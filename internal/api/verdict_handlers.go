@@ -19,17 +19,18 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		SpiceLevel      *int   `json:"spice_level"` // 0-5 peppers (preferred)
-		SpiceReason     string `json:"spice_reason"`
-		Classification  string `json:"classification"`
-		Nudity          bool   `json:"nudity"`
-		SoloActs        bool   `json:"solo_acts"`
-		HeavyInnuendo   bool   `json:"heavy_innuendo"`
-		PlayfulFantasy  bool   `json:"playful_fantasy"`
-		DarkOccult      bool   `json:"dark_occult"`
-		DemonicPresence bool   `json:"demonic_presence"`
-		LGBTQContent    bool   `json:"lgbtq_content"`
-		SummaryVerdict  string `json:"summary_verdict"`
+		SpiceLevel      *int     `json:"spice_level"` // 0-5 peppers (preferred)
+		SpiceReason     string   `json:"spice_reason"`
+		Classification  string   `json:"classification"`
+		Nudity          bool     `json:"nudity"`
+		SoloActs        bool     `json:"solo_acts"`
+		HeavyInnuendo   bool     `json:"heavy_innuendo"`
+		PlayfulFantasy  bool     `json:"playful_fantasy"`
+		DarkOccult      bool     `json:"dark_occult"`
+		DemonicPresence bool     `json:"demonic_presence"`
+		LGBTQContent    bool     `json:"lgbtq_content"`
+		SummaryVerdict  string   `json:"summary_verdict"`
+		CustomFlags     []string `json:"custom_flags"` // keys of the family's filters it matches
 	}
 	if !readJSON(w, r, &body, 8<<10) {
 		return
@@ -66,6 +67,7 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 		LGBTQContent:    body.LGBTQContent,
 		SummaryVerdict:  strings.TrimSpace(body.SummaryVerdict),
 		Model:           "manual: " + auth.UserFrom(r).Username,
+		CustomFlags:     body.CustomFlags,
 	}
 	if err := s.Store.SaveAnalysis(id, a); err != nil {
 		writeStoreErr(w, err)

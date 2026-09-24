@@ -7,6 +7,7 @@ import { $, esc, attempt, classChip, flagChips, ageChip, canManage } from "./ui.
 import { verdictFormHTML, bindVerdictForm } from "./verdictform.js";
 import { ageAndNotesHTML, bindAgeAndNotes } from "./booknotes.js";
 import { on } from "./modules.js";
+import { customChips } from "./customflags.js";
 
 export async function openBook(id, state, onChange) {
   const dlg = $("#book-dialog");
@@ -48,7 +49,7 @@ export async function openBook(id, state, onChange) {
         </div>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${grayAreaChip(b)} ${ageChip(b)} ${flagChips(b)}</div>
+      <div class="flex flex-wrap gap-1">${classChip(b)} ${grayAreaChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
       ${b.spice_level !== null && b.spice_level !== undefined
         ? `<p class="text-xs text-slate-400">${b.spice_reason ? `<b class="text-slate-200">Why ${b.spice_level} 🌶️:</b> ${esc(b.spice_reason)}. ` : ""}${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
       ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}

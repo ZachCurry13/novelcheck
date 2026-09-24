@@ -125,19 +125,22 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 		args = append(args, f.Classification)
 	}
 	for _, fl := range f.Flags {
-		if p, ok := flagColumns[fl]; ok {
+		if p, a, ok := flagPredicate(fl); ok {
 			where = append(where, p)
+			args = append(args, a...)
 		}
 	}
 	for _, fl := range f.ExcludeFlags {
-		if p, ok := flagColumns[fl]; ok {
+		if p, a, ok := flagPredicate(fl); ok {
 			where = append(where, "(b.approved = 1 OR NOT COALESCE("+p+", 0))")
+			args = append(args, a...)
 		}
 	}
 	var anyOf []string
 	for _, fl := range f.AnyFlags {
-		if p, ok := flagColumns[fl]; ok {
+		if p, a, ok := flagPredicate(fl); ok {
 			anyOf = append(anyOf, p)
+			args = append(args, a...)
 		}
 	}
 	if len(anyOf) > 0 {

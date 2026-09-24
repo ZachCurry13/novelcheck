@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS books (
     spice_level      INTEGER,                      -- 0-5 peppers; NULL = rated before the pepper scale (or not rated)
     spice_reason     TEXT NOT NULL DEFAULT '',     -- short "why this many peppers", e.g. "Heavy innuendo, on-page foreplay"
     rules_version    INTEGER NOT NULL DEFAULT 0,   -- store.RulesVersion the rating was made under
+    flags_version    INTEGER NOT NULL DEFAULT 0,   -- custom filters version the rating checked
     age_set_by       TEXT NOT NULL DEFAULT '',
     analysis_model   TEXT NOT NULL DEFAULT '',
     analysis_error   TEXT NOT NULL DEFAULT '',
@@ -134,6 +135,21 @@ CREATE TABLE IF NOT EXISTS book_notes (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_book_notes_book ON book_notes(book_id);
+
+-- The family's own AI filters (e.g. "Heavy swearing"): the AI checks every
+-- book for each one, and the Library gets a Hide checkbox per filter.
+CREATE TABLE IF NOT EXISTS custom_flags (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    key         TEXT NOT NULL UNIQUE,      -- JSON key the AI answers with, e.g. "swearing"
+    label       TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',  -- what the AI should look for
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS book_flags (
+    book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    flag_id INTEGER NOT NULL REFERENCES custom_flags(id) ON DELETE CASCADE,
+    PRIMARY KEY (book_id, flag_id)
+);
 
 -- Phones and browsers that turned on push notifications. scope: "all"
 -- (problems and everyday events) or "problems"; kids only get their own.

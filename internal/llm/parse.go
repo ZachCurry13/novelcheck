@@ -25,8 +25,10 @@ type Verdict struct {
 		DarkOccult      bool `json:"dark_occult"`
 		DemonicPresence bool `json:"demonic_presence"`
 	} `json:"spiritual_elements"`
-	LGBTQContent   bool   `json:"lgbtq_content"`
-	SummaryVerdict string `json:"summary_verdict"`
+	LGBTQContent   bool            `json:"lgbtq_content"`
+	SummaryVerdict string          `json:"summary_verdict"`
+	CustomRaw      json.RawMessage `json:"custom_flags"` // the family's own filters: {"key": true} (or a list of keys)
+	CustomFlags    []string        `json:"-"`            // keys marked true
 }
 
 // ParseVerdict extracts and validates the JSON verdict from model output,
@@ -57,6 +59,7 @@ func ParseVerdict(content string) (*Verdict, error) {
 	}
 	v.SummaryVerdict = strings.TrimSpace(v.SummaryVerdict)
 	v.SpiceReason = ShortReason(v.SpiceReason)
+	v.CustomFlags = customFlagsFrom(v.CustomRaw)
 	return &v, nil
 }
 
@@ -112,5 +115,6 @@ func (v *Verdict) ToAnalysis(model string) store.Analysis {
 		LGBTQContent:    v.LGBTQContent,
 		SummaryVerdict:  v.SummaryVerdict,
 		Model:           model,
+		CustomFlags:     v.CustomFlags,
 	}
 }

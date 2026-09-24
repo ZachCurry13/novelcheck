@@ -3,6 +3,8 @@ package llm
 import (
 	"strings"
 	"unicode"
+
+	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
 // DefaultLanguage is used when no language is chosen.
@@ -32,10 +34,11 @@ func languageName(lang string) string {
 	return lang
 }
 
-// SystemPromptFor adds the language rule to the analyzer prompt. Only the
-// free text follows the language; JSON keys stay exactly as specified.
-func SystemPromptFor(lang string) string {
-	return SystemPrompt + "\n\nLANGUAGE: Write summary_verdict in " + languageName(lang) +
+// SystemPromptFor adds the family's custom filters and the language rule to
+// the analyzer prompt. Only the free text follows the language; JSON keys
+// stay exactly as specified.
+func SystemPromptFor(lang string, flags []store.CustomFlag) string {
+	return SystemPrompt + customFlagsSection(flags) + "\n\nLANGUAGE: Write summary_verdict in " + languageName(lang) +
 		", even when the title, author or blurb is in another language, and spice_reason in the same language." +
 		" Keep every JSON key exactly as shown above."
 }

@@ -66,6 +66,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/catalogs", s.handleListCatalogs)
 			r.Get("/age-groups", s.handleAgeGroups)
 			r.Get("/updates", s.handleUpdates)
+			r.Get("/flags", s.handleListFlags)
 			r.Get("/push", s.handlePushStatus)
 			r.Post("/push/subscribe", s.handlePushSubscribe)
 			r.Post("/push/unsubscribe", s.handlePushUnsubscribe)
@@ -118,6 +119,9 @@ func (s *Server) Router() http.Handler {
 			r.Group(func(r chi.Router) {
 				r.Use(auth.RequireAdmin)
 				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)
+				r.Post("/admin/flags", s.handleAddFlag)
+				r.Put("/admin/flags/{id}", s.handleUpdateFlag)
+				r.Delete("/admin/flags/{id}", s.handleDeleteFlag)
 				r.Get("/admin/settings", s.handleGetSettings)
 				r.Get("/admin/provider-guide", s.handleProviderGuide)
 				r.Put("/admin/settings", s.handlePutSettings)

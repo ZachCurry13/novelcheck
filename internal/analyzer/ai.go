@@ -71,11 +71,18 @@ func Unreachable(err error) bool {
 	return errors.As(err, &dns)
 }
 
+// systemPrompt is the analyzer prompt plus the family's custom filters and
+// chosen language.
+func (w *Worker) systemPrompt() string {
+	flags, _ := w.Store.CustomFlags()
+	return llm.SystemPromptFor(w.Store.Setting(store.KeyLanguage), flags)
+}
+
 func (w *Worker) analyzeWith(ctx context.Context, ai store.AIConfig, c llm.Completer, model string, id int64, user string) (*llm.Verdict, error) {
 	limit := llm.Timeout(ai.BaseURL, w.Store.SettingInt(store.KeyLLMTimeoutSeconds))
 	cctx, cancel := context.WithTimeout(ctx, limit)
 	defer cancel()
-	out, usage, err := c.Complete(cctx, model, llm.SystemPromptFor(w.Store.Setting(store.KeyLanguage)), user)
+	out, usage, err := c.Complete(cctx, model, w.systemPrompt(), user)
 	if usage.Total() > 0 {
 		_ = w.Store.RecordUsageCost(id, model, usage.PromptTokens, usage.CompletionTokens, ai)
 	}

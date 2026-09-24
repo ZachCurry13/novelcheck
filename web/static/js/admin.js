@@ -8,6 +8,7 @@ import { renderRemoteAccess } from "./remoteaccess.js";
 import { renderCalibreServer } from "./calibreserver.js";
 import { renderErrors } from "./errors.js";
 import { on } from "./modules.js";
+import { renderFlagsAdmin } from "./customflags.js";
 import { refreshUser } from "./app.js";
 
 const SECTIONS = [
@@ -88,7 +89,7 @@ export async function renderAdmin(view, state) {
       <div id="rerate" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
       <div id="del-banner" class="hidden basis-full rounded-lg bg-rose-950/50 p-3 text-sm"></div>
     </div>
-    ${adminOnly(`<form id="settings" class="mb-8 grid gap-4 lg:grid-cols-2"></form><div id="remote-access"></div>`)}
+    ${adminOnly(`<div id="custom-flags"></div><form id="settings" class="mb-8 grid gap-4 lg:grid-cols-2"></form><div id="remote-access"></div>`)}
     <section id="users"></section>`;
 
   if (isAdmin) await renderSettings(view, state);
@@ -139,6 +140,7 @@ export async function renderAdmin(view, state) {
   await refresh();
   renderErrors($("#errors", view), isAdmin, refresh);
   if (isAdmin) {
+    renderFlagsAdmin($("#custom-flags", view), refresh);
     renderCalibrePicker($("#calibre-picker", view), refresh);
     renderCalibreServer($("#calibre-server", view));
   }
@@ -242,7 +244,7 @@ function renderStats(view, s) {
   }
   if (s.rerate_candidates) {
     const est = perBookCost(s) * s.rerate_candidates;
-    box.innerHTML += `${s.non_english ? `<hr class="my-2 border-slate-700">` : ""}🌶️ <b>${fmtNum(s.rerate_candidates)}</b> book${s.rerate_candidates === 1 ? " was" : "s were"} rated with older pepper rules.
+    box.innerHTML += `${s.non_english ? `<hr class="my-2 border-slate-700">` : ""}🌶️ <b>${fmtNum(s.rerate_candidates)}</b> book${s.rerate_candidates === 1 ? " was" : "s were"} rated before your latest rule changes (pepper wording or custom filters).
       <button data-act="rerate" class="btn-secondary ml-2 py-1">Re-rate with the current rules</button>
       <span class="block text-xs text-slate-400">They stay in the library with their old rating until the new one arrives. Hand-rated books are left alone.${est ? ` Estimated cost ≈ ${fmtMoney(est)}.` : ""}</span>`;
   }

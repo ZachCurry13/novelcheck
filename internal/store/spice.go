@@ -50,12 +50,14 @@ func (s *Store) AISummaries() ([]AISummary, error) {
 	return out, err
 }
 
-// RerateCandidates returns books the AI rated before the pepper scale or
-// under older rating rules (hand-rated books are left alone).
+// RerateCandidates returns books the AI rated before the pepper scale, under
+// older rating rules, or before the newest custom filters (hand-rated books
+// are left alone).
 func (s *Store) RerateCandidates() ([]int64, error) {
 	var ids []int64
 	err := s.DB.Select(&ids, `SELECT id FROM books WHERE status = 'analyzed'
-		AND (spice_level IS NULL OR rules_version < ?) AND analysis_model NOT LIKE 'manual:%' ORDER BY id`, RulesVersion)
+		AND (spice_level IS NULL OR rules_version < ? OR flags_version < ?) AND analysis_model NOT LIKE 'manual:%'
+		ORDER BY id`, RulesVersion, s.FlagsVersion())
 	return ids, err
 }
 

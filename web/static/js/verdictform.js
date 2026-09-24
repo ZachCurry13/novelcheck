@@ -3,6 +3,7 @@
 import { put } from "./api.js";
 import { $, $$, esc, attempt } from "./ui.js";
 import { pepperOptions } from "./peppers.js";
+import { verdictBoxes } from "./customflags.js";
 
 const FLAGS = [
   ["nudity", "Nudity"],
@@ -28,6 +29,7 @@ export function verdictFormHTML(b) {
         placeholder="Why this many peppers? e.g. Kissing only · Heavy innuendo, on-page foreplay">
       <div class="grid gap-1 sm:grid-cols-2">
         ${FLAGS.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-flag="${k}" ${b[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}
+        ${verdictBoxes(b)}
       </div>
       <textarea name="summary_verdict" rows="2" maxlength="1000" class="input" placeholder="1–2 sentence summary">${esc(b.summary_verdict)}</textarea>
       <div class="flex gap-2">
@@ -47,6 +49,7 @@ export function bindVerdictForm(root, bookId, onSaved) {
       summary_verdict: form.summary_verdict.value.trim(),
     };
     $$("[data-flag]", form).forEach((cb) => (body[cb.dataset.flag] = cb.checked));
+    body.custom_flags = $$("[data-cflag]", form).filter((cb) => cb.checked).map((cb) => cb.dataset.cflag);
     const ok = await attempt(() => put(`/api/books/${bookId}/verdict`, body), "Rating saved");
     if (ok) onSaved?.();
   });

@@ -17,7 +17,9 @@ const derivedCols = `, COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTIN
 		FROM catalog_books fc WHERE fc.book_id = b.id AND fc.format NOT IN ('', 'list') ORDER BY f)), '') AS formats,
 	(SELECT COUNT(DISTINCT dc.external_id) FROM catalog_books dc JOIN catalogs dcat ON dcat.id = dc.catalog_id
 		AND dcat.source = 'calibre' WHERE dc.book_id = b.id) AS calibre_copies,
-	(SELECT COUNT(*) FROM delete_requests dq WHERE dq.book_id = b.id AND dq.status = 'pending') AS delete_requests`
+	(SELECT COUNT(*) FROM delete_requests dq WHERE dq.book_id = b.id AND dq.status = 'pending') AS delete_requests,
+	COALESCE((SELECT GROUP_CONCAT(cf.key, ',') FROM book_flags bf JOIN custom_flags cf ON cf.id = bf.flag_id
+		WHERE bf.book_id = b.id), '') AS custom_flags`
 
 // UpsertBook inserts a book or returns the existing one with the same NormKey,
 // filling in any metadata the stored row is missing. Returns the book id.
@@ -129,10 +131,14 @@ func (s *Store) SaveAnalysis(id int64, a Analysis) error {
 	_, err := s.DB.Exec(`UPDATE books SET status = 'analyzed', spice_level = ?, spice_reason = ?, classification = ?,
 		nudity = ?, solo_acts = ?, heavy_innuendo = ?, playful_fantasy = ?, dark_occult = ?, demonic_presence = ?,
 		lgbtq_content = ?, summary_verdict = ?, analysis_model = ?, analysis_error = '', rules_version = ?,
-		analyzed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+		flags_version = ?, analyzed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
 		a.SpiceLevel, strings.TrimSpace(a.SpiceReason), a.Classification, a.Nudity, a.SoloActs, a.HeavyInnuendo,
-		a.PlayfulFantasy, a.DarkOccult, a.DemonicPresence, a.LGBTQContent, a.SummaryVerdict, a.Model, RulesVersion, id)
-	return err
+		a.PlayfulFantasy, a.DarkOccult, a.DemonicPresence, a.LGBTQContent, a.SummaryVerdict, a.Model, RulesVersion,
+		s.FlagsVersion(), id)
+	if err != nil {
+		return err
+	}
+	return s.setBookFlags(id, a.CustomFlags)
 }
 
 // BooksCreatedSince counts books first added at or after t (e.g. by a sync).

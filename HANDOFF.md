@@ -6,8 +6,9 @@ Latest release: **v1.15.0**. **v1.16.0** (pepper wording + quick wins, see CHANG
 1. ✅ v1.16 quick wins: pepper levels 2-3 reworded (+ `spice_reason`, `rules_version` re-rate banner), Strict family preset, gray-area chip, Re-rate whole library, Calibre-Web links + credit, phone filters.
 2. ✅ Feature switches (Admin → Features: queue, Send-to-Kindle, KOReader, import, parent tools) + 🔔 events: `calibre-new`, `batch-done`, `reading`, `token-cap` (routine ones can be turned off with `notify_routine`). Also in the unreleased 1.16.0 notes.
 3. ✅ Phone push: `internal/push` (stdlib RFC 8291 + VAPID, tested against the RFC example), Profile → Phone notifications, managers get 🔔 notices (all or problems only), everyone gets "Ready to read". Only the UI's off/blocked states were checked in a browser (the app's pane blocks notification permission); the first real subscribe/test should be done on a phone over the https address after release.
-4. ⏭ Custom AI filters: admin-defined flags injected into the prompt, auto-generated Hide checkboxes. Bump `store.RulesVersion` when flags change.
-5. Parent-child linking: kids linked to one or more parents; parents manage only their linked kids (user chose to build it).
+4. ✅ Custom AI filters (Admin → Custom AI filters, up to 12; `flag:<key>` Hide boxes; `custom_flags_version` drives re-rate offers). Not yet in kids' content rules.
+5. ⏭ **Check a book** (user: "should be the main feature, super easy and straightforward"): at the store, snap the cover or type title/author → instant rating. First tab and parents' landing page. If the book is in the library show its rating; else enrich + rate now (vision AI reads the cover; typed search as fallback) and save it to a "Looked up" catalog so a second check is free. Parents (admins/editors) only.
+6. Parent-child linking: kids linked to one or more parents; parents manage only their linked kids (user chose to build it).
 - Skipped by the user's choice: a "Skipped (up to date)" badge (same as Analyzed). Not requested: re-rating when a Calibre file changes.
 
 ## Waiting on the user

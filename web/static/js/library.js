@@ -5,12 +5,13 @@ import { openCalibreRemoval } from "./calibreremove.js";
 import { openBook } from "./bookdialog.js";
 import { pepperOptions, openPepperGuide, grayAreaChip } from "./peppers.js";
 import { on } from "./modules.js";
+import { loadFlags, customChips, hideBoxes } from "./customflags.js";
 
 const PAGE = 60;
 
 export async function renderLibrary(view, state) {
   const manager = canManage(state.user);
-  const catalogs = (await attempt(() => get("/api/catalogs"))) || [];
+  const [catalogs] = await Promise.all([attempt(() => get("/api/catalogs")).then((c) => c || []), loadFlags(true)]);
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
   view.innerHTML = `
     <form id="filters" class="card mb-4 grid gap-3 md:grid-cols-4 xl:grid-cols-8">
@@ -46,6 +47,7 @@ export async function renderLibrary(view, state) {
         <span class="label mb-0" title="Books with these are hidden (unless a parent marked them OK)">Hide:</span>
         ${Object.entries(HIDE_LABELS).map(([k, v]) =>
           `<label class="toggle"><input type="checkbox" name="hide" value="${k}"> ${esc(v)}</label>`).join("")}
+        ${hideBoxes()}
         <label class="toggle"><input type="checkbox" name="multi"> Only books in 2+ catalogs</label>
         <button type="button" id="pepper-help" class="text-xs text-slate-400 underline">🌶️ What do the peppers mean?</button>
         <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-500 underline">Missing a filter? Suggest one</a>
@@ -162,7 +164,7 @@ function card(b, queueOn) {
         </div>
         ${queueOn ? `<button data-queue="${b.id}" title="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>` : ""}
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${grayAreaChip(b)} ${ageChip(b)} ${flagChips(b)}</div>
+      <div class="flex flex-wrap gap-1">${classChip(b)} ${grayAreaChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
       ${b.summary_verdict ? `<p class="text-sm text-slate-300 line-clamp-3">${esc(b.summary_verdict)}</p>` : ""}
       <div class="mt-auto flex flex-wrap items-center gap-1">${cats} ${formatChips(b)}</div>
     </article>`;

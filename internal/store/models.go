@@ -94,6 +94,7 @@ type Book struct {
 	Formats         string  `db:"formats" json:"formats"`                 // e.g. "AZW3,EPUB": file formats across copies
 	CalibreCopies   int     `db:"calibre_copies" json:"calibre_copies"`   // Calibre entries for this book (2+ = duplicate)
 	DeleteRequests  int     `db:"delete_requests" json:"delete_requests"` // pending requests to delete it
+	CustomFlags     string  `db:"custom_flags" json:"custom_flags"`       // keys of the family's filters it matches, comma-separated
 }
 
 // BookCopy is one physical copy of a book inside a catalog.
@@ -120,6 +121,7 @@ type Analysis struct {
 	LGBTQContent    bool
 	SummaryVerdict  string
 	Model           string
+	CustomFlags     []string // keys of the family's filters the book matches
 }
 
 type QueueItem struct {
