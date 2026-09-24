@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -30,6 +31,8 @@ func main() {
 	}
 	defer database.Close()
 	st := store.New(database)
+	// NOVELCHECK_SESSION_DAYS is the default until an admin changes it in the app.
+	store.Defaults[store.KeySessionDays] = strconv.Itoa(cfg.SessionDays)
 
 	if err := auth.Bootstrap(st, cfg.AdminUser, cfg.AdminPassword); err != nil {
 		log.Fatalf("bootstrap admin: %v", err)

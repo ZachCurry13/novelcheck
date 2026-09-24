@@ -70,17 +70,17 @@ Process-level settings are environment variables. Everything else is edited in t
 | `NOVELCHECK_ADMIN_PASSWORD` | *(empty)* | Optional: if set and no users exist, creates that admin at startup. Leave empty to create the admin in the browser. |
 | `NOVELCHECK_TRUST_PROXY` | `true` | Use `CF-Connecting-IP` / `X-Forwarded-For` / `X-Real-IP` for client IPs |
 | `NOVELCHECK_CORS_ORIGINS` | *(empty)* | Comma-separated list of allowed cross-origin callers |
-| `NOVELCHECK_SESSION_DAYS` | `30` | Session lifetime |
+| `NOVELCHECK_SESSION_DAYS` | `30` | Default "keep me signed in" length. Admins can change it in **Admin → Sign-in & Updates**. |
 
 ## Security notes
 
 - Every response carries HSTS, `nosniff`, `X-Frame-Options: DENY`, and a strict same-origin CSP. API responses also carry `Cache-Control: no-store`, so Cloudflare and the service worker never cache private data.
-- Sessions use `HttpOnly`, `SameSite=Lax` cookies, and `Secure` is set when served over HTTPS or `X-Forwarded-Proto: https`. The database stores only a SHA-256 of each session token.
+- Sign-ins with **Keep me signed in** last 30 days (configurable) and roll forward while the person keeps using the app. Without it, the sign-in ends when the browser closes or after 12 hours idle. Sessions use `HttpOnly`, `SameSite=Lax` cookies, and `Secure` is set when served over HTTPS or `X-Forwarded-Proto: https`. The database stores only a SHA-256 of each session token.
 - State-changing API calls require an `X-NovelCheck: 1` header (CSRF guard). Login is rate-limited per IP.
 - **The database backup contains password hashes and the LLM/SMTP secrets.** Store it like a credential.
 - Book downloads are served only from paths recorded by the Calibre sync that sit inside `NOVELCHECK_CALIBRE_DIR`. The in-app folder browser is admin-only and can't leave that mount, even through symlinks.
 - First-run setup (`POST /api/setup`) only works while the database has no accounts.
-- Update checks call `api.github.com` about every 6 hours. Turn them off under **Admin → App Updates**.
+- Update checks call `api.github.com` about every 6 hours. Turn them off under **Admin → Sign-in & Updates**.
 
 ## Development
 

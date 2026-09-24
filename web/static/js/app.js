@@ -64,6 +64,7 @@ async function boot() {
       state.user = await post("/api/auth/login", {
         username: fd.get("username"),
         password: fd.get("password"),
+        remember: fd.get("remember") === "on",
       });
       e.target.reset();
       showApp();

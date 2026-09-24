@@ -26,6 +26,7 @@ const (
 	KeyCalibrePollHours   = "calibre_poll_hours"
 	KeyCalibreLibraryPath = "calibre_library_path" // folder inside the mount; "" = mount root
 	KeyCheckUpdates       = "check_updates"
+	KeySessionDays        = "session_days" // "keep me signed in" length; renewed while in use
 	KeyCalibreLastSync    = "calibre_last_sync"
 	KeyCalibreLastResult  = "calibre_last_result"
 )
@@ -45,6 +46,7 @@ var Defaults = map[string]string{
 	KeyCalibrePollHours:   "6",
 	KeyCalibreLibraryPath: "",
 	KeyCheckUpdates:       "true",
+	KeySessionDays:        "30", // main overrides with NOVELCHECK_SESSION_DAYS
 	KeyCalibreLastSync:    "",
 	KeyCalibreLastResult:  "",
 }

@@ -12,14 +12,16 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusTooManyRequests, "too many login attempts; try again in a few minutes")
 		return
 	}
-	var body struct {
+	body := struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
-	}
+		Remember *bool  `json:"remember"` // default true
+	}{}
 	if !readJSON(w, r, &body, 4<<10) {
 		return
 	}
-	u, err := s.Auth.Login(w, r, strings.TrimSpace(body.Username), body.Password)
+	remember := body.Remember == nil || *body.Remember
+	u, err := s.Auth.Login(w, r, strings.TrimSpace(body.Username), body.Password, remember)
 	if err != nil {
 		writeErr(w, http.StatusUnauthorized, "invalid username or password")
 		return
@@ -76,7 +78,7 @@ func (s *Server) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 	// Invalidate other sessions, then issue a fresh one for this browser.
 	_ = s.Store.DeleteUserSessions(u.ID)
-	if _, err := s.Auth.Login(w, r, u.Username, body.New); err != nil {
+	if _, err := s.Auth.Login(w, r, u.Username, body.New, true); err != nil {
 		writeStoreErr(w, err)
 		return
 	}

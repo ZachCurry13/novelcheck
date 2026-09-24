@@ -34,6 +34,7 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 * User login system supporting `Admin`, `Editor`, and `Restricted` (Kid) accounts. Editors handle day-to-day management (rating corrections, scans, drive imports, kids' accounts) without access to technical settings, secrets, or backups.
 * First-run setup: on a fresh install the web page asks for the admin username and password (no credentials in deployment YAML).
 * First-login "How to" guide per user, reopenable from a Help link.
+* Sessions: "Keep me signed in" (default on) gives a rolling session (admin-configurable, default 30 days, renewed at most daily while active); otherwise a browser-session cookie with a 12-hour idle limit.
 * Profile-level content rules (e.g., *Hide Open Door, Nudity, Solo Acts, Heavy Innuendo, Dark Occult/Demonic, LGBTQ+, and Unanalyzed books*).
 * Database-level filtering ensures restricted accounts cannot list, search, view, queue, or download hidden titles.
 
@@ -137,7 +138,7 @@ OUTPUT FORMAT (JSON ONLY):
 | `web/static` | `index.html`, compiled Tailwind `css/app.css`, ES-module JS views, `manifest.json`, `sw.js`, icons, vendored SortableJS + JSZip |
 
 ### 5.2 Tables
-`users` (role `admin|editor|restricted` + `hide_*` content rules + delivery prefs + `guide_seen`) · `sessions` · `catalogs` (`calibre` | `drive` | `custom`) · `books` (one row per logical title, keyed by a normalized title + author-surname `norm_key` so the same book in Calibre and on a Kindle is shared; holds status `pending|queued|processing|analyzed|error` and the verdict flags) · `catalog_books` (copies/locations) · `queue_items` (per-user position + `queued|reading|finished`) · `settings` (admin-tunable key/values) · `token_usage` (per-call prompt/completion tokens for caps and cost).
+`users` (role `admin|editor|restricted` + `hide_*` content rules + delivery prefs + `guide_seen`) · `sessions` (token hash, expiry, `remember`) · `catalogs` (`calibre` | `drive` | `custom`) · `books` (one row per logical title, keyed by a normalized title + author-surname `norm_key` so the same book in Calibre and on a Kindle is shared; holds status `pending|queued|processing|analyzed|error` and the verdict flags) · `catalog_books` (copies/locations) · `queue_items` (per-user position + `queued|reading|finished`) · `settings` (admin-tunable key/values) · `token_usage` (per-call prompt/completion tokens for caps and cost).
 
 ### 5.3 HTTP API
 Public: `POST /api/auth/login`, `POST /api/auth/logout`, `GET|POST /api/setup` (first admin, only while no users exist), `GET /healthz`.

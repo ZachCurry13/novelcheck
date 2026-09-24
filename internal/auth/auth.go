@@ -25,7 +25,42 @@ var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("novelcheck-timing-guard")
 
 type Manager struct {
 	Store       *store.Store
-	SessionDays int
+	SessionDays int // fallback when the admin setting is unset
+}
+
+// shortSession is how long a "don't keep me signed in" login lasts without
+// activity; its cookie also disappears when the browser is closed.
+const shortSession = 12 * 3600
+
+// renewAfter throttles rolling renewal to one database write per day.
+const renewAfter = 86400
+
+// lifetime returns the remembered-session length in seconds, from the
+// admin's "session_days" setting (1-365), else the configured default.
+func (m *Manager) lifetime() int {
+	days := m.Store.SettingInt(store.KeySessionDays)
+	if days < 1 || days > 365 {
+		days = m.SessionDays
+	}
+	if days < 1 {
+		days = 30
+	}
+	return days * 86400
+}
+
+func (m *Manager) setCookie(w http.ResponseWriter, r *http.Request, token string, remember bool) {
+	c := &http.Cookie{
+		Name:     CookieName,
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   IsHTTPS(r),
+		SameSite: http.SameSiteLaxMode,
+	}
+	if remember {
+		c.MaxAge = m.lifetime()
+	}
+	http.SetCookie(w, c)
 }
 
 func HashPassword(pw string) (string, error) {
@@ -56,8 +91,10 @@ func hashToken(t string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-// Login verifies credentials and sets the session cookie.
-func (m *Manager) Login(w http.ResponseWriter, r *http.Request, username, password string) (*store.User, error) {
+// Login verifies credentials and sets the session cookie. remember=true keeps
+// the user signed in across browser restarts, renewed while they keep using
+// the app; false signs them out when the browser closes.
+func (m *Manager) Login(w http.ResponseWriter, r *http.Request, username, password string, remember bool) (*store.User, error) {
 	u, err := m.Store.UserByName(username)
 	if err != nil {
 		// Burn comparable time so usernames can't be enumerated by timing.
@@ -68,18 +105,14 @@ func (m *Manager) Login(w http.ResponseWriter, r *http.Request, username, passwo
 		return nil, errors.New("invalid username or password")
 	}
 	token := RandomToken(32)
-	if err := m.Store.CreateSession(hashToken(token), u.ID, m.SessionDays); err != nil {
+	life := shortSession
+	if remember {
+		life = m.lifetime()
+	}
+	if err := m.Store.CreateSession(hashToken(token), u.ID, life, remember); err != nil {
 		return nil, err
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     CookieName,
-		Value:    token,
-		Path:     "/",
-		MaxAge:   m.SessionDays * 86400,
-		HttpOnly: true,
-		Secure:   IsHTTPS(r),
-		SameSite: http.SameSiteLaxMode,
-	})
+	m.setCookie(w, r, token, remember)
 	return u, nil
 }
 
@@ -96,24 +129,34 @@ func IsHTTPS(r *http.Request) bool {
 	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 }
 
-// Current resolves the session cookie to a user, or nil.
-func (m *Manager) Current(r *http.Request) *store.User {
+// current resolves the session cookie and, for active users, rolls the
+// expiry forward (at most once a day) so regular users stay signed in.
+func (m *Manager) current(w http.ResponseWriter, r *http.Request) *store.User {
 	c, err := r.Cookie(CookieName)
 	if err != nil || c.Value == "" {
 		return nil
 	}
-	u, err := m.Store.SessionUser(hashToken(c.Value))
+	sess, err := m.Store.SessionByToken(hashToken(c.Value))
 	if err != nil {
 		return nil
 	}
-	return u
+	life := shortSession
+	if sess.Remember {
+		life = m.lifetime()
+	}
+	if life-sess.SecondsLeft >= min(renewAfter, life/2) {
+		if m.Store.ExtendSession(hashToken(c.Value), life) == nil && sess.Remember {
+			m.setCookie(w, r, c.Value, true)
+		}
+	}
+	return sess.User
 }
 
 // RequireUser rejects unauthenticated requests with 401 and stores the user
 // in the request context.
 func (m *Manager) RequireUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		u := m.Current(r)
+		u := m.current(w, r)
 		if u == nil {
 			http.Error(w, `{"error":"authentication required"}`, http.StatusUnauthorized)
 			return

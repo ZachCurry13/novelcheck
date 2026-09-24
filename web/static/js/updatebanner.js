@@ -23,6 +23,7 @@ export async function checkForUpdates() {
   const st = data.status;
   if (!st) return;
   $("#version-label").textContent = `Version ${st.current}`;
+  $("#header-version").textContent = /^\d/.test(st.current) ? `v${st.current}` : st.current;
   if (!st.update_available || dismissed() === st.latest) return;
   $("#update-text").textContent = `NovelCheck ${st.latest} is available (you have ${st.current}).`;
   $("#update-banner").classList.remove("hidden");

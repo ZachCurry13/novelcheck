@@ -24,7 +24,7 @@ const defaultTokensPerBook = 900
 var numericKeys = map[string]bool{
 	store.KeyPriceInputPerM: true, store.KeyPriceOutputPerM: true, store.KeyBatchSize: true,
 	store.KeyTokensPerHour: true, store.KeyScanDelaySeconds: true, store.KeySMTPPort: true,
-	store.KeyCalibrePollHours: true,
+	store.KeyCalibrePollHours: true, store.KeySessionDays: true,
 }
 
 // editableKeys are the settings the admin panel may change.
@@ -112,6 +112,12 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 		if numericKeys[k] {
 			if f, err := strconv.ParseFloat(v, 64); err != nil || f < 0 {
 				writeErr(w, http.StatusBadRequest, k+" must be a non-negative number")
+				return
+			}
+		}
+		if k == store.KeySessionDays {
+			if n, err := strconv.Atoi(v); err != nil || n < 1 || n > 365 {
+				writeErr(w, http.StatusBadRequest, "stay signed in must be between 1 and 365 days")
 				return
 			}
 		}

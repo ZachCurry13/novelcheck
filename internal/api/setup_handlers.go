@@ -52,7 +52,7 @@ func (s *Server) handleSetup(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	u, err := s.Auth.Login(w, r, body.Username, body.Password)
+	u, err := s.Auth.Login(w, r, body.Username, body.Password, true)
 	if err != nil {
 		writeStoreErr(w, err)
 		return

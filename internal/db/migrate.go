@@ -14,7 +14,10 @@ func migrate(d *sqlx.DB) error {
 	if err := addEditorRole(d); err != nil {
 		return err
 	}
-	return addColumn(d, "users", "guide_seen", "INTEGER NOT NULL DEFAULT 0")
+	if err := addColumn(d, "users", "guide_seen", "INTEGER NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	return addColumn(d, "sessions", "remember", "INTEGER NOT NULL DEFAULT 1")
 }
 
 // addColumn adds a column if an older database doesn't have it yet.

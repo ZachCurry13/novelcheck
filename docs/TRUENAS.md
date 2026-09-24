@@ -90,7 +90,7 @@ When a new version comes out, admins and editors see a green **"NovelCheck x.y.z
 
 To update: go to **Apps**, click **novelcheck**, and click **Update** if TrueNAS offers it. If it doesn't, click **Edit** and then **Save** without changing anything. TrueNAS re-downloads the `latest` image. Your books, ratings, and users are kept.
 
-Admins can turn the update check off under **Admin → App Updates**.
+The version you are running shows at the top right (next to **Sign out**) and at the bottom of every page. Admins can turn the update check off under **Admin → Sign-in & Updates**.
 
 ## Backups
 
@@ -106,4 +106,5 @@ In NovelCheck: **Admin → Download novelcheck.db**. Keep that file somewhere sa
 | Can't open `http://…:30080` | Another app may already use port 30080. Edit the app and change `30080` to another number like `30081`. |
 | Forgot a password | Another admin can reset it under **Admin → Users & Content Rules → Reset password**. Editors can reset kids' passwords the same way under **Manage**. |
 | Locked out of the only admin account | Last resort, which erases all NovelCheck data: stop the app, delete `novelcheck.db` from the Step 1 dataset, start the app, and create a new admin in the browser (Step 4). |
+| Asked to sign in every time | Make sure **Keep me signed in on this device** is ticked when you sign in. You then stay signed in as long as you use NovelCheck at least once every 30 days (admins can change this under **Admin → Sign-in & Updates**). Some things always need a separate sign-in: the iPhone home-screen app and Safari keep separate logins, each address you use (for example your TrueNAS IP and a Cloudflare address) needs its own sign-in, and private browsing windows forget you when closed. |
 | See what's going on | **Apps → novelcheck → Logs** (the icon on the container row). |
