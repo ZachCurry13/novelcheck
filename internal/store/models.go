@@ -77,7 +77,8 @@ type Book struct {
 	Approved        bool    `db:"approved" json:"approved"`
 	ApprovedBy      string  `db:"approved_by" json:"approved_by"`
 	AgeLevel        int     `db:"age_level" json:"age_level"`
-	SpiceLevel      *int    `db:"spice_level" json:"spice_level"` // 0-5 peppers; nil = not on the pepper scale yet
+	SpiceLevel      *int    `db:"spice_level" json:"spice_level"`   // 0-5 peppers; nil = not on the pepper scale yet
+	SpiceReason     string  `db:"spice_reason" json:"spice_reason"` // what drives the pepper level, a few words
 	AgeSetBy        string  `db:"age_set_by" json:"age_set_by"`
 	AnalysisModel   string  `db:"analysis_model" json:"analysis_model"`
 	AnalysisError   string  `db:"analysis_error" json:"analysis_error"`
@@ -103,6 +104,7 @@ type BookCopy struct {
 // Analysis is the structured LLM verdict persisted onto a book.
 type Analysis struct {
 	SpiceLevel      *int // 0-5 peppers; nil for old-style verdicts
+	SpiceReason     string
 	Classification  string
 	Nudity          bool
 	SoloActs        bool

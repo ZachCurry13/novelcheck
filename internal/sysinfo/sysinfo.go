@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -56,11 +55,7 @@ func (s *Sampler) Snapshot() Snapshot {
 	snap.CPUPercent = s.cpuPercent(snap.CPUCores)
 	snap.RxPerSec, snap.TxPerSec = s.sampleNet(time.Now())
 	snap.MemUsed, snap.MemLimit, snap.MemIsLimit = memory()
-	var st syscall.Statfs_t
-	if syscall.Statfs(s.DataDir, &st) == nil {
-		snap.DiskFree = st.Bavail * uint64(st.Bsize)
-		snap.DiskTotal = st.Blocks * uint64(st.Bsize)
-	}
+	snap.DiskFree, snap.DiskTotal = diskSpace(s.DataDir)
 	for _, f := range []string{"novelcheck.db", "novelcheck.db-wal", "novelcheck.db-shm"} {
 		if fi, err := os.Stat(filepath.Join(s.DataDir, f)); err == nil {
 			snap.DBSize += uint64(fi.Size())

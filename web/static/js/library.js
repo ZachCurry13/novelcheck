@@ -3,7 +3,7 @@ import { get, post, qs } from "./api.js";
 import { $, esc, attempt, toast, classChip, flagChips, ageChip, HIDE_LABELS, FILTER_IDEA_URL, AGE_GROUPS, canManage } from "./ui.js";
 import { openCalibreRemoval } from "./calibreremove.js";
 import { openBook } from "./bookdialog.js";
-import { pepperOptions, openPepperGuide } from "./peppers.js";
+import { pepperOptions, openPepperGuide, grayAreaChip } from "./peppers.js";
 
 const PAGE = 60;
 
@@ -13,32 +13,35 @@ export async function renderLibrary(view, state) {
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
   view.innerHTML = `
     <form id="filters" class="card mb-4 grid gap-3 md:grid-cols-4 xl:grid-cols-8">
-      <input name="q" type="search" placeholder="Search title or author" class="input md:col-span-2">
-      <select name="catalog" class="input"><option value="">All catalogs</option>${catOpts}</select>
-      <select name="overlap_with" class="input" title="Only books also present in this catalog">
+      <div class="flex gap-2 md:col-span-2">
+        <input name="q" type="search" placeholder="Search title or author" class="input min-w-0 flex-1">
+        <button type="button" id="filters-toggle" class="btn-secondary filters-toggle" aria-expanded="false">Filters</button>
+      </div>
+      <select name="catalog" class="input filter-more"><option value="">All catalogs</option>${catOpts}</select>
+      <select name="overlap_with" class="input filter-more" title="Only books also present in this catalog">
         <option value="">…also in (overlap)</option>${catOpts}</select>
-      <select name="spice" class="input" title="Peppers: how much romance and sexual content">
+      <select name="spice" class="input filter-more" title="Peppers: how much romance and sexual content">
         <option value="">Any peppers</option>${pepperOptions(null)}
         <option value="old">Older rating (not on pepper scale)</option><option value="Pending">Not rated yet</option>
         <option value="failed">Rating failed</option>
       </select>
-      <select name="age" class="input" title="Books a parent rated for this age group or younger">
+      <select name="age" class="input filter-more" title="Books a parent rated for this age group or younger">
         <option value="">Any age group</option>
         ${AGE_GROUPS.map(([l, n, r]) => `<option value="${l}">Suitable for ${n} (${r})</option>`).join("")}
         <option value="unset">Age group not set yet</option>
       </select>
-      <select name="format" class="input" title="File format">
+      <select name="format" class="input filter-more" title="File format">
         <option value="">Any format</option>
         ${["epub", "azw3", "mobi", "kfx", "pdf"].map((f) => `<option value="${f}">${f.toUpperCase()}</option>`).join("")}
         <option value="multi">2+ formats</option>
         <option value="dupes">Duplicates</option>
         <option value="none">No file</option>
       </select>
-      <select name="sort" class="input">
+      <select name="sort" class="input filter-more">
         <option value="title">Sort: Title</option><option value="author">Sort: Author</option>
         <option value="recent">Sort: Recently added</option>
       </select>
-      <div class="col-span-full flex flex-wrap items-center gap-x-5 gap-y-2">
+      <div class="filter-more col-span-full flex flex-wrap items-center gap-x-5 gap-y-2">
         <span class="label mb-0" title="Books with these are hidden (unless a parent marked them OK)">Hide:</span>
         ${Object.entries(HIDE_LABELS).map(([k, v]) =>
           `<label class="toggle"><input type="checkbox" name="hide" value="${k}"> ${esc(v)}</label>`).join("")}
@@ -91,8 +94,21 @@ export async function renderLibrary(view, state) {
     if (!data.total) grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>`;
   }
 
+  // Phones show just the search box; "Filters (n)" opens the rest and counts
+  // how many are in use, so a hidden filter is never a surprise.
+  const toggle = $("#filters-toggle", view);
+  const countFilters = () => {
+    const fd = new FormData(form);
+    const n = [...fd.entries()].filter(([k, v]) => k !== "q" && k !== "sort" && v !== "").length;
+    toggle.textContent = n ? `Filters (${n})` : "Filters";
+  };
+  toggle.addEventListener("click", () => {
+    toggle.setAttribute("aria-expanded", String(form.classList.toggle("filters-open")));
+  });
+
   let debounce;
   form.addEventListener("input", () => {
+    countFilters();
     clearTimeout(debounce);
     debounce = setTimeout(() => load(true), 250);
   });
@@ -130,6 +146,7 @@ export async function renderLibrary(view, state) {
   } catch {
     /* private mode */
   }
+  countFilters();
   await load(true);
 }
 
@@ -144,7 +161,7 @@ function card(b) {
         </div>
         <button data-queue="${b.id}" title="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${ageChip(b)} ${flagChips(b)}</div>
+      <div class="flex flex-wrap gap-1">${classChip(b)} ${grayAreaChip(b)} ${ageChip(b)} ${flagChips(b)}</div>
       ${b.summary_verdict ? `<p class="text-sm text-slate-300 line-clamp-3">${esc(b.summary_verdict)}</p>` : ""}
       <div class="mt-auto flex flex-wrap items-center gap-1">${cats} ${formatChips(b)}</div>
     </article>`;

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
+	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -19,6 +20,7 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 	}
 	var body struct {
 		SpiceLevel      *int   `json:"spice_level"` // 0-5 peppers (preferred)
+		SpiceReason     string `json:"spice_reason"`
 		Classification  string `json:"classification"`
 		Nudity          bool   `json:"nudity"`
 		SoloActs        bool   `json:"solo_acts"`
@@ -53,6 +55,7 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 	}
 	a := store.Analysis{
 		SpiceLevel:      body.SpiceLevel,
+		SpiceReason:     llm.ShortReason(body.SpiceReason),
 		Classification:  body.Classification,
 		Nudity:          body.Nudity,
 		SoloActs:        body.SoloActs,

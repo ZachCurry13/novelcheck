@@ -30,6 +30,8 @@ func migrate(d *sqlx.DB) error {
 		{"users", "age_level", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "max_spice", "INTEGER NOT NULL DEFAULT -1"},
 		{"books", "spice_level", "INTEGER"},
+		{"books", "spice_reason", "TEXT NOT NULL DEFAULT ''"},
+		{"books", "rules_version", "INTEGER NOT NULL DEFAULT 0"},
 		{"token_usage", "cost", "REAL"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {

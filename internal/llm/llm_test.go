@@ -82,7 +82,8 @@ func TestParseSpiceLevel(t *testing.T) {
 		class string
 	}{
 		`{"spice_level": 0, "summary_verdict": "x"}`:       {0, "No Spice"},
-		`{"spice_level": "2", "summary_verdict": "x"}`:     {2, "No Spice"},
+		`{"spice_level": "1", "summary_verdict": "x"}`:     {1, "No Spice"},
+		`{"spice_level": "2", "summary_verdict": "x"}`:     {2, "Closed Door"},
 		`{"spice_level": 3.0}`:                             {3, "Closed Door"},
 		`{"spice_level": 5, "classification": "No Spice"}`: {5, "Open Door"},
 		"```json\n{\"spice_level\": 4}\n```":               {4, "Open Door"},
@@ -101,5 +102,24 @@ func TestParseSpiceLevel(t *testing.T) {
 	// Older-format answers still work, without a pepper level.
 	if v, err := llm.ParseVerdict(`{"classification": "Closed Door"}`); err != nil || v.SpiceLevel != nil || v.Classification != "Closed Door" {
 		t.Errorf("legacy: %+v %v", v, err)
+	}
+}
+
+func TestSpiceReason(t *testing.T) {
+	v, err := llm.ParseVerdict(`{"spice_level": 3, "spice_reason": "  \"Heavy innuendo,\n on-page foreplay.\" "}`)
+	if err != nil || v.ToAnalysis("m").SpiceReason != "Heavy innuendo, on-page foreplay" {
+		t.Fatalf("reason: %+v %v", v, err)
+	}
+	if v, _ := llm.ParseVerdict(`{"spice_level": 1}`); v.SpiceReason != "" {
+		t.Fatalf("missing reason should stay empty: %q", v.SpiceReason)
+	}
+	long := llm.ShortReason(strings.Repeat("très ", 40))
+	if r := []rune(long); len(r) != 80 || !strings.HasSuffix(long, "…") {
+		t.Fatalf("long reason not capped rune-safe: %d %q", len(r), long)
+	}
+	for _, want := range []string{"spice_reason", "Mild / Closed Door", `"gray area"`} {
+		if !strings.Contains(llm.SystemPrompt, want) {
+			t.Errorf("prompt is missing %q", want)
+		}
 	}
 }

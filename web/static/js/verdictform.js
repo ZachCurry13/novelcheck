@@ -24,6 +24,8 @@ export function verdictFormHTML(b) {
         <select name="spice_level" class="input" required>
           ${guess === null ? `<option value="" selected disabled>Choose 0–5 peppers</option>` : ""}${pepperOptions(guess)}
         </select></label>
+      <input name="spice_reason" maxlength="80" class="input" value="${esc(b.spice_reason || "")}"
+        placeholder="Why this many peppers? e.g. Kissing only · Heavy innuendo, on-page foreplay">
       <div class="grid gap-1 sm:grid-cols-2">
         ${FLAGS.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-flag="${k}" ${b[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}
       </div>
@@ -41,6 +43,7 @@ export function bindVerdictForm(root, bookId, onSaved) {
     e.preventDefault();
     const body = {
       spice_level: Number(form.spice_level.value),
+      spice_reason: form.spice_reason.value.trim(),
       summary_verdict: form.summary_verdict.value.trim(),
     };
     $$("[data-flag]", form).forEach((cb) => (body[cb.dataset.flag] = cb.checked));

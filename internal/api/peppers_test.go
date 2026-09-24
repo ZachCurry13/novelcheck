@@ -15,7 +15,7 @@ func TestPepperAPI(t *testing.T) {
 
 	// A parent rates by peppers; the old label follows.
 	res, b := admin.do("PUT", "/api/books/"+itoa(hand)+"/verdict", map[string]any{"spice_level": 2, "summary_verdict": "Sweet."}, true)
-	if res.StatusCode != 200 || b["spice_level"].(float64) != 2 || b["classification"] != "No Spice" {
+	if res.StatusCode != 200 || b["spice_level"].(float64) != 2 || b["classification"] != "Closed Door" {
 		t.Fatalf("verdict: %d %v", res.StatusCode, b)
 	}
 	if res, _ := admin.do("PUT", "/api/books/"+itoa(hand)+"/verdict", map[string]any{"spice_level": 6}, true); res.StatusCode != 400 {

@@ -8,7 +8,7 @@ import (
 
 const bookCols = `b.id, b.norm_key, b.title, b.author, b.isbn, b.description, b.blurb, b.status,
 	b.classification, b.nudity, b.solo_acts, b.heavy_innuendo, b.playful_fantasy, b.dark_occult,
-	b.demonic_presence, b.lgbtq_content, b.summary_verdict, b.approved, b.approved_by, b.age_level, b.age_set_by, b.spice_level, b.analysis_model, b.analysis_error,
+	b.demonic_presence, b.lgbtq_content, b.summary_verdict, b.approved, b.approved_by, b.age_level, b.age_set_by, b.spice_level, b.spice_reason, b.analysis_model, b.analysis_error,
 	b.analyzed_at, b.created_at, b.updated_at`
 
 // derivedCols adds each book's file formats and number of Calibre entries.
@@ -125,12 +125,12 @@ func (s *Store) SaveAnalysis(id int64, a Analysis) error {
 	if a.SpiceLevel != nil {
 		a.Classification = ClassificationForSpice(*a.SpiceLevel)
 	}
-	_, err := s.DB.Exec(`UPDATE books SET status = 'analyzed', spice_level = ?, classification = ?, nudity = ?,
-		solo_acts = ?, heavy_innuendo = ?, playful_fantasy = ?, dark_occult = ?, demonic_presence = ?,
-		lgbtq_content = ?, summary_verdict = ?, analysis_model = ?, analysis_error = '',
+	_, err := s.DB.Exec(`UPDATE books SET status = 'analyzed', spice_level = ?, spice_reason = ?, classification = ?,
+		nudity = ?, solo_acts = ?, heavy_innuendo = ?, playful_fantasy = ?, dark_occult = ?, demonic_presence = ?,
+		lgbtq_content = ?, summary_verdict = ?, analysis_model = ?, analysis_error = '', rules_version = ?,
 		analyzed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-		a.SpiceLevel, a.Classification, a.Nudity, a.SoloActs, a.HeavyInnuendo, a.PlayfulFantasy, a.DarkOccult,
-		a.DemonicPresence, a.LGBTQContent, a.SummaryVerdict, a.Model, id)
+		a.SpiceLevel, strings.TrimSpace(a.SpiceReason), a.Classification, a.Nudity, a.SoloActs, a.HeavyInnuendo,
+		a.PlayfulFantasy, a.DarkOccult, a.DemonicPresence, a.LGBTQContent, a.SummaryVerdict, a.Model, RulesVersion, id)
 	return err
 }
 

@@ -18,11 +18,12 @@ CATEGORIES & GUIDELINES:
 1. Spice Level (0-5 peppers). Pick the single best fit:
 - 0 = No Romance: No meaningful romantic or sexual content. No romantic subplot, kissing, sexual attraction, or romantic physical affection. Examples: Harry Potter and the Sorcerer's Stone; The Hobbit.
 - 1 = Sweet Romance: Romance is present but mild and non-sexual. May include crushes, attraction, flirting, hand-holding, cuddling, and sweet/brief kisses. No sexual desire or sexualized physical intimacy. Examples: Uglies (Scott Westerfeld); Seeking Persephone (Sarah M. Eden).
-- 2 = Romantic: More developed romance with stronger attraction and kissing, including passionate kissing or physical affection. No sexual activity, sexual desire, or implication of sex. The intimacy remains romantic rather than sexual. Example: My Phony Valentine (Courtney Walsh).
-- 3 = Steamy Closed-Door: Strong sexual attraction and desire are present. May include heavy/passionate making out, sexual tension, and characters expressing or acting on sexual desire. Any sexual encounter occurs off-page or fades to black; no explicit sexual activity is described.
-- 4 = Explicit: Sexual encounters occur on-page and include clear descriptions of sexual activity. Scenes contain meaningful sexual detail rather than simply implying what happens. There may be multiple or extended explicit scenes, but sex does not necessarily dominate the entire book. Examples: Fourth Wing (Rebecca Yarros); A Court of Thorns and Roses (Sarah J. Maas).
-- 5 = Very Explicit / Erotica-Level: Frequent, extended, or highly graphic on-page sexual content with extensive detail. Sexual encounters are a major component of the book and may occupy a substantial portion of the story. Example: Fifty Shades of Grey (E. L. James).
+- 2 = Mild / Closed Door: Romantic tension and kissing occur, including passionate kissing. Any physical intimacy beyond kissing cuts to black or happens strictly off-page; nothing sexual is shown or described on the page. Example: My Phony Valentine (Courtney Walsh).
+- 3 = Steamy / Heavy Tension ("gray area"): Heavy physical foreplay or suggestive on-page innuendo, such as heavy making out with clear sexual intent or sexually charged scenes that build toward intimacy, but it stops short of explicit sexual acts.
+- 4 = Explicit / Open Door: Sexual encounters occur on-page and include clear descriptions of sexual activity. Scenes contain meaningful sexual detail rather than simply implying what happens. There may be multiple or extended explicit scenes, but sex does not necessarily dominate the entire book. Examples: Fourth Wing (Rebecca Yarros); A Court of Thorns and Roses (Sarah J. Maas).
+- 5 = Very Explicit / Erotica: Frequent, extended, or highly graphic on-page sexual content with extensive detail. Sexual encounters are a major component of the book and may occupy a substantial portion of the story. Example: Fifty Shades of Grey (E. L. James).
 If unsure between two levels, choose the higher one.
+Also give spice_reason: 3-8 modest words naming what sets the level (e.g. "No romance", "Kissing only", "Fade-to-black intimacy", "Heavy innuendo, on-page foreplay", "Several explicit scenes").
 
 2. Content Elements:
 - Nudity: Presence of nudity in a romantic or intimate context.
@@ -36,6 +37,7 @@ If unsure between two levels, choose the higher one.
 OUTPUT FORMAT (JSON ONLY):
 {
   "spice_level": 0 | 1 | 2 | 3 | 4 | 5,
+  "spice_reason": "3-8 words",
   "content_elements": {
     "nudity": true | false,
     "solo_acts": true | false,
@@ -77,4 +79,4 @@ func orUnknown(s string) string {
 func EstimateTokens(s string) int { return len(s)/4 + 1 }
 
 // ExpectedCompletionTokens approximates the size of the JSON verdict.
-const ExpectedCompletionTokens = 180
+const ExpectedCompletionTokens = 195

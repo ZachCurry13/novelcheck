@@ -7,13 +7,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/delivery"
-	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -21,33 +19,6 @@ const secretMask = "********"
 
 // defaultTokensPerBook seeds the cost projection before any calls are made.
 const defaultTokensPerBook = 900
-
-var numericKeys = map[string]bool{
-	store.KeyPriceInputPerM: true, store.KeyPriceOutputPerM: true, store.KeyBatchSize: true,
-	store.KeyTokensPerHour: true, store.KeyScanDelaySeconds: true, store.KeyLLMTimeoutSeconds: true,
-	store.KeyBackupPriceIn: true, store.KeyBackupPriceOut: true, store.KeySMTPPort: true,
-	store.KeyCalibrePollHours: true, store.KeySessionDays: true,
-}
-
-// editableKeys are the settings the admin panel may change.
-var editableKeys = func() map[string]bool {
-	m := map[string]bool{}
-	for k := range store.Defaults {
-		m[k] = true
-	}
-	for k := range store.SecretKeys {
-		m[k] = true
-	}
-	for _, k := range []string{store.KeySMTPHost, store.KeySMTPUser, store.KeySMTPFrom} {
-		m[k] = true
-	}
-	delete(m, store.KeyCalibreLastSync)
-	delete(m, store.KeyCalibreLastResult)
-	delete(m, store.KeyCalibreLibraryPath) // set via PUT /admin/calibre/library (validated)
-	delete(m, store.KeyTunnelToken)        // set via PUT /admin/tunnel, which also (re)starts it
-	delete(m, store.KeyCalibreSrvPassword) // set via PUT /admin/calibre/server (tested first)
-	return m
-}()
 
 func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 	counts, err := s.Store.StatusCounts()
@@ -70,11 +41,13 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 	// Prompts dominate: assume ~80% input / 20% output tokens per call.
 	projected := float64(remaining) * perBook * (0.8*pin + 0.2*pout) / 1e6
 	rerate, _ := s.Store.RerateCandidates()
+	aiRated, _ := s.Store.AIRatedIDs()
 	var lastSync any
 	_ = json.Unmarshal([]byte(s.Store.Setting(store.KeyCalibreLastResult)), &lastSync)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"counts":            counts,
 		"rerate_candidates": len(rerate),
+		"ai_rated":          len(aiRated),
 		"non_english":       s.nonEnglishCount(),
 		"pending_deletes":   s.Store.PendingDeleteCount(),
 		"usage":             usage,
@@ -87,97 +60,6 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 		"calibre_library":   s.Syncer.LibraryDir(),
 		"calibre_last_sync": lastSync,
 	})
-}
-
-func (s *Server) handleGetSettings(w http.ResponseWriter, r *http.Request) {
-	all, err := s.Store.AllSettings()
-	if err != nil {
-		writeStoreErr(w, err)
-		return
-	}
-	out := map[string]string{}
-	for k := range editableKeys {
-		v := all[k]
-		if store.SecretKeys[k] && v != "" {
-			v = secretMask
-		}
-		out[k] = v
-	}
-	writeJSON(w, http.StatusOK, out)
-}
-
-func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
-	var body map[string]string
-	if !readJSON(w, r, &body, 64<<10) {
-		return
-	}
-	for k, v := range body {
-		if !editableKeys[k] {
-			writeErr(w, http.StatusBadRequest, "unknown setting "+k)
-			return
-		}
-		v = strings.TrimSpace(v)
-		if numericKeys[k] {
-			if f, err := strconv.ParseFloat(v, 64); err != nil || f < 0 {
-				writeErr(w, http.StatusBadRequest, k+" must be a non-negative number")
-				return
-			}
-		}
-		if (k == store.KeyLLMProvider || k == store.KeyBackupProvider) && v != "openai" && v != "anthropic" {
-			writeErr(w, http.StatusBadRequest, "llm_provider must be openai or anthropic")
-			return
-		}
-		if k == store.KeyLanguage && !llm.ValidLanguage(v) {
-			writeErr(w, http.StatusBadRequest, "unknown language")
-			return
-		}
-		if k == store.KeySessionDays {
-			if n, err := strconv.Atoi(v); err != nil || n < 1 || n > 365 {
-				writeErr(w, http.StatusBadRequest, "stay signed in must be between 1 and 365 days")
-				return
-			}
-		}
-		if k == store.KeyLLMJSONMode || k == store.KeyCheckUpdates || k == store.KeyBackupEnabled || k == store.KeyBackupJSONMode {
-			if _, err := strconv.ParseBool(v); err != nil {
-				writeErr(w, http.StatusBadRequest, k+" must be true or false")
-				return
-			}
-		}
-		if k == store.KeyLLMBaseURL || k == store.KeyBackupBaseURL {
-			v = llm.NormalizeBaseURL(v)
-		}
-		body[k] = v
-	}
-	for k, v := range body {
-		if store.SecretKeys[k] && v == secretMask {
-			continue // unchanged secret
-		}
-		if err := s.Store.SetSetting(k, v); err != nil {
-			writeStoreErr(w, err)
-			return
-		}
-	}
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
-}
-
-// handleRerate re-rates books the AI rated before the pepper scale. They stay
-// visible with their old rating until the new one arrives.
-func (s *Server) handleRerate(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		Which string `json:"which"` // "" = older ratings; "language" = summaries not in English
-	}
-	if r.ContentLength > 0 && !readJSON(w, r, &body, 1<<10) {
-		return
-	}
-	ids, err := s.Store.RerateCandidates()
-	if body.Which == "language" {
-		ids, err = s.nonEnglishSummaries()
-	}
-	if err != nil {
-		writeStoreErr(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]int{"queued": s.Worker.Rerate(ids...)})
 }
 
 func (s *Server) handleAnalyzeBatch(w http.ResponseWriter, r *http.Request) {
@@ -326,28 +208,4 @@ func (s *Server) handleRetryErrors(w http.ResponseWriter, r *http.Request) {
 	s.Worker.Enqueue(false, ids...)
 	s.Store.Resolve("analysis")
 	writeJSON(w, http.StatusOK, map[string]int{"queued": len(ids)})
-}
-
-// nonEnglishSummaries finds AI-written summaries that aren't in English, when
-// the chosen language is English (hand-rated books are left alone).
-func (s *Server) nonEnglishSummaries() ([]int64, error) {
-	if !strings.HasPrefix(s.Store.Setting(store.KeyLanguage), "English") {
-		return nil, nil
-	}
-	rows, err := s.Store.AISummaries()
-	if err != nil {
-		return nil, err
-	}
-	var ids []int64
-	for _, r := range rows {
-		if !llm.LooksEnglish(r.Summary) {
-			ids = append(ids, r.ID)
-		}
-	}
-	return ids, nil
-}
-
-func (s *Server) nonEnglishCount() int {
-	ids, _ := s.nonEnglishSummaries()
-	return len(ids)
 }

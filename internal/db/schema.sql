@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS books (
     approved_by      TEXT NOT NULL DEFAULT '',
     age_level        INTEGER NOT NULL DEFAULT 0,   -- parent-set age group, 1 young kids .. 5 adults; 0 = not set
     spice_level      INTEGER,                      -- 0-5 peppers; NULL = rated before the pepper scale (or not rated)
+    spice_reason     TEXT NOT NULL DEFAULT '',     -- short "why this many peppers", e.g. "Heavy innuendo, on-page foreplay"
+    rules_version    INTEGER NOT NULL DEFAULT 0,   -- store.RulesVersion the rating was made under
     age_set_by       TEXT NOT NULL DEFAULT '',
     analysis_model   TEXT NOT NULL DEFAULT '',
     analysis_error   TEXT NOT NULL DEFAULT '',

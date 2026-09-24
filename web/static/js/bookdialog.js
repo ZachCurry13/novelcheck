@@ -1,5 +1,5 @@
 // Book detail modal: verdict, blurb, catalog copies and actions.
-import { PEPPERS, openPepperGuide } from "./peppers.js";
+import { PEPPERS, openPepperGuide, grayAreaChip } from "./peppers.js";
 import { copyText } from "./copy.js";
 import { diagnoseLater } from "./diagnose.js";
 import { get, post, put, del } from "./api.js";
@@ -24,11 +24,13 @@ export async function openBook(id, state, onChange) {
     if (c.path && !c.path.startsWith("list:") && !c.path.startsWith("calibre-entry:")) e.paths.push(c.path);
   }
   const calibreCount = [...entries.values()].filter((e) => e.source === "calibre").length;
+  const cw = data.calibre_web_url; // set by an admin; only sent to admins and editors
   const copies = [...entries.values()].map((e) => `
     <li class="text-sm">
       <div class="flex flex-wrap items-center gap-2">
         <span class="chip-cat">${esc(e.catalog_name)}</span>
         ${e.source === "calibre" && e.external_id ? `<span class="text-xs text-slate-500">Calibre #${esc(e.external_id)}</span>` : ""}
+        ${cw && e.source === "calibre" && /^\d+$/.test(e.external_id) ? `<a href="${esc(cw)}/book/${e.external_id}" target="_blank" rel="noopener noreferrer" class="text-xs text-sky-300 underline">Open in Calibre-Web ↗</a>` : ""}
         ${e.formats.length ? e.formats.map((f) => `<span class="chip-fmt">${esc(f)}</span>`).join(" ") : `<span class="text-xs text-slate-500">no file</span>`}
       </div>
       ${isAdmin && e.paths.length ? `<p class="mt-0.5 break-all text-xs text-slate-500">${e.paths.map(esc).join("<br>")}</p>` : ""}
@@ -44,9 +46,9 @@ export async function openBook(id, state, onChange) {
         </div>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${ageChip(b)} ${flagChips(b)}</div>
+      <div class="flex flex-wrap gap-1">${classChip(b)} ${grayAreaChip(b)} ${ageChip(b)} ${flagChips(b)}</div>
       ${b.spice_level !== null && b.spice_level !== undefined
-        ? `<p class="text-xs text-slate-400">${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
+        ? `<p class="text-xs text-slate-400">${b.spice_reason ? `<b class="text-slate-200">Why ${b.spice_level} 🌶️:</b> ${esc(b.spice_reason)}. ` : ""}${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
       ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}
       ${b.status === "error" && manager ? `<p class="text-sm text-rose-400">Last error: ${esc(b.analysis_error)}
         <button type="button" data-copy-err class="ml-1 text-xs underline">📋 Copy</button>${isAdmin ? ` <button type="button" data-dx-err class="text-xs underline">🩺 Diagnose</button>` : ""}</p>` : ""}

@@ -48,6 +48,7 @@ const (
 	KeyCalibreSrvUser     = "calibre_server_user"
 	KeyCalibreSrvPassword = "calibre_server_password"
 	KeyCalibreSrvLibrary  = "calibre_server_library"
+	KeyCalibreWebURL      = "calibre_web_url" // optional Calibre-Web address for "Open in Calibre-Web" links
 	KeyCalibreLastSync    = "calibre_last_sync"
 	KeyCalibreLastResult  = "calibre_last_result"
 )
@@ -76,6 +77,7 @@ var Defaults = map[string]string{
 	KeySMTPPort:           "587",
 	KeyCalibrePollHours:   "6",
 	KeyCalibreLibraryPath: "",
+	KeyCalibreWebURL:      "",
 	KeyCheckUpdates:       "true",
 	KeySessionDays:        "30", // main overrides with NOVELCHECK_SESSION_DAYS
 	KeyCalibreLastSync:    "",

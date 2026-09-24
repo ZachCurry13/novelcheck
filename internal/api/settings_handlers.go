@@ -1,0 +1,129 @@
+package api
+
+import (
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+
+	"github.com/zachcurry13/novelcheck/internal/llm"
+	"github.com/zachcurry13/novelcheck/internal/store"
+)
+
+var numericKeys = map[string]bool{
+	store.KeyPriceInputPerM: true, store.KeyPriceOutputPerM: true, store.KeyBatchSize: true,
+	store.KeyTokensPerHour: true, store.KeyScanDelaySeconds: true, store.KeyLLMTimeoutSeconds: true,
+	store.KeyBackupPriceIn: true, store.KeyBackupPriceOut: true, store.KeySMTPPort: true,
+	store.KeyCalibrePollHours: true, store.KeySessionDays: true,
+}
+
+// editableKeys are the settings the admin panel may change.
+var editableKeys = func() map[string]bool {
+	m := map[string]bool{}
+	for k := range store.Defaults {
+		m[k] = true
+	}
+	for k := range store.SecretKeys {
+		m[k] = true
+	}
+	for _, k := range []string{store.KeySMTPHost, store.KeySMTPUser, store.KeySMTPFrom} {
+		m[k] = true
+	}
+	delete(m, store.KeyCalibreLastSync)
+	delete(m, store.KeyCalibreLastResult)
+	delete(m, store.KeyCalibreLibraryPath) // set via PUT /admin/calibre/library (validated)
+	delete(m, store.KeyTunnelToken)        // set via PUT /admin/tunnel, which also (re)starts it
+	delete(m, store.KeyCalibreSrvPassword) // set via PUT /admin/calibre/server (tested first)
+	return m
+}()
+
+func (s *Server) handleGetSettings(w http.ResponseWriter, r *http.Request) {
+	all, err := s.Store.AllSettings()
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	out := map[string]string{}
+	for k := range editableKeys {
+		v := all[k]
+		if store.SecretKeys[k] && v != "" {
+			v = secretMask
+		}
+		out[k] = v
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
+	var body map[string]string
+	if !readJSON(w, r, &body, 64<<10) {
+		return
+	}
+	for k, v := range body {
+		if !editableKeys[k] {
+			writeErr(w, http.StatusBadRequest, "unknown setting "+k)
+			return
+		}
+		v = strings.TrimSpace(v)
+		if numericKeys[k] {
+			if f, err := strconv.ParseFloat(v, 64); err != nil || f < 0 {
+				writeErr(w, http.StatusBadRequest, k+" must be a non-negative number")
+				return
+			}
+		}
+		if (k == store.KeyLLMProvider || k == store.KeyBackupProvider) && v != "openai" && v != "anthropic" {
+			writeErr(w, http.StatusBadRequest, "llm_provider must be openai or anthropic")
+			return
+		}
+		if k == store.KeyLanguage && !llm.ValidLanguage(v) {
+			writeErr(w, http.StatusBadRequest, "unknown language")
+			return
+		}
+		if k == store.KeySessionDays {
+			if n, err := strconv.Atoi(v); err != nil || n < 1 || n > 365 {
+				writeErr(w, http.StatusBadRequest, "stay signed in must be between 1 and 365 days")
+				return
+			}
+		}
+		if k == store.KeyLLMJSONMode || k == store.KeyCheckUpdates || k == store.KeyBackupEnabled || k == store.KeyBackupJSONMode {
+			if _, err := strconv.ParseBool(v); err != nil {
+				writeErr(w, http.StatusBadRequest, k+" must be true or false")
+				return
+			}
+		}
+		if k == store.KeyLLMBaseURL || k == store.KeyBackupBaseURL {
+			v = llm.NormalizeBaseURL(v)
+		}
+		if k == store.KeyCalibreWebURL && v != "" {
+			var ok bool
+			if v, ok = webAddress(v); !ok {
+				writeErr(w, http.StatusBadRequest, "Calibre-Web address must look like http://192.168.1.10:8083")
+				return
+			}
+		}
+		body[k] = v
+	}
+	for k, v := range body {
+		if store.SecretKeys[k] && v == secretMask {
+			continue // unchanged secret
+		}
+		if err := s.Store.SetSetting(k, v); err != nil {
+			writeStoreErr(w, err)
+			return
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+// webAddress accepts "192.168.1.10:8083" or "http://host:8083/" and returns
+// "http://host:8083" (no trailing slash), or false if it isn't a web address.
+func webAddress(v string) (string, bool) {
+	if !strings.Contains(v, "://") {
+		v = "http://" + v
+	}
+	u, err := url.Parse(v)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || u.RawQuery != "" || u.Fragment != "" {
+		return "", false
+	}
+	return strings.TrimRight(u.Scheme+"://"+u.Host+u.Path, "/"), true
+}

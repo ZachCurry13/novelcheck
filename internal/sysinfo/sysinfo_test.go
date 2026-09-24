@@ -3,11 +3,15 @@ package sysinfo
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
 
 func TestSnapshot(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("reads /proc and cgroups, Linux only")
+	}
 	dir := t.TempDir()
 	_ = os.WriteFile(filepath.Join(dir, "novelcheck.db"), make([]byte, 4096), 0o600)
 	s := New(dir)

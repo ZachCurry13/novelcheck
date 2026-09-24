@@ -81,8 +81,12 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"book": b, "copies": copies, "downloadable": downloadable, "notes": notes,
-		"my_delete_request": s.Store.MyDeleteRequest(id, u.ID)})
+	out := map[string]any{"book": b, "copies": copies, "downloadable": downloadable, "notes": notes,
+		"my_delete_request": s.Store.MyDeleteRequest(id, u.ID)}
+	if u.Role == store.RoleAdmin || u.Role == store.RoleEditor {
+		out["calibre_web_url"] = s.Store.Setting(store.KeyCalibreWebURL) // "Open in Calibre-Web" links
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 // handleDownload streams the best on-disk copy (used by KOReader / manual sync).

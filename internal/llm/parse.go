@@ -13,6 +13,7 @@ import (
 type Verdict struct {
 	SpiceRaw        json.RawMessage `json:"spice_level"` // 0-5; models sometimes quote it
 	SpiceLevel      *int            `json:"-"`
+	SpiceReason     string          `json:"spice_reason"`   // a few words on what sets the level
 	Classification  string          `json:"classification"` // older format, used when spice_level is missing
 	ContentElements struct {
 		Nudity        bool `json:"nudity"`
@@ -55,7 +56,20 @@ func ParseVerdict(content string) (*Verdict, error) {
 		v.SpiritualElements.DarkOccult = true
 	}
 	v.SummaryVerdict = strings.TrimSpace(v.SummaryVerdict)
+	v.SpiceReason = ShortReason(v.SpiceReason)
 	return &v, nil
+}
+
+// maxReasonRunes keeps the pepper reason chip-sized even if a model rambles.
+const maxReasonRunes = 80
+
+// ShortReason tidies a pepper reason: one line, no quotes, at most 80 characters.
+func ShortReason(s string) string {
+	s = strings.Trim(strings.Join(strings.Fields(s), " "), `"'. `)
+	if r := []rune(s); len(r) > maxReasonRunes {
+		s = strings.TrimSpace(string(r[:maxReasonRunes-1])) + "…"
+	}
+	return s
 }
 
 // spiceFrom reads 3, 3.0, "3" or "3 peppers" as a 0-5 level.
@@ -87,6 +101,7 @@ func normalizeClassification(c string) string {
 func (v *Verdict) ToAnalysis(model string) store.Analysis {
 	return store.Analysis{
 		SpiceLevel:      v.SpiceLevel,
+		SpiceReason:     v.SpiceReason,
 		Classification:  v.Classification,
 		Nudity:          v.ContentElements.Nudity,
 		SoloActs:        v.ContentElements.SoloActs,

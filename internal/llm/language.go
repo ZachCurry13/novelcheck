@@ -36,7 +36,8 @@ func languageName(lang string) string {
 // free text follows the language; JSON keys stay exactly as specified.
 func SystemPromptFor(lang string) string {
 	return SystemPrompt + "\n\nLANGUAGE: Write summary_verdict in " + languageName(lang) +
-		", even when the title, author or blurb is in another language. Keep every JSON key exactly as shown above."
+		", even when the title, author or blurb is in another language, and spice_reason in the same language." +
+		" Keep every JSON key exactly as shown above."
 }
 
 // LanguageRule is the same instruction for other prompts (e.g. diagnosis).

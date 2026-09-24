@@ -24,6 +24,10 @@ function typeOptions(role, age, isAdmin) {
   return opts.map(([v, l]) => `<option value="${v}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`).join("");
 }
 
+// "Strict family": at most 2 peppers (Jenna's limit), nothing Open Door, and
+// nothing unrated. Dark occult and LGBTQ+ are separate choices and stay as set.
+const STRICT = { max_spice: 2, hide_open_door: true, hide_nudity: true, hide_solo_acts: true, hide_innuendo: true, hide_unrated: true };
+
 const parseType = (v) => {
   const [role, age] = String(v || "restricted:0").split(":");
   return { role, age_level: Number(age) || 0 };
@@ -61,14 +65,19 @@ export async function renderUsers(host, viewer) {
     if (!act) return;
     const cardEl = e.target.closest("[data-user]");
     const id = cardEl.dataset.user;
-    if (act === "save") {
+    if (act === "strict") {
+      $("[name=max_spice]", cardEl).value = String(STRICT.max_spice);
+      $$("[data-rule]", cardEl).forEach((cb) => (cb.checked = STRICT[cb.dataset.rule] || cb.checked));
+    }
+    if (act === "save" || act === "strict") {
       const body = { ...parseType($("[name=type]", cardEl).value),
         delivery_method: $("[name=delivery_method]", cardEl).value,
         kindle_email: $("[name=kindle_email]", cardEl).value };
       $$("[data-rule]", cardEl).forEach((cb) => (body[cb.dataset.rule] = cb.checked));
       const ms = $("[name=max_spice]", cardEl);
       if (ms) body.max_spice = Number(ms.value);
-      await attempt(() => put(`/api/admin/users/${id}`, body), "User saved");
+      await attempt(() => put(`/api/admin/users/${id}`, body),
+        act === "strict" ? "Strict family preset saved: up to 2 peppers, nothing explicit or unrated" : "User saved");
     } else if (act === "password") {
       const pw = prompt("New password (8+ characters):");
       if (pw) await attempt(() => put(`/api/admin/users/${id}/password`, { password: pw }), "Password reset");
@@ -91,7 +100,8 @@ function userCard(u, isAdmin) {
         <select name="max_spice" class="input">
           <option value="-1" ${u.max_spice < 0 ? "selected" : ""}>No limit</option>
           ${PEPPERS.map((p) => `<option value="${p.n}" ${u.max_spice === p.n ? "selected" : ""}>Up to ${p.n} 🌶️ ${esc(p.name)}</option>`).join("")}
-        </select></label>` : ""}
+        </select></label>
+        <button data-uact="strict" class="btn-secondary w-full text-xs" title="Up to 2 peppers; hides Open Door, nudity, solo acts, heavy innuendo and books not yet rated. Saves right away.">👪 Strict family preset (max 2 🌶️)</button>` : ""}
       <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
         ${RULES.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-rule="${k}" ${u[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}
       </div>

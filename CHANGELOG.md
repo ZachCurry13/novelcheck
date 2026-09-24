@@ -4,6 +4,21 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.16.0]
+
+### Changed
+- **Clearer pepper levels 2 and 3**: **2 peppers · Mild / Closed Door** (*Jenna's limit*) now means romantic tension and kissing, with anything more happening off the page. **3 peppers · Steamy / Heavy Tension** is the *gray area*: heavy foreplay or suggestive scenes on the page that stop short of explicit. Levels 4 and 5 are now called **Explicit / Open Door** and **Very Explicit / Erotica**.
+- **Re-rate with the new wording**: books the AI rated before this change show up in Admin as "rated with older pepper rules", with a **Re-rate with the current rules** button and a cost estimate. They stay in the library with their old rating until the new one arrives, and hand-rated books are left alone.
+- **Phones: search first**: on a phone the Library shows just the search box and a **Filters** button, so books appear right away. The button shows how many filters are on, like **Filters (2)**.
+
+### New
+- **Why this many peppers**: every new rating includes a few words on what set the level, like "Kissing only" or "Heavy innuendo, on-page foreplay". It's shown in each book's window, and you can edit it under **Edit rating**.
+- **⚠ Gray area tag**: 3-pepper books show a tag on their card saying why, so parents can tell at a glance.
+- **👪 Strict family preset**: one click on a kid's account allows at most 2 peppers and hides Open Door, nudity, solo acts, heavy innuendo and books that haven't been rated yet.
+- **Re-rate whole library**: a button on the Admin page rates every AI-rated book again (for example after switching to a better AI), with a cost estimate first.
+- **Open in Calibre-Web**: if you use Calibre-Web, enter its address under **Admin → Calibre Library**. Each book's window then has an **Open in Calibre-Web ↗** link next to its Calibre ID, for admins and editors.
+- A thank-you to Calibre and Calibre-Web in the footer.
+
 ## [1.15.0]
 
 ### New

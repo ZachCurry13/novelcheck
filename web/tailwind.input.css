@@ -43,3 +43,14 @@
   .pt-safe { padding-top: env(safe-area-inset-top); }
   .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem); }
 }
+
+/* Plain CSS (outside the layers, so Tailwind emits it last and unchanged; it
+   is also appended by hand to app.css when Node isn't available). */
+
+/* Library filters on phones: just the search box until "Filters" is tapped. */
+@media (max-width: 767px) {
+  #filters:not(.filters-open) .filter-more { display: none; }
+}
+@media (min-width: 768px) {
+  #filters .filters-toggle { display: none; }
+}

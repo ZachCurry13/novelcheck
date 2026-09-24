@@ -46,6 +46,7 @@ const SECTIONS = [
   ]],
   ["Calibre Library", [
     ["calibre_poll_hours", "Sync every N hours (0 = manual only)", "6", "number"],
+    ["calibre_web_url", "Calibre-Web address (optional)", "http://192.168.1.10:8083 · adds \"Open in Calibre-Web\" to each book"],
   ]],
   ["Sign-in & Updates", [
     ["session_days", "Keep people signed in for (days, renewed while they use the app)", "30", "number"],
@@ -68,6 +69,7 @@ export async function renderAdmin(view, state) {
       <button data-act="batch" class="btn-primary">Analyze batch</button>
       ${adminOnly(`<button data-act="wipe" class="btn-secondary">Wipe pending queue</button>`)}
       <button data-act="sync" class="btn-secondary">Sync Calibre now</button>
+      <button data-act="rerate-all" class="btn-ghost" title="Rate every AI-rated book again, e.g. after changing the AI or its rules">Re-rate whole library…</button>
       ${adminOnly(`<a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db</a>`)}
       <p id="worker" class="basis-full text-sm text-slate-400"></p>
       <div id="rerate" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
@@ -93,7 +95,14 @@ export async function renderAdmin(view, state) {
       if (r) toast(`Re-rating ${r.queued} books so their summaries are in English`);
     } else if (act === "rerate") {
       const r = await attempt(() => post("/api/admin/rerate"));
-      if (r) toast(`Re-rating ${r.queued} books on the pepper scale`);
+      if (r) toast(`Re-rating ${r.queued} books with the current pepper rules`);
+    } else if (act === "rerate-all") {
+      const s = await attempt(() => get("/api/admin/status"));
+      if (!s) return;
+      const est = perBookCost(s) * s.ai_rated;
+      if (!confirm(`Re-rate all ${fmtNum(s.ai_rated)} AI-rated books?${est ? ` Estimated cost ≈ ${fmtMoney(est)}.` : ""}\n\nThey stay in the library with their current rating until the new one arrives. Hand-rated books are left alone.`)) return;
+      const r = await attempt(() => post("/api/admin/rerate", { which: "all" }));
+      if (r) toast(`Re-rating ${r.queued} books`);
     } else if (act === "sync") {
       await attempt(() => post("/api/admin/calibre-sync"), "Calibre sync started");
     } else if (act === "smtp-test") {
@@ -188,6 +197,9 @@ const HELP = {
     and paste its 16 letters here (spaces are fine). Use your full Gmail address as the username.</p>`,
 };
 
+// Rough cost of rating one book, from the running average (free with Ollama).
+const perBookCost = (s) => (s.cost_spent && s.usage.total_calls ? s.cost_spent / s.usage.total_calls : 0);
+
 function renderStats(view, s) {
   const c = s.counts;
   const cap = s.tokens_per_hour || 0;
@@ -215,10 +227,9 @@ function renderStats(view, s) {
       <span class="block text-xs text-slate-400">The AI rewrites them in the language chosen under LLM Analysis Engine. They stay in the library meanwhile.</span>`;
   }
   if (s.rerate_candidates) {
-    // Rough cost from the running average (free with Ollama).
-    const est = s.cost_spent && s.usage.total_calls ? (s.cost_spent / s.usage.total_calls) * s.rerate_candidates : 0;
-    box.innerHTML += `${s.non_english ? `<hr class="my-2 border-slate-700">` : ""}🌶️ <b>${fmtNum(s.rerate_candidates)}</b> book${s.rerate_candidates === 1 ? " was" : "s were"} rated before the pepper scale.
-      <button data-act="rerate" class="btn-secondary ml-2 py-1">Re-rate them on the pepper scale</button>
+    const est = perBookCost(s) * s.rerate_candidates;
+    box.innerHTML += `${s.non_english ? `<hr class="my-2 border-slate-700">` : ""}🌶️ <b>${fmtNum(s.rerate_candidates)}</b> book${s.rerate_candidates === 1 ? " was" : "s were"} rated with older pepper rules.
+      <button data-act="rerate" class="btn-secondary ml-2 py-1">Re-rate with the current rules</button>
       <span class="block text-xs text-slate-400">They stay in the library with their old rating until the new one arrives. Hand-rated books are left alone.${est ? ` Estimated cost ≈ ${fmtMoney(est)}.` : ""}</span>`;
   }
   const w = s.worker;
