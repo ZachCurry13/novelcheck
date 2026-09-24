@@ -115,6 +115,10 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		if k == store.KeyLLMProvider && v != "openai" && v != "anthropic" {
+			writeErr(w, http.StatusBadRequest, "llm_provider must be openai or anthropic")
+			return
+		}
 		if k == store.KeySessionDays {
 			if n, err := strconv.Atoi(v); err != nil || n < 1 || n > 365 {
 				writeErr(w, http.StatusBadRequest, "stay signed in must be between 1 and 365 days")

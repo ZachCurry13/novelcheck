@@ -13,7 +13,7 @@ See [`NOVELCHECK_SPEC.md`](NOVELCHECK_SPEC.md) for the full specification, archi
 | Drive scanner | Uses `showDirectoryPicker()` on Chromium and falls back to `<input webkitdirectory>` on iOS Safari and Firefox. Reads EPUB OPF metadata and MOBI/AZW3 EXTH headers **in the browser**, and parses Kindle filenames (`Title - Author_B0XXXXXXXX_EBOK.azw`). Only metadata is uploaded. You pick an existing catalog or create one, such as "Jenna's Kindle". |
 | Dashboard | Browse every catalog in one place. Filter by catalog, spice level, content flags, and cross-catalog overlap ("also in…" / "in 2+ catalogs"). |
 | Reading queue | Personal "Up Next" list, reordered with SortableJS drag handles and saved as positions. **▶ Start Reading** emails the EPUB through Send-to-Kindle SMTP or flags it for KOReader, then moves it to *Currently Reading*. |
-| LLM analysis | Works with any OpenAI-compatible endpoint (OpenAI, Gemini, Anthropic compatibility layer, Ollama, vLLM). Defaults to a small model (`gpt-4o-mini`), and an optional larger fallback model is used only when the small one fails. Blurbs come from Open Library, then Google Books, before the LLM runs. Syncing never triggers LLM calls: books wait in *Pending Analysis* until an admin runs a batch or a single scan. |
+| LLM analysis | Pick a provider in **Admin**: OpenAI, **Anthropic Claude** (native Messages API via the official Go SDK), Google Gemini, Perplexity, Ollama, or any other OpenAI-compatible endpoint (vLLM, LM Studio). Presets choose a small model (for example `gpt-4o-mini` or `claude-haiku-4-5`), and an optional larger fallback model is used only when the small one fails. Blurbs come from Open Library, then Google Books, before the LLM runs. Syncing never triggers LLM calls: books wait in *Pending Analysis* until an admin runs a batch or a single scan. |
 | Admin panel | Batch size, tokens/hour cap, scan delay, live token counter and cost estimator (spent and projected), SMTP settings with a test send, Calibre polling interval, one-click `novelcheck.db` backup, and a wipe of the pending analysis queue. |
 | Ratings review | Admins and editors can correct any rating by hand (**Edit rating**). Manual ratings are labeled with who made them. |
 | Help & updates | A step-by-step **How to** guide opens on each person's first login and can be reopened from **❔ Help**. Admins and editors see a banner when a new version is released, and **What's new** shows release notes (from `CHANGELOG.md` and GitHub Releases). |
@@ -39,7 +39,7 @@ Open `http://<host>:8080` and create your admin account on the welcome page. Do 
 
 Then, in **Admin**:
 1. Under **Calibre Library**, pick your library folder.
-2. Set the LLM base URL, API key, and model. For local Ollama use `http://ollama:11434/v1` with `llama3.2` and turn off JSON mode if your server rejects `response_format`.
+2. Under **LLM Analysis Engine**, pick an AI provider and paste its API key. For local Ollama use `http://ollama:11434/v1` with `llama3.2`, and turn off JSON mode if your server rejects `response_format`.
 3. Click **Analyze batch**. Pending books are processed within your token cap.
 4. Add editor and restricted users, and set content rules.
 
@@ -104,7 +104,7 @@ internal/store/        data access: users, sessions, catalogs, books, filters, q
 internal/auth/         bcrypt, cookie sessions, RBAC middleware, admin bootstrap
 internal/calibre/      read-only metadata.db sync + polling scheduler
 internal/enrich/       Open Library / Google Books blurb lookup
-internal/llm/          OpenAI-compatible client, system prompt, verdict parser
+internal/llm/          OpenAI-compatible client, Claude client (anthropic-sdk-go), system prompt, verdict parser
 internal/analyzer/     queued analysis worker, token-per-hour cap, small→large fallback
 internal/delivery/     Send-to-Kindle SMTP + best-file picker
 internal/api/          chi router, middleware, handlers

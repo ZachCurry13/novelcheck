@@ -7,6 +7,7 @@ import (
 
 // Setting keys editable from the admin panel.
 const (
+	KeyLLMProvider        = "llm_provider" // "openai" (any OpenAI-compatible API) or "anthropic" (Claude)
 	KeyLLMBaseURL         = "llm_base_url"
 	KeyLLMAPIKey          = "llm_api_key"
 	KeyLLMModel           = "llm_model"
@@ -33,6 +34,7 @@ const (
 
 // Defaults favour small, cheap models per the delegation strategy.
 var Defaults = map[string]string{
+	KeyLLMProvider:        "openai",
 	KeyLLMBaseURL:         "https://api.openai.com/v1",
 	KeyLLMModel:           "gpt-4o-mini",
 	KeyLLMFallbackModel:   "",

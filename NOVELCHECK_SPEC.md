@@ -21,7 +21,7 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 * **Frontend & Mobile:** HTML5, Tailwind CSS, Vanilla JavaScript (SortableJS for drag-and-drop queue management), and PWA Manifest/Service Worker for "Add to Home Screen" native app experience. Embedded directly into the Go binary using Go's `embed.FS`.
 * **APIs & Integrations:**
   * Open Library API / Google Books API (Metadata & blurb lookups)
-  * OpenAI-Compatible LLM Client (OpenAI, Anthropic, Gemini OpenAI-compatible URL, or local Ollama/vLLM instance)
+  * LLM providers selectable in the admin panel: OpenAI-compatible client (OpenAI, Google Gemini, Perplexity, local Ollama/vLLM) and Anthropic Claude via the official Go SDK (native Messages API)
   * Chromium File System Access API (`showDirectoryPicker()`) with fallback to `<input type="file" webkitdirectory>` for iOS/Safari drive scanning
   * SMTP Client (Amazon Send-to-Kindle email delivery)
 * **Deployment & Remote Access:** Single-container Docker image optimized for TrueNAS SCALE / Linux hosts. Configured to store SQLite config databases on SSD datasets and read large media libraries from HDD pools. Designed to run behind a Cloudflare Tunnel (`cloudflared`) or Reverse Proxy with full HSTS, CORS, `Cache-Control: no-store` on API routes, and `X-Forwarded-For` header support.
@@ -131,7 +131,7 @@ OUTPUT FORMAT (JSON ONLY):
 | `internal/calibre` | `metadata.db?mode=ro` reader, library-folder selection/browse/find inside the mount, `/calibre/` path resolution, prune of deleted books, interval scheduler |
 | `internal/version` / `internal/updates` | Build-time version stamp, semver comparison, cached GitHub Releases check |
 | `internal/enrich` | Open Library → Google Books → local description blurb lookup |
-| `internal/llm` | OpenAI-compatible `/chat/completions` client, Section 4 system prompt, tolerant JSON verdict parser |
+| `internal/llm` | Provider clients behind one `Completer` interface: OpenAI-compatible `/chat/completions` and Anthropic Claude (`anthropic-sdk-go`); Section 4 system prompt; tolerant JSON verdict parser |
 | `internal/analyzer` | Single worker queue; token-per-hour cap on the trailing-hour window; scan delay; small-model-first with optional large fallback |
 | `internal/delivery` | Send-to-Kindle SMTP (STARTTLS / implicit TLS) and best-format picker (EPUB > PDF) |
 | `internal/api` | `chi` router, security middleware (HSTS, CSP, `no-store`, CORS allow-list, CSRF header, real IP), JSON handlers, embedded static serving |
@@ -164,3 +164,4 @@ All non-GET API calls require the header `X-NovelCheck: 1`.
 11. **Packaging & docs.** Multi-stage `Dockerfile` (non-root UID 568), `docker-compose.yml` (prebuilt GHCR image, SSD `/data`, read-only HDD `/calibre`, port 8080, optional `cloudflared` and GPU `ollama` profiles), `README.md`, and this spec, kept in sync per Rule 3.
 12. **Distribution.** GitHub Actions workflow (`.github/workflows/docker.yml`) that tests, builds multi-arch (`amd64`/`arm64`) images, publishes them to `ghcr.io/zachcurry13/novelcheck` (`:latest` from `main`, `:X.Y.Z` per release), and creates a GitHub Release from a `v*` tag or a manual **Run workflow** with a version input. `docs/TRUENAS.md` is a no-command-line TrueNAS install guide (either **Install Custom App** or **Install via YAML**, image pull policy **Always** so `:latest` updates are fetched) with `/data` (SSD), `/calibre` (HDD, read-only), and host port 30080.
 13. **v1.1 usability.** Web-based first-run admin setup, Editor role with scoped permissions and manual rating corrections, in-app Calibre library folder picker, first-login How-to guide, and update notices with an in-app changelog (`CHANGELOG.md` also drives GitHub release notes).
+14. **v1.3 AI providers.** Provider menu with presets (OpenAI, Claude, Gemini, Perplexity, Ollama, other), `llm_provider` setting, and a native Claude client using Anthropic's official Go SDK.

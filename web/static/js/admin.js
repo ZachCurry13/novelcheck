@@ -3,12 +3,14 @@ import { get, post, put, qs } from "./api.js";
 import { $, $$, esc, attempt, toast, fmtNum, fmtMoney } from "./ui.js";
 import { renderUsers } from "./users.js";
 import { renderCalibrePicker } from "./calibrepicker.js";
+import { initProviderPicker } from "./llmpresets.js";
 
 const SECTIONS = [
   ["LLM Analysis Engine", [
-    ["llm_base_url", "OpenAI-compatible base URL", "https://api.openai.com/v1 · http://ollama:11434/v1"],
+    ["llm_provider", "", "", "hidden"],
+    ["llm_base_url", "API base URL", "https://api.openai.com/v1 · http://ollama:11434/v1"],
     ["llm_api_key", "API key", "Leave blank for local Ollama", "password"],
-    ["llm_model", "Primary (small) model", "gpt-4o-mini · gemini-1.5-flash · llama3.2"],
+    ["llm_model", "Primary (small) model", "gpt-4o-mini · claude-haiku-4-5 · gemini-2.5-flash · sonar · llama3.2"],
     ["llm_fallback_model", "Fallback (large) model", "Only used when the small model fails"],
     ["llm_json_mode", "JSON response mode", "true / false", "bool"],
     ["google_books_api_key", "Google Books API key (optional)", "", "password"],
@@ -97,8 +99,14 @@ async function renderSettings(view) {
       ${fields.map(([k, label, ph, type]) => field(k, label, ph, type, settings[k])).join("")}
       ${title.startsWith("SMTP") ? `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>` : ""}
       ${title.startsWith("Calibre") ? `<div id="calibre-picker"></div>` : ""}
+      ${title.startsWith("LLM") ? `<div id="llm-preset-host"></div>` : ""}
     </fieldset>`).join("") +
     `<div class="lg:col-span-2"><button class="btn-primary">Save settings</button></div>`;
+
+  // Move the provider menu to the top of the LLM box and wire it up.
+  const llmHost = $("#llm-preset-host", view);
+  llmHost.parentElement.insertBefore(llmHost, llmHost.parentElement.children[1]);
+  initProviderPicker(llmHost, $("#settings", view), settings);
 
   $("#settings", view).addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -111,6 +119,7 @@ async function renderSettings(view) {
 }
 
 function field(key, label, placeholder, type, value) {
+  if (type === "hidden") return `<input type="hidden" data-key="${key}" value="${esc(value ?? "")}">`;
   if (type === "bool") {
     return `<label class="toggle"><input type="checkbox" data-key="${key}" ${value === "true" ? "checked" : ""}> ${esc(label)}</label>`;
   }

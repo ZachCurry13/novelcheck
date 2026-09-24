@@ -148,11 +148,7 @@ func (w *Worker) process(ctx context.Context, id int64) error {
 	}
 
 	w.setState("analyzing", id, b.Title)
-	client := &llm.Client{
-		BaseURL:  w.Store.Setting(store.KeyLLMBaseURL),
-		APIKey:   w.Store.Setting(store.KeyLLMAPIKey),
-		JSONMode: w.Store.SettingBool(store.KeyLLMJSONMode),
-	}
+	client := w.client()
 	models := []string{w.Store.Setting(store.KeyLLMModel)}
 	if fb := w.Store.Setting(store.KeyLLMFallbackModel); fb != "" {
 		models = append(models, fb) // larger model only for edge-case failures
@@ -168,7 +164,21 @@ func (w *Worker) process(ctx context.Context, id int64) error {
 	return lastErr
 }
 
-func (w *Worker) analyzeWith(ctx context.Context, c *llm.Client, model string, id int64, user string) (*llm.Verdict, error) {
+// client builds the configured provider: Claude through Anthropic's SDK, or
+// any OpenAI-compatible API (OpenAI, Gemini, Perplexity, Ollama, vLLM...).
+func (w *Worker) client() llm.Completer {
+	key := w.Store.Setting(store.KeyLLMAPIKey)
+	if w.Store.Setting(store.KeyLLMProvider) == "anthropic" {
+		return &llm.AnthropicClient{APIKey: key}
+	}
+	return &llm.Client{
+		BaseURL:  w.Store.Setting(store.KeyLLMBaseURL),
+		APIKey:   key,
+		JSONMode: w.Store.SettingBool(store.KeyLLMJSONMode),
+	}
+}
+
+func (w *Worker) analyzeWith(ctx context.Context, c llm.Completer, model string, id int64, user string) (*llm.Verdict, error) {
 	cctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 	out, usage, err := c.Complete(cctx, model, llm.SystemPrompt, user)
