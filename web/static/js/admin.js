@@ -21,6 +21,7 @@ const SECTIONS = [
     ["batch_size", "Books per batch", "20", "number"],
     ["tokens_per_hour_cap", "Max tokens per hour (0 = unlimited)", "25000", "number"],
     ["scan_delay_seconds", "Delay between scans (seconds)", "2", "number"],
+    ["llm_timeout_seconds", "AI time limit per book (seconds)", "0 = automatic: 10 minutes for Ollama, 2 for cloud", "number"],
     ["price_input_per_million", "Input price per 1M tokens (USD)", "0.15", "number"],
     ["price_output_per_million", "Output price per 1M tokens (USD)", "0.60", "number"],
   ]],

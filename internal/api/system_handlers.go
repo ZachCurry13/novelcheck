@@ -52,7 +52,7 @@ func (s *Server) handleSystem(w http.ResponseWriter, r *http.Request) {
 // handleHealthChecks runs every connection check (AI provider, book APIs,
 // Calibre, email, remote access, Ollama, updates).
 func (s *Server) handleHealthChecks(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Minute) // local AI checks may wait for a model to load
 	defer cancel()
 	writeJSON(w, http.StatusOK, map[string]any{
 		"checked_at": time.Now().UTC().Format(time.RFC3339),

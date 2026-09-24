@@ -18,6 +18,7 @@ const (
 	KeyBatchSize          = "batch_size"
 	KeyTokensPerHour      = "tokens_per_hour_cap"
 	KeyScanDelaySeconds   = "scan_delay_seconds"
+	KeyLLMTimeoutSeconds  = "llm_timeout_seconds" // 0 = automatic (10 min on your network, 2 min for cloud)
 	KeyGoogleBooksAPIKey  = "google_books_api_key"
 	KeySMTPHost           = "smtp_host"
 	KeySMTPPort           = "smtp_port"
@@ -51,6 +52,7 @@ var Defaults = map[string]string{
 	KeyBatchSize:          "20",
 	KeyTokensPerHour:      "25000",
 	KeyScanDelaySeconds:   "2",
+	KeyLLMTimeoutSeconds:  "0",
 	KeySMTPPort:           "587",
 	KeyCalibrePollHours:   "6",
 	KeyCalibreLibraryPath: "",

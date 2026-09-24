@@ -12,7 +12,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 )
 
 type Client struct {
@@ -78,7 +77,7 @@ func (c *Client) Complete(ctx context.Context, model, system, user string) (stri
 	}
 	hc := c.HTTP
 	if hc == nil {
-		hc = &http.Client{Timeout: 120 * time.Second}
+		hc = &http.Client{} // callers set the deadline on ctx (see Timeout)
 	}
 	resp, err := hc.Do(req)
 	if err != nil {

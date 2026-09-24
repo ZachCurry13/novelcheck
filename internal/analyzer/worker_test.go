@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -122,4 +123,42 @@ func TestRerateKeepsBookVisible(t *testing.T) {
 		time.Sleep(20 * time.Millisecond)
 	}
 	t.Fatal("re-rate did not finish")
+}
+
+func TestSlowModelGivesClearError(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	slow := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-r.Context().Done():
+		case <-time.After(2 * time.Second):
+		}
+	}))
+	defer slow.Close()
+	for k, v := range map[string]string{store.KeyLLMBaseURL: slow.URL, store.KeyLLMModel: "qwen2.5:7b",
+		store.KeyLLMTimeoutSeconds: "1", store.KeyScanDelaySeconds: "0"} {
+		_ = st.SetSetting(k, v)
+	}
+	id, _ := st.UpsertBook("Slow Book", "A", "", "")
+	_ = st.SetBlurb(id, "x")
+	w := analyzer.New(st)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go w.Run(ctx)
+	w.Enqueue(true, id)
+	deadline := time.Now().Add(4 * time.Second)
+	for time.Now().Before(deadline) {
+		if b, _ := st.BookByID(id, nil); b.Status == "error" {
+			if !strings.Contains(b.AnalysisError, "didn't answer within 1s") || !strings.Contains(b.AnalysisError, "GPU") {
+				t.Fatalf("error should explain the timeout: %q", b.AnalysisError)
+			}
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("slow model did not time out")
 }

@@ -24,7 +24,7 @@ const defaultTokensPerBook = 900
 
 var numericKeys = map[string]bool{
 	store.KeyPriceInputPerM: true, store.KeyPriceOutputPerM: true, store.KeyBatchSize: true,
-	store.KeyTokensPerHour: true, store.KeyScanDelaySeconds: true, store.KeySMTPPort: true,
+	store.KeyTokensPerHour: true, store.KeyScanDelaySeconds: true, store.KeyLLMTimeoutSeconds: true, store.KeySMTPPort: true,
 	store.KeyCalibrePollHours: true, store.KeySessionDays: true,
 }
 

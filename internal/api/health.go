@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -42,7 +43,13 @@ func (s *Server) runChecks(ctx context.Context) []CheckResult {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			cctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			limit := 10 * time.Second
+			if strings.HasPrefix(c.id, "llm") && llm.IsLocal(s.Store.Setting(store.KeyLLMBaseURL)) {
+				limit = 90 * time.Second // a local model may need to load first
+			} else if strings.HasPrefix(c.id, "llm") {
+				limit = 30 * time.Second
+			}
+			cctx, cancel := context.WithTimeout(ctx, limit)
 			defer cancel()
 			start := time.Now()
 			status, msg, fix := c.run(cctx)
@@ -182,6 +189,12 @@ func (s *Server) checkModel(ctx context.Context, model string) (string, string, 
 		return "error", "No model set", "Pick an AI provider in Admin → LLM Analysis Engine."
 	}
 	out, usage, err := s.llmClient().Complete(ctx, model, "You are a health check. Reply with the single word OK.", "ping")
+	if errors.Is(err, context.DeadlineExceeded) {
+		if llm.IsLocal(s.Store.Setting(store.KeyLLMBaseURL)) {
+			return "error", "No answer in time", "Ollama may still be loading the model: wait a minute and check again. If it keeps happening, the model is probably running on the CPU (see Usage → Ollama) or is too big for your GPU; try a smaller one."
+		}
+		return "error", "No answer in time", "The AI service is slow or unreachable right now. Try again shortly."
+	}
 	if err != nil {
 		return errResult(err, "Check the API key, model name and credit with your AI provider (Admin → LLM Analysis Engine → Show setup steps).")
 	}

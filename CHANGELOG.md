@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.11.1]
+
+### Fixed
+- **"context deadline exceeded" with Ollama**: NovelCheck gave every book only 2 minutes, which is too short on your own hardware while Ollama loads a model or when it runs on the CPU. The limit is now automatic: **10 minutes** for AI on your own network (Ollama, LM Studio…) and 2 minutes for cloud services. You can set your own under **Admin → LLM Analysis Engine → AI time limit per book**.
+- **Clearer message when the AI is too slow**: it now names the model and suggests what to check (Usage → Ollama should say *100% GPU*; otherwise try a smaller model).
+- **Check everything** waits up to 90 seconds for a local model to load instead of 10.
+
 ## [1.11.0]
 
 ### New
