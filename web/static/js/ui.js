@@ -1,5 +1,7 @@
 // Shared DOM helpers. All dynamic text goes through esc() before innerHTML.
 import { pepperChip } from "./peppers.js";
+import { copyText } from "./copy.js";
+import { diagnoseLater } from "./diagnose.js";
 
 export function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, (c) => ({
@@ -23,6 +25,24 @@ export function toast(msg, isError = false) {
   text.textContent = msg;
   t.append(text);
   if (isError) {
+    const btn = (label, title, fn) => {
+      const b = document.createElement("button");
+      b.textContent = label;
+      b.title = title;
+      b.className = "ml-2 px-1 text-slate-300 hover:text-white";
+      b.onclick = fn;
+      t.append(b);
+    };
+    btn("📋", "Copy this message", async (e) => {
+      // Flash ✓ on the button; a "Copied" toast would replace this error.
+      const b = e.currentTarget;
+      if (await copyText(String(msg), true)) {
+        b.textContent = "✓";
+        setTimeout(() => (b.textContent = "📋"), 1500);
+      }
+    });
+    // Admins can ask the AI what went wrong.
+    if (document.body.dataset.role === "admin") btn("🩺", "Diagnose with AI", () => { t.classList.add("hidden"); diagnoseLater(String(msg)); });
     const close = document.createElement("button");
     close.textContent = "✕";
     close.title = "Close";

@@ -1,4 +1,5 @@
 // Admin → Remote access: built-in Cloudflare Tunnel settings and status.
+import { copyBar, bindCopy, setLogText } from "./copy.js";
 import { get, put } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";
 import { renderMarkdown } from "./markdown.js";
@@ -40,13 +41,14 @@ export async function renderRemoteAccess(host) {
         </div>
       </form>
       <details class="text-xs text-slate-500"><summary class="cursor-pointer">Connector log</summary>
-        <pre id="ra-log" class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded bg-slate-950 p-2"></pre></details>
+        <div class="mt-2 flex flex-wrap items-center justify-between gap-2"><span>Newest at the bottom. Updates every few seconds.</span>${copyBar("ra-log", "cloudflared-log.txt")}</div>
+        <pre id="ra-log" class="mt-1 max-h-96 select-text overflow-auto whitespace-pre-wrap break-all rounded bg-slate-950 p-2 font-mono"></pre></details>
     </section>`;
 
   const show = (st, hostname) => {
     const [label, cls] = STATE_LABELS[st.state] || [st.state, "chip-pending"];
     $("#ra-state", box).innerHTML = `<span class="${cls}">${esc(label)}</span>`;
-    $("#ra-log", box).textContent = (st.last_error ? `Last problem: ${st.last_error}\n\n` : "") + (st.log || []).join("\n");
+    setLogText($("#ra-log", box), (st.last_error ? `Last problem: ${st.last_error}\n\n` : "") + (st.log || []).join("\n"));
     const link = $("#ra-link", box);
     link.classList.toggle("hidden", !(hostname && st.state === "connected"));
     if (hostname) {
@@ -55,6 +57,7 @@ export async function renderRemoteAccess(host) {
     }
   };
   show(data.status, data.hostname);
+  bindCopy(box);
 
   box.addEventListener("click", (e) => {
     if (e.target.closest("[data-ra=guide]")) {

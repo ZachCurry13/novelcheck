@@ -1,0 +1,21 @@
+name: Bug report (from NovelCheck)
+description: Paste the report NovelCheck made with System → Diagnose with AI.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        In NovelCheck, open **System → 🩺 Diagnose with AI**, then click **Open GitHub issue**. The report fills in below.
+        If it's cut off, it's also on your clipboard: select everything in the box and paste. Check it before submitting; passwords and keys are never included.
+  - type: textarea
+    id: report
+    attributes:
+      label: Report
+      description: The AI's diagnosis plus NovelCheck's diagnostics.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, or what you were doing when it happened.

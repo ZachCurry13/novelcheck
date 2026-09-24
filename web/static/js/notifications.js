@@ -1,5 +1,7 @@
 // Bell icon for admins and editors: problems NovelCheck noticed on its own
 // (from the server), plus messages shown on this device (from toasts).
+import { copyText } from "./copy.js";
+import { diagnoseLater } from "./diagnose.js";
 import { get, post, api } from "./api.js";
 import { $, esc, messageLog, canManage } from "./ui.js";
 
@@ -45,7 +47,9 @@ function paintPanel() {
         <p><span class="${cls} font-semibold">${label}:</span> ${esc(n.message)}${n.count > 1 ? ` <span class="text-slate-500">(×${n.count})</span>` : ""}</p>
         <p class="text-xs text-slate-500">${esc(when(n.updated_at))}
           ${n.link ? ` · <a href="${esc(n.link)}" data-go class="underline">Fix it</a>` : ""}
-          ${n.read ? "" : ` · <button data-read="${n.id}" class="underline">Mark read</button>`}</p>
+          ${n.read ? "" : ` · <button data-read="${n.id}" class="underline">Mark read</button>`}
+          · <button data-copy-msg="${esc(n.message)}" class="underline">📋 Copy</button>
+          <span class="admin-link"> · <button data-diagnose="${esc(n.message)}" class="underline">🩺 Diagnose</button></span></p>
       </div>
     </li>`;
   }).join("");
@@ -61,6 +65,7 @@ function paintPanel() {
         <button data-all class="btn-secondary py-1 text-xs" ${data.unread ? "" : "disabled"}>Mark all read</button>
         <button data-clear class="btn-ghost py-1 text-xs" ${data.items.length ? "" : "disabled"}>Clear all</button>
         <a href="#/system" data-go class="btn-ghost py-1 text-xs admin-link">Check everything →</a>
+        <button data-copy-all class="btn-ghost py-1 text-xs">📋 Copy all</button>
       </div>
       <section>
         <p class="label">From NovelCheck</p>
@@ -89,6 +94,17 @@ export function initBell(state) {
     panel.showModal();
   };
   panel.onclick = async (e) => {
+    const cm = e.target.closest("[data-copy-msg]");
+    if (cm) return copyText(cm.dataset.copyMsg);
+    if (e.target.closest("[data-copy-all]")) {
+      return copyText([...data.items.map((n) => `[${n.updated_at}] ${n.level} ${n.source}: ${n.message}${n.count > 1 ? ` (x${n.count})` : ""}`),
+        ...messageLog.map((m) => `[${m.at.toISOString()}] this device: ${m.text}`)].join("\n") || "No messages.");
+    }
+    const dx = e.target.closest("[data-diagnose]");
+    if (dx) {
+      panel.close();
+      return diagnoseLater(dx.dataset.diagnose);
+    }
     if (e.target === panel || e.target.closest("[data-close]") || e.target.closest("[data-go]")) return panel.close();
     const read = e.target.closest("[data-read]");
     if (read) data = await post("/api/notifications/read", { id: Number(read.dataset.read) });

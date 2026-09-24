@@ -41,6 +41,7 @@ function showLogin() {
 
 function showApp() {
   showOnly("#app-view");
+  document.body.dataset.role = state.user.role;
   $$(".manager-only").forEach((el) => el.classList.toggle("hidden", !canManage(state.user)));
   $$(".admin-only").forEach((el) => el.classList.toggle("hidden", state.user.role !== "admin"));
   initBell(state);

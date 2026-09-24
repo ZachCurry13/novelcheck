@@ -122,6 +122,8 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/tunnel", s.handleTunnelStatus)
 				r.Get("/admin/system", s.handleSystem)
 				r.Post("/admin/health", s.handleHealthChecks)
+				r.Get("/admin/diagnostics", s.handleDiagnostics)
+				r.Post("/admin/diagnose", s.handleDiagnose)
 				r.Put("/admin/tunnel", s.handleTunnelSave)
 				r.Get("/admin/ollama/find", s.handleOllamaFind)
 				r.Post("/admin/ollama/pull", s.handleOllamaPull)

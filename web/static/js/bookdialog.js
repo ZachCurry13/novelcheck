@@ -1,5 +1,7 @@
 // Book detail modal: verdict, blurb, catalog copies and actions.
 import { PEPPERS, openPepperGuide } from "./peppers.js";
+import { copyText } from "./copy.js";
+import { diagnoseLater } from "./diagnose.js";
 import { get, post, put } from "./api.js";
 import { $, esc, attempt, classChip, flagChips, ageChip, canManage } from "./ui.js";
 import { verdictFormHTML, bindVerdictForm } from "./verdictform.js";
@@ -46,7 +48,8 @@ export async function openBook(id, state, onChange) {
       ${b.spice_level !== null && b.spice_level !== undefined
         ? `<p class="text-xs text-slate-400">${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
       ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}
-      ${b.status === "error" && manager ? `<p class="text-sm text-rose-400">Last error: ${esc(b.analysis_error)}</p>` : ""}
+      ${b.status === "error" && manager ? `<p class="text-sm text-rose-400">Last error: ${esc(b.analysis_error)}
+        <button type="button" data-copy-err class="ml-1 text-xs underline">📋 Copy</button>${isAdmin ? ` <button type="button" data-dx-err class="text-xs underline">🩺 Diagnose</button>` : ""}</p>` : ""}
       ${(b.blurb || b.description) ? `<div><span class="label">Blurb</span>
         <p class="text-sm leading-relaxed text-slate-300 whitespace-pre-line">${esc(b.blurb || b.description)}</p></div>` : ""}
       <div><span class="label">In catalogs</span><ul class="space-y-2">${copies || "<li class='text-sm text-slate-500'>None</li>"}</ul>${dupNote}</div>
@@ -72,6 +75,11 @@ export async function openBook(id, state, onChange) {
   dlg.onclick = async (e) => {
     if (e.target === dlg || e.target.closest("[data-close]")) return dlg.close();
     if (e.target.closest("[data-peppers]")) return openPepperGuide();
+    if (e.target.closest("[data-copy-err]")) return copyText(`${b.title}: ${b.analysis_error}`);
+    if (e.target.closest("[data-dx-err]")) {
+      dlg.close();
+      return diagnoseLater(`Rating "${b.title}" failed: ${b.analysis_error}`);
+    }
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (act === "edit-verdict" || act === "cancel-verdict") {
       $("#verdict-form", dlg).classList.toggle("hidden", act === "cancel-verdict");

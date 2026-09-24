@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.12.0]
+
+### New
+- **🩺 Diagnose with AI** (System page, admins): your connected AI reads NovelCheck's diagnostics (settings, recent problems, the worker and the remote-access log, never passwords or keys) and explains in plain words what's wrong and how to fix it. It also tells you whether it looks like a bug or something you can fix yourself.
+- **Bug reports for GitHub**: every diagnosis comes with a ready-made bug report. **Open GitHub issue** opens the NovelCheck bug form with it filled in (and copies it, in case it's too long). Your web address is swapped for a placeholder. If the AI itself is what's broken, you still get the report with the diagnostics.
+- **🩺 Diagnose shortcuts**: error pop-ups, 🔔 notifications and failed books have a **🩺 Diagnose** button that opens the diagnosis with the problem filled in.
+- **Easy copying**: **📋 Copy** and **⬇ Download** on the Cloudflare connector log (now bigger, and it no longer loses your selection when it refreshes), the **Check everything** results, each notification (**📋 Copy all** too), error pop-ups and failed books. **Copy diagnostics** / **Download diagnostics** give the raw report.
+
 ## [1.11.1]
 
 ### Fixed
