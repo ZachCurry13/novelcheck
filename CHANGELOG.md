@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.14.0]
+
+### New
+- **Model recommendations for your GPU**: the Ollama easy setup now works out how much GPU memory your Ollama server has and labels every model: **⭐ Best for your GPU**, **💪 Most powerful that fits**, **✓ Fits**, or **⚠️ Too big (slow)**. Without a GPU it recommends the small models and tells you if Ollama is running on the CPU only.
+  - **🎮 Check my GPU** loads your biggest downloaded model for a moment to measure (Ollama can't report the GPU directly), then unloads it. Or just pick your GPU's memory size from the menu.
+  - Downloaded models that are too big for the GPU get a **⚠️ slow** tag in the model order list.
+  - New larger choices in the download menu: Qwen 2.5 3B, Gemma 3 12B, Qwen 2.5 14B, Gemma 3 27B and Qwen 2.5 32B.
+
 ## [1.13.0]
 
 ### New

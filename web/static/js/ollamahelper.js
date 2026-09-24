@@ -5,11 +5,31 @@ import { $, esc, attempt, toast } from "./ui.js";
 import { initialOrder, orderHTML, bindOrder } from "./ollamaorder.js";
 import { keyFor } from "./llmpresets.js";
 
-const MODELS = [
-  ["qwen2.5:7b", "Qwen 2.5 7B · 4.7 GB · best, needs GPU"],
-  ["llama3.1:8b", "Llama 3.1 8B · 4.9 GB · needs GPU"],
-  ["llama3.2", "Llama 3.2 3B · 2 GB · fast, no GPU needed"],
-];
+// How each model fits the measured GPU (see internal/ollama/gpu.go).
+const FIT = {
+  best: ["⭐ Best for your GPU", "text-emerald-300"],
+  best_powerful: ["⭐ Best and most powerful for your GPU", "text-emerald-300"],
+  powerful: ["💪 Most powerful that fits", "text-indigo-300"],
+  fits: ["✓ Fits your GPU", "text-slate-300"],
+  too_big: ["⚠️ Too big for your GPU (slow)", "text-amber-300"],
+  cpu_ok: ["✓ OK without a GPU", "text-slate-300"],
+  cpu_slow: ["⚠️ Slow without a GPU", "text-amber-300"],
+};
+const RANK = { best_powerful: 0, best: 1, cpu_ok: 2, powerful: 3, fits: 4, "": 5, cpu_slow: 6, too_big: 7 };
+const GB = 1 << 30;
+const vramKey = (url) => `nc:vram:${url}`;
+
+function gpuText(g, msg) {
+  const gb = (b) => (b / GB).toFixed(b >= 10 * GB ? 0 : 1);
+  const text = {
+    none: "⚠️ Ollama is running on the CPU only. Small models are recommended. If this server has a GPU, turn it on in the TrueNAS Ollama app's settings (GPU → allocate).",
+    about: `🎮 About ${gb(g.vram_bytes)} GB of GPU memory (measured with ${g.basis}).`,
+    at_least: `🎮 At least ${gb(g.vram_bytes)} GB of GPU memory (${g.basis} fits entirely). Bigger models may fit too; pick your GPU size to be sure.`,
+    manual: `🎮 ${gb(g.vram_bytes)} GB of GPU memory (your choice).`,
+  }[g.kind] || "GPU not measured yet. Click Check my GPU, or pick your GPU size.";
+  return msg ? `${text} (${msg})` : text;
+}
+
 
 // prefix "" sets up the main AI; "backup_" the backup AI.
 export function renderOllamaHelper(host, form, prefix = "") {
@@ -41,7 +61,17 @@ export function renderOllamaHelper(host, form, prefix = "") {
       return;
     }
     list.innerHTML = data.servers.map(serverCard).join("");
-    list.querySelectorAll("[data-server]").forEach((card) => bindOrder($("[data-order]", card), orders[card.dataset.server]));
+    list.querySelectorAll("[data-server]").forEach((card) => {
+      bindOrder($("[data-order]", card), orders[card.dataset.server]);
+      let saved = "";
+      try {
+        saved = localStorage.getItem(vramKey(card.dataset.server)) || "";
+      } catch {
+        /* private mode */
+      }
+      $("[data-gpu-manual]", card).value = saved;
+      loadGPU(card, saved === "" ? {} : { vram_gb: saved });
+    });
   }
 
   const orders = {}; // server url -> { list }
@@ -58,15 +88,50 @@ export function renderOllamaHelper(host, form, prefix = "") {
         <ul class="space-y-1" data-order>${orderHTML(orders[s.url].list)}</ul>
         ${s.models.length ? `<button type="button" data-ol="use" data-url="${esc(s.url)}" class="btn-primary py-1">Use these models in this order</button>` : ""}
         <p class="label mb-0">3. Download another model (optional)</p>
+        <div class="space-y-2 rounded-lg bg-slate-900/60 p-2">
+          <p data-gpu-text class="text-xs text-slate-300">Checking what your GPU can hold…</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" data-ol="gpu" data-url="${esc(s.url)}" class="btn-ghost px-2 py-0.5 text-xs" title="Loads your biggest model for a moment to see how much fits on the GPU">🎮 Check my GPU</button>
+            <select data-gpu-manual class="input w-auto py-0.5 text-xs" aria-label="GPU memory">
+              <option value="">…or pick your GPU memory</option><option value="0">No GPU</option>
+              ${[4, 6, 8, 10, 12, 16, 20, 24, 32, 48].map((n) => `<option value="${n}">${n} GB</option>`).join("")}
+            </select>
+          </div>
+        </div>
         <div class="flex flex-wrap gap-2">
-          <select class="input w-auto max-w-full py-1" data-ol-model>${MODELS.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("")}</select>
+          <select class="input w-auto max-w-full py-1" data-ol-model></select>
           <button type="button" data-ol="pull" data-url="${esc(s.url)}" class="btn-secondary py-1">Download</button>
         </div>
+        <p data-model-note class="text-xs text-slate-400"></p>
         <div data-ol-progress class="hidden space-y-1">
           <progress max="100" value="0" class="w-full"></progress>
           <p class="text-xs text-slate-400"></p>
         </div>
       </div>`;
+  }
+
+  // loadGPU fetches GPU info and relabels the model menu and the downloaded list.
+  async function loadGPU(card, params) {
+    const url = card.dataset.server;
+    const res = await get("/api/admin/ollama/gpu" + qs({ url, ...params })).catch((e) => ({ error: e.message }));
+    if (res.error) return ($("[data-gpu-text]", card).textContent = `Couldn't check the GPU: ${res.error}`);
+    $("[data-gpu-text]", card).textContent = gpuText(res.gpu, res.message);
+    const models = [...res.models].sort((a, b) => RANK[a.fit] - RANK[b.fit] || a.size_gb - b.size_gb);
+    const sel = $("[data-ol-model]", card);
+    sel.innerHTML = models.map((m) => `<option value="${esc(m.name)}" data-fit="${m.fit}" data-note="${esc(m.note)}">${esc(m.label)} · ${m.size_gb} GB${
+      m.fit ? " · " + FIT[m.fit][0] : ""}</option>`).join("");
+    const note = () => {
+      const o = sel.selectedOptions[0];
+      const [label, cls] = FIT[o?.dataset.fit] || ["", "text-slate-400"];
+      $("[data-model-note]", card).className = `text-xs ${cls}`;
+      $("[data-model-note]", card).textContent = o ? `${o.dataset.note}${label ? ` · ${label}` : ""}` : "";
+    };
+    sel.onchange = note;
+    note();
+    // Flag downloaded models that are too big.
+    const state = orders[url];
+    state.fits = Object.fromEntries(res.models.map((m) => [m.name, m.fit]));
+    $("[data-order]", card).innerHTML = orderHTML(state.list, state.fits);
   }
 
   async function pull(url, card) {
@@ -122,12 +187,34 @@ export function renderOllamaHelper(host, form, prefix = "") {
     toast(`NovelCheck will now use ${r.model}${backups}. Try a small batch!`);
   }
 
+  host.addEventListener("change", (e) => {
+    const m = e.target.closest("[data-gpu-manual]");
+    if (!m) return;
+    const card = m.closest("[data-server]");
+    try {
+      localStorage.setItem(vramKey(card.dataset.server), m.value);
+    } catch {
+      /* private mode: just this visit */
+    }
+    loadGPU(card, m.value === "" ? {} : { vram_gb: m.value });
+  });
   host.addEventListener("click", (e) => {
     const b = e.target.closest("[data-ol]");
     if (!b) return;
     if (b.dataset.ol === "find") find();
     else if (b.dataset.ol === "pull") pull(b.dataset.url, b.closest("[data-server]"));
     else if (b.dataset.ol === "use") use(b.dataset.url);
+    else if (b.dataset.ol === "gpu") {
+      const card = b.closest("[data-server]");
+      $("[data-gpu-text]", card).textContent = "Checking… this loads your biggest model for a moment (up to a minute).";
+      $("[data-gpu-manual]", card).value = "";
+      try {
+        localStorage.removeItem(vramKey(card.dataset.server));
+      } catch {
+        /* ignore */
+      }
+      loadGPU(card, { probe: "1" });
+    }
   });
   return () => clearInterval(pollTimer);
 }

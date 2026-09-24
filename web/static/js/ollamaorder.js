@@ -12,7 +12,9 @@ export function initialOrder(downloaded, current) {
   return [...new Set(used)].map((name) => ({ name, on: true })).concat(rest.map((name) => ({ name, on: false })));
 }
 
-export function orderHTML(list) {
+// fits (optional) maps a model name to its GPU fit (see ollamahelper.js).
+export function orderHTML(list, fits = {}) {
+  const fitOf = (name) => fits[name] ?? fits[name.replace(/:latest$/, "")];
   if (!list.length) return `<li class="text-slate-400">No models downloaded yet.</li>`;
   let n = 0;
   return list.map((m, i) => {
@@ -23,6 +25,7 @@ export function orderHTML(list) {
       <label class="toggle min-w-0 flex-1"><input type="checkbox" data-ord="on" ${m.on ? "checked" : ""}>
         <code class="break-all">${esc(m.name)}</code></label>
       <span class="text-xs ${rank === 1 ? "text-emerald-300" : "text-slate-500"}">${role}</span>
+      ${["too_big", "cpu_slow"].includes(fitOf(m.name)) ? `<span class="text-xs text-amber-300" title="Too big to run fully on your GPU; it will be slow">⚠️ slow</span>` : ""}
       <button type="button" data-ord="up" class="btn-ghost px-2 py-0.5" ${i === 0 ? "disabled" : ""} aria-label="Move ${esc(m.name)} up">↑</button>
       <button type="button" data-ord="down" class="btn-ghost px-2 py-0.5" ${i === list.length - 1 ? "disabled" : ""} aria-label="Move ${esc(m.name)} down">↓</button>
     </li>`;
@@ -43,7 +46,7 @@ export function bindOrder(ul, state) {
       if (j < 0 || j >= list.length) return;
       [list[i], list[j]] = [list[j], list[i]];
     }
-    ul.innerHTML = orderHTML(list);
+    ul.innerHTML = orderHTML(list, state.fits);
     const focus = ul.querySelector(`[data-i="${b.dataset.ord === "up" ? i - 1 : b.dataset.ord === "down" ? i + 1 : i}"] [data-ord="${b.dataset.ord}"]`);
     focus?.focus();
   });

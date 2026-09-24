@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -124,4 +125,37 @@ func (s *Server) handleOllamaUse(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"base_url": base + "/v1", "model": model, "fallback": fallbacks})
+}
+
+// handleOllamaGPU reports what the Ollama server's GPU can hold and labels
+// the recommended models. probe=1 may load the largest downloaded model for a
+// moment to measure; vram_gb=N uses the size the admin chose instead
+// (vram_gb=0 means "no GPU").
+func (s *Server) handleOllamaGPU(w http.ResponseWriter, r *http.Request) {
+	base, err := ollama.Normalize(r.URL.Query().Get("url"))
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	var g ollama.GPU
+	var msg string
+	if v := r.URL.Query().Get("vram_gb"); v != "" {
+		gb, err := strconv.ParseFloat(v, 64)
+		if err != nil || gb < 0 || gb > 512 {
+			writeErr(w, http.StatusBadRequest, "choose a GPU memory size")
+			return
+		}
+		g = ollama.GPU{Kind: "manual", VRAMBytes: int64(gb * (1 << 30))}
+		if gb == 0 {
+			g = ollama.GPU{Kind: "none"}
+		}
+	} else {
+		ctx, cancel := context.WithTimeout(r.Context(), 4*time.Minute)
+		defer cancel()
+		g, err = ollama.MeasureGPU(ctx, base, r.URL.Query().Get("probe") == "1")
+		if err != nil {
+			msg = err.Error()
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"gpu": g, "models": ollama.Recommend(g), "message": msg})
 }
