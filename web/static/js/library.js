@@ -11,7 +11,7 @@ export async function renderLibrary(view, state) {
   const catalogs = (await attempt(() => get("/api/catalogs"))) || [];
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
   view.innerHTML = `
-    <form id="filters" class="card mb-4 grid gap-3 md:grid-cols-7">
+    <form id="filters" class="card mb-4 grid gap-3 md:grid-cols-4 xl:grid-cols-8">
       <input name="q" type="search" placeholder="Search title or author" class="input md:col-span-2">
       <select name="catalog" class="input"><option value="">All catalogs</option>${catOpts}</select>
       <select name="overlap_with" class="input" title="Only books also present in this catalog">
@@ -25,11 +25,18 @@ export async function renderLibrary(view, state) {
         ${AGE_GROUPS.map(([l, n, r]) => `<option value="${l}">Suitable for ${n} (${r})</option>`).join("")}
         <option value="unset">Age group not set yet</option>
       </select>
+      <select name="format" class="input" title="File format">
+        <option value="">Any format</option>
+        ${["epub", "azw3", "mobi", "kfx", "pdf"].map((f) => `<option value="${f}">${f.toUpperCase()}</option>`).join("")}
+        <option value="multi">2+ formats</option>
+        <option value="dupes">Duplicates</option>
+        <option value="none">No file</option>
+      </select>
       <select name="sort" class="input">
         <option value="title">Sort: Title</option><option value="author">Sort: Author</option>
         <option value="recent">Sort: Recently added</option>
       </select>
-      <div class="md:col-span-7 flex flex-wrap items-center gap-x-5 gap-y-2">
+      <div class="col-span-full flex flex-wrap items-center gap-x-5 gap-y-2">
         <span class="label mb-0" title="Books with these are hidden (unless a parent marked them OK)">Hide:</span>
         ${Object.entries(HIDE_LABELS).map(([k, v]) =>
           `<label class="toggle"><input type="checkbox" name="hide" value="${k}"> ${esc(v)}</label>`).join("")}
@@ -37,6 +44,7 @@ export async function renderLibrary(view, state) {
         <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-500 underline">Missing a filter? Suggest one</a>
         <span class="ml-auto flex flex-wrap gap-2">
           ${state.user.role === "admin" ? `<button type="button" id="remove-btn" class="btn-ghost text-xs">Remove hidden books from Calibre…</button>` : ""}
+          ${manager ? `<a href="#/duplicates" class="btn-ghost text-xs">Find duplicates</a>` : ""}
           ${manager ? `<button type="button" id="batch-btn" class="btn-secondary">Analyze next batch</button>` : ""}
         </span>
       </div>
@@ -57,6 +65,7 @@ export async function renderLibrary(view, state) {
       overlap_with: fd.get("overlap_with"),
       classification: fd.get("classification"),
       age: fd.get("age"),
+      format: fd.get("format"),
       sort: fd.get("sort"),
       multi: fd.get("multi") === "on",
       exclude: fd.getAll("hide").join(","),
@@ -123,6 +132,14 @@ function card(b) {
       </div>
       <div class="flex flex-wrap gap-1">${classChip(b)} ${ageChip(b)} ${flagChips(b)}</div>
       ${b.summary_verdict ? `<p class="text-sm text-slate-300 line-clamp-3">${esc(b.summary_verdict)}</p>` : ""}
-      <div class="mt-auto flex flex-wrap gap-1">${cats}</div>
+      <div class="mt-auto flex flex-wrap items-center gap-1">${cats} ${formatChips(b)}</div>
     </article>`;
+}
+
+// File formats (EPUB, AZW3…) and a warning when Calibre has the book twice.
+export function formatChips(b) {
+  const fmts = b.formats ? b.formats.split(",").map((f) => `<span class="chip-fmt">${esc(f)}</span>`).join(" ") : "";
+  const dup = b.calibre_copies > 1
+    ? `<span class="chip-dup" title="This book is in Calibre ${b.calibre_copies} times">⚠ ${b.calibre_copies}× in Calibre</span>` : "";
+  return `${fmts} ${dup}`;
 }

@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.9.0]
+
+### New
+- **Find duplicates**: **Library → Find duplicates** lists books that are in Calibre more than once (same title and author, even if the author is spelled slightly differently). For each copy it shows the Calibre number, formats and file size, and suggests which copy to keep: the best formats (EPUB first), then the most files, then the largest.
+- **Remove duplicates in one click** (admins, with **One-click removal** turned on): tick the extra copies and click **Remove selected copies**. They go to Calibre's recycle bin, and NovelCheck never lets you remove every copy of a book. Without one-click removal, **Copy Calibre search** gives you a search to paste into Calibre. Editors can view the list.
+- **File formats everywhere**: book cards show their formats (EPUB, AZW3, MOBI…) and a **⚠ 2× in Calibre** tag for duplicates. The book window lists each Calibre copy with all of its formats.
+- **Format filter**: the Library can show only EPUB, AZW3, MOBI, KFX or PDF books, books with **2+ formats**, **Duplicates**, or books with **No file**.
+
 ## [1.8.1]
 
 ### Fixed

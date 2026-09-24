@@ -11,6 +11,7 @@ import { openGuide } from "./guide.js";
 import { checkForUpdates } from "./updatebanner.js";
 import { renderSystem } from "./system.js";
 import { renderUsage } from "./usage.js";
+import { renderDuplicates } from "./duplicates.js";
 import { initBell } from "./notifications.js";
 
 export const state = { user: null };
@@ -24,8 +25,9 @@ const routes = {
   whatsnew: renderWhatsNew,
   system: renderSystem,
   usage: renderUsage,
+  duplicates: renderDuplicates,
 };
-const managerRoutes = new Set(["import", "admin"]);
+const managerRoutes = new Set(["import", "admin", "duplicates"]);
 const adminRoutes = new Set(["system", "usage"]);
 
 function showOnly(id) {

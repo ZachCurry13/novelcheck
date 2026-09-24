@@ -121,6 +121,17 @@ func (s *Server) handleCalibreRemove(w http.ResponseWriter, r *http.Request) {
 			want[id] = m.Title
 		}
 	}
+	removed, skipped, ok := s.removeFromCalibre(w, r, ids, want)
+	if !ok {
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]int{"removed": removed, "skipped": skipped})
+}
+
+// removeFromCalibre checks every id's title against calibre (so the wrong
+// library can never be touched), moves the books to calibre's recycle bin,
+// and re-syncs. On failure it writes the error and returns ok=false.
+func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids []int, want map[int]string) (removed, skipped int, ok bool) {
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Minute)
 	defer cancel()
 	c := s.calibreClient()
@@ -130,14 +141,14 @@ func (s *Server) handleCalibreRemove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var toRemove []int
-	skipped := 0
 	for _, id := range ids {
-		title, ok := have[id]
-		if !ok {
+		title, found := have[id]
+		if !found {
 			skipped++ // already gone from calibre
 			continue
 		}
-		if !strings.EqualFold(strings.TrimSpace(title), strings.TrimSpace(want[id])) {
+		// Compare like NovelCheck matches books: ignoring case and punctuation.
+		if store.NormKey(title, "") != store.NormKey(want[id], "") {
 			writeErr(w, http.StatusConflict, "stopped: calibre's book #"+strconv.Itoa(id)+" is \""+title+
 				"\" but NovelCheck expected \""+want[id]+"\". Is the Content server using the same library? Nothing was removed.")
 			return
@@ -157,5 +168,5 @@ func (s *Server) handleCalibreRemove(w http.ResponseWriter, r *http.Request) {
 			log.Printf("calibre sync after removal failed: %v", err)
 		}
 	}()
-	writeJSON(w, http.StatusOK, map[string]int{"removed": len(toRemove), "skipped": skipped})
+	return len(toRemove), skipped, true
 }

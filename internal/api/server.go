@@ -86,6 +86,7 @@ func (s *Server) Router() http.Handler {
 				r.Delete("/notes/{id}", s.handleDeleteNote)
 
 				r.Get("/admin/status", s.handleAdminStatus)
+				r.Get("/admin/calibre/duplicates", s.handleDuplicates)
 				r.Get("/notifications", s.handleNotifications)
 				r.Post("/notifications/read", s.handleNotificationsRead)
 				r.Delete("/notifications", s.handleNotificationsClear)
@@ -111,6 +112,7 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/calibre/find", s.handleCalibreFind)
 				r.Get("/admin/calibre/removal", s.handleCalibreRemoval)
 				r.Post("/admin/calibre/remove", s.handleCalibreRemove)
+				r.Post("/admin/calibre/duplicates/remove", s.handleRemoveDuplicates)
 				r.Get("/admin/calibre/server", s.handleCalibreServerGet)
 				r.Put("/admin/calibre/server", s.handleCalibreServerSave)
 				r.Put("/admin/calibre/library", s.handleSetCalibreLibrary)

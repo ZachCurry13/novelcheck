@@ -25,6 +25,8 @@
   .chip-pending { @apply chip bg-slate-800 text-slate-400; }
   .chip-flag { @apply chip bg-violet-900/60 text-violet-300; }
   .chip-cat { @apply chip bg-sky-900/50 text-sky-300; }
+  .chip-fmt { @apply chip rounded-md bg-slate-800 font-mono text-[10px] tracking-wide text-slate-300; }
+  .chip-dup { @apply chip bg-orange-900/60 text-orange-300; }
   .toggle { @apply flex items-center gap-2 text-sm text-slate-300; }
   .toggle input { @apply h-4 w-4 rounded border-slate-600 bg-slate-800 text-indigo-600; }
   .dialog { @apply w-full max-w-2xl rounded-2xl bg-slate-900 p-0 text-slate-100 ring-1 ring-slate-700 backdrop:bg-black/70; }

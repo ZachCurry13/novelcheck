@@ -30,7 +30,7 @@ const MANAGER = [
   ["🛠️ The Manage tab",
     "Your account can manage NovelCheck. The <b>Manage</b> tab shows how many books are rated and what the AI has cost so far. <b>Analyze batch</b> rates the next few unrated books, and <b>Sync Calibre now</b> picks up newly added books."],
   ["✏️ Fixing a rating",
-    "Open any book to set its <b>Age group</b> (Young kids, Middle grade, Teens, Young adult, Adults) and to leave <b>Parents' notes</b> after you've read it, for everyone or for parents only. If a rating looks wrong, choose <b>Edit rating</b>. Your correction is saved with your name. If a book is fine for your family even though a filter catches it (Harry Potter's magic, say), choose <b>✓ Mark as OK</b>: it then shows for everyone, kids included."],
+    "Open any book to set its <b>Age group</b> (Young kids, Middle grade, Teens, Young adult, Adults) and to leave <b>Parents' notes</b> after you've read it, for everyone or for parents only. If a rating looks wrong, choose <b>Edit rating</b>. Your correction is saved with your name. If a book is fine for your family even though a filter catches it (Harry Potter's magic, say), choose <b>✓ Mark as OK</b>: it then shows for everyone, kids included. <b>Find duplicates</b> (in the Library) lists books that are in Calibre twice."],
   ["👧 Kids' accounts",
     "At the bottom of <b>Manage</b> you can add kid accounts by age group (they only see books rated for their age or younger), reset their passwords, and tick what each child should <b>not</b> see (for example Open Door or Dark Occult). Hidden books never show up for them, not even in search."],
   ["💾 Importing a Kindle",

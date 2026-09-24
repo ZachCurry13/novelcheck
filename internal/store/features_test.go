@@ -170,3 +170,27 @@ func TestDailyTokens(t *testing.T) {
 		t.Fatalf("quiet day should be zero: %+v", days[0])
 	}
 }
+
+func TestSuggestKeep(t *testing.T) {
+	e := func(id string, sizes map[string]int64) store.DupEntry {
+		d := store.DupEntry{CalibreID: id}
+		for f, sz := range sizes {
+			d.Files = append(d.Files, store.DupFile{Format: f, Size: sz})
+		}
+		return d
+	}
+	cases := []struct {
+		entries []store.DupEntry
+		want    string
+	}{
+		{[]store.DupEntry{e("1", map[string]int64{"MOBI": 9}), e("2", map[string]int64{"EPUB": 1})}, "2"},
+		{[]store.DupEntry{e("1", map[string]int64{"EPUB": 1}), e("2", map[string]int64{"EPUB": 1, "PDF": 1})}, "2"},
+		{[]store.DupEntry{e("1", map[string]int64{"EPUB": 5}), e("2", map[string]int64{"EPUB": 9})}, "2"},
+		{[]store.DupEntry{e("1", map[string]int64{"EPUB": 5}), e("2", map[string]int64{"EPUB": 5})}, "1"},
+	}
+	for i, c := range cases {
+		if got := store.SuggestKeep(c.entries); got != c.want {
+			t.Errorf("case %d: keep %s, want %s", i, got, c.want)
+		}
+	}
+}

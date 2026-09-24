@@ -11,11 +11,27 @@ export async function openBook(id, state, onChange) {
   const b = data.book;
   const isAdmin = state.user.role === "admin";
   const manager = canManage(state.user);
-  const copies = data.copies.map((c) => `
-    <li class="flex justify-between gap-3 text-sm">
-      <span class="chip-cat">${esc(c.catalog_name)}</span>
-      <span class="truncate text-slate-400">${esc(c.format.toUpperCase())}${isAdmin && c.path ? " · " + esc(c.path) : ""}</span>
+  // One row per catalog entry (a Calibre book id, or a Kindle/drive catalog), listing its formats.
+  const entries = new Map();
+  for (const c of data.copies) {
+    const key = c.source === "calibre" ? `${c.catalog_id}#${c.external_id}` : String(c.catalog_id);
+    if (!entries.has(key)) entries.set(key, { ...c, formats: [], paths: [] });
+    const e = entries.get(key);
+    if (c.format && c.format !== "list") e.formats.push(c.format.toUpperCase());
+    if (c.path && !c.path.startsWith("list:")) e.paths.push(c.path);
+  }
+  const calibreCount = [...entries.values()].filter((e) => e.source === "calibre").length;
+  const copies = [...entries.values()].map((e) => `
+    <li class="text-sm">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="chip-cat">${esc(e.catalog_name)}</span>
+        ${e.source === "calibre" && e.external_id ? `<span class="text-xs text-slate-500">Calibre #${esc(e.external_id)}</span>` : ""}
+        ${e.formats.length ? e.formats.map((f) => `<span class="chip-fmt">${esc(f)}</span>`).join(" ") : `<span class="text-xs text-slate-500">no file</span>`}
+      </div>
+      ${isAdmin && e.paths.length ? `<p class="mt-0.5 break-all text-xs text-slate-500">${e.paths.map(esc).join("<br>")}</p>` : ""}
     </li>`).join("");
+  const dupNote = calibreCount > 1
+    ? `<p class="mt-2 text-sm text-orange-300">⚠ This book is in Calibre ${calibreCount} times.${manager ? ` <a href="#/duplicates" data-close class="underline">Review duplicates</a>` : ""}</p>` : "";
   dlg.innerHTML = `
     <div class="max-h-[85vh] overflow-y-auto p-6 space-y-4">
       <div class="flex items-start justify-between gap-4">
@@ -30,7 +46,7 @@ export async function openBook(id, state, onChange) {
       ${b.status === "error" && manager ? `<p class="text-sm text-rose-400">Last error: ${esc(b.analysis_error)}</p>` : ""}
       ${(b.blurb || b.description) ? `<div><span class="label">Blurb</span>
         <p class="text-sm leading-relaxed text-slate-300 whitespace-pre-line">${esc(b.blurb || b.description)}</p></div>` : ""}
-      <div><span class="label">In catalogs</span><ul class="space-y-1">${copies || "<li class='text-sm text-slate-500'>None</li>"}</ul></div>
+      <div><span class="label">In catalogs</span><ul class="space-y-2">${copies || "<li class='text-sm text-slate-500'>None</li>"}</ul>${dupNote}</div>
       ${b.analysis_model ? `<p class="text-xs text-slate-500">${b.analysis_model.startsWith("manual: ")
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : "Analyzed by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
       ${b.approved ? `<p class="text-xs text-emerald-400">✓ Marked OK by ${esc(b.approved_by)}: shown to everyone, even if it matches their hide filters or content rules.</p>` : ""}

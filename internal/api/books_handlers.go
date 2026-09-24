@@ -23,7 +23,7 @@ func splitCSV(s string) []string {
 
 // handleListBooks serves the unified dashboard across every catalog.
 // Query params: q, catalog, overlap_with, multi, classification, flags,
-// exclude, status, sort, limit, offset.
+// exclude, status, age, format, sort, limit, offset.
 func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	f := store.BookFilter{
@@ -36,6 +36,7 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		ExcludeFlags:   splitCSV(q.Get("exclude")),
 		Status:         q.Get("status"),
 		Age:            q.Get("age"),
+		Format:         q.Get("format"),
 		Sort:           q.Get("sort"),
 		Limit:          queryInt(r, "limit"),
 		Offset:         queryInt(r, "offset"),

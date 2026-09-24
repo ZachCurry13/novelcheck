@@ -11,6 +11,12 @@ const bookCols = `b.id, b.norm_key, b.title, b.author, b.isbn, b.description, b.
 	b.demonic_presence, b.lgbtq_content, b.summary_verdict, b.approved, b.approved_by, b.age_level, b.age_set_by, b.analysis_model, b.analysis_error,
 	b.analyzed_at, b.created_at, b.updated_at`
 
+// derivedCols adds each book's file formats and number of Calibre entries.
+const derivedCols = `, COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTINCT UPPER(fc.format) AS f
+		FROM catalog_books fc WHERE fc.book_id = b.id AND fc.format NOT IN ('', 'list') ORDER BY f)), '') AS formats,
+	(SELECT COUNT(DISTINCT dc.external_id) FROM catalog_books dc JOIN catalogs dcat ON dcat.id = dc.catalog_id
+		AND dcat.source = 'calibre' WHERE dc.book_id = b.id) AS calibre_copies`
+
 // UpsertBook inserts a book or returns the existing one with the same NormKey,
 // filling in any metadata the stored row is missing. Returns the book id.
 func (s *Store) UpsertBook(title, author, isbn, description string) (int64, error) {
@@ -68,7 +74,7 @@ func (s *Store) PruneCatalog(catalogID int64, keepExternalIDs map[string]bool) (
 // the viewer's content rules (viewer may be nil for internal callers).
 func (s *Store) BookByID(id int64, viewer *User) (*Book, error) {
 	where, args := visibilityClause(viewer)
-	q := `SELECT ` + bookCols + `, '' AS catalogs FROM books b WHERE b.id = ?` + where
+	q := `SELECT ` + bookCols + derivedCols + `, '' AS catalogs FROM books b WHERE b.id = ?` + where
 	var b Book
 	err := s.DB.Get(&b, q, append([]any{id}, args...)...)
 	if errors.Is(err, sql.ErrNoRows) {

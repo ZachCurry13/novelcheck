@@ -14,6 +14,7 @@ type BookFilter struct {
 	AnyFlags       []string // books with ANY of these flags (used for the Calibre removal list)
 	Status         string
 	Age            string // "" any | "unset" | "1".."5" = suitable up to that age group
+	Format         string // "" any | "epub" etc. | "multi" (2+ formats) | "none" (no file) | "dupes" (2+ Calibre entries)
 	Sort           string // "title" (default) | "author" | "recent"
 	Limit, Offset  int
 }
@@ -28,6 +29,16 @@ var flagColumns = map[string]string{
 	"playful_fantasy":  "b.playful_fantasy = 1",
 	"demonic_presence": "b.demonic_presence = 1",
 	"open_door":        "b.classification = 'Open Door'",
+}
+
+// fileFormats are the e-book formats the Format filter offers.
+var fileFormats = map[string]bool{"epub": true, "azw3": true, "azw": true, "mobi": true, "kfx": true, "pdf": true}
+
+var formatConds = map[string]string{
+	"multi": "(SELECT COUNT(DISTINCT LOWER(fm.format)) FROM catalog_books fm WHERE fm.book_id = b.id AND fm.format NOT IN ('', 'list')) > 1",
+	"none":  "NOT EXISTS (SELECT 1 FROM catalog_books fn WHERE fn.book_id = b.id AND fn.format NOT IN ('', 'list'))",
+	"dupes": `(SELECT COUNT(DISTINCT dd.external_id) FROM catalog_books dd JOIN catalogs dk ON dk.id = dd.catalog_id
+		AND dk.source = 'calibre' WHERE dd.book_id = b.id) > 1`,
 }
 
 var classifications = map[string]bool{"Closed Door": true, "Open Door": true, "No Spice": true}
@@ -131,6 +142,12 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 		where = append(where, "b.age_level BETWEEN 1 AND ?")
 		args = append(args, int(f.Age[0]-'0'))
 	}
+	if c, ok := formatConds[f.Format]; ok {
+		where = append(where, c)
+	} else if fileFormats[f.Format] {
+		where = append(where, "EXISTS (SELECT 1 FROM catalog_books fx WHERE fx.book_id = b.id AND LOWER(fx.format) = ?)")
+		args = append(args, f.Format)
+	}
 	if f.Status != "" {
 		where = append(where, "b.status = ?")
 		args = append(args, f.Status)
@@ -158,7 +175,7 @@ func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
 	if limit <= 0 || limit > 200 {
 		limit = 60
 	}
-	q := `SELECT ` + bookCols + `, COALESCE((SELECT GROUP_CONCAT(name, ', ') FROM (
+	q := `SELECT ` + bookCols + derivedCols + `, COALESCE((SELECT GROUP_CONCAT(name, ', ') FROM (
 			SELECT DISTINCT c.name FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
 			WHERE cb.book_id = b.id)), '') AS catalogs
 		FROM books b WHERE ` + cond + ` ORDER BY ` + order + ` LIMIT ? OFFSET ?`
