@@ -43,7 +43,8 @@ function detect(s) {
   if (url.includes("api.openai.com")) return "openai";
   if (url.includes("generativelanguage.googleapis.com")) return "gemini";
   if (url.includes("api.perplexity.ai")) return "perplexity";
-  if (url.includes(":11434")) return "ollama";
+  // Ollama's default port, and the TrueNAS Ollama app's default.
+  if (/:(11434|30068)(\/|$)/.test(url)) return "ollama";
   return "other";
 }
 

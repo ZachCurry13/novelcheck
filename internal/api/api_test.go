@@ -118,9 +118,11 @@ func TestEndToEnd(t *testing.T) {
 			{"title": "Clean Book", "author": "A. Writer", "format": "azw3", "path": "documents/Clean.azw3"},
 			{"title": "Spicy Book", "author": "B. Writer", "format": "epub", "path": "documents/Spicy.epub"},
 			{"title": "Ignored", "format": "txt"},
+			// A pasted title list (Kindles that connect as a "device").
+			{"title": "Listed Book", "author": "C. Writer", "format": "list", "path": "list:Listed Book | C. Writer"},
 		},
 	}, true)
-	if res.StatusCode != 200 || out["imported"].(float64) != 2 || out["skipped"].(float64) != 1 {
+	if res.StatusCode != 200 || out["imported"].(float64) != 3 || out["skipped"].(float64) != 1 {
 		t.Fatalf("import: %d %v", res.StatusCode, out)
 	}
 	books, _, _ := st.ListBooks(store.BookFilter{}, nil)
@@ -137,8 +139,8 @@ func TestEndToEnd(t *testing.T) {
 	if res.Header.Get("Cache-Control") != "no-store" || res.Header.Get("Strict-Transport-Security") == "" {
 		t.Fatal("missing no-store / HSTS headers on API response")
 	}
-	if out["total"].(float64) != 1 {
-		t.Fatalf("restricted user should see only 1 book, got %v", out["total"])
+	if out["total"].(float64) != 2 { // Clean Book + Listed Book; Spicy hidden
+		t.Fatalf("restricted user should see 2 books, got %v", out["total"])
 	}
 	if res, _ := kid.do("GET", "/api/admin/status", nil, false); res.StatusCode != 403 {
 		t.Fatalf("restricted user reached admin API: %d", res.StatusCode)

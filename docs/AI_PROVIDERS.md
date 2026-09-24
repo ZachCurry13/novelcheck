@@ -60,7 +60,7 @@ Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and
 
 1. In TrueNAS, open **Apps → Discover Apps**, search for **Ollama**, and click **Install**. If you've set up GPU passthrough, select your GPU in the install form. Leave the other settings as they are and click **Install**, then wait until it shows **Running**.
 2. In NovelCheck: **Admin → LLM Analysis Engine**, set **AI provider** to **Ollama**. An **Ollama easy setup** box appears.
-3. Click **1. Find Ollama**. NovelCheck looks for Ollama on your server. If it isn't found, type its address in the box next to the button (your TrueNAS IP and the port shown on the Ollama app, for example `192.168.1.50:11434`) and click **Find Ollama** again.
+3. Click **1. Find Ollama**. NovelCheck looks for Ollama on your server. If it isn't found, type its address in the box next to the button (your TrueNAS IP and the port shown on the Ollama app, for example `192.168.1.50:11434`, or `:30068` for the TrueNAS app) and click **Find Ollama** again. You don't need to type `http://`; NovelCheck adds it.
 4. Under **2. Download a model**, pick one and click **Download**. A progress bar shows the download.
    - With a GPU: **Qwen 2.5 7B** (about 4.7 GB) gives the best ratings.
    - Without a GPU: **Llama 3.2 3B** (about 2 GB) is the fastest.

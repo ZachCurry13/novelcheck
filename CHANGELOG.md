@@ -4,6 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.8.1]
+
+### Fixed
+- **Ollama address without `http://`**: typing an address like `10.13.6.41:30068` broke book rating ("first path segment in URL cannot contain colon"). NovelCheck now fills in `http://` and Ollama's `/v1` for you, including for an address you already saved.
+- **Find Ollama button missing**: with the TrueNAS Ollama app's port (30068), the AI provider showed as "Other" and hid the Ollama easy setup. Port 30068 is now recognized, and your saved address is filled in for **Find Ollama**.
+
+### New
+- **Kindles that show up as a "device"**: newer Kindles connect like a phone, which browsers can't open. The Import page now explains how to copy the Kindle's **documents** folder to the Desktop and import that instead.
+- **Paste a list**: on the Import page you can type or paste books, one per line ("Title by Author", "Title - Author", or just the title), with no cable needed.
+
 ## [1.8.0]
 
 ### New

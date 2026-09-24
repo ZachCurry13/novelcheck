@@ -49,6 +49,7 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 ### Feature 3: Browser Drive & Kindle Scanner
 * Front-end interface includes an "Import Local Drive / Kindle" feature using `window.showDirectoryPicker()`.
 * Automatically falls back to standard `<input type="file" webkitdirectory>` on non-Chromium browsers (iOS Safari, mobile browsers).
+* MTP Kindles (shown as a "device", not a drive) can't be opened by browsers: the page explains copying `documents/` to the computer first, and offers **Paste a list** (one title per line, imported with format `list`).
 * Recursively traverses selected directory folders to read book filenames and metadata tags (`.epub`, `.mobi`, `.azw3`), understanding Amazon naming conventions (`Title - Author_ASIN_EBOK.azw`).
 * Sends extracted metadata payloads (never file bodies) to the Go backend API into a selected destination catalog.
 

@@ -77,5 +77,5 @@ func New(provider, baseURL, apiKey string, jsonMode bool) Completer {
 	if provider == "anthropic" {
 		return &AnthropicClient{APIKey: apiKey}
 	}
-	return &Client{BaseURL: baseURL, APIKey: apiKey, JSONMode: jsonMode}
+	return &Client{BaseURL: NormalizeBaseURL(baseURL), APIKey: apiKey, JSONMode: jsonMode}
 }

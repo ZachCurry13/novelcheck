@@ -21,6 +21,9 @@ export function renderOllamaHelper(host, form) {
       <div id="ol-servers" class="space-y-3"></div>
     </div>`;
   const list = $("#ol-servers", host);
+  // Start from the address already saved, if it isn't the placeholder.
+  const saved = $('[data-key="llm_base_url"]', form)?.value || "";
+  if (saved && !saved.includes("YOUR-TRUENAS-IP")) $("#ol-url", host).value = saved.replace(/\/v1\/?$/, "");
   let pollTimer = null;
 
   async function find() {

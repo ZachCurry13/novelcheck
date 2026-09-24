@@ -25,7 +25,7 @@ func (s *Server) handleOllamaFind(w http.ResponseWriter, r *http.Request) {
 		}
 		extra = append(extra, n)
 	}
-	if cur := s.Store.Setting(store.KeyLLMBaseURL); strings.Contains(cur, ":11434") || strings.Contains(cur, ":30068") {
+	if cur := s.Store.Setting(store.KeyLLMBaseURL); ollamaBase(cur) != "" {
 		extra = append(extra, cur)
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"servers": ollama.Discover(ctx, extra...)})

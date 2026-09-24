@@ -94,11 +94,12 @@ type driveBook struct {
 	Author string `json:"author"`
 	ISBN   string `json:"isbn"`
 	Path   string `json:"path"`   // path relative to the picked folder
-	Format string `json:"format"` // epub | mobi | azw3 | azw | pdf
+	Format string `json:"format"` // epub | mobi | azw3 | azw | kfx | pdf | list
 	ASIN   string `json:"asin"`
 }
 
-var driveFormats = map[string]bool{"epub": true, "mobi": true, "azw3": true, "azw": true, "kfx": true, "pdf": true}
+var driveFormats = map[string]bool{"epub": true, "mobi": true, "azw3": true, "azw": true, "kfx": true, "pdf": true,
+	"list": true} // "list" = typed/pasted title, no file
 
 // handleImportDrive ingests metadata extracted client-side from a Kindle or
 // local drive into an existing or new catalog. Only metadata is uploaded.

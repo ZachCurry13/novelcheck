@@ -13,6 +13,7 @@ import (
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/delivery"
+	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -132,6 +133,9 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 				writeErr(w, http.StatusBadRequest, k+" must be true or false")
 				return
 			}
+		}
+		if k == store.KeyLLMBaseURL {
+			v = llm.NormalizeBaseURL(v)
 		}
 		body[k] = v
 	}

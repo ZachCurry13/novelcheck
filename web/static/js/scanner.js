@@ -3,6 +3,7 @@
 import { get, post } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";
 import { extractMeta, BOOK_EXT } from "./bookmeta.js";
+import { MTP_HELP, parseTitleList } from "./importlist.js";
 
 const supportsPicker = typeof window.showDirectoryPicker === "function";
 
@@ -20,8 +21,15 @@ export async function renderImport(view) {
           ${supportsPicker ? "Or select files (fallback)" : "Choose folder…"}
           <input id="dir-input" type="file" webkitdirectory multiple class="hidden">
         </label>
+        <button id="list-btn" class="btn-ghost">Paste a list</button>
+      </div>
+      <div id="list-box" class="hidden space-y-2">
+        <label class="label" for="list-text">Books, one per line: "Title by Author", "Title - Author", or just the title</label>
+        <textarea id="list-text" rows="8" class="input" placeholder="Fourth Wing by Rebecca Yarros&#10;The Hobbit - J.R.R. Tolkien&#10;Wonder"></textarea>
+        <button id="list-use" class="btn-secondary">Use this list</button>
       </div>
       <p id="scan-status" class="text-sm text-slate-400">No folder selected.</p>
+      ${MTP_HELP}
     </div>
     <div id="review" class="card hidden space-y-4">
       <div class="grid gap-3 md:grid-cols-2">
@@ -56,16 +64,22 @@ export async function renderImport(view) {
   syncNewField();
 
   async function process(entries) {
-    found = [];
+    const list = [];
     let i = 0;
     for (const { file, path } of entries) {
       status.textContent = `Reading ${++i} of ${entries.length}: ${file.name}`;
-      found.push(await extractMeta(file, path));
+      list.push(await extractMeta(file, path));
     }
+    show(list);
+    if (!list.length) status.textContent += ` If this is a Kindle, see "Kindle shows up as a device" below.`;
+  }
+
+  function show(list) {
+    found = list;
     status.textContent = `Found ${found.length} e-book${found.length === 1 ? "" : "s"}.`;
     $("#found", view).innerHTML = found.map((b) => `<tr class="border-t border-slate-800">
       <td class="p-2">${esc(b.title)}</td><td class="p-2 text-slate-400">${esc(b.author)}</td>
-      <td class="p-2 uppercase text-slate-500">${esc(b.format)}</td></tr>`).join("");
+      <td class="p-2 uppercase text-slate-500">${esc(b.format === "list" ? "typed" : b.format)}</td></tr>`).join("");
     $("#review", view).classList.toggle("hidden", !found.length);
   }
 
@@ -77,6 +91,16 @@ export async function renderImport(view) {
     } catch (e) {
       if (e.name !== "AbortError") toast(e.message, true);
     }
+  });
+
+  $("#list-btn", view).addEventListener("click", () => {
+    $("#list-box", view).classList.toggle("hidden");
+    $("#list-text", view).focus();
+  });
+  $("#list-use", view).addEventListener("click", () => {
+    const list = parseTitleList($("#list-text", view).value);
+    if (!list.length) return toast("Type or paste at least one title", true);
+    show(list);
   });
 
   // iOS Safari / Firefox fallback: <input webkitdirectory> yields a flat FileList.

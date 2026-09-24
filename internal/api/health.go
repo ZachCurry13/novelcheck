@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -201,11 +202,11 @@ func (s *Server) smtpConfig() delivery.SMTPConfig {
 // ollamaBase returns the Ollama server address when the LLM settings point
 // at one (default Ollama/TrueNAS ports), else "".
 func ollamaBase(llmURL string) string {
-	if !strings.Contains(llmURL, ":11434") && !strings.Contains(llmURL, ":30068") {
-		return ""
-	}
 	base, err := ollama.Normalize(llmURL)
 	if err != nil {
+		return ""
+	}
+	if u, perr := url.Parse(base); perr != nil || !llm.IsOllamaPort(u.Port()) {
 		return ""
 	}
 	return base
