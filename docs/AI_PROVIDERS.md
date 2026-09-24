@@ -104,5 +104,5 @@ The Books API is free for normal use. No billing account is needed.
 - **"rejected the API key" or 401 errors:** the key was copied incompletely, or the account has no credit. Create a new key and paste it again.
 - **"model not found" or 404 errors:** the model name is wrong or has been retired. Check the provider's current model list.
 - **"rate limit" or 429 errors:** you're sending too fast for your plan. Raise **Delay between scans**, lower **Books per batch**, or add credit or upgrade the plan with the provider.
-- **Lots of "Analysis Error" books:** open one to read the error. Switching to a stronger **Fallback (large) model** often fixes books the small model struggles with.
+- **Lots of "Analysis Error" books:** open **Usage** (or **Admin**) and look at **Rating errors**: failed books are grouped by reason with a plain explanation. Fix the cause, then click **Retry**. Adding a stronger model under **Fallback model(s)**, or a **Backup AI**, often fixes books the small model struggles with.
 - **Costs higher than expected:** lower **Max tokens per hour**, and remember that Perplexity's per-request fee isn't included in the estimate.
