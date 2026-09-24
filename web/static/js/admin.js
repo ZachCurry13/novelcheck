@@ -2,6 +2,7 @@
 import { get, post, put, qs } from "./api.js";
 import { $, $$, esc, attempt, toast, fmtNum, fmtMoney } from "./ui.js";
 import { renderUsers } from "./users.js";
+import { renderCalibrePicker } from "./calibrepicker.js";
 
 const SECTIONS = [
   ["LLM Analysis Engine", [
@@ -54,6 +55,7 @@ export async function renderAdmin(view) {
       <legend class="px-1 text-lg font-semibold">${esc(title)}</legend>
       ${fields.map(([k, label, ph, type]) => field(k, label, ph, type, settings[k])).join("")}
       ${title.startsWith("SMTP") ? `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>` : ""}
+      ${title.startsWith("Calibre") ? `<div id="calibre-picker"></div>` : ""}
     </fieldset>`).join("") +
     `<div class="lg:col-span-2"><button class="btn-primary">Save settings</button></div>`;
 
@@ -90,6 +92,7 @@ export async function renderAdmin(view) {
     if (s) renderStats(view, s);
   }
   await refresh();
+  renderCalibrePicker($("#calibre-picker", view), refresh);
   const timer = setInterval(refresh, 5000);
   await renderUsers($("#users", view));
   return () => clearInterval(timer);
@@ -121,6 +124,6 @@ function renderStats(view, s) {
   const sync = s.calibre_last_sync;
   $("#worker", view).innerHTML = `Worker: <b>${esc(w.state)}</b>${w.current_title ? ` — ${esc(w.current_title)}` : ""}
     · ${fmtNum(w.queue_length)} waiting${w.last_error ? ` · <span class="text-rose-400">last error: ${esc(w.last_error)}</span>` : ""}
-    <br>Calibre: ${s.calibre_available ? "mounted" : "<span class='text-amber-400'>not mounted</span>"}${sync
+    <br>Calibre: ${s.calibre_available ? "library found" : "<span class='text-amber-400'>no library selected (see Calibre Library below)</span>"}${sync
       ? ` · last sync ${esc(new Date(sync.at).toLocaleString())} (${fmtNum(sync.result?.books)} books${sync.error ? `, <span class="text-rose-400">${esc(sync.error)}</span>` : ""})` : ""}`;
 }

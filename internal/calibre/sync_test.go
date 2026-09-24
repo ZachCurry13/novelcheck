@@ -31,7 +31,15 @@ INSERT INTO data VALUES (1, 1, 'EPUB', 'Pride and Prejudice - Jane Austen'), (2,
 
 func makeLibrary(t *testing.T) string {
 	t.Helper()
-	dir := t.TempDir()
+	return makeLibraryAt(t, t.TempDir())
+}
+
+// makeLibraryAt creates a small Calibre metadata.db inside dir.
+func makeLibraryAt(t *testing.T, dir string) string {
+	t.Helper()
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
 	c, err := sqlx.Open("sqlite", filepath.Join(dir, "metadata.db"))
 	if err != nil {
 		t.Fatal(err)

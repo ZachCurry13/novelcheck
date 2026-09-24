@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -15,21 +13,20 @@ import (
 // Syncer serialises Calibre syncs and runs them on the configured schedule.
 type Syncer struct {
 	Store *store.Store
-	Dir   string
+	Dir   string // container mount point (NOVELCHECK_CALIBRE_DIR)
 	mu    sync.Mutex
 }
 
-// Available reports whether a Calibre library is mounted.
+// Available reports whether the selected folder is a Calibre library.
 func (s *Syncer) Available() bool {
-	_, err := os.Stat(filepath.Join(s.Dir, "metadata.db"))
-	return err == nil
+	return HasLibrary(s.LibraryDir())
 }
 
 // Run performs one sync and records the outcome in settings.
 func (s *Syncer) Run() (Result, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	res, err := Sync(s.Store, s.Dir)
+	res, err := Sync(s.Store, s.LibraryDir())
 	summary := map[string]any{"at": time.Now().UTC().Format(time.RFC3339), "result": res}
 	if err != nil {
 		summary["error"] = err.Error()

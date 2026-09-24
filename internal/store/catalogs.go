@@ -42,6 +42,15 @@ func (s *Store) RenameCatalog(id int64, name string) error {
 	return err
 }
 
+// ClearCatalogCopies unlinks every copy in the named catalog but keeps the
+// book rows (and their analyses); the next sync re-links what still exists
+// and prunes the rest.
+func (s *Store) ClearCatalogCopies(name string) error {
+	_, err := s.DB.Exec(`DELETE FROM catalog_books WHERE catalog_id =
+		(SELECT id FROM catalogs WHERE name = ?)`, name)
+	return err
+}
+
 // DeleteCatalog removes a catalog and then any books no longer in any catalog.
 func (s *Store) DeleteCatalog(id int64) error {
 	tx, err := s.DB.Beginx()

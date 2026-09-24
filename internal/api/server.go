@@ -71,6 +71,9 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/analyze-batch", s.handleAnalyzeBatch)
 				r.Post("/admin/wipe-queue", s.handleWipeQueue)
 				r.Post("/admin/calibre-sync", s.handleCalibreSync)
+				r.Get("/admin/calibre/browse", s.handleCalibreBrowse)
+				r.Get("/admin/calibre/find", s.handleCalibreFind)
+				r.Put("/admin/calibre/library", s.handleSetCalibreLibrary)
 				r.Post("/admin/smtp-test", s.handleSMTPTest)
 				r.Get("/admin/backup", s.handleBackup)
 

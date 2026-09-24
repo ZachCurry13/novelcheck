@@ -41,6 +41,7 @@ var editableKeys = func() map[string]bool {
 	}
 	delete(m, store.KeyCalibreLastSync)
 	delete(m, store.KeyCalibreLastResult)
+	delete(m, store.KeyCalibreLibraryPath) // set via PUT /admin/calibre/library (validated)
 	return m
 }()
 
@@ -75,6 +76,7 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 		"tokens_projected":  int(float64(remaining) * perBook),
 		"worker":            s.Worker.Status(),
 		"calibre_available": s.Syncer.Available(),
+		"calibre_library":   s.Syncer.LibraryDir(),
 		"calibre_last_sync": lastSync,
 	})
 }
@@ -160,7 +162,7 @@ func (s *Server) handleWipeQueue(w http.ResponseWriter, r *http.Request) {
 // handleCalibreSync starts a manual sync in the background.
 func (s *Server) handleCalibreSync(w http.ResponseWriter, r *http.Request) {
 	if !s.Syncer.Available() {
-		writeErr(w, http.StatusNotFound, "no Calibre library mounted at "+s.Cfg.CalibreDir)
+		writeErr(w, http.StatusNotFound, "no Calibre library (metadata.db) at "+s.Syncer.LibraryDir()+"; choose the library folder under Calibre Library")
 		return
 	}
 	go func() {
