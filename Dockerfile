@@ -14,8 +14,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags=
 # ---- runtime ----
 FROM alpine:3.22
 LABEL org.opencontainers.image.source="https://github.com/ZachCurry13/novelcheck" \
-      org.opencontainers.image.description="NovelCheck: self-hosted e-book content checker" \
-      org.opencontainers.image.licenses="NOASSERTION"
+      org.opencontainers.image.description="NovelCheck: self-hosted e-book content checker"
 RUN apk add --no-cache ca-certificates tzdata \
  && addgroup -S -g 568 novelcheck && adduser -S -u 568 -G novelcheck novelcheck \
  && mkdir -p /data /calibre && chown novelcheck:novelcheck /data

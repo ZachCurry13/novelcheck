@@ -33,7 +33,7 @@ NOVELCHECK_ADMIN_PASSWORD='choose-a-strong-one' docker compose up -d
 
 To build from source instead, clone the repo, uncomment `build: .` in `docker-compose.yml`, and run `docker compose up -d --build`.
 
-Open `http://<host>:8080` and sign in as `admin`. If you leave `NOVELCHECK_ADMIN_PASSWORD` blank, a random password is printed once to `docker logs novelcheck`.
+Open `http://<host>:8080` and sign in as `admin`. (The TrueNAS guide maps port `30080` instead, to avoid clashing with other apps.) If you leave `NOVELCHECK_ADMIN_PASSWORD` blank, a random password is printed once to `docker logs novelcheck`.
 
 Then, in **Admin**:
 1. Set the LLM base URL, API key, and model. For local Ollama use `http://ollama:11434/v1` with `llama3.2` and turn off JSON mode if your server rejects `response_format`.
@@ -41,7 +41,7 @@ Then, in **Admin**:
 3. Click **Analyze batch**. Pending books are processed within your token cap.
 4. Add restricted users and set their content rules.
 
-### Volumes (TrueNAS SCALE)
+### Volumes
 
 | Container path | Put it on | Mode | Purpose |
 |---|---|---|---|
@@ -86,7 +86,7 @@ make run         # serves on :8080 with ./data and ./calibre
 make css         # recompile Tailwind after changing classes (output is committed)
 ```
 
-CI (`.github/workflows/docker.yml`) runs `go vet` and `go test` on every push and pull request. On `main` it publishes `ghcr.io/zachcurry13/novelcheck:latest`. On a `vX.Y.Z` tag it publishes a versioned image and creates a GitHub Release. You can also cut a release without a tag: **Actions → Docker image → Run workflow** with a version such as `1.1.0`.
+CI (`.github/workflows/docker.yml`) runs `go vet` and `go test` on every push and pull request. On `main` it publishes `ghcr.io/zachcurry13/novelcheck:latest`. To cut a release, go to **Actions → Docker image → Run workflow** and enter a version such as `1.1.0`. That publishes `:1.1.0` and `:latest` and creates the `v1.1.0` tag and GitHub Release. Pushing a `vX.Y.Z` tag does the same.
 
 Go 1.26+, no CGO (pure-Go `modernc.org/sqlite`). Front-end assets are embedded with `embed.FS`, so the binary is fully self-contained. Per the spec's rule, no source file is longer than about 300 lines.
 

@@ -18,8 +18,8 @@ services:
       NOVELCHECK_SESSION_DAYS: "30"
       TZ: America/Chicago
     volumes:
-      - /mnt/ssd/apps/novelcheck:/data
-      - /mnt/tank/media/calibre:/calibre:ro
+      - /mnt/ssd/novelcheck:/data                  # change to your SSD dataset
+      - /mnt/tank/media/calibre:/calibre:ro        # change to your Calibre library folder
 
   # Optional: expose NovelCheck through a Cloudflare Tunnel (no open ports).
   # Create a tunnel in Cloudflare Zero Trust, route it to http://novelcheck:8080,
@@ -42,7 +42,7 @@ services:
     profiles: ["ollama"]
     restart: unless-stopped
     volumes:
-      - /mnt/ssd/apps/ollama:/root/.ollama
+      - /mnt/ssd/ollama:/root/.ollama
     deploy:
       resources:
         reservations:

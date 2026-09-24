@@ -113,7 +113,7 @@ OUTPUT FORMAT (JSON ONLY):
 
 ## 5. Architecture & Data Model (as implemented)
 
-> Sections 5 and 6 were added during the initial build. The original upload ended after Section 4, so the build order below was derived from Sections 1–4 and records how the codebase was actually put together.
+> Sections 5 and 6 describe the implementation and the order it was built in. Keep them in sync with the code (Rule 3).
 
 ### 5.1 Components
 | Package | Responsibility |
@@ -153,5 +153,5 @@ All non-GET API calls require the header `X-NovelCheck: 1`.
 8. **Front-end.** Embedded HTML + Tailwind + vanilla JS views: library dashboard and filters (Feature 4), book dialog, Up Next queue with SortableJS (Feature 6), drive scanner with directory picker, `webkitdirectory` fallback, and EPUB/MOBI metadata parsing (Feature 3), admin panel, users, and profile.
 9. **PWA.** `manifest.json`, `sw.js` app-shell cache, icons, and the install prompt (Feature 5).
 10. **Tests.** Store filters and visibility, Calibre read-only sync, LLM client and parser, analyzer fallback and usage recording, API end-to-end (auth, CSRF, restricted filtering, import, queue).
-11. **Packaging & docs.** Multi-stage `Dockerfile` (non-root UID 568), `docker-compose.yml` (SSD `/data`, read-only HDD `/calibre`, optional `cloudflared` and GPU `ollama` profiles), `README.md`, and this spec, kept in sync per Rule 3.
-12. **Distribution.** GitHub Actions workflow (`.github/workflows/docker.yml`) that tests, builds multi-arch (`amd64`/`arm64`) images, publishes them to `ghcr.io/zachcurry13/novelcheck`, and creates a GitHub Release for `v*` tags. `docs/TRUENAS.md` is a no-command-line TrueNAS install guide using **Install via YAML** with `/data` (SSD) and `/calibre` (HDD, read-only).
+11. **Packaging & docs.** Multi-stage `Dockerfile` (non-root UID 568), `docker-compose.yml` (prebuilt GHCR image, SSD `/data`, read-only HDD `/calibre`, port 8080, optional `cloudflared` and GPU `ollama` profiles), `README.md`, and this spec, kept in sync per Rule 3.
+12. **Distribution.** GitHub Actions workflow (`.github/workflows/docker.yml`) that tests, builds multi-arch (`amd64`/`arm64`) images, publishes them to `ghcr.io/zachcurry13/novelcheck` (`:latest` from `main`, `:X.Y.Z` per release), and creates a GitHub Release from a `v*` tag or a manual **Run workflow** with a version input. `docs/TRUENAS.md` is a no-command-line TrueNAS install guide using **Install via YAML** with `/data` (SSD), `/calibre` (HDD, read-only), and host port 30080.

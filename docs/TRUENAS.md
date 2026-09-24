@@ -60,7 +60,7 @@ services:
 
 1. In your browser, go to `http://YOUR-TRUENAS-IP:30080`, for example `http://192.168.1.50:30080`.
 2. Sign in as **admin** with the password you picked in Step 3.
-3. Right away, go to **Profile → Change password** if you'd rather not leave the password in the app settings.
+3. Optional: change your password under **Profile → Change password**. The password in the YAML is only used the very first time NovelCheck starts, so changing it here is safe.
 
 ## Step 5: First-time setup (inside NovelCheck)
 
@@ -68,7 +68,7 @@ Open the **Admin** tab.
 
 1. **LLM Analysis Engine:** This is the AI that rates books.
    - **Using OpenAI:** paste your API key. Leave the model as `gpt-4o-mini`.
-   - **Using Gemini:** set the base URL to `https://generativelanguage.googleapis.com/v1beta/openai`, paste your Gemini API key, and set the model to `gemini-1.5-flash`.
+   - **Using Gemini:** set the base URL to `https://generativelanguage.googleapis.com/v1beta/openai`, paste your Gemini API key, and set the model to a current Gemini **Flash** model name from Google AI Studio (for example `gemini-1.5-flash`).
    - Click **Save settings**.
 2. Click **Sync Calibre now**. After a few seconds the status line should show your book count.
 3. Set **Books per batch** to something small like `5`, then click **Analyze batch**. Watch the "Tokens this hour" and "Spent to date" numbers to see real costs before running bigger batches.
@@ -80,7 +80,7 @@ Open the **Admin** tab.
 - **iPhone (Safari):** open the NovelCheck address, tap **Share**, then **Add to Home Screen**.
 - **Android (Chrome):** open the address and tap **Install app** (or ⋮ → **Add to Home screen**).
 
-To use NovelCheck away from home, set up a Cloudflare Tunnel that points to `http://YOUR-TRUENAS-IP:30080`. The main [README](../README.md) has details.
+To use NovelCheck away from home, create a tunnel in **Cloudflare Zero Trust → Networks → Tunnels**, then install the **Cloudflared** app from TrueNAS **Discover Apps** and paste the tunnel token into it. In Cloudflare, point your tunnel's public hostname to `http://YOUR-TRUENAS-IP:30080`.
 
 ---
 
@@ -99,7 +99,7 @@ In NovelCheck: **Admin → Download novelcheck.db**. Keep that file somewhere sa
 | App won't start, logs say **permission denied** on `/data` | The Step 1 dataset must use the **Apps** preset. Or: **Datasets → novelcheck → Permissions → Edit** and give the **apps** user (568) *Modify* access. |
 | **Calibre: not mounted** or 0 books | Check that the Calibre path in Step 3 is the folder that directly contains `metadata.db`. Then give the **apps** user *Read* access to that dataset (**Datasets → your Calibre dataset → Permissions → Edit → Add Item → User: apps → Read**). |
 | Can't open `http://…:30080` | Another app may already use port 30080. Edit the app and change `30080` to another number like `30081`. |
-| Forgot the admin password | Edit the app, change `NOVELCHECK_ADMIN_PASSWORD`, then **Datasets → novelcheck** and delete `novelcheck.db` *(this erases NovelCheck's data)*. Or ask another admin account to reset it under **Users**. |
+| Forgot the admin password | Easiest: have another admin account reset it under **Admin → Users & Content Rules → Reset password**. Last resort (erases all NovelCheck data): stop the app, delete `novelcheck.db` from the Step 1 dataset, and start the app again. The password in the YAML is then used to create a fresh admin. |
 | See what's going on | **Apps → novelcheck → Logs** (the icon on the container row). |
 
 > Note: `NOVELCHECK_ADMIN_PASSWORD` is only used the very first time NovelCheck starts, to create the admin account. Changing it later doesn't change an existing password.
