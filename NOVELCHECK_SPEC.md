@@ -31,7 +31,9 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 ## 4. Core Features & Functional Requirements
 
 ### Feature 1: Authentication & Parental Control Filters
-* User login system supporting `Admin` and `Restricted` (Kid) accounts.
+* User login system supporting `Admin`, `Editor`, and `Restricted` (Kid) accounts. Editors handle day-to-day management (rating corrections, scans, drive imports, kids' accounts) without access to technical settings, secrets, or backups.
+* First-run setup: on a fresh install the web page asks for the admin username and password (no credentials in deployment YAML).
+* First-login "How to" guide per user, reopenable from a Help link.
 * Profile-level content rules (e.g., *Hide Open Door, Nudity, Solo Acts, Heavy Innuendo, Dark Occult/Demonic, LGBTQ+, and Unanalyzed books*).
 * Database-level filtering ensures restricted accounts cannot list, search, view, queue, or download hidden titles.
 
@@ -40,6 +42,7 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 * Read Calibre’s `metadata.db` SQLite file directly in **strict read-only mode** (`file:metadata.db?mode=ro`) to extract titles, authors, and existing metadata without database lock conflicts. Never writes to Calibre.
 * Resolve internal file paths by prepending container mount prefix `/calibre/` to relative paths extracted from `metadata.db`.
 * Automatically purge deleted Calibre titles during scheduled or manual sync runs.
+* The container mounts a parent folder; the admin selects the exact library subfolder in the app (folder browser + automatic `metadata.db` search), restricted to the mount.
 * Assign synced entries to a default catalog named `Calibre Main`.
 
 ### Feature 3: Browser Drive & Kindle Scanner
@@ -64,6 +67,8 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 ### Feature 7: Flexible LLM Analysis Engine & Admin Control Panel
 * **Metadata Enrichment Step:** Query Open Library / Google Books API for summary blurbs before LLM execution to prevent hallucinations on indie/self-published titles.
 * **On-Demand & Queued Processing:** Syncing a library indexes metadata instantly without triggering LLM API calls for every book at once. Books display a `Pending Analysis` status until processed.
+* **Manual rating corrections:** Admins and editors can override a verdict; it is recorded as `manual: <username>`.
+* **Update notices:** The app checks GitHub Releases, shows admins/editors an "update available" banner, and displays release notes (from `CHANGELOG.md`) under "What's new".
 * **Admin Control Panel:** Batch size limits, token/hourly rate caps, live cost estimator, test SMTP mailer, auto-sync schedules, 1-click SQLite database download (`novelcheck.db`), and queue clearing tools.
 
 #### System Prompt Specification
@@ -119,10 +124,11 @@ OUTPUT FORMAT (JSON ONLY):
 | Package | Responsibility |
 |---|---|
 | `cmd/novelcheck` | Loads env config, opens DB, bootstraps admin, resets interrupted analyses, starts the analysis worker + Calibre scheduler + HTTP server |
-| `internal/db` | Opens `novelcheck.db` (WAL, foreign keys, single connection) and applies the embedded idempotent `schema.sql` |
+| `internal/db` | Opens `novelcheck.db` (WAL, foreign keys, single connection), applies the embedded idempotent `schema.sql`, and runs in-place migrations for older databases |
 | `internal/store` | All SQL (via `sqlx`); SQL-level visibility clause for per-profile content rules |
-| `internal/auth` | bcrypt passwords, random session tokens (only SHA-256 stored), `RequireUser` / `RequireAdmin` middleware |
-| `internal/calibre` | `metadata.db?mode=ro` reader, `/calibre/` path resolution, prune of deleted books, interval scheduler |
+| `internal/auth` | bcrypt passwords, random session tokens (only SHA-256 stored), `RequireUser` / `RequireManager` / `RequireAdmin` middleware |
+| `internal/calibre` | `metadata.db?mode=ro` reader, library-folder selection/browse/find inside the mount, `/calibre/` path resolution, prune of deleted books, interval scheduler |
+| `internal/version` / `internal/updates` | Build-time version stamp, semver comparison, cached GitHub Releases check |
 | `internal/enrich` | Open Library → Google Books → local description blurb lookup |
 | `internal/llm` | OpenAI-compatible `/chat/completions` client, Section 4 system prompt, tolerant JSON verdict parser |
 | `internal/analyzer` | Single worker queue; token-per-hour cap on the trailing-hour window; scan delay; small-model-first with optional large fallback |
@@ -131,12 +137,13 @@ OUTPUT FORMAT (JSON ONLY):
 | `web/static` | `index.html`, compiled Tailwind `css/app.css`, ES-module JS views, `manifest.json`, `sw.js`, icons, vendored SortableJS + JSZip |
 
 ### 5.2 Tables
-`users` (role + `hide_*` content rules + delivery prefs) · `sessions` · `catalogs` (`calibre` | `drive` | `custom`) · `books` (one row per logical title, keyed by a normalized title + author-surname `norm_key` so the same book in Calibre and on a Kindle is shared; holds status `pending|queued|processing|analyzed|error` and the verdict flags) · `catalog_books` (copies/locations) · `queue_items` (per-user position + `queued|reading|finished`) · `settings` (admin-tunable key/values) · `token_usage` (per-call prompt/completion tokens for caps and cost).
+`users` (role `admin|editor|restricted` + `hide_*` content rules + delivery prefs + `guide_seen`) · `sessions` · `catalogs` (`calibre` | `drive` | `custom`) · `books` (one row per logical title, keyed by a normalized title + author-surname `norm_key` so the same book in Calibre and on a Kindle is shared; holds status `pending|queued|processing|analyzed|error` and the verdict flags) · `catalog_books` (copies/locations) · `queue_items` (per-user position + `queued|reading|finished`) · `settings` (admin-tunable key/values) · `token_usage` (per-call prompt/completion tokens for caps and cost).
 
 ### 5.3 HTTP API
-Public: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /healthz`.
-Any signed-in user: `GET /api/me`, `PUT /api/me/password`, `PUT /api/me/delivery`, `GET /api/books` (filters: `q, catalog, overlap_with, multi, classification, flags, exclude, status, sort, limit, offset`), `GET /api/books/{id}`, `GET /api/books/{id}/download`, `GET /api/catalogs`, `GET|POST /api/queue`, `PUT /api/queue/order`, `DELETE /api/queue/{id}`, `POST /api/queue/{id}/start`, `POST /api/queue/{id}/finish`.
-Admin only: `POST|PATCH|DELETE /api/catalogs[/{id}]`, `POST /api/import/drive`, `POST /api/books/{id}/analyze`, `GET /api/admin/status`, `GET|PUT /api/admin/settings`, `POST /api/admin/analyze-batch`, `POST /api/admin/wipe-queue`, `POST /api/admin/calibre-sync`, `POST /api/admin/smtp-test`, `GET /api/admin/backup`, `GET|POST /api/admin/users`, `PUT|DELETE /api/admin/users/{id}`, `PUT /api/admin/users/{id}/password`.
+Public: `POST /api/auth/login`, `POST /api/auth/logout`, `GET|POST /api/setup` (first admin, only while no users exist), `GET /healthz`.
+Any signed-in user: `GET /api/me`, `PUT /api/me/password`, `PUT /api/me/delivery`, `PUT /api/me/guide-seen`, `GET /api/updates`, `GET /api/books` (filters: `q, catalog, overlap_with, multi, classification, flags, exclude, status, sort, limit, offset`), `GET /api/books/{id}`, `GET /api/books/{id}/download`, `GET /api/catalogs`, `GET|POST /api/queue`, `PUT /api/queue/order`, `DELETE /api/queue/{id}`, `POST /api/queue/{id}/start`, `POST /api/queue/{id}/finish`.
+Editor or admin: `POST /api/catalogs`, `PATCH /api/catalogs/{id}`, `POST /api/import/drive`, `POST /api/books/{id}/analyze`, `PUT /api/books/{id}/verdict`, `GET /api/admin/status`, `POST /api/admin/analyze-batch`, `POST /api/admin/calibre-sync`, `GET|POST /api/admin/users`, `PUT|DELETE /api/admin/users/{id}`, `PUT /api/admin/users/{id}/password` (editors: restricted accounts only).
+Admin only: `DELETE /api/catalogs/{id}`, `GET|PUT /api/admin/settings`, `POST /api/admin/wipe-queue`, `GET /api/admin/calibre/browse`, `GET /api/admin/calibre/find`, `PUT /api/admin/calibre/library`, `POST /api/admin/smtp-test`, `GET /api/admin/backup`.
 All non-GET API calls require the header `X-NovelCheck: 1`.
 
 ---
@@ -155,3 +162,4 @@ All non-GET API calls require the header `X-NovelCheck: 1`.
 10. **Tests.** Store filters and visibility, Calibre read-only sync, LLM client and parser, analyzer fallback and usage recording, API end-to-end (auth, CSRF, restricted filtering, import, queue).
 11. **Packaging & docs.** Multi-stage `Dockerfile` (non-root UID 568), `docker-compose.yml` (prebuilt GHCR image, SSD `/data`, read-only HDD `/calibre`, port 8080, optional `cloudflared` and GPU `ollama` profiles), `README.md`, and this spec, kept in sync per Rule 3.
 12. **Distribution.** GitHub Actions workflow (`.github/workflows/docker.yml`) that tests, builds multi-arch (`amd64`/`arm64`) images, publishes them to `ghcr.io/zachcurry13/novelcheck` (`:latest` from `main`, `:X.Y.Z` per release), and creates a GitHub Release from a `v*` tag or a manual **Run workflow** with a version input. `docs/TRUENAS.md` is a no-command-line TrueNAS install guide using **Install via YAML** with `/data` (SSD), `/calibre` (HDD, read-only), and host port 30080.
+13. **v1.1 usability.** Web-based first-run admin setup, Editor role with scoped permissions and manual rating corrections, in-app Calibre library folder picker, first-login How-to guide, and update notices with an in-app changelog (`CHANGELOG.md` also drives GitHub release notes).

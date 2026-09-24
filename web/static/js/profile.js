@@ -3,6 +3,7 @@ import { put } from "./api.js";
 import { $, esc, attempt } from "./ui.js";
 import { RULES } from "./users.js";
 import { refreshUser } from "./app.js";
+import { openGuide } from "./guide.js";
 
 export async function renderProfile(view, state) {
   const u = state.user;
@@ -33,7 +34,13 @@ export async function renderProfile(view, state) {
         <h2 class="mb-2 text-lg font-semibold">Content rules on this account</h2>
         ${active ? `<ul class="list-disc pl-5 text-sm text-slate-300">${active}</ul>`
           : `<p class="text-sm text-slate-400">No content is hidden for this account.</p>`}
-        ${u.role !== "admin" ? `<p class="mt-2 text-xs text-slate-500">Only an admin can change these rules.</p>` : ""}
+        ${u.role === "restricted" ? `<p class="mt-2 text-xs text-slate-500">Only a parent (admin or editor) can change these rules.</p>`
+          : u.role === "editor" ? `<p class="mt-2 text-xs text-slate-500">Only an admin can change these rules.</p>` : ""}
+      </div>
+      <div class="card lg:col-span-2 flex flex-wrap items-center gap-3">
+        <p class="flex-1 text-sm text-slate-300">New here, or need a refresher?</p>
+        <button type="button" id="replay-guide" class="btn-secondary">Show the How-to guide</button>
+        <a href="#/whatsnew" class="btn-secondary">What's new</a>
       </div>
     </div>`;
 
@@ -48,6 +55,8 @@ export async function renderProfile(view, state) {
     }), "Delivery settings saved");
     if (ok) await refreshUser();
   });
+
+  $("#replay-guide", view).addEventListener("click", () => openGuide(state));
 
   $("#password", view).addEventListener("submit", async (e) => {
     e.preventDefault();

@@ -32,10 +32,31 @@
     </form>
   </section>
 
+  <!-- First-run setup (only while no accounts exist) -->
+  <section id="setup-view" class="hidden min-h-screen flex items-center justify-center p-6">
+    <form id="setup-form" class="w-full max-w-md space-y-4 rounded-2xl bg-slate-900 p-8 shadow-xl ring-1 ring-slate-800">
+      <div class="flex items-center gap-3">
+        <img src="/icons/icon.svg" alt="" class="h-10 w-10">
+        <h1 class="text-2xl font-bold">Welcome to NovelCheck</h1>
+      </div>
+      <p class="text-sm text-slate-300">Let's create your <b>admin account</b>. This is the main account that controls NovelCheck.
+        You'll add accounts for everyone else later.</p>
+      <label class="block"><span class="label">Admin username</span>
+        <input name="username" autocomplete="username" required minlength="2" maxlength="40" value="admin" class="input"></label>
+      <label class="block"><span class="label">Password (at least 8 characters)</span>
+        <input name="password" type="password" autocomplete="new-password" required minlength="8" class="input"></label>
+      <label class="block"><span class="label">Type the password again</span>
+        <input name="confirm" type="password" autocomplete="new-password" required minlength="8" class="input"></label>
+      <p id="setup-error" class="hidden text-sm text-rose-400"></p>
+      <button class="btn-primary w-full">Create admin account</button>
+      <p class="text-xs text-slate-500">Write the password down somewhere safe. NovelCheck can't show it to you again.</p>
+    </form>
+  </section>
+
   <!-- App shell -->
   <div id="app-view" class="hidden">
     <header class="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/90 backdrop-blur pt-safe">
-      <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-2 px-4 py-3 sm:gap-x-4">
         <a href="#/library" class="mr-auto flex items-center gap-2 font-bold text-lg sm:mr-0">
           <img src="/icons/icon.svg" alt="" class="h-7 w-7"> NovelCheck
         </a>
@@ -46,12 +67,28 @@
           <a href="#/admin" data-route="admin" id="admin-tab" class="nav-link manager-only">Admin</a>
           <a href="#/profile" data-route="profile" class="nav-link">Profile</a>
         </nav>
+        <button id="help-btn" class="btn-ghost px-2 text-sm sm:px-4" title="How to use NovelCheck" aria-label="Help">❔<span class="hidden sm:inline"> Help</span></button>
         <button id="install-btn" class="btn-ghost hidden text-sm">Install app</button>
-        <button id="logout-btn" class="btn-ghost text-sm">Sign out</button>
+        <button id="logout-btn" class="btn-ghost px-2 text-sm sm:px-4">Sign out</button>
       </div>
     </header>
-    <main id="view" class="mx-auto max-w-7xl px-4 py-6 pb-safe"></main>
+    <div id="update-banner" class="hidden border-b border-emerald-800 bg-emerald-950/60">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2 text-sm">
+        <span id="update-text" class="text-emerald-200"></span>
+        <a href="#/whatsnew" class="underline text-emerald-300">See what's new</a>
+        <button id="update-dismiss" class="btn-ghost ml-auto px-2 py-0.5 text-xs">Dismiss</button>
+      </div>
+    </div>
+    <main id="view" class="mx-auto max-w-7xl px-4 py-6"></main>
+    <footer class="mx-auto flex max-w-7xl flex-wrap gap-x-4 gap-y-1 border-t border-slate-800 px-4 pt-4 pb-safe text-xs text-slate-500">
+      <a href="#" id="help-link" class="underline">How to use NovelCheck</a>
+      <a href="#/whatsnew" class="underline">What's new</a>
+      <span id="version-label"></span>
+    </footer>
   </div>
+
+  <!-- First-login guide -->
+  <dialog id="guide-dialog" class="dialog"></dialog>
 
   <!-- Book detail dialog -->
   <dialog id="book-dialog" class="dialog"></dialog>

@@ -1,6 +1,9 @@
 # NovelCheck — single container. Tuned for TrueNAS SCALE / Linux hosts:
 #   * /data    -> SSD dataset (novelcheck.db, small and write-heavy)
-#   * /calibre -> Calibre library on the HDD pool, mounted READ-ONLY
+#   * /calibre -> folder containing your Calibre library (HDD pool), READ-ONLY.
+#                 It can be a parent folder: pick the exact library in
+#                 Admin -> Calibre Library.
+# On first visit the web page asks you to create the admin account.
 services:
   novelcheck:
     image: ghcr.io/zachcurry13/novelcheck:latest   # prebuilt by GitHub Actions
@@ -11,15 +14,13 @@ services:
     ports:
       - "8080:8080"
     environment:
-      NOVELCHECK_ADMIN_USER: admin
-      NOVELCHECK_ADMIN_PASSWORD: ${NOVELCHECK_ADMIN_PASSWORD:-}   # blank = random, printed to logs once
       NOVELCHECK_TRUST_PROXY: "true"                              # honor CF-Connecting-IP / X-Forwarded-For
       NOVELCHECK_CORS_ORIGINS: ""                                 # comma-separated; blank = same-origin only
       NOVELCHECK_SESSION_DAYS: "30"
       TZ: America/Chicago
     volumes:
       - /mnt/ssd/novelcheck:/data                  # change to your SSD dataset
-      - /mnt/tank/media/calibre:/calibre:ro        # change to your Calibre library folder
+      - /mnt/red14/plex:/calibre:ro                # change to the folder containing your library
 
   # Optional: expose NovelCheck through a Cloudflare Tunnel (no open ports).
   # Create a tunnel in Cloudflare Zero Trust, route it to http://novelcheck:8080,

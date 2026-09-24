@@ -17,6 +17,8 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/updates"
+	"github.com/zachcurry13/novelcheck/internal/version"
 	"github.com/zachcurry13/novelcheck/web"
 )
 
@@ -47,12 +49,13 @@ func main() {
 	go syncer.Loop(ctx)
 
 	srv := &api.Server{
-		Cfg:    cfg,
-		Store:  st,
-		Auth:   &auth.Manager{Store: st, SessionDays: cfg.SessionDays},
-		Worker: worker,
-		Syncer: syncer,
-		Web:    web.FS(),
+		Cfg:     cfg,
+		Store:   st,
+		Auth:    &auth.Manager{Store: st, SessionDays: cfg.SessionDays},
+		Worker:  worker,
+		Syncer:  syncer,
+		Updates: updates.New(),
+		Web:     web.FS(),
 	}
 	httpSrv := &http.Server{
 		Addr:              cfg.Addr,
@@ -66,7 +69,7 @@ func main() {
 		defer cancel()
 		_ = httpSrv.Shutdown(shutdown)
 	}()
-	log.Printf("NovelCheck listening on %s (data: %s, calibre: %s)", cfg.Addr, cfg.DataDir, cfg.CalibreDir)
+	log.Printf("NovelCheck %s listening on %s (data: %s, calibre: %s)", version.Version, cfg.Addr, cfg.DataDir, cfg.CalibreDir)
 	if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}

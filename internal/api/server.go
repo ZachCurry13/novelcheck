@@ -12,16 +12,18 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/updates"
 )
 
 type Server struct {
-	Cfg    config.Config
-	Store  *store.Store
-	Auth   *auth.Manager
-	Worker *analyzer.Worker
-	Syncer *calibre.Syncer
-	Web    fs.FS // embedded static assets
-	logins *loginLimiter
+	Cfg     config.Config
+	Store   *store.Store
+	Auth    *auth.Manager
+	Worker  *analyzer.Worker
+	Syncer  *calibre.Syncer
+	Updates *updates.Checker
+	Web     fs.FS // embedded static assets
+	logins  *loginLimiter
 }
 
 func (s *Server) Router() http.Handler {
@@ -38,17 +40,21 @@ func (s *Server) Router() http.Handler {
 		r.Use(noStore, cors(s.Cfg.CORSOrigins), csrfGuard)
 		r.Post("/auth/login", s.handleLogin)
 		r.Post("/auth/logout", s.handleLogout)
+		r.Get("/setup", s.handleSetupStatus)
+		r.Post("/setup", s.handleSetup)
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.Auth.RequireUser)
 			r.Get("/me", s.handleMe)
 			r.Put("/me/password", s.handleChangePassword)
 			r.Put("/me/delivery", s.handleUpdateDelivery)
+			r.Put("/me/guide-seen", s.handleGuideSeen)
 
 			r.Get("/books", s.handleListBooks)
 			r.Get("/books/{id}", s.handleGetBook)
 			r.Get("/books/{id}/download", s.handleDownload)
 			r.Get("/catalogs", s.handleListCatalogs)
+			r.Get("/updates", s.handleUpdates)
 
 			r.Get("/queue", s.handleListQueue)
 			r.Post("/queue", s.handleEnqueue)

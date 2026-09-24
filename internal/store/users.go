@@ -9,7 +9,7 @@ import (
 var ErrNotFound = errors.New("not found")
 
 const userCols = `id, username, password_hash, role, hide_open_door, hide_nudity, hide_solo_acts,
-	hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, delivery_method, kindle_email, created_at`
+	hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, delivery_method, kindle_email, guide_seen, created_at`
 
 func (s *Store) CountUsers() (int, error) {
 	var n int
@@ -67,6 +67,25 @@ func (s *Store) CreateUser(username, hash, role string) (*User, error) {
 	return s.UserByID(id)
 }
 
+// ErrSetupDone is returned when first-run setup is attempted but an account
+// already exists.
+var ErrSetupDone = errors.New("setup has already been completed")
+
+// CreateFirstAdmin creates an admin only while the users table is empty. The
+// check and insert are one statement, so two browsers racing through the
+// setup page can't both create an admin.
+func (s *Store) CreateFirstAdmin(username, hash string) (*User, error) {
+	res, err := s.DB.Exec(`INSERT INTO users (username, password_hash, role)
+		SELECT ?, ?, 'admin' WHERE NOT EXISTS (SELECT 1 FROM users)`, username, hash)
+	if err != nil {
+		return nil, err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return nil, ErrSetupDone
+	}
+	return s.UserByName(username)
+}
+
 // UpdateUserProfile saves role, content rules and delivery preferences.
 func (s *Store) UpdateUserProfile(u *User) error {
 	_, err := s.DB.Exec(`UPDATE users SET role = ?, hide_open_door = ?, hide_nudity = ?,
@@ -81,6 +100,12 @@ func (s *Store) UpdateUserProfile(u *User) error {
 func (s *Store) UpdateDelivery(id int64, method, email string) error {
 	_, err := s.DB.Exec(`UPDATE users SET delivery_method = ?, kindle_email = ? WHERE id = ?`,
 		method, email, id)
+	return err
+}
+
+// SetGuideSeen records whether the user has finished the first-login guide.
+func (s *Store) SetGuideSeen(id int64, seen bool) error {
+	_, err := s.DB.Exec(`UPDATE users SET guide_seen = ? WHERE id = ?`, seen, id)
 	return err
 }
 

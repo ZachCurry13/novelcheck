@@ -36,6 +36,22 @@ func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, auth.UserFrom(r))
 }
 
+// handleGuideSeen marks the first-login "How to" guide as done (or, with
+// {"seen": false}, asks for it to be shown again next time).
+func (s *Server) handleGuideSeen(w http.ResponseWriter, r *http.Request) {
+	body := struct {
+		Seen bool `json:"seen"`
+	}{Seen: true}
+	if r.ContentLength > 0 && !readJSON(w, r, &body, 1<<10) {
+		return
+	}
+	if err := s.Store.SetGuideSeen(auth.UserFrom(r).ID, body.Seen); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"guide_seen": body.Seen})
+}
+
 func (s *Server) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 	u := auth.UserFrom(r)
 	var body struct {

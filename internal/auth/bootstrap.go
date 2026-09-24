@@ -6,16 +6,18 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// Bootstrap creates the first admin account when the database has no users.
-// If no password is configured a random one is generated and logged once.
+// Bootstrap handles a brand-new database. Normally it does nothing and the
+// first person to open the web page creates the admin account there. If
+// NOVELCHECK_ADMIN_PASSWORD is set (optional, for automated installs), that
+// admin is created up front instead.
 func Bootstrap(s *store.Store, username, password string) error {
 	n, err := s.CountUsers()
 	if err != nil || n > 0 {
 		return err
 	}
-	generated := password == ""
-	if generated {
-		password = RandomToken(12)
+	if password == "" {
+		log.Printf("no accounts yet: open NovelCheck in your browser to create the admin account")
+		return nil
 	}
 	hash, err := HashPassword(password)
 	if err != nil {
@@ -24,10 +26,6 @@ func Bootstrap(s *store.Store, username, password string) error {
 	if _, err := s.CreateUser(username, hash, store.RoleAdmin); err != nil {
 		return err
 	}
-	if generated {
-		log.Printf("created admin user %q with generated password: %s (change it after first login)", username, password)
-	} else {
-		log.Printf("created admin user %q from NOVELCHECK_ADMIN_PASSWORD", username)
-	}
+	log.Printf("created admin user %q from NOVELCHECK_ADMIN_PASSWORD", username)
 	return nil
 }

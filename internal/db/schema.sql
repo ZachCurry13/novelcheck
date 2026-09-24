@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     hide_unrated     INTEGER NOT NULL DEFAULT 0,
     delivery_method  TEXT NOT NULL DEFAULT 'none' CHECK (delivery_method IN ('none', 'email', 'koreader')),
     kindle_email     TEXT NOT NULL DEFAULT '',
+    guide_seen       INTEGER NOT NULL DEFAULT 0,
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

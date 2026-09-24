@@ -25,6 +25,7 @@ const (
 	KeySMTPFrom           = "smtp_from"
 	KeyCalibrePollHours   = "calibre_poll_hours"
 	KeyCalibreLibraryPath = "calibre_library_path" // folder inside the mount; "" = mount root
+	KeyCheckUpdates       = "check_updates"
 	KeyCalibreLastSync    = "calibre_last_sync"
 	KeyCalibreLastResult  = "calibre_last_result"
 )
@@ -43,6 +44,7 @@ var Defaults = map[string]string{
 	KeySMTPPort:           "587",
 	KeyCalibrePollHours:   "6",
 	KeyCalibreLibraryPath: "",
+	KeyCheckUpdates:       "true",
 	KeyCalibreLastSync:    "",
 	KeyCalibreLastResult:  "",
 }

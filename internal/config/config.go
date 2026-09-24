@@ -14,7 +14,7 @@ type Config struct {
 	DataDir       string   // directory holding novelcheck.db (SSD dataset)
 	CalibreDir    string   // Calibre library mount (HDD pool), read-only
 	AdminUser     string   // bootstrap admin username
-	AdminPassword string   // bootstrap admin password (random if empty)
+	AdminPassword string   // optional: pre-create the first admin (else set up in the browser)
 	TrustProxy    bool     // honor X-Forwarded-For / CF-Connecting-IP
 	CORSOrigins   []string // allowed cross-origin callers (empty = same-origin only)
 	SessionDays   int      // session lifetime

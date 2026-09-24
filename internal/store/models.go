@@ -37,6 +37,7 @@ type User struct {
 	HideUnrated    bool   `db:"hide_unrated" json:"hide_unrated"`
 	DeliveryMethod string `db:"delivery_method" json:"delivery_method"`
 	KindleEmail    string `db:"kindle_email" json:"kindle_email"`
+	GuideSeen      bool   `db:"guide_seen" json:"guide_seen"`
 	CreatedAt      string `db:"created_at" json:"created_at"`
 }
 

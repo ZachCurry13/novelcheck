@@ -30,6 +30,9 @@ const SECTIONS = [
   ["Calibre Library", [
     ["calibre_poll_hours", "Sync every N hours (0 = manual only)", "6", "number"],
   ]],
+  ["App Updates", [
+    ["check_updates", "Check GitHub for new NovelCheck versions (shows a banner to admins and editors)", "", "bool"],
+  ]],
 ];
 
 // Admins see everything. Editors get the same dashboard and actions minus

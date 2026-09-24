@@ -11,7 +11,23 @@ import (
 // CREATE TABLE IF NOT EXISTS, so constraint changes on existing tables must
 // be applied here.
 func migrate(d *sqlx.DB) error {
-	return addEditorRole(d)
+	if err := addEditorRole(d); err != nil {
+		return err
+	}
+	return addColumn(d, "users", "guide_seen", "INTEGER NOT NULL DEFAULT 0")
+}
+
+// addColumn adds a column if an older database doesn't have it yet.
+func addColumn(d *sqlx.DB, table, column, def string) error {
+	var n int
+	if err := d.Get(&n, `SELECT COUNT(*) FROM pragma_table_info(?) WHERE name = ?`, table, column); err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	_, err := d.Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", table, column, def))
+	return err
 }
 
 // addEditorRole widens users.role to allow 'editor' (added in v1.1). SQLite

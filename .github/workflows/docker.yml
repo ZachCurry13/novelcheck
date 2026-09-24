@@ -39,6 +39,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tags, for git describe
+      - name: Work out the version baked into the app
+        id: ver
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then v="${{ inputs.version }}"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF_NAME#v}"
+          else v="$(git describe --tags --always 2>/dev/null | sed 's/^v//')"; fi
+          echo "version=${v:-dev}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - name: Log in to GitHub Container Registry
@@ -67,6 +76,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ steps.ver.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -77,12 +87,16 @@ jobs:
     env:
       TAG: ${{ inputs.version != '' && format('v{0}', inputs.version) || github.ref_name }}
     steps:
+      - uses: actions/checkout@v4
+      - name: Release notes from CHANGELOG.md
+        run: |
+          v="${TAG#v}"
+          awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "See CHANGELOG.md for details." > notes.md
+          printf '\n---\n**Update on TrueNAS:** Apps → novelcheck → Update (or Edit → Save).\nImage: `ghcr.io/zachcurry13/novelcheck:%s` (also `:latest`).\n' "$v" >> notes.md
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG }}
           name: NovelCheck ${{ env.TAG }}
           target_commitish: ${{ github.sha }}
-          generate_release_notes: true
-          body: |
-            Container image: `ghcr.io/zachcurry13/novelcheck:latest` (also tagged with this version number, without the leading v).
-            TrueNAS install guide: https://github.com/ZachCurry13/novelcheck/blob/main/docs/TRUENAS.md
+          body_path: notes.md
