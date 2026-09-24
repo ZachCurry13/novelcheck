@@ -133,6 +133,17 @@ func RequireAdmin(next http.Handler) http.Handler {
 	})
 }
 
+// RequireManager admits admins and editors; mount after RequireUser.
+func RequireManager(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if u := UserFrom(r); u == nil || !u.CanManage() {
+			http.Error(w, `{"error":"editor or admin access required"}`, http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func UserFrom(r *http.Request) *store.User {
 	u, _ := r.Context().Value(ctxKey{}).(*store.User)
 	return u

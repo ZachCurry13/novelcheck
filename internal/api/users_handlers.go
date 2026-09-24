@@ -11,11 +11,48 @@ import (
 
 var usernameRE = regexp.MustCompile(`^[A-Za-z0-9_.-]{2,40}$`)
 
+// Admins manage every account. Editors manage only restricted (kid) accounts
+// and can never create, promote, or edit admins or other editors.
+func canManageUser(actor, target *store.User) bool {
+	if actor.IsAdmin() {
+		return true
+	}
+	return actor.Role == store.RoleEditor && target.Role == store.RoleRestricted
+}
+
+// targetUser loads the {id} user and checks the caller may manage it.
+func (s *Server) targetUser(w http.ResponseWriter, r *http.Request) (*store.User, bool) {
+	id, ok := pathID(r, "id")
+	if !ok {
+		writeErr(w, http.StatusBadRequest, "invalid id")
+		return nil, false
+	}
+	target, err := s.Store.UserByID(id)
+	if err != nil {
+		writeStoreErr(w, err)
+		return nil, false
+	}
+	if !canManageUser(auth.UserFrom(r), target) {
+		writeErr(w, http.StatusForbidden, "editors can only manage restricted (kid) accounts")
+		return nil, false
+	}
+	return target, true
+}
+
 func (s *Server) handleListUsers(w http.ResponseWriter, r *http.Request) {
-	us, err := s.Store.ListUsers()
+	var us []store.User
+	var err error
+	if auth.UserFrom(r).IsAdmin() {
+		us, err = s.Store.ListUsers()
+	} else {
+		us, err = s.Store.ListUsersByRole(store.RoleRestricted)
+	}
 	if err != nil {
 		writeStoreErr(w, err)
 		return
+	}
+	if us == nil {
+		us = []store.User{}
 	}
 	writeJSON(w, http.StatusOK, us)
 }
@@ -34,8 +71,12 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "username must be 2-40 letters, digits, '.', '_' or '-'")
 		return
 	}
-	if body.Role != store.RoleAdmin {
+	if !store.ValidRole(body.Role) {
 		body.Role = store.RoleRestricted
+	}
+	if !auth.UserFrom(r).IsAdmin() && body.Role != store.RoleRestricted {
+		writeErr(w, http.StatusForbidden, "editors can only create restricted (kid) accounts")
+		return
 	}
 	hash, err := auth.HashPassword(body.Password)
 	if err != nil {
@@ -52,14 +93,8 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 
 // handleUpdateUser edits a user's role, content rules and delivery settings.
 func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
-	id, ok := pathID(r, "id")
+	existing, ok := s.targetUser(w, r)
 	if !ok {
-		writeErr(w, http.StatusBadRequest, "invalid id")
-		return
-	}
-	existing, err := s.Store.UserByID(id)
-	if err != nil {
-		writeStoreErr(w, err)
 		return
 	}
 	upd := *existing
@@ -67,8 +102,12 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	upd.ID, upd.Username, upd.PasswordHash = existing.ID, existing.Username, existing.PasswordHash
-	if upd.Role != store.RoleAdmin && upd.Role != store.RoleRestricted {
-		writeErr(w, http.StatusBadRequest, "role must be admin or restricted")
+	if !store.ValidRole(upd.Role) {
+		writeErr(w, http.StatusBadRequest, "role must be admin, editor or restricted")
+		return
+	}
+	if !auth.UserFrom(r).IsAdmin() && upd.Role != store.RoleRestricted {
+		writeErr(w, http.StatusForbidden, "editors cannot change account roles")
 		return
 	}
 	if existing.IsAdmin() && !upd.IsAdmin() && s.lastAdmin() {
@@ -88,9 +127,8 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
-	id, ok := pathID(r, "id")
+	target, ok := s.targetUser(w, r)
 	if !ok {
-		writeErr(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 	var body struct {
@@ -104,38 +142,28 @@ func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if _, err := s.Store.UserByID(id); err != nil {
+	if err := s.Store.SetPassword(target.ID, hash); err != nil {
 		writeStoreErr(w, err)
 		return
 	}
-	if err := s.Store.SetPassword(id, hash); err != nil {
-		writeStoreErr(w, err)
-		return
-	}
-	_ = s.Store.DeleteUserSessions(id)
+	_ = s.Store.DeleteUserSessions(target.ID)
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
-	id, ok := pathID(r, "id")
+	target, ok := s.targetUser(w, r)
 	if !ok {
-		writeErr(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	if id == auth.UserFrom(r).ID {
+	if target.ID == auth.UserFrom(r).ID {
 		writeErr(w, http.StatusBadRequest, "you cannot delete your own account")
-		return
-	}
-	target, err := s.Store.UserByID(id)
-	if err != nil {
-		writeStoreErr(w, err)
 		return
 	}
 	if target.IsAdmin() && s.lastAdmin() {
 		writeErr(w, http.StatusBadRequest, "cannot delete the last admin")
 		return
 	}
-	if err := s.Store.DeleteUser(id); err != nil {
+	if err := s.Store.DeleteUser(target.ID); err != nil {
 		writeStoreErr(w, err)
 		return
 	}

@@ -9,10 +9,19 @@ type Store struct{ DB *sqlx.DB }
 
 func New(db *sqlx.DB) *Store { return &Store{DB: db} }
 
+// Roles, from most to least privileged:
+//   - admin:      everything, including API keys, SMTP, library folder, backups
+//   - editor:     day-to-day management (scans, verdict corrections, drive
+//     imports, kids' accounts) without the technical settings
+//   - restricted: kid account, filtered by its content rules
 const (
 	RoleAdmin      = "admin"
+	RoleEditor     = "editor"
 	RoleRestricted = "restricted"
 )
+
+// ValidRole reports whether r is a known role.
+func ValidRole(r string) bool { return r == RoleAdmin || r == RoleEditor || r == RoleRestricted }
 
 type User struct {
 	ID             int64  `db:"id" json:"id"`
@@ -32,6 +41,9 @@ type User struct {
 }
 
 func (u *User) IsAdmin() bool { return u.Role == RoleAdmin }
+
+// CanManage is true for admins and editors (the non-technical management tier).
+func (u *User) CanManage() bool { return u.Role == RoleAdmin || u.Role == RoleEditor }
 
 type Catalog struct {
 	ID        int64  `db:"id" json:"id"`

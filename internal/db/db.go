@@ -40,5 +40,9 @@ func OpenDSN(dsn string) (*sqlx.DB, error) {
 		d.Close()
 		return nil, fmt.Errorf("apply schema: %w", err)
 	}
+	if err := migrate(d); err != nil {
+		d.Close()
+		return nil, err
+	}
 	return d, nil
 }

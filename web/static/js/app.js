@@ -1,6 +1,6 @@
 // NovelCheck app bootstrap: session check, hash router, PWA install prompt.
 import { get, post, setUnauthorizedHandler } from "./api.js";
-import { $, $$, attempt } from "./ui.js";
+import { $, $$, attempt, canManage } from "./ui.js";
 import { renderLibrary } from "./library.js";
 import { renderQueue } from "./queue.js";
 import { renderImport } from "./scanner.js";
@@ -16,7 +16,7 @@ const routes = {
   admin: renderAdmin,
   profile: renderProfile,
 };
-const adminRoutes = new Set(["import", "admin"]);
+const managerRoutes = new Set(["import", "admin"]);
 
 function showLogin() {
   state.user = null;
@@ -27,8 +27,8 @@ function showLogin() {
 function showApp() {
   $("#login-view").classList.add("hidden");
   $("#app-view").classList.remove("hidden");
-  const isAdmin = state.user.role === "admin";
-  $$(".admin-only").forEach((el) => el.classList.toggle("hidden", !isAdmin));
+  $$(".manager-only").forEach((el) => el.classList.toggle("hidden", !canManage(state.user)));
+  $("#admin-tab").textContent = state.user.role === "admin" ? "Admin" : "Manage";
   route();
 }
 
@@ -36,7 +36,7 @@ let currentCleanup = null;
 async function route() {
   if (!state.user) return;
   let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || "library";
-  if (!routes[name] || (adminRoutes.has(name) && state.user.role !== "admin")) name = "library";
+  if (!routes[name] || (managerRoutes.has(name) && !canManage(state.user))) name = "library";
   $$("#nav .nav-link").forEach((a) => a.classList.toggle("active", a.dataset.route === name));
   if (typeof currentCleanup === "function") currentCleanup();
   // Fresh container per route so listeners never leak between views.

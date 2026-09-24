@@ -60,6 +60,9 @@ export function flagChips(b) {
   return on.map((f) => `<span class="chip-flag">${esc(f)}</span>`).join(" ");
 }
 
+// Admins and editors share the management views; only admins see technical settings.
+export const canManage = (user) => user?.role === "admin" || user?.role === "editor";
+
 export function fmtNum(n) {
   return Number(n || 0).toLocaleString();
 }

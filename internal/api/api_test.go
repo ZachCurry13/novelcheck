@@ -45,6 +45,20 @@ func (c *client) do(method, path string, body any, csrf bool) (*http.Response, m
 	return res, out
 }
 
+// doList is do() for endpoints returning a JSON array.
+func (c *client) doList(method, path string) (*http.Response, []map[string]any) {
+	c.t.Helper()
+	req, _ := http.NewRequest(method, c.base+path, nil)
+	res, err := c.http.Do(req)
+	if err != nil {
+		c.t.Fatal(err)
+	}
+	defer res.Body.Close()
+	var out []map[string]any
+	_ = json.NewDecoder(res.Body).Decode(&out)
+	return res, out
+}
+
 func setup(t *testing.T) (*httptest.Server, *store.Store) {
 	d, err := db.Open(t.TempDir())
 	if err != nil {

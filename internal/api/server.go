@@ -57,31 +57,39 @@ func (s *Server) Router() http.Handler {
 			r.Post("/queue/{id}/start", s.handleStartReading)
 			r.Post("/queue/{id}/finish", s.handleFinishReading)
 
+			// Editors and admins: day-to-day management. Handlers further
+			// restrict editors to kid accounts (see users_handlers.go).
 			r.Group(func(r chi.Router) {
-				r.Use(auth.RequireAdmin)
+				r.Use(auth.RequireManager)
 				r.Post("/catalogs", s.handleCreateCatalog)
 				r.Patch("/catalogs/{id}", s.handleRenameCatalog)
-				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)
 				r.Post("/import/drive", s.handleImportDrive)
 				r.Post("/books/{id}/analyze", s.handleAnalyzeBook)
+				r.Put("/books/{id}/verdict", s.handleSetVerdict)
 
 				r.Get("/admin/status", s.handleAdminStatus)
-				r.Get("/admin/settings", s.handleGetSettings)
-				r.Put("/admin/settings", s.handlePutSettings)
 				r.Post("/admin/analyze-batch", s.handleAnalyzeBatch)
-				r.Post("/admin/wipe-queue", s.handleWipeQueue)
 				r.Post("/admin/calibre-sync", s.handleCalibreSync)
-				r.Get("/admin/calibre/browse", s.handleCalibreBrowse)
-				r.Get("/admin/calibre/find", s.handleCalibreFind)
-				r.Put("/admin/calibre/library", s.handleSetCalibreLibrary)
-				r.Post("/admin/smtp-test", s.handleSMTPTest)
-				r.Get("/admin/backup", s.handleBackup)
 
 				r.Get("/admin/users", s.handleListUsers)
 				r.Post("/admin/users", s.handleCreateUser)
 				r.Put("/admin/users/{id}", s.handleUpdateUser)
 				r.Put("/admin/users/{id}/password", s.handleResetPassword)
 				r.Delete("/admin/users/{id}", s.handleDeleteUser)
+			})
+
+			// Admins only: technical settings, secrets, destructive actions.
+			r.Group(func(r chi.Router) {
+				r.Use(auth.RequireAdmin)
+				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)
+				r.Get("/admin/settings", s.handleGetSettings)
+				r.Put("/admin/settings", s.handlePutSettings)
+				r.Post("/admin/wipe-queue", s.handleWipeQueue)
+				r.Get("/admin/calibre/browse", s.handleCalibreBrowse)
+				r.Get("/admin/calibre/find", s.handleCalibreFind)
+				r.Put("/admin/calibre/library", s.handleSetCalibreLibrary)
+				r.Post("/admin/smtp-test", s.handleSMTPTest)
+				r.Get("/admin/backup", s.handleBackup)
 			})
 		})
 	})

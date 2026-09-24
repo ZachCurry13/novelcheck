@@ -1,4 +1,5 @@
-// Admin user management: accounts, roles and parental content rules.
+// User management: accounts, roles and parental content rules.
+// Admins manage everyone; editors see and manage only kid accounts.
 import { get, post, put, del } from "./api.js";
 import { $, $$, esc, attempt } from "./ui.js";
 
@@ -12,26 +13,39 @@ export const RULES = [
   ["hide_unrated", "Hide books not yet analyzed"],
 ];
 
-export async function renderUsers(host) {
+const ROLE_LABELS = { restricted: "Restricted (Kid)", editor: "Editor", admin: "Admin" };
+
+function roleOptions(selected, isAdmin) {
+  const roles = isAdmin ? ["restricted", "editor", "admin"] : ["restricted"];
+  return roles.map((r) => `<option value="${r}" ${r === selected ? "selected" : ""}>${ROLE_LABELS[r]}</option>`).join("");
+}
+
+export async function renderUsers(host, viewer) {
+  const isAdmin = viewer?.role === "admin";
   const users = (await attempt(() => get("/api/admin/users"))) || [];
   // Fresh container on each render so click listeners never stack up.
   const root = document.createElement("div");
   host.replaceChildren(root);
   root.innerHTML = `
-    <h2 class="mb-3 text-xl font-bold">Users & Content Rules</h2>
+    <h2 class="mb-1 text-xl font-bold">${isAdmin ? "Users & Content Rules" : "Kids' Accounts & Content Rules"}</h2>
+    <p class="mb-3 text-sm text-slate-400">${isAdmin
+      ? "Admin: full control. Editor: manages books, scans and kids' accounts, but no technical settings. Restricted: kid account filtered by its rules."
+      : "Add kid accounts, reset their passwords, and choose what each one can see."}</p>
     <form id="new-user" class="card mb-4 grid gap-3 md:grid-cols-4">
       <input name="username" required placeholder="Username" class="input">
       <input name="password" type="password" required minlength="8" placeholder="Password (8+ chars)" class="input" autocomplete="new-password">
-      <select name="role" class="input"><option value="restricted">Restricted (Kid)</option><option value="admin">Admin</option></select>
+      <select name="role" class="input" ${isAdmin ? "" : "disabled"}>${roleOptions("restricted", isAdmin)}</select>
       <button class="btn-primary">Add user</button>
     </form>
-    <div class="grid gap-3 lg:grid-cols-2">${users.map(userCard).join("")}</div>`;
+    <div class="grid gap-3 lg:grid-cols-2">${users.map((u) => userCard(u, isAdmin)).join("")}</div>`;
 
   $("#new-user", root).addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const ok = await attempt(() => post("/api/admin/users", Object.fromEntries(fd)), "User created");
-    if (ok) renderUsers(host);
+    const body = Object.fromEntries(fd);
+    body.role = body.role || "restricted";
+    const ok = await attempt(() => post("/api/admin/users", body), "User created");
+    if (ok) renderUsers(host, viewer);
   });
 
   root.addEventListener("click", async (e) => {
@@ -51,20 +65,17 @@ export async function renderUsers(host) {
     } else if (act === "delete") {
       if (!confirm("Delete this user and their queue?")) return;
       const ok = await attempt(() => del(`/api/admin/users/${id}`), "User deleted");
-      if (ok) renderUsers(host);
+      if (ok) renderUsers(host, viewer);
     }
   });
 }
 
-function userCard(u) {
+function userCard(u, isAdmin) {
   return `
     <div data-user="${u.id}" class="card space-y-3">
       <div class="flex items-center justify-between">
         <p class="font-semibold">${esc(u.username)}</p>
-        <select name="role" class="input w-auto py-1 text-sm">
-          <option value="restricted" ${u.role === "restricted" ? "selected" : ""}>Restricted</option>
-          <option value="admin" ${u.role === "admin" ? "selected" : ""}>Admin</option>
-        </select>
+        <select name="role" class="input w-auto py-1 text-sm" ${isAdmin ? "" : "disabled"}>${roleOptions(u.role, isAdmin)}</select>
       </div>
       <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
         ${RULES.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-rule="${k}" ${u[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}

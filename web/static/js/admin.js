@@ -32,41 +32,27 @@ const SECTIONS = [
   ]],
 ];
 
-export async function renderAdmin(view) {
+// Admins see everything. Editors get the same dashboard and actions minus
+// technical settings, secrets, backups and the destructive queue wipe.
+export async function renderAdmin(view, state) {
+  const isAdmin = state.user.role === "admin";
+  const adminOnly = (html) => (isAdmin ? html : "");
   view.innerHTML = `
-    <h1 class="mb-4 text-2xl font-bold">Admin Control Panel</h1>
+    <h1 class="mb-4 text-2xl font-bold">${isAdmin ? "Admin Control Panel" : "Manage NovelCheck"}</h1>
     <div id="stats" class="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>
     <div class="card mb-6 flex flex-wrap items-end gap-3">
       <div><label class="label" for="batch-size">Batch size</label>
-        <input id="batch-size" type="number" min="1" max="500" class="input w-28"></div>
+        <input id="batch-size" type="number" min="1" max="500" value="20" class="input w-28"></div>
       <button data-act="batch" class="btn-primary">Analyze batch</button>
-      <button data-act="wipe" class="btn-secondary">Wipe pending queue</button>
+      ${adminOnly(`<button data-act="wipe" class="btn-secondary">Wipe pending queue</button>`)}
       <button data-act="sync" class="btn-secondary">Sync Calibre now</button>
-      <a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db</a>
+      ${adminOnly(`<a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db</a>`)}
       <p id="worker" class="basis-full text-sm text-slate-400"></p>
     </div>
-    <form id="settings" class="mb-8 grid gap-4 lg:grid-cols-2"></form>
+    ${adminOnly(`<form id="settings" class="mb-8 grid gap-4 lg:grid-cols-2"></form>`)}
     <section id="users"></section>`;
 
-  const settings = (await attempt(() => get("/api/admin/settings"))) || {};
-  $("#batch-size", view).value = settings.batch_size || 20;
-  $("#settings", view).innerHTML = SECTIONS.map(([title, fields]) => `
-    <fieldset class="card space-y-3">
-      <legend class="px-1 text-lg font-semibold">${esc(title)}</legend>
-      ${fields.map(([k, label, ph, type]) => field(k, label, ph, type, settings[k])).join("")}
-      ${title.startsWith("SMTP") ? `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>` : ""}
-      ${title.startsWith("Calibre") ? `<div id="calibre-picker"></div>` : ""}
-    </fieldset>`).join("") +
-    `<div class="lg:col-span-2"><button class="btn-primary">Save settings</button></div>`;
-
-  $("#settings", view).addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const body = {};
-    $$("[data-key]", e.target).forEach((el) => {
-      body[el.dataset.key] = el.type === "checkbox" ? String(el.checked) : el.value;
-    });
-    await attempt(() => put("/api/admin/settings", body), "Settings saved");
-  });
+  if (isAdmin) await renderSettings(view);
 
   view.addEventListener("click", async (e) => {
     const act = e.target.closest("[data-act]")?.dataset.act;
@@ -92,10 +78,32 @@ export async function renderAdmin(view) {
     if (s) renderStats(view, s);
   }
   await refresh();
-  renderCalibrePicker($("#calibre-picker", view), refresh);
+  if (isAdmin) renderCalibrePicker($("#calibre-picker", view), refresh);
   const timer = setInterval(refresh, 5000);
-  await renderUsers($("#users", view));
+  await renderUsers($("#users", view), state.user);
   return () => clearInterval(timer);
+}
+
+async function renderSettings(view) {
+  const settings = (await attempt(() => get("/api/admin/settings"))) || {};
+  $("#batch-size", view).value = settings.batch_size || 20;
+  $("#settings", view).innerHTML = SECTIONS.map(([title, fields]) => `
+    <fieldset class="card space-y-3">
+      <legend class="px-1 text-lg font-semibold">${esc(title)}</legend>
+      ${fields.map(([k, label, ph, type]) => field(k, label, ph, type, settings[k])).join("")}
+      ${title.startsWith("SMTP") ? `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>` : ""}
+      ${title.startsWith("Calibre") ? `<div id="calibre-picker"></div>` : ""}
+    </fieldset>`).join("") +
+    `<div class="lg:col-span-2"><button class="btn-primary">Save settings</button></div>`;
+
+  $("#settings", view).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const body = {};
+    $$("[data-key]", e.target).forEach((el) => {
+      body[el.dataset.key] = el.type === "checkbox" ? String(el.checked) : el.value;
+    });
+    await attempt(() => put("/api/admin/settings", body), "Settings saved");
+  });
 }
 
 function field(key, label, placeholder, type, value) {

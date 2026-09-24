@@ -23,6 +23,13 @@ func (s *Store) ListUsers() ([]User, error) {
 	return us, err
 }
 
+// ListUsersByRole returns only users with the given role.
+func (s *Store) ListUsersByRole(role string) ([]User, error) {
+	var us []User
+	err := s.DB.Select(&us, `SELECT `+userCols+` FROM users WHERE role = ? ORDER BY username`, role)
+	return us, err
+}
+
 func (s *Store) UserByID(id int64) (*User, error) {
 	return s.getUser(`SELECT `+userCols+` FROM users WHERE id = ?`, id)
 }
@@ -45,7 +52,7 @@ func (s *Store) getUser(q string, arg any) (*User, error) {
 // CreateUser inserts a user. Restricted accounts default to the strictest
 // content profile; admins can loosen it afterwards.
 func (s *Store) CreateUser(username, hash, role string) (*User, error) {
-	if role != RoleAdmin && role != RoleRestricted {
+	if !ValidRole(role) {
 		return nil, fmt.Errorf("invalid role %q", role)
 	}
 	strict := role == RoleRestricted

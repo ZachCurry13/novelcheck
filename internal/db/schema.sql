@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     id               INTEGER PRIMARY KEY AUTOINCREMENT,
     username         TEXT NOT NULL UNIQUE COLLATE NOCASE,
     password_hash    TEXT NOT NULL,
-    role             TEXT NOT NULL DEFAULT 'restricted' CHECK (role IN ('admin', 'restricted')),
+    role             TEXT NOT NULL DEFAULT 'restricted' CHECK (role IN ('admin', 'editor', 'restricted')),
     hide_open_door   INTEGER NOT NULL DEFAULT 0,
     hide_nudity      INTEGER NOT NULL DEFAULT 0,
     hide_solo_acts   INTEGER NOT NULL DEFAULT 0,

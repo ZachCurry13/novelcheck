@@ -1,12 +1,12 @@
 // Unified dashboard: browse and filter books across every catalog.
 import { get, post, qs } from "./api.js";
-import { $, esc, attempt, toast, classChip, flagChips, FLAG_LABELS } from "./ui.js";
+import { $, esc, attempt, toast, classChip, flagChips, FLAG_LABELS, canManage } from "./ui.js";
 import { openBook } from "./bookdialog.js";
 
 const PAGE = 60;
 
 export async function renderLibrary(view, state) {
-  const isAdmin = state.user.role === "admin";
+  const manager = canManage(state.user);
   const catalogs = (await attempt(() => get("/api/catalogs"))) || [];
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
   view.innerHTML = `
@@ -28,7 +28,7 @@ export async function renderLibrary(view, state) {
         ${Object.entries(FLAG_LABELS).map(([k, v]) =>
           `<label class="toggle"><input type="checkbox" name="flag" value="${k}"> ${esc(v)}</label>`).join("")}
         <label class="toggle"><input type="checkbox" name="multi"> In 2+ catalogs</label>
-        ${isAdmin ? `<button type="button" id="batch-btn" class="btn-secondary ml-auto">Analyze next batch</button>` : ""}
+        ${manager ? `<button type="button" id="batch-btn" class="btn-secondary ml-auto">Analyze next batch</button>` : ""}
       </div>
     </form>
     <p id="result-count" class="mb-3 text-sm text-slate-400"></p>

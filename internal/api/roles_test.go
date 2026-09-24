@@ -1,0 +1,67 @@
+package api_test
+
+import (
+	"testing"
+
+	"github.com/zachcurry13/novelcheck/internal/store"
+)
+
+func TestEditorPermissions(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	if res, _ := admin.do("POST", "/api/admin/users", map[string]string{"username": "wife", "password": "editorpass1", "role": "editor"}, true); res.StatusCode != 201 {
+		t.Fatalf("admin create editor: %d", res.StatusCode)
+	}
+	ed := login(t, srv, "wife", "editorpass1")
+
+	// Allowed: dashboard, kid accounts, scans, verdict edits.
+	if res, _ := ed.do("GET", "/api/admin/status", nil, false); res.StatusCode != 200 {
+		t.Fatalf("editor status: %d", res.StatusCode)
+	}
+	res, kid := ed.do("POST", "/api/admin/users", map[string]string{"username": "kid", "password": "kidpass12"}, true)
+	if res.StatusCode != 201 || kid["role"] != "restricted" {
+		t.Fatalf("editor create kid: %d %v", res.StatusCode, kid)
+	}
+	kidID := itoa(int64(kid["id"].(float64)))
+	if res, _ := ed.do("PUT", "/api/admin/users/"+kidID, map[string]any{"role": "restricted", "delivery_method": "none", "hide_lgbtq": true}, true); res.StatusCode != 200 {
+		t.Fatalf("editor update kid: %d", res.StatusCode)
+	}
+	id, _ := st.UpsertBook("Some Book", "An Author", "", "")
+	res, b := ed.do("PUT", "/api/books/"+itoa(id)+"/verdict", map[string]any{"classification": "Closed Door", "heavy_innuendo": true, "summary_verdict": "Fine for teens."}, true)
+	if res.StatusCode != 200 || b["classification"] != "Closed Door" || b["analysis_model"] != "manual: wife" {
+		t.Fatalf("editor verdict: %d %v", res.StatusCode, b)
+	}
+
+	// Forbidden: technical settings, secrets, backups, admins, promotions.
+	for _, c := range []struct{ method, path string }{
+		{"GET", "/api/admin/settings"},
+		{"PUT", "/api/admin/settings"},
+		{"GET", "/api/admin/backup"},
+		{"POST", "/api/admin/wipe-queue"},
+		{"GET", "/api/admin/calibre/browse"},
+		{"PUT", "/api/admin/calibre/library"},
+		{"PUT", "/api/admin/users/1"},          // the admin
+		{"PUT", "/api/admin/users/1/password"}, // the admin
+		{"DELETE", "/api/admin/users/1"},
+	} {
+		if res, _ := ed.do(c.method, c.path, map[string]string{}, true); res.StatusCode != 403 {
+			t.Errorf("editor %s %s: got %d, want 403", c.method, c.path, res.StatusCode)
+		}
+	}
+	if res, _ := ed.do("POST", "/api/admin/users", map[string]string{"username": "boss", "password": "bosspass12", "role": "admin"}, true); res.StatusCode != 403 {
+		t.Fatalf("editor created an admin: %d", res.StatusCode)
+	}
+	if res, _ := ed.do("PUT", "/api/admin/users/"+kidID, map[string]any{"role": "admin", "delivery_method": "none"}, true); res.StatusCode != 403 {
+		t.Fatalf("editor promoted a kid: %d", res.StatusCode)
+	}
+	res, list := ed.doList("GET", "/api/admin/users")
+	if res.StatusCode != 200 || len(list) != 1 || list[0]["role"] != store.RoleRestricted {
+		t.Fatalf("editor should only see kid accounts: %v", list)
+	}
+
+	// Kids still can't reach any management route.
+	k := login(t, srv, "kid", "kidpass12")
+	if res, _ := k.do("PUT", "/api/books/"+itoa(id)+"/verdict", map[string]any{"classification": "No Spice"}, true); res.StatusCode != 403 {
+		t.Fatalf("kid edited a verdict: %d", res.StatusCode)
+	}
+}
