@@ -11,19 +11,21 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// calibreSchema is the subset of Calibre's metadata.db that Sync reads.
+// calibreSchema is the subset of Calibre's metadata.db that Sync reads. It
+// mirrors current Calibre, whose books table no longer has an isbn column
+// (ISBNs live in identifiers).
 const calibreSchema = `
-CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, path TEXT, isbn TEXT DEFAULT '');
+CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, path TEXT);
 CREATE TABLE authors (id INTEGER PRIMARY KEY, name TEXT);
 CREATE TABLE books_authors_link (id INTEGER PRIMARY KEY, book INTEGER, author INTEGER);
 CREATE TABLE identifiers (id INTEGER PRIMARY KEY, book INTEGER, type TEXT, val TEXT);
 CREATE TABLE comments (id INTEGER PRIMARY KEY, book INTEGER, text TEXT);
 CREATE TABLE data (id INTEGER PRIMARY KEY, book INTEGER, format TEXT, name TEXT);
-INSERT INTO books VALUES (1, 'Pride and Prejudice', 'Jane Austen/Pride and Prejudice (1)', '');
-INSERT INTO books VALUES (2, 'Good Omens', 'Terry Pratchett/Good Omens (2)', '9780060853983');
+INSERT INTO books VALUES (1, 'Pride and Prejudice', 'Jane Austen/Pride and Prejudice (1)');
+INSERT INTO books VALUES (2, 'Good Omens', 'Terry Pratchett/Good Omens (2)');
 INSERT INTO authors VALUES (1, 'Jane Austen'), (2, 'Terry Pratchett'), (3, 'Neil Gaiman');
 INSERT INTO books_authors_link VALUES (1, 1, 1), (2, 2, 2), (3, 2, 3);
-INSERT INTO identifiers VALUES (1, 1, 'isbn', '9780141439518');
+INSERT INTO identifiers VALUES (1, 1, 'isbn', '9780141439518'), (2, 2, 'isbn', '9780060853983');
 INSERT INTO comments VALUES (1, 1, '<p>A <b>classic</b> &amp; witty novel.</p>');
 INSERT INTO data VALUES (1, 1, 'EPUB', 'Pride and Prejudice - Jane Austen'), (2, 1, 'MOBI', 'Pride and Prejudice - Jane Austen'),
 	(3, 2, 'EPUB', 'Good Omens - Terry Pratchett');

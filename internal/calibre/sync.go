@@ -57,7 +57,7 @@ func Sync(st *store.Store, dir string) (Result, error) {
 	err = cdb.Select(&books, `SELECT b.id, b.title, b.path,
 		COALESCE((SELECT GROUP_CONCAT(name, ' & ') FROM (SELECT a.name FROM books_authors_link l
 			JOIN authors a ON a.id = l.author WHERE l.book = b.id ORDER BY l.id)), '') AS authors,
-		COALESCE(NULLIF(b.isbn, ''), (SELECT val FROM identifiers i WHERE i.book = b.id
+		COALESCE((SELECT val FROM identifiers i WHERE i.book = b.id
 			AND i.type = 'isbn' LIMIT 1), '') AS isbn,
 		COALESCE((SELECT text FROM comments c WHERE c.book = b.id), '') AS description
 		FROM books b ORDER BY b.id`)
