@@ -9,6 +9,8 @@ import { renderProfile } from "./profile.js";
 import { renderWhatsNew } from "./whatsnew.js";
 import { openGuide } from "./guide.js";
 import { checkForUpdates } from "./updatebanner.js";
+import { renderSystem } from "./system.js";
+import { initBell } from "./notifications.js";
 
 export const state = { user: null };
 
@@ -19,8 +21,10 @@ const routes = {
   admin: renderAdmin,
   profile: renderProfile,
   whatsnew: renderWhatsNew,
+  system: renderSystem,
 };
 const managerRoutes = new Set(["import", "admin"]);
+const adminRoutes = new Set(["system"]);
 
 function showOnly(id) {
   for (const v of ["#setup-view", "#login-view", "#app-view"]) $(v).classList.toggle("hidden", v !== id);
@@ -34,6 +38,8 @@ function showLogin() {
 function showApp() {
   showOnly("#app-view");
   $$(".manager-only").forEach((el) => el.classList.toggle("hidden", !canManage(state.user)));
+  $$(".admin-only").forEach((el) => el.classList.toggle("hidden", state.user.role !== "admin"));
+  initBell(state);
   $("#admin-tab").textContent = state.user.role === "admin" ? "Admin" : "Manage";
   route();
   if (!state.user.guide_seen) openGuide(state);
@@ -44,7 +50,8 @@ let currentCleanup = null;
 async function route() {
   if (!state.user) return;
   let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || "library";
-  if (!routes[name] || (managerRoutes.has(name) && !canManage(state.user))) name = "library";
+  if (!routes[name] || (managerRoutes.has(name) && !canManage(state.user)) ||
+    (adminRoutes.has(name) && state.user.role !== "admin")) name = "library";
   $$("#nav .nav-link").forEach((a) => a.classList.toggle("active", a.dataset.route === name));
   if (typeof currentCleanup === "function") currentCleanup();
   // Fresh container per route so listeners never leak between views.

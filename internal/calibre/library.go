@@ -170,3 +170,16 @@ func (s *Syncer) SetLibrary(rel string) (string, error) {
 	s.mu.Unlock()
 	return rel, err
 }
+
+// CountBooks opens metadata.db read-only and counts its books, proving the
+// library is readable.
+func CountBooks(dir string) (int, error) {
+	db, err := OpenReadOnly(dir)
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+	var n int
+	err = db.Get(&n, `SELECT COUNT(*) FROM books`)
+	return n, err
+}

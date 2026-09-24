@@ -70,3 +70,12 @@ func (c *AnthropicClient) Complete(ctx context.Context, model, system, user stri
 	}
 	return text.String(), usage, nil
 }
+
+// New returns the client for a provider: "anthropic" uses Claude's native
+// API; anything else is treated as an OpenAI-compatible endpoint.
+func New(provider, baseURL, apiKey string, jsonMode bool) Completer {
+	if provider == "anthropic" {
+		return &AnthropicClient{APIKey: apiKey}
+	}
+	return &Client{BaseURL: baseURL, APIKey: apiKey, JSONMode: jsonMode}
+}

@@ -18,6 +18,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/sysinfo"
 	"github.com/zachcurry13/novelcheck/internal/tunnel"
 	"github.com/zachcurry13/novelcheck/internal/updates"
 	"github.com/zachcurry13/novelcheck/internal/version"
@@ -54,6 +55,14 @@ func main() {
 
 	// Built-in Cloudflare Tunnel for access from outside the home network.
 	tun := tunnel.New()
+	tun.OnChange = func(state, lastErr string) {
+		switch state {
+		case tunnel.StateConnected:
+			st.Resolve("tunnel")
+		case tunnel.StateRetrying:
+			st.Notify("error", "tunnel", "Remote access lost its connection to Cloudflare: "+lastErr, "#/admin")
+		}
+	}
 	if st.SettingBool(store.KeyTunnelEnabled) {
 		if err := tun.Apply(true, st.Setting(store.KeyTunnelToken)); err != nil {
 			log.Printf("remote access not started: %v", err)
@@ -69,7 +78,11 @@ func main() {
 		Syncer:  syncer,
 		Updates: updates.New(),
 		Tunnel:  tun,
+		SysInfo: sysinfo.New(cfg.DataDir),
 		Web:     web.FS(),
+	}
+	srv.Pulls.OnError = func(model string, err error) {
+		st.Notify("warning", "ollama", "Downloading "+model+" in Ollama failed: "+err.Error(), "#/admin")
 	}
 	httpSrv := &http.Server{
 		Addr:              cfg.Addr,

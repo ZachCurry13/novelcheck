@@ -77,6 +77,18 @@ Many services and self-hosted tools (vLLM, LM Studio, OpenRouter, Groq, Together
 4. Set the two price boxes from the service's pricing page so the cost estimate is right.
 5. If ratings fail with an error mentioning `response_format`, untick **JSON response mode**.
 
+## Google Books API key (recommended)
+
+Before rating a book, NovelCheck looks up its back-cover blurb from Open Library and Google Books. Without a key, Google shares one small daily quota among everyone, so big libraries often hit "daily limit reached". A free key fixes that:
+
+1. Go to **console.cloud.google.com** and sign in with a Google account. Create a project if asked (any name, e.g. `NovelCheck`).
+2. Open **APIs & Services → Library**, search for **Books API**, and click **Enable**.
+3. Open **APIs & Services → Credentials → Create credentials → API key**, and copy the key.
+4. In NovelCheck: **Admin → LLM Analysis Engine → Google Books API key**, paste it, and click **Save settings**.
+5. Check it: **System → Check everything** should show Google Books "Working with your API key".
+
+The Books API is free for normal use. No billing account is needed.
+
 ## Troubleshooting
 
 - **"rejected the API key" or 401 errors:** the key was copied incompletely, or the account has no credit. Create a new key and paste it again.

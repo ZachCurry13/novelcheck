@@ -133,3 +133,47 @@ func (c *Client) googleBooks(ctx context.Context, title, author, isbn string) (s
 	}
 	return strings.TrimSpace(res.Items[0].VolumeInfo.Description), nil
 }
+
+// CheckOpenLibrary confirms Open Library answers a search.
+func (c *Client) CheckOpenLibrary(ctx context.Context) error {
+	var res struct {
+		NumFound int `json:"numFound"`
+	}
+	if err := c.getJSON(ctx, c.OpenLibraryURL+"/search.json?q=the+hobbit&limit=1&fields=key", &res); err != nil {
+		return err
+	}
+	if res.NumFound == 0 {
+		return fmt.Errorf("Open Library returned no results for a test search")
+	}
+	return nil
+}
+
+// CheckGoogleBooks confirms Google Books answers a lookup (with the API key
+// if one is set). The error text says whether the key or the quota is at fault.
+func (c *Client) CheckGoogleBooks(ctx context.Context) error {
+	q := url.Values{"q": {"isbn:9780547928227"}, "maxResults": {"1"}}
+	if c.GoogleAPIKey != "" {
+		q.Set("key", c.GoogleAPIKey)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.GoogleBooksURL+"/volumes?"+q.Encode(), nil)
+	if err != nil {
+		return err
+	}
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return nil
+	case http.StatusBadRequest, http.StatusForbidden:
+		if c.GoogleAPIKey != "" {
+			return fmt.Errorf("Google rejected the API key (%s)", resp.Status)
+		}
+		return fmt.Errorf("Google Books refused the request (%s)", resp.Status)
+	case http.StatusTooManyRequests:
+		return fmt.Errorf("Google Books daily limit reached (%s)", resp.Status)
+	}
+	return fmt.Errorf("Google Books answered %s", resp.Status)
+}

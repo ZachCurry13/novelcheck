@@ -28,7 +28,10 @@
   .toggle { @apply flex items-center gap-2 text-sm text-slate-300; }
   .toggle input { @apply h-4 w-4 rounded border-slate-600 bg-slate-800 text-indigo-600; }
   .dialog { @apply w-full max-w-2xl rounded-2xl bg-slate-900 p-0 text-slate-100 ring-1 ring-slate-700 backdrop:bg-black/70; }
-  .toast { @apply fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-slate-800 px-4 py-2 text-sm shadow-lg ring-1 ring-slate-700; }
+  .toast { @apply fixed bottom-6 left-1/2 z-50 flex max-w-[90vw] -translate-x-1/2 items-start rounded-lg bg-slate-800 px-4 py-2 text-sm shadow-lg ring-1 ring-slate-700; }
+  .toast-error { @apply bg-rose-950 text-rose-100 ring-rose-800; }
+  .meter-track { @apply h-2 w-full overflow-hidden rounded-full; }
+  .meter-fill { @apply h-full rounded-full transition-[width] duration-500; }
   .stat { @apply text-2xl font-bold; }
   .drag-handle { @apply cursor-grab select-none px-2 text-xl text-slate-500 active:cursor-grabbing; }
   .sortable-ghost { @apply opacity-40; }

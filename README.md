@@ -21,6 +21,8 @@ See [`NOVELCHECK_SPEC.md`](NOVELCHECK_SPEC.md) for the full specification, archi
 | Ratings review | Admins and editors can correct any rating by hand (**Edit rating**). Manual ratings are labeled with who made them. |
 | Remote access | Built-in Cloudflare Tunnel connector: paste a tunnel token in **Admin → Remote access** to get an `https://` address that works away from home, with no port forwarding. Guide: [docs/REMOTE_ACCESS.md](docs/REMOTE_ACCESS.md). |
 | Ollama easy setup | With the Ollama provider selected, NovelCheck finds your Ollama server, downloads a model with a progress bar, and switches to it, with no terminal needed. |
+| System page | Admins get a **System** tab with NovelCheck's CPU, memory, disk and database size, the Ollama models currently loaded (GPU vs RAM), and **Check everything**, which tests the AI provider (and fallback), Open Library, Google Books, Calibre library and Content server, email login, remote access, Ollama and the update check, each with a suggested fix. |
+| Notifications | A 🔔 bell for admins and editors collects problems NovelCheck notices (failed ratings, Calibre sync errors, remote access dropping, Send-to-Kindle failures, Ollama download failures, failed checks), with **Fix it** links. Repeats are grouped, and some clear themselves when fixed. Error pop-ups stay until closed and are also listed there. |
 | Help & updates | A step-by-step **How to** guide opens on each person's first login and can be reopened from **❔ Help**. Admins and editors see a banner when a new version is released, and **What's new** shows release notes (from `CHANGELOG.md` and GitHub Releases). |
 | PWA | `manifest.json` (standalone, dark theme) and `sw.js` app-shell cache for offline launch and Add to Home Screen. |
 
@@ -118,7 +120,8 @@ internal/llm/          OpenAI-compatible client, Claude client (anthropic-sdk-go
 internal/analyzer/     queued analysis worker, token-per-hour cap, small→large fallback
 internal/delivery/     Send-to-Kindle SMTP + best-file picker
 internal/tunnel/       supervises the bundled cloudflared connector (remote access)
-internal/ollama/       Ollama discovery, model downloads with progress
+internal/ollama/       Ollama discovery, model downloads with progress, loaded models (ps)
+internal/sysinfo/      container CPU / memory (cgroup v2), disk and DB size
 internal/api/          chi router, middleware, handlers
 web/static/            index.html, Tailwind CSS, JS modules, manifest.json, sw.js, icons, vendored SortableJS/JSZip
 ```

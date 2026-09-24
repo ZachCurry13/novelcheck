@@ -4,6 +4,17 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.7.0]
+
+### New
+- **System page** (admins): a new **System** tab shows NovelCheck's CPU, memory, disk space and database size, and, when you use Ollama, which models are loaded and how much sits in GPU memory versus system RAM.
+- **Check everything**: one button tests every connection NovelCheck uses (your AI provider and fallback model, Open Library, Google Books, the Calibre library and Content server, email, remote access, Ollama, and the update check) and says how to fix anything that fails.
+- **Notifications 🔔**: admins and editors get a bell with a count. It lists problems NovelCheck notices on its own (books failing to rate, Calibre sync errors, remote access dropping, Send-to-Kindle failures, Ollama downloads failing, failed checks) with **Fix it** links, **Mark read** and **Clear all**. Some clear themselves once the problem is fixed.
+- **Google Books API key guide**: without a key, Google's shared free quota often runs out. The AI setup guide now explains how to get a free key.
+
+### Fixed
+- **Error pop-ups vanished too fast**: error messages now stay until you close them (✕), and every message is also listed under the bell in "Messages on this device".
+
 ## [1.6.0]
 
 ### New

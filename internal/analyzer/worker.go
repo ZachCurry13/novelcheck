@@ -109,6 +109,8 @@ func (w *Worker) Run(ctx context.Context) {
 			w.status.LastError = fmt.Sprintf("book %d: %v", id, err)
 			w.mu.Unlock()
 			_ = w.Store.SetStatus(id, "error", err.Error())
+			// Same error text is grouped into one notification with a count.
+			w.Store.Notify("warning", "analysis", "Rating books is failing: "+err.Error(), "#/system")
 		}
 		if ctx.Err() != nil {
 			return
@@ -167,15 +169,8 @@ func (w *Worker) process(ctx context.Context, id int64) error {
 // client builds the configured provider: Claude through Anthropic's SDK, or
 // any OpenAI-compatible API (OpenAI, Gemini, Perplexity, Ollama, vLLM...).
 func (w *Worker) client() llm.Completer {
-	key := w.Store.Setting(store.KeyLLMAPIKey)
-	if w.Store.Setting(store.KeyLLMProvider) == "anthropic" {
-		return &llm.AnthropicClient{APIKey: key}
-	}
-	return &llm.Client{
-		BaseURL:  w.Store.Setting(store.KeyLLMBaseURL),
-		APIKey:   key,
-		JSONMode: w.Store.SettingBool(store.KeyLLMJSONMode),
-	}
+	return llm.New(w.Store.Setting(store.KeyLLMProvider), w.Store.Setting(store.KeyLLMBaseURL),
+		w.Store.Setting(store.KeyLLMAPIKey), w.Store.SettingBool(store.KeyLLMJSONMode))
 }
 
 func (w *Worker) analyzeWith(ctx context.Context, c llm.Completer, model string, id int64, user string) (*llm.Verdict, error) {

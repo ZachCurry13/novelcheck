@@ -123,6 +123,7 @@ func (s *Server) deliver(u *store.User, bookID int64) (string, error) {
 		}
 		if err := delivery.SendFile(cfg, u.KindleEmail, best.Path); err != nil {
 			log.Printf("send-to-kindle for user %d failed: %v", u.ID, err)
+			s.Store.Notify("warning", "delivery", "Send-to-Kindle failed: "+err.Error(), "#/admin")
 			return "", err
 		}
 		return "Emailed " + filepath.Base(best.Path) + " to " + u.KindleEmail, nil

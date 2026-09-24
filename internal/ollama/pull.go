@@ -27,6 +27,9 @@ type PullStatus struct {
 
 // Puller runs one model download at a time in the background.
 type Puller struct {
+	// OnError, if set, is called when a download fails (for notifications).
+	OnError func(model string, err error)
+
 	mu     sync.Mutex
 	status PullStatus
 }
@@ -75,6 +78,9 @@ func (p *Puller) Start(server, model string) error {
 
 func (p *Puller) run(server, model string) {
 	err := p.pull(server, model)
+	if err != nil && p.OnError != nil {
+		p.OnError(model, err)
+	}
 	p.update(func(s *PullStatus) {
 		s.Active = false
 		if err != nil {

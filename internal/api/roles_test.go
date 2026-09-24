@@ -39,6 +39,8 @@ func TestEditorPermissions(t *testing.T) {
 		{"PUT", "/api/admin/settings"},
 		{"GET", "/api/admin/backup"},
 		{"GET", "/api/admin/tunnel"},
+		{"GET", "/api/admin/system"},
+		{"POST", "/api/admin/health"},
 		{"GET", "/api/admin/calibre/server"},
 		{"PUT", "/api/admin/calibre/server"},
 		{"POST", "/api/admin/calibre/remove"},
@@ -131,5 +133,36 @@ func TestApprovalAndRemovalAPI(t *testing.T) {
 	}
 	if res, _ := kid.do("GET", "/api/books/"+itoa(id), nil, false); res.StatusCode != 200 {
 		t.Fatalf("kid should see the approved book: %d", res.StatusCode)
+	}
+}
+
+func TestSystemAndNotificationsAPI(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	res, out := admin.do("GET", "/api/admin/system", nil, false)
+	nc, _ := out["novelcheck"].(map[string]any)
+	if res.StatusCode != 200 || nc == nil || nc["cpu_cores"].(float64) < 1 {
+		t.Fatalf("system: %d %v", res.StatusCode, out)
+	}
+
+	st.Notify("error", "calibre-sync", "Calibre sync failed: boom", "#/admin")
+	admin.do("POST", "/api/admin/users", map[string]string{"username": "wife", "password": "editorpass1", "role": "editor"}, true)
+	ed := login(t, srv, "wife", "editorpass1")
+	_, out = ed.do("GET", "/api/notifications", nil, false)
+	if out["unread"].(float64) != 1 {
+		t.Fatalf("editor should see notifications: %v", out)
+	}
+	items := out["items"].([]any)
+	id := items[0].(map[string]any)["id"].(float64)
+	if _, out = ed.do("POST", "/api/notifications/read", map[string]any{"id": id}, true); out["unread"].(float64) != 0 {
+		t.Fatalf("mark read: %v", out)
+	}
+	if res, _ := ed.do("DELETE", "/api/notifications", nil, true); res.StatusCode != 200 {
+		t.Fatalf("clear: %d", res.StatusCode)
+	}
+	admin.do("POST", "/api/admin/users", map[string]string{"username": "kid", "password": "kidpass12"}, true)
+	kid := login(t, srv, "kid", "kidpass12")
+	if res, _ := kid.do("GET", "/api/notifications", nil, false); res.StatusCode != 403 {
+		t.Fatalf("kids must not see admin notifications: %d", res.StatusCode)
 	}
 }

@@ -30,6 +30,9 @@ func (s *Syncer) Run() (Result, error) {
 	summary := map[string]any{"at": time.Now().UTC().Format(time.RFC3339), "result": res}
 	if err != nil {
 		summary["error"] = err.Error()
+		s.Store.Notify("error", "calibre-sync", "Calibre sync failed: "+err.Error(), "#/admin")
+	} else {
+		s.Store.Resolve("calibre-sync")
 	}
 	b, _ := json.Marshal(summary)
 	_ = s.Store.SetSetting(store.KeyCalibreLastSync, time.Now().UTC().Format(time.RFC3339))

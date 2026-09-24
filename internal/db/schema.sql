@@ -99,3 +99,18 @@ CREATE TABLE IF NOT EXISTS token_usage (
     completion_tokens INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_token_usage_at ON token_usage(at);
+
+-- Admin notifications: problems NovelCheck noticed on its own. Repeats of the
+-- same unread problem bump count instead of adding rows.
+CREATE TABLE IF NOT EXISTS notifications (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    level      TEXT NOT NULL DEFAULT 'warning' CHECK (level IN ('info', 'warning', 'error')),
+    source     TEXT NOT NULL,
+    message    TEXT NOT NULL,
+    link       TEXT NOT NULL DEFAULT '',
+    count      INTEGER NOT NULL DEFAULT 1,
+    read       INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(read, updated_at);

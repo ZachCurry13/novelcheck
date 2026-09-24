@@ -140,3 +140,41 @@ func send(c SMTPConfig, to string, msg []byte) error {
 	}
 	return cl.Quit()
 }
+
+// CheckLogin connects to the SMTP server and signs in without sending mail.
+func CheckLogin(c SMTPConfig) error {
+	if err := c.Validate(); err != nil {
+		return err
+	}
+	addr := net.JoinHostPort(c.Host, c.Port)
+	tlsCfg := &tls.Config{ServerName: c.Host, MinVersion: tls.VersionTLS12}
+	dialer := &net.Dialer{Timeout: 15 * time.Second}
+	var conn net.Conn
+	var err error
+	if c.Port == "465" {
+		conn, err = tls.DialWithDialer(dialer, "tcp", addr, tlsCfg)
+	} else {
+		conn, err = dialer.Dial("tcp", addr)
+	}
+	if err != nil {
+		return err
+	}
+	_ = conn.SetDeadline(time.Now().Add(20 * time.Second))
+	cl, err := smtp.NewClient(conn, c.Host)
+	if err != nil {
+		conn.Close()
+		return err
+	}
+	defer cl.Close()
+	if ok, _ := cl.Extension("STARTTLS"); ok && c.Port != "465" {
+		if err := cl.StartTLS(tlsCfg); err != nil {
+			return err
+		}
+	}
+	if c.Username != "" {
+		if err := cl.Auth(smtp.PlainAuth("", c.Username, c.Password, c.Host)); err != nil {
+			return fmt.Errorf("sign-in failed: %w", err)
+		}
+	}
+	return cl.Quit()
+}

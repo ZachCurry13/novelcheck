@@ -13,6 +13,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/ollama"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/sysinfo"
 	"github.com/zachcurry13/novelcheck/internal/tunnel"
 	"github.com/zachcurry13/novelcheck/internal/updates"
 )
@@ -26,7 +27,8 @@ type Server struct {
 	Updates *updates.Checker
 	Tunnel  *tunnel.Manager
 	Pulls   ollama.Puller // Ollama model downloads
-	Web     fs.FS         // embedded static assets
+	SysInfo *sysinfo.Sampler
+	Web     fs.FS // embedded static assets
 	logins  *loginLimiter
 }
 
@@ -79,6 +81,9 @@ func (s *Server) Router() http.Handler {
 				r.Put("/books/{id}/approval", s.handleSetApproval)
 
 				r.Get("/admin/status", s.handleAdminStatus)
+				r.Get("/notifications", s.handleNotifications)
+				r.Post("/notifications/read", s.handleNotificationsRead)
+				r.Delete("/notifications", s.handleNotificationsClear)
 				r.Post("/admin/analyze-batch", s.handleAnalyzeBatch)
 				r.Post("/admin/calibre-sync", s.handleCalibreSync)
 
@@ -107,6 +112,8 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/smtp-test", s.handleSMTPTest)
 				r.Get("/admin/backup", s.handleBackup)
 				r.Get("/admin/tunnel", s.handleTunnelStatus)
+				r.Get("/admin/system", s.handleSystem)
+				r.Post("/admin/health", s.handleHealthChecks)
 				r.Put("/admin/tunnel", s.handleTunnelSave)
 				r.Get("/admin/ollama/find", s.handleOllamaFind)
 				r.Post("/admin/ollama/pull", s.handleOllamaPull)

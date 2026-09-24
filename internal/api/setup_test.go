@@ -14,6 +14,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/sysinfo"
 	"github.com/zachcurry13/novelcheck/internal/tunnel"
 )
 
@@ -35,9 +36,10 @@ func TestFirstRunSetup(t *testing.T) {
 	s := &api.Server{
 		Cfg: config.Config{CalibreDir: t.TempDir(), SessionDays: 1}, Store: st,
 		Auth: &auth.Manager{Store: st, SessionDays: 1}, Worker: analyzer.New(st),
-		Syncer: &calibre.Syncer{Store: st, Dir: t.TempDir()},
-		Web:    fstest.MapFS{"index.html": {Data: []byte("app")}},
-		Tunnel: &tunnel.Manager{Binary: "no-such-cloudflared"},
+		Syncer:  &calibre.Syncer{Store: st, Dir: t.TempDir()},
+		Web:     fstest.MapFS{"index.html": {Data: []byte("app")}},
+		Tunnel:  &tunnel.Manager{Binary: "no-such-cloudflared"},
+		SysInfo: sysinfo.New(t.TempDir()),
 	}
 	srv := httptest.NewServer(s.Router())
 	defer srv.Close()

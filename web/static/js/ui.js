@@ -9,14 +9,33 @@ export function esc(v) {
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
+// Messages shown on this device, newest first (listed under the bell).
+export const messageLog = [];
+
 let toastTimer;
+// toast shows a short message. Errors stay until closed (so they can't vanish
+// before you read them) and every message is kept in messageLog.
 export function toast(msg, isError = false) {
   const t = $("#toast");
-  t.textContent = msg;
-  t.classList.toggle("text-rose-300", isError);
+  t.replaceChildren();
+  const text = document.createElement("span");
+  text.textContent = msg;
+  t.append(text);
+  if (isError) {
+    const close = document.createElement("button");
+    close.textContent = "✕";
+    close.title = "Close";
+    close.className = "ml-3 px-1 text-slate-400 hover:text-white";
+    close.onclick = () => t.classList.add("hidden");
+    t.append(close);
+  }
+  t.classList.toggle("toast-error", isError);
   t.classList.remove("hidden");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.add("hidden"), 3500);
+  if (!isError) toastTimer = setTimeout(() => t.classList.add("hidden"), 3500);
+  messageLog.unshift({ at: new Date(), text: String(msg), isError });
+  messageLog.length = Math.min(messageLog.length, 30);
+  window.dispatchEvent(new CustomEvent("nc:message"));
 }
 
 // Runs an async action, surfacing failures as a toast.

@@ -214,3 +214,36 @@ func TestApprovalOverridesFilters(t *testing.T) {
 		t.Fatalf("approval not cleared: %+v", b)
 	}
 }
+
+func TestNotifications(t *testing.T) {
+	s := newStore(t)
+	s.Notify("error", "tunnel", "Remote access disconnected", "#/admin")
+	s.Notify("error", "tunnel", "Remote access disconnected", "#/admin")
+	s.Notify("warning", "analysis", "Rating failed: bad key", "#/admin")
+	items, unread, err := s.Notifications(50)
+	if err != nil || unread != 2 || len(items) != 2 {
+		t.Fatalf("got %d unread, %d items, %v", unread, len(items), err)
+	}
+	for _, n := range items {
+		if n.Source == "tunnel" && n.Count != 2 {
+			t.Fatalf("duplicate should bump count: %+v", n)
+		}
+	}
+	s.Resolve("tunnel")
+	if _, unread, _ = s.Notifications(50); unread != 1 {
+		t.Fatalf("resolve should mark tunnel read, unread=%d", unread)
+	}
+	// A new occurrence after resolving is a fresh notification.
+	s.Notify("error", "tunnel", "Remote access disconnected", "#/admin")
+	if items, _, _ = s.Notifications(50); len(items) != 3 {
+		t.Fatalf("expected a new row after resolve, got %d", len(items))
+	}
+	_ = s.MarkNotificationsRead(0)
+	if _, unread, _ = s.Notifications(50); unread != 0 {
+		t.Fatal("mark all read failed")
+	}
+	_ = s.ClearNotifications()
+	if items, _, _ = s.Notifications(50); len(items) != 0 {
+		t.Fatal("clear failed")
+	}
+}

@@ -36,6 +36,8 @@ type Status struct {
 // Manager supervises one cloudflared process.
 type Manager struct {
 	Binary string // path or name of cloudflared (default "cloudflared")
+	// OnChange, if set, is called when the state changes (for notifications).
+	OnChange func(state, lastErr string)
 
 	mu      sync.Mutex
 	cancel  context.CancelFunc
@@ -69,11 +71,16 @@ func (m *Manager) Status() Status {
 
 func (m *Manager) set(state, errMsg string) {
 	m.mu.Lock()
+	changed := m.state != state
 	m.state, m.since = state, time.Now()
 	if errMsg != "" {
 		m.lastErr = errMsg
 	}
+	lastErr, cb := m.lastErr, m.OnChange
 	m.mu.Unlock()
+	if changed && cb != nil {
+		cb(state, lastErr)
+	}
 }
 
 func (m *Manager) addLog(line string) {
