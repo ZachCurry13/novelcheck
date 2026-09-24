@@ -1,0 +1,88 @@
+// Package api wires the HTTP routes for the JSON API and embedded web app.
+package api
+
+import (
+	"io/fs"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/zachcurry13/novelcheck/internal/analyzer"
+	"github.com/zachcurry13/novelcheck/internal/auth"
+	"github.com/zachcurry13/novelcheck/internal/calibre"
+	"github.com/zachcurry13/novelcheck/internal/config"
+	"github.com/zachcurry13/novelcheck/internal/store"
+)
+
+type Server struct {
+	Cfg    config.Config
+	Store  *store.Store
+	Auth   *auth.Manager
+	Worker *analyzer.Worker
+	Syncer *calibre.Syncer
+	Web    fs.FS // embedded static assets
+	logins *loginLimiter
+}
+
+func (s *Server) Router() http.Handler {
+	s.logins = newLoginLimiter()
+	r := chi.NewRouter()
+	r.Use(realIP(s.Cfg.TrustProxy))
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Logger)
+	r.Use(securityHeaders)
+
+	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })
+
+	r.Route("/api", func(r chi.Router) {
+		r.Use(noStore, cors(s.Cfg.CORSOrigins), csrfGuard)
+		r.Post("/auth/login", s.handleLogin)
+		r.Post("/auth/logout", s.handleLogout)
+
+		r.Group(func(r chi.Router) {
+			r.Use(s.Auth.RequireUser)
+			r.Get("/me", s.handleMe)
+			r.Put("/me/password", s.handleChangePassword)
+			r.Put("/me/delivery", s.handleUpdateDelivery)
+
+			r.Get("/books", s.handleListBooks)
+			r.Get("/books/{id}", s.handleGetBook)
+			r.Get("/books/{id}/download", s.handleDownload)
+			r.Get("/catalogs", s.handleListCatalogs)
+
+			r.Get("/queue", s.handleListQueue)
+			r.Post("/queue", s.handleEnqueue)
+			r.Put("/queue/order", s.handleReorderQueue)
+			r.Delete("/queue/{id}", s.handleDequeue)
+			r.Post("/queue/{id}/start", s.handleStartReading)
+			r.Post("/queue/{id}/finish", s.handleFinishReading)
+
+			r.Group(func(r chi.Router) {
+				r.Use(auth.RequireAdmin)
+				r.Post("/catalogs", s.handleCreateCatalog)
+				r.Patch("/catalogs/{id}", s.handleRenameCatalog)
+				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)
+				r.Post("/import/drive", s.handleImportDrive)
+				r.Post("/books/{id}/analyze", s.handleAnalyzeBook)
+
+				r.Get("/admin/status", s.handleAdminStatus)
+				r.Get("/admin/settings", s.handleGetSettings)
+				r.Put("/admin/settings", s.handlePutSettings)
+				r.Post("/admin/analyze-batch", s.handleAnalyzeBatch)
+				r.Post("/admin/wipe-queue", s.handleWipeQueue)
+				r.Post("/admin/calibre-sync", s.handleCalibreSync)
+				r.Post("/admin/smtp-test", s.handleSMTPTest)
+				r.Get("/admin/backup", s.handleBackup)
+
+				r.Get("/admin/users", s.handleListUsers)
+				r.Post("/admin/users", s.handleCreateUser)
+				r.Put("/admin/users/{id}", s.handleUpdateUser)
+				r.Put("/admin/users/{id}/password", s.handleResetPassword)
+				r.Delete("/admin/users/{id}", s.handleDeleteUser)
+			})
+		})
+	})
+
+	r.NotFound(s.serveStatic)
+	return r
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NovelCheck</title>
+  <meta name="description" content="Self-hosted library content checker">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NovelCheck">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="/vendor/Sortable.min.js" defer></script>
+  <script src="/vendor/jszip.min.js" defer></script>
+  <script src="/js/app.js" type="module"></script>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+  <!-- Login -->
+  <section id="login-view" class="hidden min-h-screen flex items-center justify-center p-6">
+    <form id="login-form" class="w-full max-w-sm space-y-4 rounded-2xl bg-slate-900 p-8 shadow-xl ring-1 ring-slate-800">
+      <div class="flex items-center gap-3">
+        <img src="/icons/icon.svg" alt="" class="h-10 w-10">
+        <h1 class="text-2xl font-bold">NovelCheck</h1>
+      </div>
+      <input name="username" autocomplete="username" required placeholder="Username" class="input">
+      <input name="password" type="password" autocomplete="current-password" required placeholder="Password" class="input">
+      <p id="login-error" class="hidden text-sm text-rose-400"></p>
+      <button class="btn-primary w-full">Sign in</button>
+    </form>
+  </section>
+
+  <!-- App shell -->
+  <div id="app-view" class="hidden">
+    <header class="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/90 backdrop-blur pt-safe">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+        <a href="#/library" class="mr-auto flex items-center gap-2 font-bold text-lg sm:mr-0">
+          <img src="/icons/icon.svg" alt="" class="h-7 w-7"> NovelCheck
+        </a>
+        <nav id="nav" class="order-last flex basis-full gap-1 overflow-x-auto text-sm sm:order-none sm:flex-1 sm:basis-auto">
+          <a href="#/library" data-route="library" class="nav-link">Library</a>
+          <a href="#/queue" data-route="queue" class="nav-link">Up Next</a>
+          <a href="#/import" data-route="import" class="nav-link admin-only">Import Drive</a>
+          <a href="#/admin" data-route="admin" class="nav-link admin-only">Admin</a>
+          <a href="#/profile" data-route="profile" class="nav-link">Profile</a>
+        </nav>
+        <button id="install-btn" class="btn-ghost hidden text-sm">Install app</button>
+        <button id="logout-btn" class="btn-ghost text-sm">Sign out</button>
+      </div>
+    </header>
+    <main id="view" class="mx-auto max-w-7xl px-4 py-6 pb-safe"></main>
+  </div>
+
+  <!-- Book detail dialog -->
+  <dialog id="book-dialog" class="dialog"></dialog>
+  <div id="toast" class="toast hidden"></div>
+</body>
+</html>

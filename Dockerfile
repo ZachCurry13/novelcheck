@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1
+# ---- build ----
+FROM golang:1.26-alpine AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+# Pure-Go SQLite driver: no CGO, fully static binary.
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/novelcheck ./cmd/novelcheck
+
+# ---- runtime ----
+FROM alpine:3.22
+RUN apk add --no-cache ca-certificates tzdata \
+ && addgroup -S -g 568 novelcheck && adduser -S -u 568 -G novelcheck novelcheck \
+ && mkdir -p /data /calibre && chown novelcheck:novelcheck /data
+COPY --from=build /out/novelcheck /usr/local/bin/novelcheck
+USER 568:568
+ENV NOVELCHECK_ADDR=:8080 \
+    NOVELCHECK_DATA_DIR=/data \
+    NOVELCHECK_CALIBRE_DIR=/calibre
+VOLUME ["/data"]
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- http://127.0.0.1:8080/healthz || exit 1
+ENTRYPOINT ["/usr/local/bin/novelcheck"]

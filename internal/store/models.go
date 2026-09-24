@@ -1,0 +1,105 @@
+// Package store holds the data-access layer for the NovelCheck database.
+// Queries always materialise results (Select/Get) because the pool is capped
+// at one connection; never nest queries inside a rows iteration.
+package store
+
+import "github.com/jmoiron/sqlx"
+
+type Store struct{ DB *sqlx.DB }
+
+func New(db *sqlx.DB) *Store { return &Store{DB: db} }
+
+const (
+	RoleAdmin      = "admin"
+	RoleRestricted = "restricted"
+)
+
+type User struct {
+	ID             int64  `db:"id" json:"id"`
+	Username       string `db:"username" json:"username"`
+	PasswordHash   string `db:"password_hash" json:"-"`
+	Role           string `db:"role" json:"role"`
+	HideOpenDoor   bool   `db:"hide_open_door" json:"hide_open_door"`
+	HideNudity     bool   `db:"hide_nudity" json:"hide_nudity"`
+	HideSoloActs   bool   `db:"hide_solo_acts" json:"hide_solo_acts"`
+	HideInnuendo   bool   `db:"hide_innuendo" json:"hide_innuendo"`
+	HideDarkOccult bool   `db:"hide_dark_occult" json:"hide_dark_occult"`
+	HideLGBTQ      bool   `db:"hide_lgbtq" json:"hide_lgbtq"`
+	HideUnrated    bool   `db:"hide_unrated" json:"hide_unrated"`
+	DeliveryMethod string `db:"delivery_method" json:"delivery_method"`
+	KindleEmail    string `db:"kindle_email" json:"kindle_email"`
+	CreatedAt      string `db:"created_at" json:"created_at"`
+}
+
+func (u *User) IsAdmin() bool { return u.Role == RoleAdmin }
+
+type Catalog struct {
+	ID        int64  `db:"id" json:"id"`
+	Name      string `db:"name" json:"name"`
+	Source    string `db:"source" json:"source"`
+	CreatedAt string `db:"created_at" json:"created_at"`
+	BookCount int    `db:"book_count" json:"book_count"`
+}
+
+type Book struct {
+	ID              int64   `db:"id" json:"id"`
+	NormKey         string  `db:"norm_key" json:"-"`
+	Title           string  `db:"title" json:"title"`
+	Author          string  `db:"author" json:"author"`
+	ISBN            string  `db:"isbn" json:"isbn"`
+	Description     string  `db:"description" json:"description"`
+	Blurb           string  `db:"blurb" json:"blurb"`
+	Status          string  `db:"status" json:"status"`
+	Classification  *string `db:"classification" json:"classification"`
+	Nudity          bool    `db:"nudity" json:"nudity"`
+	SoloActs        bool    `db:"solo_acts" json:"solo_acts"`
+	HeavyInnuendo   bool    `db:"heavy_innuendo" json:"heavy_innuendo"`
+	PlayfulFantasy  bool    `db:"playful_fantasy" json:"playful_fantasy"`
+	DarkOccult      bool    `db:"dark_occult" json:"dark_occult"`
+	DemonicPresence bool    `db:"demonic_presence" json:"demonic_presence"`
+	LGBTQContent    bool    `db:"lgbtq_content" json:"lgbtq_content"`
+	SummaryVerdict  string  `db:"summary_verdict" json:"summary_verdict"`
+	AnalysisModel   string  `db:"analysis_model" json:"analysis_model"`
+	AnalysisError   string  `db:"analysis_error" json:"analysis_error"`
+	AnalyzedAt      *string `db:"analyzed_at" json:"analyzed_at"`
+	CreatedAt       string  `db:"created_at" json:"created_at"`
+	UpdatedAt       string  `db:"updated_at" json:"updated_at"`
+	Catalogs        string  `db:"catalogs" json:"catalogs"` // comma-joined names (list queries)
+}
+
+// BookCopy is one physical copy of a book inside a catalog.
+type BookCopy struct {
+	CatalogID   int64  `db:"catalog_id" json:"catalog_id"`
+	CatalogName string `db:"catalog_name" json:"catalog_name"`
+	Source      string `db:"source" json:"source"`
+	Path        string `db:"path" json:"path"`
+	Format      string `db:"format" json:"format"`
+	ExternalID  string `db:"external_id" json:"external_id"`
+}
+
+// Analysis is the structured LLM verdict persisted onto a book.
+type Analysis struct {
+	Classification  string
+	Nudity          bool
+	SoloActs        bool
+	HeavyInnuendo   bool
+	PlayfulFantasy  bool
+	DarkOccult      bool
+	DemonicPresence bool
+	LGBTQContent    bool
+	SummaryVerdict  string
+	Model           string
+}
+
+type QueueItem struct {
+	ID             int64   `db:"id" json:"id"`
+	BookID         int64   `db:"book_id" json:"book_id"`
+	Position       int     `db:"position" json:"position"`
+	Status         string  `db:"status" json:"status"`
+	DeliveryNote   string  `db:"delivery_note" json:"delivery_note"`
+	UpdatedAt      string  `db:"updated_at" json:"updated_at"`
+	Title          string  `db:"title" json:"title"`
+	Author         string  `db:"author" json:"author"`
+	Classification *string `db:"classification" json:"classification"`
+	BookStatus     string  `db:"book_status" json:"book_status"`
+}

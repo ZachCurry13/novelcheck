@@ -1,0 +1,52 @@
+# NovelCheck — single container. Tuned for TrueNAS SCALE / Linux hosts:
+#   * /data    -> SSD dataset (novelcheck.db, small and write-heavy)
+#   * /calibre -> Calibre library on the HDD pool, mounted READ-ONLY
+services:
+  novelcheck:
+    image: novelcheck:latest
+    build: .
+    container_name: novelcheck
+    restart: unless-stopped
+    user: "568:568"            # TrueNAS "apps" user; must be able to read the Calibre library
+    ports:
+      - "8080:8080"
+    environment:
+      NOVELCHECK_ADMIN_USER: admin
+      NOVELCHECK_ADMIN_PASSWORD: ${NOVELCHECK_ADMIN_PASSWORD:-}   # blank = random, printed to logs once
+      NOVELCHECK_TRUST_PROXY: "true"                              # honor CF-Connecting-IP / X-Forwarded-For
+      NOVELCHECK_CORS_ORIGINS: ""                                 # comma-separated; blank = same-origin only
+      NOVELCHECK_SESSION_DAYS: "30"
+      TZ: America/Chicago
+    volumes:
+      - /mnt/ssd/apps/novelcheck:/data
+      - /mnt/tank/media/calibre:/calibre:ro
+
+  # Optional: expose NovelCheck through a Cloudflare Tunnel (no open ports).
+  # Create a tunnel in Cloudflare Zero Trust, route it to http://novelcheck:8080,
+  # then enable this service with: docker compose --profile tunnel up -d
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - novelcheck
+
+  # Optional: local LLM with GPU passthrough. Point the Admin panel's base URL
+  # at http://ollama:11434/v1 and model at llama3.2.
+  # Enable with: docker compose --profile ollama up -d
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    restart: unless-stopped
+    volumes:
+      - /mnt/ssd/apps/ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

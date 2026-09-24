@@ -1,0 +1,77 @@
+package llm_test
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/zachcurry13/novelcheck/internal/llm"
+)
+
+const sample = `{"classification":"Closed Door","content_elements":{"nudity":false,"solo_acts":false,"heavy_innuendo":true},
+"spiritual_elements":{"playful_fantasy":true,"dark_occult":false,"demonic_presence":true},
+"lgbtq_content":false,"summary_verdict":"Tension builds but intimacy happens off-page."}`
+
+func TestParseVerdictToleratesFences(t *testing.T) {
+	v, err := llm.ParseVerdict("Here you go:\n```json\n" + sample + "\n```")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v.Classification != "Closed Door" || !v.ContentElements.HeavyInnuendo {
+		t.Fatalf("bad parse %+v", v)
+	}
+	if !v.SpiritualElements.DarkOccult {
+		t.Fatal("demonic presence should imply dark_occult")
+	}
+}
+
+func TestParseVerdictNormalizesAndRejects(t *testing.T) {
+	v, err := llm.ParseVerdict(`{"classification":"open-door"}`)
+	if err != nil || v.Classification != "Open Door" {
+		t.Fatalf("normalize failed: %v %+v", err, v)
+	}
+	if _, err := llm.ParseVerdict(`{"classification":"Spicy"}`); err == nil {
+		t.Fatal("expected invalid classification error")
+	}
+	if _, err := llm.ParseVerdict(`no json here`); err == nil {
+		t.Fatal("expected missing JSON error")
+	}
+}
+
+func TestClientComplete(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/chat/completions" || r.Header.Get("Authorization") != "Bearer k" {
+			http.Error(w, "bad request", 400)
+			return
+		}
+		var body map[string]any
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		if body["model"] != "gpt-4o-mini" || body["response_format"] == nil {
+			http.Error(w, "bad body", 400)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"choices": []any{map[string]any{"message": map[string]string{"role": "assistant", "content": sample}}},
+			"usage":   map[string]int{"prompt_tokens": 700, "completion_tokens": 90},
+		})
+	}))
+	defer srv.Close()
+	c := &llm.Client{BaseURL: srv.URL + "/v1/", APIKey: "k", JSONMode: true}
+	out, usage, err := c.Complete(context.Background(), "gpt-4o-mini", llm.SystemPrompt, llm.UserPrompt("T", "A", "B"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if usage.Total() != 790 || !strings.Contains(out, "Closed Door") {
+		t.Fatalf("unexpected %d %q", usage.Total(), out)
+	}
+}
+
+func TestUserPromptTruncatesRuneSafe(t *testing.T) {
+	p := llm.UserPrompt("T", "", strings.Repeat("é", 5000))
+	if !strings.Contains(p, "Author: Unknown") || !strings.HasSuffix(p, "…") {
+		t.Fatalf("unexpected prompt tail: %q", p[len(p)-20:])
+	}
+}

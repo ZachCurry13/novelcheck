@@ -1,0 +1,40 @@
+/* Tailwind source. Compile with `make css` into web/static/css/app.css. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .input {
+    @apply w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary { @apply btn bg-indigo-600 text-white hover:bg-indigo-500; }
+  .btn-secondary { @apply btn bg-slate-800 text-slate-100 ring-1 ring-slate-700 hover:bg-slate-700; }
+  .btn-danger { @apply btn bg-rose-700 text-white hover:bg-rose-600; }
+  .btn-ghost { @apply btn text-slate-300 hover:bg-slate-800; }
+  .nav-link { @apply whitespace-nowrap rounded-md px-3 py-1.5 text-slate-300 hover:bg-slate-800 hover:text-white; }
+  .nav-link.active { @apply bg-slate-800 text-white; }
+  .card { @apply rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800; }
+  .label { @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400; }
+  .chip { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+  .chip-none { @apply chip bg-emerald-900/60 text-emerald-300; }
+  .chip-closed { @apply chip bg-amber-900/60 text-amber-300; }
+  .chip-open { @apply chip bg-rose-900/60 text-rose-300; }
+  .chip-pending { @apply chip bg-slate-800 text-slate-400; }
+  .chip-flag { @apply chip bg-violet-900/60 text-violet-300; }
+  .chip-cat { @apply chip bg-sky-900/50 text-sky-300; }
+  .toggle { @apply flex items-center gap-2 text-sm text-slate-300; }
+  .toggle input { @apply h-4 w-4 rounded border-slate-600 bg-slate-800 text-indigo-600; }
+  .dialog { @apply w-full max-w-2xl rounded-2xl bg-slate-900 p-0 text-slate-100 ring-1 ring-slate-700 backdrop:bg-black/70; }
+  .toast { @apply fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-slate-800 px-4 py-2 text-sm shadow-lg ring-1 ring-slate-700; }
+  .stat { @apply text-2xl font-bold; }
+  .drag-handle { @apply cursor-grab select-none px-2 text-xl text-slate-500 active:cursor-grabbing; }
+  .sortable-ghost { @apply opacity-40; }
+}
+
+@layer utilities {
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem); }
+}
