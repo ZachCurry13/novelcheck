@@ -19,3 +19,9 @@ var ProviderGuide string
 //
 //go:embed docs/REMOTE_ACCESS.md
 var RemoteAccessGuide string
+
+// CalibreServerGuide is docs/CALIBRE_SERVER.md, shown in Admin → Calibre
+// Library for setting up one-click removal.
+//
+//go:embed docs/CALIBRE_SERVER.md
+var CalibreServerGuide string

@@ -5,6 +5,7 @@ import { renderUsers } from "./users.js";
 import { renderCalibrePicker } from "./calibrepicker.js";
 import { initProviderPicker } from "./llmpresets.js";
 import { renderRemoteAccess } from "./remoteaccess.js";
+import { renderCalibreServer } from "./calibreserver.js";
 
 const SECTIONS = [
   ["LLM Analysis Engine", [
@@ -85,7 +86,10 @@ export async function renderAdmin(view, state) {
     if (s) renderStats(view, s);
   }
   await refresh();
-  if (isAdmin) renderCalibrePicker($("#calibre-picker", view), refresh);
+  if (isAdmin) {
+    renderCalibrePicker($("#calibre-picker", view), refresh);
+    renderCalibreServer($("#calibre-server", view));
+  }
   const timer = setInterval(refresh, 5000);
   const stopRemote = isAdmin ? await renderRemoteAccess($("#remote-access", view)) : null;
   await renderUsers($("#users", view), state.user);
@@ -103,7 +107,7 @@ async function renderSettings(view) {
       <legend class="px-1 text-lg font-semibold">${esc(title)}</legend>
       ${fields.map(([k, label, ph, type]) => field(k, label, ph, type, settings[k])).join("")}
       ${title.startsWith("SMTP") ? `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>` : ""}
-      ${title.startsWith("Calibre") ? `<div id="calibre-picker"></div>` : ""}
+      ${title.startsWith("Calibre") ? `<div id="calibre-picker"></div><div id="calibre-server"></div>` : ""}
       ${title.startsWith("LLM") ? `<div id="llm-preset-host"></div>` : ""}
     </fieldset>`).join("") +
     `<div class="lg:col-span-2"><button class="btn-primary">Save settings</button></div>`;

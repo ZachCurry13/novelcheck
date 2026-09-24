@@ -89,7 +89,8 @@ export async function renderLibrary(view, state) {
   });
   $("#remove-btn", view)?.addEventListener("click", () => {
     const fd = new FormData(form);
-    openCalibreRemoval({ hide: fd.getAll("hide").join(","), q: fd.get("q"), classification: fd.get("classification") });
+    openCalibreRemoval({ hide: fd.getAll("hide").join(","), q: fd.get("q"), classification: fd.get("classification") },
+      () => setTimeout(() => load(true), 1500));
   });
   const batch = $("#batch-btn", view);
   if (batch) {

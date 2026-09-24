@@ -112,5 +112,7 @@ func (s *Server) handleCalibreRemoval(w http.ResponseWriter, r *http.Request) {
 		"count":  len(matches),
 		"books":  matches,
 		"search": strings.Join(parts, " or "),
+		// true when the Content server is set up for one-click removal
+		"one_click": s.Store.Setting(store.KeyCalibreSrvURL) != "",
 	})
 }

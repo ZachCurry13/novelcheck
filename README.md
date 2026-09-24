@@ -13,7 +13,7 @@ See [`NOVELCHECK_SPEC.md`](NOVELCHECK_SPEC.md) for the full specification, archi
 | Drive scanner | Uses `showDirectoryPicker()` on Chromium and falls back to `<input webkitdirectory>` on iOS Safari and Firefox. Reads EPUB OPF metadata and MOBI/AZW3 EXTH headers **in the browser**, and parses Kindle filenames (`Title - Author_B0XXXXXXXX_EBOK.azw`). Only metadata is uploaded. You pick an existing catalog or create one, such as "Jenna's Kindle". |
 | Dashboard | Browse every catalog in one place. Filter by catalog, spice level and cross-catalog overlap ("also in…" / "only books in 2+ catalogs"), and tick **Hide** boxes (Open Door, Nudity, Solo Acts, Heavy Innuendo, LGBTQ+, Dark Occult) to hide books with that content. |
 | Parent "OK" | Admins and editors can **✓ Mark as OK** a book a filter catches by mistake (Harry Potter's magic, say). It then shows for everyone, overriding hide filters and kids' content rules, and is never offered for removal. |
-| Remove from Calibre | Admins get **Remove hidden books from Calibre…**, which lists the Calibre books your Hide filters catch and builds a Calibre search selecting exactly those, so Calibre deletes them itself (with its recycle bin). NovelCheck never writes to your library. |
+| Remove from Calibre | Admins get **Remove hidden books from Calibre…**, which lists the Calibre books your Hide filters catch (never ones marked OK). With **One-click removal** connected to Calibre's Content server, one button removes them through Calibre, to its recycle bin, after checking every title against Calibre so the wrong library can't be touched. Without it, NovelCheck gives you a Calibre search to paste. Either way NovelCheck itself never writes to your library. Guide: [docs/CALIBRE_SERVER.md](docs/CALIBRE_SERVER.md). |
 | Feedback | **Suggest a filter / feedback** (footer) and **Suggest one** (next to the Hide boxes) open GitHub issue forms. |
 | Reading queue | Personal "Up Next" list, reordered with SortableJS drag handles and saved as positions. **▶ Start Reading** emails the EPUB through Send-to-Kindle SMTP or flags it for KOReader, then moves it to *Currently Reading*. |
 | LLM analysis | Pick a provider in **Admin**: OpenAI, **Anthropic Claude** (native Messages API via the official Go SDK), Google Gemini, Perplexity, Ollama, or any other OpenAI-compatible endpoint (vLLM, LM Studio). Presets choose a small model (for example `gpt-4o-mini` or `claude-haiku-4-5`), and an optional larger fallback model is used only when the small one fails. Blurbs come from Open Library, then Google Books, before the LLM runs. Syncing never triggers LLM calls: books wait in *Pending Analysis* until an admin runs a batch or a single scan. |
@@ -97,6 +97,8 @@ make run         # serves on :8080 with ./data and ./calibre
 make css         # recompile Tailwind after changing classes (output is committed)
 ```
 
+`internal/calibresrv` has an optional test against a real `calibre-server`. Run one with `--enable-auth` and a user who can make changes (plus a read-only user `reader` / `readpass1`), then set `NOVELCHECK_TEST_CALIBRE_URL`, `NOVELCHECK_TEST_CALIBRE_USER` and `NOVELCHECK_TEST_CALIBRE_PASS`.
+
 The version shown in the app comes from `-ldflags -X .../internal/version.Version=…`. The Makefile and CI set it from the git tag. Add a `## [x.y.z]` section to `CHANGELOG.md` before releasing, because it becomes the release notes.
 
 CI (`.github/workflows/docker.yml`) runs `go vet` and `go test` on every push and pull request. On `main` it publishes `ghcr.io/zachcurry13/novelcheck:latest`. To cut a release, go to **Actions → Docker image → Run workflow** and enter a version such as `1.1.0`. That publishes `:1.1.0` and `:latest` and creates the `v1.1.0` tag and GitHub Release. Pushing a `vX.Y.Z` tag does the same.
@@ -110,6 +112,7 @@ internal/db/           SQLite open + embedded schema.sql
 internal/store/        data access: users, sessions, catalogs, books, filters, queue, settings, usage
 internal/auth/         bcrypt, cookie sessions, RBAC middleware, admin bootstrap
 internal/calibre/      read-only metadata.db sync + polling scheduler
+internal/calibresrv/   calibre Content server client (Digest/Basic login, list, remove to recycle bin)
 internal/enrich/       Open Library / Google Books blurb lookup
 internal/llm/          OpenAI-compatible client, Claude client (anthropic-sdk-go), system prompt, verdict parser
 internal/analyzer/     queued analysis worker, token-per-hour cap, small→large fallback

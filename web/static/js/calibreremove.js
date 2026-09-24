@@ -2,10 +2,10 @@
 // NovelCheck never deletes files; it builds a Calibre search that selects
 // exactly those books, so Calibre removes them properly (with its own
 // recycle bin and database updates).
-import { get, qs } from "./api.js";
+import { get, post, qs } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";
 
-export async function openCalibreRemoval(filters) {
+export async function openCalibreRemoval(filters, onDone) {
   const data = await attempt(() => get("/api/admin/calibre/removal" + qs(filters)));
   if (!data) return;
   const dlg = $("#book-dialog");
@@ -21,6 +21,14 @@ export async function openCalibreRemoval(filters) {
         Books a parent marked OK are left out. Check the list first:</p>
       <ul class="max-h-48 list-disc overflow-y-auto rounded-lg bg-slate-800/60 py-2 pl-8">${list}</ul>
       ${data.count > 100 ? `<p class="text-xs text-slate-500">Showing the first 100.</p>` : ""}
+      ${data.one_click ? `
+      <div class="rounded-lg bg-rose-950/40 p-3 ring-1 ring-rose-900">
+        <label class="toggle"><input type="checkbox" id="cal-checked"> I've checked the list above</label>
+        <button type="button" data-remove class="btn-danger mt-2" disabled>Remove these ${data.count} book${data.count === 1 ? "" : "s"} from Calibre</button>
+        <p class="mt-1 text-xs text-slate-400">They go to Calibre's recycle bin, so you can restore them in Calibre.</p>
+      </div>
+      <p class="text-xs text-slate-500">Or do it by hand in Calibre:</p>` : `
+      <p class="text-xs text-slate-400">Tip: set up <b>Admin → Calibre Library → One-click removal</b> to remove books straight from here.</p>`}
       <div>
         <span class="label">Calibre search</span>
         <textarea id="cal-search" readonly rows="3" class="input font-mono text-xs">${esc(data.search)}</textarea>
@@ -36,6 +44,26 @@ export async function openCalibreRemoval(filters) {
     </div>`;
   dlg.onclick = async (e) => {
     if (e.target === dlg || e.target.closest("[data-close]")) return dlg.close();
+    if (e.target.id === "cal-checked") {
+      $("[data-remove]", dlg).disabled = !e.target.checked;
+      return;
+    }
+    const rm = e.target.closest("[data-remove]");
+    if (rm) {
+      if (!confirm(`Remove ${data.count} book(s) from your Calibre library? They go to Calibre's recycle bin.`)) return;
+      rm.disabled = true;
+      rm.textContent = "Removing…";
+      const r = await attempt(() => post("/api/admin/calibre/remove", { ...filters, expected_count: data.count }));
+      if (r) {
+        dlg.close();
+        toast(`Removed ${r.removed} book(s) from Calibre${r.skipped ? ` (${r.skipped} were already gone)` : ""}. Syncing…`);
+        onDone?.();
+      } else {
+        rm.disabled = false;
+        rm.textContent = `Remove these ${data.count} books from Calibre`;
+      }
+      return;
+    }
     if (e.target.closest("[data-copy]")) {
       const ta = $("#cal-search", dlg);
       try {

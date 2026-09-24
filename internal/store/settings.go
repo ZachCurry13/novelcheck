@@ -30,7 +30,11 @@ const (
 	KeySessionDays        = "session_days" // "keep me signed in" length; renewed while in use
 	KeyTunnelEnabled      = "tunnel_enabled"
 	KeyTunnelToken        = "tunnel_token"
-	KeyTunnelHostname     = "tunnel_hostname" // public address, for display and links
+	KeyTunnelHostname     = "tunnel_hostname"    // public address, for display and links
+	KeyCalibreSrvURL      = "calibre_server_url" // Content server for one-click removal
+	KeyCalibreSrvUser     = "calibre_server_user"
+	KeyCalibreSrvPassword = "calibre_server_password"
+	KeyCalibreSrvLibrary  = "calibre_server_library"
 	KeyCalibreLastSync    = "calibre_last_sync"
 	KeyCalibreLastResult  = "calibre_last_result"
 )
@@ -57,7 +61,7 @@ var Defaults = map[string]string{
 }
 
 // SecretKeys are never returned to the browser in clear text.
-var SecretKeys = map[string]bool{KeyLLMAPIKey: true, KeySMTPPassword: true, KeyGoogleBooksAPIKey: true, KeyTunnelToken: true}
+var SecretKeys = map[string]bool{KeyLLMAPIKey: true, KeySMTPPassword: true, KeyGoogleBooksAPIKey: true, KeyTunnelToken: true, KeyCalibreSrvPassword: true}
 
 // AllSettings returns stored values merged over defaults.
 func (s *Store) AllSettings() (map[string]string, error) {

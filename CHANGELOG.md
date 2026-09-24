@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.6.0]
+
+### New
+- **One-click removal from Calibre** (admins): connect NovelCheck to Calibre's Content server under **Admin → Calibre Library → One-click removal** (**Show setup steps** explains the Calibre side). Then **Remove hidden books from Calibre…** has a **Remove these books** button. Books go to Calibre's recycle bin, and books marked OK are never included.
+- **Safety checks**: before removing anything, NovelCheck re-checks the list and confirms every title with Calibre. If Calibre is serving a different library, it stops and removes nothing.
+
 ## [1.5.0]
 
 ### Changed

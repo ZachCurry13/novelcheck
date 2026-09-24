@@ -56,7 +56,7 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 * **Unified Dashboard:** Browse all books across all catalogs simultaneously.
 * **Filtering:** Filter by catalog and spice level (`Closed Door`, `Open Door`, `No Spice`); content-flag checkboxes **hide** matching books.
 * **Parent approval:** Admins/editors can mark a book "OK", which overrides hide filters and restricted accounts' content rules (e.g. Harry Potter's fantasy magic).
-* **Calibre removal helper:** Admins can list the Calibre books their hide filters catch and copy a Calibre search (`id:=N or …`) to remove them in Calibre itself. NovelCheck keeps the library read-only.
+* **Calibre removal:** Admins can list the Calibre books their hide filters catch (never parent-approved ones) and either copy a Calibre search (`id:=N or …`) or, with the calibre Content server connected, remove them in one click. One-click removal goes through calibre's own remote interface (`/cdb/cmd/remove`, to calibre's recycle bin) after re-checking the list and verifying every id's title against calibre. NovelCheck's own access to the library stays read-only.
 * **Feedback:** In-app links to GitHub issue forms for filter suggestions and general feedback.
 * **Cross-Catalog Overlap:** Matches books present in both Calibre AND external drives as single entities to allow filtering for overlapping titles.
 
@@ -132,6 +132,7 @@ OUTPUT FORMAT (JSON ONLY):
 | `internal/store` | All SQL (via `sqlx`); SQL-level visibility clause for per-profile content rules |
 | `internal/auth` | bcrypt passwords, random session tokens (only SHA-256 stored), `RequireUser` / `RequireManager` / `RequireAdmin` middleware |
 | `internal/calibre` | `metadata.db?mode=ro` reader, library-folder selection/browse/find inside the mount, `/calibre/` path resolution, prune of deleted books, interval scheduler |
+| `internal/calibresrv` | calibre Content server client: Digest/Basic login, library list, `list` (title verification) and `remove` (to recycle bin) commands |
 | `internal/version` / `internal/updates` | Build-time version stamp, semver comparison, cached GitHub Releases check |
 | `internal/enrich` | Open Library → Google Books → local description blurb lookup |
 | `internal/llm` | Provider clients behind one `Completer` interface: OpenAI-compatible `/chat/completions` and Anthropic Claude (`anthropic-sdk-go`); Section 4 system prompt; tolerant JSON verdict parser |
@@ -147,7 +148,7 @@ OUTPUT FORMAT (JSON ONLY):
 Public: `POST /api/auth/login`, `POST /api/auth/logout`, `GET|POST /api/setup` (first admin, only while no users exist), `GET /healthz`.
 Any signed-in user: `GET /api/me`, `PUT /api/me/password`, `PUT /api/me/delivery`, `PUT /api/me/guide-seen`, `GET /api/updates`, `GET /api/books` (filters: `q, catalog, overlap_with, multi, classification, flags, exclude, status, sort, limit, offset`), `GET /api/books/{id}`, `GET /api/books/{id}/download`, `GET /api/catalogs`, `GET|POST /api/queue`, `PUT /api/queue/order`, `DELETE /api/queue/{id}`, `POST /api/queue/{id}/start`, `POST /api/queue/{id}/finish`.
 Editor or admin: `POST /api/catalogs`, `PATCH /api/catalogs/{id}`, `POST /api/import/drive`, `POST /api/books/{id}/analyze`, `PUT /api/books/{id}/verdict`, `PUT /api/books/{id}/approval`, `GET /api/admin/status`, `POST /api/admin/analyze-batch`, `POST /api/admin/calibre-sync`, `GET|POST /api/admin/users`, `PUT|DELETE /api/admin/users/{id}`, `PUT /api/admin/users/{id}/password` (editors: restricted accounts only).
-Admin only: `DELETE /api/catalogs/{id}`, `GET|PUT /api/admin/settings`, `POST /api/admin/wipe-queue`, `GET /api/admin/calibre/browse`, `GET /api/admin/calibre/find`, `GET /api/admin/calibre/removal`, `GET|PUT /api/admin/tunnel`, `GET /api/admin/ollama/find`, `GET|POST /api/admin/ollama/pull`, `POST /api/admin/ollama/use`, `PUT /api/admin/calibre/library`, `POST /api/admin/smtp-test`, `GET /api/admin/backup`.
+Admin only: `DELETE /api/catalogs/{id}`, `GET|PUT /api/admin/settings`, `POST /api/admin/wipe-queue`, `GET /api/admin/calibre/browse`, `GET /api/admin/calibre/find`, `GET /api/admin/calibre/removal`, `POST /api/admin/calibre/remove`, `GET|PUT /api/admin/calibre/server`, `GET|PUT /api/admin/tunnel`, `GET /api/admin/ollama/find`, `GET|POST /api/admin/ollama/pull`, `POST /api/admin/ollama/use`, `PUT /api/admin/calibre/library`, `POST /api/admin/smtp-test`, `GET /api/admin/backup`.
 All non-GET API calls require the header `X-NovelCheck: 1`.
 
 ---
@@ -170,3 +171,4 @@ All non-GET API calls require the header `X-NovelCheck: 1`.
 14. **v1.3 AI providers.** Provider menu with presets (OpenAI, Claude, Gemini, Perplexity, Ollama, other), `llm_provider` setting, a native Claude client using Anthropic's official Go SDK, and per-provider setup guides (`docs/AI_PROVIDERS.md`, bundled and shown in the admin panel).
 15. **v1.4 remote access & Ollama.** Bundled `cloudflared` supervised by `internal/tunnel` (token in Admin → Remote access, status + log, `docs/REMOTE_ACCESS.md` shown in-app) and an Ollama easy-setup flow (`internal/ollama`: discovery, model download with progress, one-click "use this model").
 16. **v1.5 filters & feedback.** Hide-style filter checkboxes (incl. Open Door), parent "Mark as OK" (`PUT /api/books/{id}/approval`) respected by filters and content rules, Calibre removal helper (`GET /api/admin/calibre/removal`), GitHub issue forms and in-app feedback links.
+17. **v1.6 one-click Calibre removal.** `internal/calibresrv` client (verified against calibre 7.6), Admin → Calibre Library → One-click removal (tested before saving, password secret), and `POST /api/admin/calibre/remove` with list-changed and title-mismatch guards; setup guide `docs/CALIBRE_SERVER.md` shown in-app.
