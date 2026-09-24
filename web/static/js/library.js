@@ -48,6 +48,7 @@ export async function renderLibrary(view, state) {
         <span class="ml-auto flex flex-wrap gap-2">
           ${state.user.role === "admin" ? `<button type="button" id="remove-btn" class="btn-ghost text-xs">Remove hidden books from Calibre…</button>` : ""}
           ${manager ? `<a href="#/duplicates" class="btn-ghost text-xs">Find duplicates</a>` : ""}
+          ${state.user.role === "admin" ? `<a href="#/deletions" class="btn-ghost text-xs">Delete requests</a>` : ""}
           ${manager ? `<button type="button" id="batch-btn" class="btn-secondary">Analyze next batch</button>` : ""}
         </span>
       </div>
@@ -152,7 +153,8 @@ function card(b) {
 // File formats (EPUB, AZW3…) and a warning when Calibre has the book twice.
 export function formatChips(b) {
   const fmts = b.formats ? b.formats.split(",").map((f) => `<span class="chip-fmt">${esc(f)}</span>`).join(" ") : "";
+  const del = b.delete_requests ? `<span class="chip-dup" title="Someone asked to delete this book">🗑 Delete requested</span>` : "";
   const dup = b.calibre_copies > 1
     ? `<span class="chip-dup" title="This book is in Calibre ${b.calibre_copies} times">⚠ ${b.calibre_copies}× in Calibre</span>` : "";
-  return `${fmts} ${dup}`;
+  return `${fmts} ${dup} ${del}`;
 }

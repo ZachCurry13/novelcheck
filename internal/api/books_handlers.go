@@ -81,7 +81,8 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"book": b, "copies": copies, "downloadable": downloadable, "notes": notes})
+	writeJSON(w, http.StatusOK, map[string]any{"book": b, "copies": copies, "downloadable": downloadable, "notes": notes,
+		"my_delete_request": s.Store.MyDeleteRequest(id, u.ID)})
 }
 
 // handleDownload streams the best on-disk copy (used by KOReader / manual sync).

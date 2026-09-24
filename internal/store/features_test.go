@@ -243,3 +243,26 @@ func TestPepperScale(t *testing.T) {
 	}
 	_ = ids
 }
+
+// A request stays in the history as "deleted" even after the book itself is
+// gone (the Calibre re-read removes it before the decision is saved).
+func TestDeleteRequestSurvivesBookDeletion(t *testing.T) {
+	s := newStore(t)
+	_, _, ids := seed(t, s)
+	wife, _ := s.CreateUser("wife", "x", store.RoleEditor)
+	b, _ := s.BookByID(ids["Steamy"], nil)
+	if err := s.RequestDelete(b, wife, "explicit"); err != nil {
+		t.Fatal(err)
+	}
+	reqIDs, _ := s.PendingRequestIDs([]int64{b.ID})
+	if _, err := s.DB.Exec(`DELETE FROM books WHERE id = ?`, b.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.DecideRequests(reqIDs, "deleted", "admin"); err != nil {
+		t.Fatal(err)
+	}
+	recent, _ := s.RecentDeleteDecisions(5)
+	if len(recent) != 1 || recent[0].Title != "Steamy" || recent[0].Status != "deleted" || recent[0].BookID != nil {
+		t.Fatalf("history: %+v", recent)
+	}
+}

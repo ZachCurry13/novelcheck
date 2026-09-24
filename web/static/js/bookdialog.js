@@ -2,7 +2,7 @@
 import { PEPPERS, openPepperGuide } from "./peppers.js";
 import { copyText } from "./copy.js";
 import { diagnoseLater } from "./diagnose.js";
-import { get, post, put } from "./api.js";
+import { get, post, put, del } from "./api.js";
 import { $, esc, attempt, classChip, flagChips, ageChip, canManage } from "./ui.js";
 import { verdictFormHTML, bindVerdictForm } from "./verdictform.js";
 import { ageAndNotesHTML, bindAgeAndNotes } from "./booknotes.js";
@@ -64,6 +64,10 @@ export async function openBook(id, state, onChange) {
         ${manager ? `<button data-act="analyze" class="btn-secondary">${b.classification ? "Re-analyze" : "Analyze now"}</button>
           <button data-act="edit-verdict" class="btn-secondary">Edit rating</button>
           <button data-act="approve" class="btn-secondary" title="Show this book even when it matches someone's hide filters or content rules">${b.approved ? "Remove OK mark" : "✓ Mark as OK"}</button>` : ""}
+        ${data.my_delete_request
+          ? `<button data-act="cancel-delete" class="btn-ghost" title="${esc(data.my_delete_request.reason || "")}">🗑 Delete requested · Cancel</button>`
+          : `<button data-act="request-delete" class="btn-ghost" title="Ask an admin to delete this book">🗑 Request to delete</button>`}
+        ${isAdmin && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
       </div>
     </div>`;
   const refresh = () => {
@@ -86,6 +90,14 @@ export async function openBook(id, state, onChange) {
     } else if (act === "approve") {
       const ok = await attempt(() => put(`/api/books/${b.id}/approval`, { approved: !b.approved }),
         b.approved ? "OK mark removed" : "Marked OK: it will show even when filters would hide it");
+      if (ok) refresh();
+    } else if (act === "request-delete") {
+      const reason = prompt("Why should this book be deleted? (optional)\nAn admin will review it.", "");
+      if (reason === null) return;
+      const ok = await attempt(() => post(`/api/books/${b.id}/delete-request`, { reason }), "Delete requested. An admin will review it.");
+      if (ok) refresh();
+    } else if (act === "cancel-delete") {
+      const ok = await attempt(() => del(`/api/books/${b.id}/delete-request`), "Delete request cancelled");
       if (ok) refresh();
     } else if (act === "queue") {
       await attempt(() => post("/api/queue", { book_id: b.id }), "Added to Up Next");

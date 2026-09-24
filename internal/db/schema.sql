@@ -132,3 +132,20 @@ CREATE TABLE IF NOT EXISTS book_notes (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_book_notes_book ON book_notes(book_id);
+
+-- Requests (by any user) to delete a book; an admin reviews them. Title and
+-- author are copied so the history survives the book being deleted.
+CREATE TABLE IF NOT EXISTS delete_requests (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id    INTEGER REFERENCES books(id) ON DELETE SET NULL,
+    title      TEXT NOT NULL,
+    author     TEXT NOT NULL DEFAULT '',
+    user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    username   TEXT NOT NULL DEFAULT '',
+    reason     TEXT NOT NULL DEFAULT '',
+    status     TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'deleted', 'dismissed', 'done')),
+    decided_by TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    decided_at DATETIME
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_delete_requests_pending ON delete_requests(book_id, user_id) WHERE status = 'pending';

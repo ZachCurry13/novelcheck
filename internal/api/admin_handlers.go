@@ -75,6 +75,7 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"counts":            counts,
 		"rerate_candidates": len(rerate),
+		"pending_deletes":   s.Store.PendingDeleteCount(),
 		"usage":             usage,
 		"tokens_per_hour":   s.Store.SettingInt(store.KeyTokensPerHour),
 		"cost_spent":        spent,

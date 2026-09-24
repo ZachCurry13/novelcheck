@@ -70,6 +70,7 @@ export async function renderAdmin(view, state) {
       ${adminOnly(`<a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db</a>`)}
       <p id="worker" class="basis-full text-sm text-slate-400"></p>
       <div id="rerate" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
+      <div id="del-banner" class="hidden basis-full rounded-lg bg-rose-950/50 p-3 text-sm"></div>
     </div>
     ${adminOnly(`<form id="settings" class="mb-8 grid gap-4 lg:grid-cols-2"></form><div id="remote-access"></div>`)}
     <section id="users"></section>`;
@@ -189,6 +190,12 @@ function renderStats(view, s) {
     tile("Spent to date", fmtMoney(s.cost_spent), `${fmtNum(s.usage.total_prompt_tokens + s.usage.total_completion_tokens)} tokens · ${fmtNum(s.usage.total_calls)} calls`),
     tile("Est. to finish library", fmtMoney(s.cost_projected), `≈ ${fmtNum(s.tokens_projected)} tokens remaining`),
   ].join("");
+  const delBox = $("#del-banner", view);
+  delBox.classList.toggle("hidden", !(s.pending_deletes && document.body.dataset.role === "admin"));
+  if (s.pending_deletes) {
+    delBox.innerHTML = `🗑 <b>${fmtNum(s.pending_deletes)}</b> book${s.pending_deletes === 1 ? " is" : "s are"} waiting for your delete review.
+      <a href="#/deletions" class="ml-2 underline">Review</a>`;
+  }
   const box = $("#rerate", view);
   box.classList.toggle("hidden", !s.rerate_candidates);
   if (s.rerate_candidates) {

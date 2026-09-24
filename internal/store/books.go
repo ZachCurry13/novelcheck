@@ -15,7 +15,8 @@ const bookCols = `b.id, b.norm_key, b.title, b.author, b.isbn, b.description, b.
 const derivedCols = `, COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTINCT UPPER(fc.format) AS f
 		FROM catalog_books fc WHERE fc.book_id = b.id AND fc.format NOT IN ('', 'list') ORDER BY f)), '') AS formats,
 	(SELECT COUNT(DISTINCT dc.external_id) FROM catalog_books dc JOIN catalogs dcat ON dcat.id = dc.catalog_id
-		AND dcat.source = 'calibre' WHERE dc.book_id = b.id) AS calibre_copies`
+		AND dcat.source = 'calibre' WHERE dc.book_id = b.id) AS calibre_copies,
+	(SELECT COUNT(*) FROM delete_requests dq WHERE dq.book_id = b.id AND dq.status = 'pending') AS delete_requests`
 
 // UpsertBook inserts a book or returns the existing one with the same NormKey,
 // filling in any metadata the stored row is missing. Returns the book id.
