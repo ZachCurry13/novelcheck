@@ -16,6 +16,8 @@ See [`NOVELCHECK_SPEC.md`](NOVELCHECK_SPEC.md) for the full specification, archi
 | LLM analysis | Pick a provider in **Admin**: OpenAI, **Anthropic Claude** (native Messages API via the official Go SDK), Google Gemini, Perplexity, Ollama, or any other OpenAI-compatible endpoint (vLLM, LM Studio). Presets choose a small model (for example `gpt-4o-mini` or `claude-haiku-4-5`), and an optional larger fallback model is used only when the small one fails. Blurbs come from Open Library, then Google Books, before the LLM runs. Syncing never triggers LLM calls: books wait in *Pending Analysis* until an admin runs a batch or a single scan. |
 | Admin panel | Batch size, tokens/hour cap, scan delay, live token counter and cost estimator (spent and projected), SMTP settings with a test send, Calibre polling interval, one-click `novelcheck.db` backup, and a wipe of the pending analysis queue. |
 | Ratings review | Admins and editors can correct any rating by hand (**Edit rating**). Manual ratings are labeled with who made them. |
+| Remote access | Built-in Cloudflare Tunnel connector: paste a tunnel token in **Admin → Remote access** to get an `https://` address that works away from home, with no port forwarding. Guide: [docs/REMOTE_ACCESS.md](docs/REMOTE_ACCESS.md). |
+| Ollama easy setup | With the Ollama provider selected, NovelCheck finds your Ollama server, downloads a model with a progress bar, and switches to it, with no terminal needed. |
 | Help & updates | A step-by-step **How to** guide opens on each person's first login and can be reopened from **❔ Help**. Admins and editors see a banner when a new version is released, and **What's new** shows release notes (from `CHANGELOG.md` and GitHub Releases). |
 | PWA | `manifest.json` (standalone, dark theme) and `sw.js` app-shell cache for offline launch and Add to Home Screen. |
 
@@ -54,7 +56,7 @@ The container runs as UID/GID `568` (TrueNAS `apps`). That user needs read acces
 
 ### Optional profiles
 
-- `docker compose --profile tunnel up -d`: runs `cloudflared` with `CLOUDFLARE_TUNNEL_TOKEN`. Route the tunnel to `http://novelcheck:8080`.
+- Remote access: easiest is the built-in tunnel (**Admin → Remote access**). Alternatively, `docker compose --profile tunnel up -d` runs a separate `cloudflared` with `CLOUDFLARE_TUNNEL_TOKEN`; route that tunnel to `http://novelcheck:8080`.
 - `docker compose --profile ollama up -d`: runs a local Ollama with NVIDIA GPU passthrough.
 
 ## Configuration
@@ -80,6 +82,8 @@ Process-level settings are environment variables. Everything else is edited in t
 - **The database backup contains password hashes and the LLM/SMTP secrets.** Store it like a credential.
 - Book downloads are served only from paths recorded by the Calibre sync that sit inside `NOVELCHECK_CALIBRE_DIR`. The in-app folder browser is admin-only and can't leave that mount, even through symlinks.
 - First-run setup (`POST /api/setup`) only works while the database has no accounts.
+- The tunnel token is stored as a secret (never returned to the browser) and passed to `cloudflared` through its environment, not the command line.
+- The Ollama helper (admin only) probes the container's gateway, `host.docker.internal`, and `ollama` on ports 11434/30068, plus any address the admin types.
 - Update checks call `api.github.com` about every 6 hours. Turn them off under **Admin → Sign-in & Updates**.
 
 ## Development
@@ -107,6 +111,8 @@ internal/enrich/       Open Library / Google Books blurb lookup
 internal/llm/          OpenAI-compatible client, Claude client (anthropic-sdk-go), system prompt, verdict parser
 internal/analyzer/     queued analysis worker, token-per-hour cap, small→large fallback
 internal/delivery/     Send-to-Kindle SMTP + best-file picker
+internal/tunnel/       supervises the bundled cloudflared connector (remote access)
+internal/ollama/       Ollama discovery, model downloads with progress
 internal/api/          chi router, middleware, handlers
 web/static/            index.html, Tailwind CSS, JS modules, manifest.json, sw.js, icons, vendored SortableJS/JSZip
 ```

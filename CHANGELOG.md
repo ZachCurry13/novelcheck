@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.4.0]
+
+### New
+- **Remote access built in**: use NovelCheck away from home through a free Cloudflare Tunnel, with no router changes. Paste the tunnel token from Cloudflare into **Admin → Remote access**, tick **Turn on remote access**, and you get an `https://` address that works anywhere. **Show setup steps** walks through the Cloudflare side.
+- **Ollama easy setup**: pick **Ollama** as the AI provider, click **Find Ollama**, **Download** a model (with a progress bar), and **Use this model**. No terminal commands needed. Works great with GPU passthrough.
+
 ## [1.3.2]
 
 ### Fixed

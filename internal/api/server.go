@@ -11,7 +11,9 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/config"
+	"github.com/zachcurry13/novelcheck/internal/ollama"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/tunnel"
 	"github.com/zachcurry13/novelcheck/internal/updates"
 )
 
@@ -22,7 +24,9 @@ type Server struct {
 	Worker  *analyzer.Worker
 	Syncer  *calibre.Syncer
 	Updates *updates.Checker
-	Web     fs.FS // embedded static assets
+	Tunnel  *tunnel.Manager
+	Pulls   ollama.Puller // Ollama model downloads
+	Web     fs.FS         // embedded static assets
 	logins  *loginLimiter
 }
 
@@ -97,6 +101,12 @@ func (s *Server) Router() http.Handler {
 				r.Put("/admin/calibre/library", s.handleSetCalibreLibrary)
 				r.Post("/admin/smtp-test", s.handleSMTPTest)
 				r.Get("/admin/backup", s.handleBackup)
+				r.Get("/admin/tunnel", s.handleTunnelStatus)
+				r.Put("/admin/tunnel", s.handleTunnelSave)
+				r.Get("/admin/ollama/find", s.handleOllamaFind)
+				r.Post("/admin/ollama/pull", s.handleOllamaPull)
+				r.Get("/admin/ollama/pull", s.handleOllamaPullStatus)
+				r.Post("/admin/ollama/use", s.handleOllamaUse)
 			})
 		})
 	})

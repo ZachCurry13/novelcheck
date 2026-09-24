@@ -8,7 +8,7 @@ NovelCheck sends each book's title, author, and back-cover blurb to an AI servic
 - **Most careful answers: Anthropic Claude.** About $1.50 per 1,000 books.
 - **Good middle ground: Google Gemini.** Under $1 per 1,000 books, with a limited free tier.
 - **Best for obscure or self-published books: Perplexity.** It searches the web for each book. Around $6 per 1,000 books.
-- **Free and fully private: Ollama.** Runs on your own server. Needs a reasonably powerful machine (a graphics card helps a lot), and ratings are less reliable than the paid services.
+- **Free and fully private: Ollama.** Runs on your own server, with a one-click setup inside NovelCheck. A graphics card makes it much faster.
 
 The cost estimates assume about 900 words-worth of text ("tokens") per book. NovelCheck shows your real spending under **Admin → Spent to date**, and you can cap it with **Max tokens per hour**.
 
@@ -56,14 +56,16 @@ JSON response mode is turned off for Perplexity because it doesn't support it. N
 
 ## Ollama (free, on your own server)
 
-Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and there's no bill, but your server does the work, so it's slower, and ratings are less reliable than the paid services.
+Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and there's no bill. With a graphics card (GPU) it's quick; without one, each book can take a minute or more, and ratings are a little less reliable than the paid services.
 
-1. In TrueNAS, open **Apps → Discover Apps**, search for **Ollama**, and click **Install**. If you have an NVIDIA graphics card, enable GPU access in the install form. Note the port it uses (normally `11434`).
-2. Download a model once. In **Apps**, click **ollama**, open its **Shell** (the terminal icon on the container row), type `ollama pull llama3.2`, and press Enter. Wait for it to finish (about 2 GB).
-3. In NovelCheck: **Admin → LLM Analysis Engine**, set **AI provider** to **Ollama**.
-4. In **API base URL**, replace `YOUR-TRUENAS-IP` with your server's address, for example `http://192.168.1.50:11434/v1`.
-5. Leave **API key** empty and click **Save settings**.
-6. Try a batch of 2 or 3 books first. Without a graphics card each book can take a minute or more.
+1. In TrueNAS, open **Apps → Discover Apps**, search for **Ollama**, and click **Install**. If you've set up GPU passthrough, select your GPU in the install form. Leave the other settings as they are and click **Install**, then wait until it shows **Running**.
+2. In NovelCheck: **Admin → LLM Analysis Engine**, set **AI provider** to **Ollama**. An **Ollama easy setup** box appears.
+3. Click **1. Find Ollama**. NovelCheck looks for Ollama on your server. If it isn't found, type its address in the box next to the button (your TrueNAS IP and the port shown on the Ollama app, for example `192.168.1.50:11434`) and click **Find Ollama** again.
+4. Under **2. Download a model**, pick one and click **Download**. A progress bar shows the download.
+   - With a GPU: **Qwen 2.5 7B** (about 4.7 GB) gives the best ratings.
+   - Without a GPU: **Llama 3.2 3B** (about 2 GB) is the fastest.
+5. When it finishes, click **3. Use this model** next to it. NovelCheck fills in all the settings for you, including $0 prices. Click **Save settings** to keep any other changes you made in the box.
+6. Try a batch of 2 or 3 books first to see how long each one takes.
 
 ## Other OpenAI-compatible services
 

@@ -16,6 +16,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/tunnel"
 )
 
 type client struct {
@@ -76,6 +77,7 @@ func setup(t *testing.T) (*httptest.Server, *store.Store) {
 		Worker: analyzer.New(st),
 		Syncer: &calibre.Syncer{Store: st, Dir: t.TempDir()},
 		Web:    fstest.MapFS{"index.html": {Data: []byte("<html>app</html>")}},
+		Tunnel: &tunnel.Manager{Binary: "no-such-cloudflared"},
 	}
 	srv := httptest.NewServer(s.Router())
 	t.Cleanup(srv.Close)

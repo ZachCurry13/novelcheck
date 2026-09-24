@@ -14,6 +14,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/tunnel"
 )
 
 // A fresh install with no NOVELCHECK_ADMIN_PASSWORD: the first visitor creates
@@ -36,6 +37,7 @@ func TestFirstRunSetup(t *testing.T) {
 		Auth: &auth.Manager{Store: st, SessionDays: 1}, Worker: analyzer.New(st),
 		Syncer: &calibre.Syncer{Store: st, Dir: t.TempDir()},
 		Web:    fstest.MapFS{"index.html": {Data: []byte("app")}},
+		Tunnel: &tunnel.Manager{Binary: "no-such-cloudflared"},
 	}
 	srv := httptest.NewServer(s.Router())
 	defer srv.Close()

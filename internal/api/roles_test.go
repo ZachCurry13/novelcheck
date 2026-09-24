@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -37,6 +38,8 @@ func TestEditorPermissions(t *testing.T) {
 		{"GET", "/api/admin/settings"},
 		{"PUT", "/api/admin/settings"},
 		{"GET", "/api/admin/backup"},
+		{"GET", "/api/admin/tunnel"},
+		{"PUT", "/api/admin/tunnel"},
 		{"POST", "/api/admin/wipe-queue"},
 		{"GET", "/api/admin/calibre/browse"},
 		{"PUT", "/api/admin/calibre/library"},
@@ -63,5 +66,34 @@ func TestEditorPermissions(t *testing.T) {
 	k := login(t, srv, "kid", "kidpass12")
 	if res, _ := k.do("PUT", "/api/books/"+itoa(id)+"/verdict", map[string]any{"classification": "No Spice"}, true); res.StatusCode != 403 {
 		t.Fatalf("kid edited a verdict: %d", res.StatusCode)
+	}
+}
+
+func TestTunnelSettings(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cmd := "sudo cloudflared service install eyJhIjoiYWJjIn0="
+	res, out := admin.do("PUT", "/api/admin/tunnel", map[string]any{"token": cmd, "hostname": "https://books.example.com/", "enabled": false}, true)
+	if res.StatusCode != 200 {
+		t.Fatalf("save: %d %v", res.StatusCode, out)
+	}
+	if got := st.Setting(store.KeyTunnelToken); got != "eyJhIjoiYWJjIn0=" {
+		t.Fatalf("token not extracted from command: %q", got)
+	}
+	if got := st.Setting(store.KeyTunnelHostname); got != "books.example.com" {
+		t.Fatalf("hostname not cleaned: %q", got)
+	}
+	// Enabling without the connector installed gives a clear error.
+	if res, out := admin.do("PUT", "/api/admin/tunnel", map[string]any{"enabled": true}, true); res.StatusCode != 400 || !strings.Contains(out["error"].(string), "not installed") {
+		t.Fatalf("expected not-installed error: %d %v", res.StatusCode, out)
+	}
+	// The token is a secret: never returned by the settings API.
+	_, settings := admin.do("GET", "/api/admin/settings", nil, false)
+	if _, ok := settings["tunnel_token"]; ok {
+		t.Fatal("tunnel token exposed in settings")
+	}
+	_, status := admin.do("GET", "/api/admin/tunnel", nil, false)
+	if status["has_token"] != true || strings.Contains(status["guide"].(string), "eyJhIjoiYWJjIn0") {
+		t.Fatalf("unexpected tunnel status %v", status["has_token"])
 	}
 }

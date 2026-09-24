@@ -28,6 +28,9 @@ const (
 	KeyCalibreLibraryPath = "calibre_library_path" // folder inside the mount; "" = mount root
 	KeyCheckUpdates       = "check_updates"
 	KeySessionDays        = "session_days" // "keep me signed in" length; renewed while in use
+	KeyTunnelEnabled      = "tunnel_enabled"
+	KeyTunnelToken        = "tunnel_token"
+	KeyTunnelHostname     = "tunnel_hostname" // public address, for display and links
 	KeyCalibreLastSync    = "calibre_last_sync"
 	KeyCalibreLastResult  = "calibre_last_result"
 )
@@ -54,7 +57,7 @@ var Defaults = map[string]string{
 }
 
 // SecretKeys are never returned to the browser in clear text.
-var SecretKeys = map[string]bool{KeyLLMAPIKey: true, KeySMTPPassword: true, KeyGoogleBooksAPIKey: true}
+var SecretKeys = map[string]bool{KeyLLMAPIKey: true, KeySMTPPassword: true, KeyGoogleBooksAPIKey: true, KeyTunnelToken: true}
 
 // AllSettings returns stored values merged over defaults.
 func (s *Store) AllSettings() (map[string]string, error) {

@@ -15,6 +15,9 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath \
     -ldflags="-s -w -X github.com/zachcurry13/novelcheck/internal/version.Version=${VERSION}" \
     -o /out/novelcheck ./cmd/novelcheck
 
+# ---- Cloudflare Tunnel connector (official image, multi-arch) ----
+FROM cloudflare/cloudflared:2026.9.3 AS cloudflared
+
 # ---- runtime ----
 FROM alpine:3.22
 LABEL org.opencontainers.image.source="https://github.com/ZachCurry13/novelcheck" \
@@ -23,6 +26,9 @@ RUN apk add --no-cache ca-certificates tzdata \
  && addgroup -S -g 568 novelcheck && adduser -S -u 568 -G novelcheck novelcheck \
  && mkdir -p /data /calibre && chown novelcheck:novelcheck /data
 COPY --from=build /out/novelcheck /usr/local/bin/novelcheck
+# Built-in remote access (Admin -> Remote access). Fails the build if missing.
+COPY --from=cloudflared /usr/local/bin/cloudflared /usr/local/bin/cloudflared
+RUN ["/usr/local/bin/cloudflared", "--version"]
 USER 568:568
 ENV NOVELCHECK_ADDR=:8080 \
     NOVELCHECK_DATA_DIR=/data \

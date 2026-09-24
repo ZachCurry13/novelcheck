@@ -18,6 +18,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/tunnel"
 	"github.com/zachcurry13/novelcheck/internal/updates"
 	"github.com/zachcurry13/novelcheck/internal/version"
 	"github.com/zachcurry13/novelcheck/web"
@@ -51,6 +52,15 @@ func main() {
 	syncer := &calibre.Syncer{Store: st, Dir: cfg.CalibreDir}
 	go syncer.Loop(ctx)
 
+	// Built-in Cloudflare Tunnel for access from outside the home network.
+	tun := tunnel.New()
+	if st.SettingBool(store.KeyTunnelEnabled) {
+		if err := tun.Apply(true, st.Setting(store.KeyTunnelToken)); err != nil {
+			log.Printf("remote access not started: %v", err)
+		}
+	}
+	defer tun.Stop()
+
 	srv := &api.Server{
 		Cfg:     cfg,
 		Store:   st,
@@ -58,6 +68,7 @@ func main() {
 		Worker:  worker,
 		Syncer:  syncer,
 		Updates: updates.New(),
+		Tunnel:  tun,
 		Web:     web.FS(),
 	}
 	httpSrv := &http.Server{

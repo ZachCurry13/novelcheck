@@ -42,6 +42,7 @@ var editableKeys = func() map[string]bool {
 	delete(m, store.KeyCalibreLastSync)
 	delete(m, store.KeyCalibreLastResult)
 	delete(m, store.KeyCalibreLibraryPath) // set via PUT /admin/calibre/library (validated)
+	delete(m, store.KeyTunnelToken)        // set via PUT /admin/tunnel, which also (re)starts it
 	return m
 }()
 

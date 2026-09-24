@@ -111,7 +111,7 @@ Open the **Admin** tab.
 - **iPhone (Safari):** open the NovelCheck address, tap **Share**, then **Add to Home Screen**.
 - **Android (Chrome):** open the address and tap **Install app** (or ⋮ → **Add to Home screen**).
 
-To use NovelCheck away from home, create a tunnel in **Cloudflare Zero Trust → Networks → Tunnels**, then install the **Cloudflared** app from TrueNAS **Discover Apps** and paste the tunnel token into it. In Cloudflare, point your tunnel's public hostname to `http://YOUR-TRUENAS-IP:30080`.
+To use NovelCheck away from home (on cellular, or at a friend's house), turn on the built-in Cloudflare Tunnel under **Admin → Remote access**. Click **Show setup steps** there, or see [REMOTE_ACCESS.md](REMOTE_ACCESS.md). It needs a free Cloudflare account and a domain name, and no router changes.
 
 ---
 

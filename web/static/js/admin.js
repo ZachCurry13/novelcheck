@@ -4,6 +4,7 @@ import { $, $$, esc, attempt, toast, fmtNum, fmtMoney } from "./ui.js";
 import { renderUsers } from "./users.js";
 import { renderCalibrePicker } from "./calibrepicker.js";
 import { initProviderPicker } from "./llmpresets.js";
+import { renderRemoteAccess } from "./remoteaccess.js";
 
 const SECTIONS = [
   ["LLM Analysis Engine", [
@@ -55,7 +56,7 @@ export async function renderAdmin(view, state) {
       ${adminOnly(`<a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db</a>`)}
       <p id="worker" class="basis-full text-sm text-slate-400"></p>
     </div>
-    ${adminOnly(`<form id="settings" class="mb-8 grid gap-4 lg:grid-cols-2"></form>`)}
+    ${adminOnly(`<form id="settings" class="mb-8 grid gap-4 lg:grid-cols-2"></form><div id="remote-access"></div>`)}
     <section id="users"></section>`;
 
   if (isAdmin) await renderSettings(view);
@@ -86,15 +87,19 @@ export async function renderAdmin(view, state) {
   await refresh();
   if (isAdmin) renderCalibrePicker($("#calibre-picker", view), refresh);
   const timer = setInterval(refresh, 5000);
+  const stopRemote = isAdmin ? await renderRemoteAccess($("#remote-access", view)) : null;
   await renderUsers($("#users", view), state.user);
-  return () => clearInterval(timer);
+  return () => {
+    clearInterval(timer);
+    stopRemote?.();
+  };
 }
 
 async function renderSettings(view) {
   const settings = (await attempt(() => get("/api/admin/settings"))) || {};
   $("#batch-size", view).value = settings.batch_size || 20;
   $("#settings", view).innerHTML = SECTIONS.map(([title, fields]) => `
-    <fieldset class="card space-y-3">
+    <fieldset class="card min-w-0 space-y-3">
       <legend class="px-1 text-lg font-semibold">${esc(title)}</legend>
       ${fields.map(([k, label, ph, type]) => field(k, label, ph, type, settings[k])).join("")}
       ${title.startsWith("SMTP") ? `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>` : ""}

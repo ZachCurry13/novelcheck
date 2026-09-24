@@ -14,3 +14,8 @@ var Changelog string
 //
 //go:embed docs/AI_PROVIDERS.md
 var ProviderGuide string
+
+// RemoteAccessGuide is docs/REMOTE_ACCESS.md, shown in Admin → Remote access.
+//
+//go:embed docs/REMOTE_ACCESS.md
+var RemoteAccessGuide string

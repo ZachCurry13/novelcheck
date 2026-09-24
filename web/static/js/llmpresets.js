@@ -4,6 +4,7 @@
 import { get } from "./api.js";
 import { $, esc, attempt } from "./ui.js";
 import { renderMarkdown } from "./markdown.js";
+import { renderOllamaHelper } from "./ollamahelper.js";
 
 // Defaults follow the "small model first" rule; prices are USD per 1M tokens.
 export const PRESETS = {
@@ -59,7 +60,8 @@ export function initProviderPicker(host, form, settings) {
       <button type="button" id="llm-guide-btn" class="btn-secondary py-1 text-xs">Show setup steps</button>
       <button type="button" id="llm-compare-btn" class="btn-ghost py-1 text-xs">Which one should I pick?</button>
     </div>
-    <div id="llm-guide" class="mt-2 hidden rounded-lg bg-slate-800/60 p-4 text-sm leading-relaxed text-slate-300"></div>`;
+    <div id="llm-guide" class="mt-2 hidden rounded-lg bg-slate-800/60 p-4 text-sm leading-relaxed text-slate-300"></div>
+    <div id="ollama-helper" class="mt-2 hidden"></div>`;
   const select = $("#llm-preset", host);
   const set = (key, value) => {
     const el = $(`[data-key="${key}"]`, form);
@@ -72,6 +74,9 @@ export function initProviderPicker(host, form, settings) {
     row(form, "llm_base_url")?.classList.toggle("hidden", claude);
     row(form, "llm_json_mode")?.classList.toggle("hidden", claude);
     $("#llm-hint", host).textContent = PRESETS[name].hint;
+    const helper = $("#ollama-helper", host);
+    helper.classList.toggle("hidden", name !== "ollama");
+    if (name === "ollama" && !helper.childElementCount) renderOllamaHelper(helper, form);
   };
   // Setup steps come from docs/AI_PROVIDERS.md, bundled into the app.
   let sections = null;
