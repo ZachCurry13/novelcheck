@@ -1,6 +1,6 @@
 # NovelCheck handoff
 
-Latest release: **v1.15.0**. **v1.16.0** (pepper wording + quick wins, see CHANGELOG.md) is committed on the working branch `claude/epic-newton-z23mz1`. The user asked to **hold the release** until more batches are done; later batches can share the release or get their own version numbers when it's cut.
+Latest release: **v1.16.0** (Check a book, pepper wording, feature switches, phone notifications, custom AI filters; see CHANGELOG.md), released 2026-09-24 from the working branch `claude/epic-newton-z23mz1`. Next: parent-child linking as v1.17.
 
 ## Feature plan (from the user's NOVELCHECK_UPDATES list, agreed 2026-09-24)
 1. ✅ v1.16 quick wins: pepper levels 2-3 reworded (+ `spice_reason`, `rules_version` re-rate banner), Strict family preset, gray-area chip, Re-rate whole library, Calibre-Web links + credit, phone filters.
@@ -8,11 +8,11 @@ Latest release: **v1.15.0**. **v1.16.0** (pepper wording + quick wins, see CHANG
 3. ✅ Phone push: `internal/push` (stdlib RFC 8291 + VAPID, tested against the RFC example), Profile → Phone notifications, managers get 🔔 notices (all or problems only), everyone gets "Ready to read". Only the UI's off/blocked states were checked in a browser (the app's pane blocks notification permission); the first real subscribe/test should be done on a phone over the https address after release.
 4. ✅ Custom AI filters (Admin → Custom AI filters, up to 12; `flag:<key>` Hide boxes; `custom_flags_version` drives re-rate offers). Not yet in kids' content rules.
 5. ✅ **Check a book** (user: "should be the main feature, super easy and straightforward"). Built as planned: `POST /api/check`, `Worker.RateNow`/`ReadCover`, `web/static/js/check.js`. Not yet tried with a real phone camera or a real vision model; do that after release. at the store, snap the cover or type title/author → instant rating. First tab and parents' landing page. If the book is in the library show its rating; else enrich + rate now (vision AI reads the cover; typed search as fallback) and save it to a "Looked up" catalog so a second check is free. Parents (admins/editors) only.
-6. Parent-child linking: kids linked to one or more parents; parents manage only their linked kids (user chose to build it).
+6. ⏭ Parent-child linking (v1.17), as the user chose: the admin links each kid to one or more parents; an editor sees and manages only their linked kids; kids with no parent linked stay manageable by every parent; the admin sees everyone.
 - Skipped by the user's choice: a "Skipped (up to date)" badge (same as Analyzed). Not requested: re-rating when a Calibre file changes.
 
 ## Waiting on the user
-- When to merge and release (held for now).
+- Trying v1.16 on a phone: Check a book with the camera (needs a vision-capable AI), and phone notifications over the https address.
 - Kindle `.kfx` file names from the Kindle's `documents` folder, to check whether on-device store books carry titles in their names. The Amazon list import (paste or data download) covers her purchases in the meantime.
 - Whether "user login information" for more Ollama detail meant a TrueNAS API key (real per-app CPU/GPU stats). Not built.
 
