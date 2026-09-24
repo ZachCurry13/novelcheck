@@ -29,6 +29,36 @@ You don't need the exact Calibre folder. A **parent** folder is fine, for exampl
 
 ## Step 3: Install the app
 
+TrueNAS has two ways to install an app that isn't in its catalog. They give the same result, so pick whichever you prefer:
+- **Option A: Install Custom App**, a fill-in-the-boxes form.
+- **Option B: Install via YAML**, pasting one block of text.
+
+Both use the NovelCheck image `ghcr.io/zachcurry13/novelcheck`, and both set the pull policy to **Always**. That setting matters: without it, TrueNAS keeps reusing the copy it already downloaded, and updates never arrive.
+
+### Option A: Install Custom App (form)
+
+1. Open **Apps** from the left menu, click **Discover Apps** (top right), then **Custom App**.
+2. Fill in these sections. Leave anything not listed here at its default.
+
+| Section | Field | Enter |
+|---|---|---|
+| Application Name | Application Name | `novelcheck` |
+| Image Configuration | Repository | `ghcr.io/zachcurry13/novelcheck` |
+| | Tag | `latest` |
+| | Pull Policy | **Always pull an image even if it is present on the host** |
+| Container Configuration | Timezone | your timezone, for example `America/Chicago` |
+| | Restart Policy | **Unless Stopped** |
+| Security Context Configuration | Custom User | tick it, then **User ID** `568` and **Group ID** `568` |
+| Network Configuration | Ports → **Add** | Container Port `8080`, Host Port `30080`, Protocol **TCP** |
+| Storage Configuration | Storage → **Add** (1st) | Type **Host Path**, Mount Path `/data`, Host Path = your **Step 1** folder (for example `/mnt/ssd/novelcheck`) |
+| | Storage → **Add** (2nd) | Type **Host Path**, Mount Path `/calibre`, Host Path = your **Step 2** folder (for example `/mnt/red14/plex`), and tick **Read Only** |
+
+3. Click **Install**. TrueNAS downloads NovelCheck, which takes a minute or two. Wait until the app shows **Running**.
+
+Field names can differ slightly between TrueNAS versions (for example "Ports" may be "Port Forwarding"). Look for the closest match.
+
+### Option B: Install via YAML
+
 1. Open **Apps** from the left menu, then click **Discover Apps** (top right).
 2. Click the **⋮** (three dots) menu at the top right and choose **Install via YAML**.
 3. **Name:** `novelcheck`
@@ -38,6 +68,7 @@ You don't need the exact Calibre folder. A **parent** folder is fine, for exampl
 services:
   novelcheck:
     image: ghcr.io/zachcurry13/novelcheck:latest
+    pull_policy: always
     container_name: novelcheck
     restart: unless-stopped
     user: "568:568"
@@ -88,7 +119,9 @@ To use NovelCheck away from home, create a tunnel in **Cloudflare Zero Trust →
 
 When a new version comes out, admins and editors see a green **"NovelCheck x.y.z is available"** banner in the app, and **What's new** (bottom of every page) shows the release notes.
 
-To update: go to **Apps**, click **novelcheck**, and click **Update** if TrueNAS offers it. If it doesn't, click **Edit** and then **Save** without changing anything. TrueNAS re-downloads the `latest` image. Your books, ratings, and users are kept.
+To update: go to **Apps**, click **novelcheck**, and click **Update** if TrueNAS offers it. If it doesn't, click **Edit** and then **Save** (or **Update**) without changing anything. Because the pull policy is **Always**, TrueNAS downloads the newest version while it restarts the app. Your books, ratings, and users are kept.
+
+Check the version number at the top right afterwards. If it didn't change, your app was probably installed before the pull policy was added to this guide: edit the app, set **Pull Policy** to **Always pull…** (form), or add the line `pull_policy: always` under `image:` (YAML), then save.
 
 The version you are running shows at the top right (next to **Sign out**) and at the bottom of every page. Admins can turn the update check off under **Admin → Sign-in & Updates**.
 
@@ -107,4 +140,5 @@ In NovelCheck: **Admin → Download novelcheck.db**. Keep that file somewhere sa
 | Forgot a password | Another admin can reset it under **Admin → Users & Content Rules → Reset password**. Editors can reset kids' passwords the same way under **Manage**. |
 | Locked out of the only admin account | Last resort, which erases all NovelCheck data: stop the app, delete `novelcheck.db` from the Step 1 dataset, start the app, and create a new admin in the browser (Step 4). |
 | Asked to sign in every time | Make sure **Keep me signed in on this device** is ticked when you sign in. You then stay signed in as long as you use NovelCheck at least once every 30 days (admins can change this under **Admin → Sign-in & Updates**). Some things always need a separate sign-in: the iPhone home-screen app and Safari keep separate logins, each address you use (for example your TrueNAS IP and a Cloudflare address) needs its own sign-in, and private browsing windows forget you when closed. |
+| Updated but the version number didn't change | The app's pull policy isn't **Always**, so TrueNAS reused the old download. Fix it as described in [Updating NovelCheck](#updating-novelcheck). |
 | See what's going on | **Apps → novelcheck → Logs** (the icon on the container row). |

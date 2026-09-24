@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.2.1]
+
+### Fixed
+- **Updates not arriving on TrueNAS**: the install guide and `docker-compose.yml` now set the image pull policy to **Always**. Without it, TrueNAS keeps reusing its old download of `latest`. If you installed earlier, edit the app once and set it (see "Updating NovelCheck" in the TrueNAS guide).
+
+### New
+- **TrueNAS "Install Custom App" steps**: the install guide now covers the TrueNAS form as well as YAML.
+
 ## [1.2.0]
 
 ### New

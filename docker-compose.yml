@@ -7,6 +7,7 @@
 services:
   novelcheck:
     image: ghcr.io/zachcurry13/novelcheck:latest   # prebuilt by GitHub Actions
+    pull_policy: always                            # fetch the newest :latest on every redeploy
     # build: .                                     # uncomment to build from source instead
     container_name: novelcheck
     restart: unless-stopped

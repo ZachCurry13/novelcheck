@@ -21,7 +21,7 @@ See [`NOVELCHECK_SPEC.md`](NOVELCHECK_SPEC.md) for the full specification, archi
 
 ## Install on TrueNAS (easiest)
 
-Follow **[docs/TRUENAS.md](docs/TRUENAS.md)**. It's a click-by-click guide that uses TrueNAS's **Install via YAML** screen and the prebuilt image, so there's no command line and nothing to build.
+Follow **[docs/TRUENAS.md](docs/TRUENAS.md)**. It's a click-by-click guide for either TrueNAS **Install Custom App** (a form) or **Install via YAML**, using the prebuilt image, so there's no command line and nothing to build. Set the image pull policy to **Always** so updates are actually downloaded.
 
 ## Quick start (Docker / Docker Compose)
 
