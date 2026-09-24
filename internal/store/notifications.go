@@ -48,6 +48,14 @@ func (s *Store) Notify(level, source, message, link string) {
 		(SELECT id FROM notifications ORDER BY updated_at DESC, id DESC LIMIT ?)`, maxNotifications)
 }
 
+// NotifyRoutine records a routine event (a sync or batch finished, a book was
+// sent), unless the admin turned routine events off.
+func (s *Store) NotifyRoutine(source, message, link string) {
+	if s.SettingBool(KeyNotifyRoutine) {
+		s.Notify("info", source, message, link)
+	}
+}
+
 // Resolve marks every unread notification from source as read, used when a
 // problem fixes itself (e.g. remote access reconnects).
 func (s *Store) Resolve(source string) {

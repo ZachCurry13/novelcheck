@@ -3,6 +3,7 @@ package calibre
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -26,6 +27,7 @@ func (s *Syncer) Available() bool {
 func (s *Syncer) Run() (Result, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	start := time.Now()
 	res, err := Sync(s.Store, s.LibraryDir())
 	summary := map[string]any{"at": time.Now().UTC().Format(time.RFC3339), "result": res}
 	if err != nil {
@@ -33,6 +35,10 @@ func (s *Syncer) Run() (Result, error) {
 		s.Store.Notify("error", "calibre-sync", "Calibre sync failed: "+err.Error(), "#/admin")
 	} else {
 		s.Store.Resolve("calibre-sync")
+		if n := s.Store.BooksCreatedSince(start); n > 0 {
+			s.Store.NotifyRoutine("calibre-new", fmt.Sprintf("Calibre sync added %d new book%s. They're waiting to be rated.",
+				n, map[bool]string{true: "", false: "s"}[n == 1]), "#/library")
+		}
 	}
 	b, _ := json.Marshal(summary)
 	_ = s.Store.SetSetting(store.KeyCalibreLastSync, time.Now().UTC().Format(time.RFC3339))

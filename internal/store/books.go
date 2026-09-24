@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 )
 
 const bookCols = `b.id, b.norm_key, b.title, b.author, b.isbn, b.description, b.blurb, b.status,
@@ -132,6 +133,13 @@ func (s *Store) SaveAnalysis(id int64, a Analysis) error {
 		a.SpiceLevel, strings.TrimSpace(a.SpiceReason), a.Classification, a.Nudity, a.SoloActs, a.HeavyInnuendo,
 		a.PlayfulFantasy, a.DarkOccult, a.DemonicPresence, a.LGBTQContent, a.SummaryVerdict, a.Model, RulesVersion, id)
 	return err
+}
+
+// BooksCreatedSince counts books first added at or after t (e.g. by a sync).
+func (s *Store) BooksCreatedSince(t time.Time) int {
+	var n int
+	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM books WHERE created_at >= ?`, sqlTime(t))
+	return n
 }
 
 // QueueForAnalysis flips up to limit pending books to 'queued' and returns their ids.

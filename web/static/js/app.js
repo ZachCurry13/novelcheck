@@ -14,6 +14,7 @@ import { renderUsage } from "./usage.js";
 import { renderDuplicates } from "./duplicates.js";
 import { renderDeletions } from "./deletions.js";
 import { initBell } from "./notifications.js";
+import { on, applyModules } from "./modules.js";
 
 export const state = { user: null };
 
@@ -31,6 +32,7 @@ const routes = {
 };
 const managerRoutes = new Set(["import", "admin", "duplicates"]);
 const adminRoutes = new Set(["system", "usage", "deletions"]);
+const moduleRoutes = { queue: "queue", import: "import" }; // pages an admin can turn off
 
 function showOnly(id) {
   for (const v of ["#setup-view", "#login-view", "#app-view"]) $(v).classList.toggle("hidden", v !== id);
@@ -46,6 +48,7 @@ function showApp() {
   document.body.dataset.role = state.user.role;
   $$(".manager-only").forEach((el) => el.classList.toggle("hidden", !canManage(state.user)));
   $$(".admin-only").forEach((el) => el.classList.toggle("hidden", state.user.role !== "admin"));
+  applyModules(state.user);
   initBell(state);
   $("#admin-tab").textContent = state.user.role === "admin" ? "Admin" : "Manage";
   route();
@@ -58,7 +61,8 @@ async function route() {
   if (!state.user) return;
   let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || "library";
   if (!routes[name] || (managerRoutes.has(name) && !canManage(state.user)) ||
-    (adminRoutes.has(name) && state.user.role !== "admin")) name = "library";
+    (adminRoutes.has(name) && state.user.role !== "admin") ||
+    (moduleRoutes[name] && !on(state.user, moduleRoutes[name]))) name = "library";
   $$("#nav .nav-link").forEach((a) => a.classList.toggle("active", a.dataset.route === name));
   if (typeof currentCleanup === "function") currentCleanup();
   // Fresh container per route so listeners never leak between views.
@@ -136,6 +140,7 @@ async function submitSetup(e) {
 
 export async function refreshUser() {
   state.user = await get("/api/me");
+  applyModules(state.user);
   return state.user;
 }
 

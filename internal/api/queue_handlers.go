@@ -85,7 +85,8 @@ func (s *Server) handleStartReading(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	if _, err := s.Store.BookByID(item.BookID, u); err != nil {
+	b, err := s.Store.BookByID(item.BookID, u)
+	if err != nil {
 		writeStoreErr(w, err) // profile rules changed since it was queued
 		return
 	}
@@ -98,14 +99,21 @@ func (s *Server) handleStartReading(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
+	s.Store.NotifyRoutine("reading", u.Username+" started reading “"+b.Title+"”: "+note, "")
 	writeJSON(w, http.StatusOK, map[string]string{"status": "reading", "delivery_note": note})
 }
 
 func (s *Server) deliver(u *store.User, bookID int64) (string, error) {
 	switch u.DeliveryMethod {
 	case "koreader":
+		if !s.Store.SettingBool(store.KeyModuleKOReader) {
+			return "Marked as reading (KOReader sync is turned off)", nil
+		}
 		return "Flagged for KOReader wireless sync", nil
 	case "email":
+		if !s.Store.SettingBool(store.KeyModuleKindle) {
+			return "Marked as reading (Send-to-Kindle is turned off)", nil
+		}
 		copies, err := s.Store.BookCopies(bookID)
 		if err != nil {
 			return "", err

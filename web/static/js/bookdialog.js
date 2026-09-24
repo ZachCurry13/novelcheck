@@ -6,6 +6,7 @@ import { get, post, put, del } from "./api.js";
 import { $, esc, attempt, classChip, flagChips, ageChip, canManage } from "./ui.js";
 import { verdictFormHTML, bindVerdictForm } from "./verdictform.js";
 import { ageAndNotesHTML, bindAgeAndNotes } from "./booknotes.js";
+import { on } from "./modules.js";
 
 export async function openBook(id, state, onChange) {
   const dlg = $("#book-dialog");
@@ -14,6 +15,7 @@ export async function openBook(id, state, onChange) {
   const b = data.book;
   const isAdmin = state.user.role === "admin";
   const manager = canManage(state.user);
+  const parents = on(state.user, "parents"); // age groups and parents' notes
   // One row per catalog entry (a Calibre book id, or a Kindle/drive catalog), listing its formats.
   const entries = new Map();
   for (const c of data.copies) {
@@ -59,9 +61,9 @@ export async function openBook(id, state, onChange) {
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : "Analyzed by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
       ${b.approved ? `<p class="text-xs text-emerald-400">✓ Marked OK by ${esc(b.approved_by)}: shown to everyone, even if it matches their hide filters or content rules.</p>` : ""}
       ${manager ? verdictFormHTML(b) : ""}
-      ${ageAndNotesHTML(b, data.notes || [], manager, state.user)}
+      ${parents ? ageAndNotesHTML(b, data.notes || [], manager, state.user) : ""}
       <div class="flex flex-wrap gap-2 pt-2">
-        <button data-act="queue" class="btn-primary">Add to Up Next</button>
+        ${on(state.user, "queue") ? `<button data-act="queue" class="btn-primary">Add to Up Next</button>` : ""}
         ${data.downloadable ? `<a href="/api/books/${b.id}/download" class="btn-secondary">Download</a>` : ""}
         ${manager ? `<button data-act="analyze" class="btn-secondary">${b.classification ? "Re-analyze" : "Analyze now"}</button>
           <button data-act="edit-verdict" class="btn-secondary">Edit rating</button>
@@ -77,7 +79,7 @@ export async function openBook(id, state, onChange) {
     onChange?.();
   };
   if (manager) bindVerdictForm(dlg, b.id, refresh);
-  bindAgeAndNotes(dlg, b, data.notes || [], state.user, onChange);
+  if (parents) bindAgeAndNotes(dlg, b, data.notes || [], state.user, onChange);
   dlg.onclick = async (e) => {
     if (e.target === dlg || e.target.closest("[data-close]")) return dlg.close();
     if (e.target.closest("[data-peppers]")) return openPepperGuide();

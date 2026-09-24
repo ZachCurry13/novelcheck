@@ -54,3 +54,6 @@
 @media (min-width: 768px) {
   #filters .filters-toggle { display: none; }
 }
+
+/* Features the admin turned off (Admin → Features); see js/modules.js. */
+.module-off { display: none !important; }

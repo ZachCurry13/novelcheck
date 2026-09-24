@@ -39,6 +39,22 @@ func (s *Store) SpentUSD() float64 {
 	return v
 }
 
+// UsageSince totals the tokens and cost of AI calls made since t.
+func (s *Store) UsageSince(t time.Time) (tokens int, cost float64) {
+	var row struct {
+		Tokens int     `db:"tokens"`
+		Cost   float64 `db:"cost"`
+	}
+	_ = s.DB.Get(&row, `SELECT COALESCE(SUM(prompt_tokens + completion_tokens), 0) AS tokens,
+		COALESCE(SUM(COALESCE(cost, prompt_tokens * ? / 1e6 + completion_tokens * ? / 1e6)), 0) AS cost
+		FROM token_usage WHERE at >= ?`,
+		s.SettingFloat(KeyPriceInputPerM), s.SettingFloat(KeyPriceOutputPerM), sqlTime(t))
+	return row.Tokens, row.Cost
+}
+
+// sqlTime formats t like SQLite's CURRENT_TIMESTAMP (UTC, to the second).
+func sqlTime(t time.Time) string { return t.UTC().Format("2006-01-02 15:04:05") }
+
 // TokensSince returns prompt+completion tokens used in the trailing window,
 // expressed as an SQLite datetime modifier such as "-1 hour".
 func (s *Store) TokensSince(modifier string) (int, error) {

@@ -17,6 +17,9 @@ becomes the release notes for that version and is shown in the app under
 - **👪 Strict family preset**: one click on a kid's account allows at most 2 peppers and hides Open Door, nudity, solo acts, heavy innuendo and books that haven't been rated yet.
 - **Re-rate whole library**: a button on the Admin page rates every AI-rated book again (for example after switching to a better AI), with a cost estimate first.
 - **Open in Calibre-Web**: if you use Calibre-Web, enter its address under **Admin → Calibre Library**. Each book's window then has an **Open in Calibre-Web ↗** link next to its Calibre ID, for admins and editors.
+- **Turn off what you don't use**: **Admin → Features** has switches for the Up Next reading queue, Send-to-Kindle email, KOReader sync, Import books, and parent tools (kids' accounts, age groups, parents' notes). A feature that's off disappears for everyone. Kids' content rules always keep working, even with parent tools hidden.
+- **More in the 🔔 bell**: it now also tells you when a Calibre sync adds new books, when a batch of ratings finishes (how many books, tokens and cost), and when someone starts reading a book (and how it was sent). You can turn these everyday notices off under **Admin → Features**.
+- **Hourly AI limit notice**: when rating pauses because the hourly token limit is reached, the 🔔 bell says so, and the notice clears itself when rating continues.
 - A thank-you to Calibre and Calibre-Web in the footer.
 
 ## [1.15.0]

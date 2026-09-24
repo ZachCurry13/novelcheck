@@ -65,12 +65,15 @@ func (s *Server) Router() http.Handler {
 			r.Get("/age-groups", s.handleAgeGroups)
 			r.Get("/updates", s.handleUpdates)
 
-			r.Get("/queue", s.handleListQueue)
-			r.Post("/queue", s.handleEnqueue)
-			r.Put("/queue/order", s.handleReorderQueue)
-			r.Delete("/queue/{id}", s.handleDequeue)
-			r.Post("/queue/{id}/start", s.handleStartReading)
-			r.Post("/queue/{id}/finish", s.handleFinishReading)
+			r.Group(func(r chi.Router) {
+				r.Use(s.requireModule(store.KeyModuleQueue, "The reading queue"))
+				r.Get("/queue", s.handleListQueue)
+				r.Post("/queue", s.handleEnqueue)
+				r.Put("/queue/order", s.handleReorderQueue)
+				r.Delete("/queue/{id}", s.handleDequeue)
+				r.Post("/queue/{id}/start", s.handleStartReading)
+				r.Post("/queue/{id}/finish", s.handleFinishReading)
+			})
 
 			// Editors and admins: day-to-day management. Handlers further
 			// restrict editors to kid accounts (see users_handlers.go).
@@ -78,7 +81,7 @@ func (s *Server) Router() http.Handler {
 				r.Use(auth.RequireManager)
 				r.Post("/catalogs", s.handleCreateCatalog)
 				r.Patch("/catalogs/{id}", s.handleRenameCatalog)
-				r.Post("/import/drive", s.handleImportDrive)
+				r.With(s.requireModule(store.KeyModuleImport, "Importing books")).Post("/import/drive", s.handleImportDrive)
 				r.Post("/books/{id}/analyze", s.handleAnalyzeBook)
 				r.Put("/books/{id}/verdict", s.handleSetVerdict)
 				r.Put("/books/{id}/approval", s.handleSetApproval)

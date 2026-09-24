@@ -4,8 +4,8 @@ Latest release: **v1.15.0**. **v1.16.0** (pepper wording + quick wins, see CHANG
 
 ## Feature plan (from the user's NOVELCHECK_UPDATES list, agreed 2026-09-24)
 1. ✅ v1.16 quick wins: pepper levels 2-3 reworded (+ `spice_reason`, `rules_version` re-rate banner), Strict family preset, gray-area chip, Re-rate whole library, Calibre-Web links + credit, phone filters.
-2. ⏭ Module toggles (hide Send-to-Kindle, KOReader, drive scanner, reading queue, parent tools) + new 🔔 events: Calibre sync finished, AI batch finished (books, tokens, cost), book sent, token cap reached.
-3. Phone push (Web Push/VAPID) for those events. Needs HTTPS (remote access); iPhone needs the PWA installed.
+2. ✅ Feature switches (Admin → Features: queue, Send-to-Kindle, KOReader, import, parent tools) + 🔔 events: `calibre-new`, `batch-done`, `reading`, `token-cap` (routine ones can be turned off with `notify_routine`). Also in the unreleased 1.16.0 notes.
+3. ⏭ Phone push (Web Push/VAPID) for those events. Needs HTTPS (remote access); iPhone needs the PWA installed.
 4. Custom AI filters: admin-defined flags injected into the prompt, auto-generated Hide checkboxes. Bump `store.RulesVersion` when flags change.
 5. Parent-child linking: kids linked to one or more parents; parents manage only their linked kids (user chose to build it).
 - Skipped by the user's choice: a "Skipped (up to date)" badge (same as Analyzed). Not requested: re-rating when a Calibre file changes.

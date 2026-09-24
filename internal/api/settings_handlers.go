@@ -85,7 +85,7 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		if k == store.KeyLLMJSONMode || k == store.KeyCheckUpdates || k == store.KeyBackupEnabled || k == store.KeyBackupJSONMode {
+		if k == store.KeyLLMJSONMode || k == store.KeyCheckUpdates || k == store.KeyBackupEnabled || k == store.KeyBackupJSONMode || store.IsBoolSetting(k) {
 			if _, err := strconv.ParseBool(v); err != nil {
 				writeErr(w, http.StatusBadRequest, k+" must be true or false")
 				return

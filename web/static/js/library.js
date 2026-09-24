@@ -4,6 +4,7 @@ import { $, esc, attempt, toast, classChip, flagChips, ageChip, HIDE_LABELS, FIL
 import { openCalibreRemoval } from "./calibreremove.js";
 import { openBook } from "./bookdialog.js";
 import { pepperOptions, openPepperGuide, grayAreaChip } from "./peppers.js";
+import { on } from "./modules.js";
 
 const PAGE = 60;
 
@@ -25,7 +26,7 @@ export async function renderLibrary(view, state) {
         <option value="old">Older rating (not on pepper scale)</option><option value="Pending">Not rated yet</option>
         <option value="failed">Rating failed</option>
       </select>
-      <select name="age" class="input filter-more" title="Books a parent rated for this age group or younger">
+      <select name="age" class="input filter-more${on(state.user, "parents") ? "" : " module-off"}" title="Books a parent rated for this age group or younger">
         <option value="">Any age group</option>
         ${AGE_GROUPS.map(([l, n, r]) => `<option value="${l}">Suitable for ${n} (${r})</option>`).join("")}
         <option value="unset">Age group not set yet</option>
@@ -87,7 +88,7 @@ export async function renderLibrary(view, state) {
     const data = await attempt(() => get("/api/books" + qs({ ...params(), offset })));
     if (!data) return;
     if (reset) grid.innerHTML = "";
-    grid.insertAdjacentHTML("beforeend", data.books.map(card).join(""));
+    grid.insertAdjacentHTML("beforeend", data.books.map((b) => card(b, on(state.user, "queue"))).join(""));
     offset += data.books.length;
     $("#result-count", view).textContent = `${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}`;
     $("#more-btn", view).classList.toggle("hidden", offset >= data.total);
@@ -150,7 +151,7 @@ export async function renderLibrary(view, state) {
   await load(true);
 }
 
-function card(b) {
+function card(b, queueOn) {
   const cats = b.catalogs ? b.catalogs.split(", ").map((c) => `<span class="chip-cat">${esc(c)}</span>`).join(" ") : "";
   return `
     <article data-book="${b.id}" class="card cursor-pointer transition hover:ring-indigo-600 flex flex-col gap-2">
@@ -159,7 +160,7 @@ function card(b) {
           <h3 class="font-semibold leading-tight line-clamp-2">${esc(b.title)}</h3>
           <p class="text-sm text-slate-400 truncate">${esc(b.author || "Unknown author")}</p>
         </div>
-        <button data-queue="${b.id}" title="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>
+        ${queueOn ? `<button data-queue="${b.id}" title="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>` : ""}
       </div>
       <div class="flex flex-wrap gap-1">${classChip(b)} ${grayAreaChip(b)} ${ageChip(b)} ${flagChips(b)}</div>
       ${b.summary_verdict ? `<p class="text-sm text-slate-300 line-clamp-3">${esc(b.summary_verdict)}</p>` : ""}

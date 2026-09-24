@@ -7,6 +7,8 @@ import { initProviderPicker } from "./llmpresets.js";
 import { renderRemoteAccess } from "./remoteaccess.js";
 import { renderCalibreServer } from "./calibreserver.js";
 import { renderErrors } from "./errors.js";
+import { on } from "./modules.js";
+import { refreshUser } from "./app.js";
 
 const SECTIONS = [
   ["LLM Analysis Engine", [
@@ -52,7 +54,18 @@ const SECTIONS = [
     ["session_days", "Keep people signed in for (days, renewed while they use the app)", "30", "number"],
     ["check_updates", "Check GitHub for new NovelCheck versions (shows a banner to admins and editors)", "", "bool"],
   ]],
+  ["Features", [
+    ["module_queue", "Up Next reading queue", "", "bool"],
+    ["module_send_to_kindle", "Send-to-Kindle email delivery", "", "bool"],
+    ["module_koreader", "KOReader sync delivery", "", "bool"],
+    ["module_import", "Import books (Kindle / drive scanner and lists)", "", "bool"],
+    ["module_parents", "Parent tools (kids' accounts, age groups, parents' notes)", "", "bool"],
+    ["notify_routine", "🔔 Also show everyday events: new books from Calibre, rating finished, someone started a book", "", "bool"],
+  ]],
 ];
+
+// Settings boxes that only matter while a feature is on.
+const SECTION_MODULE = { "SMTP / Send-to-Kindle": "send_to_kindle" };
 
 // Admins see everything. Editors get the same dashboard and actions minus
 // technical settings, secrets, backups and the destructive queue wipe.
@@ -78,7 +91,7 @@ export async function renderAdmin(view, state) {
     ${adminOnly(`<form id="settings" class="mb-8 grid gap-4 lg:grid-cols-2"></form><div id="remote-access"></div>`)}
     <section id="users"></section>`;
 
-  if (isAdmin) await renderSettings(view);
+  if (isAdmin) await renderSettings(view, state);
 
   view.addEventListener("click", async (e) => {
     const act = e.target.closest("[data-act]")?.dataset.act;
@@ -138,12 +151,13 @@ export async function renderAdmin(view, state) {
   };
 }
 
-async function renderSettings(view) {
+async function renderSettings(view, state) {
   const settings = (await attempt(() => get("/api/admin/settings"))) || {};
   $("#batch-size", view).value = settings.batch_size || 20;
   $("#settings", view).innerHTML = SECTIONS.map(([title, fields]) => `
-    <fieldset class="card min-w-0 space-y-3">
+    <fieldset class="card min-w-0 space-y-3${on(state.user, SECTION_MODULE[title]) ? "" : " module-off"}" ${SECTION_MODULE[title] ? `data-module="${SECTION_MODULE[title]}"` : ""}>
       <legend class="px-1 text-lg font-semibold">${esc(title)}</legend>
+      ${title === "Features" ? `<p class="text-xs text-slate-400">Turn off what your family doesn't use. It disappears for everyone; kids' content rules always keep applying.</p>` : ""}
       ${fields.map(([k, label, ph, type]) => field(k, label, ph, type, settings[k])).join("")}
       ${title.startsWith("SMTP") ? `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>` : ""}
       ${title.startsWith("Calibre") ? `<div id="calibre-picker"></div><div id="calibre-server"></div>` : ""}
@@ -168,7 +182,7 @@ async function renderSettings(view) {
     $$("[data-key]", e.target).forEach((el) => {
       body[el.dataset.key] = el.type === "checkbox" ? String(el.checked) : el.value;
     });
-    await attempt(() => put("/api/admin/settings", body), "Settings saved");
+    if (await attempt(() => put("/api/admin/settings", body), "Settings saved")) await refreshUser(); // shows/hides features right away
   });
 }
 

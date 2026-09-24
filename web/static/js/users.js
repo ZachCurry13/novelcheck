@@ -3,6 +3,7 @@
 import { PEPPERS } from "./peppers.js";
 import { get, post, put, del } from "./api.js";
 import { $, $$, esc, attempt, AGE_GROUPS } from "./ui.js";
+import { on, deliveryOptions } from "./modules.js";
 
 export const RULES = [
   ["hide_open_door", "Hide Open Door"],
@@ -16,10 +17,15 @@ export const RULES = [
 
 // Account types: kid accounts by age group (they only see books rated for
 // their age or younger), plus Editor and Admin. Values are "role:age".
-function typeOptions(role, age, isAdmin) {
+// kids=false (parent tools turned off) leaves out kid types, except on an
+// existing kid's card, whose rules keep applying.
+function typeOptions(role, age, isAdmin, kids = true) {
   const cur = `${role}:${role === "restricted" ? age || 0 : 0}`;
-  const opts = AGE_GROUPS.filter(([l]) => l < 5).map(([l, n, r]) => [`restricted:${l}`, `Kid · ${n} (${r})`]);
-  opts.push(["restricted:0", "Kid · no age group (content rules only)"]);
+  const opts = [];
+  if (kids || role === "restricted") {
+    opts.push(...AGE_GROUPS.filter(([l]) => l < 5).map(([l, n, r]) => [`restricted:${l}`, `Kid · ${n} (${r})`]));
+    opts.push(["restricted:0", "Kid · no age group (content rules only)"]);
+  }
   if (isAdmin) opts.push(["editor:0", "Editor (parent, no technical settings)"], ["admin:0", "Admin"]);
   return opts.map(([v, l]) => `<option value="${v}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`).join("");
 }
@@ -35,6 +41,7 @@ const parseType = (v) => {
 
 export async function renderUsers(host, viewer) {
   const isAdmin = viewer?.role === "admin";
+  const kids = on(viewer, "parents");
   const users = (await attempt(() => get("/api/admin/users"))) || [];
   // Fresh container on each render so click listeners never stack up.
   const root = document.createElement("div");
@@ -44,13 +51,15 @@ export async function renderUsers(host, viewer) {
     <p class="mb-3 text-sm text-slate-400">${isAdmin
       ? "Admin: full control. Editor: manages books, scans and kids' accounts, but no technical settings. Restricted: kid account filtered by its rules."
       : "Add kid accounts, reset their passwords, and choose what each one can see."}</p>
-    <form id="new-user" class="card mb-4 grid gap-3 md:grid-cols-4">
+    <form id="new-user" class="card mb-4 grid gap-3 md:grid-cols-4${kids || isAdmin ? "" : " module-off"}">
       <input name="username" required placeholder="Username" class="input">
       <input name="password" type="password" required minlength="8" placeholder="Password (8+ chars)" class="input" autocomplete="new-password">
-      <select name="type" class="input" title="Kids start with content rules suited to their age group; you can change them after.">${typeOptions("restricted", 2, isAdmin)}</select>
+      <select name="type" class="input" title="Kids start with content rules suited to their age group; you can change them after.">${
+        kids ? typeOptions("restricted", 2, isAdmin) : typeOptions("editor", 0, isAdmin, false)}</select>
       <button class="btn-primary">Add user</button>
     </form>
-    <div class="grid gap-3 lg:grid-cols-2">${users.map((u) => userCard(u, isAdmin)).join("")}</div>`;
+    ${kids ? "" : `<p class="mb-3 text-xs text-slate-500">Parent tools are turned off (Admin → Features), so new kid accounts can't be added. Existing kids keep their rules.</p>`}
+    <div class="grid gap-3 lg:grid-cols-2">${users.map((u) => userCard(u, isAdmin, viewer)).join("")}</div>`;
 
   $("#new-user", root).addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -89,12 +98,12 @@ export async function renderUsers(host, viewer) {
   });
 }
 
-function userCard(u, isAdmin) {
+function userCard(u, isAdmin, viewer) {
   return `
     <div data-user="${u.id}" class="card space-y-3">
       <div class="flex items-center justify-between">
         <p class="font-semibold">${esc(u.username)}</p>
-        <select name="type" class="input w-auto max-w-[60%] py-1 text-sm">${typeOptions(u.role, u.age_level, isAdmin)}</select>
+        <select name="type" class="input w-auto max-w-[60%] py-1 text-sm">${typeOptions(u.role, u.age_level, isAdmin, on(viewer, "parents"))}</select>
       </div>
       ${u.role === "restricted" ? `<label class="block"><span class="label">Most peppers allowed</span>
         <select name="max_spice" class="input">
@@ -106,10 +115,7 @@ function userCard(u, isAdmin) {
         ${RULES.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-rule="${k}" ${u[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}
       </div>
       <div class="grid gap-2 sm:grid-cols-2">
-        <select name="delivery_method" class="input">
-          ${["none", "email", "koreader"].map((m) => `<option value="${m}" ${u.delivery_method === m ? "selected" : ""}>${
-            { none: "No delivery", email: "Send-to-Kindle email", koreader: "KOReader sync" }[m]}</option>`).join("")}
-        </select>
+        <select name="delivery_method" class="input">${deliveryOptions(viewer, u.delivery_method)}</select>
         <input name="kindle_email" value="${esc(u.kindle_email)}" placeholder="name@kindle.com" class="input">
       </div>
       <div class="flex flex-wrap gap-2">

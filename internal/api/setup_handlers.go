@@ -57,5 +57,5 @@ func (s *Server) handleSetup(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, u)
+	writeJSON(w, http.StatusCreated, s.me(u))
 }

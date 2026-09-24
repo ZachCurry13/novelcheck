@@ -4,6 +4,7 @@ import { $, esc, attempt, ageLabel } from "./ui.js";
 import { RULES } from "./users.js";
 import { refreshUser } from "./app.js";
 import { openGuide } from "./guide.js";
+import { on, deliveryOptions } from "./modules.js";
 
 export async function renderProfile(view, state) {
   const u = state.user;
@@ -11,13 +12,9 @@ export async function renderProfile(view, state) {
   view.innerHTML = `
     <h1 class="mb-4 text-2xl font-bold">Profile — ${esc(u.username)}</h1>
     <div class="grid gap-4 lg:grid-cols-2">
-      <form id="delivery" class="card space-y-3">
+      <form id="delivery" class="card space-y-3${on(u, "queue") ? "" : " module-off"}">
         <h2 class="text-lg font-semibold">"Start Reading" delivery</h2>
-        <select name="delivery_method" class="input">
-          <option value="none">No delivery (just track progress)</option>
-          <option value="email">Email EPUB via Send-to-Kindle</option>
-          <option value="koreader">Flag for KOReader wireless sync</option>
-        </select>
+        <select name="delivery_method" class="input">${deliveryOptions(u, u.delivery_method)}</select>
         <div><label class="label" for="kindle-email">Send-to-Kindle address</label>
           <input id="kindle-email" name="kindle_email" class="input" placeholder="name@kindle.com"></div>
         <p class="text-xs text-slate-500">Add the admin's sender address to your Amazon
@@ -46,7 +43,6 @@ export async function renderProfile(view, state) {
     </div>`;
 
   const dform = $("#delivery", view);
-  dform.delivery_method.value = u.delivery_method;
   dform.kindle_email.value = u.kindle_email;
   dform.addEventListener("submit", async (e) => {
     e.preventDefault();

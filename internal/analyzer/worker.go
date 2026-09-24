@@ -33,6 +33,7 @@ type Worker struct {
 	rerate map[int64]bool // analyzed books being re-rated in place (stay visible meanwhile)
 	status Status
 	wake   chan struct{}
+	cur    *run // the current pass through the queue (Run's goroutine only)
 }
 
 func New(st *store.Store) *Worker {
@@ -133,6 +134,7 @@ func (w *Worker) Run(ctx context.Context) {
 	for {
 		id, ok := w.pop()
 		if !ok {
+			w.runDone()
 			w.setState("idle", 0, "")
 			select {
 			case <-ctx.Done():
@@ -142,17 +144,23 @@ func (w *Worker) Run(ctx context.Context) {
 			}
 		}
 		if w.takeRerate(id) {
-			if err := w.rerateOne(ctx, id); err != nil {
+			saved, err := w.rerateOne(ctx, id)
+			if err != nil {
 				log.Printf("re-rating book %d failed (kept its old rating): %v", id, err)
 			}
-		} else if err := w.process(ctx, id); err != nil {
-			log.Printf("analysis of book %d failed: %v", id, err)
-			w.mu.Lock()
-			w.status.LastError = fmt.Sprintf("book %d: %v", id, err)
-			w.mu.Unlock()
-			_ = w.Store.SetStatus(id, "error", err.Error())
-			// Same error text is grouped into one notification with a count.
-			w.Store.Notify("warning", "analysis", "Rating books is failing: "+err.Error(), "#/system")
+			w.runBook(saved, err)
+		} else {
+			saved, err := w.process(ctx, id)
+			if err != nil {
+				log.Printf("analysis of book %d failed: %v", id, err)
+				w.mu.Lock()
+				w.status.LastError = fmt.Sprintf("book %d: %v", id, err)
+				w.mu.Unlock()
+				_ = w.Store.SetStatus(id, "error", err.Error())
+				// Same error text is grouped into one notification with a count.
+				w.Store.Notify("warning", "analysis", "Rating books is failing: "+err.Error(), "#/system")
+			}
+			w.runBook(saved, err)
 		}
 		if ctx.Err() != nil {
 			return
@@ -164,13 +172,14 @@ func (w *Worker) Run(ctx context.Context) {
 	}
 }
 
-func (w *Worker) process(ctx context.Context, id int64) error {
+// process rates a queued book; saved reports whether a rating was stored.
+func (w *Worker) process(ctx context.Context, id int64) (saved bool, err error) {
 	b, err := w.Store.BookByID(id, nil)
 	if err != nil {
-		return nil // deleted meanwhile
+		return false, nil // deleted meanwhile
 	}
 	if b.Status != "queued" {
-		return nil // wiped from the queue after being popped
+		return false, nil // wiped from the queue after being popped
 	}
 	_ = w.Store.SetStatus(id, "processing", "")
 
@@ -179,9 +188,9 @@ func (w *Worker) process(ctx context.Context, id int64) error {
 		return err == nil && cur.Status == "processing" // not wiped while waiting
 	})
 	if err != nil || a == nil {
-		return err
+		return false, err
 	}
-	return w.Store.SaveAnalysis(id, *a)
+	return true, w.Store.SaveAnalysis(id, *a)
 }
 
 // rate fetches a blurb if needed, waits for token budget, then asks each
@@ -212,32 +221,35 @@ func (w *Worker) rate(ctx context.Context, b *store.Book, still func() bool) (*s
 
 // rerateOne re-rates an analyzed book without taking it out of the library:
 // its status stays "analyzed" and a failure keeps the old rating.
-func (w *Worker) rerateOne(ctx context.Context, id int64) error {
+func (w *Worker) rerateOne(ctx context.Context, id int64) (saved bool, err error) {
 	b, err := w.Store.BookByID(id, nil)
 	if err != nil || b.Status != "analyzed" || strings.HasPrefix(b.AnalysisModel, "manual:") {
-		return nil // gone, re-queued normally, or hand-rated by a parent
+		return false, nil // gone, re-queued normally, or hand-rated by a parent
 	}
 	a, err := w.rate(ctx, b, func() bool { return true })
 	if err != nil || a == nil {
-		return err
+		return false, err
 	}
-	return w.Store.SaveAnalysis(id, *a)
+	return true, w.Store.SaveAnalysis(id, *a)
 }
 
 // waitForBudget blocks while the trailing-hour token total plus this call's
 // estimate would exceed the configured cap (0 = unlimited).
 func (w *Worker) waitForBudget(ctx context.Context, id int64, title string, est int) error {
-	for {
+	for waited := false; ; waited = true {
 		limit := w.Store.SettingInt(store.KeyTokensPerHour)
-		if limit <= 0 {
-			return nil
-		}
 		used, err := w.Store.TokensSince("-1 hour")
 		if err != nil {
 			return err
 		}
-		if used+est <= limit || used == 0 {
+		if limit <= 0 || used+est <= limit || used == 0 {
+			if waited {
+				w.Store.Resolve("token-cap")
+			}
 			return nil
+		}
+		if !waited {
+			w.Store.Notify("warning", "token-cap", tokenCapMessage(limit), "#/admin")
 		}
 		w.setState("rate_limited", id, title)
 		secs, _ := w.Store.SecondsUntilWindowFrees()
