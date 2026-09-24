@@ -17,13 +17,21 @@ See [`NOVELCHECK_SPEC.md`](NOVELCHECK_SPEC.md) for the full specification, archi
 | Admin panel | Batch size, tokens/hour cap, scan delay, live token counter and cost estimator (spent and projected), SMTP settings with a test send, Calibre polling interval, one-click `novelcheck.db` backup, and a wipe of the pending analysis queue. |
 | PWA | `manifest.json` (standalone, dark theme) and `sw.js` app-shell cache for offline launch and Add to Home Screen. |
 
-## Quick start (Docker)
+## Install on TrueNAS (easiest)
+
+Follow **[docs/TRUENAS.md](docs/TRUENAS.md)**. It's a click-by-click guide that uses TrueNAS's **Install via YAML** screen and the prebuilt image, so there's no command line and nothing to build.
+
+## Quick start (Docker / Docker Compose)
+
+A prebuilt image is published to GitHub Packages as `ghcr.io/zachcurry13/novelcheck` (`:latest` tracks `main`, and `:X.Y.Z` is published for each release tag), for `linux/amd64` and `linux/arm64`.
 
 ```bash
-git clone https://github.com/zachcurry13/novelcheck && cd novelcheck
+curl -O https://raw.githubusercontent.com/ZachCurry13/novelcheck/main/docker-compose.yml
 # edit the two volume paths in docker-compose.yml, then:
-NOVELCHECK_ADMIN_PASSWORD='choose-a-strong-one' docker compose up -d --build
+NOVELCHECK_ADMIN_PASSWORD='choose-a-strong-one' docker compose up -d
 ```
+
+To build from source instead, clone the repo, uncomment `build: .` in `docker-compose.yml`, and run `docker compose up -d --build`.
 
 Open `http://<host>:8080` and sign in as `admin`. If you leave `NOVELCHECK_ADMIN_PASSWORD` blank, a random password is printed once to `docker logs novelcheck`.
 
@@ -77,6 +85,8 @@ make test        # go test ./...
 make run         # serves on :8080 with ./data and ./calibre
 make css         # recompile Tailwind after changing classes (output is committed)
 ```
+
+CI (`.github/workflows/docker.yml`) runs `go vet` and `go test` on every push and pull request. On `main` it publishes `ghcr.io/zachcurry13/novelcheck:latest`. On a `vX.Y.Z` tag it publishes a versioned image and creates a GitHub Release.
 
 Go 1.26+, no CGO (pure-Go `modernc.org/sqlite`). Front-end assets are embedded with `embed.FS`, so the binary is fully self-contained. Per the spec's rule, no source file is longer than about 300 lines.
 

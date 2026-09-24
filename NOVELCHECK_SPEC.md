@@ -154,3 +154,4 @@ All non-GET API calls require the header `X-NovelCheck: 1`.
 9. **PWA.** `manifest.json`, `sw.js` app-shell cache, icons, and the install prompt (Feature 5).
 10. **Tests.** Store filters and visibility, Calibre read-only sync, LLM client and parser, analyzer fallback and usage recording, API end-to-end (auth, CSRF, restricted filtering, import, queue).
 11. **Packaging & docs.** Multi-stage `Dockerfile` (non-root UID 568), `docker-compose.yml` (SSD `/data`, read-only HDD `/calibre`, optional `cloudflared` and GPU `ollama` profiles), `README.md`, and this spec, kept in sync per Rule 3.
+12. **Distribution.** GitHub Actions workflow (`.github/workflows/docker.yml`) that tests, builds multi-arch (`amd64`/`arm64`) images, publishes them to `ghcr.io/zachcurry13/novelcheck`, and creates a GitHub Release for `v*` tags. `docs/TRUENAS.md` is a no-command-line TrueNAS install guide using **Install via YAML** with `/data` (SSD) and `/calibre` (HDD, read-only).

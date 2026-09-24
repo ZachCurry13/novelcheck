@@ -3,8 +3,8 @@
 #   * /calibre -> Calibre library on the HDD pool, mounted READ-ONLY
 services:
   novelcheck:
-    image: novelcheck:latest
-    build: .
+    image: ghcr.io/zachcurry13/novelcheck:latest   # prebuilt by GitHub Actions
+    # build: .                                     # uncomment to build from source instead
     container_name: novelcheck
     restart: unless-stopped
     user: "568:568"            # TrueNAS "apps" user; must be able to read the Calibre library

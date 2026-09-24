@@ -1,15 +1,21 @@
 # syntax=docker/dockerfile:1
 # ---- build ----
-FROM golang:1.26-alpine AS build
+# Cross-compiles on the build machine's native arch (fast multi-arch builds).
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS build
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 # Pure-Go SQLite driver: no CGO, fully static binary.
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/novelcheck ./cmd/novelcheck
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /out/novelcheck ./cmd/novelcheck
 
 # ---- runtime ----
 FROM alpine:3.22
+LABEL org.opencontainers.image.source="https://github.com/ZachCurry13/novelcheck" \
+      org.opencontainers.image.description="NovelCheck: self-hosted e-book content checker" \
+      org.opencontainers.image.licenses="NOASSERTION"
 RUN apk add --no-cache ca-certificates tzdata \
  && addgroup -S -g 568 novelcheck && adduser -S -u 568 -G novelcheck novelcheck \
  && mkdir -p /data /calibre && chown novelcheck:novelcheck /data
