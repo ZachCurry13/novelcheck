@@ -190,8 +190,15 @@ func (s *Server) handleCalibreSync(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSMTPTest(w http.ResponseWriter, r *http.Request) {
+	// The SMTP fields are what's on screen (maybe not saved yet); blanks and
+	// the masked password fall back to the saved settings.
 	var body struct {
-		To string `json:"to"`
+		To       string `json:"to"`
+		Host     string `json:"smtp_host"`
+		Port     string `json:"smtp_port"`
+		Username string `json:"smtp_username"`
+		Password string `json:"smtp_password"`
+		From     string `json:"smtp_from"`
 	}
 	if !readJSON(w, r, &body, 4<<10) {
 		return
@@ -207,10 +214,18 @@ func (s *Server) handleSMTPTest(w http.ResponseWriter, r *http.Request) {
 	defer os.Remove(tmp.Name())
 	fmt.Fprintf(tmp, "NovelCheck SMTP test sent %s\n", time.Now().Format(time.RFC1123))
 	tmp.Close()
-	cfg := delivery.SMTPConfig{
-		Host: s.Store.Setting(store.KeySMTPHost), Port: s.Store.Setting(store.KeySMTPPort),
-		Username: s.Store.Setting(store.KeySMTPUser), Password: s.Store.Setting(store.KeySMTPPassword),
-		From: s.Store.Setting(store.KeySMTPFrom),
+	cfg := s.smtpConfig()
+	pick := func(onScreen string, saved *string) {
+		if v := strings.TrimSpace(onScreen); v != "" && v != secretMask {
+			*saved = v
+		}
+	}
+	pick(body.Host, &cfg.Host)
+	pick(body.Port, &cfg.Port)
+	pick(body.Username, &cfg.Username)
+	pick(body.From, &cfg.From)
+	if body.Password != "" && body.Password != secretMask {
+		cfg.Password = body.Password
 	}
 	if err := delivery.SendFile(cfg, body.To, tmp.Name()); err != nil {
 		writeErr(w, http.StatusBadGateway, "SMTP test failed: "+err.Error())

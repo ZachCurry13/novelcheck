@@ -40,6 +40,7 @@ func (c SMTPConfig) Validate() error {
 // SendFile emails filePath as an attachment to the given Kindle address.
 // Port 465 uses implicit TLS; other ports use STARTTLS when offered.
 func SendFile(c SMTPConfig, to, filePath string) error {
+	c = c.Clean()
 	if err := c.Validate(); err != nil {
 		return err
 	}
@@ -119,7 +120,7 @@ func send(c SMTPConfig, to string, msg []byte) error {
 	}
 	if c.Username != "" {
 		if err := cl.Auth(smtp.PlainAuth("", c.Username, c.Password, c.Host)); err != nil {
-			return err
+			return authError(c, err)
 		}
 	}
 	if err := cl.Mail(c.From); err != nil {
@@ -143,6 +144,7 @@ func send(c SMTPConfig, to string, msg []byte) error {
 
 // CheckLogin connects to the SMTP server and signs in without sending mail.
 func CheckLogin(c SMTPConfig) error {
+	c = c.Clean()
 	if err := c.Validate(); err != nil {
 		return err
 	}
@@ -173,7 +175,7 @@ func CheckLogin(c SMTPConfig) error {
 	}
 	if c.Username != "" {
 		if err := cl.Auth(smtp.PlainAuth("", c.Username, c.Password, c.Host)); err != nil {
-			return fmt.Errorf("sign-in failed: %w", err)
+			return authError(c, err)
 		}
 	}
 	return cl.Quit()

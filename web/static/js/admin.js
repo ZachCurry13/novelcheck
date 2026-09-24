@@ -27,7 +27,7 @@ const SECTIONS = [
   ["SMTP / Send-to-Kindle", [
     ["smtp_host", "SMTP host", "smtp.gmail.com"],
     ["smtp_port", "SMTP port", "587 (STARTTLS) or 465 (TLS)", "number"],
-    ["smtp_username", "SMTP username", ""],
+    ["smtp_username", "SMTP username", "your full email address, e.g. you@gmail.com"],
     ["smtp_password", "SMTP password / app password", "", "password"],
     ["smtp_from", "Approved sender email", "must be on your Amazon approved list"],
   ]],
@@ -76,7 +76,14 @@ export async function renderAdmin(view, state) {
       await attempt(() => post("/api/admin/calibre-sync"), "Calibre sync started");
     } else if (act === "smtp-test") {
       const to = prompt("Send test email to:");
-      if (to) await attempt(() => post("/api/admin/smtp-test", { to }), "Test email sent");
+      // Test exactly what's on screen, even before Save.
+      const val = (k) => $(`[data-key="${k}"]`, view)?.value ?? "";
+      if (to) {
+        await attempt(() => post("/api/admin/smtp-test", {
+          to, smtp_host: val("smtp_host"), smtp_port: val("smtp_port"), smtp_username: val("smtp_username"),
+          smtp_password: val("smtp_password"), smtp_from: val("smtp_from"),
+        }), "Test email sent. If it looks right, click Save settings.");
+      }
     }
     refresh();
   });
@@ -135,8 +142,16 @@ function field(key, label, placeholder, type, value) {
   const t = type === "password" ? "password" : type === "number" ? "number" : "text";
   return `<div><label class="label" for="s-${key}">${esc(label)}</label>
     <input id="s-${key}" data-key="${key}" type="${t}" ${t === "number" ? 'step="any" min="0"' : ""}
-      value="${esc(value ?? "")}" placeholder="${esc(placeholder)}" class="input" autocomplete="off"></div>`;
+      value="${esc(value ?? "")}" placeholder="${esc(placeholder)}" class="input"
+      autocomplete="${t === "password" ? "new-password" : "off"}" data-1p-ignore data-lpignore="true">${HELP[key] || ""}</div>`;
 }
+
+// Extra help under a few fields.
+const HELP = {
+  smtp_password: `<p class="mt-1 text-xs text-slate-400">Gmail: your normal Google password won't work. Turn on 2-Step Verification,
+    then create an <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" class="underline">App Password</a>
+    and paste its 16 letters here (spaces are fine). Use your full Gmail address as the username.</p>`,
+};
 
 function renderStats(view, s) {
   const c = s.counts;

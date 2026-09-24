@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.9.1]
+
+### Fixed
+- **"Send test email" tested the old password**: it used the last *saved* settings, so a new password typed without clicking **Save settings** was never tried. It now tests exactly what's on screen.
+- **Browser filling in the wrong password**: Chrome and password managers could fill your NovelCheck login into the email username/password fields. Those fields are now marked so browsers leave them alone.
+- **Gmail App Passwords with spaces**: the spaces Google shows ("abcd efgh ijkl mnop") are removed automatically.
+- **Clearer Gmail error**: when Gmail rejects the login, NovelCheck now explains that Gmail needs an App Password (not your normal password) and your full Gmail address as the username. The SMTP box links straight to Google's App Password page.
+
 ## [1.9.0]
 
 ### New
