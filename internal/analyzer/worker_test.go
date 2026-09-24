@@ -14,7 +14,8 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// fakeLLM answers garbage for the small model so the worker must fall back.
+// fakeLLM answers garbage for every model but big-model, so the worker must
+// work down its fallback list in order.
 func fakeLLM(calls *atomic.Int32) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls.Add(1)
@@ -46,7 +47,7 @@ func TestWorkerAnalyzesWithFallback(t *testing.T) {
 	defer srv.Close()
 	for k, v := range map[string]string{
 		store.KeyLLMBaseURL: srv.URL, store.KeyLLMModel: "small-model",
-		store.KeyLLMFallbackModel: "big-model", store.KeyScanDelaySeconds: "0",
+		store.KeyLLMFallbackModel: "mid-model, big-model", store.KeyScanDelaySeconds: "0",
 	} {
 		_ = st.SetSetting(k, v)
 	}
@@ -67,11 +68,11 @@ func TestWorkerAnalyzesWithFallback(t *testing.T) {
 			if *b.Classification != "No Spice" || !b.PlayfulFantasy || b.AnalysisModel != "big-model" {
 				t.Fatalf("unexpected analysis %+v", b)
 			}
-			if calls.Load() != 2 {
-				t.Fatalf("expected 2 LLM calls (small then fallback), got %d", calls.Load())
+			if calls.Load() != 3 {
+				t.Fatalf("expected 3 LLM calls (small, mid, then big), got %d", calls.Load())
 			}
 			u, _ := st.Usage()
-			if u.TotalCalls != 2 || u.LastHourTokens != 1100 {
+			if u.TotalCalls != 3 || u.LastHourTokens != 1650 {
 				t.Fatalf("usage not recorded: %+v", u)
 			}
 			return

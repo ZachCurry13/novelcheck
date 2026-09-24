@@ -72,8 +72,15 @@ func (s *Server) checks() []check {
 			return s.checkModel(ctx, set(store.KeyLLMModel))
 		}},
 	}
-	if fb := set(store.KeyLLMFallbackModel); fb != "" {
-		cs = append(cs, check{"llm-fallback", "AI fallback model (" + fb + ")", "#/admin", func(ctx context.Context) (string, string, string) {
+	for i, fb := range s.Store.LLMModels() {
+		if i == 0 {
+			continue // the main model is checked above
+		}
+		id := "llm-fallback"
+		if i > 1 {
+			id = fmt.Sprintf("llm-fallback-%d", i)
+		}
+		cs = append(cs, check{id, fmt.Sprintf("AI fallback #%d (%s)", i, fb), "#/admin", func(ctx context.Context) (string, string, string) {
 			return s.checkModel(ctx, fb)
 		}})
 	}

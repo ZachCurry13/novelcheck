@@ -2,6 +2,7 @@
 // progress bar, and switch NovelCheck to it, with no terminal needed.
 import { get, post, qs } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";
+import { initialOrder, orderHTML, bindOrder } from "./ollamaorder.js";
 
 const MODELS = [
   ["qwen2.5:7b", "Qwen 2.5 7B · 4.7 GB · best, needs GPU"],
@@ -36,19 +37,23 @@ export function renderOllamaHelper(host, form) {
       return;
     }
     list.innerHTML = data.servers.map(serverCard).join("");
+    list.querySelectorAll("[data-server]").forEach((card) => bindOrder($("[data-order]", card), orders[card.dataset.server]));
   }
 
+  const orders = {}; // server url -> { list }
   function serverCard(s) {
-    const installed = s.models.length
-      ? s.models.map((m) => `<li class="flex flex-wrap items-center justify-between gap-2"><code class="break-all">${esc(m)}</code>
-          <button type="button" data-ol="use" data-url="${esc(s.url)}" data-model="${esc(m)}" class="btn-primary py-0.5 text-xs">3. Use this model</button></li>`).join("")
-      : `<li class="text-slate-400">No models downloaded yet.</li>`;
+    const current = [$('[data-key="llm_model"]', form)?.value || "",
+      ...($('[data-key="llm_fallback_model"]', form)?.value || "").split(",")].map((m) => m.trim()).filter(Boolean);
+    orders[s.url] = { list: initialOrder(s.models, current) };
+    if (!orders[s.url].list.some((m) => m.on) && orders[s.url].list.length) orders[s.url].list[0].on = true;
     return `
       <div class="min-w-0 space-y-2 rounded-lg ring-1 ring-slate-700 p-3" data-server="${esc(s.url)}">
         <p>✓ Found Ollama ${esc(s.version)} at <code>${esc(s.url)}</code></p>
-        <p class="label mb-0">Downloaded models</p>
-        <ul class="space-y-1">${installed}</ul>
-        <p class="label mb-0">2. Download a model</p>
+        <p class="label mb-0">2. Tick the models to use and put them in order</p>
+        <p class="text-xs text-slate-400">#1 rates every book. If it fails on a book, #2 tries, then #3, and so on.</p>
+        <ul class="space-y-1" data-order>${orderHTML(orders[s.url].list)}</ul>
+        ${s.models.length ? `<button type="button" data-ol="use" data-url="${esc(s.url)}" class="btn-primary py-1">Use these models in this order</button>` : ""}
+        <p class="label mb-0">3. Download another model (optional)</p>
         <div class="flex flex-wrap gap-2">
           <select class="input w-auto max-w-full py-1" data-ol-model>${MODELS.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("")}</select>
           <button type="button" data-ol="pull" data-url="${esc(s.url)}" class="btn-secondary py-1">Download</button>
@@ -82,8 +87,10 @@ export function renderOllamaHelper(host, form) {
     }, 1000);
   }
 
-  async function use(url, model) {
-    const r = await attempt(() => post("/api/admin/ollama/use", { url, model }));
+  async function use(url) {
+    const models = (orders[url]?.list || []).filter((m) => m.on).map((m) => m.name);
+    if (!models.length) return toast("Tick at least one model", true);
+    const r = await attempt(() => post("/api/admin/ollama/use", { url, models }));
     if (!r) return;
     // Reflect the saved settings in the form without reloading the page.
     const set = (k, v) => {
@@ -93,11 +100,12 @@ export function renderOllamaHelper(host, form) {
     set("llm_provider", "openai");
     set("llm_base_url", r.base_url);
     set("llm_model", r.model);
-    set("llm_fallback_model", "");
+    set("llm_fallback_model", r.fallback || "");
     set("llm_json_mode", true);
     set("price_input_per_million", "0");
     set("price_output_per_million", "0");
-    toast(`NovelCheck will now use ${r.model} on your Ollama server. Try a small batch!`);
+    const backups = r.fallback ? `, with ${r.fallback.split(",").join(" then ")} as backup` : "";
+    toast(`NovelCheck will now use ${r.model}${backups}. Try a small batch!`);
   }
 
   host.addEventListener("click", (e) => {
@@ -105,7 +113,7 @@ export function renderOllamaHelper(host, form) {
     if (!b) return;
     if (b.dataset.ol === "find") find();
     else if (b.dataset.ol === "pull") pull(b.dataset.url, b.closest("[data-server]"));
-    else if (b.dataset.ol === "use") use(b.dataset.url, b.dataset.model);
+    else if (b.dataset.ol === "use") use(b.dataset.url);
   });
   return () => clearInterval(pollTimer);
 }

@@ -194,3 +194,13 @@ func TestSuggestKeep(t *testing.T) {
 		}
 	}
 }
+
+func TestLLMModelsOrder(t *testing.T) {
+	s := newStore(t)
+	_ = s.SetSetting(store.KeyLLMModel, "qwen2.5:7b")
+	_ = s.SetSetting(store.KeyLLMFallbackModel, " llama3.1:8b , llama3.2,qwen2.5:7b,, ")
+	got := s.LLMModels()
+	if len(got) != 3 || got[0] != "qwen2.5:7b" || got[1] != "llama3.1:8b" || got[2] != "llama3.2" {
+		t.Fatalf("models: %v", got)
+	}
+}

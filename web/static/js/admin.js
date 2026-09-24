@@ -13,7 +13,7 @@ const SECTIONS = [
     ["llm_base_url", "API base URL", "https://api.openai.com/v1 · http://ollama:11434/v1"],
     ["llm_api_key", "API key", "Leave blank for local Ollama", "password"],
     ["llm_model", "Primary (small) model", "gpt-4o-mini · claude-haiku-4-5 · gemini-2.5-flash · sonar · llama3.2"],
-    ["llm_fallback_model", "Fallback (large) model", "Only used when the small model fails"],
+    ["llm_fallback_model", "Fallback model(s)", "Only used when the main model fails. Several? Separate with commas, in order"],
     ["llm_json_mode", "JSON response mode", "true / false", "bool"],
     ["google_books_api_key", "Google Books API key (optional)", "", "password"],
   ]],

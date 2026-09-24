@@ -151,9 +151,10 @@ func (w *Worker) process(ctx context.Context, id int64) error {
 
 	w.setState("analyzing", id, b.Title)
 	client := w.client()
-	models := []string{w.Store.Setting(store.KeyLLMModel)}
-	if fb := w.Store.Setting(store.KeyLLMFallbackModel); fb != "" {
-		models = append(models, fb) // larger model only for edge-case failures
+	// Main model first; fallbacks (in the admin's order) only when it fails.
+	models := w.Store.LLMModels()
+	if len(models) == 0 {
+		models = []string{""} // surfaces the "model must be configured" error
 	}
 	var lastErr error
 	for _, model := range models {

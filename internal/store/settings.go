@@ -110,3 +110,21 @@ func (s *Store) SetSetting(key, value string) error {
 		ON CONFLICT(key) DO UPDATE SET value = excluded.value`, key, value)
 	return err
 }
+
+// LLMModels returns the models to try, in order: the main model, then each
+// fallback (the fallback setting may hold several, comma-separated).
+func (s *Store) LLMModels() []string {
+	var out []string
+	seen := map[string]bool{}
+	add := func(m string) {
+		if m = strings.TrimSpace(m); m != "" && !seen[m] {
+			seen[m] = true
+			out = append(out, m)
+		}
+	}
+	add(s.Setting(KeyLLMModel))
+	for _, m := range strings.Split(s.Setting(KeyLLMFallbackModel), ",") {
+		add(m)
+	}
+	return out
+}

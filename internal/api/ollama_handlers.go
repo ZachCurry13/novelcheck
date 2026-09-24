@@ -32,8 +32,9 @@ func (s *Server) handleOllamaFind(w http.ResponseWriter, r *http.Request) {
 }
 
 type ollamaModelReq struct {
-	URL   string `json:"url"`
-	Model string `json:"model"`
+	URL    string   `json:"url"`
+	Model  string   `json:"model"`
+	Models []string `json:"models"` // "use": in order, main model first
 }
 
 func (s *Server) handleOllamaPull(w http.ResponseWriter, r *http.Request) {
@@ -75,14 +76,31 @@ func (s *Server) handleOllamaUse(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadGateway, "can't reach Ollama at "+base)
 		return
 	}
-	model := strings.TrimSpace(body.Model)
-	if !slices.Contains(srv.Models, model) && !slices.Contains(srv.Models, model+":latest") {
-		writeErr(w, http.StatusBadRequest, "that model isn't downloaded on this Ollama server yet")
+	// Models in order: the first is the main one, the rest are fallbacks.
+	models := body.Models
+	if len(models) == 0 {
+		models = []string{body.Model}
+	}
+	var chosen []string
+	for _, m := range models {
+		m = strings.TrimSpace(m)
+		if m == "" || slices.Contains(chosen, m) {
+			continue
+		}
+		if !slices.Contains(srv.Models, m) && !slices.Contains(srv.Models, m+":latest") {
+			writeErr(w, http.StatusBadRequest, m+" isn't downloaded on this Ollama server yet")
+			return
+		}
+		chosen = append(chosen, m)
+	}
+	if len(chosen) == 0 {
+		writeErr(w, http.StatusBadRequest, "pick at least one model")
 		return
 	}
+	model, fallbacks := chosen[0], strings.Join(chosen[1:], ",")
 	for k, v := range map[string]string{
 		store.KeyLLMProvider: "openai", store.KeyLLMBaseURL: base + "/v1", store.KeyLLMAPIKey: "",
-		store.KeyLLMModel: model, store.KeyLLMFallbackModel: "", store.KeyLLMJSONMode: "true",
+		store.KeyLLMModel: model, store.KeyLLMFallbackModel: fallbacks, store.KeyLLMJSONMode: "true",
 		store.KeyPriceInputPerM: "0", store.KeyPriceOutputPerM: "0",
 	} {
 		if err := s.Store.SetSetting(k, v); err != nil {
@@ -90,5 +108,5 @@ func (s *Server) handleOllamaUse(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"base_url": base + "/v1", "model": model})
+	writeJSON(w, http.StatusOK, map[string]string{"base_url": base + "/v1", "model": model, "fallback": fallbacks})
 }

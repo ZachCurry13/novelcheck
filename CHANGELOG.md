@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.10.0]
+
+### New
+- **Put your Ollama models in order**: the Ollama easy setup lists every downloaded model. Tick the ones to use and move them with **↑ / ↓**. **#1** rates every book; if it fails on a book, **#2** tries, then **#3**, and so on. One click saves them all, with no copy-paste.
+- **Several fallback models for any provider**: the **Fallback model(s)** box takes a comma-separated list, tried in order. **Check everything** tests each one.
+
 ## [1.9.1]
 
 ### Fixed
