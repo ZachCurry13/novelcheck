@@ -5,6 +5,7 @@ import { RULES } from "./users.js";
 import { refreshUser } from "./app.js";
 import { openGuide } from "./guide.js";
 import { on, deliveryOptions } from "./modules.js";
+import { renderPushCard } from "./push.js";
 
 export async function renderProfile(view, state) {
   const u = state.user;
@@ -27,6 +28,7 @@ export async function renderProfile(view, state) {
         <input name="new_password" type="password" required minlength="8" placeholder="New password (8+ chars)" class="input" autocomplete="new-password">
         <button class="btn-primary">Update password</button>
       </form>
+      <div id="push-card" class="card space-y-3 lg:col-span-2"></div>
       <div class="card lg:col-span-2">
         <h2 class="mb-2 text-lg font-semibold">Content rules on this account</h2>
         ${u.age_level ? `<p class="mb-2 text-sm text-slate-300">👪 Age group: <b>${esc(ageLabel(u.age_level))}</b>. Books a parent rated for older readers are hidden.</p>` : ""}
@@ -54,6 +56,7 @@ export async function renderProfile(view, state) {
   });
 
   $("#replay-guide", view).addEventListener("click", () => openGuide(state));
+  renderPushCard($("#push-card", view), u);
 
   $("#password", view).addEventListener("submit", async (e) => {
     e.preventDefault();

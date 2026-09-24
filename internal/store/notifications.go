@@ -44,6 +44,9 @@ func (s *Store) Notify(level, source, message, link string) {
 		log.Printf("notify: %v", err)
 		return
 	}
+	if s.OnNotify != nil {
+		s.OnNotify(level, source, message, link)
+	}
 	_, _ = s.DB.Exec(`DELETE FROM notifications WHERE id NOT IN
 		(SELECT id FROM notifications ORDER BY updated_at DESC, id DESC LIMIT ?)`, maxNotifications)
 }

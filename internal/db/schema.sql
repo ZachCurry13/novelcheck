@@ -135,6 +135,19 @@ CREATE TABLE IF NOT EXISTS book_notes (
 );
 CREATE INDEX IF NOT EXISTS idx_book_notes_book ON book_notes(book_id);
 
+-- Phones and browsers that turned on push notifications. scope: "all"
+-- (problems and everyday events) or "problems"; kids only get their own.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint   TEXT NOT NULL UNIQUE,
+    p256dh     TEXT NOT NULL,
+    auth       TEXT NOT NULL,
+    scope      TEXT NOT NULL DEFAULT 'all' CHECK (scope IN ('all', 'problems')),
+    device     TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Requests (by any user) to delete a book; an admin reviews them. Title and
 -- author are copied so the history survives the book being deleted.
 CREATE TABLE IF NOT EXISTS delete_requests (

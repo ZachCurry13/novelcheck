@@ -100,6 +100,7 @@ func (s *Server) handleStartReading(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.Store.NotifyRoutine("reading", u.Username+" started reading “"+b.Title+"”: "+note, "")
+	s.pushReading(u, b.Title, note)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "reading", "delivery_note": note})
 }
 

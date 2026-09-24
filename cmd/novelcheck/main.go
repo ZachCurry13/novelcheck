@@ -17,6 +17,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/db"
+	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/sysinfo"
 	"github.com/zachcurry13/novelcheck/internal/tunnel"
@@ -73,6 +74,10 @@ func main() {
 	}
 	defer tun.Stop()
 
+	// Phone notifications: every new 🔔 notice also goes to subscribed devices.
+	pusher := push.New(st)
+	st.OnNotify = pusher.FromNotice
+
 	srv := &api.Server{
 		Cfg:     cfg,
 		Store:   st,
@@ -82,6 +87,7 @@ func main() {
 		Updates: updates.New(),
 		Tunnel:  tun,
 		SysInfo: sampler,
+		Push:    pusher,
 		Web:     web.FS(),
 	}
 	srv.Pulls.OnError = func(model string, err error) {

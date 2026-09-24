@@ -12,6 +12,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/ollama"
+	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/sysinfo"
 	"github.com/zachcurry13/novelcheck/internal/tunnel"
@@ -28,7 +29,8 @@ type Server struct {
 	Tunnel  *tunnel.Manager
 	Pulls   ollama.Puller // Ollama model downloads
 	SysInfo *sysinfo.Sampler
-	Web     fs.FS // embedded static assets
+	Push    *push.Service // phone notifications; nil turns them off
+	Web     fs.FS         // embedded static assets
 	logins  *loginLimiter
 }
 
@@ -64,6 +66,10 @@ func (s *Server) Router() http.Handler {
 			r.Get("/catalogs", s.handleListCatalogs)
 			r.Get("/age-groups", s.handleAgeGroups)
 			r.Get("/updates", s.handleUpdates)
+			r.Get("/push", s.handlePushStatus)
+			r.Post("/push/subscribe", s.handlePushSubscribe)
+			r.Post("/push/unsubscribe", s.handlePushUnsubscribe)
+			r.Post("/push/test", s.handlePushTest)
 
 			r.Group(func(r chi.Router) {
 				r.Use(s.requireModule(store.KeyModuleQueue, "The reading queue"))

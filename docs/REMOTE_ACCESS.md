@@ -46,6 +46,8 @@ Open the new `https://` address on each phone, sign in, and add it to the home s
 
 The home-screen app from the new address is separate from any you made with the old `http://…:30080` address, so each person signs in once more.
 
+Phone notifications need this `https://` address too. In the home-screen app, go to **Profile → Phone notifications** and tap **Turn on for this device**, then **Send a test**.
+
 ## Optional: an extra lock with Cloudflare Access
 
 NovelCheck already needs a password, and it slows down repeated wrong guesses. For extra peace of mind, Cloudflare can ask for a one-time code sent by email before anyone even sees the NovelCheck page:

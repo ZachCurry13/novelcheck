@@ -20,6 +20,7 @@ becomes the release notes for that version and is shown in the app under
 - **Turn off what you don't use**: **Admin → Features** has switches for the Up Next reading queue, Send-to-Kindle email, KOReader sync, Import books, and parent tools (kids' accounts, age groups, parents' notes). A feature that's off disappears for everyone. Kids' content rules always keep working, even with parent tools hidden.
 - **More in the 🔔 bell**: it now also tells you when a Calibre sync adds new books, when a batch of ratings finishes (how many books, tokens and cost), and when someone starts reading a book (and how it was sent). You can turn these everyday notices off under **Admin → Features**.
 - **Hourly AI limit notice**: when rating pauses because the hourly token limit is reached, the 🔔 bell says so, and the notice clears itself when rating continues.
+- **📱 Phone notifications**: under **Profile → Phone notifications**, tap **Turn on for this device** to get notices on your phone or computer even when NovelCheck is closed. Parents get the 🔔 notices (or **Only problems**); everyone gets "📚 Ready to read" when a book they started is sent to their Kindle or KOReader. **Send a test** checks it works. Notifications need NovelCheck's secure **https://** address (set up under **Admin → Remote access**). On iPhone and iPad, first add NovelCheck to the Home Screen (Share → Add to Home Screen) and open it from there.
 - A thank-you to Calibre and Calibre-Web in the footer.
 
 ## [1.15.0]

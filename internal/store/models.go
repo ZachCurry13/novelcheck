@@ -5,7 +5,12 @@ package store
 
 import "github.com/jmoiron/sqlx"
 
-type Store struct{ DB *sqlx.DB }
+type Store struct {
+	DB *sqlx.DB
+	// OnNotify, if set, hears about each new notification (not repeats of an
+	// unread one), e.g. to push it to phones. It must not block.
+	OnNotify func(level, source, message, link string)
+}
 
 func New(db *sqlx.DB) *Store { return &Store{DB: db} }
 

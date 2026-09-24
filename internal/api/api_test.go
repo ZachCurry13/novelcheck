@@ -15,6 +15,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/db"
+	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/sysinfo"
 	"github.com/zachcurry13/novelcheck/internal/tunnel"
@@ -80,6 +81,7 @@ func setup(t *testing.T) (*httptest.Server, *store.Store) {
 		Web:     fstest.MapFS{"index.html": {Data: []byte("<html>app</html>")}},
 		Tunnel:  &tunnel.Manager{Binary: "no-such-cloudflared"},
 		SysInfo: sysinfo.New(t.TempDir()),
+		Push:    push.New(st),
 	}
 	srv := httptest.NewServer(s.Router())
 	t.Cleanup(srv.Close)
