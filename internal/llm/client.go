@@ -35,7 +35,7 @@ type message struct {
 
 type chatRequest struct {
 	Model          string            `json:"model"`
-	Messages       []message         `json:"messages"`
+	Messages       []any             `json:"messages"` // message, or partsMessage for images
 	Temperature    float64           `json:"temperature"`
 	MaxTokens      int               `json:"max_tokens,omitempty"`
 	ResponseFormat map[string]string `json:"response_format,omitempty"`
@@ -56,12 +56,16 @@ func (c *Client) Complete(ctx context.Context, model, system, user string) (stri
 	if strings.TrimSpace(c.BaseURL) == "" || strings.TrimSpace(model) == "" {
 		return "", Usage{}, errors.New("LLM base URL and model must be configured")
 	}
-	body := chatRequest{
+	return c.send(ctx, chatRequest{
 		Model:       model,
-		Messages:    []message{{"system", system}, {"user", user}},
+		Messages:    []any{message{"system", system}, message{"user", user}},
 		Temperature: 0,
 		MaxTokens:   600,
-	}
+	})
+}
+
+// send posts a chat request and returns the assistant text and usage.
+func (c *Client) send(ctx context.Context, body chatRequest) (string, Usage, error) {
 	if c.JSONMode {
 		body.ResponseFormat = map[string]string{"type": "json_object"}
 	}

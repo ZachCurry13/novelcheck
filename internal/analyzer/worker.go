@@ -34,6 +34,17 @@ type Worker struct {
 	status Status
 	wake   chan struct{}
 	cur    *run // the current pass through the queue (Run's goroutine only)
+
+	// NewEnricher builds the book-lookup client (tests point it at a fake).
+	NewEnricher func() *enrich.Client
+}
+
+// Enricher is the Open Library / Google Books client for lookups.
+func (w *Worker) Enricher() *enrich.Client {
+	if w.NewEnricher != nil {
+		return w.NewEnricher()
+	}
+	return enrich.New(w.Store.Setting(store.KeyGoogleBooksAPIKey))
 }
 
 func New(st *store.Store) *Worker {
@@ -200,10 +211,7 @@ func (w *Worker) rate(ctx context.Context, b *store.Book, still func() bool) (*s
 	id := b.ID
 	if b.Blurb == "" {
 		w.setState("enriching", id, b.Title)
-		ec := enrich.New(w.Store.Setting(store.KeyGoogleBooksAPIKey))
-		blurb, _ := ec.Blurb(ctx, b.Title, b.Author, b.ISBN, b.Description)
-		b.Blurb = calibre.StripHTML(blurb)
-		_ = w.Store.SetBlurb(id, b.Blurb)
+		w.fillBlurb(ctx, b)
 	}
 
 	user := llm.UserPrompt(b.Title, b.Author, b.Blurb)
@@ -217,6 +225,14 @@ func (w *Worker) rate(ctx context.Context, b *store.Book, still func() bool) (*s
 
 	w.setState("analyzing", id, b.Title)
 	return w.askAIs(ctx, id, user)
+}
+
+// fillBlurb looks up a book's description (Open Library, then Google Books,
+// then what the library had) and saves it.
+func (w *Worker) fillBlurb(ctx context.Context, b *store.Book) {
+	blurb, _ := w.Enricher().Blurb(ctx, b.Title, b.Author, b.ISBN, b.Description)
+	b.Blurb = calibre.StripHTML(blurb)
+	_ = w.Store.SetBlurb(b.ID, b.Blurb)
 }
 
 // rerateOne re-rates an analyzed book without taking it out of the library:

@@ -62,7 +62,10 @@ func (c *client) doList(method, path string) (*http.Response, []map[string]any) 
 	return res, out
 }
 
-func setup(t *testing.T) (*httptest.Server, *store.Store) {
+func setup(t *testing.T) (*httptest.Server, *store.Store) { return setupWith(t, nil) }
+
+// setupWith lets a test adjust the server (e.g. fake book lookups) first.
+func setupWith(t *testing.T, adjust func(*api.Server)) (*httptest.Server, *store.Store) {
 	d, err := db.Open(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
@@ -82,6 +85,9 @@ func setup(t *testing.T) (*httptest.Server, *store.Store) {
 		Tunnel:  &tunnel.Manager{Binary: "no-such-cloudflared"},
 		SysInfo: sysinfo.New(t.TempDir()),
 		Push:    push.New(st),
+	}
+	if adjust != nil {
+		adjust(s)
 	}
 	srv := httptest.NewServer(s.Router())
 	t.Cleanup(srv.Close)

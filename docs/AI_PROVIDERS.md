@@ -67,6 +67,10 @@ Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and
 5. Under **2. Tick the models to use and put them in order**, tick the models you want and use **↑ / ↓** to order them. **#1** rates every book; if it fails on a book, **#2** tries, then **#3**, and so on. Click **Use these models in this order**. NovelCheck fills in all the settings for you, including $0 prices. Click **Save settings** to keep any other changes you made in the box.
 6. Try a batch of 2 or 3 books first to see how long each one takes.
 
+## Photos for Check a book
+
+**📷 Check a book** asks your AI to read the title off a photo of the cover. OpenAI (`gpt-4o-mini`), Claude and Gemini models can all read photos. With Ollama you need a vision model such as `llama3.2-vision` or `llava` (plain `llama3.2` can't see images); if none of your models can, NovelCheck says so and you can type the title instead. Android phones read the ISBN barcode themselves, so no AI is needed for that.
+
 ## Language
 
 Summaries are written in **English (US)** unless you pick another language under **Admin → LLM Analysis Engine → Language for book summaries**. Small models sometimes answered in the book's own language before; if any existing summaries aren't in English, Admin shows **Re-rate them in English**.

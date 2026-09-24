@@ -6,6 +6,11 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.16.0]
 
+### 📷 Check a book
+- **Snap a cover, see the rating**: the new first tab for parents, **📷 Check a book**, is where NovelCheck now opens. In a shop, tap **Take a photo of the cover** (or type the title, author or ISBN) and you get a plain answer: "✓ within Jenna's limit", "⚠ the gray area" or "✕ explicit", plus the peppers, why, the tags and a short summary.
+- Books already in your library answer at once. New ones are looked up and rated on the spot (usually 10–30 seconds) and kept under **Looked up**, so checking them again is instant and free. **Recently checked** lists the last few.
+- Your AI reads the title from the photo; most cloud AIs can (OpenAI, Claude, Gemini). With a small local Ollama model that can't read images, type the title instead. On Android, the barcode on the back is read by the phone itself.
+
 ### Changed
 - **Clearer pepper levels 2 and 3**: **2 peppers · Mild / Closed Door** (*Jenna's limit*) now means romantic tension and kissing, with anything more happening off the page. **3 peppers · Steamy / Heavy Tension** is the *gray area*: heavy foreplay or suggestive scenes on the page that stop short of explicit. Levels 4 and 5 are now called **Explicit / Open Door** and **Very Explicit / Erotica**.
 - **Re-rate with the new wording**: books the AI rated before this change show up in Admin as "rated with older pepper rules", with a **Re-rate with the current rules** button and a cost estimate. They stay in the library with their old rating until the new one arrives, and hand-rated books are left alone.

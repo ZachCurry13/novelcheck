@@ -86,6 +86,7 @@ func (s *Server) Router() http.Handler {
 			// restrict editors to kid accounts (see users_handlers.go).
 			r.Group(func(r chi.Router) {
 				r.Use(auth.RequireManager)
+				r.Post("/check", s.handleCheck)
 				r.Post("/catalogs", s.handleCreateCatalog)
 				r.Patch("/catalogs/{id}", s.handleRenameCatalog)
 				r.With(s.requireModule(store.KeyModuleImport, "Importing books")).Post("/import/drive", s.handleImportDrive)

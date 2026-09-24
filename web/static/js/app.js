@@ -2,6 +2,7 @@
 import { get, post, setUnauthorizedHandler } from "./api.js";
 import { $, $$, attempt, canManage } from "./ui.js";
 import { renderLibrary } from "./library.js";
+import { renderCheck } from "./check.js";
 import { renderQueue } from "./queue.js";
 import { renderImport } from "./scanner.js";
 import { renderAdmin } from "./admin.js";
@@ -19,6 +20,7 @@ import { on, applyModules } from "./modules.js";
 export const state = { user: null };
 
 const routes = {
+  check: renderCheck,
   library: renderLibrary,
   queue: renderQueue,
   import: renderImport,
@@ -30,7 +32,7 @@ const routes = {
   duplicates: renderDuplicates,
   deletions: renderDeletions,
 };
-const managerRoutes = new Set(["import", "admin", "duplicates"]);
+const managerRoutes = new Set(["check", "import", "admin", "duplicates"]);
 const adminRoutes = new Set(["system", "usage", "deletions"]);
 const moduleRoutes = { queue: "queue", import: "import" }; // pages an admin can turn off
 
@@ -59,7 +61,8 @@ function showApp() {
 let currentCleanup = null;
 async function route() {
   if (!state.user) return;
-  let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || "library";
+  // Parents land on Check a book (the main feature); kids on the Library.
+  let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || (canManage(state.user) ? "check" : "library");
   if (!routes[name] || (managerRoutes.has(name) && !canManage(state.user)) ||
     (adminRoutes.has(name) && state.user.role !== "admin") ||
     (moduleRoutes[name] && !on(state.user, moduleRoutes[name]))) name = "library";

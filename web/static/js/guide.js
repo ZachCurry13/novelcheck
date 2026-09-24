@@ -44,9 +44,16 @@ const ADMIN = [
 
 const DONE = [["✅ You're all set", "You can reopen this guide any time from the <b>Help</b> link at the top or bottom of the page."]];
 
+// Parents see this right after the welcome: it's the main feature.
+const CHECK = ["📷 Check a book",
+  "At a shop, or deciding what to buy? Open <b>Check a book</b> (it's the first tab), tap <b>📷 Take a photo of the cover</b> or type the title, and you'll see its peppers, why, and a short summary. Books you already have answer at once; new ones take a few seconds and are kept under <b>Looked up</b>."];
+
 function stepsFor(user) {
   const s = [...EVERYONE];
-  if (user.role === "admin" || user.role === "editor") s.push(...MANAGER);
+  if (user.role === "admin" || user.role === "editor") {
+    s.splice(1, 0, CHECK);
+    s.push(...MANAGER);
+  }
   if (user.role === "admin") s.push(...ADMIN);
   return [...s, ...DONE];
 }
