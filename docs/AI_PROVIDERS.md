@@ -67,6 +67,10 @@ Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and
 5. Under **2. Tick the models to use and put them in order**, tick the models you want and use **↑ / ↓** to order them. **#1** rates every book; if it fails on a book, **#2** tries, then **#3**, and so on. Click **Use these models in this order**. NovelCheck fills in all the settings for you, including $0 prices. Click **Save settings** to keep any other changes you made in the box.
 6. Try a batch of 2 or 3 books first to see how long each one takes.
 
+## Language
+
+Summaries are written in **English (US)** unless you pick another language under **Admin → LLM Analysis Engine → Language for book summaries**. Small models sometimes answered in the book's own language before; if any existing summaries aren't in English, Admin shows **Re-rate them in English**.
+
 ## Backup AI (optional)
 
 A second AI that takes over when the main one fails, for example a second Ollama on another computer, or a cloud AI like OpenAI for when your server is off.

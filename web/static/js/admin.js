@@ -17,6 +17,7 @@ const SECTIONS = [
     ["llm_fallback_model", "Fallback model(s)", "Only used when the main model fails. Several? Separate with commas, in order"],
     ["llm_json_mode", "JSON response mode", "true / false", "bool"],
     ["google_books_api_key", "Google Books API key (optional)", "", "password"],
+    ["language", "Language for book summaries", "English (US)|English (UK)|Spanish|French|German|Portuguese|Italian|Dutch", "select"],
   ]],
   ["Backup AI (optional)", [
     ["backup_llm_enabled", "Use a backup AI when the main one fails (a second Ollama, or a cloud AI)", "", "bool"],
@@ -87,6 +88,9 @@ export async function renderAdmin(view, state) {
       if (!confirm("Return all queued books to Pending Analysis?")) return;
       const r = await attempt(() => post("/api/admin/wipe-queue"));
       if (r) toast(`Reset ${r.reset} books to pending`);
+    } else if (act === "rerate-language") {
+      const r = await attempt(() => post("/api/admin/rerate", { which: "language" }));
+      if (r) toast(`Re-rating ${r.queued} books so their summaries are in English`);
     } else if (act === "rerate") {
       const r = await attempt(() => post("/api/admin/rerate"));
       if (r) toast(`Re-rating ${r.queued} books on the pepper scale`);
@@ -164,6 +168,12 @@ function field(key, label, placeholder, type, value) {
   if (type === "bool") {
     return `<label class="toggle"><input type="checkbox" data-key="${key}" ${value === "true" ? "checked" : ""}> ${esc(label)}</label>`;
   }
+  if (type === "select") {
+    // placeholder holds the choices, separated by "|"; the first is the default.
+    const opts = placeholder.split("|");
+    return `<div><label class="label" for="s-${key}">${esc(label)}</label>
+      <select id="s-${key}" data-key="${key}" class="input">${opts.map((o) => `<option ${o === (value || opts[0]) ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></div>`;
+  }
   const t = type === "password" ? "password" : type === "number" ? "number" : "text";
   return `<div><label class="label" for="s-${key}">${esc(label)}</label>
     <input id="s-${key}" data-key="${key}" type="${t}" ${t === "number" ? 'step="any" min="0"' : ""}
@@ -197,11 +207,17 @@ function renderStats(view, s) {
       <a href="#/deletions" class="ml-2 underline">Review</a>`;
   }
   const box = $("#rerate", view);
-  box.classList.toggle("hidden", !s.rerate_candidates);
+  box.classList.toggle("hidden", !s.rerate_candidates && !s.non_english);
+  box.innerHTML = "";
+  if (s.non_english) {
+    box.innerHTML = `🌐 <b>${fmtNum(s.non_english)}</b> book summar${s.non_english === 1 ? "y isn't" : "ies aren't"} in English.
+      <button data-act="rerate-language" class="btn-secondary ml-2 py-1">Re-rate them in English</button>
+      <span class="block text-xs text-slate-400">The AI rewrites them in the language chosen under LLM Analysis Engine. They stay in the library meanwhile.</span>`;
+  }
   if (s.rerate_candidates) {
     // Rough cost from the running average (free with Ollama).
     const est = s.cost_spent && s.usage.total_calls ? (s.cost_spent / s.usage.total_calls) * s.rerate_candidates : 0;
-    box.innerHTML = `🌶️ <b>${fmtNum(s.rerate_candidates)}</b> book${s.rerate_candidates === 1 ? " was" : "s were"} rated before the pepper scale.
+    box.innerHTML += `${s.non_english ? `<hr class="my-2 border-slate-700">` : ""}🌶️ <b>${fmtNum(s.rerate_candidates)}</b> book${s.rerate_candidates === 1 ? " was" : "s were"} rated before the pepper scale.
       <button data-act="rerate" class="btn-secondary ml-2 py-1">Re-rate them on the pepper scale</button>
       <span class="block text-xs text-slate-400">They stay in the library with their old rating until the new one arrives. Hand-rated books are left alone.${est ? ` Estimated cost ≈ ${fmtMoney(est)}.` : ""}</span>`;
   }

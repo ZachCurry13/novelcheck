@@ -75,6 +75,7 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"counts":            counts,
 		"rerate_candidates": len(rerate),
+		"non_english":       s.nonEnglishCount(),
 		"pending_deletes":   s.Store.PendingDeleteCount(),
 		"usage":             usage,
 		"tokens_per_hour":   s.Store.SettingInt(store.KeyTokensPerHour),
@@ -126,6 +127,10 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, http.StatusBadRequest, "llm_provider must be openai or anthropic")
 			return
 		}
+		if k == store.KeyLanguage && !llm.ValidLanguage(v) {
+			writeErr(w, http.StatusBadRequest, "unknown language")
+			return
+		}
 		if k == store.KeySessionDays {
 			if n, err := strconv.Atoi(v); err != nil || n < 1 || n > 365 {
 				writeErr(w, http.StatusBadRequest, "stay signed in must be between 1 and 365 days")
@@ -158,7 +163,16 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 // handleRerate re-rates books the AI rated before the pepper scale. They stay
 // visible with their old rating until the new one arrives.
 func (s *Server) handleRerate(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Which string `json:"which"` // "" = older ratings; "language" = summaries not in English
+	}
+	if r.ContentLength > 0 && !readJSON(w, r, &body, 1<<10) {
+		return
+	}
 	ids, err := s.Store.RerateCandidates()
+	if body.Which == "language" {
+		ids, err = s.nonEnglishSummaries()
+	}
 	if err != nil {
 		writeStoreErr(w, err)
 		return
@@ -312,4 +326,28 @@ func (s *Server) handleRetryErrors(w http.ResponseWriter, r *http.Request) {
 	s.Worker.Enqueue(false, ids...)
 	s.Store.Resolve("analysis")
 	writeJSON(w, http.StatusOK, map[string]int{"queued": len(ids)})
+}
+
+// nonEnglishSummaries finds AI-written summaries that aren't in English, when
+// the chosen language is English (hand-rated books are left alone).
+func (s *Server) nonEnglishSummaries() ([]int64, error) {
+	if !strings.HasPrefix(s.Store.Setting(store.KeyLanguage), "English") {
+		return nil, nil
+	}
+	rows, err := s.Store.AISummaries()
+	if err != nil {
+		return nil, err
+	}
+	var ids []int64
+	for _, r := range rows {
+		if !llm.LooksEnglish(r.Summary) {
+			ids = append(ids, r.ID)
+		}
+	}
+	return ids, nil
+}
+
+func (s *Server) nonEnglishCount() int {
+	ids, _ := s.nonEnglishSummaries()
+	return len(ids)
 }

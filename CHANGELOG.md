@@ -4,6 +4,18 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.15.0]
+
+### New
+- **🗑 Request to delete**: anyone can open a book and ask for it to be deleted, with an optional reason (and cancel it later). Books with a request show a **🗑 Delete requested** tag.
+- **Delete requests page** (admins): **Library → Delete requests** (or the banner on Admin, or the 🔔 bell) lists each requested book with who asked and why. Tick books and **Delete from Calibre** (to Calibre's recycle bin, with the same safety checks as duplicates), **Keep**, or **Mark done** for books that aren't in Calibre. A **Recently handled** list keeps the history.
+- **Language for summaries**: **Admin → LLM Analysis Engine → Language for book summaries** (default **English (US)**). The AI now writes every summary in that language, even for books whose description is in another language. If some existing summaries aren't in English, Admin offers **Re-rate them in English**; they stay in the library while that happens.
+- **Import from Amazon, Goodreads, StoryGraph, Hardcover or a spreadsheet**: the Import page (now called **Import books**) takes a list file with no Kindle cable. NovelCheck finds the title, author and ISBN columns by itself, lets you pick Goodreads shelves or StoryGraph statuses, and removes Goodreads' series tags so books match your Calibre library. Step-by-step guides explain how to get the file from each service.
+- **Amazon library in one paste**: copy Amazon's **Content Library** page and use **Paste a list**. NovelCheck picks out each title and author and skips the buttons and dates. Remove anything that isn't a book with ✕ before importing.
+
+### Changed
+- The 🔔 bell refreshes when you move between pages, so new notices appear sooner.
+
 ## [1.14.2]
 
 ### Fixed

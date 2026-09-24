@@ -30,6 +30,20 @@ func ClassificationForSpice(level int) string {
 const effectiveSpice = `COALESCE(b.spice_level, CASE b.classification
 	WHEN 'No Spice' THEN 2 WHEN 'Closed Door' THEN 3 WHEN 'Open Door' THEN 4 END)`
 
+// AISummary is an AI-written summary, for the language check.
+type AISummary struct {
+	ID      int64  `db:"id"`
+	Summary string `db:"summary_verdict"`
+}
+
+// AISummaries lists analyzed books' AI-written summaries (not hand ratings).
+func (s *Store) AISummaries() ([]AISummary, error) {
+	var out []AISummary
+	err := s.DB.Select(&out, `SELECT id, summary_verdict FROM books WHERE status = 'analyzed'
+		AND summary_verdict != '' AND analysis_model NOT LIKE 'manual:%'`)
+	return out, err
+}
+
 // RerateCandidates returns analyzed books rated by the AI before the pepper
 // scale existed (hand-rated books are left alone).
 func (s *Store) RerateCandidates() ([]int64, error) {

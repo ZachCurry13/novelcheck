@@ -198,7 +198,7 @@ func (w *Worker) rate(ctx context.Context, b *store.Book, still func() bool) (*s
 	}
 
 	user := llm.UserPrompt(b.Title, b.Author, b.Blurb)
-	est := llm.EstimateTokens(llm.SystemPrompt+user) + llm.ExpectedCompletionTokens
+	est := llm.EstimateTokens(llm.SystemPromptFor(w.Store.Setting(store.KeyLanguage))+user) + llm.ExpectedCompletionTokens
 	if err := w.waitForBudget(ctx, id, b.Title, est); err != nil {
 		return nil, err
 	}

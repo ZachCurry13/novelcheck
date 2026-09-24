@@ -19,6 +19,7 @@ const (
 	KeyTokensPerHour     = "tokens_per_hour_cap"
 	KeyScanDelaySeconds  = "scan_delay_seconds"
 	KeyLLMTimeoutSeconds = "llm_timeout_seconds" // 0 = automatic (10 min on your network, 2 min for cloud)
+	KeyLanguage          = "language"            // language the AI writes summaries in
 
 	// Backup AI: a second provider tried when the main one fails.
 	KeyBackupEnabled  = "backup_llm_enabled"
@@ -64,6 +65,7 @@ var Defaults = map[string]string{
 	KeyTokensPerHour:      "25000",
 	KeyScanDelaySeconds:   "2",
 	KeyLLMTimeoutSeconds:  "0",
+	KeyLanguage:           "English (US)",
 	KeyBackupEnabled:      "false",
 	KeyBackupProvider:     "openai",
 	KeyBackupBaseURL:      "",

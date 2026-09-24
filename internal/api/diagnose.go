@@ -65,7 +65,9 @@ func (s *Server) handleDiagnose(w http.ResponseWriter, r *http.Request) {
 		}
 		model := ai.Models[0]
 		ctx, cancel := context.WithTimeout(r.Context(), min(llm.Timeout(ai.BaseURL, s.Store.SettingInt(store.KeyLLMTimeoutSeconds)), 5*time.Minute))
-		out, usage, err := llm.New(ai.Provider, ai.BaseURL, ai.APIKey, ai.JSONMode).Complete(ctx, model, diagnosePrompt, user)
+		prompt := diagnosePrompt + "\n\nWrite \"diagnosis\" and \"fix_steps\" in " + llm.LanguageRule(s.Store.Setting(store.KeyLanguage)) +
+			"; write \"title\", \"summary\" and \"suspected_cause\" in English (they go to the developer)."
+		out, usage, err := llm.New(ai.Provider, ai.BaseURL, ai.APIKey, ai.JSONMode).Complete(ctx, model, prompt, user)
 		cancel()
 		if usage.Total() > 0 {
 			_ = s.Store.RecordUsageCost(0, model, usage.PromptTokens, usage.CompletionTokens, ai)

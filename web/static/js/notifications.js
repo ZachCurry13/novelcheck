@@ -119,4 +119,6 @@ export function initBell(state) {
   window.addEventListener("nc:message", paintBadge);
   refresh();
   timer = setInterval(refresh, 60000);
+  // Also check when moving between pages, so new items show up promptly.
+  window.addEventListener("hashchange", refresh);
 }
