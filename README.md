@@ -86,7 +86,7 @@ make run         # serves on :8080 with ./data and ./calibre
 make css         # recompile Tailwind after changing classes (output is committed)
 ```
 
-CI (`.github/workflows/docker.yml`) runs `go vet` and `go test` on every push and pull request. On `main` it publishes `ghcr.io/zachcurry13/novelcheck:latest`. On a `vX.Y.Z` tag it publishes a versioned image and creates a GitHub Release.
+CI (`.github/workflows/docker.yml`) runs `go vet` and `go test` on every push and pull request. On `main` it publishes `ghcr.io/zachcurry13/novelcheck:latest`. On a `vX.Y.Z` tag it publishes a versioned image and creates a GitHub Release. You can also cut a release without a tag: **Actions → Docker image → Run workflow** with a version such as `1.1.0`.
 
 Go 1.26+, no CGO (pure-Go `modernc.org/sqlite`). Front-end assets are embedded with `embed.FS`, so the binary is fully self-contained. Per the spec's rule, no source file is longer than about 300 lines.
 

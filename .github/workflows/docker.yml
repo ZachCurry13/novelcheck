@@ -2,6 +2,9 @@
 # (ghcr.io/zachcurry13/novelcheck) so TrueNAS can install it without building.
 #   push to main   -> :latest
 #   tag v1.2.3     -> :1.2.3, :1.2, :latest  + a GitHub Release
+#   manual run     -> Actions > Docker image > Run workflow, enter a version
+#                     (e.g. 1.0.0) to publish :1.0.0 + :latest and create
+#                     the v1.0.0 tag and GitHub Release in one step.
 name: Docker image
 
 on:
@@ -10,6 +13,11 @@ on:
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version without the v (e.g. 1.0.0). Leave blank to just rebuild."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -46,7 +54,8 @@ jobs:
         with:
           images: ghcr.io/zachcurry13/novelcheck
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || inputs.version != '' }}
+            type=raw,value=${{ inputs.version }},enable=${{ inputs.version != '' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,format=short
@@ -63,12 +72,17 @@ jobs:
 
   release:
     needs: image
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.version != ''
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.version != '' && format('v{0}', inputs.version) || github.ref_name }}
     steps:
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.TAG }}
+          name: NovelCheck ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
           generate_release_notes: true
           body: |
-            Container image: `ghcr.io/zachcurry13/novelcheck:${{ github.ref_name }}` (also `:latest`).
+            Container image: `ghcr.io/zachcurry13/novelcheck:latest` (also tagged with this version number, without the leading v).
             TrueNAS install guide: https://github.com/ZachCurry13/novelcheck/blob/main/docs/TRUENAS.md
