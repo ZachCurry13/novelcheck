@@ -39,7 +39,7 @@ Open `http://<host>:8080` and create your admin account on the welcome page. Do 
 
 Then, in **Admin**:
 1. Under **Calibre Library**, pick your library folder.
-2. Under **LLM Analysis Engine**, pick an AI provider and paste its API key. For local Ollama use `http://ollama:11434/v1` with `llama3.2`, and turn off JSON mode if your server rejects `response_format`.
+2. Under **LLM Analysis Engine**, pick an AI provider and paste its API key. **Show setup steps** walks through each provider; the same guide is in [docs/AI_PROVIDERS.md](docs/AI_PROVIDERS.md). For local Ollama use `http://ollama:11434/v1` with `llama3.2`, and turn off JSON mode if your server rejects `response_format`.
 3. Click **Analyze batch**. Pending books are processed within your token cap.
 4. Add editor and restricted users, and set content rules.
 

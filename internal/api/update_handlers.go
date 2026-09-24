@@ -26,3 +26,8 @@ func (s *Server) handleUpdates(w http.ResponseWriter, r *http.Request) {
 		"changelog":      novelcheck.Changelog,
 	})
 }
+
+// handleProviderGuide returns the AI provider setup guide (Markdown).
+func (s *Server) handleProviderGuide(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]string{"markdown": novelcheck.ProviderGuide})
+}

@@ -98,7 +98,7 @@ Open the **Admin** tab.
 1. **Pick your Calibre library:** in the **Calibre Library** box, click **Find libraries automatically** and then **Use this** next to your library. Or click **Browse folders…**, click through to it (for example `books` → `Clean Library`), and click **Use this**. Folders that are Calibre libraries show a 📚 **Calibre library** badge. NovelCheck then loads your books, which takes a few seconds.
 2. **AI settings** (the AI that rates books), in the **LLM Analysis Engine** box:
    - Pick your **AI provider**: OpenAI, Anthropic Claude, Google Gemini, Perplexity, or Ollama (a free AI running on your own server). NovelCheck fills in the right address, a small low-cost model, and prices.
-   - Paste the provider's **API key**. The hint under the menu says where to get one. Ollama doesn't need a key.
+   - Paste the provider's **API key**. Click **Show setup steps** under the menu for step-by-step instructions for that provider, or see [AI_PROVIDERS.md](AI_PROVIDERS.md). Not sure which to choose? Click **Which one should I pick?**. Ollama doesn't need a key.
    - Click **Save settings**.
 3. Set **Batch size** to something small like `5`, then click **Analyze batch**. Watch "Tokens this hour" and "Spent to date" to see real costs before running bigger batches.
 4. **Accounts:** under **Users & Content Rules**, add everyone else:

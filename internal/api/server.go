@@ -89,6 +89,7 @@ func (s *Server) Router() http.Handler {
 				r.Use(auth.RequireAdmin)
 				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)
 				r.Get("/admin/settings", s.handleGetSettings)
+				r.Get("/admin/provider-guide", s.handleProviderGuide)
 				r.Put("/admin/settings", s.handlePutSettings)
 				r.Post("/admin/wipe-queue", s.handleWipeQueue)
 				r.Get("/admin/calibre/browse", s.handleCalibreBrowse)

@@ -13,25 +13,38 @@ function inline(s) {
 
 export function renderMarkdown(md) {
   const out = [];
-  let list = false;
+  let list = null; // "ul" | "ol" | null
   const closeList = () => {
-    if (list) out.push("</ul>");
-    list = false;
+    if (list) out.push(`</${list}>`);
+    list = null;
+  };
+  const openList = (type) => {
+    if (list === type) return;
+    closeList();
+    out.push(type === "ol" ? '<ol class="list-decimal space-y-1 pl-5">' : '<ul class="list-disc space-y-1 pl-5">');
+    list = type;
   };
   for (const raw of String(md || "").split("\n")) {
     const line = raw.trimEnd();
     const h = line.match(/^(#{1,4})\s+(.*)$/);
-    const li = line.match(/^\s*[-*]\s+(.*)$/);
+    const ol = line.match(/^\d+\.\s+(.*)$/);
+    const ul = line.match(/^\s*[-*]\s+(.*)$/);
     if (h) {
       closeList();
       const size = ["text-xl", "text-lg", "text-base", "text-sm"][h[1].length - 1];
       out.push(`<h${h[1].length + 1} class="${size} mt-4 mb-1 font-semibold">${inline(h[2])}</h${h[1].length + 1}>`);
-    } else if (li) {
-      if (!list) out.push('<ul class="list-disc space-y-1 pl-5">');
-      list = true;
-      out.push(`<li>${inline(li[1])}</li>`);
+    } else if (ol) {
+      openList("ol");
+      out.push(`<li>${inline(ol[1])}</li>`);
+    } else if (ul && list === "ol" && /^\s+/.test(line)) {
+      // indented bullet under a numbered step: keep it inside that step
+      const last = out.length - 1;
+      out[last] = out[last].replace(/<\/li>$/, `<br><span class="ml-2 inline-block">• ${inline(ul[1])}</span></li>`);
+    } else if (ul) {
+      openList("ul");
+      out.push(`<li>${inline(ul[1])}</li>`);
     } else if (!line.trim()) {
-      closeList();
+      if (list !== "ol") closeList(); // numbered steps may be separated by blank lines
     } else {
       closeList();
       out.push(`<p class="my-2">${inline(line)}</p>`);

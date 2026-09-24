@@ -1,4 +1,4 @@
-// Package novelcheck exposes repository-level assets to the application.
+// Package novelcheck exposes repository-level documents bundled into the app.
 package novelcheck
 
 import _ "embed"
@@ -8,3 +8,9 @@ import _ "embed"
 //
 //go:embed CHANGELOG.md
 var Changelog string
+
+// ProviderGuide is docs/AI_PROVIDERS.md, shown in Admin → LLM Analysis Engine
+// as step-by-step setup instructions for each AI provider.
+//
+//go:embed docs/AI_PROVIDERS.md
+var ProviderGuide string
