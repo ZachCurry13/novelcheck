@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.13.0]
+
+### New
+- **Backup AI**: a new **Admin → Backup AI (optional)** section sets up a second AI that takes over when the main one fails: another Ollama on your network (the **Find Ollama** helper works here too) or a cloud AI like OpenAI or Claude. If the main server is switched off, NovelCheck goes straight to the backup instead of waiting on each model. The 🔔 bell tells you when the backup was used, and each AI's cost is counted at its own prices.
+- **Public address check**: **Check everything** now loads your remote-access address from the internet and confirms NovelCheck answers, not just that the tunnel is connected. It explains what to fix (missing Public Hostname, wrong service address), or tells you the problem is your device's network when the site works from outside.
+
+### Changed
+- **Clearer "AI server is off" message**: Check everything says "Can't reach the AI server" with what to check, instead of a technical "dial tcp" error. AI diagnosis also uses the backup AI when the main one is down.
+
 ## [1.12.0]
 
 ### New

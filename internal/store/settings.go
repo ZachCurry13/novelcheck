@@ -7,18 +7,29 @@ import (
 
 // Setting keys editable from the admin panel.
 const (
-	KeyLLMProvider        = "llm_provider" // "openai" (any OpenAI-compatible API) or "anthropic" (Claude)
-	KeyLLMBaseURL         = "llm_base_url"
-	KeyLLMAPIKey          = "llm_api_key"
-	KeyLLMModel           = "llm_model"
-	KeyLLMFallbackModel   = "llm_fallback_model"
-	KeyLLMJSONMode        = "llm_json_mode"
-	KeyPriceInputPerM     = "price_input_per_million"
-	KeyPriceOutputPerM    = "price_output_per_million"
-	KeyBatchSize          = "batch_size"
-	KeyTokensPerHour      = "tokens_per_hour_cap"
-	KeyScanDelaySeconds   = "scan_delay_seconds"
-	KeyLLMTimeoutSeconds  = "llm_timeout_seconds" // 0 = automatic (10 min on your network, 2 min for cloud)
+	KeyLLMProvider       = "llm_provider" // "openai" (any OpenAI-compatible API) or "anthropic" (Claude)
+	KeyLLMBaseURL        = "llm_base_url"
+	KeyLLMAPIKey         = "llm_api_key"
+	KeyLLMModel          = "llm_model"
+	KeyLLMFallbackModel  = "llm_fallback_model"
+	KeyLLMJSONMode       = "llm_json_mode"
+	KeyPriceInputPerM    = "price_input_per_million"
+	KeyPriceOutputPerM   = "price_output_per_million"
+	KeyBatchSize         = "batch_size"
+	KeyTokensPerHour     = "tokens_per_hour_cap"
+	KeyScanDelaySeconds  = "scan_delay_seconds"
+	KeyLLMTimeoutSeconds = "llm_timeout_seconds" // 0 = automatic (10 min on your network, 2 min for cloud)
+
+	// Backup AI: a second provider tried when the main one fails.
+	KeyBackupEnabled  = "backup_llm_enabled"
+	KeyBackupProvider = "backup_llm_provider"
+	KeyBackupBaseURL  = "backup_llm_base_url"
+	KeyBackupAPIKey   = "backup_llm_api_key"
+	KeyBackupModel    = "backup_llm_model" // one or more, comma-separated, in order
+	KeyBackupJSONMode = "backup_llm_json_mode"
+	KeyBackupPriceIn  = "backup_price_input_per_million"
+	KeyBackupPriceOut = "backup_price_output_per_million"
+
 	KeyGoogleBooksAPIKey  = "google_books_api_key"
 	KeySMTPHost           = "smtp_host"
 	KeySMTPPort           = "smtp_port"
@@ -53,6 +64,13 @@ var Defaults = map[string]string{
 	KeyTokensPerHour:      "25000",
 	KeyScanDelaySeconds:   "2",
 	KeyLLMTimeoutSeconds:  "0",
+	KeyBackupEnabled:      "false",
+	KeyBackupProvider:     "openai",
+	KeyBackupBaseURL:      "",
+	KeyBackupModel:        "",
+	KeyBackupJSONMode:     "true",
+	KeyBackupPriceIn:      "0",
+	KeyBackupPriceOut:     "0",
 	KeySMTPPort:           "587",
 	KeyCalibrePollHours:   "6",
 	KeyCalibreLibraryPath: "",
@@ -63,7 +81,7 @@ var Defaults = map[string]string{
 }
 
 // SecretKeys are never returned to the browser in clear text.
-var SecretKeys = map[string]bool{KeyLLMAPIKey: true, KeySMTPPassword: true, KeyGoogleBooksAPIKey: true, KeyTunnelToken: true, KeyCalibreSrvPassword: true}
+var SecretKeys = map[string]bool{KeyLLMAPIKey: true, KeyBackupAPIKey: true, KeySMTPPassword: true, KeyGoogleBooksAPIKey: true, KeyTunnelToken: true, KeyCalibreSrvPassword: true}
 
 // AllSettings returns stored values merged over defaults.
 func (s *Store) AllSettings() (map[string]string, error) {

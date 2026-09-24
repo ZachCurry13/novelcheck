@@ -39,6 +39,15 @@ func TestOllamaUseModelOrder(t *testing.T) {
 	if res, _ := admin.do("POST", "/api/admin/ollama/use", map[string]any{"url": ol.URL, "models": []string{"qwen2.5:7b", "nope:1b"}}, true); res.StatusCode != 400 {
 		t.Fatalf("unknown model must be refused: %d", res.StatusCode)
 	}
+	// "Use as backup" fills the backup AI and leaves the main one alone.
+	res, out = admin.do("POST", "/api/admin/ollama/use", map[string]any{"url": ol.URL, "models": []string{"llama3.1:8b", "llama3.2:latest"}, "target": "backup"}, true)
+	if res.StatusCode != 200 || out["target"] != "backup" {
+		t.Fatalf("use as backup: %d %v", res.StatusCode, out)
+	}
+	ais := st.AIConfigs()
+	if len(ais) != 2 || ais[0].Models[0] != "qwen2.5:7b" || ais[1].Name != "backup" || len(ais[1].Models) != 2 || ais[1].BaseURL != ol.URL+"/v1" {
+		t.Fatalf("ai configs: %+v", ais)
+	}
 	// The single-model form still works and clears old fallbacks.
 	if res, out := admin.do("POST", "/api/admin/ollama/use", map[string]any{"url": ol.URL, "model": "llama3.2"}, true); res.StatusCode != 200 || out["fallback"] != "" {
 		t.Fatalf("single model: %d %v", res.StatusCode, out)

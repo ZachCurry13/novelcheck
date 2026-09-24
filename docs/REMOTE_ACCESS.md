@@ -68,5 +68,8 @@ If you'd rather run the tunnel as its own TrueNAS app (for example because you a
 - **Status stays "Starting" or shows "Retrying":** check the token. Copy it again from **Zero Trust → Networks → Tunnels → novelcheck → Configure**, paste it, and click **Save & connect**. The log box shows Cloudflare's messages.
 - **"Cloudflare rejected the tunnel token":** the token was cut short or the tunnel was deleted. Copy a fresh one.
 - **Connected, but the address shows a Cloudflare error page (502 or 1033):** the route's URL is wrong. It must be `localhost:8080` with type `HTTP`, or `YOUR-TRUENAS-IP:30080` if you use the separate Cloudflared app.
-- **The address doesn't load at all:** new addresses can take a few minutes to start working. Also check the domain is **Active** in the Cloudflare dashboard.
+- **The address doesn't load at all:** first open **System → Check everything** and look at **Public address**. NovelCheck loads your address from the internet and tells you whether it really works.
+  - **"Opens from the internet"** but your phone or computer says the page can't be found: that device's network remembers an old "not found" answer (for up to 30 minutes). Try your phone on mobile data with Wi-Fi off, wait a bit, run `ipconfig /flushdns` on Windows, or restart your router. A Pi-hole or ad-blocking DNS can also block new addresses.
+  - **"doesn't exist in DNS yet"**: add the address under the tunnel's **Public Hostname** tab and check the domain is **Active** in the Cloudflare dashboard.
+- **The log says "QUIC connection failed" and "suggested_protocol=http2":** harmless. Your network blocks UDP port 7844 to one of Cloudflare's regions, so cloudflared uses HTTP/2 instead. The "receive buffer size" warning is harmless too.
 - **"cloudflared is not installed":** you're running an old NovelCheck image. Update NovelCheck (see "Updating NovelCheck" in the TrueNAS guide).

@@ -24,7 +24,8 @@ const defaultTokensPerBook = 900
 
 var numericKeys = map[string]bool{
 	store.KeyPriceInputPerM: true, store.KeyPriceOutputPerM: true, store.KeyBatchSize: true,
-	store.KeyTokensPerHour: true, store.KeyScanDelaySeconds: true, store.KeyLLMTimeoutSeconds: true, store.KeySMTPPort: true,
+	store.KeyTokensPerHour: true, store.KeyScanDelaySeconds: true, store.KeyLLMTimeoutSeconds: true,
+	store.KeyBackupPriceIn: true, store.KeyBackupPriceOut: true, store.KeySMTPPort: true,
 	store.KeyCalibrePollHours: true, store.KeySessionDays: true,
 }
 
@@ -60,7 +61,7 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pin, pout := s.Store.SettingFloat(store.KeyPriceInputPerM), s.Store.SettingFloat(store.KeyPriceOutputPerM)
-	spent := float64(usage.TotalPrompt)*pin/1e6 + float64(usage.TotalCompletion)*pout/1e6
+	spent := s.Store.SpentUSD()
 	perBook := usage.AvgPerBook
 	if perBook == 0 {
 		perBook = defaultTokensPerBook
@@ -120,7 +121,7 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		if k == store.KeyLLMProvider && v != "openai" && v != "anthropic" {
+		if (k == store.KeyLLMProvider || k == store.KeyBackupProvider) && v != "openai" && v != "anthropic" {
 			writeErr(w, http.StatusBadRequest, "llm_provider must be openai or anthropic")
 			return
 		}
@@ -130,13 +131,13 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		if k == store.KeyLLMJSONMode || k == store.KeyCheckUpdates {
+		if k == store.KeyLLMJSONMode || k == store.KeyCheckUpdates || k == store.KeyBackupEnabled || k == store.KeyBackupJSONMode {
 			if _, err := strconv.ParseBool(v); err != nil {
 				writeErr(w, http.StatusBadRequest, k+" must be true or false")
 				return
 			}
 		}
-		if k == store.KeyLLMBaseURL {
+		if k == store.KeyLLMBaseURL || k == store.KeyBackupBaseURL {
 			v = llm.NormalizeBaseURL(v)
 		}
 		body[k] = v

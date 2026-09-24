@@ -35,6 +35,7 @@ type ollamaModelReq struct {
 	URL    string   `json:"url"`
 	Model  string   `json:"model"`
 	Models []string `json:"models"` // "use": in order, main model first
+	Target string   `json:"target"` // "use": "" = main AI, "backup" = backup AI
 }
 
 func (s *Server) handleOllamaPull(w http.ResponseWriter, r *http.Request) {
@@ -98,6 +99,20 @@ func (s *Server) handleOllamaUse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	model, fallbacks := chosen[0], strings.Join(chosen[1:], ",")
+	if body.Target == "backup" {
+		for k, v := range map[string]string{
+			store.KeyBackupEnabled: "true", store.KeyBackupProvider: "openai", store.KeyBackupBaseURL: base + "/v1",
+			store.KeyBackupAPIKey: "", store.KeyBackupModel: strings.Join(chosen, ","), store.KeyBackupJSONMode: "true",
+			store.KeyBackupPriceIn: "0", store.KeyBackupPriceOut: "0",
+		} {
+			if err := s.Store.SetSetting(k, v); err != nil {
+				writeStoreErr(w, err)
+				return
+			}
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"base_url": base + "/v1", "model": strings.Join(chosen, ","), "target": "backup"})
+		return
+	}
 	for k, v := range map[string]string{
 		store.KeyLLMProvider: "openai", store.KeyLLMBaseURL: base + "/v1", store.KeyLLMAPIKey: "",
 		store.KeyLLMModel: model, store.KeyLLMFallbackModel: fallbacks, store.KeyLLMJSONMode: "true",

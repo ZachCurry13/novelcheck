@@ -101,7 +101,8 @@ CREATE TABLE IF NOT EXISTS token_usage (
     book_id           INTEGER,
     model             TEXT NOT NULL,
     prompt_tokens     INTEGER NOT NULL DEFAULT 0,
-    completion_tokens INTEGER NOT NULL DEFAULT 0
+    completion_tokens INTEGER NOT NULL DEFAULT 0,
+    cost              REAL                           -- USD at the time; NULL on older rows
 );
 CREATE INDEX IF NOT EXISTS idx_token_usage_at ON token_usage(at);
 

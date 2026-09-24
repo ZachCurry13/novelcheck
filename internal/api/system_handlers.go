@@ -25,9 +25,8 @@ func (s *Server) handleSystem(w http.ResponseWriter, r *http.Request) {
 		out["counts"] = counts
 	}
 	if u, err := s.Store.Usage(); err == nil {
-		pin, pout := s.Store.SettingFloat(store.KeyPriceInputPerM), s.Store.SettingFloat(store.KeyPriceOutputPerM)
 		out["usage"] = u
-		out["cost_spent"] = float64(u.TotalPrompt)*pin/1e6 + float64(u.TotalCompletion)*pout/1e6
+		out["cost_spent"] = s.Store.SpentUSD()
 	}
 	if base := ollamaBase(s.Store.Setting(store.KeyLLMBaseURL)); base != "" {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)

@@ -67,6 +67,16 @@ Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and
 5. Under **2. Tick the models to use and put them in order**, tick the models you want and use **↑ / ↓** to order them. **#1** rates every book; if it fails on a book, **#2** tries, then **#3**, and so on. Click **Use these models in this order**. NovelCheck fills in all the settings for you, including $0 prices. Click **Save settings** to keep any other changes you made in the box.
 6. Try a batch of 2 or 3 books first to see how long each one takes.
 
+## Backup AI (optional)
+
+A second AI that takes over when the main one fails, for example a second Ollama on another computer, or a cloud AI like OpenAI for when your server is off.
+
+1. **Admin → Backup AI (optional)**: tick **Use a backup AI when the main one fails**.
+2. Pick the backup's **AI provider**. For a second Ollama, type its address in the Ollama box (for example `192.168.1.60:11434`), click **Find Ollama**, tick its models in order and click **Use these models in this order**. For a cloud AI, paste its API key and model like in the sections above.
+3. Click **Save settings**, then **System → Check everything** to see both AIs answer.
+
+When the main AI fails on a book, NovelCheck tries the backup. If the main server can't be reached at all, it goes straight to the backup instead of waiting on each model. The 🔔 bell tells you when the backup was used. Each AI's cost is counted at its own prices.
+
 ## Other OpenAI-compatible services
 
 Many services and self-hosted tools (vLLM, LM Studio, OpenRouter, Groq, Together, and others) accept the same requests as OpenAI.

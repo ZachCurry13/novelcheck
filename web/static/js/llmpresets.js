@@ -36,10 +36,21 @@ export const PRESETS = {
   other: { label: "Other (OpenAI-compatible)", guide: "Other OpenAI-compatible", hint: "Any service with an OpenAI-style /chat/completions endpoint, such as vLLM or LM Studio." },
 };
 
+// keyFor maps a main-AI setting to its backup-AI twin (prefix "backup_").
+// The backup keeps all its models in one ordered list, so it has no
+// separate fallback field.
+export function keyFor(prefix, key) {
+  if (!prefix) return key;
+  if (key === "llm_fallback_model") return null;
+  return prefix + key;
+}
+
 // Guess which preset matches the saved settings.
-function detect(s) {
-  if (s.llm_provider === "anthropic") return "claude";
-  const url = s.llm_base_url || "";
+function detect(s, prefix) {
+  const k = (key) => s[keyFor(prefix, key)];
+  if (k("llm_provider") === "anthropic") return "claude";
+  const url = k("llm_base_url") || "";
+  if (!url && prefix) return "ollama"; // a new backup: a second Ollama is the common case
   if (url.includes("api.openai.com")) return "openai";
   if (url.includes("generativelanguage.googleapis.com")) return "gemini";
   if (url.includes("api.perplexity.ai")) return "perplexity";
@@ -48,40 +59,44 @@ function detect(s) {
   return "other";
 }
 
-const row = (form, key) => $(`[data-key="${key}"]`, form)?.closest("div, label");
+const row = (form, key) => key && $(`[data-key="${key}"]`, form)?.closest("div, label");
 
-export function initProviderPicker(host, form, settings) {
+// initProviderPicker adds the provider menu, setup guides and the Ollama
+// helper. prefix "" edits the main AI; "backup_" edits the backup AI.
+export function initProviderPicker(host, form, settings, prefix = "") {
+  const id = (name) => `${prefix}${name}`;
   host.innerHTML = `
-    <label class="label" for="llm-preset">AI provider</label>
-    <select id="llm-preset" class="input">
+    <label class="label" for="${id("llm-preset")}">AI provider</label>
+    <select id="${id("llm-preset")}" data-preset class="input">
       ${Object.entries(PRESETS).map(([k, p]) => `<option value="${k}">${esc(p.label)}</option>`).join("")}
     </select>
-    <p id="llm-hint" class="mt-1 text-xs text-slate-400"></p>
+    <p data-hint class="mt-1 text-xs text-slate-400"></p>
     <div class="mt-2 flex flex-wrap gap-2">
-      <button type="button" id="llm-guide-btn" class="btn-secondary py-1 text-xs">Show setup steps</button>
-      <button type="button" id="llm-compare-btn" class="btn-ghost py-1 text-xs">Which one should I pick?</button>
+      <button type="button" data-guide-btn class="btn-secondary py-1 text-xs">Show setup steps</button>
+      <button type="button" data-compare-btn class="btn-ghost py-1 text-xs">Which one should I pick?</button>
     </div>
-    <div id="llm-guide" class="mt-2 hidden rounded-lg bg-slate-800/60 p-4 text-sm leading-relaxed text-slate-300"></div>
-    <div id="ollama-helper" class="mt-2 hidden"></div>`;
-  const select = $("#llm-preset", host);
+    <div data-guide class="mt-2 hidden rounded-lg bg-slate-800/60 p-4 text-sm leading-relaxed text-slate-300"></div>
+    <div data-ollama-helper class="mt-2 hidden"></div>`;
+  const select = $("[data-preset]", host);
   const set = (key, value) => {
-    const el = $(`[data-key="${key}"]`, form);
+    const k = keyFor(prefix, key);
+    const el = k && $(`[data-key="${k}"]`, form);
     if (!el || value === undefined) return;
     if (el.type === "checkbox") el.checked = value;
     else el.value = value;
   };
   const showFor = (name) => {
     const claude = name === "claude";
-    row(form, "llm_base_url")?.classList.toggle("hidden", claude);
-    row(form, "llm_json_mode")?.classList.toggle("hidden", claude);
-    $("#llm-hint", host).textContent = PRESETS[name].hint;
-    const helper = $("#ollama-helper", host);
+    row(form, keyFor(prefix, "llm_base_url"))?.classList.toggle("hidden", claude);
+    row(form, keyFor(prefix, "llm_json_mode"))?.classList.toggle("hidden", claude);
+    $("[data-hint]", host).textContent = PRESETS[name].hint;
+    const helper = $("[data-ollama-helper]", host);
     helper.classList.toggle("hidden", name !== "ollama");
-    if (name === "ollama" && !helper.childElementCount) renderOllamaHelper(helper, form);
+    if (name === "ollama" && !helper.childElementCount) renderOllamaHelper(helper, form, prefix);
   };
   // Setup steps come from docs/AI_PROVIDERS.md, bundled into the app.
   let sections = null;
-  const panel = $("#llm-guide", host);
+  const panel = $("[data-guide]", host);
   const showGuide = async (heading) => {
     if (!sections) {
       const data = await attempt(() => get("/api/admin/provider-guide"));
@@ -92,17 +107,18 @@ export function initProviderPicker(host, form, settings) {
     panel.innerHTML = sec ? renderMarkdown("## " + sec) : "<p>No guide for this provider.</p>";
     panel.classList.remove("hidden");
   };
-  $("#llm-guide-btn", host).addEventListener("click", () => showGuide(PRESETS[select.value].guide));
-  $("#llm-compare-btn", host).addEventListener("click", () => showGuide("Which one should I pick?"));
+  $("[data-guide-btn]", host).addEventListener("click", () => showGuide(PRESETS[select.value].guide));
+  $("[data-compare-btn]", host).addEventListener("click", () => showGuide("Which one should I pick?"));
 
-  select.value = detect(settings);
+  select.value = detect(settings, prefix);
   showFor(select.value);
   select.addEventListener("change", () => {
     const p = PRESETS[select.value];
     set("llm_provider", p.provider || "openai");
     if (select.value !== "other") {
       set("llm_base_url", p.base);
-      set("llm_model", p.model);
+      // The backup lists every model in one field, in order.
+      set("llm_model", prefix && p.fallback ? `${p.model},${p.fallback}` : p.model);
       set("llm_fallback_model", p.fallback);
       set("llm_json_mode", p.json);
       set("price_input_per_million", p.pin);

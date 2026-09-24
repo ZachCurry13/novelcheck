@@ -17,6 +17,16 @@ const SECTIONS = [
     ["llm_json_mode", "JSON response mode", "true / false", "bool"],
     ["google_books_api_key", "Google Books API key (optional)", "", "password"],
   ]],
+  ["Backup AI (optional)", [
+    ["backup_llm_enabled", "Use a backup AI when the main one fails (a second Ollama, or a cloud AI)", "", "bool"],
+    ["backup_llm_provider", "", "", "hidden"],
+    ["backup_llm_base_url", "API base URL", "http://192.168.1.60:11434/v1 · https://api.openai.com/v1"],
+    ["backup_llm_api_key", "API key", "Leave blank for Ollama", "password"],
+    ["backup_llm_model", "Model(s), in order", "e.g. llama3.2, or gpt-4o-mini; several? separate with commas"],
+    ["backup_llm_json_mode", "JSON response mode", "", "bool"],
+    ["backup_price_input_per_million", "Input price per 1M tokens (USD)", "0 for Ollama", "number"],
+    ["backup_price_output_per_million", "Output price per 1M tokens (USD)", "0 for Ollama", "number"],
+  ]],
   ["Rate Caps & Batching", [
     ["batch_size", "Books per batch", "20", "number"],
     ["tokens_per_hour_cap", "Max tokens per hour (0 = unlimited)", "25000", "number"],
@@ -121,6 +131,7 @@ async function renderSettings(view) {
       ${title.startsWith("SMTP") ? `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>` : ""}
       ${title.startsWith("Calibre") ? `<div id="calibre-picker"></div><div id="calibre-server"></div>` : ""}
       ${title.startsWith("LLM") ? `<div id="llm-preset-host"></div>` : ""}
+      ${title.startsWith("Backup") ? `<p id="backup-note" class="text-xs text-slate-400">Tried only when the main AI fails on a book. If the main server is switched off, NovelCheck goes straight to the backup. You'll get a 🔔 notice when the backup is used.</p><div id="backup-preset-host"></div>` : ""}
     </fieldset>`).join("") +
     `<div class="lg:col-span-2"><button class="btn-primary">Save settings</button></div>`;
 
@@ -128,6 +139,11 @@ async function renderSettings(view) {
   const llmHost = $("#llm-preset-host", view);
   llmHost.parentElement.insertBefore(llmHost, llmHost.parentElement.children[1]);
   initProviderPicker(llmHost, $("#settings", view), settings);
+  // Same menu for the backup AI, placed under its on/off switch.
+  const backupHost = $("#backup-preset-host", view);
+  backupHost.parentElement.insertBefore(backupHost, backupHost.parentElement.children[2]);
+  backupHost.parentElement.insertBefore($("#backup-note", view), backupHost);
+  initProviderPicker(backupHost, $("#settings", view), settings, "backup_");
 
   $("#settings", view).addEventListener("submit", async (e) => {
     e.preventDefault();

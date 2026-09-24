@@ -3,6 +3,7 @@
 import { get, post, qs } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";
 import { initialOrder, orderHTML, bindOrder } from "./ollamaorder.js";
+import { keyFor } from "./llmpresets.js";
 
 const MODELS = [
   ["qwen2.5:7b", "Qwen 2.5 7B · 4.7 GB · best, needs GPU"],
@@ -10,26 +11,29 @@ const MODELS = [
   ["llama3.2", "Llama 3.2 3B · 2 GB · fast, no GPU needed"],
 ];
 
-export function renderOllamaHelper(host, form) {
+// prefix "" sets up the main AI; "backup_" the backup AI.
+export function renderOllamaHelper(host, form, prefix = "") {
+  const field = (key) => { const k = keyFor(prefix, key); return k && $(`[data-key="${k}"]`, form); };
   host.innerHTML = `
     <div class="space-y-3 rounded-lg bg-slate-800/60 p-4 text-sm">
-      <p class="font-semibold">Ollama easy setup</p>
+      <p class="font-semibold">Ollama easy setup${prefix ? " (backup)" : ""}</p>
+      ${prefix ? `<p class="text-slate-400">For a second Ollama on your network, type its address (e.g. <code>192.168.1.60:11434</code>) and click Find.</p>` : ""}
       <p class="text-slate-400">First install the <b>Ollama</b> app from TrueNAS <b>Apps → Discover Apps</b> (turn on your GPU there if you have one). Then:</p>
       <div class="flex flex-wrap gap-2">
         <button type="button" data-ol="find" class="btn-primary py-1">1. Find Ollama</button>
-        <input id="ol-url" class="input w-64 max-w-full py-1" placeholder="or type its address, e.g. 192.168.1.50:11434">
+        <input data-ol-url class="input w-64 max-w-full py-1" placeholder="or type its address, e.g. 192.168.1.50:11434">
       </div>
-      <div id="ol-servers" class="space-y-3"></div>
+      <div data-ol-servers class="space-y-3"></div>
     </div>`;
-  const list = $("#ol-servers", host);
+  const list = $("[data-ol-servers]", host);
   // Start from the address already saved, if it isn't the placeholder.
-  const saved = $('[data-key="llm_base_url"]', form)?.value || "";
-  if (saved && !saved.includes("YOUR-TRUENAS-IP")) $("#ol-url", host).value = saved.replace(/\/v1\/?$/, "");
+  const saved = field("llm_base_url")?.value || "";
+  if (saved && !saved.includes("YOUR-TRUENAS-IP")) $("[data-ol-url]", host).value = saved.replace(/\/v1\/?$/, "");
   let pollTimer = null;
 
   async function find() {
     list.innerHTML = `<p class="text-slate-400">Looking for Ollama…</p>`;
-    const data = await attempt(() => get("/api/admin/ollama/find" + qs({ url: $("#ol-url", host).value.trim() })));
+    const data = await attempt(() => get("/api/admin/ollama/find" + qs({ url: $("[data-ol-url]", host).value.trim() })));
     if (!data) return (list.innerHTML = "");
     if (!data.servers.length) {
       list.innerHTML = `<p class="text-amber-300">Ollama wasn't found. Check the Ollama app is <b>Running</b> in TrueNAS,
@@ -42,8 +46,8 @@ export function renderOllamaHelper(host, form) {
 
   const orders = {}; // server url -> { list }
   function serverCard(s) {
-    const current = [$('[data-key="llm_model"]', form)?.value || "",
-      ...($('[data-key="llm_fallback_model"]', form)?.value || "").split(",")].map((m) => m.trim()).filter(Boolean);
+    const current = [...(field("llm_model")?.value || "").split(","),
+      ...(field("llm_fallback_model")?.value || "").split(",")].map((m) => m.trim()).filter(Boolean);
     orders[s.url] = { list: initialOrder(s.models, current) };
     if (!orders[s.url].list.some((m) => m.on) && orders[s.url].list.length) orders[s.url].list[0].on = true;
     return `
@@ -90,13 +94,23 @@ export function renderOllamaHelper(host, form) {
   async function use(url) {
     const models = (orders[url]?.list || []).filter((m) => m.on).map((m) => m.name);
     if (!models.length) return toast("Tick at least one model", true);
-    const r = await attempt(() => post("/api/admin/ollama/use", { url, models }));
+    const r = await attempt(() => post("/api/admin/ollama/use", { url, models, target: prefix ? "backup" : "" }));
     if (!r) return;
     // Reflect the saved settings in the form without reloading the page.
     const set = (k, v) => {
-      const el = $(`[data-key="${k}"]`, form);
+      const el = field(k);
       if (el) el.type === "checkbox" ? (el.checked = v) : (el.value = v);
     };
+    if (prefix) {
+      set("llm_enabled", true);
+      set("llm_provider", "openai");
+      set("llm_base_url", r.base_url);
+      set("llm_model", r.model);
+      set("llm_json_mode", true);
+      set("price_input_per_million", "0");
+      set("price_output_per_million", "0");
+      return toast(`Backup AI set: ${r.model.split(",").join(" then ")} at ${r.base_url}. It's used when the main AI fails.`);
+    }
     set("llm_provider", "openai");
     set("llm_base_url", r.base_url);
     set("llm_model", r.model);

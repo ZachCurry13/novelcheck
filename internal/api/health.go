@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/delivery"
 	"github.com/zachcurry13/novelcheck/internal/enrich"
@@ -37,6 +38,10 @@ type check struct {
 // failures as notifications (passing checks resolve earlier ones).
 func (s *Server) runChecks(ctx context.Context) []CheckResult {
 	checks := s.checks()
+	anyLocal := false
+	for _, ai := range s.Store.AIConfigs() {
+		anyLocal = anyLocal || llm.IsLocal(ai.BaseURL)
+	}
 	out := make([]CheckResult, len(checks))
 	var wg sync.WaitGroup
 	for i, c := range checks {
@@ -44,7 +49,7 @@ func (s *Server) runChecks(ctx context.Context) []CheckResult {
 		go func() {
 			defer wg.Done()
 			limit := 10 * time.Second
-			if strings.HasPrefix(c.id, "llm") && llm.IsLocal(s.Store.Setting(store.KeyLLMBaseURL)) {
+			if strings.HasPrefix(c.id, "llm") && anyLocal {
 				limit = 90 * time.Second // a local model may need to load first
 			} else if strings.HasPrefix(c.id, "llm") {
 				limit = 30 * time.Second
@@ -74,22 +79,26 @@ func errResult(err error, fix string) (string, string, string) { return "error",
 
 func (s *Server) checks() []check {
 	set := s.Store.Setting
-	cs := []check{
-		{"llm", "AI provider (" + set(store.KeyLLMModel) + ")", "#/admin", func(ctx context.Context) (string, string, string) {
-			return s.checkModel(ctx, set(store.KeyLLMModel))
-		}},
-	}
-	for i, fb := range s.Store.LLMModels() {
-		if i == 0 {
-			continue // the main model is checked above
+	var cs []check
+	for _, ai := range s.Store.AIConfigs() {
+		models := ai.Models
+		if len(models) == 0 {
+			models = []string{""}
 		}
-		id := "llm-fallback"
-		if i > 1 {
-			id = fmt.Sprintf("llm-fallback-%d", i)
+		for i, model := range models {
+			id, name := "llm", "AI provider ("+model+")"
+			switch {
+			case ai.Name == "backup":
+				id, name = fmt.Sprintf("llm-backup-%d", i+1), fmt.Sprintf("Backup AI #%d (%s)", i+1, model)
+			case i == 1:
+				id, name = "llm-fallback", fmt.Sprintf("AI fallback #%d (%s)", i, model)
+			case i > 1:
+				id, name = fmt.Sprintf("llm-fallback-%d", i), fmt.Sprintf("AI fallback #%d (%s)", i, model)
+			}
+			cs = append(cs, check{id, name, "#/admin", func(ctx context.Context) (string, string, string) {
+				return s.checkModel(ctx, ai, model)
+			}})
 		}
-		cs = append(cs, check{id, fmt.Sprintf("AI fallback #%d (%s)", i, fb), "#/admin", func(ctx context.Context) (string, string, string) {
-			return s.checkModel(ctx, fb)
-		}})
 	}
 	cs = append(cs,
 		check{"openlibrary", "Open Library (book blurbs)", "", func(ctx context.Context) (string, string, string) {
@@ -158,6 +167,11 @@ func (s *Server) checks() []check {
 			}
 			return "error", "Not connected (" + st.State + ")" + strings.TrimSpace(" "+st.LastError), "Open Admin → Remote access and check the token and the connector log."
 		}})
+		if host := strings.TrimSpace(set(store.KeyTunnelHostname)); host != "" {
+			cs = append(cs, check{"public-address", "Public address (" + host + ")", "#/admin", func(ctx context.Context) (string, string, string) {
+				return checkPublicAddress(ctx, "https://"+host)
+			}})
+		}
 	}
 	if base := ollamaBase(set(store.KeyLLMBaseURL)); base != "" {
 		cs = append(cs, check{"ollama", "Ollama server", "#/system", func(ctx context.Context) (string, string, string) {
@@ -184,16 +198,28 @@ func (s *Server) checks() []check {
 }
 
 // checkModel sends a tiny request (a few tokens) to confirm the model answers.
-func (s *Server) checkModel(ctx context.Context, model string) (string, string, string) {
+func (s *Server) checkModel(ctx context.Context, ai store.AIConfig, model string) (string, string, string) {
 	if model == "" {
 		return "error", "No model set", "Pick an AI provider in Admin → LLM Analysis Engine."
 	}
-	out, usage, err := s.llmClient().Complete(ctx, model, "You are a health check. Reply with the single word OK.", "ping")
+	// JSON mode off: the health check asks for a plain "OK", not JSON.
+	client := llm.New(ai.Provider, ai.BaseURL, ai.APIKey, false)
+	out, usage, err := client.Complete(ctx, model, "You are a health check. Reply with the single word OK.", "ping")
 	if errors.Is(err, context.DeadlineExceeded) {
-		if llm.IsLocal(s.Store.Setting(store.KeyLLMBaseURL)) {
+		if llm.IsLocal(ai.BaseURL) {
 			return "error", "No answer in time", "Ollama may still be loading the model: wait a minute and check again. If it keeps happening, the model is probably running on the CPU (see Usage → Ollama) or is too big for your GPU; try a smaller one."
 		}
 		return "error", "No answer in time", "The AI service is slow or unreachable right now. Try again shortly."
+	}
+	if analyzer.Unreachable(err) {
+		fix := "Check the address in Admin → LLM Analysis Engine, and that the AI server is switched on."
+		if llm.IsLocal(ai.BaseURL) {
+			fix = "Is Ollama running? In TrueNAS open Apps and check the Ollama app says Running, and that the address and port are right."
+		}
+		if ai.Name == "main" && len(s.Store.AIConfigs()) > 1 {
+			fix += " Meanwhile the backup AI rates books."
+		}
+		return "error", "Can't reach the AI server at " + ai.BaseURL, fix
 	}
 	if err != nil {
 		return errResult(err, "Check the API key, model name and credit with your AI provider (Admin → LLM Analysis Engine → Show setup steps).")
@@ -202,13 +228,6 @@ func (s *Server) checkModel(ctx context.Context, model string) (string, string, 
 		return "warn", "Answered, but with an empty reply", "Try a different model."
 	}
 	return "ok", fmt.Sprintf("Answering (%d tokens used for this check)", usage.Total()), ""
-}
-
-// llmClient builds the configured provider client (same logic as the worker).
-func (s *Server) llmClient() llm.Completer {
-	// JSON mode off: the health check asks for a plain "OK", not JSON.
-	return llm.New(s.Store.Setting(store.KeyLLMProvider), s.Store.Setting(store.KeyLLMBaseURL),
-		s.Store.Setting(store.KeyLLMAPIKey), false)
 }
 
 func (s *Server) smtpConfig() delivery.SMTPConfig {

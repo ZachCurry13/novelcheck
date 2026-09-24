@@ -55,27 +55,36 @@ func (s *Server) handleDiagnose(w http.ResponseWriter, r *http.Request) {
 	diag := s.diagnosticsText()
 	d := diagnosis{}
 
-	models := s.Store.LLMModels()
-	if len(models) == 0 {
-		d.AIError = "no AI model is set up (Admin → LLM Analysis Engine)"
-	} else {
-		base := s.Store.Setting(store.KeyLLMBaseURL)
-		ctx, cancel := context.WithTimeout(r.Context(), min(llm.Timeout(base, s.Store.SettingInt(store.KeyLLMTimeoutSeconds)), 5*time.Minute))
-		defer cancel()
-		client := llm.New(s.Store.Setting(store.KeyLLMProvider), base, s.Store.Setting(store.KeyLLMAPIKey), s.Store.SettingBool(store.KeyLLMJSONMode))
-		user := "User's description: " + orNone(problem) + "\n\nDiagnostics report:\n" + lastChars(diag, 14000)
-		out, usage, err := client.Complete(ctx, models[0], diagnosePrompt, user)
-		if usage.Total() > 0 {
-			_ = s.Store.RecordUsage(0, models[0], usage.PromptTokens, usage.CompletionTokens)
+	// Ask the main AI; if it can't answer (it may be the problem), the backup.
+	user := "User's description: " + orNone(problem) + "\n\nDiagnostics report:\n" + lastChars(diag, 14000)
+	var aiErrs []string
+	for _, ai := range s.Store.AIConfigs() {
+		if len(ai.Models) == 0 {
+			aiErrs = append(aiErrs, "no AI model is set up (Admin → LLM Analysis Engine)")
+			continue
 		}
-		d.Model = models[0]
-		switch {
-		case err != nil:
-			d.AIError = err.Error()
-		case !parseDiagnosis(out, &d):
+		model := ai.Models[0]
+		ctx, cancel := context.WithTimeout(r.Context(), min(llm.Timeout(ai.BaseURL, s.Store.SettingInt(store.KeyLLMTimeoutSeconds)), 5*time.Minute))
+		out, usage, err := llm.New(ai.Provider, ai.BaseURL, ai.APIKey, ai.JSONMode).Complete(ctx, model, diagnosePrompt, user)
+		cancel()
+		if usage.Total() > 0 {
+			_ = s.Store.RecordUsageCost(0, model, usage.PromptTokens, usage.CompletionTokens, ai)
+		}
+		if err != nil {
+			aiErrs = append(aiErrs, fmt.Sprintf("%s AI (%s): %v", ai.Name, model, err))
+			continue
+		}
+		d.Model = model
+		if ai.Name == "backup" {
+			d.Model += " (backup AI)"
+		}
+		if !parseDiagnosis(out, &d) {
 			d.Diagnosis = strings.TrimSpace(out) // the model ignored the format; still show what it said
 		}
+		aiErrs = nil
+		break
 	}
+	d.AIError = strings.Join(aiErrs, " · ")
 	if d.Title == "" {
 		d.Title = firstLineOf(problem, "Problem report")
 	}

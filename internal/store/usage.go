@@ -21,6 +21,24 @@ func (s *Store) RecordUsage(bookID int64, model string, prompt, completion int) 
 	return err
 }
 
+// RecordUsageCost records a call priced with that AI's own rates, so a paid
+// backup and a free local model are both counted correctly.
+func (s *Store) RecordUsageCost(bookID int64, model string, prompt, completion int, ai AIConfig) error {
+	cost := float64(prompt)*ai.PriceIn/1e6 + float64(completion)*ai.PriceOut/1e6
+	_, err := s.DB.Exec(`INSERT INTO token_usage (book_id, model, prompt_tokens, completion_tokens, cost)
+		VALUES (?, ?, ?, ?, ?)`, bookID, model, prompt, completion, cost)
+	return err
+}
+
+// SpentUSD totals AI spending. Calls recorded before per-call costs existed
+// are priced with the main AI's current rates.
+func (s *Store) SpentUSD() float64 {
+	var v float64
+	_ = s.DB.Get(&v, `SELECT COALESCE(SUM(COALESCE(cost, prompt_tokens * ? / 1e6 + completion_tokens * ? / 1e6)), 0)
+		FROM token_usage`, s.SettingFloat(KeyPriceInputPerM), s.SettingFloat(KeyPriceOutputPerM))
+	return v
+}
+
 // TokensSince returns prompt+completion tokens used in the trailing window,
 // expressed as an SQLite datetime modifier such as "-1 hour".
 func (s *Store) TokensSince(modifier string) (int, error) {

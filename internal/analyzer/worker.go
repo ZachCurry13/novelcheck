@@ -4,7 +4,6 @@ package analyzer
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -208,22 +207,7 @@ func (w *Worker) rate(ctx context.Context, b *store.Book, still func() bool) (*s
 	}
 
 	w.setState("analyzing", id, b.Title)
-	client := w.client()
-	// Main model first; fallbacks (in the admin's order) only when it fails.
-	models := w.Store.LLMModels()
-	if len(models) == 0 {
-		models = []string{""} // surfaces the "model must be configured" error
-	}
-	var lastErr error
-	for _, model := range models {
-		v, err := w.analyzeWith(ctx, client, model, id, user)
-		if err == nil {
-			a := v.ToAnalysis(model)
-			return &a, nil
-		}
-		lastErr = err
-	}
-	return nil, lastErr
+	return w.askAIs(ctx, id, user)
 }
 
 // rerateOne re-rates an analyzed book without taking it out of the library:
@@ -238,31 +222,6 @@ func (w *Worker) rerateOne(ctx context.Context, id int64) error {
 		return err
 	}
 	return w.Store.SaveAnalysis(id, *a)
-}
-
-// client builds the configured provider: Claude through Anthropic's SDK, or
-// any OpenAI-compatible API (OpenAI, Gemini, Perplexity, Ollama, vLLM...).
-func (w *Worker) client() llm.Completer {
-	return llm.New(w.Store.Setting(store.KeyLLMProvider), w.Store.Setting(store.KeyLLMBaseURL),
-		w.Store.Setting(store.KeyLLMAPIKey), w.Store.SettingBool(store.KeyLLMJSONMode))
-}
-
-func (w *Worker) analyzeWith(ctx context.Context, c llm.Completer, model string, id int64, user string) (*llm.Verdict, error) {
-	base := w.Store.Setting(store.KeyLLMBaseURL)
-	limit := llm.Timeout(base, w.Store.SettingInt(store.KeyLLMTimeoutSeconds))
-	cctx, cancel := context.WithTimeout(ctx, limit)
-	defer cancel()
-	out, usage, err := c.Complete(cctx, model, llm.SystemPrompt, user)
-	if usage.Total() > 0 {
-		_ = w.Store.RecordUsage(id, model, usage.PromptTokens, usage.CompletionTokens)
-	}
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) && ctx.Err() == nil {
-			return nil, timeoutError(model, limit, llm.IsLocal(base) && w.Store.Setting(store.KeyLLMProvider) != "anthropic")
-		}
-		return nil, err
-	}
-	return llm.ParseVerdict(out)
 }
 
 // waitForBudget blocks while the trailing-hour token total plus this call's
@@ -300,17 +259,4 @@ func sleep(ctx context.Context, d time.Duration) bool {
 	case <-t.C:
 		return true
 	}
-}
-
-// timeoutError explains a model that didn't answer in time.
-func timeoutError(model string, limit time.Duration, local bool) error {
-	msg := fmt.Sprintf("%s didn't answer within %s", model, limit.Round(time.Second))
-	if local {
-		msg += ". On your own server this usually means the model is running on the CPU instead of the GPU " +
-			"(see Usage → Ollama: it should say 100% GPU), or it's too big for your GPU. Try a smaller model, " +
-			"or raise the AI time limit in Admin → LLM Analysis Engine."
-	} else {
-		msg += ". The AI service may be overloaded; it will be retried next batch. You can raise the AI time limit in Admin."
-	}
-	return errors.New(msg)
 }
