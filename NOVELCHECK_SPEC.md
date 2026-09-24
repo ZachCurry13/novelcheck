@@ -8,24 +8,23 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 ---
 
 ## 2. Core Development Rules (Strict Enforcement)
-
 1. **File Length Limit (Max ~300 Lines):** Keep code modular. No single file (Go, JavaScript, CSS, or SQL) should exceed ~300 lines of code. Split API routes, handlers, database services, and UI components into small, logical sub-modules.
-2. **Model Delegation Strategy:** Always delegate to smaller/faster models (e.g., `gpt-4o-mini`, `gemini-1.5-flash`, `llama3.2`) for classification, blurb summarization, and JSON parsing tasks. Save larger models only for complex edge-case fallbacks.
+2. **Model Delegation Strategy:** Default LLM calls to lightweight, high-efficiency models (e.g., `gpt-4o-mini`, `gemini-1.5-flash`, `llama3.2`) for fast structured JSON outputs. Only escalate to larger models if the primary model fails.
 3. **Repository Source of Truth:** Keep GitHub repository files (`README.md`, `docker-compose.yml`, `NOVELCHECK_SPEC.md`) fully synchronized and up to date. Perform regular audits to ensure documentation matches codebase implementation without contradictions.
 
 ---
 
 ## 3. Technical Stack
-* **Language/Backend:** Go (using `chi` or `fiber` HTTP router)
-* **Database:** SQLite (GORM or `sqlx` driver) for local caching, custom tags, user accounts, library catalogs, and user queues.
-* **Authentication:** JWT or Cookie-based Session Authentication with Role-Based Access Control (RBAC).
+* **Language/Backend:** Go 1.26 (using modular HTTP handlers)
+* **Database:** SQLite for local caching, custom tags, user accounts, library catalogs, and user queues.
+* **Authentication:** Cookie/Session-based Authentication with Role-Based Access Control (RBAC).
 * **Frontend & Mobile:** HTML5, Tailwind CSS, Vanilla JavaScript (SortableJS for drag-and-drop queue management), and PWA Manifest/Service Worker for "Add to Home Screen" native app experience. Embedded directly into the Go binary using Go's `embed.FS`.
 * **APIs & Integrations:**
   * Open Library API / Google Books API (Metadata & blurb lookups)
   * OpenAI-Compatible LLM Client (OpenAI, Anthropic, Gemini OpenAI-compatible URL, or local Ollama/vLLM instance)
   * Chromium File System Access API (`showDirectoryPicker()`) with fallback to `<input type="file" webkitdirectory>` for iOS/Safari drive scanning
   * SMTP Client (Amazon Send-to-Kindle email delivery)
-* **Deployment & Remote Access:** Single-container Docker image optimized for TrueNAS SCALE / Linux hosts (supports GPU passthrough for local LLMs). Configured to store SQLite config databases on SSD datasets and read large media libraries from HDD pools. Designed to run behind a Cloudflare Tunnel (`cloudflared`) or Reverse Proxy with full HSTS, CORS, `Cache-Control: no-store` on API routes, and `X-Forwarded-For` header support.
+* **Deployment & Remote Access:** Single-container Docker image optimized for TrueNAS SCALE / Linux hosts. Configured to store SQLite config databases on SSD datasets and read large media libraries from HDD pools. Designed to run behind a Cloudflare Tunnel (`cloudflared`) or Reverse Proxy with full HSTS, CORS, `Cache-Control: no-store` on API routes, and `X-Forwarded-For` header support.
 
 ---
 
@@ -33,52 +32,39 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 
 ### Feature 1: Authentication & Parental Control Filters
 * User login system supporting `Admin` and `Restricted` (Kid) accounts.
-* Profile-level content rules (e.g., *Hide books flagged as Open Door, Nudity, or Dark Occult*).
-* Database-level filtering ensures restricted accounts cannot view or search locked titles.
+* Profile-level content rules (e.g., *Hide Open Door, Nudity, Solo Acts, Heavy Innuendo, Dark Occult/Demonic, LGBTQ+, and Unanalyzed books*).
+* Database-level filtering ensures restricted accounts cannot list, search, view, queue, or download hidden titles.
 
 ### Feature 2: Calibre Library Auto-Sync (Read-Only)
 * Mount Calibre’s root storage directory into the Docker container.
-* Read Calibre’s `metadata.db` SQLite file directly in **strict read-only mode** (`file:metadata.db?mode=ro`) to extract titles, authors, and existing metadata without database lock conflicts.
+* Read Calibre’s `metadata.db` SQLite file directly in **strict read-only mode** (`file:metadata.db?mode=ro`) to extract titles, authors, and existing metadata without database lock conflicts. Never writes to Calibre.
 * Resolve internal file paths by prepending container mount prefix `/calibre/` to relative paths extracted from `metadata.db`.
+* Automatically purge deleted Calibre titles during scheduled or manual sync runs.
 * Assign synced entries to a default catalog named `Calibre Main`.
 
 ### Feature 3: Browser Drive & Kindle Scanner
 * Front-end interface includes an "Import Local Drive / Kindle" feature using `window.showDirectoryPicker()`.
 * Automatically falls back to standard `<input type="file" webkitdirectory>` on non-Chromium browsers (iOS Safari, mobile browsers).
-* Recursively traverses selected directory folders (e.g., `documents/`) to read book filenames and metadata tags (`.epub`, `.mobi`, `.azw3`).
-* Sends extracted metadata payloads to the Go backend API.
-* Prompt user to create or select a destination catalog (e.g., `Jenna's Kindle`).
+* Recursively traverses selected directory folders to read book filenames and metadata tags (`.epub`, `.mobi`, `.azw3`), understanding Amazon naming conventions (`Title - Author_ASIN_EBOK.azw`).
+* Sends extracted metadata payloads (never file bodies) to the Go backend API into a selected destination catalog.
 
 ### Feature 4: Multi-Catalog UI & Filtering
 * **Unified Dashboard:** Browse all books across all catalogs simultaneously.
-* **Filtering:**
-  * Filter by Catalog (`Calibre Main`, `Jenna's Kindle`, or Custom).
-  * Filter by Spice Classification (`Closed Door`, `Open Door`, `No Spice`).
-  * Filter by Content Flags (Nudity, Solo Acts, LGBTQ+ Content, Dark Occult / Demonic).
-  * Filter Cross-Catalog Overlap (View books present in both Calibre AND Kindle).
+* **Filtering:** Filter by catalog, spice level (`Closed Door`, `Open Door`, `No Spice`), and content flags.
+* **Cross-Catalog Overlap:** Matches books present in both Calibre AND external drives as single entities to allow filtering for overlapping titles.
 
 ### Feature 5: Progressive Web App (PWA) "Install as App" Support
 * Includes `manifest.json` metadata defining application icons, dark standalone theme colors, app name (`NovelCheck`), and `display: standalone`.
-* Lightweight Service Worker (`sw.js`) enabling offline app shell caching and triggering native mobile "Install App" / "Add to Home Screen" prompts on iOS Safari and Android Chrome.
+* Lightweight Service Worker (`sw.js`) enabling offline app shell caching and triggering native mobile "Install App" / "Add to Home Screen" prompts.
 
 ### Feature 6: Netflix-Style "Reading Queue" & Start Reading
-* **Personal Queues:** Every logged-in user gets their own ordered queue ("Up Next").
-* **Drag-and-Drop Reordering:** Reorder books in the queue using interactive drag handles (persisted to SQLite via position integers).
-* **"Start Reading" Action Button:**
-  * Triggers immediate delivery based on user preference (e.g., emails `.epub` via Send-to-Kindle SMTP, or flags for KOReader wireless sync).
-  * Moves book status from `Queued` to `Currently Reading`.
+* **Personal Queues:** Every logged-in user gets their own ordered queue ("Up Next") with persistent position ordering.
+* **"Start Reading" Action Button:** Triggers immediate delivery based on user preference (emails `.epub` via Send-to-Kindle SMTP or flags for KOReader sync) and shifts status to `Currently Reading`.
 
 ### Feature 7: Flexible LLM Analysis Engine & Admin Control Panel
-* **Small Model Delegation:** Default LLM calls to lightweight, high-efficiency models (e.g., `gpt-4o-mini`, `gemini-1.5-flash`, `llama3.2`) for fast structured JSON outputs.
 * **Metadata Enrichment Step:** Query Open Library / Google Books API for summary blurbs before LLM execution to prevent hallucinations on indie/self-published titles.
 * **On-Demand & Queued Processing:** Syncing a library indexes metadata instantly without triggering LLM API calls for every book at once. Books display a `Pending Analysis` status until processed.
-* **Comprehensive Admin Settings Panel:**
-  * **Single & Batch Scanning:** On-demand scan button per book + batch size limits (e.g., *Analyze 20 books at a time*).
-  * **Token / Hourly Rate Caps:** Configurable max token limits per hour (e.g., *Cap at 25,000 tokens/hr*) and scan delays.
-  * **Cost & Token Estimator:** Real-time token counter and estimated API cost dashboard.
-  * **SMTP / Send-to-Kindle Configuration:** Manage host, port, and approved sender email credentials.
-  * **Calibre Polling Schedule:** Configurable background sync intervals (e.g., *Sync Calibre every 6 hours* or *Manual trigger only*).
-  * **Database Backup & Maintenance:** 1-click SQLite database download (`novelcheck.db`) + wipe pending queue option.
+* **Admin Control Panel:** Batch size limits, token/hourly rate caps, live cost estimator, test SMTP mailer, auto-sync schedules, 1-click SQLite database download (`novelcheck.db`), and queue clearing tools.
 
 #### System Prompt Specification
 ```text
