@@ -109,7 +109,7 @@ make run         # serves on :8080 with ./data and ./calibre
 make css         # recompile Tailwind after changing classes (output is committed)
 ```
 
-Without Node (for example on a Windows PC), stick to classes already in `web/static/css/app.css`; small hand-written rules go at the end of `web/tailwind.input.css` as plain CSS and are appended to `app.css` too. `go test ./...` also runs on Windows; a few Calibre, database and tunnel tests need Linux (symlinks, `/` paths, `cloudflared`) and pass in CI.
+On Windows without `make`, run the same command directly: `npx tailwindcss@3 -c tailwind.config.js -i web/tailwind.input.css -o web/static/css/app.css --minify`. `go test ./...` also runs on Windows; a few Calibre, database and tunnel tests need Linux (symlinks, `/` paths, `cloudflared`) and pass in CI.
 
 `internal/calibresrv` has an optional test against a real `calibre-server`. Run one with `--enable-auth` and a user who can make changes (plus a read-only user `reader` / `readpass1`), then set `NOVELCHECK_TEST_CALIBRE_URL`, `NOVELCHECK_TEST_CALIBRE_USER` and `NOVELCHECK_TEST_CALIBRE_PASS`.
 

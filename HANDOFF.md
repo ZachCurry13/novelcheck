@@ -1,6 +1,6 @@
 # NovelCheck handoff
 
-Latest release: **v1.15.0**. **v1.16.0** (pepper wording + quick wins, see CHANGELOG.md) is committed on the working branch `claude/epic-newton-z23mz1`; it goes to `main` and gets released once the user says so.
+Latest release: **v1.15.0**. **v1.16.0** (pepper wording + quick wins, see CHANGELOG.md) is committed on the working branch `claude/epic-newton-z23mz1`. The user asked to **hold the release** until more batches are done; later batches can share the release or get their own version numbers when it's cut.
 
 ## Feature plan (from the user's NOVELCHECK_UPDATES list, agreed 2026-09-24)
 1. ✅ v1.16 quick wins: pepper levels 2-3 reworded (+ `spice_reason`, `rules_version` re-rate banner), Strict family preset, gray-area chip, Re-rate whole library, Calibre-Web links + credit, phone filters.
@@ -11,12 +11,12 @@ Latest release: **v1.15.0**. **v1.16.0** (pepper wording + quick wins, see CHANG
 - Skipped by the user's choice: a "Skipped (up to date)" badge (same as Analyzed). Not requested: re-rating when a Calibre file changes.
 
 ## Waiting on the user
-- Go-ahead to merge and release v1.16.0.
+- When to merge and release (held for now).
 - Kindle `.kfx` file names from the Kindle's `documents` folder, to check whether on-device store books carry titles in their names. The Amazon list import (paste or data download) covers her purchases in the meantime.
 - Whether "user login information" for more Ollama detail meant a TrueNAS API key (real per-app CPU/GPU stats). Not built.
 
 ## Working on the Windows desktop (`C:\novelcheck`)
-- No Node: Tailwind can't be rebuilt, so use classes already in `app.css`; hand-written rules go at the end of `web/tailwind.input.css` (plain CSS) and are appended to `app.css`. JS is checked by importing every module in a local run (preview server, fresh port to dodge the 1-hour static cache).
+- Node.js LTS is installed (no `make`): build CSS with `npx tailwindcss@3 -c tailwind.config.js -i web/tailwind.input.css -o web/static/css/app.css --minify`. Shells started before the install may need `C:\Program Files\nodejs` on PATH. For a visual check, run the app locally (`.claude/launch.json`, untracked) on a fresh port to dodge the 1-hour static cache.
 - The clone uses LF endings (`core.autocrlf=false`). `go test ./...` passes except Windows-only failures in `internal/calibre`, `internal/db` (temp-file lock at cleanup) and `internal/tunnel`; use `GOOS=linux go vet ./...`. CI on Linux is the real gate.
 
 ## Conventions
