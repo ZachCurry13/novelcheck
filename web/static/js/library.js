@@ -20,6 +20,7 @@ export async function renderLibrary(view, state) {
       <select name="spice" class="input" title="Peppers: how much romance and sexual content">
         <option value="">Any peppers</option>${pepperOptions(null)}
         <option value="old">Older rating (not on pepper scale)</option><option value="Pending">Not rated yet</option>
+        <option value="failed">Rating failed</option>
       </select>
       <select name="age" class="input" title="Books a parent rated for this age group or younger">
         <option value="">Any age group</option>
@@ -65,7 +66,8 @@ export async function renderLibrary(view, state) {
       q: fd.get("q"),
       catalog: fd.get("catalog"),
       overlap_with: fd.get("overlap_with"),
-      spice: fd.get("spice") === "Pending" ? "" : fd.get("spice"),
+      spice: ["Pending", "failed"].includes(fd.get("spice")) ? "" : fd.get("spice"),
+      status: fd.get("spice") === "failed" ? "error" : "",
       classification: fd.get("spice") === "Pending" ? "Pending" : "",
       age: fd.get("age"),
       format: fd.get("format"),
@@ -119,6 +121,13 @@ export async function renderLibrary(view, state) {
       toast(`Queued ${r.queued} books for analysis`);
       setTimeout(() => load(true), 400);
     });
+  }
+  // "Show in Library" from Rating errors opens this page filtered to failures.
+  try {
+    if (sessionStorage.getItem("nc:libfilter") === "failed") form.spice.value = "failed";
+    sessionStorage.removeItem("nc:libfilter");
+  } catch {
+    /* private mode */
   }
   await load(true);
 }

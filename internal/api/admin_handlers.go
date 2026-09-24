@@ -273,3 +273,32 @@ func (s *Server) handleBackup(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", `attachment; filename="`+name+`"`)
 	http.ServeContent(w, r, "", st.ModTime(), f)
 }
+
+// handleErrors lists books that failed to rate, grouped by the reason.
+func (s *Server) handleErrors(w http.ResponseWriter, r *http.Request) {
+	groups, err := s.Store.ErrorGroups()
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"groups": groups})
+}
+
+// handleRetryErrors queues failed books again: every one, or only those that
+// failed with {"message": "..."}.
+func (s *Server) handleRetryErrors(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Message string `json:"message"`
+	}
+	if r.ContentLength > 0 && !readJSON(w, r, &body, 16<<10) {
+		return
+	}
+	ids, err := s.Store.ErrorBookIDs(body.Message)
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	s.Worker.Enqueue(false, ids...)
+	s.Store.Resolve("analysis")
+	writeJSON(w, http.StatusOK, map[string]int{"queued": len(ids)})
+}

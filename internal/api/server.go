@@ -92,6 +92,8 @@ func (s *Server) Router() http.Handler {
 				r.Post("/notifications/read", s.handleNotificationsRead)
 				r.Delete("/notifications", s.handleNotificationsClear)
 				r.Post("/admin/analyze-batch", s.handleAnalyzeBatch)
+				r.Get("/admin/errors", s.handleErrors)
+				r.Post("/admin/retry-errors", s.handleRetryErrors)
 				r.Post("/admin/calibre-sync", s.handleCalibreSync)
 
 				r.Get("/admin/users", s.handleListUsers)

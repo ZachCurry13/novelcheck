@@ -3,6 +3,7 @@
 import { get } from "./api.js";
 import { $, esc } from "./ui.js";
 import { lineChart, columnChart } from "./charts.js";
+import { renderErrors } from "./errors.js";
 
 const GB = 1 << 30;
 const MB = 1 << 20;
@@ -68,7 +69,7 @@ function libraryTiles(s) {
   return [
     tile("Books rated", fmtNum(done), `of ${fmtNum(total)} in the library`, total ? (done / total) * 100 : 0, true),
     tile("Waiting", fmtNum((c.pending || 0) + (c.queued || 0) + (c.processing || 0)), `worker ${s.worker.state}`),
-    tile("Errors", fmtNum(c.error || 0), c.error ? "Retry from Admin → Analysis" : "None"),
+    tile("Errors", fmtNum(c.error || 0), c.error ? "See Rating errors below" : "None"),
     tile("AI spend to date", `$${(s.cost_spent || 0).toFixed(2)}`, `${fmtNum(s.usage?.total_calls)} AI calls · ${fmtNum(s.usage?.today_tokens)} tokens today`),
   ].join("");
 }
@@ -84,6 +85,7 @@ export async function renderUsage(view) {
     </div>
     <h2 class="mb-2 text-lg font-semibold">Library &amp; AI</h2>
     <div id="lib-tiles" class="mb-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>
+    <div id="errors"></div>
     <section class="card mb-6"><h2 class="label">AI tokens per day (last 14 days)</h2><div id="token-chart"></div></section>
     <section class="card space-y-3"><h2 class="text-lg font-semibold">Ollama</h2><div id="ollama"></div></section>`;
 
@@ -124,6 +126,7 @@ export async function renderUsage(view) {
   }
 
   await refresh();
+  renderErrors($("#errors", view), true);
   const timer = setInterval(refresh, 5000);
   return () => clearInterval(timer);
 }

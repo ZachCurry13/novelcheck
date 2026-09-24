@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.14.1]
+
+### Fixed
+- **Errors you couldn't see or retry**: the Errors count on Usage didn't say what went wrong, and failed books were never tried again. A new **Rating errors** list (on Usage, and on Admin for editors too) groups failed books by reason, shows example titles and a plain explanation of each common error, and has **Retry** buttons for one group or **Retry all**. You can also **📋 Copy** or **🩺 Diagnose** a group.
+- **Library → Rating failed**: the pepper filter can now show just the books that failed; **Show in Library** in the errors list opens it.
+
 ## [1.14.0]
 
 ### New

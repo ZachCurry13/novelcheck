@@ -6,6 +6,7 @@ import { renderCalibrePicker } from "./calibrepicker.js";
 import { initProviderPicker } from "./llmpresets.js";
 import { renderRemoteAccess } from "./remoteaccess.js";
 import { renderCalibreServer } from "./calibreserver.js";
+import { renderErrors } from "./errors.js";
 
 const SECTIONS = [
   ["LLM Analysis Engine", [
@@ -59,6 +60,7 @@ export async function renderAdmin(view, state) {
   view.innerHTML = `
     <h1 class="mb-4 text-2xl font-bold">${isAdmin ? "Admin Control Panel" : "Manage NovelCheck"}</h1>
     <div id="stats" class="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>
+    <div id="errors"></div>
     <div class="card mb-6 flex flex-wrap items-end gap-3">
       <div><label class="label" for="batch-size">Batch size</label>
         <input id="batch-size" type="number" min="1" max="500" value="20" class="input w-28"></div>
@@ -108,6 +110,7 @@ export async function renderAdmin(view, state) {
     if (s) renderStats(view, s);
   }
   await refresh();
+  renderErrors($("#errors", view), isAdmin, refresh);
   if (isAdmin) {
     renderCalibrePicker($("#calibre-picker", view), refresh);
     renderCalibreServer($("#calibre-server", view));
