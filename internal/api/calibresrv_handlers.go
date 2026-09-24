@@ -163,10 +163,11 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 		}
 	}
 	log.Printf("calibre: removed %d books via Content server (requested by admin)", len(toRemove))
-	go func() {
+	// Re-read the library now, so the page shows the result straight away.
+	if s.Syncer.Available() {
 		if _, err := s.Syncer.Run(); err != nil {
 			log.Printf("calibre sync after removal failed: %v", err)
 		}
-	}()
+	}
 	return len(toRemove), skipped, true
 }

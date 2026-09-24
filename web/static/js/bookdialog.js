@@ -21,7 +21,7 @@ export async function openBook(id, state, onChange) {
     if (!entries.has(key)) entries.set(key, { ...c, formats: [], paths: [] });
     const e = entries.get(key);
     if (c.format && c.format !== "list") e.formats.push(c.format.toUpperCase());
-    if (c.path && !c.path.startsWith("list:")) e.paths.push(c.path);
+    if (c.path && !c.path.startsWith("list:") && !c.path.startsWith("calibre-entry:")) e.paths.push(c.path);
   }
   const calibreCount = [...entries.values()].filter((e) => e.source === "calibre").length;
   const copies = [...entries.values()].map((e) => `

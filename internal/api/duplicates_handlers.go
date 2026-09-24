@@ -45,6 +45,7 @@ func (s *Server) handleDuplicates(w http.ResponseWriter, r *http.Request) {
 		"groups":     out,
 		"extra":      extra,
 		"can_remove": isAdmin && s.Store.Setting(store.KeyCalibreSrvURL) != "",
+		"synced_at":  s.Store.Setting(store.KeyCalibreLastSync), // when NovelCheck last read Calibre
 	})
 }
 

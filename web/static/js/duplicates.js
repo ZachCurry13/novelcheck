@@ -31,15 +31,35 @@ export async function renderDuplicates(view, state) {
     <p class="mb-4 max-w-3xl text-sm text-slate-400">Books that are in Calibre more than once (same title and author).
       NovelCheck suggests keeping the copy with the best formats (EPUB first), then the most files, then the largest.
       Change the ticks if you'd rather keep a different copy. Removed copies go to Calibre's recycle bin.</p>
+    <div class="mb-3 flex flex-wrap items-center gap-3 text-sm">
+      <button id="dup-recheck" class="btn-secondary py-1">🔄 Check again</button>
+      <span id="dup-synced" class="text-slate-400"></span>
+    </div>
+    <div id="dup-result"></div>
     <div id="dup-body"><p class="text-slate-400">Looking for duplicates…</p></div>`;
   const body = $("#dup-body", view);
+  const result = $("#dup-result", view);
+  const when = (iso) => (iso ? new Date(iso).toLocaleString() : "never");
+
+  // recheck re-reads the Calibre library, then reloads the list.
+  async function recheck(btn) {
+    btn.disabled = true;
+    btn.textContent = "Reading Calibre…";
+    const r = await attempt(() => post("/api/admin/calibre-sync?wait=1"));
+    btn.disabled = false;
+    btn.textContent = "🔄 Check again";
+    if (r) await load();
+    return r;
+  }
+  $("#dup-recheck", view).addEventListener("click", (e) => recheck(e.target));
 
   async function load() {
     const data = await attempt(() => get("/api/admin/calibre/duplicates"));
-    if (!data) return;
+    if (!data) return null;
+    $("#dup-synced", view).textContent = `Calibre last read ${when(data.synced_at)}`;
     if (!data.groups.length) {
       body.innerHTML = `<div class="card text-slate-300">✓ No duplicates found. Every book is in Calibre only once.</div>`;
-      return;
+      return data;
     }
     const how = data.can_remove
       ? `<button id="dup-remove" class="btn-primary">Remove selected copies</button>`
@@ -61,7 +81,7 @@ export async function renderDuplicates(view, state) {
     const picked = () => $$("[data-remove]:checked", body).map((c) => c.dataset.remove);
     const count = () => ($("#dup-count", body).textContent = `${picked().length} selected to remove`);
     count();
-    body.addEventListener("change", (e) => {
+    body.onchange = (e) => {
       const box = e.target.closest("[data-remove]");
       if (!box) return;
       // Never let every copy of a book be ticked.
@@ -71,7 +91,7 @@ export async function renderDuplicates(view, state) {
         toast("Keep at least one copy of each book", true);
       }
       count();
-    });
+    };
     $("#dup-copy", body).addEventListener("click", async () => {
       const ids = picked();
       if (!ids.length) return toast("Tick at least one copy", true);
@@ -93,9 +113,14 @@ export async function renderDuplicates(view, state) {
       e.target.disabled = false;
       e.target.textContent = "Remove selected copies";
       if (!r) return;
-      toast(`Removed ${r.removed} duplicate${r.removed === 1 ? "" : "s"}${r.skipped ? ` (${r.skipped} were already gone)` : ""}. Re-syncing Calibre…`);
-      setTimeout(load, 2500);
+      // The server re-read Calibre before answering, so this list is current.
+      const after = await load();
+      const left = after ? after.extra : null;
+      result.innerHTML = `<div class="card mb-4 ${left ? "text-amber-200" : "text-emerald-200"}">
+        ${left === 0 ? "✓" : "⚠️"} Removed ${r.removed} cop${r.removed === 1 ? "y" : "ies"} (in Calibre's recycle bin)${r.skipped ? `; ${r.skipped} were already gone` : ""}.
+        ${left === 0 ? "Calibre now has no duplicates." : left !== null ? `Calibre still has ${left} extra cop${left === 1 ? "y" : "ies"}: see the list below, or click Check again in a minute.` : ""}</div>`;
     });
+    return data;
   }
   await load();
 }

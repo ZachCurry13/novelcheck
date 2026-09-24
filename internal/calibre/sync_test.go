@@ -114,3 +114,33 @@ func TestFilePathUsesMountPrefix(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+// Two Calibre entries of the same book without any files are still two
+// entries (a duplicate), and a re-sync doesn't multiply them.
+func TestEmptyEntriesStayDistinct(t *testing.T) {
+	lib := makeLibrary(t)
+	c, _ := sqlx.Open("sqlite", filepath.Join(lib, "metadata.db"))
+	c.MustExec(`INSERT INTO books VALUES (7, 'Dune', 'Frank Herbert/Dune (7)'), (8, 'Dune', 'Frank Herbert/Dune (8)')`)
+	c.MustExec(`INSERT INTO authors VALUES (9, 'Frank Herbert')`)
+	c.MustExec(`INSERT INTO books_authors_link VALUES (9, 7, 9), (10, 8, 9)`)
+	c.Close()
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	for i := 0; i < 2; i++ {
+		if _, err := calibre.Sync(st, lib); err != nil {
+			t.Fatal(err)
+		}
+	}
+	groups, err := st.CalibreDuplicates()
+	if err != nil || len(groups) != 1 || groups[0].Title != "Dune" || len(groups[0].Entries) != 2 {
+		t.Fatalf("empty duplicates not found: %+v %v", groups, err)
+	}
+	books, _, _ := st.ListBooks(store.BookFilter{Query: "Dune"}, nil)
+	if books[0].CalibreCopies != 2 || books[0].Formats != "" {
+		t.Fatalf("book: %+v", books[0])
+	}
+}

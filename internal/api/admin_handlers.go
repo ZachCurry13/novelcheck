@@ -195,6 +195,16 @@ func (s *Server) handleCalibreSync(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "no Calibre library (metadata.db) at "+s.Syncer.LibraryDir()+"; choose the library folder under Calibre Library")
 		return
 	}
+	// ?wait=1 syncs before answering (used by "Check again" on Duplicates).
+	if r.URL.Query().Get("wait") == "1" {
+		res, err := s.Syncer.Run()
+		if err != nil {
+			writeErr(w, http.StatusBadGateway, "Calibre sync failed: "+err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"result": res, "at": s.Store.Setting(store.KeyCalibreLastSync)})
+		return
+	}
 	go func() {
 		if _, err := s.Syncer.Run(); err != nil {
 			log.Printf("manual calibre sync failed: %v", err)

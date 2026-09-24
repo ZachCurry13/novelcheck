@@ -49,6 +49,12 @@ func (s *Store) AddCopy(catalogID, bookID int64, path, format, externalID string
 	return err
 }
 
+// DropEmptyPaths removes catalog links stored without a path (older syncs).
+func (s *Store) DropEmptyPaths(catalogID int64) error {
+	_, err := s.DB.Exec(`DELETE FROM catalog_books WHERE catalog_id = ? AND path = ''`, catalogID)
+	return err
+}
+
 // PruneCatalog drops catalog links whose external ids are no longer present
 // (e.g. books deleted from Calibre), then deletes orphaned books.
 func (s *Store) PruneCatalog(catalogID int64, keepExternalIDs map[string]bool) (int, error) {

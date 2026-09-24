@@ -77,6 +77,11 @@ func Sync(st *store.Store, dir string) (Result, error) {
 	if err != nil {
 		return res, err
 	}
+	// Older versions stored file-less entries with an empty path; drop those
+	// so they're re-added with a placeholder below.
+	if err := st.DropEmptyPaths(catID); err != nil {
+		return res, err
+	}
 	keep := map[string]bool{}
 	for _, b := range books {
 		id, err := st.UpsertBook(b.Title, b.Authors, b.ISBN, StripHTML(b.Description))
@@ -88,7 +93,9 @@ func Sync(st *store.Store, dir string) (Result, error) {
 		res.Books++
 		fs := byBook[b.ID]
 		if len(fs) == 0 {
-			if err := st.AddCopy(catID, id, "", "", ext); err != nil {
+			// No files: a placeholder path keeps each Calibre entry distinct, so
+			// two empty entries of the same book still show as duplicates.
+			if err := st.AddCopy(catID, id, EntryPath(ext), "", ext); err != nil {
 				return res, err
 			}
 			continue
@@ -103,6 +110,9 @@ func Sync(st *store.Store, dir string) (Result, error) {
 	res.Removed, err = st.PruneCatalog(catID, keep)
 	return res, err
 }
+
+// EntryPath stands in for the file path of a Calibre entry with no files.
+func EntryPath(calibreID string) string { return "calibre-entry:" + calibreID }
 
 // FilePath resolves a Calibre relative path to the container mount, e.g.
 // ("/calibre", "Author/Title (1)", "Title - Author", "EPUB") ->

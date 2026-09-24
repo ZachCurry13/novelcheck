@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.14.2]
+
+### Fixed
+- **No way to confirm duplicates were removed**: after **Remove selected copies**, NovelCheck now re-reads your Calibre library before answering, reloads the list, and says what happened (for example "✓ Removed 12 copies. Calibre now has no duplicates"). A new **🔄 Check again** button re-reads Calibre and refreshes the list any time, with the time it last read Calibre.
+- **Duplicates missed for entries without files**: two Calibre entries of the same book that had no book files weren't recognised as duplicates. They are now (after the next Calibre read, or **Check again**).
+
 ## [1.14.1]
 
 ### Fixed
