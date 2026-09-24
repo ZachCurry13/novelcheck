@@ -97,3 +97,36 @@ func TestTunnelSettings(t *testing.T) {
 		t.Fatalf("unexpected tunnel status %v", status["has_token"])
 	}
 }
+
+func TestApprovalAndRemovalAPI(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	id, _ := st.UpsertBook("Harry Potter", "J. K. Rowling", "", "")
+	_ = st.AddCopy(cal, id, "/calibre/hp.epub", "epub", "42")
+	_ = st.SaveAnalysis(id, store.Analysis{Classification: "No Spice", DarkOccult: true})
+
+	res, out := admin.do("GET", "/api/admin/calibre/removal?hide=dark_occult", nil, false)
+	if res.StatusCode != 200 || out["search"] != "id:=42" {
+		t.Fatalf("removal: %d %v", res.StatusCode, out)
+	}
+	if res, _ := admin.do("GET", "/api/admin/calibre/removal", nil, false); res.StatusCode != 400 {
+		t.Fatalf("removal without filters should be refused: %d", res.StatusCode)
+	}
+	res, b := admin.do("PUT", "/api/books/"+itoa(id)+"/approval", map[string]bool{"approved": true}, true)
+	if res.StatusCode != 200 || b["approved"] != true || b["approved_by"] != "admin" {
+		t.Fatalf("approve: %d %v", res.StatusCode, b)
+	}
+	if _, out := admin.do("GET", "/api/admin/calibre/removal?hide=dark_occult", nil, false); out["count"].(float64) != 0 {
+		t.Fatalf("approved book offered for removal: %v", out)
+	}
+
+	admin.do("POST", "/api/admin/users", map[string]string{"username": "kid", "password": "kidpass12"}, true)
+	kid := login(t, srv, "kid", "kidpass12")
+	if res, _ := kid.do("PUT", "/api/books/"+itoa(id)+"/approval", map[string]bool{"approved": false}, true); res.StatusCode != 403 {
+		t.Fatalf("kid changed an approval: %d", res.StatusCode)
+	}
+	if res, _ := kid.do("GET", "/api/books/"+itoa(id), nil, false); res.StatusCode != 200 {
+		t.Fatalf("kid should see the approved book: %d", res.StatusCode)
+	}
+}

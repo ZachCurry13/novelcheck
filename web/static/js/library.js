@@ -1,6 +1,7 @@
 // Unified dashboard: browse and filter books across every catalog.
 import { get, post, qs } from "./api.js";
-import { $, esc, attempt, toast, classChip, flagChips, FLAG_LABELS, canManage } from "./ui.js";
+import { $, esc, attempt, toast, classChip, flagChips, HIDE_LABELS, FILTER_IDEA_URL, canManage } from "./ui.js";
+import { openCalibreRemoval } from "./calibreremove.js";
 import { openBook } from "./bookdialog.js";
 
 const PAGE = 60;
@@ -24,11 +25,15 @@ export async function renderLibrary(view, state) {
         <option value="recent">Sort: Recently added</option>
       </select>
       <div class="md:col-span-6 flex flex-wrap items-center gap-x-5 gap-y-2">
-        <span class="label mb-0">Has:</span>
-        ${Object.entries(FLAG_LABELS).map(([k, v]) =>
-          `<label class="toggle"><input type="checkbox" name="flag" value="${k}"> ${esc(v)}</label>`).join("")}
-        <label class="toggle"><input type="checkbox" name="multi"> In 2+ catalogs</label>
-        ${manager ? `<button type="button" id="batch-btn" class="btn-secondary ml-auto">Analyze next batch</button>` : ""}
+        <span class="label mb-0" title="Books with these are hidden (unless a parent marked them OK)">Hide:</span>
+        ${Object.entries(HIDE_LABELS).map(([k, v]) =>
+          `<label class="toggle"><input type="checkbox" name="hide" value="${k}"> ${esc(v)}</label>`).join("")}
+        <label class="toggle"><input type="checkbox" name="multi"> Only books in 2+ catalogs</label>
+        <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-500 underline">Missing a filter? Suggest one</a>
+        <span class="ml-auto flex flex-wrap gap-2">
+          ${state.user.role === "admin" ? `<button type="button" id="remove-btn" class="btn-ghost text-xs">Remove hidden books from Calibre…</button>` : ""}
+          ${manager ? `<button type="button" id="batch-btn" class="btn-secondary">Analyze next batch</button>` : ""}
+        </span>
       </div>
     </form>
     <p id="result-count" class="mb-3 text-sm text-slate-400"></p>
@@ -48,7 +53,7 @@ export async function renderLibrary(view, state) {
       classification: fd.get("classification"),
       sort: fd.get("sort"),
       multi: fd.get("multi") === "on",
-      flags: fd.getAll("flag").join(","),
+      exclude: fd.getAll("hide").join(","),
       limit: PAGE,
     };
   }
@@ -81,6 +86,10 @@ export async function renderLibrary(view, state) {
     }
     const c = e.target.closest("[data-book]");
     if (c) openBook(Number(c.dataset.book), state, () => load(true));
+  });
+  $("#remove-btn", view)?.addEventListener("click", () => {
+    const fd = new FormData(form);
+    openCalibreRemoval({ hide: fd.getAll("hide").join(","), q: fd.get("q"), classification: fd.get("classification") });
   });
   const batch = $("#batch-btn", view);
   if (batch) {

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -77,4 +78,39 @@ func writeBrowseErr(w http.ResponseWriter, err error) {
 	default:
 		writeErr(w, http.StatusBadRequest, err.Error())
 	}
+}
+
+// handleCalibreRemoval lists the Calibre books that match the given hide
+// filters (?hide=nudity,dark_occult&classification=...), and builds a Calibre
+// search that selects exactly those books so the admin can remove them in
+// Calibre itself. Parent-approved books are never included. NovelCheck never
+// deletes files: the Calibre library stays read-only.
+func (s *Server) handleCalibreRemoval(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	f := store.BookFilter{
+		Query:          q.Get("q"),
+		Classification: q.Get("classification"),
+		AnyFlags:       splitCSV(q.Get("hide")),
+	}
+	if len(f.AnyFlags) == 0 && f.Classification == "" {
+		writeErr(w, http.StatusBadRequest, "tick at least one Hide box (or pick a spice level) first")
+		return
+	}
+	matches, err := s.Store.CalibreMatches(f)
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	if matches == nil {
+		matches = []store.CalibreMatch{}
+	}
+	parts := make([]string, 0, len(matches))
+	for _, m := range matches {
+		parts = append(parts, "id:="+m.CalibreID)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"count":  len(matches),
+		"books":  matches,
+		"search": strings.Join(parts, " or "),
+	})
 }

@@ -10,7 +10,8 @@ type BookFilter struct {
 	MultiCatalog   bool     // only books present in 2+ catalogs
 	Classification string   // "Closed Door" | "Open Door" | "No Spice" | "Pending"
 	Flags          []string // books that HAVE all of these flags
-	ExcludeFlags   []string // books that have NONE of these flags
+	ExcludeFlags   []string // hide books with ANY of these flags (parent-approved books stay)
+	AnyFlags       []string // books with ANY of these flags (used for the Calibre removal list)
 	Status         string
 	Sort           string // "title" (default) | "author" | "recent"
 	Limit, Offset  int
@@ -25,6 +26,7 @@ var flagColumns = map[string]string{
 	"dark_occult":      "(b.dark_occult = 1 OR b.demonic_presence = 1)",
 	"playful_fantasy":  "b.playful_fantasy = 1",
 	"demonic_presence": "b.demonic_presence = 1",
+	"open_door":        "b.classification = 'Open Door'",
 }
 
 var classifications = map[string]bool{"Closed Door": true, "Open Door": true, "No Spice": true}
@@ -33,7 +35,8 @@ var classifications = map[string]bool{"Closed Door": true, "Open Door": true, "N
 func ValidClassification(c string) bool { return classifications[c] }
 
 // visibilityClause enforces a user's profile content rules at the SQL level so
-// hidden titles can never be listed, searched, fetched or queued.
+// hidden titles can never be listed, searched, fetched or queued. Books a
+// parent marked "OK" (approved) are exempt, e.g. Harry Potter's fantasy magic.
 func visibilityClause(u *User) (string, []any) {
 	if u == nil {
 		return "", nil
@@ -63,12 +66,11 @@ func visibilityClause(u *User) (string, []any) {
 	if len(parts) == 0 {
 		return "", nil
 	}
-	return " AND (" + strings.Join(parts, " AND ") + ")", nil
+	return " AND (b.approved = 1 OR (" + strings.Join(parts, " AND ") + "))", nil
 }
 
-// ListBooks returns books matching f that viewer is allowed to see, plus the
-// total match count for pagination.
-func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
+// filterCond turns f (plus the viewer's content rules) into a WHERE clause.
+func filterCond(f BookFilter, viewer *User) (string, []any) {
 	where := []string{"1=1"}
 	var args []any
 	if q := strings.TrimSpace(f.Query); q != "" {
@@ -101,17 +103,30 @@ func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
 	}
 	for _, fl := range f.ExcludeFlags {
 		if p, ok := flagColumns[fl]; ok {
-			where = append(where, "NOT "+p)
+			where = append(where, "(b.approved = 1 OR NOT COALESCE("+p+", 0))")
 		}
+	}
+	var anyOf []string
+	for _, fl := range f.AnyFlags {
+		if p, ok := flagColumns[fl]; ok {
+			anyOf = append(anyOf, p)
+		}
+	}
+	if len(anyOf) > 0 {
+		where = append(where, "b.approved = 0 AND ("+strings.Join(anyOf, " OR ")+")")
 	}
 	if f.Status != "" {
 		where = append(where, "b.status = ?")
 		args = append(args, f.Status)
 	}
 	vis, vargs := visibilityClause(viewer)
-	cond := strings.Join(where, " AND ") + vis
-	args = append(args, vargs...)
+	return strings.Join(where, " AND ") + vis, append(args, vargs...)
+}
 
+// ListBooks returns books matching f that viewer is allowed to see, plus the
+// total match count for pagination.
+func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
+	cond, args := filterCond(f, viewer)
 	var total int
 	if err := s.DB.Get(&total, `SELECT COUNT(*) FROM books b WHERE `+cond, args...); err != nil {
 		return nil, 0, err
@@ -134,4 +149,24 @@ func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
 	var books []Book
 	err := s.DB.Select(&books, q, append(args, limit, max(f.Offset, 0))...)
 	return books, total, err
+}
+
+// CalibreMatch is a Calibre book that matches a removal filter.
+type CalibreMatch struct {
+	CalibreID string `db:"external_id" json:"calibre_id"`
+	Title     string `db:"title" json:"title"`
+	Author    string `db:"author" json:"author"`
+}
+
+// CalibreMatches lists Calibre books (by Calibre id) matching f, for the
+// "remove from Calibre" helper. Parent-approved books are never included.
+func (s *Store) CalibreMatches(f BookFilter) ([]CalibreMatch, error) {
+	cond, args := filterCond(f, nil)
+	var out []CalibreMatch
+	err := s.DB.Select(&out, `SELECT cb.external_id, MIN(b.title) AS title, MIN(b.author) AS author
+		FROM books b JOIN catalog_books cb ON cb.book_id = b.id
+		JOIN catalogs c ON c.id = cb.catalog_id AND c.source = 'calibre'
+		WHERE b.approved = 0 AND `+cond+`
+		GROUP BY cb.external_id ORDER BY title COLLATE NOCASE`, args...)
+	return out, err
 }

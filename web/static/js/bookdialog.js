@@ -1,5 +1,5 @@
 // Book detail modal: verdict, blurb, catalog copies and actions.
-import { get, post } from "./api.js";
+import { get, post, put } from "./api.js";
 import { $, esc, attempt, classChip, flagChips, canManage } from "./ui.js";
 import { verdictFormHTML, bindVerdictForm } from "./verdictform.js";
 
@@ -32,12 +32,14 @@ export async function openBook(id, state, onChange) {
       <div><span class="label">In catalogs</span><ul class="space-y-1">${copies || "<li class='text-sm text-slate-500'>None</li>"}</ul></div>
       ${b.analysis_model ? `<p class="text-xs text-slate-500">${b.analysis_model.startsWith("manual: ")
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : "Analyzed by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
+      ${b.approved ? `<p class="text-xs text-emerald-400">✓ Marked OK by ${esc(b.approved_by)}: shown to everyone, even if it matches their hide filters or content rules.</p>` : ""}
       ${manager ? verdictFormHTML(b) : ""}
       <div class="flex flex-wrap gap-2 pt-2">
         <button data-act="queue" class="btn-primary">Add to Up Next</button>
         ${data.downloadable ? `<a href="/api/books/${b.id}/download" class="btn-secondary">Download</a>` : ""}
         ${manager ? `<button data-act="analyze" class="btn-secondary">${b.classification ? "Re-analyze" : "Analyze now"}</button>
-          <button data-act="edit-verdict" class="btn-secondary">Edit rating</button>` : ""}
+          <button data-act="edit-verdict" class="btn-secondary">Edit rating</button>
+          <button data-act="approve" class="btn-secondary" title="Show this book even when it matches someone's hide filters or content rules">${b.approved ? "Remove OK mark" : "✓ Mark as OK"}</button>` : ""}
       </div>
     </div>`;
   const refresh = () => {
@@ -50,6 +52,10 @@ export async function openBook(id, state, onChange) {
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (act === "edit-verdict" || act === "cancel-verdict") {
       $("#verdict-form", dlg).classList.toggle("hidden", act === "cancel-verdict");
+    } else if (act === "approve") {
+      const ok = await attempt(() => put(`/api/books/${b.id}/approval`, { approved: !b.approved }),
+        b.approved ? "OK mark removed" : "Marked OK: it will show even when filters would hide it");
+      if (ok) refresh();
     } else if (act === "queue") {
       await attempt(() => post("/api/queue", { book_id: b.id }), "Added to Up Next");
     } else if (act === "analyze") {

@@ -8,7 +8,7 @@ import (
 
 const bookCols = `b.id, b.norm_key, b.title, b.author, b.isbn, b.description, b.blurb, b.status,
 	b.classification, b.nudity, b.solo_acts, b.heavy_innuendo, b.playful_fantasy, b.dark_occult,
-	b.demonic_presence, b.lgbtq_content, b.summary_verdict, b.analysis_model, b.analysis_error,
+	b.demonic_presence, b.lgbtq_content, b.summary_verdict, b.approved, b.approved_by, b.analysis_model, b.analysis_error,
 	b.analyzed_at, b.created_at, b.updated_at`
 
 // UpsertBook inserts a book or returns the existing one with the same NormKey,
@@ -83,6 +83,17 @@ func (s *Store) BookCopies(bookID int64) ([]BookCopy, error) {
 		cb.format, cb.external_id FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
 		WHERE cb.book_id = ? ORDER BY c.name`, bookID)
 	return cs, err
+}
+
+// SetApproved marks a book "OK" (shown despite filters and content rules) or
+// clears the mark. by records which parent did it.
+func (s *Store) SetApproved(id int64, approved bool, by string) error {
+	if !approved {
+		by = ""
+	}
+	_, err := s.DB.Exec(`UPDATE books SET approved = ?, approved_by = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?`, approved, by, id)
+	return err
 }
 
 func (s *Store) SetBlurb(id int64, blurb string) error {

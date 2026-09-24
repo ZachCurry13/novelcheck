@@ -76,6 +76,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/import/drive", s.handleImportDrive)
 				r.Post("/books/{id}/analyze", s.handleAnalyzeBook)
 				r.Put("/books/{id}/verdict", s.handleSetVerdict)
+				r.Put("/books/{id}/approval", s.handleSetApproval)
 
 				r.Get("/admin/status", s.handleAdminStatus)
 				r.Post("/admin/analyze-batch", s.handleAnalyzeBatch)
@@ -98,6 +99,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/wipe-queue", s.handleWipeQueue)
 				r.Get("/admin/calibre/browse", s.handleCalibreBrowse)
 				r.Get("/admin/calibre/find", s.handleCalibreFind)
+				r.Get("/admin/calibre/removal", s.handleCalibreRemoval)
 				r.Put("/admin/calibre/library", s.handleSetCalibreLibrary)
 				r.Post("/admin/smtp-test", s.handleSMTPTest)
 				r.Get("/admin/backup", s.handleBackup)

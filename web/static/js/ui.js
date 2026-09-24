@@ -41,6 +41,19 @@ export function classChip(book) {
   return `<span class="${cls}">${esc(c)}</span>`;
 }
 
+// GitHub issue form for suggesting new filters (the footer links to all forms).
+export const FILTER_IDEA_URL = "https://github.com/ZachCurry13/novelcheck/issues/new?template=filter_suggestion.yml";
+
+// Hide checkboxes in the Library, in display order.
+export const HIDE_LABELS = {
+  open_door: "Open Door",
+  nudity: "Nudity",
+  solo_acts: "Solo Acts",
+  heavy_innuendo: "Heavy Innuendo",
+  lgbtq: "LGBTQ+ Content",
+  dark_occult: "Dark Occult / Demonic",
+};
+
 export const FLAG_LABELS = {
   nudity: "Nudity",
   solo_acts: "Solo Acts",
@@ -57,7 +70,9 @@ export function flagChips(b) {
   if (b.lgbtq_content) on.push("LGBTQ+");
   if (b.dark_occult || b.demonic_presence) on.push("Dark Occult");
   if (b.playful_fantasy && !b.dark_occult) on.push("Fantasy Magic");
-  return on.map((f) => `<span class="chip-flag">${esc(f)}</span>`).join(" ");
+  const chips = on.map((f) => `<span class="chip-flag">${esc(f)}</span>`);
+  if (b.approved) chips.unshift(`<span class="chip-none" title="Marked OK by ${esc(b.approved_by)}">✓ OK'd by parent</span>`);
+  return chips.join(" ");
 }
 
 // Admins and editors share the management views; only admins see technical settings.

@@ -72,6 +72,8 @@ type Book struct {
 	DemonicPresence bool    `db:"demonic_presence" json:"demonic_presence"`
 	LGBTQContent    bool    `db:"lgbtq_content" json:"lgbtq_content"`
 	SummaryVerdict  string  `db:"summary_verdict" json:"summary_verdict"`
+	Approved        bool    `db:"approved" json:"approved"`
+	ApprovedBy      string  `db:"approved_by" json:"approved_by"`
 	AnalysisModel   string  `db:"analysis_model" json:"analysis_model"`
 	AnalysisError   string  `db:"analysis_error" json:"analysis_error"`
 	AnalyzedAt      *string `db:"analyzed_at" json:"analyzed_at"`

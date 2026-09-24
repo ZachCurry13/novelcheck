@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS books (
     demonic_presence INTEGER NOT NULL DEFAULT 0,
     lgbtq_content    INTEGER NOT NULL DEFAULT 0,
     summary_verdict  TEXT NOT NULL DEFAULT '',
+    approved         INTEGER NOT NULL DEFAULT 0,   -- parent marked "OK": bypasses filters
+    approved_by      TEXT NOT NULL DEFAULT '',
     analysis_model   TEXT NOT NULL DEFAULT '',
     analysis_error   TEXT NOT NULL DEFAULT '',
     analyzed_at      DATETIME,

@@ -54,7 +54,10 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 
 ### Feature 4: Multi-Catalog UI & Filtering
 * **Unified Dashboard:** Browse all books across all catalogs simultaneously.
-* **Filtering:** Filter by catalog, spice level (`Closed Door`, `Open Door`, `No Spice`), and content flags.
+* **Filtering:** Filter by catalog and spice level (`Closed Door`, `Open Door`, `No Spice`); content-flag checkboxes **hide** matching books.
+* **Parent approval:** Admins/editors can mark a book "OK", which overrides hide filters and restricted accounts' content rules (e.g. Harry Potter's fantasy magic).
+* **Calibre removal helper:** Admins can list the Calibre books their hide filters catch and copy a Calibre search (`id:=N or …`) to remove them in Calibre itself. NovelCheck keeps the library read-only.
+* **Feedback:** In-app links to GitHub issue forms for filter suggestions and general feedback.
 * **Cross-Catalog Overlap:** Matches books present in both Calibre AND external drives as single entities to allow filtering for overlapping titles.
 
 ### Feature 5: Progressive Web App (PWA) "Install as App" Support
@@ -138,13 +141,13 @@ OUTPUT FORMAT (JSON ONLY):
 | `web/static` | `index.html`, compiled Tailwind `css/app.css`, ES-module JS views, `manifest.json`, `sw.js`, icons, vendored SortableJS + JSZip |
 
 ### 5.2 Tables
-`users` (role `admin|editor|restricted` + `hide_*` content rules + delivery prefs + `guide_seen`) · `sessions` (token hash, expiry, `remember`) · `catalogs` (`calibre` | `drive` | `custom`) · `books` (one row per logical title, keyed by a normalized title + author-surname `norm_key` so the same book in Calibre and on a Kindle is shared; holds status `pending|queued|processing|analyzed|error` and the verdict flags) · `catalog_books` (copies/locations) · `queue_items` (per-user position + `queued|reading|finished`) · `settings` (admin-tunable key/values) · `token_usage` (per-call prompt/completion tokens for caps and cost).
+`users` (role `admin|editor|restricted` + `hide_*` content rules + delivery prefs + `guide_seen`) · `sessions` (token hash, expiry, `remember`) · `catalogs` (`calibre` | `drive` | `custom`) · `books` (one row per logical title, with `approved`/`approved_by` for parent "OK" marks, keyed by a normalized title + author-surname `norm_key` so the same book in Calibre and on a Kindle is shared; holds status `pending|queued|processing|analyzed|error` and the verdict flags) · `catalog_books` (copies/locations) · `queue_items` (per-user position + `queued|reading|finished`) · `settings` (admin-tunable key/values) · `token_usage` (per-call prompt/completion tokens for caps and cost).
 
 ### 5.3 HTTP API
 Public: `POST /api/auth/login`, `POST /api/auth/logout`, `GET|POST /api/setup` (first admin, only while no users exist), `GET /healthz`.
 Any signed-in user: `GET /api/me`, `PUT /api/me/password`, `PUT /api/me/delivery`, `PUT /api/me/guide-seen`, `GET /api/updates`, `GET /api/books` (filters: `q, catalog, overlap_with, multi, classification, flags, exclude, status, sort, limit, offset`), `GET /api/books/{id}`, `GET /api/books/{id}/download`, `GET /api/catalogs`, `GET|POST /api/queue`, `PUT /api/queue/order`, `DELETE /api/queue/{id}`, `POST /api/queue/{id}/start`, `POST /api/queue/{id}/finish`.
-Editor or admin: `POST /api/catalogs`, `PATCH /api/catalogs/{id}`, `POST /api/import/drive`, `POST /api/books/{id}/analyze`, `PUT /api/books/{id}/verdict`, `GET /api/admin/status`, `POST /api/admin/analyze-batch`, `POST /api/admin/calibre-sync`, `GET|POST /api/admin/users`, `PUT|DELETE /api/admin/users/{id}`, `PUT /api/admin/users/{id}/password` (editors: restricted accounts only).
-Admin only: `DELETE /api/catalogs/{id}`, `GET|PUT /api/admin/settings`, `POST /api/admin/wipe-queue`, `GET /api/admin/calibre/browse`, `GET /api/admin/calibre/find`, `PUT /api/admin/calibre/library`, `POST /api/admin/smtp-test`, `GET /api/admin/backup`.
+Editor or admin: `POST /api/catalogs`, `PATCH /api/catalogs/{id}`, `POST /api/import/drive`, `POST /api/books/{id}/analyze`, `PUT /api/books/{id}/verdict`, `PUT /api/books/{id}/approval`, `GET /api/admin/status`, `POST /api/admin/analyze-batch`, `POST /api/admin/calibre-sync`, `GET|POST /api/admin/users`, `PUT|DELETE /api/admin/users/{id}`, `PUT /api/admin/users/{id}/password` (editors: restricted accounts only).
+Admin only: `DELETE /api/catalogs/{id}`, `GET|PUT /api/admin/settings`, `POST /api/admin/wipe-queue`, `GET /api/admin/calibre/browse`, `GET /api/admin/calibre/find`, `GET /api/admin/calibre/removal`, `GET|PUT /api/admin/tunnel`, `GET /api/admin/ollama/find`, `GET|POST /api/admin/ollama/pull`, `POST /api/admin/ollama/use`, `PUT /api/admin/calibre/library`, `POST /api/admin/smtp-test`, `GET /api/admin/backup`.
 All non-GET API calls require the header `X-NovelCheck: 1`.
 
 ---
@@ -166,3 +169,4 @@ All non-GET API calls require the header `X-NovelCheck: 1`.
 13. **v1.1 usability.** Web-based first-run admin setup, Editor role with scoped permissions and manual rating corrections, in-app Calibre library folder picker, first-login How-to guide, and update notices with an in-app changelog (`CHANGELOG.md` also drives GitHub release notes).
 14. **v1.3 AI providers.** Provider menu with presets (OpenAI, Claude, Gemini, Perplexity, Ollama, other), `llm_provider` setting, a native Claude client using Anthropic's official Go SDK, and per-provider setup guides (`docs/AI_PROVIDERS.md`, bundled and shown in the admin panel).
 15. **v1.4 remote access & Ollama.** Bundled `cloudflared` supervised by `internal/tunnel` (token in Admin → Remote access, status + log, `docs/REMOTE_ACCESS.md` shown in-app) and an Ollama easy-setup flow (`internal/ollama`: discovery, model download with progress, one-click "use this model").
+16. **v1.5 filters & feedback.** Hide-style filter checkboxes (incl. Open Door), parent "Mark as OK" (`PUT /api/books/{id}/approval`) respected by filters and content rules, Calibre removal helper (`GET /api/admin/calibre/removal`), GitHub issue forms and in-app feedback links.

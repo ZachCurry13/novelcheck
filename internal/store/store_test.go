@@ -173,3 +173,44 @@ func TestAnalysisQueueLifecycle(t *testing.T) {
 		t.Fatalf("unexpected counts %v", counts)
 	}
 }
+
+// A parent's "OK" mark overrides kids' content rules and hide filters, and
+// keeps the book off the Calibre removal list.
+func TestApprovalOverridesFilters(t *testing.T) {
+	s := newStore(t)
+	_, _, ids := seed(t, s)
+	kid, _ := s.CreateUser("kid", "x", store.RoleRestricted)
+
+	if _, err := s.BookByID(ids["Spooky"], kid); err != store.ErrNotFound {
+		t.Fatal("Spooky should be hidden before approval")
+	}
+	hide := store.BookFilter{ExcludeFlags: []string{"dark_occult"}}
+	if books, _, _ := s.ListBooks(hide, nil); titles(books)["Spooky"] {
+		t.Fatal("hide filter should hide Spooky")
+	}
+	matches, _ := s.CalibreMatches(store.BookFilter{AnyFlags: []string{"nudity", "open_door"}})
+	if len(matches) != 1 || matches[0].Title != "Steamy" {
+		t.Fatalf("removal list: %+v", matches)
+	}
+
+	if err := s.SetApproved(ids["Spooky"], true, "mom"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.SetApproved(ids["Steamy"], true, "mom"); err != nil {
+		t.Fatal(err)
+	}
+	b, err := s.BookByID(ids["Spooky"], kid)
+	if err != nil || !b.Approved || b.ApprovedBy != "mom" {
+		t.Fatalf("approved book should be visible to kid: %+v %v", b, err)
+	}
+	if books, _, _ := s.ListBooks(hide, nil); !titles(books)["Spooky"] {
+		t.Fatal("approved book should survive hide filter")
+	}
+	if matches, _ := s.CalibreMatches(store.BookFilter{AnyFlags: []string{"nudity"}}); len(matches) != 0 {
+		t.Fatalf("approved book must not be offered for removal: %+v", matches)
+	}
+	_ = s.SetApproved(ids["Spooky"], false, "mom")
+	if b, _ := s.BookByID(ids["Spooky"], nil); b.Approved || b.ApprovedBy != "" {
+		t.Fatalf("approval not cleared: %+v", b)
+	}
+}

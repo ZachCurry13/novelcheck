@@ -1,0 +1,27 @@
+name: Suggest a filter
+description: Ask for a new content filter or rating category.
+title: "Filter idea: "
+labels: ["filter idea"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks! Describe the kind of content you'd like NovelCheck to spot, so families can hide it.
+  - type: input
+    id: name
+    attributes:
+      label: Filter name
+      placeholder: e.g. Graphic violence, Profanity, Substance use
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What should it catch?
+      description: What would put a book in this filter? Any examples of books that should (or shouldn't) be caught?
+    validations:
+      required: true
+  - type: dropdown
+    id: who
+    attributes:
+      label: Who is this mainly for?
+      options: ["Young kids", "Teens", "Adults / my own reading", "Everyone"]

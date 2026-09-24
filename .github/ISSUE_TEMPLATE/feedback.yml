@@ -1,0 +1,16 @@
+name: Feedback or problem
+description: Tell us what's working, what isn't, or what you'd like changed.
+body:
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What's on your mind?
+      description: If something went wrong, say what you did and what happened.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: NovelCheck version
+      description: Shown at the top right of NovelCheck, next to Sign out.
+      placeholder: e.g. 1.5.0

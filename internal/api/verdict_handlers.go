@@ -62,3 +62,30 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 	b, _ := s.Store.BookByID(id, nil)
 	writeJSON(w, http.StatusOK, b)
 }
+
+// handleSetApproval lets an admin or editor mark a book "OK" so it shows
+// even when it matches someone's hide filters or content rules (for
+// example Harry Potter's fantasy magic), or remove that mark.
+func (s *Server) handleSetApproval(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r, "id")
+	if !ok {
+		writeErr(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+	var body struct {
+		Approved bool `json:"approved"`
+	}
+	if !readJSON(w, r, &body, 1<<10) {
+		return
+	}
+	if _, err := s.Store.BookByID(id, nil); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	if err := s.Store.SetApproved(id, body.Approved, auth.UserFrom(r).Username); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	b, _ := s.Store.BookByID(id, nil)
+	writeJSON(w, http.StatusOK, b)
+}

@@ -7,7 +7,7 @@ const EVERYONE = [
   ["👋 Welcome to NovelCheck",
     "NovelCheck helps you pick books that fit your family. Each book gets a simple rating for romance (\"spice\") and a few content flags, so you know what's inside before you start reading."],
   ["📚 The Library",
-    "The <b>Library</b> tab shows every book. Use the search box and the drop-downs to narrow it down. Tick the boxes (like <b>Nudity</b>) to see only books that include those things."],
+    "The <b>Library</b> tab shows every book. Use the search box and the drop-downs to narrow it down. Tick the <b>Hide</b> boxes (like <b>Nudity</b>) to hide books that include those things. Missing a filter? Use <b>Suggest one</b> next to the boxes."],
   ["🌶️ What the ratings mean",
     `<ul class="list-disc space-y-1 pl-5">
       <li><span class="chip-none">No Spice</span>: no physical intimacy.</li>
@@ -30,7 +30,7 @@ const MANAGER = [
   ["🛠️ The Manage tab",
     "Your account can manage NovelCheck. The <b>Manage</b> tab shows how many books are rated and what the AI has cost so far. <b>Analyze batch</b> rates the next few unrated books, and <b>Sync Calibre now</b> picks up newly added books."],
   ["✏️ Fixing a rating",
-    "If a rating looks wrong, open the book and choose <b>Edit rating</b>. Your correction is saved with your name, so everyone knows it was checked by a person."],
+    "If a rating looks wrong, open the book and choose <b>Edit rating</b>. Your correction is saved with your name. If a book is fine for your family even though a filter catches it (Harry Potter's magic, say), choose <b>✓ Mark as OK</b>: it then shows for everyone, kids included."],
   ["👧 Kids' accounts",
     "At the bottom of <b>Manage</b> you can add kid accounts, reset their passwords, and tick what each child should <b>not</b> see (for example Open Door or Dark Occult). Hidden books never show up for them, not even in search."],
   ["💾 Importing a Kindle",

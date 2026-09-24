@@ -4,6 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.5.0]
+
+### Changed
+- **Filter boxes now hide books**: the Library's checkboxes are labeled **Hide:**. Ticking **Nudity**, for example, hides books with nudity instead of showing only those. There's also a new **Open Door** box.
+
+### New
+- **✓ Mark as OK**: if a filter catches a book that's fine for your family (Harry Potter's magic, say), an admin or editor can open it and click **Mark as OK**. It then shows for everyone, kids included, whatever the filters or content rules say. Click **Remove OK mark** to undo.
+- **Remove hidden books from Calibre** (admins): in the Library, tick the Hide boxes, then click **Remove hidden books from Calibre…**. NovelCheck lists the matching Calibre books (never ones marked OK) and gives you a search to paste into Calibre, which then removes exactly those books using its own recycle bin.
+- **Suggest a filter / feedback**: links at the bottom of every page and next to the Hide boxes open a short form on GitHub (a free GitHub account is needed).
+
 ## [1.4.0]
 
 ### New
