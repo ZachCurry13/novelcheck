@@ -62,6 +62,7 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		Username string `json:"username"`
 		Password string `json:"password"`
 		Role     string `json:"role"`
+		AgeLevel int    `json:"age_level"` // kid accounts: 1 young kids .. 5 adults
 	}
 	if !readJSON(w, r, &body, 4<<10) {
 		return
@@ -83,7 +84,11 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	u, err := s.Store.CreateUser(body.Username, hash, body.Role)
+	if !store.ValidAge(body.AgeLevel) {
+		writeErr(w, http.StatusBadRequest, "unknown age group")
+		return
+	}
+	u, err := s.Store.CreateUserAge(body.Username, hash, body.Role, body.AgeLevel)
 	if err != nil {
 		writeErr(w, http.StatusConflict, "username already exists")
 		return
@@ -113,6 +118,13 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	if existing.IsAdmin() && !upd.IsAdmin() && s.lastAdmin() {
 		writeErr(w, http.StatusBadRequest, "cannot demote the last admin")
 		return
+	}
+	if !store.ValidAge(upd.AgeLevel) {
+		writeErr(w, http.StatusBadRequest, "unknown age group")
+		return
+	}
+	if upd.Role != store.RoleRestricted {
+		upd.AgeLevel = 0
 	}
 	if msg := validateDelivery(upd.DeliveryMethod, upd.KindleEmail); msg != "" {
 		writeErr(w, http.StatusBadRequest, msg)

@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.8.0]
+
+### New
+- **Age groups**: open any book and set its **Age group**: Young kids (up to 8), Middle grade (9–12), Teens (13–15), Young adult (16–17) or Adults (18+). Choosing one also counts as rating the book, even before the AI gets to it. The Library has a **Suitable for…** filter, and book cards show the age group.
+- **Kid accounts by age group**: when you add a kid, pick their age group ("Kid · Teens (13–15)", for example). Each group starts with sensible content rules, and kids only see books rated for their group or younger. Existing kid accounts can be switched under **Admin → Users**.
+- **Parents' notes**: after reading a book, leave a note on it. Notes can be for **everyone** (kids see them as "Notes from your parents") or **parents only** 🔒. You can edit or delete your own notes.
+- **Usage tab** (admins): CPU, memory, **network speed** (download and upload) and disk, with 15-minute charts, plus books rated, AI calls and cost, AI tokens per day for the last two weeks, and what Ollama has loaded. The **System** tab now holds just the connection checks.
+
 ## [1.7.0]
 
 ### New

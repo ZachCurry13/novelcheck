@@ -9,12 +9,25 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// handleSystem reports NovelCheck's resource use, the analysis worker, and
+// handleSystem feeds the Usage page: NovelCheck's resource use and recent
+// history, AI token use, library counts, the analysis worker, and
 // (when an Ollama server is configured) which models it has loaded.
 func (s *Server) handleSystem(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{
 		"novelcheck": s.SysInfo.Snapshot(),
+		"history":    s.SysInfo.History(),
 		"worker":     s.Worker.Status(),
+	}
+	if days, err := s.Store.DailyTokens(14); err == nil {
+		out["daily_tokens"] = days
+	}
+	if counts, err := s.Store.StatusCounts(); err == nil {
+		out["counts"] = counts
+	}
+	if u, err := s.Store.Usage(); err == nil {
+		pin, pout := s.Store.SettingFloat(store.KeyPriceInputPerM), s.Store.SettingFloat(store.KeyPriceOutputPerM)
+		out["usage"] = u
+		out["cost_spent"] = float64(u.TotalPrompt)*pin/1e6 + float64(u.TotalCompletion)*pout/1e6
 	}
 	if base := ollamaBase(s.Store.Setting(store.KeyLLMBaseURL)); base != "" {
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)

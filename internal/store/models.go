@@ -38,6 +38,7 @@ type User struct {
 	DeliveryMethod string `db:"delivery_method" json:"delivery_method"`
 	KindleEmail    string `db:"kindle_email" json:"kindle_email"`
 	GuideSeen      bool   `db:"guide_seen" json:"guide_seen"`
+	AgeLevel       int    `db:"age_level" json:"age_level"` // kid accounts only; 0 = not set
 	CreatedAt      string `db:"created_at" json:"created_at"`
 }
 
@@ -74,6 +75,8 @@ type Book struct {
 	SummaryVerdict  string  `db:"summary_verdict" json:"summary_verdict"`
 	Approved        bool    `db:"approved" json:"approved"`
 	ApprovedBy      string  `db:"approved_by" json:"approved_by"`
+	AgeLevel        int     `db:"age_level" json:"age_level"`
+	AgeSetBy        string  `db:"age_set_by" json:"age_set_by"`
 	AnalysisModel   string  `db:"analysis_model" json:"analysis_model"`
 	AnalysisError   string  `db:"analysis_error" json:"analysis_error"`
 	AnalyzedAt      *string `db:"analyzed_at" json:"analyzed_at"`

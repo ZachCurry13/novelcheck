@@ -60,6 +60,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/books/{id}", s.handleGetBook)
 			r.Get("/books/{id}/download", s.handleDownload)
 			r.Get("/catalogs", s.handleListCatalogs)
+			r.Get("/age-groups", s.handleAgeGroups)
 			r.Get("/updates", s.handleUpdates)
 
 			r.Get("/queue", s.handleListQueue)
@@ -79,6 +80,10 @@ func (s *Server) Router() http.Handler {
 				r.Post("/books/{id}/analyze", s.handleAnalyzeBook)
 				r.Put("/books/{id}/verdict", s.handleSetVerdict)
 				r.Put("/books/{id}/approval", s.handleSetApproval)
+				r.Put("/books/{id}/age", s.handleSetAge)
+				r.Post("/books/{id}/notes", s.handleAddNote)
+				r.Put("/notes/{id}", s.handleUpdateNote)
+				r.Delete("/notes/{id}", s.handleDeleteNote)
 
 				r.Get("/admin/status", s.handleAdminStatus)
 				r.Get("/notifications", s.handleNotifications)

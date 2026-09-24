@@ -53,6 +53,9 @@ func main() {
 	syncer := &calibre.Syncer{Store: st, Dir: cfg.CalibreDir}
 	go syncer.Loop(ctx)
 
+	sampler := sysinfo.New(cfg.DataDir)
+	go sampler.Loop(ctx)
+
 	// Built-in Cloudflare Tunnel for access from outside the home network.
 	tun := tunnel.New()
 	tun.OnChange = func(state, lastErr string) {
@@ -78,7 +81,7 @@ func main() {
 		Syncer:  syncer,
 		Updates: updates.New(),
 		Tunnel:  tun,
-		SysInfo: sysinfo.New(cfg.DataDir),
+		SysInfo: sampler,
 		Web:     web.FS(),
 	}
 	srv.Pulls.OnError = func(model string, err error) {

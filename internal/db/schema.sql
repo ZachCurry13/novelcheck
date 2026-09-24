@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
     delivery_method  TEXT NOT NULL DEFAULT 'none' CHECK (delivery_method IN ('none', 'email', 'koreader')),
     kindle_email     TEXT NOT NULL DEFAULT '',
     guide_seen       INTEGER NOT NULL DEFAULT 0,
+    age_level        INTEGER NOT NULL DEFAULT 0,   -- kid accounts: 1 young kids .. 5 adults; 0 = not set
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -55,6 +56,8 @@ CREATE TABLE IF NOT EXISTS books (
     summary_verdict  TEXT NOT NULL DEFAULT '',
     approved         INTEGER NOT NULL DEFAULT 0,   -- parent marked "OK": bypasses filters
     approved_by      TEXT NOT NULL DEFAULT '',
+    age_level        INTEGER NOT NULL DEFAULT 0,   -- parent-set age group, 1 young kids .. 5 adults; 0 = not set
+    age_set_by       TEXT NOT NULL DEFAULT '',
     analysis_model   TEXT NOT NULL DEFAULT '',
     analysis_error   TEXT NOT NULL DEFAULT '',
     analyzed_at      DATETIME,
@@ -114,3 +117,15 @@ CREATE TABLE IF NOT EXISTS notifications (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(read, updated_at);
+
+-- Parents' notes on books (e.g. after reading them).
+CREATE TABLE IF NOT EXISTS book_notes (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body       TEXT NOT NULL,
+    visibility TEXT NOT NULL DEFAULT 'everyone' CHECK (visibility IN ('everyone', 'parents')),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_book_notes_book ON book_notes(book_id);

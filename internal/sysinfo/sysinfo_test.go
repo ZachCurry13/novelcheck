@@ -23,3 +23,24 @@ func TestSnapshot(t *testing.T) {
 		t.Fatalf("cpu percent out of range: %v", snap.CPUPercent)
 	}
 }
+
+func TestNetworkAndHistory(t *testing.T) {
+	s := New(t.TempDir())
+	if _, _, ok := netBytes(); !ok {
+		t.Skip("/proc/net/dev not available")
+	}
+	s.Snapshot()
+	time.Sleep(600 * time.Millisecond)
+	snap := s.Snapshot()
+	if snap.RxPerSec < 0 || snap.TxPerSec < 0 {
+		t.Fatalf("negative network rate: %+v", snap)
+	}
+	s.mu.Lock()
+	for i := 0; i < historyLen+5; i++ {
+		s.history = append(s.history, Point{})
+	}
+	s.mu.Unlock()
+	if h := s.History(); len(h) != historyLen+5 {
+		t.Fatalf("history copy: %d", len(h))
+	}
+}

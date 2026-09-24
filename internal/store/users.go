@@ -9,7 +9,7 @@ import (
 var ErrNotFound = errors.New("not found")
 
 const userCols = `id, username, password_hash, role, hide_open_door, hide_nudity, hide_solo_acts,
-	hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, delivery_method, kindle_email, guide_seen, created_at`
+	hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, created_at`
 
 func (s *Store) CountUsers() (int, error) {
 	var n int
@@ -52,14 +52,28 @@ func (s *Store) getUser(q string, arg any) (*User, error) {
 // CreateUser inserts a user. Restricted accounts default to the strictest
 // content profile; admins can loosen it afterwards.
 func (s *Store) CreateUser(username, hash, role string) (*User, error) {
-	if !ValidRole(role) {
-		return nil, fmt.Errorf("invalid role %q", role)
+	return s.CreateUserAge(username, hash, role, 0)
+}
+
+// CreateUserAge creates a user; kid (restricted) accounts with an age group
+// start from that age group's content rules instead of the strictest ones.
+func (s *Store) CreateUserAge(username, hash, role string, age int) (*User, error) {
+	if !ValidRole(role) || !ValidAge(age) {
+		return nil, fmt.Errorf("invalid role %q or age group %d", role, age)
 	}
 	strict := role == RoleRestricted
+	p := User{HideOpenDoor: strict, HideNudity: strict, HideSoloActs: strict, HideInnuendo: strict,
+		HideDarkOccult: strict, HideUnrated: strict}
+	if role != RoleRestricted {
+		age = 0
+	} else if preset, ok := agePresets[age]; ok {
+		p = preset
+	}
 	res, err := s.DB.Exec(`INSERT INTO users (username, password_hash, role, hide_open_door,
-		hide_nudity, hide_solo_acts, hide_innuendo, hide_dark_occult, hide_unrated)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		username, hash, role, strict, strict, strict, strict, strict, strict)
+		hide_nudity, hide_solo_acts, hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, age_level)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		username, hash, role, p.HideOpenDoor, p.HideNudity, p.HideSoloActs, p.HideInnuendo,
+		p.HideDarkOccult, p.HideLGBTQ, p.HideUnrated, age)
 	if err != nil {
 		return nil, err
 	}
@@ -90,9 +104,9 @@ func (s *Store) CreateFirstAdmin(username, hash string) (*User, error) {
 func (s *Store) UpdateUserProfile(u *User) error {
 	_, err := s.DB.Exec(`UPDATE users SET role = ?, hide_open_door = ?, hide_nudity = ?,
 		hide_solo_acts = ?, hide_innuendo = ?, hide_dark_occult = ?, hide_lgbtq = ?,
-		hide_unrated = ?, delivery_method = ?, kindle_email = ? WHERE id = ?`,
+		hide_unrated = ?, delivery_method = ?, kindle_email = ?, age_level = ? WHERE id = ?`,
 		u.Role, u.HideOpenDoor, u.HideNudity, u.HideSoloActs, u.HideInnuendo,
-		u.HideDarkOccult, u.HideLGBTQ, u.HideUnrated, u.DeliveryMethod, u.KindleEmail, u.ID)
+		u.HideDarkOccult, u.HideLGBTQ, u.HideUnrated, u.DeliveryMethod, u.KindleEmail, u.AgeLevel, u.ID)
 	return err
 }
 

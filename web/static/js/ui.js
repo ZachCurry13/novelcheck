@@ -60,6 +60,20 @@ export function classChip(book) {
   return `<span class="${cls}">${esc(c)}</span>`;
 }
 
+// Age groups (same order and levels as the server's store.AgeGroups).
+export const AGE_GROUPS = [
+  [1, "Young kids", "up to 8"],
+  [2, "Middle grade", "9–12"],
+  [3, "Teens", "13–15"],
+  [4, "Young adult", "16–17"],
+  [5, "Adults", "18+"],
+];
+export const ageLabel = (lvl) => {
+  const g = AGE_GROUPS.find(([l]) => l === lvl);
+  return g ? `${g[1]} (${g[2]})` : "";
+};
+export const ageChip = (b) => (b.age_level ? `<span class="chip-cat" title="Age group set by ${esc(b.age_set_by)}">👪 ${esc(ageLabel(b.age_level))}</span>` : "");
+
 // GitHub issue form for suggesting new filters (the footer links to all forms).
 export const FILTER_IDEA_URL = "https://github.com/ZachCurry13/novelcheck/issues/new?template=filter_suggestion.yml";
 

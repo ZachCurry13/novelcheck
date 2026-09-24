@@ -10,6 +10,7 @@ import { renderWhatsNew } from "./whatsnew.js";
 import { openGuide } from "./guide.js";
 import { checkForUpdates } from "./updatebanner.js";
 import { renderSystem } from "./system.js";
+import { renderUsage } from "./usage.js";
 import { initBell } from "./notifications.js";
 
 export const state = { user: null };
@@ -22,9 +23,10 @@ const routes = {
   profile: renderProfile,
   whatsnew: renderWhatsNew,
   system: renderSystem,
+  usage: renderUsage,
 };
 const managerRoutes = new Set(["import", "admin"]);
-const adminRoutes = new Set(["system"]);
+const adminRoutes = new Set(["system", "usage"]);
 
 function showOnly(id) {
   for (const v of ["#setup-view", "#login-view", "#app-view"]) $(v).classList.toggle("hidden", v !== id);

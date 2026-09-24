@@ -1,7 +1,7 @@
 // User management: accounts, roles and parental content rules.
 // Admins manage everyone; editors see and manage only kid accounts.
 import { get, post, put, del } from "./api.js";
-import { $, $$, esc, attempt } from "./ui.js";
+import { $, $$, esc, attempt, AGE_GROUPS } from "./ui.js";
 
 export const RULES = [
   ["hide_open_door", "Hide Open Door"],
@@ -13,12 +13,20 @@ export const RULES = [
   ["hide_unrated", "Hide books not yet analyzed"],
 ];
 
-const ROLE_LABELS = { restricted: "Restricted (Kid)", editor: "Editor", admin: "Admin" };
-
-function roleOptions(selected, isAdmin) {
-  const roles = isAdmin ? ["restricted", "editor", "admin"] : ["restricted"];
-  return roles.map((r) => `<option value="${r}" ${r === selected ? "selected" : ""}>${ROLE_LABELS[r]}</option>`).join("");
+// Account types: kid accounts by age group (they only see books rated for
+// their age or younger), plus Editor and Admin. Values are "role:age".
+function typeOptions(role, age, isAdmin) {
+  const cur = `${role}:${role === "restricted" ? age || 0 : 0}`;
+  const opts = AGE_GROUPS.filter(([l]) => l < 5).map(([l, n, r]) => [`restricted:${l}`, `Kid · ${n} (${r})`]);
+  opts.push(["restricted:0", "Kid · no age group (content rules only)"]);
+  if (isAdmin) opts.push(["editor:0", "Editor (parent, no technical settings)"], ["admin:0", "Admin"]);
+  return opts.map(([v, l]) => `<option value="${v}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`).join("");
 }
+
+const parseType = (v) => {
+  const [role, age] = String(v || "restricted:0").split(":");
+  return { role, age_level: Number(age) || 0 };
+};
 
 export async function renderUsers(host, viewer) {
   const isAdmin = viewer?.role === "admin";
@@ -34,7 +42,7 @@ export async function renderUsers(host, viewer) {
     <form id="new-user" class="card mb-4 grid gap-3 md:grid-cols-4">
       <input name="username" required placeholder="Username" class="input">
       <input name="password" type="password" required minlength="8" placeholder="Password (8+ chars)" class="input" autocomplete="new-password">
-      <select name="role" class="input" ${isAdmin ? "" : "disabled"}>${roleOptions("restricted", isAdmin)}</select>
+      <select name="type" class="input" title="Kids start with content rules suited to their age group; you can change them after.">${typeOptions("restricted", 2, isAdmin)}</select>
       <button class="btn-primary">Add user</button>
     </form>
     <div class="grid gap-3 lg:grid-cols-2">${users.map((u) => userCard(u, isAdmin)).join("")}</div>`;
@@ -42,8 +50,7 @@ export async function renderUsers(host, viewer) {
   $("#new-user", root).addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const body = Object.fromEntries(fd);
-    body.role = body.role || "restricted";
+    const body = { username: fd.get("username"), password: fd.get("password"), ...parseType(fd.get("type")) };
     const ok = await attempt(() => post("/api/admin/users", body), "User created");
     if (ok) renderUsers(host, viewer);
   });
@@ -54,7 +61,7 @@ export async function renderUsers(host, viewer) {
     const cardEl = e.target.closest("[data-user]");
     const id = cardEl.dataset.user;
     if (act === "save") {
-      const body = { role: $("[name=role]", cardEl).value,
+      const body = { ...parseType($("[name=type]", cardEl).value),
         delivery_method: $("[name=delivery_method]", cardEl).value,
         kindle_email: $("[name=kindle_email]", cardEl).value };
       $$("[data-rule]", cardEl).forEach((cb) => (body[cb.dataset.rule] = cb.checked));
@@ -75,7 +82,7 @@ function userCard(u, isAdmin) {
     <div data-user="${u.id}" class="card space-y-3">
       <div class="flex items-center justify-between">
         <p class="font-semibold">${esc(u.username)}</p>
-        <select name="role" class="input w-auto py-1 text-sm" ${isAdmin ? "" : "disabled"}>${roleOptions(u.role, isAdmin)}</select>
+        <select name="type" class="input w-auto max-w-[60%] py-1 text-sm">${typeOptions(u.role, u.age_level, isAdmin)}</select>
       </div>
       <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
         ${RULES.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-rule="${k}" ${u[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}

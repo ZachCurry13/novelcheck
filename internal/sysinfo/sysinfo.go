@@ -1,4 +1,4 @@
-// Package sysinfo reports NovelCheck's own resource use for the System page:
+// Package sysinfo reports NovelCheck's own resource use for the Usage page:
 // CPU and memory of its container (Linux cgroup v2, falling back to the
 // process), plus disk space and database size for the data folder.
 package sysinfo
@@ -25,6 +25,8 @@ type Snapshot struct {
 	DiskTotal     uint64  `json:"disk_total"`
 	DBSize        uint64  `json:"db_size"`
 	Goroutines    int     `json:"goroutines"`
+	RxPerSec      float64 `json:"rx_per_sec"` // network download, bytes/s
+	TxPerSec      float64 `json:"tx_per_sec"` // network upload, bytes/s
 }
 
 // Sampler remembers the previous CPU reading so it can report a rate.
@@ -36,6 +38,11 @@ type Sampler struct {
 	lastCPU  float64 // CPU seconds used
 	lastWall time.Time
 	lastPct  float64
+
+	lastRx, lastTx uint64
+	netAt          time.Time
+	rxRate, txRate float64
+	history        []Point
 }
 
 func New(dataDir string) *Sampler { return &Sampler{DataDir: dataDir, start: time.Now()} }
@@ -47,6 +54,7 @@ func (s *Sampler) Snapshot() Snapshot {
 		Goroutines:    runtime.NumGoroutine(),
 	}
 	snap.CPUPercent = s.cpuPercent(snap.CPUCores)
+	snap.RxPerSec, snap.TxPerSec = s.sampleNet(time.Now())
 	snap.MemUsed, snap.MemLimit, snap.MemIsLimit = memory()
 	var st syscall.Statfs_t
 	if syscall.Statfs(s.DataDir, &st) == nil {

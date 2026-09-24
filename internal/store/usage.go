@@ -1,5 +1,10 @@
 package store
 
+import (
+	"fmt"
+	"time"
+)
+
 // UsageStats summarises LLM token consumption for the cost dashboard.
 type UsageStats struct {
 	LastHourTokens  int     `json:"last_hour_tokens"`
@@ -58,4 +63,37 @@ func (s *Store) Usage() (UsageStats, error) {
 		u.AvgPerBook = float64(row.P+row.C) / float64(row.N)
 	}
 	return u, nil
+}
+
+// DayTokens is one day's AI token use.
+type DayTokens struct {
+	Day    string `db:"day" json:"day"`
+	Tokens int    `db:"tokens" json:"tokens"`
+	Calls  int    `db:"calls" json:"calls"`
+}
+
+// DailyTokens returns token use per day for the last n days (UTC), oldest
+// first, with zero rows for quiet days.
+func (s *Store) DailyTokens(n int) ([]DayTokens, error) {
+	var rows []DayTokens
+	if err := s.DB.Select(&rows, `SELECT date(at) AS day, SUM(prompt_tokens + completion_tokens) AS tokens,
+		COUNT(*) AS calls FROM token_usage WHERE at >= date('now', ?) GROUP BY day`,
+		fmt.Sprintf("-%d days", n-1)); err != nil {
+		return nil, err
+	}
+	byDay := map[string]DayTokens{}
+	for _, r := range rows {
+		byDay[r.Day] = r
+	}
+	out := make([]DayTokens, 0, n)
+	today := time.Now().UTC()
+	for i := n - 1; i >= 0; i-- {
+		d := today.AddDate(0, 0, -i).Format("2006-01-02")
+		r, ok := byDay[d]
+		if !ok {
+			r = DayTokens{Day: d}
+		}
+		out = append(out, r)
+	}
+	return out, nil
 }

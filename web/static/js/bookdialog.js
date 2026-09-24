@@ -1,7 +1,8 @@
 // Book detail modal: verdict, blurb, catalog copies and actions.
 import { get, post, put } from "./api.js";
-import { $, esc, attempt, classChip, flagChips, canManage } from "./ui.js";
+import { $, esc, attempt, classChip, flagChips, ageChip, canManage } from "./ui.js";
 import { verdictFormHTML, bindVerdictForm } from "./verdictform.js";
+import { ageAndNotesHTML, bindAgeAndNotes } from "./booknotes.js";
 
 export async function openBook(id, state, onChange) {
   const dlg = $("#book-dialog");
@@ -24,7 +25,7 @@ export async function openBook(id, state, onChange) {
         </div>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${flagChips(b)}</div>
+      <div class="flex flex-wrap gap-1">${classChip(b)} ${ageChip(b)} ${flagChips(b)}</div>
       ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}
       ${b.status === "error" && manager ? `<p class="text-sm text-rose-400">Last error: ${esc(b.analysis_error)}</p>` : ""}
       ${(b.blurb || b.description) ? `<div><span class="label">Blurb</span>
@@ -34,6 +35,7 @@ export async function openBook(id, state, onChange) {
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : "Analyzed by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
       ${b.approved ? `<p class="text-xs text-emerald-400">✓ Marked OK by ${esc(b.approved_by)}: shown to everyone, even if it matches their hide filters or content rules.</p>` : ""}
       ${manager ? verdictFormHTML(b) : ""}
+      ${ageAndNotesHTML(b, data.notes || [], manager, state.user)}
       <div class="flex flex-wrap gap-2 pt-2">
         <button data-act="queue" class="btn-primary">Add to Up Next</button>
         ${data.downloadable ? `<a href="/api/books/${b.id}/download" class="btn-secondary">Download</a>` : ""}
@@ -47,6 +49,7 @@ export async function openBook(id, state, onChange) {
     onChange?.();
   };
   if (manager) bindVerdictForm(dlg, b.id, refresh);
+  bindAgeAndNotes(dlg, b, data.notes || [], state.user, onChange);
   dlg.onclick = async (e) => {
     if (e.target === dlg || e.target.closest("[data-close]")) return dlg.close();
     const act = e.target.closest("[data-act]")?.dataset.act;

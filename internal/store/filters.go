@@ -13,6 +13,7 @@ type BookFilter struct {
 	ExcludeFlags   []string // hide books with ANY of these flags (parent-approved books stay)
 	AnyFlags       []string // books with ANY of these flags (used for the Calibre removal list)
 	Status         string
+	Age            string // "" any | "unset" | "1".."5" = suitable up to that age group
 	Sort           string // "title" (default) | "author" | "recent"
 	Limit, Offset  int
 }
@@ -43,7 +44,8 @@ func visibilityClause(u *User) (string, []any) {
 	}
 	var parts []string
 	if u.HideUnrated {
-		parts = append(parts, "b.status = 'analyzed'")
+		// A parent picking an age group counts as rating the book.
+		parts = append(parts, "(b.status = 'analyzed' OR b.age_level > 0)")
 	}
 	if u.HideOpenDoor {
 		parts = append(parts, "COALESCE(b.classification, '') != 'Open Door'")
@@ -63,10 +65,17 @@ func visibilityClause(u *User) (string, []any) {
 	if u.HideLGBTQ {
 		parts = append(parts, "b.lgbtq_content = 0")
 	}
-	if len(parts) == 0 {
-		return "", nil
+	clause := ""
+	if len(parts) > 0 {
+		clause = " AND (b.approved = 1 OR (" + strings.Join(parts, " AND ") + "))"
 	}
-	return " AND (b.approved = 1 OR (" + strings.Join(parts, " AND ") + "))", nil
+	// An age group set on the book always applies to kids of a younger group,
+	// even if a parent marked the book OK for its content.
+	if u.Role == RoleRestricted && u.AgeLevel > 0 {
+		clause += " AND (b.age_level = 0 OR b.age_level <= ?)"
+		return clause, []any{u.AgeLevel}
+	}
+	return clause, nil
 }
 
 // filterCond turns f (plus the viewer's content rules) into a WHERE clause.
@@ -114,6 +123,13 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	}
 	if len(anyOf) > 0 {
 		where = append(where, "b.approved = 0 AND ("+strings.Join(anyOf, " OR ")+")")
+	}
+	switch {
+	case f.Age == "unset":
+		where = append(where, "b.age_level = 0")
+	case len(f.Age) == 1 && f.Age >= "1" && f.Age <= "5":
+		where = append(where, "b.age_level BETWEEN 1 AND ?")
+		args = append(args, int(f.Age[0]-'0'))
 	}
 	if f.Status != "" {
 		where = append(where, "b.status = ?")

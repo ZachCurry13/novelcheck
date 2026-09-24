@@ -1,6 +1,6 @@
 // Profile: delivery preference, password change, and read-only content rules.
 import { put } from "./api.js";
-import { $, esc, attempt } from "./ui.js";
+import { $, esc, attempt, ageLabel } from "./ui.js";
 import { RULES } from "./users.js";
 import { refreshUser } from "./app.js";
 import { openGuide } from "./guide.js";
@@ -32,6 +32,7 @@ export async function renderProfile(view, state) {
       </form>
       <div class="card lg:col-span-2">
         <h2 class="mb-2 text-lg font-semibold">Content rules on this account</h2>
+        ${u.age_level ? `<p class="mb-2 text-sm text-slate-300">👪 Age group: <b>${esc(ageLabel(u.age_level))}</b>. Books a parent rated for older readers are hidden.</p>` : ""}
         ${active ? `<ul class="list-disc pl-5 text-sm text-slate-300">${active}</ul>`
           : `<p class="text-sm text-slate-400">No content is hidden for this account.</p>`}
         ${u.role === "restricted" ? `<p class="mt-2 text-xs text-slate-500">Only a parent (admin or editor) can change these rules.</p>`

@@ -35,6 +35,7 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		Flags:          splitCSV(q.Get("flags")),
 		ExcludeFlags:   splitCSV(q.Get("exclude")),
 		Status:         q.Get("status"),
+		Age:            q.Get("age"),
 		Sort:           q.Get("sort"),
 		Limit:          queryInt(r, "limit"),
 		Offset:         queryInt(r, "offset"),
@@ -73,7 +74,12 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	_, downloadable := delivery.BestFile(copies, false)
-	writeJSON(w, http.StatusOK, map[string]any{"book": b, "copies": copies, "downloadable": downloadable})
+	notes, err := s.Store.BookNotes(id, u)
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"book": b, "copies": copies, "downloadable": downloadable, "notes": notes})
 }
 
 // handleDownload streams the best on-disk copy (used by KOReader / manual sync).
