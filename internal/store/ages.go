@@ -23,11 +23,11 @@ func ValidAge(level int) bool { return level >= 0 && level <= len(AgeGroups) }
 // agePresets are the starting content rules for a new kid account of each age
 // group. Parents can change any of them afterwards.
 var agePresets = map[int]User{
-	1: {HideOpenDoor: true, HideNudity: true, HideSoloActs: true, HideInnuendo: true, HideDarkOccult: true, HideUnrated: true},
-	2: {HideOpenDoor: true, HideNudity: true, HideSoloActs: true, HideInnuendo: true, HideDarkOccult: true, HideUnrated: true},
-	3: {HideOpenDoor: true, HideNudity: true, HideSoloActs: true, HideInnuendo: true, HideDarkOccult: true, HideUnrated: true},
-	4: {HideOpenDoor: true, HideSoloActs: true, HideDarkOccult: true, HideUnrated: true},
-	5: {},
+	1: {MaxSpice: 0, HideOpenDoor: true, HideNudity: true, HideSoloActs: true, HideInnuendo: true, HideDarkOccult: true, HideUnrated: true},
+	2: {MaxSpice: 1, HideOpenDoor: true, HideNudity: true, HideSoloActs: true, HideInnuendo: true, HideDarkOccult: true, HideUnrated: true},
+	3: {MaxSpice: 2, HideOpenDoor: true, HideNudity: true, HideSoloActs: true, HideInnuendo: true, HideDarkOccult: true, HideUnrated: true},
+	4: {MaxSpice: 3, HideOpenDoor: true, HideSoloActs: true, HideDarkOccult: true, HideUnrated: true},
+	5: {MaxSpice: -1},
 }
 
 // SetBookAge records a parent's age group for a book (0 clears it).

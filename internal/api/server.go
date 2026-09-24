@@ -87,6 +87,7 @@ func (s *Server) Router() http.Handler {
 
 				r.Get("/admin/status", s.handleAdminStatus)
 				r.Get("/admin/calibre/duplicates", s.handleDuplicates)
+				r.Post("/admin/rerate", s.handleRerate)
 				r.Get("/notifications", s.handleNotifications)
 				r.Post("/notifications/read", s.handleNotificationsRead)
 				r.Delete("/notifications", s.handleNotificationsClear)

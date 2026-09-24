@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
     kindle_email     TEXT NOT NULL DEFAULT '',
     guide_seen       INTEGER NOT NULL DEFAULT 0,
     age_level        INTEGER NOT NULL DEFAULT 0,   -- kid accounts: 1 young kids .. 5 adults; 0 = not set
+    max_spice        INTEGER NOT NULL DEFAULT -1,  -- kid accounts: hide books above this many peppers (0-5); -1 = no limit
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS books (
     approved         INTEGER NOT NULL DEFAULT 0,   -- parent marked "OK": bypasses filters
     approved_by      TEXT NOT NULL DEFAULT '',
     age_level        INTEGER NOT NULL DEFAULT 0,   -- parent-set age group, 1 young kids .. 5 adults; 0 = not set
+    spice_level      INTEGER,                      -- 0-5 peppers; NULL = rated before the pepper scale (or not rated)
     age_set_by       TEXT NOT NULL DEFAULT '',
     analysis_model   TEXT NOT NULL DEFAULT '',
     analysis_error   TEXT NOT NULL DEFAULT '',

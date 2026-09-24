@@ -15,10 +15,14 @@ STRICT RULES:
 
 CATEGORIES & GUIDELINES:
 
-1. Classification:
-- Closed Door: Romantic tension exists. Intimacy occurs off-page or cuts away.
-- Open Door: Explicit sexual acts described on the page.
-- No Spice: No physical intimacy or sexual activity occurs.
+1. Spice Level (0-5 peppers). Pick the single best fit:
+- 0 = No Romance: No meaningful romantic or sexual content. No romantic subplot, kissing, sexual attraction, or romantic physical affection. Examples: Harry Potter and the Sorcerer's Stone; The Hobbit.
+- 1 = Sweet Romance: Romance is present but mild and non-sexual. May include crushes, attraction, flirting, hand-holding, cuddling, and sweet/brief kisses. No sexual desire or sexualized physical intimacy. Examples: Uglies (Scott Westerfeld); Seeking Persephone (Sarah M. Eden).
+- 2 = Romantic: More developed romance with stronger attraction and kissing, including passionate kissing or physical affection. No sexual activity, sexual desire, or implication of sex. The intimacy remains romantic rather than sexual. Example: My Phony Valentine (Courtney Walsh).
+- 3 = Steamy Closed-Door: Strong sexual attraction and desire are present. May include heavy/passionate making out, sexual tension, and characters expressing or acting on sexual desire. Any sexual encounter occurs off-page or fades to black; no explicit sexual activity is described.
+- 4 = Explicit: Sexual encounters occur on-page and include clear descriptions of sexual activity. Scenes contain meaningful sexual detail rather than simply implying what happens. There may be multiple or extended explicit scenes, but sex does not necessarily dominate the entire book. Examples: Fourth Wing (Rebecca Yarros); A Court of Thorns and Roses (Sarah J. Maas).
+- 5 = Very Explicit / Erotica-Level: Frequent, extended, or highly graphic on-page sexual content with extensive detail. Sexual encounters are a major component of the book and may occupy a substantial portion of the story. Example: Fifty Shades of Grey (E. L. James).
+If unsure between two levels, choose the higher one.
 
 2. Content Elements:
 - Nudity: Presence of nudity in a romantic or intimate context.
@@ -31,7 +35,7 @@ CATEGORIES & GUIDELINES:
 
 OUTPUT FORMAT (JSON ONLY):
 {
-  "classification": "Closed Door | Open Door | No Spice",
+  "spice_level": 0 | 1 | 2 | 3 | 4 | 5,
   "content_elements": {
     "nudity": true | false,
     "solo_acts": true | false,

@@ -9,7 +9,7 @@ import (
 var ErrNotFound = errors.New("not found")
 
 const userCols = `id, username, password_hash, role, hide_open_door, hide_nudity, hide_solo_acts,
-	hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, created_at`
+	hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, created_at`
 
 func (s *Store) CountUsers() (int, error) {
 	var n int
@@ -63,17 +63,17 @@ func (s *Store) CreateUserAge(username, hash, role string, age int) (*User, erro
 	}
 	strict := role == RoleRestricted
 	p := User{HideOpenDoor: strict, HideNudity: strict, HideSoloActs: strict, HideInnuendo: strict,
-		HideDarkOccult: strict, HideUnrated: strict}
+		HideDarkOccult: strict, HideUnrated: strict, MaxSpice: -1}
 	if role != RoleRestricted {
 		age = 0
 	} else if preset, ok := agePresets[age]; ok {
 		p = preset
 	}
 	res, err := s.DB.Exec(`INSERT INTO users (username, password_hash, role, hide_open_door,
-		hide_nudity, hide_solo_acts, hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, age_level)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		hide_nudity, hide_solo_acts, hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, age_level, max_spice)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		username, hash, role, p.HideOpenDoor, p.HideNudity, p.HideSoloActs, p.HideInnuendo,
-		p.HideDarkOccult, p.HideLGBTQ, p.HideUnrated, age)
+		p.HideDarkOccult, p.HideLGBTQ, p.HideUnrated, age, p.MaxSpice)
 	if err != nil {
 		return nil, err
 	}
@@ -104,9 +104,9 @@ func (s *Store) CreateFirstAdmin(username, hash string) (*User, error) {
 func (s *Store) UpdateUserProfile(u *User) error {
 	_, err := s.DB.Exec(`UPDATE users SET role = ?, hide_open_door = ?, hide_nudity = ?,
 		hide_solo_acts = ?, hide_innuendo = ?, hide_dark_occult = ?, hide_lgbtq = ?,
-		hide_unrated = ?, delivery_method = ?, kindle_email = ?, age_level = ? WHERE id = ?`,
+		hide_unrated = ?, delivery_method = ?, kindle_email = ?, age_level = ?, max_spice = ? WHERE id = ?`,
 		u.Role, u.HideOpenDoor, u.HideNudity, u.HideSoloActs, u.HideInnuendo,
-		u.HideDarkOccult, u.HideLGBTQ, u.HideUnrated, u.DeliveryMethod, u.KindleEmail, u.AgeLevel, u.ID)
+		u.HideDarkOccult, u.HideLGBTQ, u.HideUnrated, u.DeliveryMethod, u.KindleEmail, u.AgeLevel, u.MaxSpice, u.ID)
 	return err
 }
 

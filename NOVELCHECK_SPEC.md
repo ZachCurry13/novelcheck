@@ -55,7 +55,8 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 
 ### Feature 4: Multi-Catalog UI & Filtering
 * **Unified Dashboard:** Browse all books across all catalogs simultaneously.
-* **Filtering:** Filter by catalog and spice level (`Closed Door`, `Open Door`, `No Spice`); content-flag checkboxes **hide** matching books.
+* **Filtering:** Filter by catalog and peppers (0–5, or "older rating"); content-flag checkboxes **hide** matching books.
+* **Pepper scale:** Spice is rated 0–5 peppers: 0 No Romance, 1 Sweet Romance, 2 Romantic, 3 Steamy Closed-Door, 4 Explicit, 5 Very Explicit / Erotica-Level (full descriptions and examples in the prompt below and in the app's "What do the peppers mean?"). `spice_level` is stored per book; `classification` is derived for the Open Door filter and older rules (0–2 No Spice, 3 Closed Door, 4–5 Open Door). Books rated before the scale keep `spice_level` NULL and, for kids' limits, count as the highest level their old label allows (No Spice = 2, Closed Door = 3, Open Door = 4). Kid accounts have `max_spice` (−1 = no limit; age-group presets 0/1/2/3/none). Admins/editors can re-rate AI-rated older books in place (they stay visible; failures keep the old rating); hand-rated books are never re-rated.
 * **Parent approval:** Admins/editors can mark a book "OK", which overrides hide filters and restricted accounts' content rules (e.g. Harry Potter's fantasy magic).
 * **Calibre removal:** Admins can list the Calibre books their hide filters catch (never parent-approved ones) and either copy a Calibre search (`id:=N or …`) or, with the calibre Content server connected, remove them in one click. One-click removal goes through calibre's own remote interface (`/cdb/cmd/remove`, to calibre's recycle bin) after re-checking the list and verifying every id's title against calibre. NovelCheck's own access to the library stays read-only.
 * **Feedback:** In-app links to GitHub issue forms for filter suggestions and general feedback.
@@ -93,10 +94,14 @@ STRICT RULES:
 
 CATEGORIES & GUIDELINES:
 
-1. Classification:
-- Closed Door: Romantic tension exists. Intimacy occurs off-page or cuts away.
-- Open Door: Explicit sexual acts described on the page.
-- No Spice: No physical intimacy or sexual activity occurs.
+1. Spice Level (0-5 peppers). Pick the single best fit:
+- 0 = No Romance: No meaningful romantic or sexual content. No romantic subplot, kissing, sexual attraction, or romantic physical affection. Examples: Harry Potter and the Sorcerer's Stone; The Hobbit.
+- 1 = Sweet Romance: Romance is present but mild and non-sexual. May include crushes, attraction, flirting, hand-holding, cuddling, and sweet/brief kisses. No sexual desire or sexualized physical intimacy. Examples: Uglies (Scott Westerfeld); Seeking Persephone (Sarah M. Eden).
+- 2 = Romantic: More developed romance with stronger attraction and kissing, including passionate kissing or physical affection. No sexual activity, sexual desire, or implication of sex. The intimacy remains romantic rather than sexual. Example: My Phony Valentine (Courtney Walsh).
+- 3 = Steamy Closed-Door: Strong sexual attraction and desire are present. May include heavy/passionate making out, sexual tension, and characters expressing or acting on sexual desire. Any sexual encounter occurs off-page or fades to black; no explicit sexual activity is described.
+- 4 = Explicit: Sexual encounters occur on-page and include clear descriptions of sexual activity. Scenes contain meaningful sexual detail rather than simply implying what happens. There may be multiple or extended explicit scenes, but sex does not necessarily dominate the entire book. Examples: Fourth Wing (Rebecca Yarros); A Court of Thorns and Roses (Sarah J. Maas).
+- 5 = Very Explicit / Erotica-Level: Frequent, extended, or highly graphic on-page sexual content with extensive detail. Sexual encounters are a major component of the book and may occupy a substantial portion of the story. Example: Fifty Shades of Grey (E. L. James).
+If unsure between two levels, choose the higher one.
 
 2. Content Elements:
 - Nudity: Presence of nudity in a romantic or intimate context.
@@ -109,7 +114,7 @@ CATEGORIES & GUIDELINES:
 
 OUTPUT FORMAT (JSON ONLY):
 {
-  "classification": "Closed Door | Open Door | No Spice",
+  "spice_level": 0 | 1 | 2 | 3 | 4 | 5,
   "content_elements": {
     "nudity": true | false,
     "solo_acts": true | false,
@@ -153,8 +158,8 @@ OUTPUT FORMAT (JSON ONLY):
 
 ### 5.3 HTTP API
 Public: `POST /api/auth/login`, `POST /api/auth/logout`, `GET|POST /api/setup` (first admin, only while no users exist), `GET /healthz`.
-Any signed-in user: `GET /api/me`, `PUT /api/me/password`, `PUT /api/me/delivery`, `PUT /api/me/guide-seen`, `GET /api/updates`, `GET /api/books` (filters: `q, catalog, overlap_with, multi, classification, flags, exclude, status, age, format, sort, limit, offset`; `format` = a file format, `multi`, `dupes` or `none`; `age` = `unset` or `1`–`5` for "suitable up to"), `GET /api/books/{id}`, `GET /api/books/{id}/download`, `GET /api/catalogs`, `GET /api/age-groups`, `GET|POST /api/queue`, `PUT /api/queue/order`, `DELETE /api/queue/{id}`, `POST /api/queue/{id}/start`, `POST /api/queue/{id}/finish`.
-Editor or admin: `GET /api/notifications`, `POST /api/notifications/read`, `DELETE /api/notifications`, `POST /api/catalogs`, `PATCH /api/catalogs/{id}`, `POST /api/import/drive`, `POST /api/books/{id}/analyze`, `PUT /api/books/{id}/verdict`, `PUT /api/books/{id}/approval`, `PUT /api/books/{id}/age`, `POST /api/books/{id}/notes`, `PUT|DELETE /api/notes/{id}`, `GET /api/admin/calibre/duplicates`, `GET /api/admin/status`, `POST /api/admin/analyze-batch`, `POST /api/admin/calibre-sync`, `GET|POST /api/admin/users`, `PUT|DELETE /api/admin/users/{id}`, `PUT /api/admin/users/{id}/password` (editors: restricted accounts only).
+Any signed-in user: `GET /api/me`, `PUT /api/me/password`, `PUT /api/me/delivery`, `PUT /api/me/guide-seen`, `GET /api/updates`, `GET /api/books` (filters: `q, catalog, overlap_with, multi, classification, flags, exclude, status, age, format, spice, sort, limit, offset`; `spice` = `0`–`5` or `old`; `format` = a file format, `multi`, `dupes` or `none`; `age` = `unset` or `1`–`5` for "suitable up to"), `GET /api/books/{id}`, `GET /api/books/{id}/download`, `GET /api/catalogs`, `GET /api/age-groups`, `GET|POST /api/queue`, `PUT /api/queue/order`, `DELETE /api/queue/{id}`, `POST /api/queue/{id}/start`, `POST /api/queue/{id}/finish`.
+Editor or admin: `GET /api/notifications`, `POST /api/notifications/read`, `DELETE /api/notifications`, `POST /api/catalogs`, `PATCH /api/catalogs/{id}`, `POST /api/import/drive`, `POST /api/books/{id}/analyze`, `PUT /api/books/{id}/verdict` (`spice_level` 0–5), `PUT /api/books/{id}/approval`, `PUT /api/books/{id}/age`, `POST /api/books/{id}/notes`, `PUT|DELETE /api/notes/{id}`, `GET /api/admin/calibre/duplicates`, `POST /api/admin/rerate`, `GET /api/admin/status`, `POST /api/admin/analyze-batch`, `POST /api/admin/calibre-sync`, `GET|POST /api/admin/users`, `PUT|DELETE /api/admin/users/{id}`, `PUT /api/admin/users/{id}/password` (editors: restricted accounts only).
 Admin only: `DELETE /api/catalogs/{id}`, `GET|PUT /api/admin/settings`, `POST /api/admin/wipe-queue`, `GET /api/admin/calibre/browse`, `GET /api/admin/calibre/find`, `GET /api/admin/calibre/removal`, `POST /api/admin/calibre/remove`, `POST /api/admin/calibre/duplicates/remove`, `GET|PUT /api/admin/calibre/server`, `GET|PUT /api/admin/tunnel`, `GET /api/admin/system`, `POST /api/admin/health`, `GET /api/admin/ollama/find`, `GET|POST /api/admin/ollama/pull`, `POST /api/admin/ollama/use`, `PUT /api/admin/calibre/library`, `POST /api/admin/smtp-test`, `GET /api/admin/backup`.
 All non-GET API calls require the header `X-NovelCheck: 1`.
 
@@ -182,3 +187,5 @@ All non-GET API calls require the header `X-NovelCheck: 1`.
 18. **v1.7 system, health & notifications.** `internal/sysinfo`, Ollama `ps`, connection checks (`internal/api/health.go`), notifications store + bell UI, persistent error toasts, System tab.
 19. **v1.8 age groups, notes & usage.** `age_level` on books and users (`internal/store/ages.go`, visibility clause), `book_notes` (`internal/store/notes.go`, `internal/api/notes_handlers.go`), account-type picker, network rates + history sampler (`internal/sysinfo/history.go`), SVG charts (`web/static/js/charts.js`) and the admin Usage tab.
 20. **v1.9 duplicates & formats.** Derived `formats`/`calibre_copies` columns and the Format filter (`internal/store/filters.go`), `internal/store/duplicates.go` (groups + keep suggestion), `internal/api/duplicates_handlers.go` sharing the verified Calibre removal path, `web/static/js/duplicates.js`, format chips and per-entry copies in the book window.
+21. **v1.10 model chain.** Ordered fallback models (`Store.LLMModels`), ordered Ollama picker (`web/static/js/ollamaorder.js`).
+22. **v1.11 pepper scale.** `books.spice_level`, `users.max_spice` (`internal/store/spice.go`), prompt + parser (`spice_level`, legacy `classification` still accepted), in-place re-rating (`Worker.Rerate`, `POST /api/admin/rerate`), `web/static/js/peppers.js` (scale, chips, guide dialog), pepper filter/select/limits in the UI.

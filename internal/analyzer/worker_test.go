@@ -84,3 +84,42 @@ func TestWorkerAnalyzesWithFallback(t *testing.T) {
 	}
 	t.Fatal("timed out waiting for analysis")
 }
+
+func TestRerateKeepsBookVisible(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	var calls atomic.Int32
+	srv := fakeLLM(&calls)
+	defer srv.Close()
+	_ = st.SetSetting(store.KeyLLMBaseURL, srv.URL)
+	_ = st.SetSetting(store.KeyLLMModel, "big-model")
+	id, _ := st.UpsertBook("The Hobbit", "J.R.R. Tolkien", "", "")
+	_ = st.SetBlurb(id, "A hobbit goes on an adventure.")
+	_ = st.SaveAnalysis(id, store.Analysis{Classification: "Closed Door", Model: "old-model"})
+
+	w := analyzer.New(st)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if n := w.Rerate(id, id); n != 1 {
+		t.Fatalf("rerate should de-duplicate, added %d", n)
+	}
+	if b, _ := st.BookByID(id, nil); b.Status != "analyzed" {
+		t.Fatalf("queued re-rate must not hide the book: %s", b.Status)
+	}
+	go w.Run(ctx)
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if b, _ := st.BookByID(id, nil); b.AnalysisModel == "big-model" {
+			if b.Status != "analyzed" || *b.Classification != "No Spice" {
+				t.Fatalf("re-rated book: %+v", b)
+			}
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("re-rate did not finish")
+}

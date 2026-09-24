@@ -68,10 +68,12 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 	remaining := counts["pending"] + counts["queued"] + counts["error"]
 	// Prompts dominate: assume ~80% input / 20% output tokens per call.
 	projected := float64(remaining) * perBook * (0.8*pin + 0.2*pout) / 1e6
+	rerate, _ := s.Store.RerateCandidates()
 	var lastSync any
 	_ = json.Unmarshal([]byte(s.Store.Setting(store.KeyCalibreLastResult)), &lastSync)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"counts":            counts,
+		"rerate_candidates": len(rerate),
 		"usage":             usage,
 		"tokens_per_hour":   s.Store.SettingInt(store.KeyTokensPerHour),
 		"cost_spent":        spent,
@@ -149,6 +151,17 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+// handleRerate re-rates books the AI rated before the pepper scale. They stay
+// visible with their old rating until the new one arrives.
+func (s *Server) handleRerate(w http.ResponseWriter, r *http.Request) {
+	ids, err := s.Store.RerateCandidates()
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]int{"queued": s.Worker.Rerate(ids...)})
 }
 
 func (s *Server) handleAnalyzeBatch(w http.ResponseWriter, r *http.Request) {

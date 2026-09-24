@@ -1,4 +1,5 @@
 // Shared DOM helpers. All dynamic text goes through esc() before innerHTML.
+import { pepperChip } from "./peppers.js";
 
 export function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, (c) => ({
@@ -51,13 +52,15 @@ export async function attempt(fn, okMsg) {
 }
 
 export function classChip(book) {
+  if (book.spice_level !== null && book.spice_level !== undefined) return pepperChip(book.spice_level);
   const c = book.classification;
   if (!c) {
     const label = { queued: "Queued", processing: "Analyzing…", error: "Analysis Error" }[book.status || book.book_status];
     return `<span class="chip-pending">${esc(label || "Pending Analysis")}</span>`;
   }
   const cls = { "No Spice": "chip-none", "Closed Door": "chip-closed", "Open Door": "chip-open" }[c] || "chip-pending";
-  return `<span class="${cls}">${esc(c)}</span>`;
+  // Rated before the pepper scale: show the older label until re-rated.
+  return `<span class="${cls}" title="Older rating; re-rate for peppers">${esc(c)}</span>`;
 }
 
 // Age groups (same order and levels as the server's store.AgeGroups).

@@ -85,8 +85,10 @@ func TestNotifications(t *testing.T) {
 func TestAgeGroups(t *testing.T) {
 	s := newStore(t)
 	_, _, ids := seed(t, s)
-	_ = s.SetBookAge(ids["Clean"], 1, "mom")  // young kids
-	_ = s.SetBookAge(ids["Spooky"], 3, "mom") // teens
+	zero := 0
+	_ = s.SaveAnalysis(ids["Clean"], store.Analysis{SpiceLevel: &zero}) // 0 peppers
+	_ = s.SetBookAge(ids["Clean"], 1, "mom")                            // young kids
+	_ = s.SetBookAge(ids["Spooky"], 3, "mom")                           // teens
 	_ = s.SetApproved(ids["Spooky"], true, "mom")
 
 	young, _ := s.CreateUserAge("little", "x", store.RoleRestricted, 1)
@@ -203,4 +205,41 @@ func TestLLMModelsOrder(t *testing.T) {
 	if len(got) != 3 || got[0] != "qwen2.5:7b" || got[1] != "llama3.1:8b" || got[2] != "llama3.2" {
 		t.Fatalf("models: %v", got)
 	}
+}
+
+func TestPepperScale(t *testing.T) {
+	s := newStore(t)
+	_, _, ids := seed(t, s) // Clean: old "No Spice"; Steamy: old "Open Door"
+	lv := func(n int) *int { return &n }
+	sweet, _ := s.UpsertBook("Sweet One", "A", "", "")
+	_ = s.SaveAnalysis(sweet, store.Analysis{SpiceLevel: lv(1), Classification: "Open Door"})
+	b, _ := s.BookByID(sweet, nil)
+	if b.SpiceLevel == nil || *b.SpiceLevel != 1 || *b.Classification != "No Spice" {
+		t.Fatalf("peppers should set the label: %+v", b)
+	}
+	steamy, _ := s.UpsertBook("Closed One", "B", "", "")
+	_ = s.SaveAnalysis(steamy, store.Analysis{SpiceLevel: lv(3)})
+
+	kid, _ := s.CreateUserAge("mid", "x", store.RoleRestricted, 2) // middle grade: up to 1 pepper
+	if kid.MaxSpice != 1 {
+		t.Fatalf("preset max peppers: %d", kid.MaxSpice)
+	}
+	got := func(u *store.User, f store.BookFilter) map[string]bool {
+		books, _, _ := s.ListBooks(f, u)
+		return titles(books)
+	}
+	if v := got(kid, store.BookFilter{}); !v["Sweet One"] || v["Closed One"] || v["Clean"] || v["Steamy"] {
+		t.Fatalf("kid up to 1 pepper sees %v (old 'No Spice' counts as up to 2)", v)
+	}
+	if v := got(nil, store.BookFilter{Spice: "3"}); len(v) != 1 || !v["Closed One"] {
+		t.Fatalf("exact pepper filter: %v", v)
+	}
+	if v := got(nil, store.BookFilter{Spice: "old"}); !v["Clean"] || !v["Steamy"] || v["Sweet One"] {
+		t.Fatalf("old-rating filter: %v", v)
+	}
+	ids2, _ := s.RerateCandidates()
+	if len(ids2) != 3 { // Clean, Steamy, Spooky
+		t.Fatalf("rerate candidates: %v", ids2)
+	}
+	_ = ids
 }

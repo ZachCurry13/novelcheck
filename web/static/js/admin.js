@@ -56,6 +56,7 @@ export async function renderAdmin(view, state) {
       <button data-act="sync" class="btn-secondary">Sync Calibre now</button>
       ${adminOnly(`<a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db</a>`)}
       <p id="worker" class="basis-full text-sm text-slate-400"></p>
+      <div id="rerate" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     </div>
     ${adminOnly(`<form id="settings" class="mb-8 grid gap-4 lg:grid-cols-2"></form><div id="remote-access"></div>`)}
     <section id="users"></section>`;
@@ -72,6 +73,9 @@ export async function renderAdmin(view, state) {
       if (!confirm("Return all queued books to Pending Analysis?")) return;
       const r = await attempt(() => post("/api/admin/wipe-queue"));
       if (r) toast(`Reset ${r.reset} books to pending`);
+    } else if (act === "rerate") {
+      const r = await attempt(() => post("/api/admin/rerate"));
+      if (r) toast(`Re-rating ${r.queued} books on the pepper scale`);
     } else if (act === "sync") {
       await attempt(() => post("/api/admin/calibre-sync"), "Calibre sync started");
     } else if (act === "smtp-test") {
@@ -165,6 +169,15 @@ function renderStats(view, s) {
     tile("Spent to date", fmtMoney(s.cost_spent), `${fmtNum(s.usage.total_prompt_tokens + s.usage.total_completion_tokens)} tokens · ${fmtNum(s.usage.total_calls)} calls`),
     tile("Est. to finish library", fmtMoney(s.cost_projected), `≈ ${fmtNum(s.tokens_projected)} tokens remaining`),
   ].join("");
+  const box = $("#rerate", view);
+  box.classList.toggle("hidden", !s.rerate_candidates);
+  if (s.rerate_candidates) {
+    // Rough cost from the running average (free with Ollama).
+    const est = s.cost_spent && s.usage.total_calls ? (s.cost_spent / s.usage.total_calls) * s.rerate_candidates : 0;
+    box.innerHTML = `🌶️ <b>${fmtNum(s.rerate_candidates)}</b> book${s.rerate_candidates === 1 ? " was" : "s were"} rated before the pepper scale.
+      <button data-act="rerate" class="btn-secondary ml-2 py-1">Re-rate them on the pepper scale</button>
+      <span class="block text-xs text-slate-400">They stay in the library with their old rating until the new one arrives. Hand-rated books are left alone.${est ? ` Estimated cost ≈ ${fmtMoney(est)}.` : ""}</span>`;
+  }
   const w = s.worker;
   const sync = s.calibre_last_sync;
   $("#worker", view).innerHTML = `Worker: <b>${esc(w.state)}</b>${w.current_title ? ` — ${esc(w.current_title)}` : ""}

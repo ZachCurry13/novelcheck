@@ -2,6 +2,7 @@
 // verdict that is labelled with who made the change.
 import { put } from "./api.js";
 import { $, $$, esc, attempt } from "./ui.js";
+import { pepperOptions } from "./peppers.js";
 
 const FLAGS = [
   ["nudity", "Nudity"],
@@ -14,12 +15,15 @@ const FLAGS = [
 ];
 
 export function verdictFormHTML(b) {
-  const opts = ["No Spice", "Closed Door", "Open Door"]
-    .map((c) => `<option ${b.classification === c ? "selected" : ""}>${c}</option>`).join("");
+  // Older ratings preselect the closest pepper level.
+  const guess = b.spice_level ?? { "No Spice": 0, "Closed Door": 3, "Open Door": 4 }[b.classification] ?? null;
   return `
     <form id="verdict-form" class="hidden space-y-3 rounded-lg bg-slate-800/60 p-4">
       <h3 class="font-semibold">Edit rating</h3>
-      <select name="classification" class="input">${opts}</select>
+      <label class="block"><span class="label">Peppers</span>
+        <select name="spice_level" class="input" required>
+          ${guess === null ? `<option value="" selected disabled>Choose 0–5 peppers</option>` : ""}${pepperOptions(guess)}
+        </select></label>
       <div class="grid gap-1 sm:grid-cols-2">
         ${FLAGS.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-flag="${k}" ${b[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}
       </div>
@@ -36,7 +40,7 @@ export function bindVerdictForm(root, bookId, onSaved) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const body = {
-      classification: form.classification.value,
+      spice_level: Number(form.spice_level.value),
       summary_verdict: form.summary_verdict.value.trim(),
     };
     $$("[data-flag]", form).forEach((cb) => (body[cb.dataset.flag] = cb.checked));

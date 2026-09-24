@@ -1,5 +1,6 @@
 // First-login "How to" guide. Opens automatically until the user finishes or
 // skips it, and can be reopened any time from the Help link.
+import { PEPPERS, pepperChip } from "./peppers.js";
 import { put } from "./api.js";
 import { $, esc, attempt } from "./ui.js";
 
@@ -9,12 +10,11 @@ const EVERYONE = [
   ["📚 The Library",
     "The <b>Library</b> tab shows every book. Use the search box and the drop-downs to narrow it down. Tick the <b>Hide</b> boxes (like <b>Nudity</b>) to hide books that include those things. Missing a filter? Use <b>Suggest one</b> next to the boxes."],
   ["🌶️ What the ratings mean",
-    `<ul class="list-disc space-y-1 pl-5">
-      <li><span class="chip-none">No Spice</span>: no physical intimacy.</li>
-      <li><span class="chip-closed">Closed Door</span>: romance, but intimate scenes happen off the page.</li>
-      <li><span class="chip-open">Open Door</span>: intimate scenes are described on the page.</li>
+    `<p class="mb-2">Books get 0 to 5 peppers for romance and sexual content:</p>
+    <ul class="space-y-1">${PEPPERS.map((p) => `<li>${pepperChip(p.n)}</li>`).join("")}
       <li><span class="chip-pending">Pending Analysis</span>: not rated yet.</li>
     </ul>
+    <p class="mt-2">Tap <b>🌶️ What do the peppers mean?</b> in the Library for the full descriptions and examples.</p>
     <p class="mt-2">Purple tags such as <span class="chip-flag">Dark Occult</span> point out other content you may want to know about.</p>`],
   ["🔎 Book details",
     "Tap any book to open it. You'll see its summary, the rating, and which libraries or devices it's on. Tap <b>＋</b> or <b>Add to Up Next</b> to save it for later."],

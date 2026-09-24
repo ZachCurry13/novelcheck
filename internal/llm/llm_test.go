@@ -75,3 +75,31 @@ func TestUserPromptTruncatesRuneSafe(t *testing.T) {
 		t.Fatalf("unexpected prompt tail: %q", p[len(p)-20:])
 	}
 }
+
+func TestParseSpiceLevel(t *testing.T) {
+	cases := map[string]struct {
+		level int
+		class string
+	}{
+		`{"spice_level": 0, "summary_verdict": "x"}`:       {0, "No Spice"},
+		`{"spice_level": "2", "summary_verdict": "x"}`:     {2, "No Spice"},
+		`{"spice_level": 3.0}`:                             {3, "Closed Door"},
+		`{"spice_level": 5, "classification": "No Spice"}`: {5, "Open Door"},
+		"```json\n{\"spice_level\": 4}\n```":               {4, "Open Door"},
+	}
+	for in, want := range cases {
+		v, err := llm.ParseVerdict(in)
+		if err != nil || v.SpiceLevel == nil || *v.SpiceLevel != want.level || v.Classification != want.class {
+			t.Errorf("%s: got %+v err %v", in, v, err)
+		}
+	}
+	for _, bad := range []string{`{"spice_level": 7}`, `{"spice_level": "hot"}`, `{"summary_verdict": "no level"}`} {
+		if _, err := llm.ParseVerdict(bad); err == nil {
+			t.Errorf("%s should be rejected", bad)
+		}
+	}
+	// Older-format answers still work, without a pepper level.
+	if v, err := llm.ParseVerdict(`{"classification": "Closed Door"}`); err != nil || v.SpiceLevel != nil || v.Classification != "Closed Door" {
+		t.Errorf("legacy: %+v %v", v, err)
+	}
+}

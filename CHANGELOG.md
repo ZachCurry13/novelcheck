@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.11.0]
+
+### New
+- **🌶️ The pepper scale**: books are now rated **0 to 5 peppers**: 0 No Romance, 1 Sweet Romance, 2 Romantic, 3 Steamy Closed-Door, 4 Explicit, 5 Very Explicit / Erotica-Level. The AI uses these exact descriptions and examples. **What do the peppers mean?** in the Library (and **About peppers** in each book) shows them all.
+- **Pepper filter**: the Library can show books with a given number of peppers, older ratings, or books not rated yet.
+- **Most peppers allowed** for kid accounts: new kids start at 0 (Young kids), 1 (Middle grade), 2 (Teens), 3 (Young adult) or no limit (Adults), and you can change it under **Admin → Users**. Existing kid accounts start with no limit, so nothing changes for them until you set one.
+- **Edit rating** now asks for peppers.
+- **Re-rate older books**: books rated before the pepper scale keep their old label (No Spice, Closed Door, Open Door) and show a **Re-rate them on the pepper scale** button in Admin. They stay in the library while they're re-rated, and hand-rated books are left alone. Until then a kid's pepper limit plays it safe: an old "No Spice" counts as up to 2 peppers, "Closed Door" as 3 and "Open Door" as 4.
+
 ## [1.10.0]
 
 ### New

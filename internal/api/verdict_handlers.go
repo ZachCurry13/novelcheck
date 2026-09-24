@@ -18,6 +18,7 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
+		SpiceLevel      *int   `json:"spice_level"` // 0-5 peppers (preferred)
 		Classification  string `json:"classification"`
 		Nudity          bool   `json:"nudity"`
 		SoloActs        bool   `json:"solo_acts"`
@@ -31,8 +32,15 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &body, 8<<10) {
 		return
 	}
+	if body.SpiceLevel != nil {
+		if !store.ValidSpice(*body.SpiceLevel) {
+			writeErr(w, http.StatusBadRequest, "peppers must be 0 to 5")
+			return
+		}
+		body.Classification = store.ClassificationForSpice(*body.SpiceLevel)
+	}
 	if !store.ValidClassification(body.Classification) {
-		writeErr(w, http.StatusBadRequest, "classification must be No Spice, Closed Door or Open Door")
+		writeErr(w, http.StatusBadRequest, "choose how many peppers (0-5)")
 		return
 	}
 	if len(body.SummaryVerdict) > 1000 {
@@ -44,6 +52,7 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a := store.Analysis{
+		SpiceLevel:      body.SpiceLevel,
 		Classification:  body.Classification,
 		Nudity:          body.Nudity,
 		SoloActs:        body.SoloActs,

@@ -3,6 +3,7 @@ import { get, post, qs } from "./api.js";
 import { $, esc, attempt, toast, classChip, flagChips, ageChip, HIDE_LABELS, FILTER_IDEA_URL, AGE_GROUPS, canManage } from "./ui.js";
 import { openCalibreRemoval } from "./calibreremove.js";
 import { openBook } from "./bookdialog.js";
+import { pepperOptions, openPepperGuide } from "./peppers.js";
 
 const PAGE = 60;
 
@@ -16,9 +17,9 @@ export async function renderLibrary(view, state) {
       <select name="catalog" class="input"><option value="">All catalogs</option>${catOpts}</select>
       <select name="overlap_with" class="input" title="Only books also present in this catalog">
         <option value="">…also in (overlap)</option>${catOpts}</select>
-      <select name="classification" class="input">
-        <option value="">Any spice level</option><option>No Spice</option>
-        <option>Closed Door</option><option>Open Door</option><option value="Pending">Pending Analysis</option>
+      <select name="spice" class="input" title="Peppers: how much romance and sexual content">
+        <option value="">Any peppers</option>${pepperOptions(null)}
+        <option value="old">Older rating (not on pepper scale)</option><option value="Pending">Not rated yet</option>
       </select>
       <select name="age" class="input" title="Books a parent rated for this age group or younger">
         <option value="">Any age group</option>
@@ -41,6 +42,7 @@ export async function renderLibrary(view, state) {
         ${Object.entries(HIDE_LABELS).map(([k, v]) =>
           `<label class="toggle"><input type="checkbox" name="hide" value="${k}"> ${esc(v)}</label>`).join("")}
         <label class="toggle"><input type="checkbox" name="multi"> Only books in 2+ catalogs</label>
+        <button type="button" id="pepper-help" class="text-xs text-slate-400 underline">🌶️ What do the peppers mean?</button>
         <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-500 underline">Missing a filter? Suggest one</a>
         <span class="ml-auto flex flex-wrap gap-2">
           ${state.user.role === "admin" ? `<button type="button" id="remove-btn" class="btn-ghost text-xs">Remove hidden books from Calibre…</button>` : ""}
@@ -63,7 +65,8 @@ export async function renderLibrary(view, state) {
       q: fd.get("q"),
       catalog: fd.get("catalog"),
       overlap_with: fd.get("overlap_with"),
-      classification: fd.get("classification"),
+      spice: fd.get("spice") === "Pending" ? "" : fd.get("spice"),
+      classification: fd.get("spice") === "Pending" ? "Pending" : "",
       age: fd.get("age"),
       format: fd.get("format"),
       sort: fd.get("sort"),
@@ -102,9 +105,10 @@ export async function renderLibrary(view, state) {
     const c = e.target.closest("[data-book]");
     if (c) openBook(Number(c.dataset.book), state, () => load(true));
   });
+  $("#pepper-help", view).addEventListener("click", openPepperGuide);
   $("#remove-btn", view)?.addEventListener("click", () => {
     const fd = new FormData(form);
-    openCalibreRemoval({ hide: fd.getAll("hide").join(","), q: fd.get("q"), classification: fd.get("classification") },
+    openCalibreRemoval({ hide: fd.getAll("hide").join(","), q: fd.get("q"), classification: fd.get("spice") === "Pending" ? "Pending" : "" },
       () => setTimeout(() => load(true), 1500));
   });
   const batch = $("#batch-btn", view);

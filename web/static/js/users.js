@@ -1,5 +1,6 @@
 // User management: accounts, roles and parental content rules.
 // Admins manage everyone; editors see and manage only kid accounts.
+import { PEPPERS } from "./peppers.js";
 import { get, post, put, del } from "./api.js";
 import { $, $$, esc, attempt, AGE_GROUPS } from "./ui.js";
 
@@ -65,6 +66,8 @@ export async function renderUsers(host, viewer) {
         delivery_method: $("[name=delivery_method]", cardEl).value,
         kindle_email: $("[name=kindle_email]", cardEl).value };
       $$("[data-rule]", cardEl).forEach((cb) => (body[cb.dataset.rule] = cb.checked));
+      const ms = $("[name=max_spice]", cardEl);
+      if (ms) body.max_spice = Number(ms.value);
       await attempt(() => put(`/api/admin/users/${id}`, body), "User saved");
     } else if (act === "password") {
       const pw = prompt("New password (8+ characters):");
@@ -84,6 +87,11 @@ function userCard(u, isAdmin) {
         <p class="font-semibold">${esc(u.username)}</p>
         <select name="type" class="input w-auto max-w-[60%] py-1 text-sm">${typeOptions(u.role, u.age_level, isAdmin)}</select>
       </div>
+      ${u.role === "restricted" ? `<label class="block"><span class="label">Most peppers allowed</span>
+        <select name="max_spice" class="input">
+          <option value="-1" ${u.max_spice < 0 ? "selected" : ""}>No limit</option>
+          ${PEPPERS.map((p) => `<option value="${p.n}" ${u.max_spice === p.n ? "selected" : ""}>Up to ${p.n} 🌶️ ${esc(p.name)}</option>`).join("")}
+        </select></label>` : ""}
       <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
         ${RULES.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-rule="${k}" ${u[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}
       </div>

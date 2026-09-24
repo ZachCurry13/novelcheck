@@ -123,8 +123,12 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "unknown age group")
 		return
 	}
+	if upd.MaxSpice < -1 || upd.MaxSpice > store.MaxSpiceLevel {
+		writeErr(w, http.StatusBadRequest, "most peppers must be 0 to 5, or no limit")
+		return
+	}
 	if upd.Role != store.RoleRestricted {
-		upd.AgeLevel = 0
+		upd.AgeLevel, upd.MaxSpice = 0, -1
 	}
 	if msg := validateDelivery(upd.DeliveryMethod, upd.KindleEmail); msg != "" {
 		writeErr(w, http.StatusBadRequest, msg)

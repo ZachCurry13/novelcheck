@@ -1,6 +1,9 @@
 package store
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 // BookFilter describes a dashboard search across all catalogs.
 type BookFilter struct {
@@ -14,6 +17,7 @@ type BookFilter struct {
 	AnyFlags       []string // books with ANY of these flags (used for the Calibre removal list)
 	Status         string
 	Age            string // "" any | "unset" | "1".."5" = suitable up to that age group
+	Spice          string // "" any | "0".."5" exact peppers | "old" = rated before the pepper scale
 	Format         string // "" any | "epub" etc. | "multi" (2+ formats) | "none" (no file) | "dupes" (2+ Calibre entries)
 	Sort           string // "title" (default) | "author" | "recent"
 	Limit, Offset  int
@@ -75,6 +79,10 @@ func visibilityClause(u *User) (string, []any) {
 	}
 	if u.HideLGBTQ {
 		parts = append(parts, "b.lgbtq_content = 0")
+	}
+	if u.MaxSpice >= 0 {
+		// Unrated books are governed by HideUnrated, so they pass here.
+		parts = append(parts, "COALESCE("+effectiveSpice+", 0) <= "+strconv.Itoa(u.MaxSpice))
 	}
 	clause := ""
 	if len(parts) > 0 {
@@ -141,6 +149,13 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	case len(f.Age) == 1 && f.Age >= "1" && f.Age <= "5":
 		where = append(where, "b.age_level BETWEEN 1 AND ?")
 		args = append(args, int(f.Age[0]-'0'))
+	}
+	switch {
+	case f.Spice == "old":
+		where = append(where, "b.status = 'analyzed' AND b.spice_level IS NULL")
+	case len(f.Spice) == 1 && f.Spice >= "0" && f.Spice <= "5":
+		where = append(where, "b.spice_level = ?")
+		args = append(args, int(f.Spice[0]-'0'))
 	}
 	if c, ok := formatConds[f.Format]; ok {
 		where = append(where, c)

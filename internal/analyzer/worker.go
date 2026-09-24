@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +30,7 @@ type Worker struct {
 
 	mu     sync.Mutex
 	queue  []int64
+	rerate map[int64]bool // analyzed books being re-rated in place (stay visible meanwhile)
 	status Status
 	wake   chan struct{}
 }
@@ -57,10 +59,46 @@ func (w *Worker) Enqueue(front bool, ids ...int64) {
 	}
 }
 
+// Rerate re-analyzes already-rated books (e.g. onto the pepper scale) after
+// any other queued work. Their current rating stays in place until the new
+// one is saved, so kids don't lose access meanwhile; a failure keeps the old
+// rating. Returns how many were added.
+func (w *Worker) Rerate(ids ...int64) int {
+	w.mu.Lock()
+	if w.rerate == nil {
+		w.rerate = map[int64]bool{}
+	}
+	added := 0
+	for _, id := range ids {
+		if !w.rerate[id] {
+			w.rerate[id] = true
+			w.queue = append(w.queue, id)
+			added++
+		}
+	}
+	w.status.QueueLength = len(w.queue)
+	w.mu.Unlock()
+	select {
+	case w.wake <- struct{}{}:
+	default:
+	}
+	return added
+}
+
+// takeRerate reports (and clears) whether id was queued by Rerate.
+func (w *Worker) takeRerate(id int64) bool {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	r := w.rerate[id]
+	delete(w.rerate, id)
+	return r
+}
+
 // Wipe drops everything waiting and returns queued books to Pending.
 func (w *Worker) Wipe() (int64, error) {
 	w.mu.Lock()
 	w.queue = nil
+	w.rerate = nil
 	w.status.QueueLength = 0
 	w.mu.Unlock()
 	return w.Store.ResetQueued()
@@ -103,7 +141,11 @@ func (w *Worker) Run(ctx context.Context) {
 				continue
 			}
 		}
-		if err := w.process(ctx, id); err != nil {
+		if w.takeRerate(id) {
+			if err := w.rerateOne(ctx, id); err != nil {
+				log.Printf("re-rating book %d failed (kept its old rating): %v", id, err)
+			}
+		} else if err := w.process(ctx, id); err != nil {
 			log.Printf("analysis of book %d failed: %v", id, err)
 			w.mu.Lock()
 			w.status.LastError = fmt.Sprintf("book %d: %v", id, err)
@@ -132,6 +174,21 @@ func (w *Worker) process(ctx context.Context, id int64) error {
 	}
 	_ = w.Store.SetStatus(id, "processing", "")
 
+	a, err := w.rate(ctx, b, func() bool {
+		cur, err := w.Store.BookByID(id, nil)
+		return err == nil && cur.Status == "processing" // not wiped while waiting
+	})
+	if err != nil || a == nil {
+		return err
+	}
+	return w.Store.SaveAnalysis(id, *a)
+}
+
+// rate fetches a blurb if needed, waits for token budget, then asks each
+// model in order until one gives a valid verdict. still is re-checked after
+// waiting; if it returns false, rate gives up quietly (nil, nil).
+func (w *Worker) rate(ctx context.Context, b *store.Book, still func() bool) (*store.Analysis, error) {
+	id := b.ID
 	if b.Blurb == "" {
 		w.setState("enriching", id, b.Title)
 		ec := enrich.New(w.Store.Setting(store.KeyGoogleBooksAPIKey))
@@ -143,10 +200,10 @@ func (w *Worker) process(ctx context.Context, id int64) error {
 	user := llm.UserPrompt(b.Title, b.Author, b.Blurb)
 	est := llm.EstimateTokens(llm.SystemPrompt+user) + llm.ExpectedCompletionTokens
 	if err := w.waitForBudget(ctx, id, b.Title, est); err != nil {
-		return err
+		return nil, err
 	}
-	if cur, err := w.Store.BookByID(id, nil); err != nil || cur.Status != "processing" {
-		return nil // wiped while waiting for token budget
+	if !still() {
+		return nil, nil
 	}
 
 	w.setState("analyzing", id, b.Title)
@@ -160,11 +217,26 @@ func (w *Worker) process(ctx context.Context, id int64) error {
 	for _, model := range models {
 		v, err := w.analyzeWith(ctx, client, model, id, user)
 		if err == nil {
-			return w.Store.SaveAnalysis(id, v.ToAnalysis(model))
+			a := v.ToAnalysis(model)
+			return &a, nil
 		}
 		lastErr = err
 	}
-	return lastErr
+	return nil, lastErr
+}
+
+// rerateOne re-rates an analyzed book without taking it out of the library:
+// its status stays "analyzed" and a failure keeps the old rating.
+func (w *Worker) rerateOne(ctx context.Context, id int64) error {
+	b, err := w.Store.BookByID(id, nil)
+	if err != nil || b.Status != "analyzed" || strings.HasPrefix(b.AnalysisModel, "manual:") {
+		return nil // gone, re-queued normally, or hand-rated by a parent
+	}
+	a, err := w.rate(ctx, b, func() bool { return true })
+	if err != nil || a == nil {
+		return err
+	}
+	return w.Store.SaveAnalysis(id, *a)
 }
 
 // client builds the configured provider: Claude through Anthropic's SDK, or
