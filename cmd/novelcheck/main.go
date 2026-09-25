@@ -20,6 +20,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/suggest"
 	"github.com/zachcurry13/novelcheck/internal/sysinfo"
 	"github.com/zachcurry13/novelcheck/internal/tunnel"
 	"github.com/zachcurry13/novelcheck/internal/updates"
@@ -98,6 +99,7 @@ func main() {
 		SysInfo: sampler,
 		Push:    pusher,
 		Deep:    deep,
+		Suggest: suggest.New(st),
 		Web:     web.FS(),
 	}
 	srv.Pulls.OnError = func(model string, err error) {

@@ -235,3 +235,25 @@ CREATE TABLE IF NOT EXISTS delete_requests (
     decided_at DATETIME
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_delete_requests_pending ON delete_requests(book_id, user_id) WHERE status = 'pending';
+
+-- Suggested Reads: each person's 👍/👎 on a suggestion. norm_key is the
+-- book's NormKey, so a vote on a book outside the library still counts if
+-- the book is added later.
+CREATE TABLE IF NOT EXISTS suggestion_votes (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    norm_key   TEXT NOT NULL,
+    title      TEXT NOT NULL,
+    author     TEXT NOT NULL DEFAULT '',
+    vote       INTEGER NOT NULL CHECK (vote IN (-1, 1)),
+    reason     TEXT NOT NULL DEFAULT '',     -- why a 👎: read, story, author, series, spicy; '' = not given
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, norm_key)
+);
+
+-- The AI's latest suggestions per person (made at most once a day).
+CREATE TABLE IF NOT EXISTS suggestion_sets (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    made_at TEXT NOT NULL,                -- UTC "2006-01-02 15:04:05"
+    mode    TEXT NOT NULL DEFAULT '',     -- the suggest_mode setting it was made under
+    data    TEXT NOT NULL DEFAULT '{}'    -- JSON: library picks with reasons, books outside the library
+);

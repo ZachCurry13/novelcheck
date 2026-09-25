@@ -3,6 +3,7 @@ import { get, post, put, del } from "./api.js";
 import { $, esc, attempt, toast, classChip } from "./ui.js";
 import { on } from "./modules.js";
 import { confirmKindleSend, openKOReaderSetup } from "./delivery.js";
+import { renderSuggestions } from "./suggest.js";
 
 export async function renderQueue(view, state) {
   view.innerHTML = `
@@ -17,7 +18,8 @@ export async function renderQueue(view, state) {
     <section>
       <h2 class="label">Queued — drag to reorder</h2>
       <ol id="queued" class="space-y-2"></ol>
-    </section>`;
+    </section>
+    <div id="suggestions"></div>`;
   $("#delivery-mode", view).textContent = {
     email: `Send-to-Kindle (${state.user.kindle_email})`,
     koreader: "KOReader catalog",
@@ -71,6 +73,7 @@ export async function renderQueue(view, state) {
   });
 
   await load();
+  if (on(state.user, "suggestions")) renderSuggestions($("#suggestions", view), state, load);
   if (window.Sortable) {
     sortable = window.Sortable.create(queued, {
       handle: ".drag-handle",

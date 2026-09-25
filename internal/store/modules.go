@@ -9,6 +9,7 @@ const (
 	KeyModuleKOReader = "module_koreader"       // "Start Reading" flags for KOReader sync
 	KeyModuleImport   = "module_import"         // Import books: Kindle/drive scanner and lists
 	KeyModuleParents  = "module_parents"        // kids' accounts, age groups, parents' notes
+	KeyModuleSuggest  = "module_suggestions"    // 💡 Suggested Reads under Up Next
 	KeyNotifyRoutine  = "notify_routine"        // 🔔 also lists routine events, not just problems
 )
 
@@ -19,6 +20,7 @@ var moduleNames = map[string]string{
 	KeyModuleKOReader: "koreader",
 	KeyModuleImport:   "import",
 	KeyModuleParents:  "parents",
+	KeyModuleSuggest:  "suggestions",
 }
 
 func init() {

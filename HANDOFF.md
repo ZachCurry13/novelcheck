@@ -12,9 +12,15 @@ Latest release: **v1.17.0** (2026-09-25; the V2 list: Deep Scan, barcode scanner
 7. ✅ §10 Admin tabs (AI & Scans, Users & Rules, Delivery & Services, System & Toggles), collapsible cards, per-tab save, backup fields shown only when enabled, user-card badges.
 8. ✅ §9 tap-to-see values on Usage charts; §13 Ollama model list with disk use + delete (in-use models protected).
 9. ✅ §11 tidy titles: `internal/titles` parser, series + number on books, sync follows Calibre renames (ratings kept, stale file links pruned), Admin 🏷️ Tidy in Calibre + per-book edit via the Content server (Calibre-Web fallback).
-10. ⏭ **Next (v1.18)**: §12 suggested reads under Up Next (match library books to queue picks, read history and content filters; 👍 boosts similar authors/series/tropes with Add to Up Next / Wishlist, 👎 hides it and logs an exclusion so similar titles are suppressed).
+10. ✅ §12 suggested reads: moved to v1.18 (see below).
 - Already done before V2: §7 (switches, custom filters), §4 (scale, strict preset, reasons), §5 push, §9 diagnostics copy + Calibre-Web, §13 GPU detection.
 - Dropped by the user: parent-child linking.
+
+## v1.18 list (branch `feature/v1.18-suggestions`), from the user on 2026-09-25
+1. ✅ §12 Suggested Reads: `internal/suggest` free matching + daily AI picks (+ books you don't own), row under Up Next, 👍/👎 with an optional "Why not?" (story / author / series / too spicy / already read) that steers the matching. Admin: `suggest_mode` (free / AI / AI + outside) and the `module_suggestions` switch.
+2. ⏭ Taste profile: an optional "rate 20 books" list (want to read / don't want / read & liked / read & didn't like; "20 more"), a varied mix from the library (series firsts, different authors and pepper levels), saved per person and editable, feeding the same signals as 👍/👎. Its own admin switch. Marking books uses no AI.
+3. Library filters: author, series, genre (from Calibre tags, which the sync doesn't read yet), fiction vs nonfiction, the basic categories. Show the user the category list before building.
+4. Bug reports without a GitHub account (today `diagnose.js` opens a GitHub issue form). Options to put to the user: email link, a no-login form service, or a small relay that files the GitHub issue for them.
 
 ## Waiting on the user
 - If the app ever restarts on its own again, the TrueNAS app log (panics are now logged with a stack).

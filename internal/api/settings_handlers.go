@@ -83,6 +83,10 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, http.StatusBadRequest, "unknown language")
 			return
 		}
+		if k == store.KeySuggestMode && !store.ValidSuggestMode(v) {
+			writeErr(w, http.StatusBadRequest, "unknown Suggested Reads choice")
+			return
+		}
 		if k == store.KeyBatchSize {
 			if n, err := strconv.Atoi(v); err != nil || n < 0 || n > 500 {
 				writeErr(w, http.StatusBadRequest, "books per batch must be a whole number from 0 (all waiting books) to 500")

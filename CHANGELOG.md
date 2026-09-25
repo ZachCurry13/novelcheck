@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.18.0]
+
+### 💡 Suggested Reads
+- **Suggestions under Up Next**: a row of books from your library picked for each person, each with a short reason, such as "Next in Discworld after Mort", "More by Terry Pratchett" or "Like The Hobbit". They're based on what that person has in Up Next, is reading and has finished. Kids only ever see books their rules allow.
+- **👍 / 👎**: 👍 means "more like this" and shows **＋ Up Next** (or **⭐ Wishlist**). 👎 hides the book at once and asks an optional **Why not?**: *Not my kind of story*, *Not this author*, *Not this series*, *Too spicy* or *Already read it*. Each answer teaches the suggestions something different: a 👎 for "Too spicy" stops books at that pepper level or higher, "Not this series" skips the rest of the series, and "Already read it" moves the series on to the next book. **Start over** clears your 👍/👎.
+- **The admin decides how they're picked** (Admin → AI & Scans → Suggested Reads): **Free matching only** (no AI, no cost), **AI picks from your library** (your AI picks the best 10 and writes the reasons, at most once a day per person and within the hourly token cap), or **AI picks + books you don't own** (a few books to add to the wishlist, where NovelCheck rates them). Kids' accounts never get books you don't own. **Admin → System & Toggles → Features** can switch Suggested Reads off.
+
 ## [1.17.0]
 
 ### 🧬 Deep Scan

@@ -15,6 +15,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/ollama"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/suggest"
 	"github.com/zachcurry13/novelcheck/internal/sysinfo"
 	"github.com/zachcurry13/novelcheck/internal/tunnel"
 	"github.com/zachcurry13/novelcheck/internal/updates"
@@ -32,6 +33,7 @@ type Server struct {
 	SysInfo *sysinfo.Sampler
 	Push    *push.Service    // phone notifications; nil turns them off
 	Deep    *deepread.Runner // Deep Scans (full-text reading)
+	Suggest *suggest.Service // Suggested Reads under Up Next
 	Web     fs.FS            // embedded static assets
 	logins  *loginLimiter
 }
@@ -93,6 +95,13 @@ func (s *Server) Router() http.Handler {
 				r.Delete("/queue/{id}", s.handleDequeue)
 				r.Post("/queue/{id}/start", s.handleStartReading)
 				r.Post("/queue/{id}/finish", s.handleFinishReading)
+				r.Group(func(r chi.Router) {
+					r.Use(s.requireModule(store.KeyModuleSuggest, "Suggested Reads"))
+					r.Get("/suggestions", s.handleSuggestions)
+					r.Post("/suggestions/vote", s.handleSuggestionVote)
+					r.Delete("/suggestions/votes", s.handleClearSuggestionVotes)
+					r.Post("/suggestions/wish", s.handleWishSuggestion)
+				})
 			})
 
 			// Editors and admins: day-to-day management. Handlers further

@@ -29,6 +29,9 @@ const SECTIONS = [
     ["backup_price_input_per_million", "Input price per 1M tokens (USD)", "0 for Ollama", "number", "backup_llm_enabled"],
     ["backup_price_output_per_million", "Output price per 1M tokens (USD)", "0 for Ollama", "number", "backup_llm_enabled"],
   ]],
+  ["ai", "Suggested Reads", [
+    ["suggest_mode", "How suggestions under Up Next are picked", "AI picks + books you don't own|AI picks from your library|Free matching only (no AI)", "select"],
+  ]],
   ["ai", "Rate Caps & Batching", [
     ["batch_size", "Books per batch (0 = all waiting books)", "20", "number"],
     ["tokens_per_hour_cap", "Max tokens per hour (0 = unlimited)", "25000", "number"],
@@ -54,6 +57,7 @@ const SECTIONS = [
     ["module_koreader", "KOReader catalog delivery", "", "bool"],
     ["module_import", "Import books (Kindle / drive scanner and lists)", "", "bool"],
     ["module_parents", "Parent tools (kids' accounts, age groups, parents' notes)", "", "bool"],
+    ["module_suggestions", "💡 Suggested Reads under Up Next", "", "bool"],
     ["notify_routine", "🔔 Also show everyday events: new books from Calibre, rating finished, someone started a book", "", "bool"],
   ]],
   ["system", "Sign-in & Updates", [
@@ -121,7 +125,7 @@ function field(key, label, placeholder, type, value, when) {
   if (type === "select") {
     const opts = placeholder.split("|"); // the choices; the first is the default
     return wrap(`<div><label class="label" for="s-${key}">${esc(label)}</label>
-      <select id="s-${key}" data-key="${key}" class="input">${opts.map((o) => `<option ${o === (value || opts[0]) ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></div>`);
+      <select id="s-${key}" data-key="${key}" class="input">${opts.map((o) => `<option ${o === (value || opts[0]) ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>${HELP[key] || ""}</div>`);
   }
   const t = type === "password" ? "password" : type === "number" ? "number" : "text";
   return wrap(`<div><label class="label" for="s-${key}">${esc(label)}</label>
@@ -132,6 +136,7 @@ function field(key, label, placeholder, type, value, when) {
 
 // Extra help under a few fields.
 const HELP = {
+  suggest_mode: `<p class="mt-1 text-xs text-slate-400">Free matching looks for the next book in a series, the same authors and similar descriptions. With AI, your AI then picks the best 10 with a reason, at most once a day per person and within the hourly token cap. Kids' accounts (and anyone hiding unrated books) never get books you don't own.</p>`,
   smtp_password: `<p class="mt-1 text-xs text-slate-400">Gmail: your normal Google password won't work. Turn on 2-Step Verification,
     then create an <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" class="underline">App Password</a>
     and paste its 16 letters here (spaces are fine). Use your full Gmail address as the username.</p>`,
