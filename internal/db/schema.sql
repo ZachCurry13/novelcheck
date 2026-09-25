@@ -151,6 +151,32 @@ CREATE TABLE IF NOT EXISTS book_flags (
     PRIMARY KEY (book_id, flag_id)
 );
 
+-- Deep reads: the AI reads a book's whole EPUB in parts. Admins start them;
+-- anyone else requests one for an admin to approve. notes is a JSON list of
+-- what each part contained.
+CREATE TABLE IF NOT EXISTS deep_reads (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id      INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    status       TEXT NOT NULL DEFAULT 'requested'
+                 CHECK (status IN ('requested', 'queued', 'reading', 'done', 'error', 'declined', 'cancelled')),
+    requested_by TEXT NOT NULL DEFAULT '',
+    reason       TEXT NOT NULL DEFAULT '',
+    approved_by  TEXT NOT NULL DEFAULT '',
+    words        INTEGER NOT NULL DEFAULT 0,
+    parts_total  INTEGER NOT NULL DEFAULT 0,
+    parts_done   INTEGER NOT NULL DEFAULT 0,
+    est_tokens   INTEGER NOT NULL DEFAULT 0,
+    model        TEXT NOT NULL DEFAULT '',
+    notes        TEXT NOT NULL DEFAULT '',
+    error        TEXT NOT NULL DEFAULT '',
+    source       TEXT NOT NULL DEFAULT 'admin', -- admin | request | batch | auto (a chosen user's Up Next)
+    prev_level   INTEGER,                       -- peppers before the scan (the blurb rating); NULL = unrated
+    new_level    INTEGER,                       -- peppers the full text earned
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_deep_reads_open ON deep_reads(book_id) WHERE status IN ('requested', 'queued', 'reading');
+
 -- Phones and browsers that turned on push notifications. scope: "all"
 -- (problems and everyday events) or "problems"; kids only get their own.
 CREATE TABLE IF NOT EXISTS push_subscriptions (

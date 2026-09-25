@@ -89,6 +89,15 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		if k == store.KeyDeepUsers {
+			v = s.normalizeDeepUsers(v) // up to 3 existing accounts
+		}
+		if k == store.KeyDeepTopN {
+			if n, err := strconv.Atoi(v); err != nil || n < 1 || n > 50 {
+				writeErr(w, http.StatusBadRequest, "Deep Scan batch size must be between 1 and 50 books")
+				return
+			}
+		}
 		if k == store.KeySessionDays {
 			if n, err := strconv.Atoi(v); err != nil || n < 1 || n > 365 {
 				writeErr(w, http.StatusBadRequest, "stay signed in must be between 1 and 365 days")

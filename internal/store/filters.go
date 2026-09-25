@@ -11,6 +11,7 @@ type BookFilter struct {
 	CatalogID      int64    // only books in this catalog
 	OverlapWith    int64    // ...that are also in this catalog
 	MultiCatalog   bool     // only books present in 2+ catalogs
+	DeepOnly       bool     // only books rated by a Deep Scan (full text)
 	Classification string   // "Closed Door" | "Open Door" | "No Spice" | "Pending"
 	Flags          []string // books that HAVE all of these flags
 	ExcludeFlags   []string // hide books with ANY of these flags (parent-approved books stay)
@@ -113,6 +114,9 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	if f.OverlapWith > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM catalog_books y WHERE y.book_id = b.id AND y.catalog_id = ?)")
 		args = append(args, f.OverlapWith)
+	}
+	if f.DeepOnly {
+		where = append(where, "b.analysis_model LIKE 'deep:%'")
 	}
 	if f.MultiCatalog {
 		where = append(where, "(SELECT COUNT(DISTINCT z.catalog_id) FROM catalog_books z WHERE z.book_id = b.id) > 1")

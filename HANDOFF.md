@@ -1,28 +1,32 @@
 # NovelCheck handoff
 
-Latest release: **v1.16.0** (Check a book, pepper wording, feature switches, phone notifications, custom AI filters; see CHANGELOG.md), released 2026-09-24 from the working branch `claude/epic-newton-z23mz1`. Next: parent-child linking as v1.17.
+Latest release: **v1.16.0** (Check a book, pepper wording, feature switches, phone notifications, custom AI filters). Work in progress on branch **`feature/v2-updates`** (pushed; not merged, not released) toward **v1.17.0**, following the user's V2 list (`NOVELCHECK_UPDATES.md` v2, pasted 2026-09-25). Commit per section; release when the user says so.
 
-## Feature plan (from the user's NOVELCHECK_UPDATES list, agreed 2026-09-24)
-1. ✅ v1.16 quick wins: pepper levels 2-3 reworded (+ `spice_reason`, `rules_version` re-rate banner), Strict family preset, gray-area chip, Re-rate whole library, Calibre-Web links + credit, phone filters.
-2. ✅ Feature switches (Admin → Features: queue, Send-to-Kindle, KOReader, import, parent tools) + 🔔 events: `calibre-new`, `batch-done`, `reading`, `token-cap` (routine ones can be turned off with `notify_routine`). Also in the unreleased 1.16.0 notes.
-3. ✅ Phone push: `internal/push` (stdlib RFC 8291 + VAPID, tested against the RFC example), Profile → Phone notifications, managers get 🔔 notices (all or problems only), everyone gets "Ready to read". Only the UI's off/blocked states were checked in a browser (the app's pane blocks notification permission); the first real subscribe/test should be done on a phone over the https address after release.
-4. ✅ Custom AI filters (Admin → Custom AI filters, up to 12; `flag:<key>` Hide boxes; `custom_flags_version` drives re-rate offers). Not yet in kids' content rules.
-5. ✅ **Check a book** (user: "should be the main feature, super easy and straightforward"). Built as planned: `POST /api/check`, `Worker.RateNow`/`ReadCover`, `web/static/js/check.js`. Not yet tried with a real phone camera or a real vision model; do that after release. at the store, snap the cover or type title/author → instant rating. First tab and parents' landing page. If the book is in the library show its rating; else enrich + rate now (vision AI reads the cover; typed search as fallback) and save it to a "Looked up" catalog so a second check is free. Parents (admins/editors) only.
-6. ⏭ Parent-child linking (v1.17), as the user chose: the admin links each kid to one or more parents; an editor sees and manages only their linked kids; kids with no parent linked stay manageable by every parent; the admin sees everyone.
-- Skipped by the user's choice: a "Skipped (up to date)" badge (same as Analyzed). Not requested: re-rating when a Calibre file changes.
+## V2 list: status
+1. ✅ §1 fixes: GET retry on resume (`api.js`), `internal/safe` panic guards, batch size 0 = all (max 500), no delete for looked-up books, neutral "Level N" labels (no nicknames/pronouns), photo fallback on Check a book.
+2. ✅ §3 Deep Scan: `internal/epub`, `internal/deepread`, `deep_reads` (+ audit), Admin → 🧬 Deep Scan (next N with estimate, up to 3 auto users, approvals), escalation warning + Up Next banner, 🧬 filter/badge.
+3. ⏭ §2 live barcode scanner (ZXing, approved by the user) + wishlist ("Add to Wishlist" / "Pending acquisition" for unowned books, admin approve & track).
+4. §5 KOReader OPDS feed (per-user token URL, QR code via a small QR library, approved), approved-sender guide in Start Reading, optional delivery step in first-run setup.
+5. §6 presets: add "Young Reader" alongside Strict Family (age + pepper caps in one click).
+6. §8 delta scanning: re-rate when Calibre's last-modified or the file changes.
+7. §10 Admin sub-tabs (Users & Rules, AI & Scans, Delivery & Services, System & Toggles), user cards, accordions.
+8. §9 tap-to-see values on Usage charts; §13 Ollama model list with disk use + delete.
+9. §11 title normalizer (strip "01 - ", "Book 2:") + push title/series to Calibre via the Content server.
+10. §12 suggested reads under Up Next with 👍/👎.
+- Already done before V2: §7 (switches, custom filters), §4 (scale, strict preset, reasons), §5 push, §9 diagnostics copy + Calibre-Web, §13 GPU detection.
+- Dropped by the user: parent-child linking.
 
 ## Waiting on the user
-- Trying v1.16 on a phone: Check a book with the camera (needs a vision-capable AI), and phone notifications over the https address.
-- Kindle `.kfx` file names from the Kindle's `documents` folder, to check whether on-device store books carry titles in their names. The Amazon list import (paste or data download) covers Kindle purchases in the meantime.
-- Whether "user login information" for more Ollama detail meant a TrueNAS API key (real per-app CPU/GPU stats). Not built.
+- If the app ever restarts on its own again, the TrueNAS app log (panics are now logged with a stack).
+- Kindle `.kfx` file names (do store books carry titles?) and whether "user login information" meant a TrueNAS API key. Not built.
 
 ## Working on the Windows desktop (`C:\novelcheck`)
-- Node.js LTS is installed (no `make`): build CSS with `npx tailwindcss@3 -c tailwind.config.js -i web/tailwind.input.css -o web/static/css/app.css --minify`. Shells started before the install may need `C:\Program Files\nodejs` on PATH. For a visual check, run the app locally (`.claude/launch.json`, untracked) on a fresh port to dodge the 1-hour static cache.
+- Node.js LTS is installed (no `make`): build CSS with `npx tailwindcss@3 -c tailwind.config.js -i web/tailwind.input.css -o web/static/css/app.css --minify`. For a visual check, run the app locally (`.claude/launch.json`, untracked) on a fresh port to dodge the 1-hour static cache, and stub `fetch` (sign-in isn't possible).
 - The clone uses LF endings (`core.autocrlf=false`). `go test ./...` passes except Windows-only failures in `internal/calibre`, `internal/db` (temp-file lock at cleanup) and `internal/tunnel`; use `GOOS=linux go vet ./...`. CI on Linux is the real gate.
 
 ## Conventions
-- Files ≤ ~300 lines; Go (chi, sqlx, modernc sqlite); vanilla ES modules; Tailwind compiled with `make css` and committed; strict CSP (no inline styles).
-- Check JS as modules: `for f in web/static/js/*.js; do node --input-type=module --check < $f || echo BAD $f; done` (plain `node --check` misses some errors).
-- Every user-facing change: plain-English CHANGELOG entry (release notes + in-app What's new), README/spec/docs in sync, bump the `web/static/sw.js` cache name when JS changes.
-- Release: push to `main`, then run **Actions → Docker image → Run workflow** with the `version`. No model identifiers in commits.
+- Files ≤ ~300 lines; Go (chi, sqlx, modernc sqlite); vanilla ES modules; Tailwind compiled and committed; strict CSP (no inline styles, no external scripts: vendor libraries into `web/static/vendor`).
+- Check JS as modules: `for f in web/static/js/*.js; do node --input-type=module --check < $f || echo BAD $f; done`.
+- Every user-facing change: plain-English CHANGELOG entry (release notes + in-app What's new), README/spec/docs in sync, bump the `web/static/sw.js` cache name when JS changes. Neutral wording: no personal names or pronouns in the app or docs.
+- Release: push to `main`, then run **Actions → Docker image → Run workflow** with the `version`.
 - The users (a parent admin and an editor) run this on TrueNAS; keep explanations non-technical.

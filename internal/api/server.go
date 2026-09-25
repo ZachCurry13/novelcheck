@@ -11,6 +11,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/config"
+	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/ollama"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -29,8 +30,9 @@ type Server struct {
 	Tunnel  *tunnel.Manager
 	Pulls   ollama.Puller // Ollama model downloads
 	SysInfo *sysinfo.Sampler
-	Push    *push.Service // phone notifications; nil turns them off
-	Web     fs.FS         // embedded static assets
+	Push    *push.Service    // phone notifications; nil turns them off
+	Deep    *deepread.Runner // Deep Scans (full-text reading)
+	Web     fs.FS            // embedded static assets
 	logins  *loginLimiter
 }
 
@@ -67,6 +69,8 @@ func (s *Server) Router() http.Handler {
 			r.Get("/age-groups", s.handleAgeGroups)
 			r.Get("/updates", s.handleUpdates)
 			r.Get("/flags", s.handleListFlags)
+			r.Get("/books/{id}/deep-scan", s.handleBookDeepScan)
+			r.Post("/books/{id}/deep-scan", s.handleStartDeepScan)
 			r.Get("/push", s.handlePushStatus)
 			r.Post("/push/subscribe", s.handlePushSubscribe)
 			r.Post("/push/unsubscribe", s.handlePushUnsubscribe)
@@ -120,6 +124,10 @@ func (s *Server) Router() http.Handler {
 			r.Group(func(r chi.Router) {
 				r.Use(auth.RequireAdmin)
 				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)
+				r.Get("/admin/deep-scans", s.handleDeepScans)
+				r.Get("/admin/deep-scans/next", s.handleDeepScanNext)
+				r.Post("/admin/deep-scans/next", s.handleDeepScanNext)
+				r.Post("/admin/deep-scans/{id}/{action}", s.handleDecideDeepScan)
 				r.Post("/admin/flags", s.handleAddFlag)
 				r.Put("/admin/flags/{id}", s.handleUpdateFlag)
 				r.Delete("/admin/flags/{id}", s.handleDeleteFlag)

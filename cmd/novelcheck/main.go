@@ -17,6 +17,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/db"
+	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/sysinfo"
@@ -74,6 +75,10 @@ func main() {
 	}
 	defer tun.Stop()
 
+	// Deep Scans: full-text reading of chosen books, one at a time.
+	deep := deepread.New(st, cfg.CalibreDir)
+	go deep.Run(ctx)
+
 	// Phone notifications: every new 🔔 notice also goes to subscribed devices.
 	pusher := push.New(st)
 	st.OnNotify = pusher.FromNotice
@@ -88,6 +93,7 @@ func main() {
 		Tunnel:  tun,
 		SysInfo: sampler,
 		Push:    pusher,
+		Deep:    deep,
 		Web:     web.FS(),
 	}
 	srv.Pulls.OnError = func(model string, err error) {

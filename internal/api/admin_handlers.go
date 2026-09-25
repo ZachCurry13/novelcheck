@@ -50,6 +50,7 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 		"ai_rated":          len(aiRated),
 		"non_english":       s.nonEnglishCount(),
 		"pending_deletes":   s.Store.PendingDeleteCount(),
+		"pending_deep":      s.Store.PendingDeepRequests(),
 		"usage":             usage,
 		"tokens_per_hour":   s.Store.SettingInt(store.KeyTokensPerHour),
 		"cost_spent":        spent,

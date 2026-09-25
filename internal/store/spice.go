@@ -46,7 +46,7 @@ type AISummary struct {
 func (s *Store) AISummaries() ([]AISummary, error) {
 	var out []AISummary
 	err := s.DB.Select(&out, `SELECT id, summary_verdict FROM books WHERE status = 'analyzed'
-		AND summary_verdict != '' AND analysis_model NOT LIKE 'manual:%'`)
+		AND summary_verdict != '' AND analysis_model NOT LIKE 'manual:%' AND analysis_model NOT LIKE 'deep:%'`)
 	return out, err
 }
 
@@ -56,7 +56,7 @@ func (s *Store) AISummaries() ([]AISummary, error) {
 func (s *Store) RerateCandidates() ([]int64, error) {
 	var ids []int64
 	err := s.DB.Select(&ids, `SELECT id FROM books WHERE status = 'analyzed'
-		AND (spice_level IS NULL OR rules_version < ? OR flags_version < ?) AND analysis_model NOT LIKE 'manual:%'
+		AND (spice_level IS NULL OR rules_version < ? OR flags_version < ?) AND analysis_model NOT LIKE 'manual:%' AND analysis_model NOT LIKE 'deep:%'
 		ORDER BY id`, RulesVersion, s.FlagsVersion())
 	return ids, err
 }
@@ -65,6 +65,6 @@ func (s *Store) RerateCandidates() ([]int64, error) {
 func (s *Store) AIRatedIDs() ([]int64, error) {
 	var ids []int64
 	err := s.DB.Select(&ids, `SELECT id FROM books WHERE status = 'analyzed'
-		AND analysis_model NOT LIKE 'manual:%' ORDER BY id`)
+		AND analysis_model NOT LIKE 'manual:%' AND analysis_model NOT LIKE 'deep:%' ORDER BY id`)
 	return ids, err
 }

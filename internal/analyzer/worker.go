@@ -242,7 +242,7 @@ func (w *Worker) fillBlurb(ctx context.Context, b *store.Book) {
 // its status stays "analyzed" and a failure keeps the old rating.
 func (w *Worker) rerateOne(ctx context.Context, id int64) (saved bool, err error) {
 	b, err := w.Store.BookByID(id, nil)
-	if err != nil || b.Status != "analyzed" || strings.HasPrefix(b.AnalysisModel, "manual:") {
+	if err != nil || b.Status != "analyzed" || strings.HasPrefix(b.AnalysisModel, "manual:") || strings.HasPrefix(b.AnalysisModel, store.DeepModelPrefix) {
 		return false, nil // gone, re-queued normally, or hand-rated by a parent
 	}
 	a, err := w.rate(ctx, b, func() bool { return true })

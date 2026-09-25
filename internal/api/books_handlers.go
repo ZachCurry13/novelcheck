@@ -31,6 +31,7 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		CatalogID:      queryID(r, "catalog"),
 		OverlapWith:    queryID(r, "overlap_with"),
 		MultiCatalog:   q.Get("multi") == "1",
+		DeepOnly:       q.Get("deep") == "1",
 		Classification: q.Get("classification"),
 		Flags:          splitCSV(q.Get("flags")),
 		ExcludeFlags:   splitCSV(q.Get("exclude")),

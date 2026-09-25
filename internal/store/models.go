@@ -135,4 +135,6 @@ type QueueItem struct {
 	Author         string  `db:"author" json:"author"`
 	Classification *string `db:"classification" json:"classification"`
 	BookStatus     string  `db:"book_status" json:"book_status"`
+	SpiceLevel     *int    `db:"spice_level" json:"spice_level"`
+	DeepChange     string  `db:"deep_change" json:"deep_change"` // e.g. "2→4" when a Deep Scan raised the rating
 }

@@ -71,6 +71,10 @@ Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and
 
 **📷 Check a book** asks your AI to read the title off a photo of the cover. OpenAI (`gpt-4o-mini`), Claude and Gemini models can all read photos. With Ollama you need a vision model such as `llama3.2-vision` or `llava` (plain `llama3.2` can't see images); if none of your models can, NovelCheck says so and you can type the title instead. Android phones read the ISBN barcode themselves, so no AI is needed for that.
 
+## Deep Scan (reading the whole book)
+
+A **🧬 Deep Scan** sends the book's full text to your AI in parts, so it uses far more tokens than a normal rating: a typical novel is around 150,000 tokens, or about 2–5 cents with `gpt-4o-mini`. NovelCheck shows the estimate before every scan. You can pick a separate **Deep Scan model** under **Admin → LLM Analysis Engine**, for example a cheap model with a large context window. With Ollama the book is cut into small parts (about 2,000 words) to fit local models' memory; it's free, but a whole book can take a long time on a small GPU.
+
 ## Language
 
 Summaries are written in **English (US)** unless you pick another language under **Admin → LLM Analysis Engine → Language for book summaries**. Small models sometimes answered in the book's own language before; if any existing summaries aren't in English, Admin shows **Re-rate them in English**.

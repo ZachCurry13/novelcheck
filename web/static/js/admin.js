@@ -19,6 +19,7 @@ const SECTIONS = [
     ["llm_model", "Primary (small) model", "gpt-4o-mini · claude-haiku-4-5 · gemini-2.5-flash · sonar · llama3.2"],
     ["llm_fallback_model", "Fallback model(s)", "Only used when the main model fails. Several? Separate with commas, in order"],
     ["llm_json_mode", "JSON response mode", "true / false", "bool"],
+    ["deep_read_model", "Deep Scan model (optional)", "Blank = the models above · e.g. a cheaper model with a big context window"],
     ["google_books_api_key", "Google Books API key (optional)", "", "password"],
     ["language", "Language for book summaries", "English (US)|English (UK)|Spanish|French|German|Portuguese|Italian|Dutch", "select"],
   ]],
@@ -83,11 +84,13 @@ export async function renderAdmin(view, state) {
       <button data-act="batch" class="btn-primary">Analyze batch</button>
       ${adminOnly(`<button data-act="wipe" class="btn-secondary">Wipe pending queue</button>`)}
       <button data-act="sync" class="btn-secondary">Sync Calibre now</button>
+      ${adminOnly(`<a href="#/deepscan" class="btn-secondary">🧬 Deep Scan…</a>`)}
       <button data-act="rerate-all" class="btn-ghost" title="Rate every AI-rated book again, e.g. after changing the AI or its rules">Re-rate whole library…</button>
       ${adminOnly(`<a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db</a>`)}
       <p id="worker" class="basis-full text-sm text-slate-400"></p>
       <div id="rerate" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
       <div id="del-banner" class="hidden basis-full rounded-lg bg-rose-950/50 p-3 text-sm"></div>
+      <div id="deep-banner" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     </div>
     ${adminOnly(`<div id="custom-flags"></div><form id="settings" class="mb-8 grid gap-4 lg:grid-cols-2"></form><div id="remote-access"></div>`)}
     <section id="users"></section>`;
@@ -228,6 +231,11 @@ function renderStats(view, s) {
     tile("Spent to date", fmtMoney(s.cost_spent), `${fmtNum(s.usage.total_prompt_tokens + s.usage.total_completion_tokens)} tokens · ${fmtNum(s.usage.total_calls)} calls`),
     tile("Est. to finish library", fmtMoney(s.cost_projected), `≈ ${fmtNum(s.tokens_projected)} tokens remaining`),
   ].join("");
+  const deepBox = $("#deep-banner", view);
+  deepBox.classList.toggle("hidden", !(s.pending_deep && document.body.dataset.role === "admin"));
+  if (s.pending_deep) {
+    deepBox.innerHTML = `🧬 <b>${fmtNum(s.pending_deep)}</b> Deep Scan request${s.pending_deep === 1 ? " is" : "s are"} waiting for your approval. <a href="#/deepscan" class="ml-2 underline">Review</a>`;
+  }
   const delBox = $("#del-banner", view);
   delBox.classList.toggle("hidden", !(s.pending_deletes && document.body.dataset.role === "admin"));
   if (s.pending_deletes) {

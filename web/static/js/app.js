@@ -14,6 +14,7 @@ import { renderSystem } from "./system.js";
 import { renderUsage } from "./usage.js";
 import { renderDuplicates } from "./duplicates.js";
 import { renderDeletions } from "./deletions.js";
+import { renderDeepScanAdmin } from "./deepscanadmin.js";
 import { initBell } from "./notifications.js";
 import { on, applyModules } from "./modules.js";
 
@@ -31,9 +32,10 @@ const routes = {
   usage: renderUsage,
   duplicates: renderDuplicates,
   deletions: renderDeletions,
+  deepscan: renderDeepScanAdmin,
 };
 const managerRoutes = new Set(["check", "import", "admin", "duplicates"]);
-const adminRoutes = new Set(["system", "usage", "deletions"]);
+const adminRoutes = new Set(["system", "usage", "deletions", "deepscan"]);
 const moduleRoutes = { queue: "queue", import: "import" }; // pages an admin can turn off
 
 function showOnly(id) {

@@ -78,6 +78,7 @@ function queueRow(i, idx) {
       <div class="min-w-0 flex-1">
         <p class="truncate font-semibold">${esc(i.title)}</p>
         <p class="truncate text-sm text-slate-400">${esc(i.author)}</p>
+        ${deepBanner(i)}
       </div>
       <div class="hidden sm:block">${classChip(i)}</div>
       <button data-act="start" class="btn-primary">▶ Start Reading</button>
@@ -85,11 +86,16 @@ function queueRow(i, idx) {
     </li>`;
 }
 
+// "2→4": a Deep Scan found more than the blurb suggested.
+const deepBanner = (i) => (i.deep_change
+  ? `<p class="text-xs font-semibold text-amber-300" title="The full text was rated higher than the description">⚠️ Rating changed via Deep Scan: Level ${esc(i.deep_change.replace("→", " → Level "))}</p>` : "");
+
 function readingCard(i) {
   return `
     <div data-item="${i.id}" class="card flex flex-col gap-2 ring-indigo-700">
       <p class="font-semibold">${esc(i.title)}</p>
       <p class="text-sm text-slate-400">${esc(i.author)}</p>
+      ${deepBanner(i)}
       ${i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
       <div class="flex gap-2"><button data-act="finish" class="btn-secondary">Finished</button>
         <button data-act="remove" class="btn-ghost">Remove</button></div>

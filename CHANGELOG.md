@@ -6,6 +6,14 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.17.0]
 
+### 🧬 Deep Scan
+- **The AI can now read the whole book**: open a book and choose **🧬 Deep Scan this book** (admins), or **Request a Deep Scan** (everyone else; an admin approves it). NovelCheck reads the book's EPUB from Calibre part by part, and the rating comes from the text itself instead of the description. The book window lists what was found where (for example "Chapter 12 · Level 4: an explicit scene"), and the book gets a **🧬 Deep Scan** tag.
+- **Cost first**: every Deep Scan shows its size and estimated cost before it starts (a typical novel is around 150,000 tokens; with gpt-4o-mini that's about 2–5 cents).
+- **Admin → 🧬 Deep Scan**: scan the next 10, 20 or 30 books waiting in Up Next lists (with the estimate shown first), pick up to 3 readers whose Up Next is always scanned automatically, approve requests, follow progress, and see every rating the full text changed.
+- **When the text is spicier than the blurb**: the rating is updated, the 🔔 bell (and phones) get a warning, and the book shows **⚠️ Rating changed via Deep Scan: Level 2 → Level 4** in Up Next and in its window.
+- **Library → 🧬 Deep Scanned only** shows just the fully read books. Deep Scan ratings are never overwritten by re-rates of the description.
+- Optional **Deep Scan model** under Admin → LLM Analysis Engine (for example a cheaper model with a big context window); otherwise your usual AI does the reading.
+
 ### Fixed
 - **No more error when you reopen the app**: when a phone wakes NovelCheck before its connection is back, the app now waits for the network and quietly tries again (up to 3 times) instead of showing an error.
 - **Steadier server**: if something goes wrong while rating a book, syncing Calibre or sending a notification, NovelCheck now records the error and carries on instead of stopping (which made the app restart).

@@ -15,7 +15,7 @@ func (s *Store) ListQueue(userID int64, all bool) ([]QueueItem, error) {
 	}
 	var items []QueueItem
 	err := s.DB.Select(&items, `SELECT q.id, q.book_id, q.position, q.status, q.delivery_note,
-		q.updated_at, b.title, b.author, b.classification, b.status AS book_status
+		q.updated_at, b.title, b.author, b.classification, b.status AS book_status, b.spice_level, `+deepChangeCol+`
 		FROM queue_items q JOIN books b ON b.id = q.book_id
 		WHERE q.user_id = ? `+filter+`
 		ORDER BY CASE q.status WHEN 'reading' THEN 0 WHEN 'queued' THEN 1 ELSE 2 END,
@@ -36,7 +36,7 @@ func (s *Store) Enqueue(userID, bookID int64) error {
 func (s *Store) QueueItem(userID, itemID int64) (*QueueItem, error) {
 	var it QueueItem
 	err := s.DB.Get(&it, `SELECT q.id, q.book_id, q.position, q.status, q.delivery_note,
-		q.updated_at, b.title, b.author, b.classification, b.status AS book_status
+		q.updated_at, b.title, b.author, b.classification, b.status AS book_status, b.spice_level, `+deepChangeCol+`
 		FROM queue_items q JOIN books b ON b.id = q.book_id
 		WHERE q.user_id = ? AND q.id = ?`, userID, itemID)
 	if errors.Is(err, sql.ErrNoRows) {

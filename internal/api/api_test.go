@@ -15,6 +15,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/db"
+	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/sysinfo"
@@ -86,6 +87,7 @@ func setupWith(t *testing.T, adjust func(*api.Server)) (*httptest.Server, *store
 		SysInfo: sysinfo.New(t.TempDir()),
 		Push:    push.New(st),
 	}
+	s.Deep = deepread.New(st, s.Cfg.CalibreDir)
 	if adjust != nil {
 		adjust(s)
 	}
