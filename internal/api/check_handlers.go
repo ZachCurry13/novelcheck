@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
+	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/enrich"
 	"github.com/zachcurry13/novelcheck/internal/safe"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -108,7 +109,8 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"book": b, "rating": b.Status == "processing",
-		"in_library": len(catalogs) > 0, "catalogs": catalogs, "found": found, "source": source})
+		"in_library": len(catalogs) > 0, "catalogs": catalogs, "found": found, "source": source,
+		"my_wish": s.Store.MyWish(id, auth.UserFrom(r).ID)})
 }
 
 // saveLookup adds a checked book to the "Looked up" list.

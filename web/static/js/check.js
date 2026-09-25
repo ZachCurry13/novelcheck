@@ -1,21 +1,26 @@
 // Check a book: the main screen for parents. Snap the cover (or type the
 // title) in a shop and see the rating. Known books answer at once; new ones
 // are looked up, rated by the AI, and kept under "Looked up".
-import { get, post, qs } from "./api.js";
+import { get, post, del, qs } from "./api.js";
 import { $, esc, attempt, classChip, flagChips, ageChip } from "./ui.js";
 import { PEPPERS, whyChip, openPepperGuide } from "./peppers.js";
 import { loadFlags, customChips } from "./customflags.js";
 import { openBook } from "./bookdialog.js";
+import { liveBlocker, scanLive } from "./barcode.js";
 
 export async function renderCheck(view, state) {
   view.innerHTML = `
     <div class="mx-auto max-w-xl space-y-4">
       <div>
         <h1 class="text-2xl font-bold">Check a book</h1>
-        <p class="text-sm text-slate-400">At the shop? Snap the cover, or type the title.</p>
+        <p class="text-sm text-slate-400">At the shop? Scan the barcode, snap the cover, or type the title.</p>
       </div>
-      <button id="snap" class="btn-primary w-full py-4 text-lg">📷 Take a photo of the cover</button>
+      <div class="grid gap-2 sm:grid-cols-2">
+        <button id="scan" class="btn-primary py-4 text-lg">▦ Scan the barcode</button>
+        <button id="snap" class="btn-primary py-4 text-lg">📷 Photo of the cover</button>
+      </div>
       <button id="pick" class="btn-ghost w-full text-sm">🖼 Or choose a photo you already took</button>
+      <dialog id="scan-dialog" class="dialog"></dialog>
       <input id="photo" type="file" accept="image/*" capture="environment" class="hidden">
       <input id="library-photo" type="file" accept="image/*" class="hidden">
       <form id="check-form" class="flex gap-2">
@@ -55,9 +60,11 @@ export async function renderCheck(view, state) {
       }
       if (mine !== run) return;
     }
+    last = res;
     out.innerHTML = resultCard(book, res);
     loadRecent(view, state);
   };
+  let last = null; // the latest result, for the wishlist buttons
 
   $("#snap", view).addEventListener("click", () => $("#photo", view).click());
   $("#pick", view).addEventListener("click", () => $("#library-photo", view).click());
@@ -87,12 +94,37 @@ export async function renderCheck(view, state) {
     const id = Number(e.target.closest("[data-id]")?.dataset.id);
     if (act === "open") openBook(id, state);
     else if (act === "peppers") openPepperGuide();
+    else if (act === "queue") attempt(() => post("/api/queue", { book_id: id }), "Added to Up Next");
+    else if (act === "wish" || act === "unwish") toggleWish(act, id);
     else if (act === "retry") check({ query: e.target.dataset.q }, "Trying again…");
     else if (act === "another") {
       out.innerHTML = "";
       form.q.value = "";
       form.q.focus();
     }
+  });
+  const toggleWish = async (act, id) => {
+    if (act === "wish") {
+      const note = prompt("Add a note for the family? (optional)", "");
+      if (note === null) return;
+      const r = await attempt(() => post(`/api/books/${id}/wish`, { note }), "Added to the family wishlist");
+      if (r) last.my_wish = r.wish;
+    } else if (await attempt(() => del(`/api/books/${id}/wish`), "Removed from your wishlist")) {
+      last.my_wish = null;
+    }
+    const d = await get(`/api/books/${id}`).catch(() => null);
+    if (d) out.innerHTML = resultCard(d.book, last);
+  };
+
+  // Live barcode scanning, with the photo options as the fallback.
+  $("#scan", view).addEventListener("click", async () => {
+    const why = liveBlocker();
+    if (why) {
+      out.innerHTML = `<p class="card text-sm text-amber-200">${esc(why)}</p>`;
+      return;
+    }
+    const isbn = await scanLive($("#scan-dialog", view));
+    if (isbn) check({ query: isbn }, "Looking up the barcode…");
   });
   loadRecent(view, state);
 }
@@ -124,9 +156,19 @@ function resultCard(b, res) {
     ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}
     <p class="text-xs text-slate-400">${esc(p.name)}: ${esc(p.desc)} <button data-act="peppers" class="underline">About peppers</button></p>
     ${where}
-    <div class="flex flex-wrap gap-2"><button data-act="open" class="btn-secondary">Open details</button>
+    <div class="flex flex-wrap gap-2">${actions(res)}<button data-act="open" class="btn-secondary">Open details</button>
       <button data-act="another" class="btn-ghost">Check another</button></div>
   </div>`;
+}
+
+// Owned books go straight to Up Next; others can be wished for or queued
+// as "to get". Nothing here ever offers deleting or removing.
+function actions(res) {
+  if (res.in_library) return `<button data-act="queue" class="btn-primary">＋ Add to Up Next</button>`;
+  const wish = res.my_wish
+    ? `<button data-act="unwish" class="btn-secondary" title="Remove it from your wishlist">⭐ On your wishlist${res.my_wish.status === "approved" ? " (to get)" : ""}</button>`
+    : `<button data-act="wish" class="btn-primary">⭐ Add to Wishlist</button>`;
+  return `${wish}<button data-act="queue" class="btn-secondary" title="Add it to Up Next until you get a copy">＋ Up Next (to get)</button>`;
 }
 
 // The last few books checked that aren't in the library.

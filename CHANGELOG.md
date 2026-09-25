@@ -14,6 +14,12 @@ becomes the release notes for that version and is shown in the app under
 - **Library → 🧬 Deep Scanned only** shows just the fully read books. Deep Scan ratings are never overwritten by re-rates of the description.
 - Optional **Deep Scan model** under Admin → LLM Analysis Engine (for example a cheaper model with a big context window); otherwise your usual AI does the reading.
 
+### 📷 Barcode scanning & ⭐ Wishlist
+- **Scan the barcode live**: Check a book has a new **▦ Scan the barcode** button. Point the phone at the barcode on the back of a book and it's recognized in a moment, on iPhone and Android alike (it needs NovelCheck's https:// address). If the camera can't be used, you're told why and can take a photo instead.
+- **Already have it?** Books in your library show **✓ In your library** with **＋ Add to Up Next**. Books you don't have show **⭐ Add to Wishlist** or **＋ Up Next (to get)**, and never offer deleting or removing.
+- **⭐ Wishlist** (new tab): everyone can wish for books, with a note. Parents see the whole family's wishes, **Approve & Track** the ones they'll buy, decline others, or mark them as got; a wish is marked as got by itself once the book shows up in your library.
+- **Up Next** shows **📦 Pending acquisition** for books you don't have yet (instead of Start Reading).
+
 ### Fixed
 - **No more error when you reopen the app**: when a phone wakes NovelCheck before its connection is back, the app now waits for the network and quietly tries again (up to 3 times) instead of showing an error.
 - **Steadier server**: if something goes wrong while rating a book, syncing Calibre or sending a notification, NovelCheck now records the error and carries on instead of stopping (which made the app restart).

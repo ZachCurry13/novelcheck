@@ -68,12 +68,12 @@ export async function openBook(id, state, onChange) {
       ${manager ? verdictFormHTML(b) : ""}
       ${parents ? ageAndNotesHTML(b, data.notes || [], manager, state.user) : ""}
       <div class="flex flex-wrap gap-2 pt-2">
-        ${on(state.user, "queue") ? `<button data-act="queue" class="btn-primary">Add to Up Next</button>` : ""}
+        ${on(state.user, "queue") ? `<button data-act="queue" class="btn-primary">${owned ? "Add to Up Next" : "Up Next (to get)"}</button>` : ""}
         ${data.downloadable ? `<a href="/api/books/${b.id}/download" class="btn-secondary">Download</a>` : ""}
         ${manager ? `<button data-act="analyze" class="btn-secondary">${b.classification ? "Re-analyze" : "Analyze now"}</button>
           <button data-act="edit-verdict" class="btn-secondary">Edit rating</button>
           <button data-act="approve" class="btn-secondary" title="Show this book even when it matches someone's hide filters or content rules">${b.approved ? "Remove OK mark" : "✓ Mark as OK"}</button>` : ""}
-        ${!owned ? `<span class="self-center text-xs text-slate-400">Not in your library (looked up)</span>`
+        ${!owned ? (data.my_wish ? `<button data-act="unwish" class="btn-ghost" title="Remove it from your wishlist">⭐ On your wishlist · Remove</button>` : `<button data-act="wish" class="btn-secondary">⭐ Add to Wishlist</button>`)
           : data.my_delete_request
             ? `<button data-act="cancel-delete" class="btn-ghost" title="${esc(data.my_delete_request.reason || "")}">🗑 Delete requested · Cancel</button>`
             : `<button data-act="request-delete" class="btn-ghost" title="Ask an admin to delete this book">🗑 Request to delete</button>`}
@@ -106,6 +106,12 @@ export async function openBook(id, state, onChange) {
       if (reason === null) return;
       const ok = await attempt(() => post(`/api/books/${b.id}/delete-request`, { reason }), "Delete requested. An admin will review it.");
       if (ok) refresh();
+    } else if (act === "wish") {
+      const note = prompt("Add a note for the family? (optional)", "");
+      if (note === null) return;
+      if (await attempt(() => post(`/api/books/${b.id}/wish`, { note }), "Added to the family wishlist")) refresh();
+    } else if (act === "unwish") {
+      if (await attempt(() => del(`/api/books/${b.id}/wish`), "Removed from your wishlist")) refresh();
     } else if (act === "cancel-delete") {
       const ok = await attempt(() => del(`/api/books/${b.id}/delete-request`), "Delete request cancelled");
       if (ok) refresh();

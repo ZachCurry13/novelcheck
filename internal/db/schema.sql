@@ -177,6 +177,22 @@ CREATE TABLE IF NOT EXISTS deep_reads (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_deep_reads_open ON deep_reads(book_id) WHERE status IN ('requested', 'queued', 'reading');
 
+-- The family wishlist: books someone would like to get (usually found with
+-- Check a book). Parents approve them ("to get") and they're marked acquired
+-- once they show up in a library.
+CREATE TABLE IF NOT EXISTS wishlist (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    username   TEXT NOT NULL DEFAULT '',
+    note       TEXT NOT NULL DEFAULT '',
+    status     TEXT NOT NULL DEFAULT 'wanted' CHECK (status IN ('wanted', 'approved', 'acquired', 'declined')),
+    decided_by TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_wishlist_open ON wishlist(book_id, user_id) WHERE status IN ('wanted', 'approved');
+
 -- Phones and browsers that turned on push notifications. scope: "all"
 -- (problems and everyday events) or "problems"; kids only get their own.
 CREATE TABLE IF NOT EXISTS push_subscriptions (

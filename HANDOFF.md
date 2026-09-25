@@ -5,8 +5,8 @@ Latest release: **v1.16.0** (Check a book, pepper wording, feature switches, pho
 ## V2 list: status
 1. ✅ §1 fixes: GET retry on resume (`api.js`), `internal/safe` panic guards, batch size 0 = all (max 500), no delete for looked-up books, neutral "Level N" labels (no nicknames/pronouns), photo fallback on Check a book.
 2. ✅ §3 Deep Scan: `internal/epub`, `internal/deepread`, `deep_reads` (+ audit), Admin → 🧬 Deep Scan (next N with estimate, up to 3 auto users, approvals), escalation warning + Up Next banner, 🧬 filter/badge.
-3. ⏭ §2 live barcode scanner (ZXing, approved by the user) + wishlist ("Add to Wishlist" / "Pending acquisition" for unowned books, admin approve & track).
-4. §5 KOReader OPDS feed (per-user token URL, QR code via a small QR library, approved), approved-sender guide in Start Reading, optional delivery step in first-run setup.
+3. ✅ §2 live barcode scanner (`barcode.js`, vendored ZXing, camera allowed for self) + wishlist (`wishlist` table, ⭐ Wishlist tab, owned-aware actions, pending acquisition in Up Next).
+4. ⏭ §5 KOReader OPDS feed (per-user token URL, QR code via a small QR library, approved), approved-sender guide in Start Reading, optional delivery step in first-run setup.
 5. §6 presets: add "Young Reader" alongside Strict Family (age + pepper caps in one click).
 6. §8 delta scanning: re-rate when Calibre's last-modified or the file changes.
 7. §10 Admin sub-tabs (Users & Rules, AI & Scans, Delivery & Services, System & Toggles), user cards, accordions.

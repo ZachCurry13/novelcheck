@@ -17,7 +17,7 @@ func securityHeaders(next http.Handler) http.Handler {
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "same-origin")
-		h.Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+		h.Set("Permissions-Policy", "camera=(self), microphone=(), geolocation=()") // camera: live barcode scanning
 		h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; "+
 			"style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'")
 		next.ServeHTTP(w, r)

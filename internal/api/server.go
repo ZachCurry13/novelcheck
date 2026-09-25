@@ -69,6 +69,9 @@ func (s *Server) Router() http.Handler {
 			r.Get("/age-groups", s.handleAgeGroups)
 			r.Get("/updates", s.handleUpdates)
 			r.Get("/flags", s.handleListFlags)
+			r.Post("/books/{id}/wish", s.handleAddWish)
+			r.Delete("/books/{id}/wish", s.handleRemoveWish)
+			r.Get("/wishlist", s.handleWishlist)
 			r.Get("/books/{id}/deep-scan", s.handleBookDeepScan)
 			r.Post("/books/{id}/deep-scan", s.handleStartDeepScan)
 			r.Get("/push", s.handlePushStatus)
@@ -91,6 +94,7 @@ func (s *Server) Router() http.Handler {
 			r.Group(func(r chi.Router) {
 				r.Use(auth.RequireManager)
 				r.Post("/check", s.handleCheck)
+				r.Post("/wishlist/{id}/{action}", s.handleDecideWish)
 				r.Post("/catalogs", s.handleCreateCatalog)
 				r.Patch("/catalogs/{id}", s.handleRenameCatalog)
 				r.With(s.requireModule(store.KeyModuleImport, "Importing books")).Post("/import/drive", s.handleImportDrive)

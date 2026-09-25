@@ -79,9 +79,10 @@ function queueRow(i, idx) {
         <p class="truncate font-semibold">${esc(i.title)}</p>
         <p class="truncate text-sm text-slate-400">${esc(i.author)}</p>
         ${deepBanner(i)}
+        ${i.owned ? "" : `<p class="text-xs text-sky-300">📦 Pending acquisition: not in your library yet</p>`}
       </div>
       <div class="hidden sm:block">${classChip(i)}</div>
-      <button data-act="start" class="btn-primary">▶ Start Reading</button>
+      ${i.owned ? `<button data-act="start" class="btn-primary">▶ Start Reading</button>` : `<a href="#/wishlist" class="btn-ghost text-sm" title="Get a copy first">⭐ Wishlist</a>`}
       <button data-act="remove" class="btn-ghost px-2" title="Remove">✕</button>
     </li>`;
 }

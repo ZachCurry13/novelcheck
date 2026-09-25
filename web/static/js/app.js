@@ -15,6 +15,7 @@ import { renderUsage } from "./usage.js";
 import { renderDuplicates } from "./duplicates.js";
 import { renderDeletions } from "./deletions.js";
 import { renderDeepScanAdmin } from "./deepscanadmin.js";
+import { renderWishlist } from "./wishlist.js";
 import { initBell } from "./notifications.js";
 import { on, applyModules } from "./modules.js";
 
@@ -33,6 +34,7 @@ const routes = {
   duplicates: renderDuplicates,
   deletions: renderDeletions,
   deepscan: renderDeepScanAdmin,
+  wishlist: renderWishlist,
 };
 const managerRoutes = new Set(["check", "import", "admin", "duplicates"]);
 const adminRoutes = new Set(["system", "usage", "deletions", "deepscan"]);
