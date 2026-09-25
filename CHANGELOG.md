@@ -4,21 +4,34 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.17.0]
+
+### Fixed
+- **No more error when you reopen the app**: when a phone wakes NovelCheck before its connection is back, the app now waits for the network and quietly tries again (up to 3 times) instead of showing an error.
+- **Steadier server**: if something goes wrong while rating a book, syncing Calibre or sending a notification, NovelCheck now records the error and carries on instead of stopping (which made the app restart).
+- **Books per batch**: **0** now means "all waiting books" (up to 500), a cleared box goes back to 20, and anything else invalid is refused with a clear message.
+- **Looked-up books can't be deleted**: a book you only looked up with Check a book isn't in your library, so its window no longer offers **Request to delete**.
+- **Photos on Check a book**: a new **Choose a photo you already took** button, and a clear message when a photo can't be opened.
+
+### Changed
+- **Plain pepper labels**: ratings now read **Level 0–5** with their name (for example "Level 2: Mild / Closed Door"), without nicknames. Level 3 is called **Steamy Closed Door / Heavy Tension**. Books at Level 3 or higher show the AI's reason as a tag, with a "why" tooltip.
+- Neutral wording in the import guides and examples.
+
 ## [1.16.0]
 
 ### 📷 Check a book
-- **Snap a cover, see the rating**: the new first tab for parents, **📷 Check a book**, is where NovelCheck now opens. In a shop, tap **Take a photo of the cover** (or type the title, author or ISBN) and you get a plain answer: "✓ within Jenna's limit", "⚠ the gray area" or "✕ explicit", plus the peppers, why, the tags and a short summary.
+- **Snap a cover, see the rating**: the new first tab for parents, **📷 Check a book**, is where NovelCheck now opens. In a shop, tap **Take a photo of the cover** (or type the title, author or ISBN) and you get a plain answer: "✓ Level 0–2", "⚠ Level 3" or "✕ Level 4–5", plus the peppers, why, the tags and a short summary.
 - Books already in your library answer at once. New ones are looked up and rated on the spot (usually 10–30 seconds) and kept under **Looked up**, so checking them again is instant and free. **Recently checked** lists the last few.
 - Your AI reads the title from the photo; most cloud AIs can (OpenAI, Claude, Gemini). With a small local Ollama model that can't read images, type the title instead. On Android, the barcode on the back is read by the phone itself.
 
 ### Changed
-- **Clearer pepper levels 2 and 3**: **2 peppers · Mild / Closed Door** (*Jenna's limit*) now means romantic tension and kissing, with anything more happening off the page. **3 peppers · Steamy / Heavy Tension** is the *gray area*: heavy foreplay or suggestive scenes on the page that stop short of explicit. Levels 4 and 5 are now called **Explicit / Open Door** and **Very Explicit / Erotica**.
+- **Clearer pepper levels 2 and 3**: **Level 2: Mild / Closed Door** now means romantic tension and kissing, with anything more happening off the page. **Level 3: Steamy Closed Door / Heavy Tension** means heavy foreplay or suggestive scenes on the page that stop short of explicit. Levels 4 and 5 are now called **Explicit / Open Door** and **Very Explicit / Erotica**.
 - **Re-rate with the new wording**: books the AI rated before this change show up in Admin as "rated with older pepper rules", with a **Re-rate with the current rules** button and a cost estimate. They stay in the library with their old rating until the new one arrives, and hand-rated books are left alone.
 - **Phones: search first**: on a phone the Library shows just the search box and a **Filters** button, so books appear right away. The button shows how many filters are on, like **Filters (2)**.
 
 ### New
 - **Why this many peppers**: every new rating includes a few words on what set the level, like "Kissing only" or "Heavy innuendo, on-page foreplay". It's shown in each book's window, and you can edit it under **Edit rating**.
-- **⚠ Gray area tag**: 3-pepper books show a tag on their card saying why, so parents can tell at a glance.
+- **Why tag**: books at Level 3 show a tag on their card saying why, so parents can tell at a glance.
 - **👪 Strict family preset**: one click on a kid's account allows at most 2 peppers and hides Open Door, nudity, solo acts, heavy innuendo and books that haven't been rated yet.
 - **Re-rate whole library**: a button on the Admin page rates every AI-rated book again (for example after switching to a better AI), with a cost estimate first.
 - **Open in Calibre-Web**: if you use Calibre-Web, enter its address under **Admin → Calibre Library**. Each book's window then has an **Open in Calibre-Web ↗** link next to its Calibre ID, for admins and editors.

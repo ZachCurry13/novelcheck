@@ -1,5 +1,5 @@
-// The 0-5 pepper scale, in the family's own words. The server's AI prompt
-// (internal/llm/prompt.go) uses the same descriptions.
+// The 0-5 pepper scale. The server's AI prompt (internal/llm/prompt.go) uses
+// the same descriptions. Labels stay neutral: "Level N: name".
 import { esc } from "./ui.js";
 
 export const PEPPERS = [
@@ -9,10 +9,10 @@ export const PEPPERS = [
   { n: 1, name: "Sweet Romance", cls: "chip-none",
     desc: "Romance is present but mild and non-sexual. May include crushes, attraction, flirting, hand-holding, cuddling, and sweet/brief kisses. No sexual desire or sexualized physical intimacy.",
     ex: "Uglies (Scott Westerfeld); Seeking Persephone (Sarah M. Eden)" },
-  { n: 2, name: "Mild / Closed Door", cls: "chip-none", tag: "Jenna's limit",
+  { n: 2, name: "Mild / Closed Door", cls: "chip-none",
     desc: "Romantic tension and kissing occur, including passionate kissing. Any physical intimacy beyond kissing cuts to black or happens strictly off-page; nothing sexual is shown or described.",
     ex: "My Phony Valentine (Courtney Walsh)" },
-  { n: 3, name: "Steamy / Heavy Tension", cls: "chip-closed", tag: "Gray area",
+  { n: 3, name: "Steamy Closed Door / Heavy Tension", cls: "chip-closed",
     desc: "Heavy physical foreplay or suggestive on-page innuendo, such as heavy making out with clear sexual intent, but it stops short of explicit sexual acts. Cards show why a book got this rating.",
     ex: "A romance that is clearly sexually charged on the page but never explicit" },
   { n: 4, name: "Explicit / Open Door", cls: "chip-open",
@@ -28,25 +28,27 @@ export const pepperIcons = (n) => (n > 0 ? "🌶️".repeat(n) : `<span class="o
 
 export function pepperChip(n) {
   const p = PEPPERS[n];
-  return `<span class="${p.cls}" title="${esc(p.desc)}">${pepperIcons(n)} ${n} · ${esc(p.name)}</span>`;
+  return `<span class="${p.cls}" title="${esc(p.desc)}">${pepperIcons(n)} Level ${n}: ${esc(p.name)}</span>`;
 }
 
-// Level 3 is the gray area: say why at a glance ("Heavy innuendo, on-page
-// foreplay"). Older ratings without a reason fall back to their flags.
-export function grayAreaChip(b) {
-  if (b.spice_level !== 3) return "";
-  const why = b.spice_reason || (b.heavy_innuendo ? "Heavy innuendo" : b.nudity ? "Nudity" : "Heavy tension");
-  return `<span class="chip-closed" title="Level 3 is the gray area: steamy, but not explicit">⚠ Gray area · ${esc(why)}</span>`;
+// "Why was this flagged?": books at Level 3 or higher show the AI's reason
+// ("Heavy innuendo, on-page foreplay"), also as a tooltip. Older ratings
+// without a reason fall back to their flags.
+export function whyChip(b) {
+  const lvl = b.spice_level;
+  if (lvl === null || lvl === undefined || lvl < 3) return "";
+  const why = b.spice_reason || (b.heavy_innuendo ? "Heavy innuendo" : b.nudity ? "Nudity" : lvl >= 4 ? "Explicit scenes" : "Heavy tension");
+  return `<span class="${lvl >= 4 ? "chip-open" : "chip-closed"}" title="Why this is Level ${lvl}: ${esc(why)}">ⓘ ${esc(why)}</span>`;
 }
 
 // Options for a pepper <select>; selected may be null.
 export function pepperOptions(selected) {
-  return PEPPERS.map((p) => `<option value="${p.n}" ${selected === p.n ? "selected" : ""}>${p.n} 🌶️ ${esc(p.name)}</option>`).join("");
+  return PEPPERS.map((p) => `<option value="${p.n}" ${selected === p.n ? "selected" : ""}>Level ${p.n}: ${esc(p.name)}</option>`).join("");
 }
 
 export function pepperScaleHTML() {
   return `<ul class="space-y-3">${PEPPERS.map((p) => `
-    <li><p class="font-semibold">${pepperIcons(p.n)} ${p.n} Pepper${p.n === 1 ? "" : "s"} · ${esc(p.name)}${p.tag ? ` <span class="${p.cls}">${esc(p.tag)}</span>` : ""}</p>
+    <li><p class="font-semibold">${pepperIcons(p.n)} Level ${p.n}: ${esc(p.name)}</p>
       <p class="text-sm text-slate-300">${esc(p.desc)}</p>
       <p class="text-xs text-slate-400">Examples: ${esc(p.ex)}</p></li>`).join("")}</ul>`;
 }

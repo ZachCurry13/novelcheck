@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/zachcurry13/novelcheck/internal/safe"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -66,7 +67,9 @@ func (s *Syncer) Loop(ctx context.Context) {
 	defer t.Stop()
 	for {
 		if s.Available() && s.Due(time.Now()) {
-			if res, err := s.Run(); err != nil {
+			var res Result
+			// A panic in one sync is logged; the schedule (and the app) keep going.
+			if err := safe.Run("calibre sync", func() (err error) { res, err = s.Run(); return err }); err != nil {
 				log.Printf("calibre sync failed: %v", err)
 			} else {
 				log.Printf("calibre sync: %d books, %d files, %d removed", res.Books, res.Copies, res.Removed)

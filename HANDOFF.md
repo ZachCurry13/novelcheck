@@ -13,7 +13,7 @@ Latest release: **v1.16.0** (Check a book, pepper wording, feature switches, pho
 
 ## Waiting on the user
 - Trying v1.16 on a phone: Check a book with the camera (needs a vision-capable AI), and phone notifications over the https address.
-- Kindle `.kfx` file names from the Kindle's `documents` folder, to check whether on-device store books carry titles in their names. The Amazon list import (paste or data download) covers her purchases in the meantime.
+- Kindle `.kfx` file names from the Kindle's `documents` folder, to check whether on-device store books carry titles in their names. The Amazon list import (paste or data download) covers Kindle purchases in the meantime.
 - Whether "user login information" for more Ollama detail meant a TrueNAS API key (real per-app CPU/GPU stats). Not built.
 
 ## Working on the Windows desktop (`C:\novelcheck`)

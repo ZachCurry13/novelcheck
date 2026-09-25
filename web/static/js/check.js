@@ -2,8 +2,8 @@
 // title) in a shop and see the rating. Known books answer at once; new ones
 // are looked up, rated by the AI, and kept under "Looked up".
 import { get, post, qs } from "./api.js";
-import { $, esc, attempt, toast, classChip, flagChips, ageChip } from "./ui.js";
-import { PEPPERS, grayAreaChip, openPepperGuide } from "./peppers.js";
+import { $, esc, attempt, classChip, flagChips, ageChip } from "./ui.js";
+import { PEPPERS, whyChip, openPepperGuide } from "./peppers.js";
 import { loadFlags, customChips } from "./customflags.js";
 import { openBook } from "./bookdialog.js";
 
@@ -15,7 +15,9 @@ export async function renderCheck(view, state) {
         <p class="text-sm text-slate-400">At the shop? Snap the cover, or type the title.</p>
       </div>
       <button id="snap" class="btn-primary w-full py-4 text-lg">📷 Take a photo of the cover</button>
+      <button id="pick" class="btn-ghost w-full text-sm">🖼 Or choose a photo you already took</button>
       <input id="photo" type="file" accept="image/*" capture="environment" class="hidden">
+      <input id="library-photo" type="file" accept="image/*" class="hidden">
       <form id="check-form" class="flex gap-2">
         <input name="q" type="search" enterkeyhint="search" placeholder="Title, author or ISBN" class="input min-w-0 flex-1" autocomplete="off">
         <button class="btn-secondary">Check</button>
@@ -58,16 +60,23 @@ export async function renderCheck(view, state) {
   };
 
   $("#snap", view).addEventListener("click", () => $("#photo", view).click());
-  $("#photo", view).addEventListener("change", async (e) => {
+  $("#pick", view).addEventListener("click", () => $("#library-photo", view).click());
+  const onPhoto = async (e) => {
     const file = e.target.files[0];
     e.target.value = "";
     if (!file) return;
     const isbn = await barcode(file); // Android can read the barcode on the back, free and instant
     if (isbn) return check({ query: isbn }, "Reading the barcode…");
     const image = await shrink(file).catch(() => "");
-    if (!image) return toast("That photo couldn't be opened. Please try again.", true);
+    if (!image) {
+      out.innerHTML = `<p class="card text-sm text-rose-300">That photo couldn't be opened (some phones save photos in a format the browser can't read).
+        Try <b>Choose a photo</b>, take the picture again, or type the title below.</p>`;
+      return;
+    }
     check({ image }, "📷 Reading the cover…");
-  });
+  };
+  $("#photo", view).addEventListener("change", onPhoto);
+  $("#library-photo", view).addEventListener("change", onPhoto);
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const q = form.q.value.trim();
@@ -103,13 +112,14 @@ function resultCard(b, res) {
         <button data-act="another" class="btn-ghost">Check another</button></div></div>`;
   }
   const p = PEPPERS[b.spice_level];
-  const verdict = b.spice_level <= 2 ? ["bg-emerald-950/60 text-emerald-200", `✓ ${b.spice_level} pepper${b.spice_level === 1 ? "" : "s"}: within Jenna's limit`]
-    : b.spice_level === 3 ? ["bg-amber-950/60 text-amber-200", "⚠ 3 peppers: the gray area"]
-      : ["bg-rose-950/60 text-rose-200", `✕ ${b.spice_level} peppers: explicit`];
+  // Green up to Level 2 (the Strict Family Preset's cap), amber at 3, red when explicit.
+  const tone = b.spice_level <= 2 ? ["bg-emerald-950/60 text-emerald-200", "✓"]
+    : b.spice_level === 3 ? ["bg-amber-950/60 text-amber-200", "⚠"] : ["bg-rose-950/60 text-rose-200", "✕"];
+  const verdict = [tone[0], `${tone[1]} Level ${b.spice_level}: ${p.name}`];
   return `<div class="card space-y-3" data-id="${b.id}">
     <div><h2 class="text-xl font-bold">${esc(b.title)}</h2><p class="text-sm text-slate-400">${esc(b.author || "Unknown author")}</p></div>
     <p class="rounded-lg p-3 text-lg font-semibold ${verdict[0]}">${verdict[1]}</p>
-    <div class="flex flex-wrap gap-1">${classChip(b)} ${grayAreaChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
+    <div class="flex flex-wrap gap-1">${classChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
     ${b.spice_reason ? `<p class="text-sm"><b>Why:</b> ${esc(b.spice_reason)}</p>` : ""}
     ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}
     <p class="text-xs text-slate-400">${esc(p.name)}: ${esc(p.desc)} <button data-act="peppers" class="underline">About peppers</button></p>

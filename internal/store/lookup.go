@@ -4,6 +4,15 @@ package store
 // the family's libraries, so checking the same book again is instant (and free).
 const LookedUpCatalog = "Looked up"
 
+// Owned reports whether a book is in one of the family's libraries, not just
+// looked up with Check a book.
+func (s *Store) Owned(bookID int64) bool {
+	var n int
+	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
+		WHERE cb.book_id = ? AND c.name != ?`, bookID, LookedUpCatalog)
+	return n > 0
+}
+
 // MatchBook finds a book NovelCheck already knows: same title and author
 // surname, or else the only book with that title. 0 means none.
 func (s *Store) MatchBook(title, author string) int64 {

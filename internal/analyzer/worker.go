@@ -13,6 +13,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/enrich"
 	"github.com/zachcurry13/novelcheck/internal/llm"
+	"github.com/zachcurry13/novelcheck/internal/safe"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -154,14 +155,16 @@ func (w *Worker) Run(ctx context.Context) {
 				continue
 			}
 		}
+		// One book's trouble (even a panic) must not stop the worker or the app.
+		var saved bool
 		if w.takeRerate(id) {
-			saved, err := w.rerateOne(ctx, id)
+			err := safe.Run(fmt.Sprintf("re-rating book %d", id), func() (err error) { saved, err = w.rerateOne(ctx, id); return err })
 			if err != nil {
 				log.Printf("re-rating book %d failed (kept its old rating): %v", id, err)
 			}
 			w.runBook(saved, err)
 		} else {
-			saved, err := w.process(ctx, id)
+			err := safe.Run(fmt.Sprintf("rating book %d", id), func() (err error) { saved, err = w.process(ctx, id); return err })
 			if err != nil {
 				log.Printf("analysis of book %d failed: %v", id, err)
 				w.mu.Lock()

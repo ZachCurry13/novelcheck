@@ -62,12 +62,17 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// maxBatch caps one batch, even when the batch size is 0 ("all waiting").
+const maxBatch = 500
+
 func (s *Server) handleAnalyzeBatch(w http.ResponseWriter, r *http.Request) {
 	n := queryInt(r, "size")
 	if n <= 0 {
-		n = s.Store.SettingInt(store.KeyBatchSize)
+		n = s.Store.SettingInt(store.KeyBatchSize) // blank or unreadable reads as 0
 	}
-	n = min(max(n, 1), 500)
+	if n <= 0 || n > maxBatch {
+		n = maxBatch // 0 means every waiting book (up to the cap)
+	}
 	ids, err := s.Store.QueueForAnalysis(n)
 	if err != nil {
 		writeStoreErr(w, err)

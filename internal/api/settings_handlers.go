@@ -66,6 +66,9 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		v = strings.TrimSpace(v)
+		if numericKeys[k] && v == "" {
+			v = store.Defaults[k] // a cleared number box goes back to its default
+		}
 		if numericKeys[k] {
 			if f, err := strconv.ParseFloat(v, 64); err != nil || f < 0 {
 				writeErr(w, http.StatusBadRequest, k+" must be a non-negative number")
@@ -79,6 +82,12 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 		if k == store.KeyLanguage && !llm.ValidLanguage(v) {
 			writeErr(w, http.StatusBadRequest, "unknown language")
 			return
+		}
+		if k == store.KeyBatchSize {
+			if n, err := strconv.Atoi(v); err != nil || n < 0 || n > 500 {
+				writeErr(w, http.StatusBadRequest, "books per batch must be a whole number from 0 (all waiting books) to 500")
+				return
+			}
 		}
 		if k == store.KeySessionDays {
 			if n, err := strconv.Atoi(v); err != nil || n < 1 || n > 365 {

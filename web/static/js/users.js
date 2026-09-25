@@ -30,7 +30,7 @@ function typeOptions(role, age, isAdmin, kids = true) {
   return opts.map(([v, l]) => `<option value="${v}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`).join("");
 }
 
-// "Strict family": at most 2 peppers (Jenna's limit), nothing Open Door, and
+// "Strict Family Preset": at most Level 2, nothing Open Door, and
 // nothing unrated. Dark occult and LGBTQ+ are separate choices and stay as set.
 const STRICT = { max_spice: 2, hide_open_door: true, hide_nudity: true, hide_solo_acts: true, hide_innuendo: true, hide_unrated: true };
 
@@ -110,7 +110,7 @@ function userCard(u, isAdmin, viewer) {
           <option value="-1" ${u.max_spice < 0 ? "selected" : ""}>No limit</option>
           ${PEPPERS.map((p) => `<option value="${p.n}" ${u.max_spice === p.n ? "selected" : ""}>Up to ${p.n} 🌶️ ${esc(p.name)}</option>`).join("")}
         </select></label>
-        <button data-uact="strict" class="btn-secondary w-full text-xs" title="Up to 2 peppers; hides Open Door, nudity, solo acts, heavy innuendo and books not yet rated. Saves right away.">👪 Strict family preset (max 2 🌶️)</button>` : ""}
+        <button data-uact="strict" class="btn-secondary w-full text-xs" title="Up to 2 peppers; hides Open Door, nudity, solo acts, heavy innuendo and books not yet rated. Saves right away.">👪 Strict Family Preset (Max Level 2)</button>` : ""}
       <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
         ${RULES.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-rule="${k}" ${u[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}
       </div>

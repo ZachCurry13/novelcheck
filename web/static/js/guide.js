@@ -34,7 +34,7 @@ const MANAGER = [
   ["👧 Kids' accounts",
     "At the bottom of <b>Manage</b> you can add kid accounts by age group (they only see books rated for their age or younger), reset their passwords, and tick what each child should <b>not</b> see (for example Open Door or Dark Occult). Hidden books never show up for them, not even in search."],
   ["💾 Importing a Kindle",
-    "Plug a Kindle into your computer, open <b>Import Drive</b>, and pick its <b>documents</b> folder. NovelCheck lists the books and adds them to a catalog like \"Jenna's Kindle\"."],
+    "Plug a Kindle into your computer, open <b>Import Drive</b>, and pick its <b>documents</b> folder. NovelCheck lists the books and adds them to a catalog like \"Kids' Kindle\"."],
 ];
 
 const ADMIN = [

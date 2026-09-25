@@ -23,6 +23,10 @@ func (s *Server) handleRequestDelete(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
+	if !s.Store.Owned(id) {
+		writeErr(w, http.StatusBadRequest, "this book isn't in your library, so there's nothing to delete")
+		return
+	}
 	var body struct {
 		Reason string `json:"reason"`
 	}

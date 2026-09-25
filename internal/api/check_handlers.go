@@ -11,6 +11,7 @@ import (
 
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/enrich"
+	"github.com/zachcurry13/novelcheck/internal/safe"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -89,13 +90,14 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if b.Status != "analyzed" && b.Status != "processing" {
-		go func() {
+		title := b.Title
+		safe.Go("check a book", func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 			defer cancel()
 			if err := s.Worker.RateNow(ctx, id); err != nil {
-				log.Printf("check a book: rating %q failed: %v", b.Title, err)
+				log.Printf("check a book: rating %q failed: %v", title, err)
 			}
-		}()
+		})
 		b.Status = "processing"
 	}
 	var catalogs []string

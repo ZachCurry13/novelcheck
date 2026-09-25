@@ -105,6 +105,10 @@ func TestCheckABook(t *testing.T) {
 	if len(copies) != 1 || copies[0].CatalogName != store.LookedUpCatalog {
 		t.Fatalf("saved to Looked up: %+v", copies)
 	}
+	// A looked-up book isn't ours: there's nothing to delete.
+	if res, _ := admin.do("POST", "/api/books/"+itoa(id)+"/delete-request", map[string]string{"reason": "x"}, true); res.StatusCode != 400 {
+		t.Fatalf("delete request for an unowned book: %d", res.StatusCode)
+	}
 
 	for _, bad := range []map[string]string{{}, {"image": "data:text/html;base64,PGI+"}, {"query": "978-0-00-000000-0"}} {
 		if res, _ := admin.do("POST", "/api/check", bad, true); res.StatusCode == 200 {

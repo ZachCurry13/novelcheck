@@ -3,7 +3,7 @@ import { get, post, qs } from "./api.js";
 import { $, esc, attempt, toast, classChip, flagChips, ageChip, HIDE_LABELS, FILTER_IDEA_URL, AGE_GROUPS, canManage } from "./ui.js";
 import { openCalibreRemoval } from "./calibreremove.js";
 import { openBook } from "./bookdialog.js";
-import { pepperOptions, openPepperGuide, grayAreaChip } from "./peppers.js";
+import { pepperOptions, openPepperGuide, whyChip } from "./peppers.js";
 import { on } from "./modules.js";
 import { loadFlags, customChips, hideBoxes } from "./customflags.js";
 
@@ -164,7 +164,7 @@ function card(b, queueOn) {
         </div>
         ${queueOn ? `<button data-queue="${b.id}" title="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>` : ""}
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${grayAreaChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
+      <div class="flex flex-wrap gap-1">${classChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
       ${b.summary_verdict ? `<p class="text-sm text-slate-300 line-clamp-3">${esc(b.summary_verdict)}</p>` : ""}
       <div class="mt-auto flex flex-wrap items-center gap-1">${cats} ${formatChips(b)}</div>
     </article>`;

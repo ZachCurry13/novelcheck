@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/zachcurry13/novelcheck/internal/safe"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -95,12 +96,12 @@ func (p *Service) FromNotice(level, source, message, link string) {
 		title = "NovelCheck"
 	}
 	m := Message{Title: title, Body: message, URL: "/" + link, Tag: source}
-	go p.background(func() ([]store.PushSub, error) { return p.Store.ManagerPushSubs(level) }, m)
+	safe.Go("push notice", func() { p.background(func() ([]store.PushSub, error) { return p.Store.ManagerPushSubs(level) }, m) })
 }
 
 // ToUser pushes to one person's own devices (e.g. their book is on its way).
 func (p *Service) ToUser(userID int64, m Message) {
-	go p.background(func() ([]store.PushSub, error) { return p.Store.UserPushSubs(userID) }, m)
+	safe.Go("push to user", func() { p.background(func() ([]store.PushSub, error) { return p.Store.UserPushSubs(userID) }, m) })
 }
 
 func (p *Service) background(list func() ([]store.PushSub, error), m Message) {

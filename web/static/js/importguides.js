@@ -10,7 +10,7 @@ const guide = (title, steps, note = "") => `
 
 export const IMPORT_GUIDES = `
   <div class="space-y-2">
-    ${guide("📚 Amazon Kindle books she bought: the quick way (copy the page)", [
+    ${guide("📚 Import Kindle purchases: quick paste", [
       "On a computer, open <b>amazon.com</b> and sign in.",
       "Hover <b>Account &amp; Lists</b> and click <b>Content Library</b> (it used to be called <b>Manage Your Content and Devices</b>), then the <b>Books</b> tab.",
       "If there's a <b>Show</b> or <b>per page</b> option at the bottom, pick the biggest number. Scroll to the bottom of the page so every book has loaded.",

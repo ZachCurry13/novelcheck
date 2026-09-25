@@ -117,7 +117,7 @@ func TestSpiceReason(t *testing.T) {
 	if r := []rune(long); len(r) != 80 || !strings.HasSuffix(long, "…") {
 		t.Fatalf("long reason not capped rune-safe: %d %q", len(r), long)
 	}
-	for _, want := range []string{"spice_reason", "Mild / Closed Door", `"gray area"`} {
+	for _, want := range []string{"spice_reason", "Mild / Closed Door", "Steamy Closed Door / Heavy Tension"} {
 		if !strings.Contains(llm.SystemPrompt, want) {
 			t.Errorf("prompt is missing %q", want)
 		}

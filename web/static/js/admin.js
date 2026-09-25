@@ -33,7 +33,7 @@ const SECTIONS = [
     ["backup_price_output_per_million", "Output price per 1M tokens (USD)", "0 for Ollama", "number"],
   ]],
   ["Rate Caps & Batching", [
-    ["batch_size", "Books per batch", "20", "number"],
+    ["batch_size", "Books per batch (0 = all waiting books)", "20", "number"],
     ["tokens_per_hour_cap", "Max tokens per hour (0 = unlimited)", "25000", "number"],
     ["scan_delay_seconds", "Delay between scans (seconds)", "2", "number"],
     ["llm_timeout_seconds", "AI time limit per book (seconds)", "0 = automatic: 10 minutes for Ollama, 2 for cloud", "number"],
@@ -79,7 +79,7 @@ export async function renderAdmin(view, state) {
     <div id="errors"></div>
     <div class="card mb-6 flex flex-wrap items-end gap-3">
       <div><label class="label" for="batch-size">Batch size</label>
-        <input id="batch-size" type="number" min="1" max="500" value="20" class="input w-28"></div>
+        <input id="batch-size" type="number" min="0" max="500" value="20" class="input w-28" title="0 = all waiting books (up to 500)"></div>
       <button data-act="batch" class="btn-primary">Analyze batch</button>
       ${adminOnly(`<button data-act="wipe" class="btn-secondary">Wipe pending queue</button>`)}
       <button data-act="sync" class="btn-secondary">Sync Calibre now</button>

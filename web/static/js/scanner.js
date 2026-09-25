@@ -53,7 +53,7 @@ export async function renderImport(view) {
         </div>
         <div id="new-cat-wrap">
           <label class="label" for="new-cat">New catalog name</label>
-          <input id="new-cat" class="input" placeholder="e.g. Jenna's Kindle">
+          <input id="new-cat" class="input" placeholder="e.g. Kids' Kindle">
         </div>
       </div>
       <div class="max-h-96 overflow-y-auto rounded-lg ring-1 ring-slate-800">

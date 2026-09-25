@@ -4,7 +4,7 @@ package store
 // "What do the peppers mean?"):
 //
 //	0 No Romance · 1 Sweet Romance · 2 Mild / Closed Door ·
-//	3 Steamy / Heavy Tension ("gray area") · 4 Explicit / Open Door ·
+//	3 Steamy Closed Door / Heavy Tension · 4 Explicit / Open Door ·
 //	5 Very Explicit / Erotica
 const MaxSpiceLevel = 5
 

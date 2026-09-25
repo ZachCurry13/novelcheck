@@ -1,5 +1,5 @@
 // Book detail modal: verdict, blurb, catalog copies and actions.
-import { PEPPERS, openPepperGuide, grayAreaChip } from "./peppers.js";
+import { PEPPERS, openPepperGuide, whyChip } from "./peppers.js";
 import { copyText } from "./copy.js";
 import { diagnoseLater } from "./diagnose.js";
 import { get, post, put, del } from "./api.js";
@@ -27,6 +27,8 @@ export async function openBook(id, state, onChange) {
     if (c.path && !c.path.startsWith("list:") && !c.path.startsWith("calibre-entry:")) e.paths.push(c.path);
   }
   const calibreCount = [...entries.values()].filter((e) => e.source === "calibre").length;
+  // Only looked up (Check a book), not owned: never offer deleting or removing it.
+  const owned = data.copies.some((c) => c.catalog_name !== "Looked up");
   const cw = data.calibre_web_url; // set by an admin; only sent to admins and editors
   const copies = [...entries.values()].map((e) => `
     <li class="text-sm">
@@ -49,7 +51,7 @@ export async function openBook(id, state, onChange) {
         </div>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${grayAreaChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
+      <div class="flex flex-wrap gap-1">${classChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
       ${b.spice_level !== null && b.spice_level !== undefined
         ? `<p class="text-xs text-slate-400">${b.spice_reason ? `<b class="text-slate-200">Why ${b.spice_level} 🌶️:</b> ${esc(b.spice_reason)}. ` : ""}${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
       ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}
@@ -69,10 +71,11 @@ export async function openBook(id, state, onChange) {
         ${manager ? `<button data-act="analyze" class="btn-secondary">${b.classification ? "Re-analyze" : "Analyze now"}</button>
           <button data-act="edit-verdict" class="btn-secondary">Edit rating</button>
           <button data-act="approve" class="btn-secondary" title="Show this book even when it matches someone's hide filters or content rules">${b.approved ? "Remove OK mark" : "✓ Mark as OK"}</button>` : ""}
-        ${data.my_delete_request
-          ? `<button data-act="cancel-delete" class="btn-ghost" title="${esc(data.my_delete_request.reason || "")}">🗑 Delete requested · Cancel</button>`
-          : `<button data-act="request-delete" class="btn-ghost" title="Ask an admin to delete this book">🗑 Request to delete</button>`}
-        ${isAdmin && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
+        ${!owned ? `<span class="self-center text-xs text-slate-400">Not in your library (looked up)</span>`
+          : data.my_delete_request
+            ? `<button data-act="cancel-delete" class="btn-ghost" title="${esc(data.my_delete_request.reason || "")}">🗑 Delete requested · Cancel</button>`
+            : `<button data-act="request-delete" class="btn-ghost" title="Ask an admin to delete this book">🗑 Request to delete</button>`}
+        ${owned && isAdmin && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
       </div>
     </div>`;
   const refresh = () => {
