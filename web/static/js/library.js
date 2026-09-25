@@ -9,6 +9,7 @@ import { loadFlags, customChips, hideBoxes } from "./customflags.js";
 import { deepChip } from "./deepscan.js";
 import { seriesText } from "./titlefix.js";
 import { coverImg } from "./covers.js";
+import { setupSelect } from "./libraryselect.js";
 
 const PAGE = 60;
 
@@ -71,12 +72,14 @@ export async function renderLibrary(view, state) {
         </span>
       </div>
     </form>
-    <p id="result-count" class="mb-3 text-sm text-slate-400"></p>
+    <div class="mb-3 flex items-center justify-between gap-2"><p id="result-count" class="text-sm text-slate-400"></p>
+      <button type="button" id="select-toggle" class="btn-ghost py-1 text-sm" title="Pick several books to add to Up Next, Deep Scan or delete">☑ Select</button></div>
     <div id="grid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
     <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>`;
 
   const form = $("#filters", view);
   const grid = $("#grid", view);
+  const sel = setupSelect(view, grid, state, () => load(true));
   let offset = 0;
 
   function params() {
@@ -112,6 +115,7 @@ export async function renderLibrary(view, state) {
     $("#result-count", view).textContent = `${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}`;
     $("#more-btn", view).classList.toggle("hidden", offset >= data.total);
     if (!data.total) grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>`;
+    sel.repaint();
   }
 
   // Phones show just the search box; "Filters (n)" opens the rest and counts
@@ -135,6 +139,8 @@ export async function renderLibrary(view, state) {
   form.addEventListener("submit", (e) => e.preventDefault());
   $("#more-btn", view).addEventListener("click", () => load(false));
   grid.addEventListener("click", async (e) => {
+    const picked = e.target.closest("[data-book]");
+    if (picked && sel.clicked(picked, e)) return; // selecting several books
     const q = e.target.closest("[data-queue]");
     if (q) {
       e.stopPropagation();
@@ -174,6 +180,7 @@ export async function renderLibrary(view, state) {
   if ([...preset.keys()].some((k) => k !== "q")) form.classList.add("filters-open");
   countFilters();
   await load(true);
+  return sel.cleanup;
 }
 
 function card(b, queueOn) {

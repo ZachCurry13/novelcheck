@@ -74,6 +74,7 @@ func (s *Server) Router() http.Handler {
 
 			r.Get("/books", s.handleListBooks)
 			r.Get("/books/facets", s.handleBookFacets)
+			r.Post("/books/bulk", s.handleBulkBooks)
 			r.Get("/books/{id}", s.handleGetBook)
 			r.Get("/books/{id}/download", s.handleDownload)
 			r.Get("/books/{id}/cover", s.handleCover)

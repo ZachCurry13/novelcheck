@@ -32,6 +32,12 @@ becomes the release notes for that version and is shown in the app under
 - **Libraries have owners**: a library you import (a Kindle, a folder or a list) is yours. Tick **🔒 Private** when importing, or later under **📚 Your libraries** on the Import page, and only you and the admins see its books. **Shared** libraries are seen by everyone, and kids still only see what their rules allow.
 - **Remove books from your own library straight away**: in a book's window, **Remove from this library** takes it off that library's list at once, with no delete request (nothing is deleted from your device or from Calibre). You can also rename or delete your own libraries. Admins can change who owns a library; libraries imported before this update belong to the whole family.
 
+### ☑ Select several books
+- **☑ Select** in the Library lets you pick many books at once: tap them (on a computer you can also drag across them, or Shift-click to pick everything in between), or **Select all shown**. Then:
+  - **＋ Up Next** adds them all.
+  - **🧬 Deep Scan** starts scans for an admin, or asks an admin for everyone else. Books without an EPUB file are skipped.
+  - **🗑 Delete** takes books in your own libraries out straight away, and sends a delete request to the admins for the rest.
+
 ## [1.17.0]
 
 ### 🧬 Deep Scan
