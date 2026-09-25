@@ -1,6 +1,6 @@
 # NovelCheck handoff
 
-Latest release: **v1.18.0** (2026-09-25; Suggested Reads, taste profile, covers, browse filters, AI genres, problem reports, library owners, multi-select). Before that **v1.17.0** (2026-09-25; the V2 list: Deep Scan, barcode scanner + wishlist, KOReader catalog, kids' presets, changed-book re-rates, Admin tabs, chart readouts + Ollama cleanup, tidy titles). `feature/v2-updates` was fast-forwarded into `main`. Next: **§12 Suggested Reads** for **v1.18.0**, on a new branch from `main`. Commit per section; release when the user says so.
+Latest release: **v1.18.1** (2026-09-25; the Deep Scan fix). **v1.18.0** (2026-09-25; Suggested Reads, taste profile, covers, browse filters, AI genres, problem reports, library owners, multi-select). Before that **v1.17.0** (2026-09-25; the V2 list: Deep Scan, barcode scanner + wishlist, KOReader catalog, kids' presets, changed-book re-rates, Admin tabs, chart readouts + Ollama cleanup, tidy titles). `feature/v2-updates` was fast-forwarded into `main`. Next: **§12 Suggested Reads** for **v1.18.0**, on a new branch from `main`. Commit per section; release when the user says so.
 
 ## V2 list: status
 1. ✅ §1 fixes: GET retry on resume (`api.js`), `internal/safe` panic guards, batch size 0 = all (max 500), no delete for looked-up books, neutral "Level N" labels (no nicknames/pronouns), photo fallback on Check a book.
@@ -16,7 +16,7 @@ Latest release: **v1.18.0** (2026-09-25; Suggested Reads, taste profile, covers,
 - Already done before V2: §7 (switches, custom filters), §4 (scale, strict preset, reasons), §5 push, §9 diagnostics copy + Calibre-Web, §13 GPU detection.
 - Dropped by the user: parent-child linking.
 
-## v1.18 list (branch `feature/v1.18-suggestions`), from the user on 2026-09-25
+## v1.18 list (released as v1.18.0), from the user on 2026-09-25
 1. ✅ §12 Suggested Reads: `internal/suggest` free matching + daily AI picks (+ books you don't own), row under Up Next, 👍/👎 with an optional "Why not?" (story / author / series / too spicy / already read) that steers the matching. Admin: `suggest_mode` (free / AI / AI + outside) and the `module_suggestions` switch.
 2. ✅ Taste profile: an optional "rate 20 books" list (want to read / don't want / read & liked / read & didn't like; "20 more"), a varied mix from the library (series firsts, different authors and pepper levels), saved per person and editable, feeding the same signals as 👍/👎. Its own admin switch. Marking books uses no AI.
 3. ✅ Book covers everywhere (taste picker first, then library cards, suggestions, Up Next, the book window): Calibre's `cover.jpg` next to each book's files, served read-only and shrunk + cached under /data. Plus Open Library covers by ISBN for looked-up books, and "🖼️ Wrong cover?" reports reviewed on the Admin page.
@@ -26,10 +26,11 @@ Latest release: **v1.18.0** (2026-09-25; Suggested Reads, taste profile, covers,
 7. ✅ Library ownership: whoever imports a library owns it (`catalogs.owner`); owners can remove books from their own library without a request, and mark it Private (only them) or Shared (everyone). Private = the owner and admins only (the user chose this; every adult is an editor or admin, and kids can't import).
 
 
-## v1.18.1: Deep Scan fix (branch `fix/deep-scan-checks`)
+## v1.18.1: Deep Scan fix (released 2026-09-25)
 The user's library showed Harry Potter 2 and 2001 as Level 4 from Deep Scans by llama3.2 3B: parts scored tension and violence as peppers and the old max-of-parts combine let one part decide. Fixed with checks v2 (romance-first answers, "none" = 0, scale-copy guard, second look for 3+, flags need backing, big jumps held for review, old deep ratings re-rated from the description at start-up, small-model warning). Their setup: main model llama3.2:latest, fallback qwen2.5:7b (suggest making qwen2.5:7b main and the Deep Scan model).
 
 ## v1.19 ideas from the user (2026-09-25), not started
+Decided: parent profiles get an optional 4-digit PIN (kids' profiles open freely and keep their rules; kids can still get their own login later). Scanned or typed physical books are rated as they're added (within the token cap). Discover books are rated in the background (a few dozen a day at most); unrated ones are hidden from kids.
 1. One shared family login with several reading profiles (Netflix-style, e.g. each parent plus a young child), each with its own Up Next, taste and suggestions, instead of linking parent accounts.
 2. Physical libraries: continuous barcode scanning (and title/author/ISBN or cover photo) to add books to a named physical library, with the same ratings and filters.
 3. Discover tab: popular now, new releases, all-time classics, top teen and kids' books, new in a library, popular in the family's library; the family's content filters apply, and the pepper level shows on every book.
