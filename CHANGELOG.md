@@ -25,6 +25,9 @@ becomes the release notes for that version and is shown in the app under
 - In a book's window, the **author**, **series** and **genre** are links that open the library filtered to them.
 - **Suggested Reads: From** lets each person get suggestions from every library or just one, for example a Kindle they imported. It's remembered on their device.
 
+### 🐞 Report a problem or idea
+- **No GitHub account needed**: anyone can press **🐞 Report a problem or idea** at the bottom of any page. It goes to the admins (in the 🔔 and on the Admin page), with the page they were on and their device type. From there an admin can **🩺 Diagnose** it, which checks the setup and can pass a real NovelCheck bug on to the developer, or copy it or mark it done.
+
 ## [1.17.0]
 
 ### 🧬 Deep Scan

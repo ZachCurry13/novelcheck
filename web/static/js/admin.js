@@ -29,6 +29,7 @@ export async function renderAdmin(view, state) {
     <div id="deep-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="titles-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="covers-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
+    <div id="problems-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <nav id="admin-tabs" class="mb-4 flex gap-1 overflow-x-auto border-b border-slate-800">${tabs.map(([k, l]) =>
       `<button data-tab="${k}" class="nav-link rounded-b-none">${l}</button>`).join("")}</nav>
     <section data-panel="ai" class="space-y-6">
@@ -80,7 +81,9 @@ export async function renderAdmin(view, state) {
   view.addEventListener("click", async (e) => {
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (!act) return;
-    if (act === "genres-fill" || act === "genres-stop") {
+    if (act === "problem-reports") {
+      import("./problems.js").then((m) => m.openProblemReports());
+    } else if (act === "genres-fill" || act === "genres-stop") {
       if (act === "genres-fill" && !confirm("Ask the AI for the genres of the books Calibre has no tags for? It runs in the background, within your hourly token cap, and you can stop it any time.")) return;
       await attempt(() => post(`/api/admin/genres/${act === "genres-fill" ? "fill" : "stop"}`), act === "genres-fill" ? "Filling in genres…" : "Stopping after the current batch");
     } else if (act === "cover-reports") {

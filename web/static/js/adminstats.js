@@ -27,6 +27,8 @@ export function renderStats(view, s) {
     `🧬 <b>${fmtNum(s.pending_deep)}</b> Deep Scan request${s.pending_deep === 1 ? " is" : "s are"} waiting for your approval. <a href="#/deepscan" class="ml-2 underline">Review</a>`);
   banner($("#del-banner", view), s.pending_deletes && admin,
     `🗑 <b>${fmtNum(s.pending_deletes)}</b> book${s.pending_deletes === 1 ? " is" : "s are"} waiting for your delete review. <a href="#/deletions" class="ml-2 underline">Review</a>`);
+  banner($("#problems-banner", view), s.problem_reports && admin,
+    `🐞 <b>${fmtNum(s.problem_reports)}</b> problem${s.problem_reports === 1 ? " or idea" : "s or ideas"} from your family. <button data-act="problem-reports" class="ml-2 underline">Review</button>`);
   banner($("#covers-banner", view), s.cover_reports && admin,
     `🖼️ <b>${fmtNum(s.cover_reports)}</b> book cover${s.cover_reports === 1 ? " was" : "s were"} reported as wrong. <button data-act="cover-reports" class="ml-2 underline">Review</button>`);
   banner($("#titles-banner", view), s.title_fixes && admin,

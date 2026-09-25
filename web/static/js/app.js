@@ -109,6 +109,10 @@ async function boot() {
       openGuide(state);
     });
   }
+  $("#report-link").addEventListener("click", (e) => {
+    e.preventDefault();
+    import("./problems.js").then((m) => m.openReportProblem());
+  });
   setupInstallPrompt();
 
   $("#setup-form").addEventListener("submit", submitSetup);

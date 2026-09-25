@@ -93,6 +93,7 @@ func (s *Server) Router() http.Handler {
 			r.Post("/push/subscribe", s.handlePushSubscribe)
 			r.Post("/push/unsubscribe", s.handlePushUnsubscribe)
 			r.Post("/push/test", s.handlePushTest)
+			r.Post("/problems", s.handleReportProblem)
 
 			r.Group(func(r chi.Router) {
 				r.Use(s.requireModule(store.KeyModuleQueue, "The reading queue"))
@@ -171,6 +172,8 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/calibre/duplicates/remove", s.handleRemoveDuplicates)
 				r.Get("/admin/title-fixes", s.handleTitleFixes)
 				r.Post("/admin/title-fixes", s.handleFixTitles)
+				r.Get("/admin/problems", s.handleProblemReports)
+				r.Post("/admin/problems/{id}/done", s.handleCloseProblemReport)
 				r.Get("/admin/genres", s.handleGenreStatus)
 				r.Post("/admin/genres/fill", s.handleGenreFill)
 				r.Post("/admin/genres/stop", s.handleGenreStop)

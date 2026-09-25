@@ -274,3 +274,17 @@ CREATE TABLE IF NOT EXISTS cover_reports (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_cover_reports_open ON cover_reports(book_id, user_id) WHERE status = 'open';
+
+-- "Report a problem or idea" from anyone in the family, for an admin to
+-- look into (and pass on through Diagnose if it's a NovelCheck bug).
+CREATE TABLE IF NOT EXISTS problem_reports (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    username   TEXT NOT NULL DEFAULT '',
+    text       TEXT NOT NULL,
+    page       TEXT NOT NULL DEFAULT '',   -- where they were in the app
+    device     TEXT NOT NULL DEFAULT '',   -- the browser's user agent
+    version    TEXT NOT NULL DEFAULT '',   -- NovelCheck version at the time
+    status     TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'done')),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
