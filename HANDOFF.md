@@ -1,6 +1,6 @@
 # NovelCheck handoff
 
-Latest release: **v1.16.0** (Check a book, pepper wording, feature switches, phone notifications, custom AI filters). Work in progress on branch **`feature/v2-updates`** (pushed; not merged, not released) toward **v1.17.0**, following the user's V2 list (`NOVELCHECK_UPDATES.md` v2, pasted 2026-09-25). Commit per section; release when the user says so.
+Latest release: **v1.17.0** (2026-09-25; the V2 list: Deep Scan, barcode scanner + wishlist, KOReader catalog, kids' presets, changed-book re-rates, Admin tabs, chart readouts + Ollama cleanup, tidy titles). `feature/v2-updates` was fast-forwarded into `main`. Next: **§12 Suggested Reads** for **v1.18.0**, on a new branch from `main`. Commit per section; release when the user says so.
 
 ## V2 list: status
 1. ✅ §1 fixes: GET retry on resume (`api.js`), `internal/safe` panic guards, batch size 0 = all (max 500), no delete for looked-up books, neutral "Level N" labels (no nicknames/pronouns), photo fallback on Check a book.
@@ -12,7 +12,7 @@ Latest release: **v1.16.0** (Check a book, pepper wording, feature switches, pho
 7. ✅ §10 Admin tabs (AI & Scans, Users & Rules, Delivery & Services, System & Toggles), collapsible cards, per-tab save, backup fields shown only when enabled, user-card badges.
 8. ✅ §9 tap-to-see values on Usage charts; §13 Ollama model list with disk use + delete (in-use models protected).
 9. ✅ §11 tidy titles: `internal/titles` parser, series + number on books, sync follows Calibre renames (ratings kept, stale file links pruned), Admin 🏷️ Tidy in Calibre + per-book edit via the Content server (Calibre-Web fallback).
-10. ⏭ §12 suggested reads under Up Next with 👍/👎.
+10. ⏭ **Next (v1.18)**: §12 suggested reads under Up Next (match library books to queue picks, read history and content filters; 👍 boosts similar authors/series/tropes with Add to Up Next / Wishlist, 👎 hides it and logs an exclusion so similar titles are suppressed).
 - Already done before V2: §7 (switches, custom filters), §4 (scale, strict preset, reasons), §5 push, §9 diagnostics copy + Calibre-Web, §13 GPU detection.
 - Dropped by the user: parent-child linking.
 
