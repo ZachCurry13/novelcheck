@@ -25,6 +25,10 @@ becomes the release notes for that version and is shown in the app under
 - **Send-to-Kindle check**: pressing **▶ Start Reading** with Send-to-Kindle first shows where the book goes and which address it comes from, with the steps to add that address to Amazon's approved list. **Profile** shows the same steps.
 - The first-run guide for admins has a new optional **Start Reading delivery** step.
 
+### 👪 Kids' accounts
+- **One-click presets** on each kid's card: **👪 Strict Family (Max Level 2)** and the new **🧒 Young Reader (Level 1, ages 9–12)**, which also sets the age group and hides dark occult. Rules a preset doesn't cover stay as you set them.
+- The pepper limit for kids now offers **No limit** or **Level 0–3**.
+
 ### Fixed
 - **No more error when you reopen the app**: when a phone wakes NovelCheck before its connection is back, the app now waits for the network and quietly tries again (up to 3 times) instead of showing an error.
 - **Steadier server**: if something goes wrong while rating a book, syncing Calibre or sending a notification, NovelCheck now records the error and carries on instead of stopping (which made the app restart).

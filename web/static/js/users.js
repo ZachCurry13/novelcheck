@@ -31,9 +31,18 @@ function typeOptions(role, age, isAdmin, kids = true) {
   return opts.map(([v, l]) => `<option value="${v}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`).join("");
 }
 
-// "Strict Family Preset": at most Level 2, nothing Open Door, and
-// nothing unrated. Dark occult and LGBTQ+ are separate choices and stay as set.
-const STRICT = { max_spice: 2, hide_open_door: true, hide_nudity: true, hide_solo_acts: true, hide_innuendo: true, hide_unrated: true };
+// One-click household presets for kids' accounts. They set the pepper cap
+// (and, for Young Reader, the age group) and switch the listed rules on;
+// other rules, like LGBTQ+, stay as the parent set them.
+const STRICT_RULES = ["hide_open_door", "hide_nudity", "hide_solo_acts", "hide_innuendo", "hide_unrated"];
+const PRESETS = {
+  strict: { label: "👪 Strict Family (Max Level 2)", max_spice: 2, rules: STRICT_RULES,
+    title: "Up to Level 2; hides Open Door, nudity, solo acts, heavy innuendo and books not yet rated. Keeps the age group.",
+    done: "Strict Family preset saved: up to Level 2, nothing explicit or unrated" },
+  young: { label: "🧒 Young Reader (Level 1, ages 9–12)", type: "restricted:2", max_spice: 1, rules: [...STRICT_RULES, "hide_dark_occult"],
+    title: "Middle grade (9–12), up to Level 1; also hides dark occult. Books a parent rated for older readers stay hidden.",
+    done: "Young Reader preset saved: ages 9–12, up to Level 1" },
+};
 
 const parseType = (v) => {
   const [role, age] = String(v || "restricted:0").split(":");
@@ -75,19 +84,20 @@ export async function renderUsers(host, viewer) {
     if (!act) return;
     const cardEl = e.target.closest("[data-user]");
     const id = cardEl.dataset.user;
-    if (act === "strict") {
-      $("[name=max_spice]", cardEl).value = String(STRICT.max_spice);
-      $$("[data-rule]", cardEl).forEach((cb) => (cb.checked = STRICT[cb.dataset.rule] || cb.checked));
+    const preset = PRESETS[act];
+    if (preset) {
+      if (preset.type) $("[name=type]", cardEl).value = preset.type;
+      $("[name=max_spice]", cardEl).value = String(preset.max_spice);
+      $$("[data-rule]", cardEl).forEach((cb) => (cb.checked = preset.rules.includes(cb.dataset.rule) || cb.checked));
     }
-    if (act === "save" || act === "strict") {
+    if (act === "save" || preset) {
       const body = { ...parseType($("[name=type]", cardEl).value),
         delivery_method: $("[name=delivery_method]", cardEl).value,
         kindle_email: $("[name=kindle_email]", cardEl).value };
       $$("[data-rule]", cardEl).forEach((cb) => (body[cb.dataset.rule] = cb.checked));
       const ms = $("[name=max_spice]", cardEl);
       if (ms) body.max_spice = Number(ms.value);
-      await attempt(() => put(`/api/admin/users/${id}`, body),
-        act === "strict" ? "Strict family preset saved: up to 2 peppers, nothing explicit or unrated" : "User saved");
+      await attempt(() => put(`/api/admin/users/${id}`, body), preset ? preset.done : "User saved");
     } else if (act === "koreader") {
       openKOReaderSetup(id);
     } else if (act === "password") {
@@ -111,9 +121,10 @@ function userCard(u, isAdmin, viewer) {
       ${u.role === "restricted" ? `<label class="block"><span class="label">Most peppers allowed</span>
         <select name="max_spice" class="input">
           <option value="-1" ${u.max_spice < 0 ? "selected" : ""}>No limit</option>
-          ${PEPPERS.map((p) => `<option value="${p.n}" ${u.max_spice === p.n ? "selected" : ""}>Up to ${p.n} 🌶️ ${esc(p.name)}</option>`).join("")}
+          ${PEPPERS.filter((p) => p.n <= 3 || u.max_spice === p.n).map((p) => `<option value="${p.n}" ${u.max_spice === p.n ? "selected" : ""}>Up to Level ${p.n}: ${esc(p.name)}</option>`).join("")}
         </select></label>
-        <button data-uact="strict" class="btn-secondary w-full text-xs" title="Up to 2 peppers; hides Open Door, nudity, solo acts, heavy innuendo and books not yet rated. Saves right away.">👪 Strict Family Preset (Max Level 2)</button>` : ""}
+        <div class="grid gap-2 sm:grid-cols-2">${Object.entries(PRESETS).map(([k, p]) =>
+          `<button data-uact="${k}" class="btn-secondary text-xs" title="${esc(p.title)} Saves right away.">${esc(p.label)}</button>`).join("")}</div>` : ""}
       <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
         ${RULES.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-rule="${k}" ${u[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}
       </div>
