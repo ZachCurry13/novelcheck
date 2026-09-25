@@ -17,7 +17,7 @@ import (
 )
 
 func (s *Server) handleSuggestions(w http.ResponseWriter, r *http.Request) {
-	res, err := s.Suggest.For(auth.UserFrom(r))
+	res, err := s.Suggest.For(auth.UserFrom(r), queryID(r, "catalog"))
 	if err != nil {
 		writeStoreErr(w, err)
 		return

@@ -19,6 +19,12 @@ becomes the release notes for that version and is shown in the app under
 - **Covers everywhere**: the Library, Up Next, Suggested Reads, the taste list, the wishlist, Check a book and each book's window now show the book's cover. It comes straight from your Calibre library, where Calibre keeps one next to each book's files. NovelCheck makes a small copy once and never changes the library. Books you only looked up get their cover from Open Library by ISBN, and books with no cover get a tidy stand-in with the title.
 - **🖼️ Wrong cover?**: anyone can report a wrong cover from a book's window, with an optional note. Admins see **🖼️ … covers were reported as wrong** on the Admin page, with the cover, the note and an **Open in Calibre-Web** link. Change the cover in Calibre and press **Fixed**; NovelCheck shows the new cover by itself.
 
+### 🔎 Browse the library
+- **New filters**: **genre** (Fantasy, Romance, Mystery & Thriller, Science Fiction, Horror, Historical Fiction, Young Adult, Children's, Biography & Memoir, History, Self-help & more, each with its number of books), **Fiction / Nonfiction**, **author** and **series** (both suggest names as you type). Search now also looks at series names and Calibre tags.
+- Genres come from the **tags in Calibre**, matched on whole words (so "Science Fiction" isn't "Science"), and a "Fiction" or "Nonfiction" tag decides which it is.
+- In a book's window, the **author**, **series** and **genre** are links that open the library filtered to them.
+- **Suggested Reads: From** lets each person get suggestions from every library or just one, for example a Kindle they imported. It's remembered on their device.
+
 ## [1.17.0]
 
 ### 🧬 Deep Scan

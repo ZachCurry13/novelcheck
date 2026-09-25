@@ -32,6 +32,7 @@ type calibreBook struct {
 	LastModified string  `db:"last_modified"` // e.g. "2024-03-01 18:23:45.123456+00:00"
 	Series       string  `db:"series"`
 	SeriesIndex  float64 `db:"series_index"`
+	Tags         string  `db:"tags"` // joined with the unit separator, char(31)
 }
 
 type calibreFile struct {
@@ -67,6 +68,11 @@ func Sync(st *store.Store, dir string) (Result, error) {
 		series = `COALESCE((SELECT s.name FROM books_series_link sl JOIN series s ON s.id = sl.series
 			WHERE sl.book = b.id LIMIT 1), '') AS series, COALESCE(b.series_index, 0) AS series_index`
 	}
+	tags := "'' AS tags"
+	if hasColumn(cdb, "books_tags_link", "tag") {
+		tags = `COALESCE((SELECT GROUP_CONCAT(t.name, char(31)) FROM books_tags_link tl JOIN tags t ON t.id = tl.tag
+			WHERE tl.book = b.id), '') AS tags`
+	}
 	var books []calibreBook
 	err = cdb.Select(&books, `SELECT b.id, b.title, b.path,
 		COALESCE((SELECT GROUP_CONCAT(name, ' & ') FROM (SELECT a.name FROM books_authors_link l
@@ -74,7 +80,7 @@ func Sync(st *store.Store, dir string) (Result, error) {
 		COALESCE((SELECT val FROM identifiers i WHERE i.book = b.id
 			AND i.type = 'isbn' LIMIT 1), '') AS isbn,
 		COALESCE((SELECT text FROM comments c WHERE c.book = b.id), '') AS description,
-		`+lastMod+` AS last_modified, `+series+`
+		`+lastMod+` AS last_modified, `+series+`, `+tags+`
 		FROM books b ORDER BY b.id`)
 	if err != nil {
 		return res, fmt.Errorf("read calibre books: %w", err)
@@ -102,7 +108,7 @@ func Sync(st *store.Store, dir string) (Result, error) {
 	for _, b := range books {
 		ext := strconv.FormatInt(b.ID, 10)
 		id, err := st.UpsertCalibreBook(catID, store.CalibreEntry{ExtID: ext, Title: b.Title, Authors: b.Authors,
-			ISBN: b.ISBN, Description: StripHTML(b.Description), Series: b.Series, SeriesIndex: b.SeriesIndex})
+			ISBN: b.ISBN, Description: StripHTML(b.Description), Series: b.Series, SeriesIndex: b.SeriesIndex, Tags: splitTags(b.Tags)})
 		if err != nil {
 			continue // skip malformed rows (e.g. empty title) without aborting the sync
 		}
@@ -190,4 +196,11 @@ func StripHTML(s string) string {
 	s = strings.NewReplacer("</p>", "\n", "<br>", "\n", "<br/>", "\n", "<br />", "\n").Replace(s)
 	s = html.UnescapeString(tagRE.ReplaceAllString(s, " "))
 	return strings.TrimSpace(spaceRE.ReplaceAllString(s, " "))
+}
+
+func splitTags(s string) []string {
+	if s == "" {
+		return nil
+	}
+	return strings.Split(s, "\x1f")
 }

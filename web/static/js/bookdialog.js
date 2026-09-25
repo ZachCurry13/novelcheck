@@ -9,7 +9,8 @@ import { ageAndNotesHTML, bindAgeAndNotes } from "./booknotes.js";
 import { on } from "./modules.js";
 import { customChips } from "./customflags.js";
 import { renderDeepSection, deepChip } from "./deepscan.js";
-import { seriesLine, openTitleEdit } from "./titlefix.js";
+import { seriesLine, seriesText, openTitleEdit } from "./titlefix.js";
+import { genreChips, authorLinks, seriesLink } from "./genres.js";
 import { coverImg, reportCover } from "./covers.js";
 
 export async function openBook(id, state, onChange) {
@@ -56,13 +57,14 @@ export async function openBook(id, state, onChange) {
         </div>
         <div class="min-w-0 flex-1">
           <h2 class="text-xl font-bold">${esc(b.title)}</h2>
-          ${seriesLine(b)}
-          <p class="text-slate-400">${esc(b.author || "Unknown author")}${b.isbn ? " · ISBN " + esc(b.isbn) : ""}</p>
+          ${b.series ? `<p>${seriesLink(b, seriesText(b))}</p>` : seriesLine(b)}
+          <p class="text-slate-400">${authorLinks(b.author)}${b.isbn ? " · ISBN " + esc(b.isbn) : ""}</p>
           ${isAdmin && calibreIds.length ? `<p class="mt-1 text-xs ${b.title_fix ? "text-amber-300" : "text-slate-500"}">${b.title_fix ? `In Calibre: “${esc(b.title_fix)}” · ` : ""}<button type="button" data-act="calibre-title" class="underline">✏️ ${b.title_fix ? "Tidy it in Calibre" : "Edit title in Calibre"}</button></p>` : ""}
         </div>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>
       </div>
       <div class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
+      ${b.genres || b.kind ? `<div class="flex flex-wrap gap-1">${genreChips(b)}</div>` : ""}
       ${b.spice_level !== null && b.spice_level !== undefined
         ? `<p class="text-xs text-slate-400">${b.spice_reason ? `<b class="text-slate-200">Why ${b.spice_level} 🌶️:</b> ${esc(b.spice_reason)}. ` : ""}${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
       ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}

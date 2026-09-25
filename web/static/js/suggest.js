@@ -1,7 +1,7 @@
 // 💡 Suggested Reads at the bottom of Up Next: books from the family's
 // library picked for this reader (and, when the admin allows, a few the
 // family doesn't own), with 👍/👎 to steer what comes next.
-import { get, post, del } from "./api.js";
+import { get, post, del, qs } from "./api.js";
 import { esc, attempt, toast, classChip } from "./ui.js";
 import { seriesText } from "./titlefix.js";
 import { openBook } from "./bookdialog.js";
@@ -16,7 +16,15 @@ const SUBTITLE = {
 };
 
 export async function renderSuggestions(host, state, onQueued, polls = 0) {
-  const data = await attempt(() => get("/api/suggestions"));
+  // "From": every library, or just one (say, a Kindle someone imported). Remembered on this device.
+  let from = "";
+  try {
+    from = localStorage.getItem("nc:suggest-from") || "";
+  } catch {
+    /* private mode */
+  }
+  const [data, cats] = await Promise.all([attempt(() => get("/api/suggestions" + qs({ catalog: from }))), get("/api/catalogs").catch(() => [])]);
+  const libs = (cats || []).filter((c) => c.name !== "Looked up" && c.book_count > 0);
   if (!data || !host.isConnected) return;
   const taste = on(state.user, "taste");
   const liked = new Set(); // cards given a 👍 this visit: they show their add button
@@ -29,7 +37,9 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
     host.innerHTML = `<section class="mt-10">
       <div class="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <h2 class="text-lg font-bold">💡 Suggested Reads${taste ? ` <button data-taste class="btn-ghost ml-1 px-2 py-0.5 text-xs font-normal">🎯 Your taste</button>` : ""}</h2>
-        <p class="text-xs text-slate-500">${data.refreshing ? "✨ The AI is picking new suggestions…" : SUBTITLE[data.mode]}</p>
+        <p class="flex flex-wrap items-center gap-2 text-xs text-slate-500">${libs.length > 1 ? `<label>From <select data-from class="input w-auto py-0.5 text-xs">
+          <option value="">All libraries</option>${libs.map((c) => `<option value="${c.id}" ${String(c.id) === from ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>` : ""}
+          <span>${data.refreshing ? "✨ The AI is picking new suggestions…" : SUBTITLE[data.mode]}</span></p>
       </div>
       ${cards.length ? `<ul class="flex max-w-full snap-x gap-3 overflow-x-auto pb-2">${cards.join("")}</ul>`
         : `<p class="text-sm text-slate-500">Add a few books to Up Next (or finish some) and suggestions will show up here.${taste ? ` Or <button data-taste class="underline">🎯 mark a few books you know</button> to get started.` : ""}</p>`}
@@ -42,6 +52,15 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
   const drop = (key) => {
     data.items = data.items.filter((it) => `b${it.book.id}` !== key);
     outside.splice(0, outside.length, ...outside.filter((o) => o.key !== key));
+  };
+  host.onchange = (e) => {
+    if (!e.target.matches("[data-from]")) return;
+    try {
+      localStorage.setItem("nc:suggest-from", e.target.value);
+    } catch {
+      /* private mode */
+    }
+    renderSuggestions(host, state, onQueued);
   };
   host.onclick = async (e) => {
     const card = e.target.closest("[data-sg]");

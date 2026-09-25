@@ -90,6 +90,10 @@ type Book struct {
 	Series          string  `db:"series" json:"series"`             // series name, when known
 	SeriesIndex     float64 `db:"series_index" json:"series_index"` // number in the series; 0 = none
 	TitleFix        string  `db:"title_fix" json:"title_fix"`       // Calibre's untidy title ("01 - Dune"); "" = tidy
+	Tags            string  `db:"tags" json:"tags"`                 // Calibre's tags, comma-separated
+	Genres          string  `db:"genres" json:"genres"`             // categories as ",fantasy,romance," (package genres)
+	Kind            string  `db:"kind" json:"kind"`                 // fiction, nonfiction or ""
+	GenreSource     string  `db:"genre_source" json:"genre_source"` // calibre, ai or ""
 	AnalyzedAt      *string `db:"analyzed_at" json:"analyzed_at"`
 	CreatedAt       string  `db:"created_at" json:"created_at"`
 	UpdatedAt       string  `db:"updated_at" json:"updated_at"`

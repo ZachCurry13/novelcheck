@@ -19,6 +19,10 @@ CREATE TABLE books_series_link (id INTEGER PRIMARY KEY, book INTEGER, series INT
 INSERT INTO books (id, title, path) VALUES (3, '01 - Guards! Guards!', 'Terry Pratchett/01 - Guards! Guards! (3)');
 INSERT INTO books_authors_link VALUES (4, 3, 2);
 INSERT INTO data VALUES (4, 3, 'EPUB', '01 - Guards! Guards! - Terry Pratchett');
+CREATE TABLE tags (id INTEGER PRIMARY KEY, name TEXT);
+CREATE TABLE books_tags_link (id INTEGER PRIMARY KEY, book INTEGER, tag INTEGER);
+INSERT INTO tags VALUES (1, 'Fiction'), (2, 'Fantasy'), (3, 'Humor');
+INSERT INTO books_tags_link VALUES (1, 3, 1), (2, 3, 2), (3, 3, 3);
 `
 
 // TestSyncFollowsRenames: tidying a title in Calibre (which also moves its
@@ -50,7 +54,8 @@ func TestSyncFollowsRenames(t *testing.T) {
 		return books[0]
 	}
 	b := find()
-	if b.Title != "Guards! Guards!" || b.SeriesIndex != 1 || b.TitleFix != "01 - Guards! Guards!" {
+	if b.Title != "Guards! Guards!" || b.SeriesIndex != 1 || b.TitleFix != "01 - Guards! Guards!" ||
+		b.Genres != ",fantasy,humor," || b.Kind != "fiction" || b.GenreSource != "calibre" || b.Tags != "Fiction, Fantasy, Humor" {
 		t.Fatalf("tidy title from the numbered one: %+v", b)
 	}
 	one := 1

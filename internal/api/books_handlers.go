@@ -23,7 +23,8 @@ func splitCSV(s string) []string {
 
 // handleListBooks serves the unified dashboard across every catalog.
 // Query params: q, catalog, overlap_with, multi, classification, flags,
-// exclude, status, age, format, spice, sort, limit, offset.
+// exclude, status, age, format, spice, author, series, genre, kind, sort,
+// limit, offset.
 func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	f := store.BookFilter{
@@ -39,6 +40,10 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		Age:            q.Get("age"),
 		Format:         q.Get("format"),
 		Spice:          q.Get("spice"),
+		Author:         q.Get("author"),
+		Series:         q.Get("series"),
+		Genre:          q.Get("genre"),
+		Kind:           q.Get("kind"),
 		Sort:           q.Get("sort"),
 		Limit:          queryInt(r, "limit"),
 		Offset:         queryInt(r, "offset"),
@@ -159,4 +164,15 @@ func (s *Server) handleAnalyzeBook(w http.ResponseWriter, r *http.Request) {
 	}
 	s.Worker.Enqueue(true, id)
 	writeJSON(w, http.StatusAccepted, map[string]any{"queued": id})
+}
+
+// handleBookFacets returns the genre, fiction/nonfiction, author and series
+// choices for the library filters (only books the viewer may see).
+func (s *Server) handleBookFacets(w http.ResponseWriter, r *http.Request) {
+	f, err := s.Store.Facets(auth.UserFrom(r))
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, f)
 }

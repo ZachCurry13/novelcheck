@@ -20,7 +20,7 @@ const tasteBatch = 20
 // ones on screen) and the reader's answers so far.
 func (s *Server) handleTasteBooks(w http.ResponseWriter, r *http.Request) {
 	u := auth.UserFrom(r)
-	pool, err := s.Store.SuggestPool(u)
+	pool, err := s.Store.SuggestPool(u, 0)
 	if err != nil {
 		writeStoreErr(w, err)
 		return

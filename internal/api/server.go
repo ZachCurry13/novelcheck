@@ -71,6 +71,7 @@ func (s *Server) Router() http.Handler {
 			r.Post("/me/opds/reset", s.handleResetMyOPDS)
 
 			r.Get("/books", s.handleListBooks)
+			r.Get("/books/facets", s.handleBookFacets)
 			r.Get("/books/{id}", s.handleGetBook)
 			r.Get("/books/{id}/download", s.handleDownload)
 			r.Get("/books/{id}/cover", s.handleCover)

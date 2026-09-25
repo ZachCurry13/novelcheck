@@ -20,6 +20,10 @@ type BookFilter struct {
 	Age            string // "" any | "unset" | "1".."5" = suitable up to that age group
 	Spice          string // "" any | "0".."5" exact peppers | "old" = rated before the pepper scale
 	Format         string // "" any | "epub" etc. | "multi" (2+ formats) | "none" (no file) | "dupes" (2+ Calibre entries)
+	Author         string // part of an author's name
+	Series         string // part of a series name
+	Genre          string // a category key (package genres)
+	Kind           string // "fiction", "nonfiction" or "unknown"
 	Sort           string // "title" (default) | "author" | "recent"
 	Limit, Offset  int
 }
@@ -103,9 +107,9 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	where := []string{"1=1"}
 	var args []any
 	if q := strings.TrimSpace(f.Query); q != "" {
-		where = append(where, "(b.title LIKE ? OR b.author LIKE ? OR b.series LIKE ?)")
+		where = append(where, "(b.title LIKE ? OR b.author LIKE ? OR b.series LIKE ? OR b.tags LIKE ?)")
 		like := "%" + q + "%"
-		args = append(args, like, like, like)
+		args = append(args, like, like, like, like)
 	}
 	if f.CatalogID > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM catalog_books x WHERE x.book_id = b.id AND x.catalog_id = ?)")
@@ -174,6 +178,7 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 		where = append(where, "b.status = ?")
 		args = append(args, f.Status)
 	}
+	where, args = browseConds(f, where, args)
 	vis, vargs := visibilityClause(viewer)
 	return strings.Join(where, " AND ") + vis, append(args, vargs...)
 }

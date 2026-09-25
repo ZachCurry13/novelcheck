@@ -10,6 +10,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/zachcurry13/novelcheck/internal/genres"
 	"github.com/zachcurry13/novelcheck/internal/titles"
 )
 
@@ -22,6 +23,7 @@ type CalibreEntry struct {
 	Description string
 	Series      string  // Calibre's series; "" = none
 	SeriesIndex float64 // only meaningful with a series
+	Tags        []string
 }
 
 // CopyKey identifies one catalog link: a file (or placeholder) of a book.
@@ -51,7 +53,14 @@ func (s *Store) UpsertCalibreBook(catalogID int64, e CalibreEntry) (int64, error
 	if t.Title != strings.Join(strings.Fields(e.Title), " ") {
 		fix = e.Title
 	}
-	_, err = s.DB.Exec(`UPDATE books SET series = ?, series_index = ?, title_fix = ? WHERE id = ?`, series, index, fix, id)
+	// Categories from Calibre's tags; without any, genres the AI filled in stay.
+	keys, kind := genres.FromTags(e.Tags)
+	g := genres.Join(keys)
+	_, err = s.DB.Exec(`UPDATE books SET series = ?, series_index = ?, title_fix = ?, tags = ?,
+		genres = CASE WHEN ? != '' OR genre_source != 'ai' THEN ? ELSE genres END,
+		kind = CASE WHEN ? != '' OR genre_source != 'ai' THEN ? ELSE kind END,
+		genre_source = CASE WHEN ? != '' THEN 'calibre' WHEN genre_source = 'ai' THEN 'ai' ELSE '' END
+		WHERE id = ?`, series, index, fix, strings.Join(e.Tags, ", "), g, g, g, kind, g, id)
 	return id, err
 }
 

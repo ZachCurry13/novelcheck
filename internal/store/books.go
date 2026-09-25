@@ -12,7 +12,7 @@ import (
 const bookCols = `b.id, b.norm_key, b.title, b.author, b.isbn, b.description, b.blurb, b.status,
 	b.classification, b.nudity, b.solo_acts, b.heavy_innuendo, b.playful_fantasy, b.dark_occult,
 	b.demonic_presence, b.lgbtq_content, b.summary_verdict, b.approved, b.approved_by, b.age_level, b.age_set_by, b.spice_level, b.spice_reason, b.analysis_model, b.analysis_error,
-	b.series, b.series_index, b.title_fix, b.analyzed_at, b.created_at, b.updated_at`
+	b.series, b.series_index, b.title_fix, b.tags, b.genres, b.kind, b.genre_source, b.analyzed_at, b.created_at, b.updated_at`
 
 // derivedCols adds each book's file formats and number of Calibre entries.
 const derivedCols = `, COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTINCT UPPER(fc.format) AS f

@@ -14,14 +14,22 @@ const PAGE = 60;
 
 export async function renderLibrary(view, state) {
   const manager = canManage(state.user);
-  const [catalogs] = await Promise.all([attempt(() => get("/api/catalogs")).then((c) => c || []), loadFlags(true)]);
+  const [catalogs, , facets] = await Promise.all([attempt(() => get("/api/catalogs")).then((c) => c || []), loadFlags(true),
+    attempt(() => get("/api/books/facets")).then((f) => f || { genres: [], kinds: [], authors: [], series: [] })]);
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
+  const opt = (v, label, n) => `<option value="${esc(v)}">${esc(label)}${n === undefined ? "" : ` (${n.toLocaleString()})`}</option>`;
   view.innerHTML = `
     <form id="filters" class="card mb-4 grid gap-3 md:grid-cols-4 xl:grid-cols-8">
       <div class="flex gap-2 md:col-span-2">
-        <input name="q" type="search" placeholder="Search title or author" class="input min-w-0 flex-1">
+        <input name="q" type="search" placeholder="Search title, author, series or tag" class="input min-w-0 flex-1">
         <button type="button" id="filters-toggle" class="btn-secondary filters-toggle" aria-expanded="false">Filters</button>
       </div>
+      <select name="genre" class="input filter-more"><option value="">Any genre</option>${(facets.genres || []).map((g) => opt(g.key, g.label, g.count)).join("")}</select>
+      <select name="kind" class="input filter-more"><option value="">Fiction &amp; nonfiction</option>${(facets.kinds || []).filter((k) => k.count).map((k) => opt(k.key, k.label, k.count)).join("")}</select>
+      <input name="author" list="author-list" placeholder="Author" class="input filter-more" autocomplete="off">
+      <input name="series" list="series-list" placeholder="Series" class="input filter-more" autocomplete="off">
+      <datalist id="author-list">${(facets.authors || []).map((a) => `<option value="${esc(a)}"></option>`).join("")}</datalist>
+      <datalist id="series-list">${(facets.series || []).map((s) => `<option value="${esc(s)}"></option>`).join("")}</datalist>
       <select name="catalog" class="input filter-more"><option value="">All catalogs</option>${catOpts}</select>
       <select name="overlap_with" class="input filter-more" title="Only books also present in this catalog">
         <option value="">…also in (overlap)</option>${catOpts}</select>
@@ -82,6 +90,10 @@ export async function renderLibrary(view, state) {
       classification: fd.get("spice") === "Pending" ? "Pending" : "",
       age: fd.get("age"),
       format: fd.get("format"),
+      genre: fd.get("genre"),
+      kind: fd.get("kind"),
+      author: fd.get("author"),
+      series: fd.get("series"),
       sort: fd.get("sort"),
       multi: fd.get("multi") === "on",
       deep: fd.get("deep") === "on",
@@ -154,6 +166,12 @@ export async function renderLibrary(view, state) {
   } catch {
     /* private mode */
   }
+  // Links such as #/library?author=… (from a book's window) open with that filter set.
+  const preset = new URLSearchParams(location.hash.split("?")[1] || "");
+  for (const k of ["q", "author", "series", "genre", "kind"]) {
+    if (preset.get(k) && form.elements[k]) form.elements[k].value = preset.get(k);
+  }
+  if ([...preset.keys()].some((k) => k !== "q")) form.classList.add("filters-open");
   countFilters();
   await load(true);
 }

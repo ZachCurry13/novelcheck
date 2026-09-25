@@ -66,6 +66,10 @@ CREATE TABLE IF NOT EXISTS books (
     series           TEXT NOT NULL DEFAULT '',     -- series name from Calibre, or taken from the title
     series_index     REAL NOT NULL DEFAULT 0,      -- number in the series; 0 = none
     title_fix        TEXT NOT NULL DEFAULT '',     -- Calibre's title when NovelCheck tidied it ("01 - Dune"); '' = already tidy
+    tags             TEXT NOT NULL DEFAULT '',     -- Calibre's tags, comma-separated
+    genres           TEXT NOT NULL DEFAULT '',     -- categories (package genres) as ",fantasy,romance,"
+    kind             TEXT NOT NULL DEFAULT '',     -- fiction, nonfiction or '' (unknown)
+    genre_source     TEXT NOT NULL DEFAULT '',     -- calibre (from tags) or ai; '' = none yet
     age_set_by       TEXT NOT NULL DEFAULT '',
     analysis_model   TEXT NOT NULL DEFAULT '',
     analysis_error   TEXT NOT NULL DEFAULT '',

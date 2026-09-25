@@ -54,10 +54,11 @@ type saved struct {
 	Error   string               `json:"error,omitempty"`
 }
 
-// For returns u's suggestions, starting a new AI pick in the background when due.
-func (s *Service) For(u *store.User) (Result, error) {
+// For returns u's suggestions from catalogID (0 = every library), starting
+// a new AI pick in the background when due.
+func (s *Service) For(u *store.User, catalogID int64) (Result, error) {
 	mode := s.Store.Setting(store.KeySuggestMode)
-	pool, err := s.Store.SuggestPool(u)
+	pool, err := s.Store.SuggestPool(u, catalogID)
 	if err != nil {
 		return Result{}, err
 	}
