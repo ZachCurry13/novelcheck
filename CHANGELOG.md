@@ -37,6 +37,10 @@ becomes the release notes for that version and is shown in the app under
 - Settings are in **collapsible cards**, each tab has its own **Save**, and the backup AI's details stay hidden until you switch the backup on.
 - User cards show a **role badge**, and for kids their **pepper limit** and **age group** at a glance.
 
+### 📈 Usage & Ollama
+- **Tap a chart to read it**: on the Usage page, tap (or hover over) any day's bar or any point on a line to see the exact date and value. On a phone it stays shown until you tap somewhere else.
+- **🧹 Installed models**: the Ollama easy setup has a new button listing every model on your Ollama server with the disk space it uses, biggest first, and a **Delete** button to free space. Models NovelCheck is set to use are marked **In use** and can't be deleted by accident.
+
 ### Fixed
 - **No more error when you reopen the app**: when a phone wakes NovelCheck before its connection is back, the app now waits for the network and quietly tries again (up to 3 times) instead of showing an error.
 - **Steadier server**: if something goes wrong while rating a book, syncing Calibre or sending a notification, NovelCheck now records the error and carries on instead of stopping (which made the app restart).

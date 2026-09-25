@@ -36,23 +36,46 @@ export function lineChart(el, { series, labels, fmt, max }) {
     hair.classList.remove("hidden");
     out.textContent = `${labels[i]} · ${series.map((s) => `${s.name}: ${fmt(s.values[i])}`).join(" · ")}`;
   };
-  svg.addEventListener("pointermove", (e) => {
+  const pick = (e) => {
     const r = svg.getBoundingClientRect();
-    show(Math.round(((e.clientX - r.left) / r.width) * (n - 1)));
+    show(Math.min(n - 1, Math.max(0, Math.round(((e.clientX - r.left) / r.width) * (n - 1)))));
+  };
+  svg.addEventListener("pointermove", pick);
+  svg.addEventListener("pointerdown", pick); // a tap on a phone
+  // With a mouse the readout follows the pointer; after a tap it stays until the next tap.
+  svg.addEventListener("pointerleave", (e) => {
+    if (e.pointerType !== "mouse") return;
+    hair.classList.add("hidden");
+    out.textContent = "";
   });
-  svg.addEventListener("pointerleave", () => { hair.classList.add("hidden"); out.textContent = ""; });
 }
 
-// bars: [{ label, value, tip }]
+// bars: [{ label, value, tip }]. Hover (or tap, on a phone) a bar to read its
+// exact value; a tapped bar stays highlighted until the next tap.
 export function columnChart(el, bars, cls = "fill-indigo-500") {
   const top = Math.max(...bars.map((b) => b.value), 1);
   const slot = W / bars.length, gap = 2;
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="h-28 w-full" role="img" aria-label="Daily AI tokens">
+  el.innerHTML = `<p class="readout h-4 text-xs text-slate-300" aria-live="polite"></p>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="h-28 w-full cursor-pointer" role="img" aria-label="Daily AI tokens">
     ${bars.map((b, i) => {
       const h = b.value ? Math.max(2, (b.value / top) * (H - PAD)) : 0;
-      return `<g class="group"><rect x="${i * slot}" y="0" width="${slot}" height="${H}" class="fill-transparent"><title>${esc(b.tip)}</title></rect>
-        <rect x="${i * slot + gap}" y="${H - h}" width="${slot - 2 * gap}" height="${h}" rx="2" class="${cls} group-hover:opacity-80 pointer-events-none"/></g>`;
+      return `<g class="group"><rect data-i="${i}" x="${i * slot}" y="0" width="${slot}" height="${H}" class="fill-transparent"><title>${esc(b.tip)}</title></rect>
+        <rect data-bar="${i}" x="${i * slot + gap}" y="${H - h}" width="${slot - 2 * gap}" height="${h}" rx="2" class="${cls} group-hover:opacity-80 pointer-events-none"/></g>`;
     }).join("")}
     <line x1="0" x2="${W}" y1="${H}" y2="${H}" class="stroke-slate-700" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>
     <div class="flex justify-between text-[10px] text-slate-500"><span>${esc(bars[0]?.label || "")}</span><span>today</span></div>`;
+  const svg = el.querySelector("svg"), out = el.querySelector(".readout");
+  const show = (e) => {
+    const i = e.target.closest?.("[data-i]")?.dataset.i;
+    if (i === undefined) return;
+    out.textContent = bars[i].tip;
+    el.querySelectorAll("[data-bar]").forEach((r) => r.classList.toggle("opacity-60", r.dataset.bar !== i));
+  };
+  svg.addEventListener("pointermove", show);
+  svg.addEventListener("pointerdown", show);
+  svg.addEventListener("pointerleave", (e) => {
+    if (e.pointerType !== "mouse") return;
+    out.textContent = "";
+    el.querySelectorAll("[data-bar]").forEach((r) => r.classList.remove("opacity-60"));
+  });
 }

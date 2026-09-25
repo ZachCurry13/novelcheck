@@ -4,6 +4,7 @@ import { get, post, qs } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";
 import { initialOrder, orderHTML, bindOrder } from "./ollamaorder.js";
 import { keyFor } from "./llmpresets.js";
+import { openOllamaModels } from "./ollamamodels.js";
 
 // How each model fits the measured GPU (see internal/ollama/gpu.go).
 const FIT = {
@@ -41,6 +42,7 @@ export function renderOllamaHelper(host, form, prefix = "") {
       <p class="text-slate-400">First install the <b>Ollama</b> app from TrueNAS <b>Apps → Discover Apps</b> (turn on your GPU there if you have one). Then:</p>
       <div class="flex flex-wrap gap-2">
         <button type="button" data-ol="find" class="btn-primary py-1">1. Find Ollama</button>
+        <button type="button" data-ol="models" class="btn-ghost py-1" title="See installed models and free disk space">🧹 Installed models</button>
         <input data-ol-url class="input w-64 max-w-full py-1" placeholder="or type its address, e.g. 192.168.1.50:11434">
       </div>
       <div data-ol-servers class="space-y-3"></div>
@@ -202,6 +204,7 @@ export function renderOllamaHelper(host, form, prefix = "") {
     const b = e.target.closest("[data-ol]");
     if (!b) return;
     if (b.dataset.ol === "find") find();
+    else if (b.dataset.ol === "models") openOllamaModels($("[data-ol-url]", host).value.trim());
     else if (b.dataset.ol === "pull") pull(b.dataset.url, b.closest("[data-server]"));
     else if (b.dataset.ol === "use") use(b.dataset.url);
     else if (b.dataset.ol === "gpu") {

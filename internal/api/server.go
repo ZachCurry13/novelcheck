@@ -169,6 +169,8 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/ollama/pull", s.handleOllamaPullStatus)
 				r.Post("/admin/ollama/use", s.handleOllamaUse)
 				r.Get("/admin/ollama/gpu", s.handleOllamaGPU)
+				r.Get("/admin/ollama/models", s.handleOllamaModels)
+				r.Post("/admin/ollama/delete", s.handleOllamaDelete)
 			})
 		})
 	})
