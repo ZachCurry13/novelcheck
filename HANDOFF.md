@@ -23,7 +23,7 @@ Latest release: **v1.17.0** (2026-09-25; the V2 list: Deep Scan, barcode scanner
 4. ✅ Library filters: author, series, genre (from Calibre tags, which the sync doesn't read yet), fiction vs nonfiction, the basic categories. Show the user the category list before building. Done: genres from Calibre tags, fiction/nonfiction, author/series type-ahead, links from the book window; Suggested Reads "From" one library. AI fills genres for untagged books (Admin button with a cost estimate, 25 per call).
 5. ✅ Bug reports: the user chose "family members tell their admin": anyone can press Report a problem; it lands in the admin's 🔔 and an Admin list, and the admin passes it on (GitHub via Diagnose as today).
 6. ⏭ Library multi-select: tap to tick books (and drag across the grid to tick a run), then one bar: ＋ Up Next, 🧬 Deep Scan (admins start, others request), 🗑 delete (request; admins review as usual).
-7. Library ownership: whoever imports a library owns it (`catalogs.owner`); owners can remove books from their own library without a request, and mark it Private (only them) or Shared (everyone). Ask the user: can admins see private libraries?
+7. ✅ Library ownership: whoever imports a library owns it (`catalogs.owner`); owners can remove books from their own library without a request, and mark it Private (only them) or Shared (everyone). Private = the owner and admins only (the user chose this; every adult is an editor or admin, and kids can't import).
 
 ## Waiting on the user
 - If the app ever restarts on its own again, the TrueNAS app log (panics are now logged with a stack).

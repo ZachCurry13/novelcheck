@@ -95,11 +95,20 @@ func visibilityClause(u *User) (string, []any) {
 	}
 	// An age group set on the book always applies to kids of a younger group,
 	// even if a parent marked the book OK for its content.
+	var args []any
 	if u.Role == RoleRestricted && u.AgeLevel > 0 {
 		clause += " AND (b.age_level = 0 OR b.age_level <= ?)"
-		return clause, []any{u.AgeLevel}
+		args = append(args, u.AgeLevel)
 	}
-	return clause, nil
+	// Private libraries: a book only in someone else's private library is
+	// seen by its owner and the admins only.
+	if u.Role != RoleAdmin {
+		clause += ` AND (NOT EXISTS (SELECT 1 FROM catalog_books pn WHERE pn.book_id = b.id)
+			OR EXISTS (SELECT 1 FROM catalog_books pv JOIN catalogs pc ON pc.id = pv.catalog_id
+				WHERE pv.book_id = b.id AND (pc.private = 0 OR pc.owner_id = ?)))`
+		args = append(args, u.ID)
+	}
+	return clause, args
 }
 
 // filterCond turns f (plus the viewer's content rules) into a WHERE clause.

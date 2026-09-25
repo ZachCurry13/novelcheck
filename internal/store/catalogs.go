@@ -1,8 +1,6 @@
 package store
 
 import (
-	"database/sql"
-	"errors"
 	"strings"
 	"unicode"
 
@@ -10,23 +8,6 @@ import (
 )
 
 const CalibreCatalogName = "Calibre Main"
-
-func (s *Store) ListCatalogs() ([]Catalog, error) {
-	var cs []Catalog
-	err := s.DB.Select(&cs, `SELECT c.id, c.name, c.source, c.created_at,
-		(SELECT COUNT(DISTINCT book_id) FROM catalog_books cb WHERE cb.catalog_id = c.id) AS book_count
-		FROM catalogs c ORDER BY c.name`)
-	return cs, err
-}
-
-func (s *Store) CatalogByID(id int64) (*Catalog, error) {
-	var c Catalog
-	err := s.DB.Get(&c, `SELECT id, name, source, created_at, 0 AS book_count FROM catalogs WHERE id = ?`, id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, ErrNotFound
-	}
-	return &c, err
-}
 
 // EnsureCatalog returns the catalog with the given name, creating it if needed.
 func (s *Store) EnsureCatalog(name, source string) (int64, error) {

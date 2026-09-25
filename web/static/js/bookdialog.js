@@ -42,6 +42,7 @@ export async function openBook(id, state, onChange) {
         ${e.source === "calibre" && e.external_id ? `<span class="text-xs text-slate-500">Calibre #${esc(e.external_id)}</span>` : ""}
         ${cw && e.source === "calibre" && /^\d+$/.test(e.external_id) ? `<a href="${esc(cw)}/book/${e.external_id}" target="_blank" rel="noopener noreferrer" class="text-xs text-sky-300 underline">Open in Calibre-Web ↗</a>` : ""}
         ${e.formats.length ? e.formats.map((f) => `<span class="chip-fmt">${esc(f)}</span>`).join(" ") : `<span class="text-xs text-slate-500">no file</span>`}
+        ${(data.editable_catalogs || []).includes(e.catalog_id) && e.source !== "calibre" ? `<button type="button" data-act="remove-from" data-cat="${e.catalog_id}" class="text-xs text-rose-300 underline">Remove from this library</button>` : ""}
       </div>
       ${isAdmin && e.paths.length ? `<p class="mt-0.5 break-all text-xs text-slate-500">${e.paths.map(esc).join("<br>")}</p>` : ""}
     </li>`).join("");
@@ -109,6 +110,11 @@ export async function openBook(id, state, onChange) {
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (act === "calibre-title") {
       openTitleEdit(b, calibreIds, cw, refresh);
+    } else if (act === "remove-from") {
+      const cat = e.target.closest("[data-cat]").dataset.cat;
+      const name = data.copies.find((c) => String(c.catalog_id) === cat)?.catalog_name || "this library";
+      if (!confirm(`Take "${b.title}" out of ${name}? Nothing is deleted from your device or Calibre.`)) return;
+      if (await attempt(() => del(`/api/catalogs/${cat}/books/${b.id}`), `Removed from ${name}`)) refresh();
     } else if (act === "wrong-cover") {
       if (await reportCover(b)) e.target.closest("[data-act]").replaceWith(Object.assign(document.createElement("span"),
         { className: "text-xs text-slate-500", textContent: "🖼️ Cover reported" }));

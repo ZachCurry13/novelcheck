@@ -28,6 +28,10 @@ becomes the release notes for that version and is shown in the app under
 ### 🐞 Report a problem or idea
 - **No GitHub account needed**: anyone can press **🐞 Report a problem or idea** at the bottom of any page. It goes to the admins (in the 🔔 and on the Admin page), with the page they were on and their device type. From there an admin can **🩺 Diagnose** it, which checks the setup and can pass a real NovelCheck bug on to the developer, or copy it or mark it done.
 
+### 📚 Your own libraries
+- **Libraries have owners**: a library you import (a Kindle, a folder or a list) is yours. Tick **🔒 Private** when importing, or later under **📚 Your libraries** on the Import page, and only you and the admins see its books. **Shared** libraries are seen by everyone, and kids still only see what their rules allow.
+- **Remove books from your own library straight away**: in a book's window, **Remove from this library** takes it off that library's list at once, with no delete request (nothing is deleted from your device or from Calibre). You can also rename or delete your own libraries. Admins can change who owns a library; libraries imported before this update belong to the whole family.
+
 ## [1.17.0]
 
 ### 🧬 Deep Scan

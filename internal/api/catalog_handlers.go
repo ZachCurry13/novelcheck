@@ -4,11 +4,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
 func (s *Server) handleListCatalogs(w http.ResponseWriter, r *http.Request) {
-	cs, err := s.Store.ListCatalogs()
+	cs, err := s.Store.ListCatalogs(auth.UserFrom(r))
 	if err != nil {
 		writeStoreErr(w, err)
 		return
@@ -52,42 +53,6 @@ func (s *Server) handleCreateCatalog(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, map[string]any{"id": id, "name": name})
 }
 
-func (s *Server) handleRenameCatalog(w http.ResponseWriter, r *http.Request) {
-	id, ok := pathID(r, "id")
-	var body struct {
-		Name string `json:"name"`
-	}
-	if !ok || !readJSON(w, r, &body, 4<<10) {
-		if !ok {
-			writeErr(w, http.StatusBadRequest, "invalid id")
-		}
-		return
-	}
-	name, valid := validCatalogName(body.Name)
-	if !valid || strings.EqualFold(name, store.CalibreCatalogName) {
-		writeErr(w, http.StatusBadRequest, "invalid catalog name")
-		return
-	}
-	if err := s.Store.RenameCatalog(id, name); err != nil {
-		writeErr(w, http.StatusConflict, "a catalog with that name already exists")
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
-}
-
-func (s *Server) handleDeleteCatalog(w http.ResponseWriter, r *http.Request) {
-	id, ok := pathID(r, "id")
-	if !ok {
-		writeErr(w, http.StatusBadRequest, "invalid id")
-		return
-	}
-	if err := s.Store.DeleteCatalog(id); err != nil {
-		writeStoreErr(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
-}
-
 // driveBook is one e-book discovered by the browser drive scanner.
 type driveBook struct {
 	Title  string `json:"title"`
@@ -107,6 +72,7 @@ func (s *Server) handleImportDrive(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		CatalogID   int64       `json:"catalog_id"`
 		CatalogName string      `json:"catalog_name"`
+		Private     bool        `json:"private"` // a new library: only its owner (and admins) see it
 		Books       []driveBook `json:"books"`
 	}
 	if !readJSON(w, r, &body, 8<<20) {
@@ -116,28 +82,35 @@ func (s *Server) handleImportDrive(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "too many books in one import")
 		return
 	}
+	// A new library belongs to whoever imports it; adding to an existing one
+	// needs its owner (or an admin).
+	u := auth.UserFrom(r)
 	catID := body.CatalogID
-	if catID > 0 {
-		c, err := s.Store.CatalogByID(catID)
-		if err != nil {
-			writeStoreErr(w, err)
-			return
-		}
-		if c.Source == "calibre" {
-			writeErr(w, http.StatusBadRequest, "cannot import drive books into the Calibre catalog")
-			return
-		}
-	} else {
+	if catID == 0 {
 		name, ok := validCatalogName(body.CatalogName)
-		if !ok || strings.EqualFold(name, store.CalibreCatalogName) {
-			writeErr(w, http.StatusBadRequest, "choose a catalog or enter a valid new catalog name")
+		if !ok || strings.EqualFold(name, store.CalibreCatalogName) || strings.EqualFold(name, store.LookedUpCatalog) {
+			writeErr(w, http.StatusBadRequest, "choose a library or enter a valid new library name")
 			return
 		}
-		var err error
-		if catID, err = s.Store.EnsureCatalog(name, "drive"); err != nil {
+		if c, err := s.Store.CatalogByName(name); err == nil {
+			catID = c.ID
+		} else if catID, err = s.Store.CreateOwnedCatalog(name, "drive", u.ID, body.Private); err != nil {
 			writeStoreErr(w, err)
 			return
 		}
+	}
+	c, err := s.Store.CatalogByID(catID)
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	if c.Source == "calibre" {
+		writeErr(w, http.StatusBadRequest, "cannot import drive books into the Calibre catalog")
+		return
+	}
+	if !c.CanEdit(u) {
+		writeErr(w, http.StatusForbidden, "that library belongs to "+c.Owner+"; choose another name")
+		return
 	}
 	imported, skipped := 0, 0
 	for _, b := range body.Books {

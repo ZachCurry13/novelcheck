@@ -122,7 +122,9 @@ func (s *Server) Router() http.Handler {
 				r.Post("/wishlist/{id}/{action}", s.handleDecideWish)
 				r.Get("/admin/users/{id}/opds", s.handleUserOPDS)
 				r.Post("/catalogs", s.handleCreateCatalog)
-				r.Patch("/catalogs/{id}", s.handleRenameCatalog)
+				r.Patch("/catalogs/{id}", s.handleUpdateCatalog)
+				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)
+				r.Delete("/catalogs/{id}/books/{book}", s.handleRemoveFromCatalog)
 				r.With(s.requireModule(store.KeyModuleImport, "Importing books")).Post("/import/drive", s.handleImportDrive)
 				r.Post("/books/{id}/analyze", s.handleAnalyzeBook)
 				r.Put("/books/{id}/verdict", s.handleSetVerdict)
@@ -153,7 +155,6 @@ func (s *Server) Router() http.Handler {
 			// Admins only: technical settings, secrets, destructive actions.
 			r.Group(func(r chi.Router) {
 				r.Use(auth.RequireAdmin)
-				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)
 				r.Get("/admin/deep-scans", s.handleDeepScans)
 				r.Get("/admin/deep-scans/next", s.handleDeepScanNext)
 				r.Post("/admin/deep-scans/next", s.handleDeepScanNext)

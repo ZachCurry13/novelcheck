@@ -6,11 +6,13 @@ import { extractMeta, BOOK_EXT } from "./bookmeta.js";
 import { MTP_HELP, parseTitleList } from "./importlist.js";
 import { parseCSV, detect, rowsToBooks, looksLikeAmazonPaste, parseAmazonPaste } from "./importfile.js";
 import { IMPORT_GUIDES } from "./importguides.js";
+import { canEditLibrary, renderLibraries } from "./libraries.js";
 
 const supportsPicker = typeof window.showDirectoryPicker === "function";
 
-export async function renderImport(view) {
-  const catalogs = ((await attempt(() => get("/api/catalogs"))) || []).filter((c) => c.source !== "calibre");
+export async function renderImport(view, state) {
+  // Libraries this person may add to: their own (and, for editors, the family's).
+  const catalogs = ((await attempt(() => get("/api/catalogs"))) || []).filter((c) => canEditLibrary(c, state.user));
   view.innerHTML = `
     <h1 class="mb-1 text-2xl font-bold">Import books</h1>
     <p class="mb-6 text-sm text-slate-400">Plug in a Kindle or e-reader and pick its <code>documents</code> folder, or,
@@ -48,12 +50,13 @@ export async function renderImport(view) {
           <label class="label" for="cat-select">Destination catalog</label>
           <select id="cat-select" class="input">
             <option value="new">+ Create new catalog…</option>
-            ${catalogs.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}
+            ${catalogs.map((c) => `<option value="${c.id}">${esc(c.name)}${c.private ? " 🔒" : ""}</option>`).join("")}
           </select>
         </div>
         <div id="new-cat-wrap">
           <label class="label" for="new-cat">New catalog name</label>
           <input id="new-cat" class="input" placeholder="e.g. Kids' Kindle">
+          <label class="toggle mt-2 text-sm"><input type="checkbox" id="new-cat-private"> 🔒 Private: only I (and the admins) see these books</label>
         </div>
       </div>
       <div class="max-h-96 overflow-y-auto rounded-lg ring-1 ring-slate-800">
@@ -172,6 +175,7 @@ export async function renderImport(view) {
     const body = { books: found };
     if (catSelect.value === "new") {
       body.catalog_name = $("#new-cat", view).value.trim();
+      body.private = $("#new-cat-private", view).checked;
       if (!body.catalog_name) return toast("Enter a name for the new catalog", true);
     } else {
       body.catalog_id = Number(catSelect.value);
@@ -184,6 +188,10 @@ export async function renderImport(view) {
       location.hash = `#/library`;
     }
   });
+  const libs = document.createElement("div");
+  libs.className = "mt-4";
+  view.append(libs);
+  renderLibraries(libs, state);
 }
 
 // Recursively collect e-book files from a FileSystemDirectoryHandle.
