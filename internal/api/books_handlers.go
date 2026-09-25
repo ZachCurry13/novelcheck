@@ -83,7 +83,8 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out := map[string]any{"book": b, "copies": copies, "downloadable": downloadable, "notes": notes,
-		"my_delete_request": s.Store.MyDeleteRequest(id, u.ID), "my_wish": s.Store.MyWish(id, u.ID), "owned": s.Store.Owned(id)}
+		"my_delete_request": s.Store.MyDeleteRequest(id, u.ID), "my_wish": s.Store.MyWish(id, u.ID), "owned": s.Store.Owned(id),
+		"my_cover_report": s.Store.MyCoverReport(id, u.ID)}
 	if u.Role == store.RoleAdmin || u.Role == store.RoleEditor {
 		out["calibre_web_url"] = s.Store.Setting(store.KeyCalibreWebURL) // "Open in Calibre-Web" links
 	}

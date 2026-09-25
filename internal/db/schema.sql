@@ -257,3 +257,16 @@ CREATE TABLE IF NOT EXISTS suggestion_sets (
     mode    TEXT NOT NULL DEFAULT '',     -- the suggest_mode setting it was made under
     data    TEXT NOT NULL DEFAULT '{}'    -- JSON: library picks with reasons, books outside the library
 );
+
+-- Covers someone flagged as wrong, for an admin to fix in Calibre.
+CREATE TABLE IF NOT EXISTS cover_reports (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    username   TEXT NOT NULL DEFAULT '',
+    note       TEXT NOT NULL DEFAULT '',
+    status     TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'fixed', 'dismissed')),
+    decided_by TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cover_reports_open ON cover_reports(book_id, user_id) WHERE status = 'open';

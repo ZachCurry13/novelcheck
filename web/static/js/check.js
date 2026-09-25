@@ -7,6 +7,7 @@ import { PEPPERS, whyChip, openPepperGuide } from "./peppers.js";
 import { loadFlags, customChips } from "./customflags.js";
 import { openBook } from "./bookdialog.js";
 import { liveBlocker, scanLive } from "./barcode.js";
+import { coverImg } from "./covers.js";
 
 export async function renderCheck(view, state) {
   view.innerHTML = `
@@ -138,7 +139,7 @@ function resultCard(b, res) {
   if (b.status === "error" || b.spice_level === null || b.spice_level === undefined) {
     const why = b.status === "error" ? `Rating failed: ${esc(b.analysis_error)}` : b.status === "processing" ? "The AI is still working on it." : "It hasn't been rated yet.";
     return `<div class="card space-y-3" data-id="${b.id}">
-      <h2 class="text-xl font-bold">${esc(b.title)}</h2><p class="text-sm text-slate-400">${esc(b.author || "")}</p>
+      <div class="flex gap-3">${coverImg(b.id, "h-28 w-20", true)}<div class="min-w-0"><h2 class="text-xl font-bold">${esc(b.title)}</h2><p class="text-sm text-slate-400">${esc(b.author || "")}</p></div></div>
       <p class="text-sm text-amber-200">${why}</p>${where}
       <div class="flex flex-wrap gap-2"><button data-act="retry" data-q="${esc(`${b.title} ${b.author || ""}`.trim())}" class="btn-primary">Try again</button>
         <button data-act="another" class="btn-ghost">Check another</button></div></div>`;
@@ -149,7 +150,7 @@ function resultCard(b, res) {
     : b.spice_level === 3 ? ["bg-amber-950/60 text-amber-200", "⚠"] : ["bg-rose-950/60 text-rose-200", "✕"];
   const verdict = [tone[0], `${tone[1]} Level ${b.spice_level}: ${p.name}`];
   return `<div class="card space-y-3" data-id="${b.id}">
-    <div><h2 class="text-xl font-bold">${esc(b.title)}</h2><p class="text-sm text-slate-400">${esc(b.author || "Unknown author")}</p></div>
+    <div class="flex gap-3">${coverImg(b.id, "h-28 w-20", true)}<div class="min-w-0"><h2 class="text-xl font-bold">${esc(b.title)}</h2><p class="text-sm text-slate-400">${esc(b.author || "Unknown author")}</p></div></div>
     <p class="rounded-lg p-3 text-lg font-semibold ${verdict[0]}">${verdict[1]}</p>
     <div class="flex flex-wrap gap-1">${classChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
     ${b.spice_reason ? `<p class="text-sm"><b>Why:</b> ${esc(b.spice_reason)}</p>` : ""}
@@ -180,7 +181,8 @@ async function loadRecent(view, state) {
   if (!data?.books.length) return;
   host.innerHTML = `<h2 class="mb-2 mt-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Recently checked</h2>
     <ul class="space-y-2">${data.books.map((b) => `<li><button data-open="${b.id}" class="card flex w-full items-center justify-between gap-3 text-left">
-      <span class="min-w-0"><span class="block truncate font-semibold">${esc(b.title)}</span><span class="block truncate text-xs text-slate-400">${esc(b.author || "")}</span></span>
+      ${coverImg(b.id, "h-12 w-8")}
+      <span class="min-w-0 flex-1"><span class="block truncate font-semibold">${esc(b.title)}</span><span class="block truncate text-xs text-slate-400">${esc(b.author || "")}</span></span>
       <span class="shrink-0">${classChip(b)}</span></button></li>`).join("")}</ul>`;
   host.onclick = (e) => {
     const id = e.target.closest("[data-open]")?.dataset.open;

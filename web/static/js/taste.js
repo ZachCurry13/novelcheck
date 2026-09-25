@@ -4,6 +4,7 @@
 import { get, post, qs } from "./api.js";
 import { esc, attempt, classChip } from "./ui.js";
 import { seriesText } from "./titlefix.js";
+import { coverImg } from "./covers.js";
 
 const MARKS = [["want", "📖 Want to read"], ["liked", "❤️ Read & liked"], ["disliked", "👎 Read, didn't like"], ["notwant", "🙅 Not for me"]];
 const LABEL = { ...Object.fromEntries(MARKS), up: "👍 Liked a suggestion", down: "👎 Hid a suggestion" };
@@ -100,12 +101,13 @@ function rateHTML(books, chosen) {
   return `<ul class="space-y-2">${books.map((b) => {
     const cur = chosen.get(b.id) || "";
     const series = seriesText(b);
-    return `<li data-book="${b.id}" class="rounded-lg bg-slate-800/60 p-3">
+    return `<li data-book="${b.id}" class="flex gap-3 rounded-lg bg-slate-800/60 p-3">
+      ${coverImg(b.id, "h-24 w-16")}<div class="min-w-0 flex-1">
       <div class="flex flex-wrap items-baseline justify-between gap-2">
         <span class="min-w-0"><b>${esc(b.title)}</b> <span class="text-xs text-slate-400">${esc(b.author || "Unknown author")}${series ? ` · ${esc(series)}` : ""}</span></span>
         ${classChip(b)}</div>
       <div class="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">${MARKS.map(([k, l]) => `<button data-mark="${k}" aria-pressed="${cur === k}"
-        class="${cur === k ? "btn-primary" : "btn-ghost border border-slate-700"} px-2 py-1 text-xs">${l}</button>`).join("")}</div>
+        class="${cur === k ? "btn-primary" : "btn-ghost border border-slate-700"} px-2 py-1 text-xs">${l}</button>`).join("")}</div></div>
     </li>`;
   }).join("")}</ul>
   <div class="flex flex-wrap gap-2"><button data-more class="btn-secondary">Show 20 more</button><button data-close class="btn-primary">Done</button></div>`;

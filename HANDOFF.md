@@ -19,8 +19,8 @@ Latest release: **v1.17.0** (2026-09-25; the V2 list: Deep Scan, barcode scanner
 ## v1.18 list (branch `feature/v1.18-suggestions`), from the user on 2026-09-25
 1. ✅ §12 Suggested Reads: `internal/suggest` free matching + daily AI picks (+ books you don't own), row under Up Next, 👍/👎 with an optional "Why not?" (story / author / series / too spicy / already read) that steers the matching. Admin: `suggest_mode` (free / AI / AI + outside) and the `module_suggestions` switch.
 2. ✅ Taste profile: an optional "rate 20 books" list (want to read / don't want / read & liked / read & didn't like; "20 more"), a varied mix from the library (series firsts, different authors and pepper levels), saved per person and editable, feeding the same signals as 👍/👎. Its own admin switch. Marking books uses no AI.
-3. ⏭ Book covers everywhere (taste picker first, then library cards, suggestions, Up Next, the book window): Calibre's `cover.jpg` next to each book's files, served read-only and shrunk + cached under /data.
-4. Library filters: author, series, genre (from Calibre tags, which the sync doesn't read yet), fiction vs nonfiction, the basic categories. Show the user the category list before building.
+3. ✅ Book covers everywhere (taste picker first, then library cards, suggestions, Up Next, the book window): Calibre's `cover.jpg` next to each book's files, served read-only and shrunk + cached under /data. Plus Open Library covers by ISBN for looked-up books, and "🖼️ Wrong cover?" reports reviewed on the Admin page.
+4. ⏭ Library filters: author, series, genre (from Calibre tags, which the sync doesn't read yet), fiction vs nonfiction, the basic categories. Show the user the category list before building.
 5. Bug reports without a GitHub account (today `diagnose.js` opens a GitHub issue form). Options to put to the user: email link, a no-login form service, or a small relay that files the GitHub issue for them.
 
 ## Waiting on the user

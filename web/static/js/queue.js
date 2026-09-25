@@ -4,6 +4,7 @@ import { $, esc, attempt, toast, classChip } from "./ui.js";
 import { on } from "./modules.js";
 import { confirmKindleSend, openKOReaderSetup } from "./delivery.js";
 import { renderSuggestions } from "./suggest.js";
+import { coverImg } from "./covers.js";
 
 export async function renderQueue(view, state) {
   view.innerHTML = `
@@ -90,6 +91,7 @@ function queueRow(i, idx) {
     <li data-item="${i.id}" class="card flex items-center gap-3 py-3">
       <span class="drag-handle" title="Drag to reorder">⠿</span>
       <span data-pos class="w-6 text-right text-slate-500">${idx + 1}</span>
+      ${coverImg(i.book_id, "h-14 w-10")}
       <div class="min-w-0 flex-1">
         <p class="truncate font-semibold">${esc(i.title)}</p>
         <p class="truncate text-sm text-slate-400">${esc(i.author)}</p>
@@ -108,12 +110,13 @@ const deepBanner = (i) => (i.deep_change
 
 function readingCard(i) {
   return `
-    <div data-item="${i.id}" class="card flex flex-col gap-2 ring-indigo-700">
+    <div data-item="${i.id}" class="card flex gap-3 ring-indigo-700">
+      ${coverImg(i.book_id, "h-24 w-16")}<div class="flex min-w-0 flex-1 flex-col gap-2">
       <p class="font-semibold">${esc(i.title)}</p>
       <p class="text-sm text-slate-400">${esc(i.author)}</p>
       ${deepBanner(i)}
       ${i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
       <div class="flex gap-2"><button data-act="finish" class="btn-secondary">Finished</button>
-        <button data-act="remove" class="btn-ghost">Remove</button></div>
+        <button data-act="remove" class="btn-ghost">Remove</button></div></div>
     </div>`;
 }

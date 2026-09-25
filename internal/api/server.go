@@ -11,6 +11,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/calibre"
 	"github.com/zachcurry13/novelcheck/internal/config"
+	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/ollama"
 	"github.com/zachcurry13/novelcheck/internal/push"
@@ -33,6 +34,7 @@ type Server struct {
 	SysInfo *sysinfo.Sampler
 	Push    *push.Service    // phone notifications; nil turns them off
 	Deep    *deepread.Runner // Deep Scans (full-text reading)
+	Covers  covers.Cache     // shrunk book covers under /data/covers
 	Suggest *suggest.Service // Suggested Reads under Up Next
 	Web     fs.FS            // embedded static assets
 	logins  *loginLimiter
@@ -71,6 +73,8 @@ func (s *Server) Router() http.Handler {
 			r.Get("/books", s.handleListBooks)
 			r.Get("/books/{id}", s.handleGetBook)
 			r.Get("/books/{id}/download", s.handleDownload)
+			r.Get("/books/{id}/cover", s.handleCover)
+			r.Post("/books/{id}/cover-report", s.handleReportCover)
 			r.Post("/books/{id}/delete-request", s.handleRequestDelete)
 			r.Delete("/books/{id}/delete-request", s.handleCancelDelete)
 			r.Get("/catalogs", s.handleListCatalogs)
@@ -164,6 +168,8 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/calibre/duplicates/remove", s.handleRemoveDuplicates)
 				r.Get("/admin/title-fixes", s.handleTitleFixes)
 				r.Post("/admin/title-fixes", s.handleFixTitles)
+				r.Get("/admin/cover-reports", s.handleCoverReports)
+				r.Post("/admin/cover-reports/{id}/{action}", s.handleCloseCoverReport)
 				r.Post("/books/{id}/calibre-title", s.handleSaveCalibreTitle)
 				r.Get("/admin/delete-requests", s.handleDeleteRequests)
 				r.Post("/admin/delete-requests/decide", s.handleDecideDeletes)

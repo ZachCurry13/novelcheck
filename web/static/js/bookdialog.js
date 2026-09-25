@@ -10,6 +10,7 @@ import { on } from "./modules.js";
 import { customChips } from "./customflags.js";
 import { renderDeepSection, deepChip } from "./deepscan.js";
 import { seriesLine, openTitleEdit } from "./titlefix.js";
+import { coverImg, reportCover } from "./covers.js";
 
 export async function openBook(id, state, onChange) {
   const dlg = $("#book-dialog");
@@ -48,7 +49,12 @@ export async function openBook(id, state, onChange) {
   dlg.innerHTML = `
     <div class="max-h-[85vh] overflow-y-auto p-6 space-y-4">
       <div class="flex items-start justify-between gap-4">
-        <div>
+        <div class="flex shrink-0 flex-col items-center gap-1">
+          ${coverImg(b.id, "h-36 w-24 sm:h-44 sm:w-28", true)}
+          ${data.my_cover_report ? `<span class="text-xs text-slate-500">🖼️ Cover reported</span>`
+            : `<button type="button" data-act="wrong-cover" class="text-xs text-slate-500 underline">🖼️ Wrong cover?</button>`}
+        </div>
+        <div class="min-w-0 flex-1">
           <h2 class="text-xl font-bold">${esc(b.title)}</h2>
           ${seriesLine(b)}
           <p class="text-slate-400">${esc(b.author || "Unknown author")}${b.isbn ? " · ISBN " + esc(b.isbn) : ""}</p>
@@ -101,6 +107,9 @@ export async function openBook(id, state, onChange) {
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (act === "calibre-title") {
       openTitleEdit(b, calibreIds, cw, refresh);
+    } else if (act === "wrong-cover") {
+      if (await reportCover(b)) e.target.closest("[data-act]").replaceWith(Object.assign(document.createElement("span"),
+        { className: "text-xs text-slate-500", textContent: "🖼️ Cover reported" }));
     } else if (act === "edit-verdict" || act === "cancel-verdict") {
       $("#verdict-form", dlg).classList.toggle("hidden", act === "cancel-verdict");
     } else if (act === "approve") {

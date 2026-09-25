@@ -15,6 +15,10 @@ becomes the release notes for that version and is shown in the app under
 - **Tell NovelCheck what you like (optional)**: open **🎯 Your taste** from Suggested Reads or your Profile to see 20 books from the library. Mark the ones you know: **📖 Want to read**, **❤️ Read & liked**, **👎 Read, didn't like** or **🙅 Not for me**, and skip the rest. **Show 20 more** brings a new batch any time, and **Your answers** lets you change or remove any answer (your 👍/👎 on suggestions are listed there too).
 - Answers go straight into your suggestions: books you've read and liked count as reading history, so a series moves on to the next book. The list mixes different authors and pepper levels, starting with the first books of a series. Marking books uses no AI. Admins can switch it off under **Features**.
 
+### 🖼️ Book covers
+- **Covers everywhere**: the Library, Up Next, Suggested Reads, the taste list, the wishlist, Check a book and each book's window now show the book's cover. It comes straight from your Calibre library, where Calibre keeps one next to each book's files. NovelCheck makes a small copy once and never changes the library. Books you only looked up get their cover from Open Library by ISBN, and books with no cover get a tidy stand-in with the title.
+- **🖼️ Wrong cover?**: anyone can report a wrong cover from a book's window, with an optional note. Admins see **🖼️ … covers were reported as wrong** on the Admin page, with the cover, the note and an **Open in Calibre-Web** link. Change the cover in Calibre and press **Fixed**; NovelCheck shows the new cover by itself.
+
 ## [1.17.0]
 
 ### 🧬 Deep Scan

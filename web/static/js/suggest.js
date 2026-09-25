@@ -5,6 +5,7 @@ import { get, post, del } from "./api.js";
 import { esc, attempt, toast, classChip } from "./ui.js";
 import { seriesText } from "./titlefix.js";
 import { openBook } from "./bookdialog.js";
+import { coverImg, noCover } from "./covers.js";
 import { openTaste } from "./taste.js";
 import { on } from "./modules.js";
 
@@ -105,8 +106,9 @@ const votes = (liked, addButton) => `<div class="mt-auto flex items-center gap-1
 function libraryCard({ book: b, reason, by_ai: byAI }, liked) {
   const series = seriesText(b);
   return `<li data-sg="b${b.id}" class="card flex w-64 shrink-0 snap-start flex-col gap-1.5">
+    <div class="flex gap-2"><button data-open class="shrink-0" aria-label="Open ${esc(b.title)}">${coverImg(b.id, "h-20 w-14")}</button><div class="min-w-0">
     <button data-open class="text-left font-semibold leading-tight line-clamp-2 hover:underline">${esc(b.title)}</button>
-    <p class="truncate text-sm text-slate-400">${esc(b.author || "Unknown author")}${series ? ` · <span class="text-sky-300">${esc(series)}</span>` : ""}</p>
+    <p class="line-clamp-2 text-sm text-slate-400">${esc(b.author || "Unknown author")}${series ? ` · <span class="text-sky-300">${esc(series)}</span>` : ""}</p></div></div>
     <div class="flex flex-wrap gap-1">${classChip(b)}</div>
     <p class="text-xs text-slate-300">${byAI ? "✨ " : ""}${esc(reason)}</p>
     ${votes(liked, `<button data-add class="btn-primary py-1 text-sm">＋ Up Next</button>`)}
@@ -115,8 +117,9 @@ function libraryCard({ book: b, reason, by_ai: byAI }, liked) {
 
 function outsideCard(o, liked) {
   return `<li data-sg="${o.key}" class="card flex w-64 shrink-0 snap-start flex-col gap-1.5 border border-dashed border-slate-700">
+    <div class="flex gap-2">${noCover()}<div class="min-w-0">
     <p class="font-semibold leading-tight line-clamp-2">${esc(o.title)}</p>
-    <p class="truncate text-sm text-slate-400">${esc(o.author || "Unknown author")}</p>
+    <p class="line-clamp-2 text-sm text-slate-400">${esc(o.author || "Unknown author")}</p></div></div>
     <p><span class="chip-none" title="Not in your library, so NovelCheck hasn't rated it yet">Not in your library</span></p>
     <p class="text-xs text-slate-300">✨ ${esc(o.reason)}</p>
     ${votes(liked, `<button data-wish class="btn-secondary py-1 text-sm">⭐ Wishlist</button>`)}

@@ -8,6 +8,7 @@ import { on } from "./modules.js";
 import { loadFlags, customChips, hideBoxes } from "./customflags.js";
 import { deepChip } from "./deepscan.js";
 import { seriesText } from "./titlefix.js";
+import { coverImg } from "./covers.js";
 
 const PAGE = 60;
 
@@ -161,8 +162,9 @@ function card(b, queueOn) {
   const cats = b.catalogs ? b.catalogs.split(", ").map((c) => `<span class="chip-cat">${esc(c)}</span>`).join(" ") : "";
   return `
     <article data-book="${b.id}" class="card cursor-pointer transition hover:ring-indigo-600 flex flex-col gap-2">
-      <div class="flex items-start justify-between gap-2">
-        <div class="min-w-0">
+      <div class="flex items-start justify-between gap-3">
+        ${coverImg(b.id, "h-24 w-16")}
+        <div class="min-w-0 flex-1">
           <h3 class="font-semibold leading-tight line-clamp-2">${esc(b.title)}</h3>
           <p class="text-sm text-slate-400 truncate">${esc(b.author || "Unknown author")}${seriesText(b) ? ` · <span class="text-sky-300">${esc(seriesText(b))}</span>` : ""}</p>
         </div>
