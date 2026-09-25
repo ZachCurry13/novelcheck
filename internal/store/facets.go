@@ -106,3 +106,39 @@ func byCount(m map[string]int, limit int) []string {
 	}
 	return out
 }
+
+// GenreBook is a book the AI is asked to put in categories.
+type GenreBook struct {
+	ID          int64  `db:"id"`
+	Title       string `db:"title"`
+	Author      string `db:"author"`
+	Description string `db:"description"`
+}
+
+// ownedNoGenre: library books with no categories from Calibre's tags or the AI yet.
+const ownedNoGenre = `b.genre_source = '' AND EXISTS (SELECT 1 FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
+	WHERE cb.book_id = b.id AND c.name != '` + LookedUpCatalog + `')`
+
+// MissingGenres returns up to n library books without categories.
+func (s *Store) MissingGenres(n int) ([]GenreBook, error) {
+	out := []GenreBook{}
+	err := s.DB.Select(&out, `SELECT b.id, b.title, b.author,
+		CASE WHEN b.description != '' THEN b.description ELSE b.blurb END AS description
+		FROM books b WHERE `+ownedNoGenre+` ORDER BY b.id LIMIT ?`, n)
+	return out, err
+}
+
+// CountMissingGenres is how many library books have no categories.
+func (s *Store) CountMissingGenres() int {
+	var n int
+	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM books b WHERE `+ownedNoGenre)
+	return n
+}
+
+// SetAIGenres saves the AI's categories for a book (never over ones from
+// Calibre's tags). Empty keys still mark the book as done.
+func (s *Store) SetAIGenres(id int64, keys []string, kind string) error {
+	_, err := s.DB.Exec(`UPDATE books SET genres = ?, kind = CASE WHEN ? != '' THEN ? ELSE kind END, genre_source = 'ai'
+		WHERE id = ? AND genre_source != 'calibre'`, genres.Join(keys), kind, kind, id)
+	return err
+}

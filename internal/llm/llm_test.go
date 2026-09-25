@@ -123,3 +123,15 @@ func TestSpiceReason(t *testing.T) {
 		}
 	}
 }
+
+func TestParseGenres(t *testing.T) {
+	out := "Sure!\n```json\n{\"books\": [{\"id\": 1, \"genres\": [\"Fantasy\", \"made-up\", \"ya\", \"romance\", \"horror\"], \"fiction\": true},\n" +
+		"{\"id\": 2, \"genres\": [\"history\"], \"fiction\": false}, {\"id\": 99, \"genres\": [\"fantasy\"]}]}\n```"
+	res, err := llm.ParseGenres(out, map[int64]bool{1: true, 2: true})
+	if err != nil || len(res) != 2 || strings.Join(res[1].Keys, ",") != "fantasy,ya,romance" || res[1].Kind != "fiction" || res[2].Kind != "nonfiction" {
+		t.Fatalf("%+v %v", res, err)
+	}
+	if !strings.Contains(llm.GenreSystem(), "truecrime: True Crime") {
+		t.Fatal("the list is in the prompt")
+	}
+}

@@ -66,29 +66,12 @@ func (s *Service) ask(ctx context.Context, u *store.User, mode string, picks []P
 	for _, p := range picks {
 		ids[p.Book.ID] = true
 	}
-	var errs []string
-	for _, ai := range s.Store.AIConfigs() {
-		client := llm.New(ai.Provider, ai.BaseURL, ai.APIKey, ai.JSONMode)
-		for _, model := range ai.Models {
-			cctx, cancel := context.WithTimeout(ctx, llm.Timeout(ai.BaseURL, s.Store.SettingInt(store.KeyLLMTimeoutSeconds)))
-			out, usage, err := client.Complete(cctx, model, system, user)
-			cancel()
-			if usage.Total() > 0 {
-				_ = s.Store.RecordUsageCost(0, model, usage.PromptTokens, usage.CompletionTokens, ai)
-			}
-			if err == nil {
-				var res llm.SuggestResult
-				if res, err = llm.ParseSuggest(out, ids); err == nil {
-					return res, nil
-				}
-			}
-			if ctx.Err() != nil {
-				return llm.SuggestResult{}, ctx.Err()
-			}
-			errs = append(errs, fmt.Sprintf("%s AI (%s): %v", ai.Name, model, err))
-		}
-	}
-	return llm.SuggestResult{}, fmt.Errorf("%s", strings.Join(errs, "; "))
+	var res llm.SuggestResult
+	_, err := llm.Ask(ctx, s.Store, s.Store.AIConfigs(), 0, system, user, func(out string) (err error) {
+		res, err = llm.ParseSuggest(out, ids)
+		return err
+	})
+	return res, err
 }
 
 func (s *Service) hasAI() bool {

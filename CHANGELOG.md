@@ -21,7 +21,7 @@ becomes the release notes for that version and is shown in the app under
 
 ### 🔎 Browse the library
 - **New filters**: **genre** (Fantasy, Romance, Mystery & Thriller, Science Fiction, Horror, Historical Fiction, Young Adult, Children's, Biography & Memoir, History, Self-help & more, each with its number of books), **Fiction / Nonfiction**, **author** and **series** (both suggest names as you type). Search now also looks at series names and Calibre tags.
-- Genres come from the **tags in Calibre**, matched on whole words (so "Science Fiction" isn't "Science"), and a "Fiction" or "Nonfiction" tag decides which it is.
+- Genres come from the **tags in Calibre**, matched on whole words (so "Science Fiction" isn't "Science"), and a "Fiction" or "Nonfiction" tag decides which it is. Books with no tags can get theirs from the AI: the Admin page shows how many are missing and a **Fill in with AI** button with the estimated cost. It sorts about 25 books per AI call, stays within the hourly token cap and can be stopped. Tags you add in Calibre always win.
 - In a book's window, the **author**, **series** and **genre** are links that open the library filtered to them.
 - **Suggested Reads: From** lets each person get suggestions from every library or just one, for example a Kindle they imported. It's remembered on their device.
 

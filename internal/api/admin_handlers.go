@@ -51,6 +51,7 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 		"changed_books":     s.Store.ChangedSinceRated(),
 		"title_fixes":       s.Store.CountTitleFixes(),
 		"cover_reports":     s.Store.CountCoverReports(),
+		"genres":            s.Genres.Status(),
 		"non_english":       s.nonEnglishCount(),
 		"pending_deletes":   s.Store.PendingDeleteCount(),
 		"pending_deep":      s.Store.PendingDeepRequests(),

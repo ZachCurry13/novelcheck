@@ -20,6 +20,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
+	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/suggest"
@@ -103,6 +104,7 @@ func main() {
 		Deep:    deep,
 		Suggest: suggest.New(st),
 		Covers:  covers.Cache{Dir: filepath.Join(cfg.DataDir, "covers")},
+		Genres:  &genrefill.Filler{Store: st},
 		Web:     web.FS(),
 	}
 	srv.Pulls.OnError = func(model string, err error) {

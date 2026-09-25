@@ -44,6 +44,7 @@ export async function renderAdmin(view, state) {
         ${adminOnly(`<button data-act="wipe" class="btn-ghost">Wipe pending queue</button>`)}
         <p id="worker" class="basis-full text-sm text-slate-400"></p>
         <div id="rerate" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
+        <div id="genres-banner" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
       </div>
       ${adminOnly(`<div id="custom-flags"></div><div id="settings-ai"></div>`)}
     </section>
@@ -79,7 +80,10 @@ export async function renderAdmin(view, state) {
   view.addEventListener("click", async (e) => {
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (!act) return;
-    if (act === "cover-reports") {
+    if (act === "genres-fill" || act === "genres-stop") {
+      if (act === "genres-fill" && !confirm("Ask the AI for the genres of the books Calibre has no tags for? It runs in the background, within your hourly token cap, and you can stop it any time.")) return;
+      await attempt(() => post(`/api/admin/genres/${act === "genres-fill" ? "fill" : "stop"}`), act === "genres-fill" ? "Filling in genres…" : "Stopping after the current batch");
+    } else if (act === "cover-reports") {
       import("./covers.js").then((m) => m.openCoverReports());
     } else if (act === "tidy-titles") {
       import("./titlefix.js").then((m) => m.openTitleFixes());

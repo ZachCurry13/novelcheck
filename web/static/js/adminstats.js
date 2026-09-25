@@ -45,6 +45,12 @@ export function renderStats(view, s) {
       <span class="block text-xs text-slate-400">They stay in the library with their old rating until the new one arrives. Hand-rated books are left alone.${est ? ` Estimated cost ≈ ${fmtMoney(est)}.` : ""}</span>`;
   }
   banner($("#rerate", view), rerate !== "", rerate);
+  const g = s.genres || {};
+  banner($("#genres-banner", view), admin && (g.missing || g.running), g.running
+    ? `🏷️ Filling in genres with AI… <b>${fmtNum(g.done)}</b> of ${fmtNum(g.total)} books. <button data-act="genres-stop" class="ml-2 underline">Stop</button>`
+    : `🏷️ <b>${fmtNum(g.missing)}</b> library book${g.missing === 1 ? " has" : "s have"} no genre (no tags in Calibre).
+      <button data-act="genres-fill" class="btn-secondary ml-2 py-1">Fill in with AI${g.est_cost ? ` (≈ ${fmtMoney(g.est_cost)})` : ""}</button>
+      <span class="block text-xs text-slate-400">About 25 books per AI call, within your hourly token cap. Tags you add in Calibre always win.${g.error ? ` <span class="text-rose-400">Last run stopped: ${esc(g.error)}</span>` : ""}</span>`);
 
   const w = s.worker;
   const sync = s.calibre_last_sync;

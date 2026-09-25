@@ -13,6 +13,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
+	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/ollama"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -32,11 +33,12 @@ type Server struct {
 	Tunnel  *tunnel.Manager
 	Pulls   ollama.Puller // Ollama model downloads
 	SysInfo *sysinfo.Sampler
-	Push    *push.Service    // phone notifications; nil turns them off
-	Deep    *deepread.Runner // Deep Scans (full-text reading)
-	Covers  covers.Cache     // shrunk book covers under /data/covers
-	Suggest *suggest.Service // Suggested Reads under Up Next
-	Web     fs.FS            // embedded static assets
+	Push    *push.Service     // phone notifications; nil turns them off
+	Deep    *deepread.Runner  // Deep Scans (full-text reading)
+	Covers  covers.Cache      // shrunk book covers under /data/covers
+	Genres  *genrefill.Filler // AI genres for books without Calibre tags
+	Suggest *suggest.Service  // Suggested Reads under Up Next
+	Web     fs.FS             // embedded static assets
 	logins  *loginLimiter
 }
 
@@ -169,6 +171,9 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/calibre/duplicates/remove", s.handleRemoveDuplicates)
 				r.Get("/admin/title-fixes", s.handleTitleFixes)
 				r.Post("/admin/title-fixes", s.handleFixTitles)
+				r.Get("/admin/genres", s.handleGenreStatus)
+				r.Post("/admin/genres/fill", s.handleGenreFill)
+				r.Post("/admin/genres/stop", s.handleGenreStop)
 				r.Get("/admin/cover-reports", s.handleCoverReports)
 				r.Post("/admin/cover-reports/{id}/{action}", s.handleCloseCoverReport)
 				r.Post("/books/{id}/calibre-title", s.handleSaveCalibreTitle)

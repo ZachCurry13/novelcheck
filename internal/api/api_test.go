@@ -17,6 +17,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
+	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/suggest"
@@ -92,6 +93,7 @@ func setupWith(t *testing.T, adjust func(*api.Server)) (*httptest.Server, *store
 	s.Deep = deepread.New(st, s.Cfg.CalibreDir)
 	s.Suggest = suggest.New(st)
 	s.Covers = covers.Cache{Dir: t.TempDir()}
+	s.Genres = &genrefill.Filler{Store: st}
 	if adjust != nil {
 		adjust(s)
 	}
