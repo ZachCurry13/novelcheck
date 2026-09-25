@@ -46,6 +46,10 @@ func (s *Server) Router() http.Handler {
 
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })
 
+	// KOReader's OPDS catalog: the private token in the address stands in for signing in.
+	r.Get("/opds/{token}", s.handleOPDSFeed)
+	r.Get("/opds/{token}/book/{id}/{name}", s.handleOPDSBook)
+
 	r.Route("/api", func(r chi.Router) {
 		r.Use(noStore, cors(s.Cfg.CORSOrigins), csrfGuard)
 		r.Post("/auth/login", s.handleLogin)
@@ -59,6 +63,8 @@ func (s *Server) Router() http.Handler {
 			r.Put("/me/password", s.handleChangePassword)
 			r.Put("/me/delivery", s.handleUpdateDelivery)
 			r.Put("/me/guide-seen", s.handleGuideSeen)
+			r.Get("/me/opds", s.handleMyOPDS)
+			r.Post("/me/opds/reset", s.handleResetMyOPDS)
 
 			r.Get("/books", s.handleListBooks)
 			r.Get("/books/{id}", s.handleGetBook)
@@ -95,6 +101,7 @@ func (s *Server) Router() http.Handler {
 				r.Use(auth.RequireManager)
 				r.Post("/check", s.handleCheck)
 				r.Post("/wishlist/{id}/{action}", s.handleDecideWish)
+				r.Get("/admin/users/{id}/opds", s.handleUserOPDS)
 				r.Post("/catalogs", s.handleCreateCatalog)
 				r.Patch("/catalogs/{id}", s.handleRenameCatalog)
 				r.With(s.requireModule(store.KeyModuleImport, "Importing books")).Post("/import/drive", s.handleImportDrive)

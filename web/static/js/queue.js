@@ -1,6 +1,8 @@
 // Netflix-style "Up Next" reading queue with SortableJS drag-and-drop.
 import { get, post, put, del } from "./api.js";
 import { $, esc, attempt, toast, classChip } from "./ui.js";
+import { on } from "./modules.js";
+import { confirmKindleSend, openKOReaderSetup } from "./delivery.js";
 
 export async function renderQueue(view, state) {
   view.innerHTML = `
@@ -18,8 +20,12 @@ export async function renderQueue(view, state) {
     </section>`;
   $("#delivery-mode", view).textContent = {
     email: `Send-to-Kindle (${state.user.kindle_email})`,
-    koreader: "KOReader wireless sync",
+    koreader: "KOReader catalog",
   }[state.user.delivery_method] || "None";
+  if (state.user.delivery_method === "koreader" && on(state.user, "koreader")) {
+    $("#delivery-mode", view).insertAdjacentHTML("afterend", ` · <button id="ko-setup" class="underline">KOReader setup</button>`);
+    $("#ko-setup", view).addEventListener("click", () => openKOReaderSetup());
+  }
 
   const reading = $("#reading", view);
   const queued = $("#queued", view);
@@ -48,6 +54,12 @@ export async function renderQueue(view, state) {
     const act = btn.dataset.act;
     btn.disabled = true;
     if (act === "start") {
+      // Send-to-Kindle: show who the email comes from (Amazon's approved list) first.
+      const title = btn.closest("[data-item]").querySelector(".font-semibold")?.textContent || "this book";
+      if (state.user.delivery_method === "email" && on(state.user, "send_to_kindle") && !(await confirmKindleSend(state.user, title))) {
+        btn.disabled = false;
+        return;
+      }
       const r = await attempt(() => post(`/api/queue/${id}/start`));
       if (r) toast(r.delivery_note);
     } else if (act === "finish") {

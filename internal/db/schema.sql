@@ -193,6 +193,14 @@ CREATE TABLE IF NOT EXISTS wishlist (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_wishlist_open ON wishlist(book_id, user_id) WHERE status IN ('wanted', 'approved');
 
+-- Private KOReader (OPDS) feed addresses: /opds/<token> lists the person's
+-- Up Next with download links. KOReader can't sign in, so the token is the key.
+CREATE TABLE IF NOT EXISTS opds_tokens (
+    user_id    INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    token      TEXT NOT NULL UNIQUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Phones and browsers that turned on push notifications. scope: "all"
 -- (problems and everyday events) or "problems"; kids only get their own.
 CREATE TABLE IF NOT EXISTS push_subscriptions (

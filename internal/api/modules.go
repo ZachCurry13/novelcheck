@@ -10,10 +10,13 @@ import (
 // hide what the admin turned off.
 type meJSON struct {
 	*store.User
-	Modules map[string]bool `json:"modules"`
+	Modules      map[string]bool `json:"modules"`
+	DeliveryFrom string          `json:"delivery_from"` // the Send-to-Kindle sender, for Amazon's approved list
 }
 
-func (s *Server) me(u *store.User) meJSON { return meJSON{User: u, Modules: s.Store.Modules()} }
+func (s *Server) me(u *store.User) meJSON {
+	return meJSON{User: u, Modules: s.Store.Modules(), DeliveryFrom: s.Store.Setting(store.KeySMTPFrom)}
+}
 
 // requireModule refuses API calls for a feature the admin turned off.
 func (s *Server) requireModule(key, what string) func(http.Handler) http.Handler {

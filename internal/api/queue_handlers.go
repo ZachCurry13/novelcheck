@@ -110,7 +110,7 @@ func (s *Server) deliver(u *store.User, bookID int64) (string, error) {
 		if !s.Store.SettingBool(store.KeyModuleKOReader) {
 			return "Marked as reading (KOReader sync is turned off)", nil
 		}
-		return "Flagged for KOReader wireless sync", nil
+		return "Ready in your KOReader catalog (Up Next)", nil
 	case "email":
 		if !s.Store.SettingBool(store.KeyModuleKindle) {
 			return "Marked as reading (Send-to-Kindle is turned off)", nil

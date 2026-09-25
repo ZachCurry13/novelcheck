@@ -6,6 +6,7 @@ import { refreshUser } from "./app.js";
 import { openGuide } from "./guide.js";
 import { on, deliveryOptions } from "./modules.js";
 import { renderPushCard } from "./push.js";
+import { amazonStepsHTML, openKOReaderSetup } from "./delivery.js";
 
 export async function renderProfile(view, state) {
   const u = state.user;
@@ -18,8 +19,10 @@ export async function renderProfile(view, state) {
         <select name="delivery_method" class="input">${deliveryOptions(u, u.delivery_method)}</select>
         <div><label class="label" for="kindle-email">Send-to-Kindle address</label>
           <input id="kindle-email" name="kindle_email" class="input" placeholder="name@kindle.com"></div>
-        <p class="text-xs text-slate-500">Add the admin's sender address to your Amazon
-          "Approved Personal Document E-mail List" first.</p>
+        <details class="text-xs text-slate-400${on(u, "send_to_kindle") ? "" : " module-off"}"><summary class="cursor-pointer">Books are emailed from
+          <b>${esc(u.delivery_from || "the admin's sender address")}</b>. How to approve it on Amazon</summary>
+          <div class="mt-2">${amazonStepsHTML(u.delivery_from)}</div></details>
+        <button type="button" id="ko-setup" class="btn-ghost w-full text-sm${on(u, "koreader") ? "" : " module-off"}">📖 KOReader setup: catalog address and QR code</button>
         <button class="btn-primary">Save delivery settings</button>
       </form>
       <form id="password" class="card space-y-3">
@@ -57,6 +60,7 @@ export async function renderProfile(view, state) {
 
   $("#replay-guide", view).addEventListener("click", () => openGuide(state));
   renderPushCard($("#push-card", view), u);
+  $("#ko-setup", view).addEventListener("click", () => openKOReaderSetup());
 
   $("#password", view).addEventListener("submit", async (e) => {
     e.preventDefault();

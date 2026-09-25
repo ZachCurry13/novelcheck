@@ -40,6 +40,13 @@ const MANAGER = [
 const ADMIN = [
   ["⚙️ Admin settings",
     "As an admin you also have the technical settings: the AI key and model, spending limits, the email account used for Send-to-Kindle, and which Calibre library folder to use. Editors can't see or change these."],
+  ["📬 Start Reading delivery (optional)",
+    `<p class="mb-2">When someone presses <b>▶ Start Reading</b> in Up Next, NovelCheck can put the book on their e-reader:</p>
+    <ul class="list-disc space-y-1 pl-5">
+      <li><b>Kindle</b>: fill in <b>Admin → SMTP / Send-to-Kindle</b> (for Gmail, an App Password) and press <b>Send test email</b>. Each reader adds that sender to their Amazon approved list; <b>Profile</b> shows how.</li>
+      <li><b>KOReader</b>: nothing to set up here. Each reader opens <b>Profile → KOReader setup</b> for their private catalog address and QR code (parents can do it for kids from their account card).</li>
+    </ul>
+    <p class="mt-2">Don't use either? Switch them off under <b>Admin → Features</b>.</p>`],
 ];
 
 const DONE = [["✅ You're all set", "You can reopen this guide any time from the <b>Help</b> link at the top or bottom of the page."]];

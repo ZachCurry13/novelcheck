@@ -4,6 +4,7 @@ import { PEPPERS } from "./peppers.js";
 import { get, post, put, del } from "./api.js";
 import { $, $$, esc, attempt, AGE_GROUPS } from "./ui.js";
 import { on, deliveryOptions } from "./modules.js";
+import { openKOReaderSetup } from "./delivery.js";
 
 export const RULES = [
   ["hide_open_door", "Hide Open Door"],
@@ -87,6 +88,8 @@ export async function renderUsers(host, viewer) {
       if (ms) body.max_spice = Number(ms.value);
       await attempt(() => put(`/api/admin/users/${id}`, body),
         act === "strict" ? "Strict family preset saved: up to 2 peppers, nothing explicit or unrated" : "User saved");
+    } else if (act === "koreader") {
+      openKOReaderSetup(id);
     } else if (act === "password") {
       const pw = prompt("New password (8+ characters):");
       if (pw) await attempt(() => put(`/api/admin/users/${id}/password`, { password: pw }), "Password reset");
@@ -121,6 +124,7 @@ function userCard(u, isAdmin, viewer) {
       <div class="flex flex-wrap gap-2">
         <button data-uact="save" class="btn-primary">Save</button>
         <button data-uact="password" class="btn-secondary">Reset password</button>
+        ${(isAdmin || u.role === "restricted") && on(viewer, "koreader") ? `<button data-uact="koreader" class="btn-ghost" title="Set up this reader's KOReader">📖 KOReader</button>` : ""}
         <button data-uact="delete" class="btn-danger">Delete</button>
       </div>
     </div>`;

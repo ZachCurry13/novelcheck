@@ -20,6 +20,11 @@ becomes the release notes for that version and is shown in the app under
 - **⭐ Wishlist** (new tab): everyone can wish for books, with a note. Parents see the whole family's wishes, **Approve & Track** the ones they'll buy, decline others, or mark them as got; a wish is marked as got by itself once the book shows up in your library.
 - **Up Next** shows **📦 Pending acquisition** for books you don't have yet (instead of Start Reading).
 
+### 📬 Delivery
+- **KOReader catalog**: every reader now has a private catalog address for KOReader (**Profile → KOReader setup**, with a QR code and step-by-step instructions). Add it in KOReader under 🔍 → **OPDS catalog** and the Up Next books appear there, ready to download. Parents can open it for a kid's device from the kid's account card, and a kid's catalog follows the kid's content rules. **New address** retires the old one.
+- **Send-to-Kindle check**: pressing **▶ Start Reading** with Send-to-Kindle first shows where the book goes and which address it comes from, with the steps to add that address to Amazon's approved list. **Profile** shows the same steps.
+- The first-run guide for admins has a new optional **Start Reading delivery** step.
+
 ### Fixed
 - **No more error when you reopen the app**: when a phone wakes NovelCheck before its connection is back, the app now waits for the network and quietly tries again (up to 3 times) instead of showing an error.
 - **Steadier server**: if something goes wrong while rating a book, syncing Calibre or sending a notification, NovelCheck now records the error and carries on instead of stopping (which made the app restart).

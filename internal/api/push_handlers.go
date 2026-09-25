@@ -142,7 +142,7 @@ func (s *Server) pushReading(u *store.User, title, note string) {
 	case "email":
 		body = "“" + title + "” was sent to your Kindle. It usually shows up within a few minutes."
 	case "koreader":
-		body = "“" + title + "” is ready for KOReader to sync."
+		body = "“" + title + "” is ready in your KOReader catalog."
 	default:
 		return
 	}

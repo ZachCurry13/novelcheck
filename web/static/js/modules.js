@@ -14,7 +14,7 @@ export function deliveryOptions(user, selected) {
   return [
     ["none", "No delivery (just track progress)"],
     ["email", "Email EPUB via Send-to-Kindle", "send_to_kindle"],
-    ["koreader", "Flag for KOReader wireless sync", "koreader"],
+    ["koreader", "KOReader catalog (OPDS download)", "koreader"],
   ].filter(([v, , mod]) => !mod || on(user, mod) || v === selected)
     .map(([v, label]) => `<option value="${v}" ${v === selected ? "selected" : ""}>${label}</option>`).join("");
 }
