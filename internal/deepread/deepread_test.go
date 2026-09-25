@@ -14,6 +14,7 @@ import (
 
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/epub"
+	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -45,16 +46,22 @@ func TestSplitKeepsChaptersAndCutsLongOnes(t *testing.T) {
 }
 
 // fakeAI answers each part by what's in it, and the final wrap-up.
-func fakeAI(t *testing.T) *httptest.Server {
+// fakeAI answers like a small model; confirms says whether the second look
+// agrees that the "spicy" chapter is explicit.
+func fakeAI(t *testing.T, confirms bool) *httptest.Server {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, _ := io.ReadAll(r.Body)
 		body := string(raw)
-		answer := `{"level": 1, "note": "A sweet first meeting.", "lgbtq_content": false}`
+		answer := `{"romance": "a sweet first meeting", "level": 1, "note": "A sweet first meeting.", "lgbtq_content": false}`
 		switch {
 		case strings.Contains(body, "spice_reason") && strings.Contains(body, "Highest pepper level"):
 			answer = `{"spice_reason": "Explicit scene in Chapter 2", "summary_verdict": "Mostly sweet, with one explicit chapter."}`
+		case strings.Contains(body, "sex_on_page") && strings.Contains(body, "spicy") && confirms:
+			answer = `{"sex_on_page": true, "foreplay_on_page": true, "kissing": true, "romance": true, "evidence": "a couple has sex"}`
+		case strings.Contains(body, "sex_on_page"):
+			answer = `{"sex_on_page": false, "foreplay_on_page": false, "kissing": false, "romance": false, "evidence": ""}`
 		case strings.Contains(body, "spicy"):
-			answer = `{"level": 4, "note": "An explicit scene.", "nudity": true}`
+			answer = `{"romance": "a couple has sex, described in detail", "level": 4, "note": "An explicit scene.", "nudity": true}`
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"choices": []any{map[string]any{"message": map[string]string{"role": "assistant", "content": answer}}},
@@ -93,7 +100,7 @@ func TestScanRaisesRatingAndLogsIt(t *testing.T) {
 	}
 	defer d.Close()
 	st := store.New(d)
-	ai := fakeAI(t)
+	ai := fakeAI(t, true)
 	_ = st.SetSetting(store.KeyLLMBaseURL, ai.URL)
 	_ = st.SetSetting(store.KeyLLMModel, "big-model")
 	calibreDir := t.TempDir()
@@ -115,17 +122,27 @@ func TestScanRaisesRatingAndLogsIt(t *testing.T) {
 	if err := r.scan(context.Background(), next); err != nil {
 		t.Fatal(err)
 	}
-	b, _ := st.BookByID(id, nil)
-	if *b.SpiceLevel != 4 || !b.Nudity || b.AnalysisModel != "deep: big-model" || b.SpiceReason != "Explicit scene in Chapter 2" {
-		t.Fatalf("book after scan: level %d nudity %v model %q reason %q", *b.SpiceLevel, b.Nudity, b.AnalysisModel, b.SpiceReason)
+	// Two levels up is a big jump: it waits for an admin, and the book keeps its rating.
+	if b, _ := st.BookByID(id, nil); *b.SpiceLevel != 2 {
+		t.Fatalf("held, not applied: level %d", *b.SpiceLevel)
 	}
 	dr := st.LatestDeepRead(id)
-	if dr.Status != "done" || *dr.PrevLevel != 2 || *dr.NewLevel != 4 || !strings.Contains(dr.Notes, `"label":"Chapter 2 (1/2)"`) {
-		t.Fatalf("deep read: %+v", dr)
+	if !dr.Held || *dr.ProposedLevel != 4 || dr.NewLevel != nil || dr.Checks != store.DeepChecks || !strings.Contains(dr.Notes, `"note":"a couple has sex"`) {
+		t.Fatalf("held scan: %+v", dr)
 	}
 	items, _, _ := st.Notifications(5)
 	if len(items) == 0 || items[0].Source != "deep-scan" || items[0].Level != "warning" || !strings.Contains(items[0].Message, "Level 2 to Level 4") {
-		t.Fatalf("escalation notice: %+v", items)
+		t.Fatalf("review notice: %+v", items)
+	}
+	if ok, err := st.AcceptDeepRead(dr.ID, "admin"); !ok || err != nil {
+		t.Fatalf("accept: %v %v", ok, err)
+	}
+	b, _ := st.BookByID(id, nil)
+	if *b.SpiceLevel != 4 || !b.Nudity || b.AnalysisModel != "deep: big-model" || b.SpiceReason != "Explicit scene in Chapter 2" {
+		t.Fatalf("book after accepting: level %d nudity %v model %q reason %q", *b.SpiceLevel, b.Nudity, b.AnalysisModel, b.SpiceReason)
+	}
+	if dr = st.LatestDeepRead(id); dr.Held || *dr.NewLevel != 4 || dr.Status != "done" {
+		t.Fatalf("accepted scan: %+v", dr)
 	}
 	// Re-rates leave a Deep Scan alone, and it isn't picked again.
 	if ids, _ := st.AIRatedIDs(); len(ids) != 0 {
@@ -139,5 +156,57 @@ func TestScanRaisesRatingAndLogsIt(t *testing.T) {
 func TestDeepUsersSetting(t *testing.T) {
 	if got := DeepUsers(" 3, x, 7,0, 9, 11"); len(got) != 3 || got[0] != 3 || got[2] != 9 {
 		t.Fatalf("up to 3 valid ids: %v", got)
+	}
+}
+
+// One misread part can't decide a book: a flag needs two parts of a long
+// book, and "very explicit" needs several explicit parts.
+func TestCombineNeedsBacking(t *testing.T) {
+	parts := make([]Part, 10)
+	results := make([]llm.PartResult, 10)
+	results[3] = llm.PartResult{Level: 5, Evidence: "a couple has sex", HeavyInnuendo: true, DarkOccult: true}
+	results[7] = llm.PartResult{Level: 1, Note: "a crush", PlayfulFantasy: true}
+	results[8] = llm.PartResult{Level: 0, PlayfulFantasy: true}
+	a, notes := combine(parts, results)
+	if *a.SpiceLevel != 4 || a.HeavyInnuendo || a.DarkOccult || !a.PlayfulFantasy {
+		t.Fatalf("combined: %+v", a)
+	}
+	if len(notes) != 2 || notes[0].Note != "a couple has sex" {
+		t.Fatalf("notes: %+v", notes)
+	}
+	// A short book: one part is enough.
+	a, _ = combine(parts[:3], []llm.PartResult{{Level: 0, DarkOccult: true}, {}, {}})
+	if !a.DarkOccult || *a.SpiceLevel != 0 {
+		t.Fatalf("short book: %+v", a)
+	}
+}
+
+// The model calls a chapter explicit, but the second look finds no sexual
+// content: the chapter doesn't count, and the rating goes down, not up.
+func TestSecondLookOverrulesAMisreadPart(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	ai := fakeAI(t, false)
+	_ = st.SetSetting(store.KeyLLMBaseURL, ai.URL)
+	_ = st.SetSetting(store.KeyLLMModel, "small-model")
+	calibreDir := t.TempDir()
+	cat, _ := st.EnsureCatalog("Calibre Main", "calibre")
+	id, _ := st.UpsertBook("Adventure Book", "Author", "", "")
+	_ = st.AddCopy(cat, id, writeBook(t, calibreDir), "epub", "6")
+	two := 2
+	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &two, Model: "gpt"})
+	r := New(st, calibreDir)
+	r.Queue([]int64{id}, "admin", "admin")
+	next, _ := st.NextDeepRead()
+	if err := r.scan(context.Background(), next); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := st.BookByID(id, nil)
+	if *b.SpiceLevel != 1 || b.Nudity || st.LatestDeepRead(id).Held {
+		t.Fatalf("misread part must not count: level %d nudity %v", *b.SpiceLevel, b.Nudity)
 	}
 }

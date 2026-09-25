@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os/signal"
@@ -60,6 +61,13 @@ func main() {
 
 	worker := analyzer.New(st)
 	go worker.Run(ctx)
+	// Ratings from Deep Scans made before the stricter checks could come from
+	// one misread part: they go back to a rating from the book's description.
+	if old := st.OldDeepRatings(); len(old) > 0 {
+		worker.Enqueue(false, old...)
+		st.Notify("info", "deep-scan", fmt.Sprintf("Deep Scan got stricter. %d book(s) it rated before are being rated from their description again; "+
+			"you can Deep Scan them again from the Deep Scan page.", len(old)), "#/deepscan")
+	}
 	syncer := &calibre.Syncer{Store: st, Dir: cfg.CalibreDir}
 	go syncer.Loop(ctx)
 

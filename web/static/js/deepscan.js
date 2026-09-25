@@ -19,7 +19,10 @@ export const when = (ts) => new Date(ts.includes("T") ? ts : ts.replace(" ", "T"
 
 // deepChangeLine renders "Level 2 → Level 4" for a finished scan that changed the rating.
 export function deepChangeLine(d) {
-  if (!d || d.status !== "done" || d.prev_level === null || d.new_level === d.prev_level) return "";
+  if (d?.held) {
+    return `<p class="text-sm font-semibold text-amber-300">🧬 Deep Scan suggests Level ${d.proposed_level} (now Level ${d.prev_level}). An admin will review it before it applies.</p>`;
+  }
+  if (!d || d.status !== "done" || d.prev_level === null || d.new_level === null || d.new_level === d.prev_level) return "";
   const up = d.new_level > d.prev_level;
   return `<p class="text-sm font-semibold ${up ? "text-amber-300" : "text-emerald-300"}">${up ? "⚠️ Rating changed via Deep Scan" : "✓ Deep Scan lowered the rating"}: Level ${d.prev_level} → Level ${d.new_level}</p>`;
 }

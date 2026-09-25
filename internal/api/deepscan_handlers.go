@@ -1,14 +1,18 @@
 package api
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
+	"github.com/zachcurry13/novelcheck/internal/ollama"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -91,7 +95,8 @@ func (s *Server) handleDeepScans(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"scans": scans,
+	warning, suggest := s.deepModelWarning(r.Context())
+	writeJSON(w, http.StatusOK, map[string]any{"scans": scans, "model_warning": warning, "suggest_model": suggest,
 		"users": deepread.DeepUsers(s.Store.Setting(store.KeyDeepUsers)), "top_n": s.Store.SettingInt(store.KeyDeepTopN)})
 }
 
@@ -102,7 +107,20 @@ func (s *Server) handleDecideDeepScan(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	done, err := s.Store.DecideDeepRead(id, chi.URLParam(r, "action"), auth.UserFrom(r).Username)
+	by := auth.UserFrom(r).Username
+	var done bool
+	var err error
+	switch action := chi.URLParam(r, "action"); action {
+	case "accept": // a held big jump: save its rating
+		done, err = s.Store.AcceptDeepRead(id, by)
+	case "keep": // a held big jump: keep the rating the book had
+		done, err = s.Store.KeepOldRating(id, by)
+	default:
+		done, err = s.Store.DecideDeepRead(id, action, by)
+	}
+	if s.Store.HeldDeepReads() == 0 {
+		s.Store.Resolve("deep-scan")
+	}
 	switch {
 	case err != nil:
 		writeErr(w, http.StatusBadRequest, err.Error())
@@ -154,4 +172,50 @@ func (s *Server) normalizeDeepUsers(v string) string {
 		}
 	}
 	return strings.Join(keep, ",")
+}
+
+// deepModelWarning says so when Deep Scan uses a small local model (under
+// 7B parameters), which often mistakes tense or violent scenes for romance.
+// suggest is the smallest installed model of 7B or more, to switch to in one tap.
+func (s *Server) deepModelWarning(ctx context.Context) (warning, suggest string) {
+	ais := s.Store.AIConfigs()
+	if len(ais) == 0 || len(ais[0].Models) == 0 {
+		return "", ""
+	}
+	model := ais[0].Models[0]
+	if m := strings.TrimSpace(s.Store.Setting(store.KeyDeepModel)); m != "" {
+		model = m
+	}
+	base, err := ollama.Normalize(strings.TrimSuffix(strings.TrimSuffix(ais[0].BaseURL, "/"), "/v1"))
+	if err != nil {
+		return "", ""
+	}
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	installed, err := ollama.Installed(ctx, base)
+	if err != nil {
+		return "", "" // not Ollama (a cloud AI), or not reachable
+	}
+	size := func(m ollama.Model) float64 {
+		b, err := strconv.ParseFloat(strings.TrimSuffix(strings.ToUpper(m.Params), "B"), 64)
+		if err != nil {
+			return -1
+		}
+		return b
+	}
+	var current *ollama.Model
+	best := -1.0
+	for i, m := range installed {
+		if m.Name == model || m.Name == model+":latest" {
+			current = &installed[i]
+		}
+		if b := size(m); b >= 7 && (best < 0 || b < best) {
+			best, suggest = b, m.Name
+		}
+	}
+	if current == nil || size(*current) < 0 || size(*current) >= 7 {
+		return "", ""
+	}
+	return fmt.Sprintf("Deep Scan uses %s (%s parameters). Models this small often mistake tense or violent scenes for romance. "+
+		"A 7B or bigger model is much more reliable, e.g. qwen2.5:7b or llama3.1:8b (about 5 GB), if your GPU fits it.", model, current.Params), suggest
 }

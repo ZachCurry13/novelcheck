@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/zachcurry13/novelcheck/internal/llm"
@@ -45,6 +44,12 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 		if ctx.Err() != nil {
 			return nil // shutting down: it resumes after the restart
 		}
+		if err == nil {
+			res, err = r.confirm(ctx, book, p, res) // a second look before a part can count as 3 or more
+		}
+		if ctx.Err() != nil {
+			return nil
+		}
 		if err != nil {
 			return fmt.Errorf("part %d of %d (%s): %w", i+1, len(parts), p.Label, err)
 		}
@@ -58,43 +63,24 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 	if a.SummaryVerdict == "" {
 		a.SummaryVerdict = book.SummaryVerdict
 	}
+	raw, _ := json.Marshal(notes)
+	if bigJump(prev, *a.SpiceLevel) {
+		// A big raise waits for an admin, with the evidence, instead of applying.
+		if err := r.Store.HoldDeepRead(d.ID, string(raw), a, *a.SpiceLevel); err != nil {
+			return err
+		}
+		r.Store.Notify("warning", "deep-scan", fmt.Sprintf("Deep Scan suggests raising “%s” from Level %d to Level %d. Review it before it applies.",
+			book.Title, *prev, *a.SpiceLevel), "#/deepscan")
+		return nil
+	}
 	if err := r.Store.SaveAnalysis(book.ID, a); err != nil {
 		return err
 	}
-	raw, _ := json.Marshal(notes)
 	if err := r.Store.FinishDeepRead(d.ID, "done", string(raw), "", a.SpiceLevel); err != nil {
 		return err
 	}
 	r.announce(book.Title, prev, *a.SpiceLevel)
 	return nil
-}
-
-// combine takes the highest level any part reached and every flag any part
-// found. Notes keep the parts worth mentioning.
-func combine(parts []Part, results []llm.PartResult) (store.Analysis, []Note) {
-	level := 0
-	var a store.Analysis
-	var notes []Note
-	for i, res := range results {
-		level = max(level, res.Level)
-		a.Nudity = a.Nudity || res.Nudity
-		a.SoloActs = a.SoloActs || res.SoloActs
-		a.HeavyInnuendo = a.HeavyInnuendo || res.HeavyInnuendo
-		a.PlayfulFantasy = a.PlayfulFantasy || res.PlayfulFantasy
-		a.DarkOccult = a.DarkOccult || res.DarkOccult
-		a.DemonicPresence = a.DemonicPresence || res.DemonicPresence
-		a.LGBTQContent = a.LGBTQContent || res.LGBTQ
-		for _, k := range res.CustomFlags {
-			if !slices.Contains(a.CustomFlags, k) {
-				a.CustomFlags = append(a.CustomFlags, k)
-			}
-		}
-		if res.Note != "" || res.Level >= 2 {
-			notes = append(notes, Note{Label: parts[i].Label, Level: res.Level, Note: res.Note})
-		}
-	}
-	a.SpiceLevel = &level
-	return a, notes
 }
 
 // wrapUp asks for the short reason and the summary; if that fails, the

@@ -4,6 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.18.1]
+
+### 🧬 Deep Scan: stricter and fairer
+- **Peppers are only about romance.** A small AI model was rating exciting chapters as "explicit": a battle in *Harry Potter and the Chamber of Secrets*, an emergency on the spaceship in *2001*. One such chapter could make the whole book Level 4. Now fights, deaths, monsters, danger, tension and magic never count.
+- **It has to name what it saw.** For each part of the book, the AI first says what romance or sexual content is on the page, or "none", which means Level 0. A part rated 3 or higher gets a second, stricter check before it counts. Repeating the pepper scale's own wording doesn't count as evidence.
+- **One part can't decide a book.** In longer books a content tag such as Heavy Innuendo must show up in two parts. Innuendo and nudity only count where sexual content was confirmed, and Level 5 needs several explicit parts.
+- **Big jumps wait for you.** A Deep Scan that would raise a book by 2 or more levels waits on the Deep Scan page, showing what it found, until you **Accept** it or **Keep** the old rating.
+- **Old results were put back.** Books Deep Scanned before this update go back to their rating from the description (you'll see a notice). You can Deep Scan them again any time.
+- **Model size advice.** Deep Scan warns when it uses a small model (under 7B). If a bigger one is already on your Ollama, **Use it for Deep Scan** switches in one tap; other ratings keep their model.
+
 ## [1.18.0]
 
 ### 💡 Suggested Reads

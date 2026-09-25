@@ -12,6 +12,7 @@ import (
 // PartResult is what the AI found in one part of a book (Deep read).
 type PartResult struct {
 	Level           int
+	Evidence        string // the romantic or sexual content on the page, in the AI's words
 	Note            string
 	Nudity          bool
 	SoloActs        bool
@@ -33,10 +34,15 @@ STRICT RULES:
 1. Pepper levels (0-5). Give the highest level that occurs in THIS PART:
 ` + PepperLevels + `
 
-` + ContentGuide + `
+WHAT PEPPERS MEASURE: ONLY romantic and sexual content. Violence, fighting, killing, death, injury, monsters, danger, suspense, fear, horror, magic, science, religion, politics and every other mature theme are NOT romance: a part without romance or sexual content is level 0, however dark, violent, tense or frightening it is.
+First write in "romance" what romantic or sexual content actually happens on the page in THIS text, in your own words (e.g. "two characters kiss", "a couple has sex, described in detail"), or "none". Don't copy the level descriptions above. Then give the level that matches it. "none" means level 0.
+Level 3 or higher needs sexual content happening on the page in this text; if "romance" doesn't describe any, use level 2 or lower.
 
-OUTPUT FORMAT (JSON ONLY):
-{"level": 0 | 1 | 2 | 3 | 4 | 5, "note": "one short, modest sentence on any romance/sexual content or flagged themes in this part, or \"\" if there is none", "nudity": true | false, "solo_acts": true | false, "heavy_innuendo": true | false, "playful_fantasy": true | false, "dark_occult": true | false, "demonic_presence": true | false, "lgbtq_content": true | false}`
+` + ContentGuide + `
+Only mark nudity, solo_acts or heavy_innuendo for sexual content on the page in this text. Mark playful_fantasy only for actual magic or fantasy creatures in this text.
+
+OUTPUT FORMAT (JSON ONLY, in this order):
+{"romance": "what romantic or sexual content happens on the page in this text, modestly, or \"none\"", "level": 0 | 1 | 2 | 3 | 4 | 5, "note": "one short, modest sentence on any romance/sexual content or flagged themes in this part, or \"\" if there is none", "nudity": true | false, "solo_acts": true | false, "heavy_innuendo": true | false, "playful_fantasy": true | false, "dark_occult": true | false, "demonic_presence": true | false, "lgbtq_content": true | false}`
 
 // DeepPartSystem is the instruction for reading one part, with the family's
 // custom filters.
@@ -57,6 +63,7 @@ func ParsePart(out string) (PartResult, error) {
 	}
 	var raw struct {
 		Level           json.RawMessage `json:"level"`
+		Romance         string          `json:"romance"`
 		Note            string          `json:"note"`
 		Nudity          bool            `json:"nudity"`
 		SoloActs        bool            `json:"solo_acts"`
@@ -74,7 +81,14 @@ func ParsePart(out string) (PartResult, error) {
 	if !ok {
 		return PartResult{}, fmt.Errorf("level must be 0-5, got %s", raw.Level)
 	}
-	return PartResult{Level: level, Note: ShortNote(raw.Note), Nudity: raw.Nudity, SoloActs: raw.SoloActs,
+	evidence := ShortNote(raw.Romance)
+	switch {
+	case noRomance(evidence):
+		level, evidence = 0, "" // however intense the part, without romance it has no peppers
+	case level >= 3 && copiesScale(evidence):
+		level = 2 // it repeated a level's description instead of saying what's in the book
+	}
+	return PartResult{Level: level, Evidence: evidence, Note: ShortNote(raw.Note), Nudity: raw.Nudity, SoloActs: raw.SoloActs,
 		HeavyInnuendo: raw.HeavyInnuendo, PlayfulFantasy: raw.PlayfulFantasy, DarkOccult: raw.DarkOccult || raw.DemonicPresence,
 		DemonicPresence: raw.DemonicPresence, LGBTQ: raw.LGBTQ, CustomFlags: customFlagsFrom(raw.Custom)}, nil
 }

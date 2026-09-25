@@ -8,26 +8,29 @@ import (
 
 // DeepRead is one Deep Scan: the AI reading a whole book.
 type DeepRead struct {
-	ID          int64  `db:"id" json:"id"`
-	BookID      int64  `db:"book_id" json:"book_id"`
-	Title       string `db:"title" json:"title"`
-	Author      string `db:"author" json:"author"`
-	Status      string `db:"status" json:"status"` // requested | queued | reading | done | error | declined | cancelled
-	Source      string `db:"source" json:"source"` // admin | request | batch | auto
-	RequestedBy string `db:"requested_by" json:"requested_by"`
-	Reason      string `db:"reason" json:"reason"`
-	ApprovedBy  string `db:"approved_by" json:"approved_by"`
-	Words       int    `db:"words" json:"words"`
-	PartsTotal  int    `db:"parts_total" json:"parts_total"`
-	PartsDone   int    `db:"parts_done" json:"parts_done"`
-	EstTokens   int    `db:"est_tokens" json:"est_tokens"`
-	Model       string `db:"model" json:"model"`
-	Notes       string `db:"notes" json:"notes"` // JSON: [{"label": "Chapter 12", "level": 4, "note": "…"}]
-	Error       string `db:"error" json:"error"`
-	PrevLevel   *int   `db:"prev_level" json:"prev_level"`
-	NewLevel    *int   `db:"new_level" json:"new_level"`
-	CreatedAt   string `db:"created_at" json:"created_at"`
-	UpdatedAt   string `db:"updated_at" json:"updated_at"`
+	ID            int64  `db:"id" json:"id"`
+	BookID        int64  `db:"book_id" json:"book_id"`
+	Title         string `db:"title" json:"title"`
+	Author        string `db:"author" json:"author"`
+	Status        string `db:"status" json:"status"` // requested | queued | reading | done | error | declined | cancelled
+	Source        string `db:"source" json:"source"` // admin | request | batch | auto
+	RequestedBy   string `db:"requested_by" json:"requested_by"`
+	Reason        string `db:"reason" json:"reason"`
+	ApprovedBy    string `db:"approved_by" json:"approved_by"`
+	Words         int    `db:"words" json:"words"`
+	PartsTotal    int    `db:"parts_total" json:"parts_total"`
+	PartsDone     int    `db:"parts_done" json:"parts_done"`
+	EstTokens     int    `db:"est_tokens" json:"est_tokens"`
+	Model         string `db:"model" json:"model"`
+	Notes         string `db:"notes" json:"notes"` // JSON: [{"label": "Chapter 12", "level": 4, "note": "…"}]
+	Error         string `db:"error" json:"error"`
+	PrevLevel     *int   `db:"prev_level" json:"prev_level"`
+	NewLevel      *int   `db:"new_level" json:"new_level"`
+	Checks        int    `db:"checks" json:"checks"`                 // version of the checks (DeepChecks)
+	Held          bool   `db:"held" json:"held"`                     // a big jump waiting for an admin
+	ProposedLevel *int   `db:"proposed_level" json:"proposed_level"` // what a held scan suggests
+	CreatedAt     string `db:"created_at" json:"created_at"`
+	UpdatedAt     string `db:"updated_at" json:"updated_at"`
 }
 
 // DeepModelPrefix marks ratings made by a Deep Scan ("deep: <model>"): batch
@@ -54,7 +57,7 @@ func init() {
 var ErrDeepReadOpen = errors.New("this book already has a Deep Scan requested or running")
 
 const deepCols = `d.id, d.book_id, b.title, b.author, d.status, d.source, d.requested_by, d.reason, d.approved_by,
-	d.words, d.parts_total, d.parts_done, d.est_tokens, d.model, d.notes, d.error, d.prev_level, d.new_level,
+	d.words, d.parts_total, d.parts_done, d.est_tokens, d.model, d.notes, d.error, d.prev_level, d.new_level, d.checks, d.held, d.proposed_level,
 	d.created_at, d.updated_at`
 
 // deepChangeCol is "2→4" when the book's latest Deep Scan raised its rating.
@@ -165,8 +168,8 @@ func (s *Store) SetDeepProgress(id int64, done, total int, model string, prevLev
 // FinishDeepRead stores the result ("done", with the new level) or why it
 // failed ("error").
 func (s *Store) FinishDeepRead(id int64, status, notes, errMsg string, newLevel *int) error {
-	_, err := s.DB.Exec(`UPDATE deep_reads SET status = ?, notes = ?, error = ?, new_level = ?, updated_at = CURRENT_TIMESTAMP
-		WHERE id = ? AND status IN ('queued', 'reading')`, status, notes, errMsg, newLevel, id)
+	_, err := s.DB.Exec(`UPDATE deep_reads SET status = ?, notes = ?, error = ?, new_level = ?, checks = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ? AND status IN ('queued', 'reading')`, status, notes, errMsg, newLevel, DeepChecks, id)
 	return err
 }
 

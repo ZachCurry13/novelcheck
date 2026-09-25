@@ -183,6 +183,10 @@ CREATE TABLE IF NOT EXISTS deep_reads (
     source       TEXT NOT NULL DEFAULT 'admin', -- admin | request | batch | auto (a chosen user's Up Next)
     prev_level   INTEGER,                       -- peppers before the scan (the blurb rating); NULL = unrated
     new_level    INTEGER,                       -- peppers the full text earned
+    checks       INTEGER NOT NULL DEFAULT 1,    -- version of Deep Scan's checks it was made with (store.DeepChecks)
+    held         INTEGER NOT NULL DEFAULT 0,    -- 1 = a big jump waiting for an admin to accept
+    proposed_level INTEGER,                     -- the level a held scan suggests
+    proposal     TEXT NOT NULL DEFAULT '',      -- JSON: the rating a held scan would save
     created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

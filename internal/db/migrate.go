@@ -45,6 +45,10 @@ func migrate(d *sqlx.DB) error {
 		{"suggestion_votes", "reason", "TEXT NOT NULL DEFAULT ''"},
 		{"catalogs", "owner_id", "INTEGER REFERENCES users(id) ON DELETE SET NULL"},
 		{"catalogs", "private", "INTEGER NOT NULL DEFAULT 0"},
+		{"deep_reads", "checks", "INTEGER NOT NULL DEFAULT 1"},
+		{"deep_reads", "held", "INTEGER NOT NULL DEFAULT 0"},
+		{"deep_reads", "proposed_level", "INTEGER"},
+		{"deep_reads", "proposal", "TEXT NOT NULL DEFAULT ''"},
 		{"token_usage", "cost", "REAL"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {

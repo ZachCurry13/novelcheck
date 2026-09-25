@@ -23,8 +23,10 @@ export function renderStats(view, s) {
     tile("Est. to finish library", fmtMoney(s.cost_projected), `≈ ${fmtNum(s.tokens_projected)} tokens remaining`),
   ].join("");
   const admin = document.body.dataset.role === "admin";
-  banner($("#deep-banner", view), s.pending_deep && admin,
-    `🧬 <b>${fmtNum(s.pending_deep)}</b> Deep Scan request${s.pending_deep === 1 ? " is" : "s are"} waiting for your approval. <a href="#/deepscan" class="ml-2 underline">Review</a>`);
+  banner($("#deep-banner", view), (s.pending_deep || s.deep_review) && admin, [
+    s.deep_review && `🧬 <b>${fmtNum(s.deep_review)}</b> Deep Scan result${s.deep_review === 1 ? "" : "s"} would raise a rating a lot and ${s.deep_review === 1 ? "waits" : "wait"} for you to check.`,
+    s.pending_deep && `🧬 <b>${fmtNum(s.pending_deep)}</b> Deep Scan request${s.pending_deep === 1 ? " is" : "s are"} waiting for your approval.`,
+  ].filter(Boolean).join(" ") + ` <a href="#/deepscan" class="ml-2 underline">Review</a>`);
   banner($("#del-banner", view), s.pending_deletes && admin,
     `🗑 <b>${fmtNum(s.pending_deletes)}</b> book${s.pending_deletes === 1 ? " is" : "s are"} waiting for your delete review. <a href="#/deletions" class="ml-2 underline">Review</a>`);
   banner($("#problems-banner", view), s.problem_reports && admin,
