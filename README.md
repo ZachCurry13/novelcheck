@@ -149,3 +149,7 @@ web/static/            index.html, Tailwind CSS, JS modules, manifest.json, sw.j
 ## Thanks
 
 NovelCheck is built around [Calibre](https://calibre-ebook.com) by Kovid Goyal: it reads Calibre's library and removes books through Calibre's own Content server. It works well alongside [Calibre-Web](https://github.com/janeczku/calibre-web) for reading and browsing that same library.
+
+## License
+
+NovelCheck is released under the [MIT License](LICENSE). The libraries bundled in `web/static/vendor` keep their own licenses: [SortableJS](https://github.com/SortableJS/Sortable) (MIT), [JSZip](https://github.com/Stuk/jszip) (MIT or GPLv3), [QR Code Generator](https://github.com/kazuhikoarase/qrcode-generator) by Kazuhiko Arase (MIT) and [ZXing](https://github.com/zxing-js/library) (Apache-2.0, see `zxing.LICENSE.txt`).
