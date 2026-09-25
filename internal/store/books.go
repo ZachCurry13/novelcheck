@@ -5,12 +5,14 @@ import (
 	"errors"
 	"strings"
 	"time"
+
+	"github.com/zachcurry13/novelcheck/internal/titles"
 )
 
 const bookCols = `b.id, b.norm_key, b.title, b.author, b.isbn, b.description, b.blurb, b.status,
 	b.classification, b.nudity, b.solo_acts, b.heavy_innuendo, b.playful_fantasy, b.dark_occult,
 	b.demonic_presence, b.lgbtq_content, b.summary_verdict, b.approved, b.approved_by, b.age_level, b.age_set_by, b.spice_level, b.spice_reason, b.analysis_model, b.analysis_error,
-	b.analyzed_at, b.created_at, b.updated_at`
+	b.series, b.series_index, b.title_fix, b.analyzed_at, b.created_at, b.updated_at`
 
 // derivedCols adds each book's file formats and number of Calibre entries.
 const derivedCols = `, COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTINCT UPPER(fc.format) AS f
@@ -23,20 +25,23 @@ const derivedCols = `, COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTIN
 
 // UpsertBook inserts a book or returns the existing one with the same NormKey,
 // filling in any metadata the stored row is missing. Returns the book id.
+// Series numbering in the title ("01 - Dune") is stored as the series number.
 func (s *Store) UpsertBook(title, author, isbn, description string) (int64, error) {
-	title = strings.TrimSpace(title)
-	if title == "" {
+	t := titles.Parse(title)
+	if t.Title == "" {
 		return 0, errors.New("title required")
 	}
-	key := NormKey(title, author)
-	_, err := s.DB.Exec(`INSERT INTO books (norm_key, title, author, isbn, description)
-		VALUES (?, ?, ?, ?, ?)
+	key := NormKey(t.Title, author)
+	_, err := s.DB.Exec(`INSERT INTO books (norm_key, title, author, isbn, description, series, series_index)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(norm_key) DO UPDATE SET
 			author = CASE WHEN books.author = '' THEN excluded.author ELSE books.author END,
 			isbn = CASE WHEN books.isbn = '' THEN excluded.isbn ELSE books.isbn END,
 			description = CASE WHEN books.description = '' THEN excluded.description ELSE books.description END,
+			series = CASE WHEN books.series = '' THEN excluded.series ELSE books.series END,
+			series_index = CASE WHEN books.series_index = 0 THEN excluded.series_index ELSE books.series_index END,
 			updated_at = CURRENT_TIMESTAMP`,
-		key, title, strings.TrimSpace(author), strings.TrimSpace(isbn), strings.TrimSpace(description))
+		key, t.Title, strings.TrimSpace(author), strings.TrimSpace(isbn), strings.TrimSpace(description), t.Series, t.Index)
 	if err != nil {
 		return 0, err
 	}

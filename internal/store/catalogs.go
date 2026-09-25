@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strings"
 	"unicode"
+
+	"github.com/zachcurry13/novelcheck/internal/titles"
 )
 
 const CalibreCatalogName = "Calibre Main"
@@ -69,9 +71,10 @@ func (s *Store) DeleteCatalog(id int64) error {
 
 // NormKey builds the de-duplication key used to match the same title across
 // catalogs (e.g. a Calibre copy and a Kindle copy): lowercase alphanumerics
-// of the title plus the author's last name.
+// of the title (without series numbering such as "01 - ") plus the author's
+// last name, so "01 - Dune" and "Dune (Dune, #1)" match "Dune".
 func NormKey(title, author string) string {
-	return squash(title) + "|" + squash(lastName(author))
+	return squash(titles.Clean(title)) + "|" + squash(lastName(author))
 }
 
 func squash(s string) string {

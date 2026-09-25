@@ -27,6 +27,7 @@ export async function renderAdmin(view, state) {
     <h1 class="mb-3 text-2xl font-bold">${isAdmin ? "Admin Control Panel" : "Manage NovelCheck"}</h1>
     <div id="del-banner" class="mb-2 hidden rounded-lg bg-rose-950/50 p-3 text-sm"></div>
     <div id="deep-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
+    <div id="titles-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <nav id="admin-tabs" class="mb-4 flex gap-1 overflow-x-auto border-b border-slate-800">${tabs.map(([k, l]) =>
       `<button data-tab="${k}" class="nav-link rounded-b-none">${l}</button>`).join("")}</nav>
     <section data-panel="ai" class="space-y-6">
@@ -77,7 +78,9 @@ export async function renderAdmin(view, state) {
   view.addEventListener("click", async (e) => {
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (!act) return;
-    if (act === "batch") {
+    if (act === "tidy-titles") {
+      import("./titlefix.js").then((m) => m.openTitleFixes());
+    } else if (act === "batch") {
       const r = await attempt(() => post("/api/admin/analyze-batch" + qs({ size: $("#batch-size", view).value })));
       if (r) toast(`Queued ${r.queued} books`);
     } else if (act === "wipe") {

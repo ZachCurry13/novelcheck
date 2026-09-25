@@ -2,6 +2,7 @@ package calibresrv
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -85,5 +86,28 @@ func TestRealCalibreServer(t *testing.T) {
 	ro := &Client{URL: base, Username: "reader", Password: "readpass1", Library: def}
 	if err := ro.Remove(ctx, []int{1}); err == nil || !strings.Contains(err.Error(), "permission") {
 		t.Fatalf("read-only user should be refused, got %v", err)
+	}
+}
+
+func TestSetMetadataRequest(t *testing.T) {
+	var got string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(r.Body)
+		got = r.URL.RequestURI() + " " + string(b)
+		if strings.Contains(got, `"fields",99,`) {
+			w.Write([]byte(`{"result":null}`)) // calibre has no book 99
+			return
+		}
+		w.Write([]byte(`{"result":{"!_":2,"!v":{"title":"Dune"}}}`))
+	}))
+	defer srv.Close()
+	c := &Client{URL: srv.URL, Library: "Books"}
+	found, err := c.SetMetadata(context.Background(), 12, "Dune", "Dune Chronicles", 1)
+	want := `/cdb/cmd/set_metadata/0?library_id=Books ["fields",12,[["title","Dune"],["series","Dune Chronicles"],["series_index",1]]]`
+	if err != nil || !found || got != want {
+		t.Fatalf("got %q (%v, %v)", got, found, err)
+	}
+	if found, err := c.SetMetadata(context.Background(), 99, "Dune", "", 0); err != nil || found || strings.Contains(got, "series") {
+		t.Fatalf("title only, missing book: %q %v %v", got, found, err)
 	}
 }

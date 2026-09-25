@@ -11,8 +11,8 @@ Latest release: **v1.16.0** (Check a book, pepper wording, feature switches, pho
 6. ✅ §8 delta scanning: Calibre last_modified / file mtime per copy vs the rating's `rated_modified`; changed books join the re-rate banner (never automatic).
 7. ✅ §10 Admin tabs (AI & Scans, Users & Rules, Delivery & Services, System & Toggles), collapsible cards, per-tab save, backup fields shown only when enabled, user-card badges.
 8. ✅ §9 tap-to-see values on Usage charts; §13 Ollama model list with disk use + delete (in-use models protected).
-9. ⏭ §11 title normalizer (strip "01 - ", "Book 2:") + push title/series to Calibre via the Content server.
-10. §12 suggested reads under Up Next with 👍/👎.
+9. ✅ §11 tidy titles: `internal/titles` parser, series + number on books, sync follows Calibre renames (ratings kept, stale file links pruned), Admin 🏷️ Tidy in Calibre + per-book edit via the Content server (Calibre-Web fallback).
+10. ⏭ §12 suggested reads under Up Next with 👍/👎.
 - Already done before V2: §7 (switches, custom filters), §4 (scale, strict preset, reasons), §5 push, §9 diagnostics copy + Calibre-Web, §13 GPU detection.
 - Dropped by the user: parent-child linking.
 

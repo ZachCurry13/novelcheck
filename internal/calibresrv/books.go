@@ -50,3 +50,19 @@ func (c *Client) Remove(ctx context.Context, ids []int) error {
 	_, err := c.cmd(ctx, "remove", []any{ids, false})
 	return err
 }
+
+// SetMetadata changes a book's title and, when series is given, its series
+// and number: the same as `calibredb set_metadata --field`. Calibre renames
+// the book's folder and files to match. found is false if calibre has no
+// book with that id.
+func (c *Client) SetMetadata(ctx context.Context, id int, title, series string, index float64) (found bool, err error) {
+	fields := [][]any{{"title", title}}
+	if series != "" { // the number goes last: calibre sets it on the series just given
+		fields = append(fields, []any{"series", series}, []any{"series_index", index})
+	}
+	raw, err := c.cmd(ctx, "set_metadata", []any{"fields", id, fields})
+	if err != nil {
+		return false, err
+	}
+	return len(raw) > 0 && string(raw) != "null", nil
+}

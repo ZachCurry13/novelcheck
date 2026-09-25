@@ -1,5 +1,7 @@
 package store
 
+import "github.com/zachcurry13/novelcheck/internal/titles"
+
 // LookedUpCatalog holds books found with Check a book that aren't in any of
 // the family's libraries, so checking the same book again is instant (and free).
 const LookedUpCatalog = "Looked up"
@@ -20,7 +22,7 @@ func (s *Store) MatchBook(title, author string) int64 {
 	if s.DB.Get(&id, `SELECT id FROM books WHERE norm_key = ?`, NormKey(title, author)) == nil {
 		return id
 	}
-	t := squash(title)
+	t := squash(titles.Clean(title))
 	if t == "" {
 		return 0
 	}

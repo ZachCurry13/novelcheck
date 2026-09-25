@@ -41,7 +41,12 @@ becomes the release notes for that version and is shown in the app under
 - **Tap a chart to read it**: on the Usage page, tap (or hover over) any day's bar or any point on a line to see the exact date and value. On a phone it stays shown until you tap somewhere else.
 - **🧹 Installed models**: the Ollama easy setup has a new button listing every model on your Ollama server with the disk space it uses, biggest first, and a **Delete** button to free space. Models NovelCheck is set to use are marked **In use** and can't be deleted by accident.
 
+### 🏷️ Tidy titles
+- **Clean titles everywhere**: titles with track or series numbers, such as "01 - The Hobbit", "Book 2: Catching Fire" or "Guards! Guards! (Discworld, #8)", now show as the plain title, with the series and number underneath (**📚 Discworld #8**). Calibre's own series always wins. Titles like "1984" or "13 Reasons Why" are left alone. Library search finds series names too.
+- **Fix them in Calibre in one click**: the Admin page lists every numbered title (**🏷️ Tidy in Calibre**). Tick the ones to change and NovelCheck saves the tidy titles in Calibre through its Content server. It first checks that each book matches, so the wrong library is never touched. An admin can also edit any book's title, series and number from its window (**✏️ Edit title in Calibre**). There's an **Open in Calibre-Web** link if the Content server isn't set up.
+
 ### Fixed
+- **Renaming a book in Calibre keeps its rating**: a book renamed in Calibre (or moved to a new folder) used to come back as a new, unrated book next to the old one. It now stays the same book, with its rating, notes and Up Next places, and its file links follow the move. Tidying a title doesn't put the book in the re-rate list.
 - **No more error when you reopen the app**: when a phone wakes NovelCheck before its connection is back, the app now waits for the network and quietly tries again (up to 3 times) instead of showing an error.
 - **Steadier server**: if something goes wrong while rating a book, syncing Calibre or sending a notification, NovelCheck now records the error and carries on instead of stopping (which made the app restart).
 - **Books per batch**: **0** now means "all waiting books" (up to 500), a cleared box goes back to 20, and anything else invalid is refused with a clear message.

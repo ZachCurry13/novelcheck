@@ -9,6 +9,7 @@ import { ageAndNotesHTML, bindAgeAndNotes } from "./booknotes.js";
 import { on } from "./modules.js";
 import { customChips } from "./customflags.js";
 import { renderDeepSection, deepChip } from "./deepscan.js";
+import { seriesLine, openTitleEdit } from "./titlefix.js";
 
 export async function openBook(id, state, onChange) {
   const dlg = $("#book-dialog");
@@ -28,6 +29,7 @@ export async function openBook(id, state, onChange) {
     if (c.path && !c.path.startsWith("list:") && !c.path.startsWith("calibre-entry:")) e.paths.push(c.path);
   }
   const calibreCount = [...entries.values()].filter((e) => e.source === "calibre").length;
+  const calibreIds = [...entries.values()].filter((e) => e.source === "calibre" && /^\d+$/.test(e.external_id)).map((e) => e.external_id);
   // Only looked up (Check a book), not owned: never offer deleting or removing it.
   const owned = data.copies.some((c) => c.catalog_name !== "Looked up");
   const cw = data.calibre_web_url; // set by an admin; only sent to admins and editors
@@ -48,7 +50,9 @@ export async function openBook(id, state, onChange) {
       <div class="flex items-start justify-between gap-4">
         <div>
           <h2 class="text-xl font-bold">${esc(b.title)}</h2>
+          ${seriesLine(b)}
           <p class="text-slate-400">${esc(b.author || "Unknown author")}${b.isbn ? " · ISBN " + esc(b.isbn) : ""}</p>
+          ${isAdmin && calibreIds.length ? `<p class="mt-1 text-xs ${b.title_fix ? "text-amber-300" : "text-slate-500"}">${b.title_fix ? `In Calibre: “${esc(b.title_fix)}” · ` : ""}<button type="button" data-act="calibre-title" class="underline">✏️ ${b.title_fix ? "Tidy it in Calibre" : "Edit title in Calibre"}</button></p>` : ""}
         </div>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>
       </div>
@@ -95,7 +99,9 @@ export async function openBook(id, state, onChange) {
       return diagnoseLater(`Rating "${b.title}" failed: ${b.analysis_error}`);
     }
     const act = e.target.closest("[data-act]")?.dataset.act;
-    if (act === "edit-verdict" || act === "cancel-verdict") {
+    if (act === "calibre-title") {
+      openTitleEdit(b, calibreIds, cw, refresh);
+    } else if (act === "edit-verdict" || act === "cancel-verdict") {
       $("#verdict-form", dlg).classList.toggle("hidden", act === "cancel-verdict");
     } else if (act === "approve") {
       const ok = await attempt(() => put(`/api/books/${b.id}/approval`, { approved: !b.approved }),

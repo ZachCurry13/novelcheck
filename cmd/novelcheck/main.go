@@ -46,6 +46,10 @@ func main() {
 		log.Printf("reset %d interrupted analyses to pending", n)
 	}
 	_ = st.PurgeExpiredSessions()
+	// Titles stored before tidying ("01 - Dune") get their plain title and series number.
+	if n, err := st.TidyTitles(); err == nil && n > 0 {
+		log.Printf("tidied %d titles with track or series numbers", n)
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

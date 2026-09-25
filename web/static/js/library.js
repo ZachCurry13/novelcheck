@@ -7,6 +7,7 @@ import { pepperOptions, openPepperGuide, whyChip } from "./peppers.js";
 import { on } from "./modules.js";
 import { loadFlags, customChips, hideBoxes } from "./customflags.js";
 import { deepChip } from "./deepscan.js";
+import { seriesText } from "./titlefix.js";
 
 const PAGE = 60;
 
@@ -163,7 +164,7 @@ function card(b, queueOn) {
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
           <h3 class="font-semibold leading-tight line-clamp-2">${esc(b.title)}</h3>
-          <p class="text-sm text-slate-400 truncate">${esc(b.author || "Unknown author")}</p>
+          <p class="text-sm text-slate-400 truncate">${esc(b.author || "Unknown author")}${seriesText(b) ? ` · <span class="text-sky-300">${esc(seriesText(b))}</span>` : ""}</p>
         </div>
         ${queueOn ? `<button data-queue="${b.id}" title="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>` : ""}
       </div>

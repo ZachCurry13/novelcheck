@@ -103,9 +103,9 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	where := []string{"1=1"}
 	var args []any
 	if q := strings.TrimSpace(f.Query); q != "" {
-		where = append(where, "(b.title LIKE ? OR b.author LIKE ?)")
+		where = append(where, "(b.title LIKE ? OR b.author LIKE ? OR b.series LIKE ?)")
 		like := "%" + q + "%"
-		args = append(args, like, like)
+		args = append(args, like, like, like)
 	}
 	if f.CatalogID > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM catalog_books x WHERE x.book_id = b.id AND x.catalog_id = ?)")
