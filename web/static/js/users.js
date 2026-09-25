@@ -115,7 +115,7 @@ function userCard(u, isAdmin, viewer) {
   return `
     <div data-user="${u.id}" class="card space-y-3">
       <div class="flex items-center justify-between">
-        <p class="font-semibold">${esc(u.username)}</p>
+        <div class="min-w-0"><p class="font-semibold">${esc(u.username)}</p><p class="mt-1 flex flex-wrap gap-1">${badges(u)}</p></div>
         <select name="type" class="input w-auto max-w-[60%] py-1 text-sm">${typeOptions(u.role, u.age_level, isAdmin, on(viewer, "parents"))}</select>
       </div>
       ${u.role === "restricted" ? `<label class="block"><span class="label">Most peppers allowed</span>
@@ -139,4 +139,16 @@ function userCard(u, isAdmin, viewer) {
         <button data-uact="delete" class="btn-danger">Delete</button>
       </div>
     </div>`;
+}
+
+// badges sum an account up at a glance: role, and for kids their limits.
+function badges(u) {
+  const role = { admin: ["Admin", "chip-open"], editor: ["Parent (editor)", "chip-cat"], restricted: ["Kid", "chip-none"] }[u.role] || [u.role, "chip-pending"];
+  const out = [`<span class="${role[1]}">${esc(role[0])}</span>`];
+  if (u.role === "restricted") {
+    out.push(`<span class="chip-closed">${u.max_spice < 0 ? "No pepper limit" : `🌶️ Max Level ${u.max_spice}`}</span>`);
+    const age = AGE_GROUPS.find(([l]) => l === u.age_level);
+    if (age) out.push(`<span class="chip-cat">👪 ${esc(age[1])}</span>`);
+  }
+  return out.join("");
 }

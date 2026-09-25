@@ -32,6 +32,11 @@ becomes the release notes for that version and is shown in the app under
 ### ⚡ Changed books
 - **Only changed books are rated again**: NovelCheck now remembers when each book last changed in Calibre (its details or its file). Unchanged books are never rated twice; if you edit a book in Calibre after it was rated, it joins the **Re-rate** banner on the Admin page ("changed in Calibre since they were rated"), so nothing is spent without your say-so. **Re-rate whole library** is still there to redo everything.
 
+### 🧹 Tidier Admin page
+- **Four tabs** instead of one long page: **🤖 AI & Scans** (progress, batches, re-rates, custom filters, AI settings), **👪 Users & Rules**, **📬 Delivery & Services** (Send-to-Kindle, Calibre, KOReader, remote access) and **⚙️ System & Toggles** (features, sign-in, backups). Editors see the first two. The page remembers which tab you were on.
+- Settings are in **collapsible cards**, each tab has its own **Save**, and the backup AI's details stay hidden until you switch the backup on.
+- User cards show a **role badge**, and for kids their **pepper limit** and **age group** at a glance.
+
 ### Fixed
 - **No more error when you reopen the app**: when a phone wakes NovelCheck before its connection is back, the app now waits for the network and quietly tries again (up to 3 times) instead of showing an error.
 - **Steadier server**: if something goes wrong while rating a book, syncing Calibre or sending a notification, NovelCheck now records the error and carries on instead of stopping (which made the app restart).
