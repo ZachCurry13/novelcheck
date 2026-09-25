@@ -7,6 +7,7 @@ import { openGuide } from "./guide.js";
 import { on, deliveryOptions } from "./modules.js";
 import { renderPushCard } from "./push.js";
 import { amazonStepsHTML, openKOReaderSetup } from "./delivery.js";
+import { openTaste } from "./taste.js";
 
 export async function renderProfile(view, state) {
   const u = state.user;
@@ -31,6 +32,10 @@ export async function renderProfile(view, state) {
         <input name="new_password" type="password" required minlength="8" placeholder="New password (8+ chars)" class="input" autocomplete="new-password">
         <button class="btn-primary">Update password</button>
       </form>
+      ${on(u, "queue") && on(u, "suggestions") && on(u, "taste") ? `<div class="card space-y-2 lg:col-span-2">
+        <h2 class="text-lg font-semibold">🎯 Your reading taste</h2>
+        <p class="text-sm text-slate-400">Optional: mark books you know (want to read, read &amp; liked, …) so 💡 Suggested Reads under Up Next fit you better.</p>
+        <button type="button" id="taste-open" class="btn-secondary">Rate some books</button></div>` : ""}
       <div id="push-card" class="card space-y-3 lg:col-span-2"></div>
       <div class="card lg:col-span-2">
         <h2 class="mb-2 text-lg font-semibold">Content rules on this account</h2>
@@ -61,6 +66,7 @@ export async function renderProfile(view, state) {
   $("#replay-guide", view).addEventListener("click", () => openGuide(state));
   renderPushCard($("#push-card", view), u);
   $("#ko-setup", view).addEventListener("click", () => openKOReaderSetup());
+  $("#taste-open", view)?.addEventListener("click", () => openTaste());
 
   $("#password", view).addEventListener("submit", async (e) => {
     e.preventDefault();

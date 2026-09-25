@@ -108,7 +108,8 @@ func (s *Service) withinBudget() bool {
 }
 
 var statusWords = map[string]string{"queued": "wants to read", "reading": "reading now",
-	"finished": "finished", "up": "liked this suggestion", "read": "has already read it", "down": "doesn't want"}
+	"finished": "finished", "up": "liked this suggestion", "read": "has already read it", "down": "doesn't want",
+	"want": "wants to read", "liked": "read it and liked it", "notwant": "doesn't want to read it", "disliked": "read it and didn't like it"}
 
 // reasonWords explain a 👎 to the AI.
 var reasonWords = map[string]string{"story": "not their kind of story", "author": "doesn't like the author",
@@ -118,7 +119,7 @@ var reasonWords = map[string]string{"story": "not their kind of story", "author"
 // first), 10 unwanted ones, and their content limits.
 func reader(u *store.User, signals []store.SuggestSignal) llm.SuggestReader {
 	var r llm.SuggestReader
-	for _, pass := range [][]string{{"reading", "finished", "up", "read"}, {"queued"}} {
+	for _, pass := range [][]string{{"reading", "finished", "liked", "up", "read"}, {"queued", "want"}} {
 		for _, sg := range signals {
 			if slices.Contains(pass, sg.Status) && len(r.Liked) < 25 {
 				r.Liked = append(r.Liked, describe(sg))

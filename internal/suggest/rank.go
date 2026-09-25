@@ -137,7 +137,7 @@ func dislike(b store.SuggestBook, v vector, s store.SuggestSignal, sv vector) fl
 		if b.Spice >= 0 && s.Spice >= 0 && b.Spice >= s.Spice {
 			return ruledOut
 		}
-	case "":
+	case "", "notwant", "disliked": // weights -1 and -2
 		m, _ := match(b, v, s.SuggestBook, sv)
 		return m * -s.Weight / 3
 	}

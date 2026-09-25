@@ -11,6 +11,10 @@ becomes the release notes for that version and is shown in the app under
 - **👍 / 👎**: 👍 means "more like this" and shows **＋ Up Next** (or **⭐ Wishlist**). 👎 hides the book at once and asks an optional **Why not?**: *Not my kind of story*, *Not this author*, *Not this series*, *Too spicy* or *Already read it*. Each answer teaches the suggestions something different: a 👎 for "Too spicy" stops books at that pepper level or higher, "Not this series" skips the rest of the series, and "Already read it" moves the series on to the next book. **Start over** clears your 👍/👎.
 - **The admin decides how they're picked** (Admin → AI & Scans → Suggested Reads): **Free matching only** (no AI, no cost), **AI picks from your library** (your AI picks the best 10 and writes the reasons, at most once a day per person and within the hourly token cap), or **AI picks + books you don't own** (a few books to add to the wishlist, where NovelCheck rates them). Kids' accounts never get books you don't own. **Admin → System & Toggles → Features** can switch Suggested Reads off.
 
+### 🎯 Your reading taste
+- **Tell NovelCheck what you like (optional)**: open **🎯 Your taste** from Suggested Reads or your Profile to see 20 books from the library. Mark the ones you know: **📖 Want to read**, **❤️ Read & liked**, **👎 Read, didn't like** or **🙅 Not for me**, and skip the rest. **Show 20 more** brings a new batch any time, and **Your answers** lets you change or remove any answer (your 👍/👎 on suggestions are listed there too).
+- Answers go straight into your suggestions: books you've read and liked count as reading history, so a series moves on to the next book. The list mixes different authors and pepper levels, starting with the first books of a series. Marking books uses no AI. Admins can switch it off under **Features**.
+
 ## [1.17.0]
 
 ### 🧬 Deep Scan

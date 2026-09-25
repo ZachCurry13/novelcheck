@@ -58,6 +58,7 @@ const SECTIONS = [
     ["module_import", "Import books (Kindle / drive scanner and lists)", "", "bool"],
     ["module_parents", "Parent tools (kids' accounts, age groups, parents' notes)", "", "bool"],
     ["module_suggestions", "💡 Suggested Reads under Up Next", "", "bool"],
+    ["module_taste", "🎯 Taste profile: people can rate books they know to improve their suggestions (uses no AI)", "", "bool"],
     ["notify_routine", "🔔 Also show everyday events: new books from Calibre, rating finished, someone started a book", "", "bool"],
   ]],
   ["system", "Sign-in & Updates", [

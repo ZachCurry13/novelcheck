@@ -70,9 +70,9 @@ func (s *Service) For(u *store.User) (Result, error) {
 	liked := false
 	for _, sg := range signals {
 		switch sg.Status {
-		case "up":
+		case "up", "want", "liked":
 			res.Up++
-		case "down", "read":
+		case "down", "read", "notwant", "disliked":
 			res.Down++
 		}
 		liked = liked || sg.Weight > 0

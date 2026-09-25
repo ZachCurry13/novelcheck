@@ -10,6 +10,7 @@ const (
 	KeyModuleImport   = "module_import"         // Import books: Kindle/drive scanner and lists
 	KeyModuleParents  = "module_parents"        // kids' accounts, age groups, parents' notes
 	KeyModuleSuggest  = "module_suggestions"    // 💡 Suggested Reads under Up Next
+	KeyModuleTaste    = "module_taste"          // 🎯 taste profile: rate books to steer suggestions
 	KeyNotifyRoutine  = "notify_routine"        // 🔔 also lists routine events, not just problems
 )
 
@@ -21,6 +22,7 @@ var moduleNames = map[string]string{
 	KeyModuleImport:   "import",
 	KeyModuleParents:  "parents",
 	KeyModuleSuggest:  "suggestions",
+	KeyModuleTaste:    "taste",
 }
 
 func init() {

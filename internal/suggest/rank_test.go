@@ -113,3 +113,21 @@ func TestDislikeReasons(t *testing.T) {
 		t.Fatalf("not this series: %v", got)
 	}
 }
+
+func TestSample(t *testing.T) {
+	got := Sample(pool, nil, map[int64]bool{5: true}, 3)
+	seen := map[string]bool{}
+	for _, b := range got {
+		if b.ID == 5 || b.SeriesIndex > 1 && len(got) < 3 {
+			t.Fatalf("excluded or later series book first: %+v", got)
+		}
+		seen[b.Title] = true
+	}
+	// Varied first (one Pratchett, no later Discworld books), then filled up.
+	if len(got) != 3 || !seen["Dragonflight"] {
+		t.Fatalf("sample: %+v", got)
+	}
+	if all := Sample(pool, nil, nil, 20); len(all) != len(pool) {
+		t.Fatalf("a small library shows everything: %d", len(all))
+	}
+}

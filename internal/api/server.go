@@ -101,6 +101,8 @@ func (s *Server) Router() http.Handler {
 					r.Post("/suggestions/vote", s.handleSuggestionVote)
 					r.Delete("/suggestions/votes", s.handleClearSuggestionVotes)
 					r.Post("/suggestions/wish", s.handleWishSuggestion)
+					r.With(s.requireModule(store.KeyModuleTaste, "The taste profile")).Get("/taste", s.handleTasteBooks)
+					r.With(s.requireModule(store.KeyModuleTaste, "The taste profile")).Post("/taste", s.handleTasteMark)
 				})
 			})
 

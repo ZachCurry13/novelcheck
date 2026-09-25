@@ -5,6 +5,8 @@ import { get, post, del } from "./api.js";
 import { esc, attempt, toast, classChip } from "./ui.js";
 import { seriesText } from "./titlefix.js";
 import { openBook } from "./bookdialog.js";
+import { openTaste } from "./taste.js";
+import { on } from "./modules.js";
 
 const SUBTITLE = {
   free: "Matched from your library",
@@ -15,6 +17,7 @@ const SUBTITLE = {
 export async function renderSuggestions(host, state, onQueued, polls = 0) {
   const data = await attempt(() => get("/api/suggestions"));
   if (!data || !host.isConnected) return;
+  const taste = on(state.user, "taste");
   const liked = new Set(); // cards given a 👍 this visit: they show their add button
   const asking = new Set(); // cards just given a 👎: they ask "Why not?"
   const outside = data.outside.map((o, i) => ({ ...o, key: `o${i}` }));
@@ -24,11 +27,11 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
       .concat(outside.map((o) => (asking.has(o.key) ? whyCard(o.key, {}) : outsideCard(o, liked.has(o.key)))));
     host.innerHTML = `<section class="mt-10">
       <div class="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 class="text-lg font-bold">💡 Suggested Reads</h2>
+        <h2 class="text-lg font-bold">💡 Suggested Reads${taste ? ` <button data-taste class="btn-ghost ml-1 px-2 py-0.5 text-xs font-normal">🎯 Your taste</button>` : ""}</h2>
         <p class="text-xs text-slate-500">${data.refreshing ? "✨ The AI is picking new suggestions…" : SUBTITLE[data.mode]}</p>
       </div>
       ${cards.length ? `<ul class="flex max-w-full snap-x gap-3 overflow-x-auto pb-2">${cards.join("")}</ul>`
-        : `<p class="text-sm text-slate-500">Add a few books to Up Next (or finish some) and suggestions will show up here.</p>`}
+        : `<p class="text-sm text-slate-500">Add a few books to Up Next (or finish some) and suggestions will show up here.${taste ? ` Or <button data-taste class="underline">🎯 mark a few books you know</button> to get started.` : ""}</p>`}
       ${data.up + data.down ? `<p class="mt-1 text-xs text-slate-500">Your feedback so far: 👍 ${data.up} · 👎 ${data.down} ·
         <button data-reset class="underline">Start over</button></p>` : ""}
     </section>`;
@@ -41,6 +44,7 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
   };
   host.onclick = async (e) => {
     const card = e.target.closest("[data-sg]");
+    if (e.target.closest("[data-taste]")) return openTaste(() => renderSuggestions(host, state, onQueued));
     if (e.target.closest("[data-reset]")) {
       if (confirm("Forget all your 👍 and 👎? Books you hid can be suggested again.")) {
         if (await attempt(() => del("/api/suggestions/votes"), "Starting over")) renderSuggestions(host, state, onQueued);

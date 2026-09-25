@@ -49,6 +49,11 @@ type SuggestSignal struct {
 // DownReasons are the optional answers to "Why not?" after a 👎.
 var DownReasons = map[string]bool{"read": true, "story": true, "author": true, "series": true, "spicy": true}
 
+// ProfileMarks are the taste-profile answers and the vote each is saved as:
+// want to read (weight 3), read & liked (4), don't want to read (-1), read &
+// didn't like (-2).
+var ProfileMarks = map[string]int{"want": 1, "liked": 1, "notwant": -1, "disliked": -1}
+
 const suggestCols = `b.id, b.title, b.author, b.series, b.series_index,
 	CASE WHEN b.description != '' THEN b.description ELSE b.blurb END AS description,
 	COALESCE(` + effectiveSpice + `, -1) AS spice`
@@ -79,8 +84,8 @@ func (s *Store) SuggestSignals(userID int64) ([]SuggestSignal, error) {
 		SELECT COALESCE(b.id, 0), v.title, v.author, COALESCE(b.series, ''), COALESCE(b.series_index, 0),
 			COALESCE(CASE WHEN b.description != '' THEN b.description ELSE b.blurb END, ''),
 			CASE WHEN b.id IS NULL THEN -1 ELSE COALESCE(`+effectiveSpice+`, -1) END,
-			CASE WHEN v.vote = 1 THEN 4 WHEN v.reason = 'read' THEN 1.5 ELSE -1 END,
-			CASE WHEN v.vote = 1 THEN 'up' WHEN v.reason = 'read' THEN 'read' ELSE 'down' END, v.reason
+			CASE WHEN v.reason = 'want' THEN 3 WHEN v.vote = 1 THEN 4 WHEN v.reason = 'read' THEN 1.5 WHEN v.reason = 'disliked' THEN -2 ELSE -1 END,
+			CASE WHEN v.reason IN ('want', 'liked', 'disliked', 'notwant', 'read') THEN v.reason WHEN v.vote = 1 THEN 'up' ELSE 'down' END, v.reason
 		FROM suggestion_votes v LEFT JOIN books b ON b.norm_key = v.norm_key WHERE v.user_id = ?`, userID, userID)
 	return out, err
 }
@@ -112,8 +117,8 @@ func (s *Store) VoteSuggestion(userID int64, title, author string, vote int, rea
 		_, err := s.DB.Exec(`DELETE FROM suggestion_votes WHERE user_id = ? AND norm_key = ?`, userID, key)
 		return err
 	}
-	if vote != 1 && vote != -1 || (reason != "" && (vote != -1 || !DownReasons[reason])) {
-		return errors.New("vote must be 1, -1 or 0, and a reason only goes with a 👎")
+	if vote != 1 && vote != -1 || (reason != "" && ProfileMarks[reason] != vote && (vote != -1 || !DownReasons[reason])) {
+		return errors.New("unknown vote or reason")
 	}
 	_, err := s.DB.Exec(`INSERT INTO suggestion_votes (user_id, norm_key, title, author, vote, reason) VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT (user_id, norm_key) DO UPDATE SET vote = excluded.vote, reason = excluded.reason, created_at = CURRENT_TIMESTAMP`,
