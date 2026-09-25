@@ -31,8 +31,8 @@ export async function renderLibrary(view, state) {
       <input name="series" list="series-list" placeholder="Series" class="input filter-more" autocomplete="off">
       <datalist id="author-list">${(facets.authors || []).map((a) => `<option value="${esc(a)}"></option>`).join("")}</datalist>
       <datalist id="series-list">${(facets.series || []).map((s) => `<option value="${esc(s)}"></option>`).join("")}</datalist>
-      <select name="catalog" class="input filter-more"><option value="">All catalogs</option>${catOpts}</select>
-      <select name="overlap_with" class="input filter-more" title="Only books also present in this catalog">
+      <select name="catalog" class="input filter-more"><option value="">All libraries</option>${catOpts}</select>
+      <select name="overlap_with" class="input filter-more" title="Only books also in this library">
         <option value="">…also in (overlap)</option>${catOpts}</select>
       <select name="spice" class="input filter-more" title="Peppers: how much romance and sexual content">
         <option value="">Any peppers</option>${pepperOptions(null)}
@@ -60,7 +60,7 @@ export async function renderLibrary(view, state) {
         ${Object.entries(HIDE_LABELS).map(([k, v]) =>
           `<label class="toggle"><input type="checkbox" name="hide" value="${k}"> ${esc(v)}</label>`).join("")}
         ${hideBoxes()}
-        <label class="toggle"><input type="checkbox" name="multi"> Only books in 2+ catalogs</label>
+        <label class="toggle"><input type="checkbox" name="multi"> Only books in 2+ libraries</label>
         <label class="toggle" title="Books whose whole text was read by the AI"><input type="checkbox" name="deep"> 🧬 Deep Scanned only</label>
         <button type="button" id="pepper-help" class="text-xs text-slate-400 underline">🌶️ What do the peppers mean?</button>
         <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-500 underline">Missing a filter? Suggest one</a>

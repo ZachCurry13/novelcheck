@@ -8,9 +8,9 @@ import { diagnoseLater } from "./diagnose.js";
 // What common errors mean, in plain words.
 const HINTS = [
   [/first path segment|missing protocol scheme/i, "The AI address was missing http:// (fixed in NovelCheck 1.8.1). Just retry."],
-  [/didn't answer within|deadline exceeded|timeout/i, "The AI took too long. Newer versions wait longer for Ollama; retry. If it keeps happening, the model may be too big for your GPU (see the ⚠️ tags in Admin → Ollama)."],
+  [/didn't answer within|deadline exceeded|timeout/i, "The AI took too long. Newer versions wait longer for Ollama; retry. If it keeps happening, the model may be too big for your GPU (see the ⚠️ tags in Admin → AI & Scans → LLM Analysis Engine → Find Ollama)."],
   [/connection refused|no such host|dial tcp|can't reach|unreachable/i, "The AI server was switched off or unreachable at the time. Check it's running, then retry."],
-  [/401|403|api key|unauthori[sz]ed|invalid.*key/i, "The AI service rejected the API key. Check it in Admin → LLM Analysis Engine, then retry."],
+  [/401|403|api key|unauthori[sz]ed|invalid.*key/i, "The AI service rejected the API key. Check it in Admin → AI & Scans → LLM Analysis Engine, then retry."],
   [/429|rate limit|quota|insufficient|billing|credit/i, "The AI service's limit or credit ran out. Wait or add credit, then retry."],
   [/json|verdict|spice_level|classification|no choices/i, "The model's answer couldn't be read. A bigger model, or a fallback model, usually fixes this; then retry."],
   [/not found|404|model .* (does not exist|not found)/i, "The model name wasn't found on the AI server. Check the model name, then retry."],

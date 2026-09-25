@@ -25,7 +25,7 @@ const deviceHint = "If a phone or computer still can't open it, that device's ne
 func checkPublicAddress(ctx context.Context, base string) (string, string, string) {
 	u, err := url.Parse(base)
 	if err != nil || u.Host == "" {
-		return "error", "The public address looks wrong: " + base, "Fix it in Admin → Remote access (e.g. books.yourname.com)."
+		return "error", "The public address looks wrong: " + base, "Fix it in Admin → Delivery & Services → Remote access (e.g. books.yourname.com)."
 	}
 	if net.ParseIP(u.Hostname()) == nil {
 		if _, err := net.DefaultResolver.LookupHost(ctx, u.Hostname()); err != nil {

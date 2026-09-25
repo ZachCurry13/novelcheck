@@ -1,4 +1,4 @@
-// Admin → Remote access: built-in Cloudflare Tunnel settings and status.
+// Admin → Delivery & Services → Remote access: built-in Cloudflare Tunnel settings and status.
 import { copyBar, bindCopy, setLogText } from "./copy.js";
 import { get, put } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";

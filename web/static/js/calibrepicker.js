@@ -1,4 +1,4 @@
-// Admin → Calibre Library: browse the mounted folder and pick the exact
+// Admin → Delivery & Services → Calibre Library: browse the mounted folder and pick the exact
 // Calibre library (the folder containing metadata.db).
 import { get, put, qs } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";

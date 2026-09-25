@@ -21,7 +21,7 @@ function loadZXing() {
 
 // liveBlocker says why live scanning can't start here ("" if it can).
 export function liveBlocker() {
-  if (!window.isSecureContext) return "Live scanning needs NovelCheck's secure https:// address (Admin → Remote access). You can still take a photo.";
+  if (!window.isSecureContext) return "Live scanning needs NovelCheck's secure https:// address (Admin → Delivery & Services → Remote access). You can still take a photo.";
   if (!navigator.mediaDevices?.getUserMedia) return "This browser can't use the camera for live scanning. You can still take a photo.";
   return "";
 }

@@ -21,7 +21,7 @@ Do this in the Calibre program that manages your library: Calibre on your comput
 
 ## Step 2: Connect NovelCheck
 
-1. In NovelCheck, open **Admin → Calibre Library → One-click removal**.
+1. In NovelCheck, open **Admin → Delivery & Services → Calibre Library → One-click removal**.
 2. **Content server address:** your computer's or TrueNAS's IP plus the port, for example `http://192.168.1.50:8081`.
 3. **Username** and **Password:** the ones from Step 1.
 4. Click **Test & save**. NovelCheck shows your Calibre libraries. If you have more than one, pick the one NovelCheck reads.

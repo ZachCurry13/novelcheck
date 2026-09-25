@@ -101,7 +101,7 @@ func timeoutError(model string, limit time.Duration, local bool) error {
 	if local {
 		msg += ". On your own server this usually means the model is running on the CPU instead of the GPU " +
 			"(see Usage → Ollama: it should say 100% GPU), or it's too big for your GPU. Try a smaller model, " +
-			"or raise the AI time limit in Admin → LLM Analysis Engine."
+			"or raise the AI time limit in Admin → AI & Scans → LLM Analysis Engine."
 	} else {
 		msg += ". The AI service may be overloaded; it will be retried next batch. You can raise the AI time limit in Admin."
 	}

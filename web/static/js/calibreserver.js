@@ -1,4 +1,4 @@
-// Admin → Calibre Library → One-click removal: connect to calibre's Content
+// Admin → Delivery & Services → Calibre Library → One-click removal: connect to calibre's Content
 // server so NovelCheck can remove filtered books through calibre.
 import { get, put } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";

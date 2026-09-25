@@ -1,4 +1,4 @@
-// The family's own AI filters (Admin → Custom AI filters): chips on books,
+// The family's own AI filters (Admin → AI & Scans → Custom AI filters): chips on books,
 // Hide checkboxes in the Library, ticks in "Edit rating", and the admin editor.
 import { get, post, put, del } from "./api.js";
 import { $, esc, attempt } from "./ui.js";

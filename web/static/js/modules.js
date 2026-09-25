@@ -1,4 +1,4 @@
-// Features the admin can turn off under Admin → Features. The server refuses
+// Features the admin can turn off under Admin → System & Toggles → Features. The server refuses
 // their API calls too; this hides them so the app stays uncluttered.
 
 // on(user, "queue") is true unless the admin turned that feature off.

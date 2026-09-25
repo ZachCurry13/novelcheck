@@ -28,7 +28,7 @@ export async function openCalibreRemoval(filters, onDone) {
         <p class="mt-1 text-xs text-slate-400">They go to Calibre's recycle bin, so you can restore them in Calibre.</p>
       </div>
       <p class="text-xs text-slate-500">Or do it by hand in Calibre:</p>` : `
-      <p class="text-xs text-slate-400">Tip: set up <b>Admin → Calibre Library → One-click removal</b> to remove books straight from here.</p>`}
+      <p class="text-xs text-slate-400">Tip: set up <b>Admin → Delivery & Services → Calibre Library → One-click removal</b> to remove books straight from here.</p>`}
       <div>
         <span class="label">Calibre search</span>
         <textarea id="cal-search" readonly rows="3" class="input font-mono text-xs">${esc(data.search)}</textarea>
@@ -38,7 +38,7 @@ export async function openCalibreRemoval(filters, onDone) {
         <li>Open <b>Calibre</b> on your computer, or its web interface.</li>
         <li>Paste the search into Calibre's search bar and press <b>Enter</b>. Exactly these books appear.</li>
         <li>Select them all (<b>Ctrl+A</b>, or <b>⌘A</b> on a Mac) and press <b>Delete</b> (<b>Remove books</b>). Calibre asks you to confirm.</li>
-        <li>Back in NovelCheck, click <b>Admin → Sync Calibre now</b> so they disappear here too.</li>
+        <li>Back in NovelCheck, click <b>Admin → AI & Scans → Sync Calibre now</b> so they disappear here too.</li>
       </ol>
       <p class="text-xs text-slate-500">Calibre keeps deleted books in its recycle bin for a while, so a mistake can be undone there.</p>`}
     </div>`;

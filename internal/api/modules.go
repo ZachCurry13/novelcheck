@@ -23,7 +23,7 @@ func (s *Server) requireModule(key, what string) func(http.Handler) http.Handler
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !s.Store.SettingBool(key) {
-				writeErr(w, http.StatusForbidden, what+" is turned off (Admin → Features)")
+				writeErr(w, http.StatusForbidden, what+" is turned off (Admin → System & Toggles → Features)")
 				return
 			}
 			next.ServeHTTP(w, r)

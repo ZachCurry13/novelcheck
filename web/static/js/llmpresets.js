@@ -1,4 +1,4 @@
-// Admin → LLM Analysis Engine: a provider menu that fills in sensible settings.
+// Admin → AI & Scans → LLM Analysis Engine: a provider menu that fills in sensible settings.
 // Everything except Claude uses the OpenAI-compatible API; Claude uses
 // Anthropic's native API (llm_provider = "anthropic").
 import { get } from "./api.js";

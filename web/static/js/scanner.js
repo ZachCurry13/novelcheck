@@ -47,14 +47,14 @@ export async function renderImport(view, state) {
     <div id="review" class="card hidden space-y-4">
       <div class="grid gap-3 md:grid-cols-2">
         <div>
-          <label class="label" for="cat-select">Destination catalog</label>
+          <label class="label" for="cat-select">Add to library</label>
           <select id="cat-select" class="input">
-            <option value="new">+ Create new catalog…</option>
+            <option value="new">+ New library…</option>
             ${catalogs.map((c) => `<option value="${c.id}">${esc(c.name)}${c.private ? " 🔒" : ""}</option>`).join("")}
           </select>
         </div>
         <div id="new-cat-wrap">
-          <label class="label" for="new-cat">New catalog name</label>
+          <label class="label" for="new-cat">New library name</label>
           <input id="new-cat" class="input" placeholder="e.g. Kids' Kindle">
           <label class="toggle mt-2 text-sm"><input type="checkbox" id="new-cat-private"> 🔒 Private: only I (and the admins) see these books</label>
         </div>
@@ -176,7 +176,7 @@ export async function renderImport(view, state) {
     if (catSelect.value === "new") {
       body.catalog_name = $("#new-cat", view).value.trim();
       body.private = $("#new-cat-private", view).checked;
-      if (!body.catalog_name) return toast("Enter a name for the new catalog", true);
+      if (!body.catalog_name) return toast("Enter a name for the new library", true);
     } else {
       body.catalog_id = Number(catSelect.value);
     }

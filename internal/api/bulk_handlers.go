@@ -32,7 +32,7 @@ func (s *Server) handleBulkBooks(w http.ResponseWriter, r *http.Request) {
 	switch body.Action {
 	case "queue":
 		if !s.Store.SettingBool(store.KeyModuleQueue) {
-			writeErr(w, http.StatusForbidden, "The reading queue is turned off (Admin → Features)")
+			writeErr(w, http.StatusForbidden, "The reading queue is turned off (Admin → System & Toggles → Features)")
 			return
 		}
 		act = func(b *store.Book) string { return outcome(s.Store.Enqueue(u.ID, b.ID), "queued") }

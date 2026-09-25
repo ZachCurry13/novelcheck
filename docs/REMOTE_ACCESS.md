@@ -34,7 +34,7 @@ Your NovelCheck address is now the subdomain plus the domain, for example `books
 
 ## Step 3: Turn it on in NovelCheck
 
-1. In NovelCheck, open **Admin → Remote access**.
+1. In NovelCheck, open **Admin → Delivery & Services → Remote access**.
 2. Paste the token (or the whole command you copied) into **Tunnel token**.
 3. Type your address, for example `books.yourname.com`, into **Public address**.
 4. Tick **Turn on remote access** and click **Save & connect**.

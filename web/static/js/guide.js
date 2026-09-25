@@ -8,7 +8,7 @@ const EVERYONE = [
   ["👋 Welcome to NovelCheck",
     "NovelCheck helps you pick books that fit your family. Each book gets a simple rating for romance (\"spice\") and a few content flags, so you know what's inside before you start reading."],
   ["📚 The Library",
-    "The <b>Library</b> tab shows every book. Use the search box and the drop-downs to narrow it down. Tick the <b>Hide</b> boxes (like <b>Nudity</b>) to hide books that include those things. Missing a filter? Use <b>Suggest one</b> next to the boxes."],
+    "The <b>Library</b> tab shows every book with its cover. Search by title, author, series or tag, or narrow it down by <b>genre</b>, <b>fiction or nonfiction</b>, <b>author</b>, <b>series</b> and more. Tick the <b>Hide</b> boxes (like <b>Nudity</b>) to hide books that include those things. <b>☑ Select</b> lets you pick several books at once, to add them to Up Next or ask to delete them."],
   ["🌶️ What the ratings mean",
     `<p class="mb-2">Books get 0 to 5 peppers for romance and sexual content:</p>
     <ul class="space-y-1">${PEPPERS.map((p) => `<li>${pepperChip(p.n)}</li>`).join("")}
@@ -19,22 +19,22 @@ const EVERYONE = [
   ["🔎 Book details",
     "Tap any book to open it. You'll see its summary, the rating, and which libraries or devices it's on. Tap <b>＋</b> or <b>Add to Up Next</b> to save it for later."],
   ["▶️ Up Next",
-    "The <b>Up Next</b> tab is your reading list. Drag the <b>⠿</b> handle to reorder books. When you're ready, press <b>▶ Start Reading</b>. If you've set up your Kindle email, the book is sent to your Kindle."],
+    "The <b>Up Next</b> tab is your reading list. Drag the <b>⠿</b> handle to reorder books. When you're ready, press <b>▶ Start Reading</b>. If you've set up your Kindle email, the book is sent to your Kindle. Below the list, <b>💡 Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (and a quick \"Why not?\" helps it learn)."],
   ["👤 Your profile",
-    "In <b>Profile</b> you can add your Send-to-Kindle email and change your password."],
+    "In <b>Profile</b> you can set how books reach your e-reader, change your password, and mark books you know under <b>🎯 Your reading taste</b> so your suggestions fit you better. Something not working, or an idea? <b>🐞 Report a problem or idea</b> at the bottom of any page tells your admin."],
   ["📱 Put it on your phone",
     "<b>iPhone:</b> tap <b>Share</b>, then <b>Add to Home Screen</b>.<br><b>Android:</b> tap <b>Install app</b> (or ⋮ → <b>Add to Home screen</b>). It then opens like a regular app."],
 ];
 
 const MANAGER = [
-  ["🛠️ The Manage tab",
-    "Your account can manage NovelCheck. The <b>Manage</b> tab shows how many books are rated and what the AI has cost so far. <b>Analyze batch</b> rates the next few unrated books, and <b>Sync Calibre now</b> picks up newly added books."],
+  ["🛠️ The Admin tab",
+    "Your account can manage NovelCheck. On the <b>Admin</b> tab, <b>AI &amp; Scans</b> shows how many books are rated and what the AI has cost so far. <b>Analyze batch</b> rates the next few unrated books, and <b>Sync Calibre now</b> picks up newly added books. Banners at the top point out anything waiting for you, such as delete requests or reported problems."],
   ["✏️ Fixing a rating",
     "Open any book to set its <b>Age group</b> (Young kids, Middle grade, Teens, Young adult, Adults) and to leave <b>Parents' notes</b> after you've read it, for everyone or for parents only. If a rating looks wrong, choose <b>Edit rating</b>. Your correction is saved with your name. If a book is fine for your family even though a filter catches it (Harry Potter's magic, say), choose <b>✓ Mark as OK</b>: it then shows for everyone, kids included. <b>Find duplicates</b> (in the Library) lists books that are in Calibre twice."],
   ["👧 Kids' accounts",
-    "At the bottom of <b>Manage</b> you can add kid accounts by age group (they only see books rated for their age or younger), reset their passwords, and tick what each child should <b>not</b> see (for example Open Door or Dark Occult). Hidden books never show up for them, not even in search."],
+    "Under <b>Admin → Users &amp; Rules</b> you can add kid accounts by age group (they only see books rated for their age or younger), reset their passwords, and tick what each child should <b>not</b> see (for example Open Door or Dark Occult). Hidden books never show up for them, not even in search."],
   ["💾 Importing a Kindle",
-    "Plug a Kindle into your computer, open <b>Import Drive</b>, and pick its <b>documents</b> folder. NovelCheck lists the books and adds them to a catalog like \"Kids' Kindle\"."],
+    "Plug a Kindle into your computer, open <b>Import books</b>, and pick its <b>documents</b> folder (or bring in a list from Goodreads, Amazon and others). NovelCheck adds the books to a library you name, like \"Kids' Kindle\". It's yours: tick <b>🔒 Private</b> so only you and the admins see it, and manage it under <b>📚 Your libraries</b>."],
 ];
 
 const ADMIN = [
@@ -43,10 +43,10 @@ const ADMIN = [
   ["📬 Start Reading delivery (optional)",
     `<p class="mb-2">When someone presses <b>▶ Start Reading</b> in Up Next, NovelCheck can put the book on their e-reader:</p>
     <ul class="list-disc space-y-1 pl-5">
-      <li><b>Kindle</b>: fill in <b>Admin → SMTP / Send-to-Kindle</b> (for Gmail, an App Password) and press <b>Send test email</b>. Each reader adds that sender to their Amazon approved list; <b>Profile</b> shows how.</li>
+      <li><b>Kindle</b>: fill in <b>Admin → Delivery & Services → SMTP / Send-to-Kindle</b> (for Gmail, an App Password) and press <b>Send test email</b>. Each reader adds that sender to their Amazon approved list; <b>Profile</b> shows how.</li>
       <li><b>KOReader</b>: nothing to set up here. Each reader opens <b>Profile → KOReader setup</b> for their private catalog address and QR code (parents can do it for kids from their account card).</li>
     </ul>
-    <p class="mt-2">Don't use either? Switch them off under <b>Admin → Features</b>.</p>`],
+    <p class="mt-2">Don't use either? Switch them off under <b>Admin → System & Toggles → Features</b>.</p>`],
 ];
 
 const DONE = [["✅ You're all set", "You can reopen this guide any time from the <b>Help</b> link at the top or bottom of the page."]];

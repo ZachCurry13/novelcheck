@@ -106,7 +106,7 @@ func (s *Server) handleSaveCalibreTitle(w http.ResponseWriter, r *http.Request) 
 // library. On failure it writes the error and returns ok=false.
 func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []titlePush) (fixed int, ok bool) {
 	if s.Store.Setting(store.KeyCalibreSrvURL) == "" {
-		writeErr(w, http.StatusBadRequest, "set up the calibre Content server connection first (Admin → System)")
+		writeErr(w, http.StatusBadRequest, "set up the calibre Content server connection first (Admin → Delivery & Services → Calibre Library)")
 		return 0, false
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Minute)

@@ -73,7 +73,7 @@ export async function openBook(id, state, onChange) {
         <button type="button" data-copy-err class="ml-1 text-xs underline">📋 Copy</button>${isAdmin ? ` <button type="button" data-dx-err class="text-xs underline">🩺 Diagnose</button>` : ""}</p>` : ""}
       ${(b.blurb || b.description) ? `<div><span class="label">Blurb</span>
         <p class="text-sm leading-relaxed text-slate-300 whitespace-pre-line">${esc(b.blurb || b.description)}</p></div>` : ""}
-      <div><span class="label">In catalogs</span><ul class="space-y-2">${copies || "<li class='text-sm text-slate-500'>None</li>"}</ul>${dupNote}</div>
+      <div><span class="label">In libraries</span><ul class="space-y-2">${copies || "<li class='text-sm text-slate-500'>None</li>"}</ul>${dupNote}</div>
       ${b.analysis_model ? `<p class="text-xs text-slate-500">${b.analysis_model.startsWith("manual: ")
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : b.analysis_model.startsWith("deep: ") ? "🧬 Deep Scanned (whole book) by " + esc(b.analysis_model.slice(6)) : "Rated from the description by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
       ${b.approved ? `<p class="text-xs text-emerald-400">✓ Marked OK by ${esc(b.approved_by)}: shown to everyone, even if it matches their hide filters or content rules.</p>` : ""}

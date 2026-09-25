@@ -111,7 +111,7 @@ Open the **Admin** tab.
 - **iPhone (Safari):** open the NovelCheck address, tap **Share**, then **Add to Home Screen**.
 - **Android (Chrome):** open the address and tap **Install app** (or ⋮ → **Add to Home screen**).
 
-To use NovelCheck away from home (on cellular, or at a friend's house), turn on the built-in Cloudflare Tunnel under **Admin → Remote access**. Click **Show setup steps** there, or see [REMOTE_ACCESS.md](REMOTE_ACCESS.md). It needs a free Cloudflare account and a domain name, and no router changes.
+To use NovelCheck away from home (on cellular, or at a friend's house), turn on the built-in Cloudflare Tunnel under **Admin → Delivery & Services → Remote access**. Click **Show setup steps** there, or see [REMOTE_ACCESS.md](REMOTE_ACCESS.md). It needs a free Cloudflare account and a domain name, and no router changes.
 
 ---
 
@@ -123,11 +123,11 @@ To update: go to **Apps**, click **novelcheck**, and click **Update** if TrueNAS
 
 Check the version number at the top right afterwards. If it didn't change, your app was probably installed before the pull policy was added to this guide: edit the app, set **Pull Policy** to **Always pull…** (form), or add the line `pull_policy: always` under `image:` (YAML), then save.
 
-The version you are running shows at the top right (next to **Sign out**) and at the bottom of every page. Admins can turn the update check off under **Admin → Sign-in & Updates**.
+The version you are running shows at the top right (next to **Sign out**) and at the bottom of every page. Admins can turn the update check off under **Admin → System & Toggles → Sign-in & Updates**.
 
 ## Backups
 
-In NovelCheck: **Admin → Download novelcheck.db**. Keep that file somewhere safe. It contains passwords (scrambled) and your API keys.
+In NovelCheck: **Admin → System & Toggles → Download novelcheck.db**. Keep that file somewhere safe. It contains passwords (scrambled) and your API keys.
 
 ## Troubleshooting
 
@@ -137,8 +137,8 @@ In NovelCheck: **Admin → Download novelcheck.db**. Keep that file somewhere sa
 | **Browse folders…** shows nothing, or says **permission denied** | Give the **apps** user *Read* access to the Step 2 dataset: **Datasets → that dataset → Permissions → Edit → Add Item → User: apps → Read**, and tick **Apply permissions recursively**. |
 | **Find libraries automatically** finds nothing | Check the Step 3 path points at the folder that *contains* your library somewhere inside it. The search goes up to 5 folders deep; use **Browse folders…** for anything deeper. |
 | Can't open `http://…:30080` | Another app may already use port 30080. Edit the app and change `30080` to another number like `30081`. |
-| Forgot a password | Another admin can reset it under **Admin → Users & Content Rules → Reset password**. Editors can reset kids' passwords the same way under **Manage**. |
+| Forgot a password | Another admin can reset it under **Admin → Users & Rules → Reset password**. Editors can reset kids' passwords the same way under **Manage**. |
 | Locked out of the only admin account | Last resort, which erases all NovelCheck data: stop the app, delete `novelcheck.db` from the Step 1 dataset, start the app, and create a new admin in the browser (Step 4). |
-| Asked to sign in every time | Make sure **Keep me signed in on this device** is ticked when you sign in. You then stay signed in as long as you use NovelCheck at least once every 30 days (admins can change this under **Admin → Sign-in & Updates**). Some things always need a separate sign-in: the iPhone home-screen app and Safari keep separate logins, each address you use (for example your TrueNAS IP and a Cloudflare address) needs its own sign-in, and private browsing windows forget you when closed. |
+| Asked to sign in every time | Make sure **Keep me signed in on this device** is ticked when you sign in. You then stay signed in as long as you use NovelCheck at least once every 30 days (admins can change this under **Admin → System & Toggles → Sign-in & Updates**). Some things always need a separate sign-in: the iPhone home-screen app and Safari keep separate logins, each address you use (for example your TrueNAS IP and a Cloudflare address) needs its own sign-in, and private browsing windows forget you when closed. |
 | Updated but the version number didn't change | The app's pull policy isn't **Always**, so TrueNAS reused the old download. Fix it as described in [Updating NovelCheck](#updating-novelcheck). |
 | See what's going on | **Apps → novelcheck → Logs** (the icon on the container row). |

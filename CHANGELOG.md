@@ -38,6 +38,13 @@ becomes the release notes for that version and is shown in the app under
   - **🧬 Deep Scan** starts scans for an admin, or asks an admin for everyone else. Books without an EPUB file are skipped.
   - **🗑 Delete** takes books in your own libraries out straight away, and sends a delete request to the admins for the rest.
 
+### Changed
+- The **How-to guide** covers the new features, and every "Admin → …" instruction in the app and the guides now names the Admin tab it's on (for example **Admin → Delivery & Services → Calibre Library**).
+- The app says **library** everywhere it used to say "catalog" (the KOReader catalog keeps its name).
+
+### Fixed
+- Tidying titles in Calibre without the Content server set up pointed to the wrong Admin page.
+
 ## [1.17.0]
 
 ### 🧬 Deep Scan

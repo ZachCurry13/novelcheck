@@ -64,7 +64,7 @@ export async function renderDuplicates(view, state) {
     const how = data.can_remove
       ? `<button id="dup-remove" class="btn-primary">Remove selected copies</button>`
       : isAdmin
-        ? `<p class="text-sm text-slate-400">To remove them from here, turn on <a href="#/admin" class="underline">Admin → Calibre Library → One-click removal</a>. Or copy the search into Calibre's search bar and delete them there.</p>`
+        ? `<p class="text-sm text-slate-400">To remove them from here, turn on <a href="#/admin" class="underline">Admin → Delivery & Services → Calibre Library → One-click removal</a>. Or copy the search into Calibre's search bar and delete them there.</p>`
         : `<p class="text-sm text-slate-400">Only an admin can remove books from Calibre. You can copy the search into Calibre's search bar to find them.</p>`;
     body.innerHTML = `
       <div class="card mb-4 flex flex-wrap items-center gap-3">

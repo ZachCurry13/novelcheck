@@ -60,7 +60,7 @@ func (s *Server) handleDiagnose(w http.ResponseWriter, r *http.Request) {
 	var aiErrs []string
 	for _, ai := range s.Store.AIConfigs() {
 		if len(ai.Models) == 0 {
-			aiErrs = append(aiErrs, "no AI model is set up (Admin → LLM Analysis Engine)")
+			aiErrs = append(aiErrs, "no AI model is set up (Admin → AI & Scans → LLM Analysis Engine)")
 			continue
 		}
 		model := ai.Models[0]

@@ -35,7 +35,7 @@ func (s *Server) handleCreateCatalog(w http.ResponseWriter, r *http.Request) {
 	}
 	name, ok := validCatalogName(body.Name)
 	if !ok {
-		writeErr(w, http.StatusBadRequest, "catalog name must be 1-80 characters")
+		writeErr(w, http.StatusBadRequest, "a library name must be 1-80 characters")
 		return
 	}
 	if body.Source != "drive" {
@@ -105,7 +105,7 @@ func (s *Server) handleImportDrive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if c.Source == "calibre" {
-		writeErr(w, http.StatusBadRequest, "cannot import drive books into the Calibre catalog")
+		writeErr(w, http.StatusBadRequest, "books can't be imported into the Calibre library; choose or name another library")
 		return
 	}
 	if !c.CanEdit(u) {

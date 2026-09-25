@@ -1,6 +1,6 @@
 # Setting up the AI that rates your books
 
-NovelCheck sends each book's title, author, and back-cover blurb to an AI service, which answers with a rating (spice level, content flags, and a short summary). You choose which service in **Admin → LLM Analysis Engine → AI provider**. Only book information is sent, never your files or anything about your family.
+NovelCheck sends each book's title, author, and back-cover blurb to an AI service, which answers with a rating (spice level, content flags, and a short summary). You choose which service in **Admin → AI & Scans → LLM Analysis Engine → AI provider**. Only book information is sent, never your files or anything about your family.
 
 ## Which one should I pick?
 
@@ -10,7 +10,7 @@ NovelCheck sends each book's title, author, and back-cover blurb to an AI servic
 - **Best for obscure or self-published books: Perplexity.** It searches the web for each book. Around $6 per 1,000 books.
 - **Free and fully private: Ollama.** Runs on your own server, with a one-click setup inside NovelCheck. A graphics card makes it much faster.
 
-The cost estimates assume about 900 words-worth of text ("tokens") per book. NovelCheck shows your real spending under **Admin → Spent to date**, and you can cap it with **Max tokens per hour**.
+The cost estimates assume about 900 words-worth of text ("tokens") per book. NovelCheck shows your real spending under **Admin → AI & Scans → Spent to date**, and you can cap it with **Max tokens per hour**.
 
 Whichever you pick, start with a small batch (5 books), check the ratings look sensible, then run bigger batches.
 
@@ -20,7 +20,7 @@ Whichever you pick, start with a small batch (5 books), check the ratings look s
 2. Add a payment method and some credit: **Settings → Billing → Add payment details**. $5 lasts a long time for NovelCheck.
 3. Open **API keys** (in the left menu or under your profile) and click **Create new secret key**. Name it `NovelCheck`.
 4. Copy the key right away (it starts with `sk-`). OpenAI only shows it once.
-5. In NovelCheck: **Admin → LLM Analysis Engine**, set **AI provider** to **OpenAI**, paste the key into **API key**, and click **Save settings**.
+5. In NovelCheck: **Admin → AI & Scans → LLM Analysis Engine**, set **AI provider** to **OpenAI**, paste the key into **API key**, and click **Save settings**.
 6. Leave the model as `gpt-4o-mini`. It's fast, cheap, and good at this job.
 
 ## Anthropic Claude
@@ -29,7 +29,7 @@ Whichever you pick, start with a small batch (5 books), check the ratings look s
 2. Add credit: **Settings → Billing**. $5 is plenty to start.
 3. Open **API Keys** and click **Create Key**. Name it `NovelCheck`.
 4. Copy the key right away (it starts with `sk-ant-`). Anthropic only shows it once.
-5. In NovelCheck: **Admin → LLM Analysis Engine**, set **AI provider** to **Anthropic Claude**, paste the key into **API key**, and click **Save settings**.
+5. In NovelCheck: **Admin → AI & Scans → LLM Analysis Engine**, set **AI provider** to **Anthropic Claude**, paste the key into **API key**, and click **Save settings**.
 6. The preset uses **Claude Haiku 4.5** (`claude-haiku-4-5`) for every book and **Claude Sonnet 5** (`claude-sonnet-5`) only when Haiku can't give a usable answer. You can leave both as they are.
 
 Claude doesn't need the "API base URL" or "JSON response mode" settings, so NovelCheck hides them when Claude is selected.
@@ -39,7 +39,7 @@ Claude doesn't need the "API base URL" or "JSON response mode" settings, so Nove
 1. Go to **aistudio.google.com** and sign in with a Google account.
 2. Click **Get API key**, then **Create API key**. Copy the key.
 3. Free tier or paid: Gemini has a free tier with daily limits. On the free tier Google may use what you send to improve its products. That's only book blurbs, but if you'd rather it didn't, turn on billing in Google Cloud for that project.
-4. In NovelCheck: **Admin → LLM Analysis Engine**, set **AI provider** to **Google Gemini**, paste the key into **API key**, and click **Save settings**.
+4. In NovelCheck: **Admin → AI & Scans → LLM Analysis Engine**, set **AI provider** to **Google Gemini**, paste the key into **API key**, and click **Save settings**.
 5. The preset fills in `gemini-2.5-flash`. Google renames models from time to time, so check AI Studio's model list for the current **Flash** model and its price, and update **Primary (small) model** and the two price boxes if they differ.
 6. If you hit "rate limit" errors on the free tier, raise **Delay between scans** to 5 seconds or more, or use smaller batches.
 
@@ -48,7 +48,7 @@ Claude doesn't need the "API base URL" or "JSON response mode" settings, so Nove
 1. Go to **perplexity.ai**, sign in, and open **Settings → API**.
 2. Add a payment method and buy some API credit.
 3. Click **Generate API key** and copy it (it starts with `pplx-`).
-4. In NovelCheck: **Admin → LLM Analysis Engine**, set **AI provider** to **Perplexity**, paste the key into **API key**, and click **Save settings**.
+4. In NovelCheck: **Admin → AI & Scans → LLM Analysis Engine**, set **AI provider** to **Perplexity**, paste the key into **API key**, and click **Save settings**.
 5. The preset uses `sonar`, which searches the web for each book before answering. That's why it's good with lesser-known titles.
 6. Perplexity also charges a small fee per request on top of the per-token price. NovelCheck's cost estimate doesn't include that fee, so check your Perplexity usage page for the true total.
 
@@ -59,7 +59,7 @@ JSON response mode is turned off for Perplexity because it doesn't support it. N
 Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and there's no bill. With a graphics card (GPU) it's quick; without one, each book can take a minute or more, and ratings are a little less reliable than the paid services.
 
 1. In TrueNAS, open **Apps → Discover Apps**, search for **Ollama**, and click **Install**. If you've set up GPU passthrough, select your GPU in the install form. Leave the other settings as they are and click **Install**, then wait until it shows **Running**.
-2. In NovelCheck: **Admin → LLM Analysis Engine**, set **AI provider** to **Ollama**. An **Ollama easy setup** box appears.
+2. In NovelCheck: **Admin → AI & Scans → LLM Analysis Engine**, set **AI provider** to **Ollama**. An **Ollama easy setup** box appears.
 3. Click **1. Find Ollama**. NovelCheck looks for Ollama on your server. If it isn't found, type its address in the box next to the button (your TrueNAS IP and the port shown on the Ollama app, for example `192.168.1.50:11434`, or `:30068` for the TrueNAS app) and click **Find Ollama** again. You don't need to type `http://`; NovelCheck adds it.
 4. No models yet? Under **3. Download another model**, pick one and click **Download**. A progress bar shows the download. The menu marks each model for your GPU: **⭐ Best**, **💪 Most powerful that fits**, or **⚠️ Too big (slow)**. Click **🎮 Check my GPU** to measure it (it loads your biggest downloaded model for a moment), or pick your GPU's memory size (for example 8 GB) from the menu.
    - With a GPU: **Qwen 2.5 7B** (about 4.7 GB) gives the best ratings.
@@ -73,17 +73,31 @@ Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and
 
 ## Deep Scan (reading the whole book)
 
-A **🧬 Deep Scan** sends the book's full text to your AI in parts, so it uses far more tokens than a normal rating: a typical novel is around 150,000 tokens, or about 2–5 cents with `gpt-4o-mini`. NovelCheck shows the estimate before every scan. You can pick a separate **Deep Scan model** under **Admin → LLM Analysis Engine**, for example a cheap model with a large context window. With Ollama the book is cut into small parts (about 2,000 words) to fit local models' memory; it's free, but a whole book can take a long time on a small GPU.
+A **🧬 Deep Scan** sends the book's full text to your AI in parts, so it uses far more tokens than a normal rating: a typical novel is around 150,000 tokens, or about 2–5 cents with `gpt-4o-mini`. NovelCheck shows the estimate before every scan. You can pick a separate **Deep Scan model** under **Admin → AI & Scans → LLM Analysis Engine**, for example a cheap model with a large context window. With Ollama the book is cut into small parts (about 2,000 words) to fit local models' memory; it's free, but a whole book can take a long time on a small GPU.
+
+## Suggested Reads
+
+**💡 Suggested Reads** (under Up Next) starts with free matching done by NovelCheck itself, with no AI: next in a series, same authors, similar descriptions. What the AI adds is up to you, under **Admin → AI & Scans → Suggested Reads**:
+
+- **Free matching only (no AI)**: costs nothing.
+- **AI picks from your library**: the AI chooses the best 10 from a shortlist of 30 and writes a reason for each. It runs at most once a day per person who opens Up Next, and never goes past your hourly token cap. That's roughly 4,000 tokens a time, well under a cent with `gpt-4o-mini`, and free with Ollama.
+- **AI picks + books you don't own**: the same, plus up to 5 books to add to the wishlist. Kids' accounts never get these.
+
+Marking books under **🎯 Your reading taste** uses no AI.
+
+## Genres for books without tags
+
+Genres come from the tags in Calibre. For books that have none, the Admin page offers **Fill in with AI**, with an estimated cost first. It sorts about 25 books per call (roughly 2,700 tokens, a fraction of a cent with `gpt-4o-mini`), stays within your hourly token cap, and can be stopped any time. Tags you add in Calibre always win.
 
 ## Language
 
-Summaries are written in **English (US)** unless you pick another language under **Admin → LLM Analysis Engine → Language for book summaries**. Small models sometimes answered in the book's own language before; if any existing summaries aren't in English, Admin shows **Re-rate them in English**.
+Summaries are written in **English (US)** unless you pick another language under **Admin → AI & Scans → LLM Analysis Engine → Language for book summaries**. Small models sometimes answered in the book's own language before; if any existing summaries aren't in English, Admin shows **Re-rate them in English**.
 
 ## Backup AI (optional)
 
 A second AI that takes over when the main one fails, for example a second Ollama on another computer, or a cloud AI like OpenAI for when your server is off.
 
-1. **Admin → Backup AI (optional)**: tick **Use a backup AI when the main one fails**.
+1. **Admin → AI & Scans → Backup AI (optional)**: tick **Use a backup AI when the main one fails**.
 2. Pick the backup's **AI provider**. For a second Ollama, type its address in the Ollama box (for example `192.168.1.60:11434`), click **Find Ollama**, tick its models in order and click **Use these models in this order**. For a cloud AI, paste its API key and model like in the sections above.
 3. Click **Save settings**, then **System → Check everything** to see both AIs answer.
 
@@ -106,7 +120,7 @@ Before rating a book, NovelCheck looks up its back-cover blurb from Open Library
 1. Go to **console.cloud.google.com** and sign in with a Google account. Create a project if asked (any name, e.g. `NovelCheck`).
 2. Open **APIs & Services → Library**, search for **Books API**, and click **Enable**.
 3. Open **APIs & Services → Credentials → Create credentials → API key**, and copy the key.
-4. In NovelCheck: **Admin → LLM Analysis Engine → Google Books API key**, paste it, and click **Save settings**.
+4. In NovelCheck: **Admin → AI & Scans → LLM Analysis Engine → Google Books API key**, paste it, and click **Save settings**.
 5. Check it: **System → Check everything** should show Google Books "Working with your API key".
 
 The Books API is free for normal use. No billing account is needed.

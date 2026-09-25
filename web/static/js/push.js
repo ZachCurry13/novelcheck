@@ -10,7 +10,7 @@ const installed = () => window.matchMedia?.("(display-mode: standalone)").matche
 // Why this device can't get notifications, or "" if it can.
 function blocker() {
   if (!window.isSecureContext) {
-    return "Notifications need NovelCheck's secure <b>https://</b> address (an admin sets it up under <b>Admin → Remote access</b>). Open NovelCheck at that address, then come back here.";
+    return "Notifications need NovelCheck's secure <b>https://</b> address (an admin sets it up under <b>Admin → Delivery & Services → Remote access</b>). Open NovelCheck at that address, then come back here.";
   }
   if (isIOS() && !installed()) {
     return "On iPhone and iPad: tap <b>Share → Add to Home Screen</b>, open NovelCheck from the new icon, then turn notifications on here.";
