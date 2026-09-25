@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS books (
     spice_reason     TEXT NOT NULL DEFAULT '',     -- short "why this many peppers", e.g. "Heavy innuendo, on-page foreplay"
     rules_version    INTEGER NOT NULL DEFAULT 0,   -- store.RulesVersion the rating was made under
     flags_version    INTEGER NOT NULL DEFAULT 0,   -- custom filters version the rating checked
+    rated_modified   TEXT NOT NULL DEFAULT '',     -- the Calibre change time the rating saw (delta scanning)
     age_set_by       TEXT NOT NULL DEFAULT '',
     analysis_model   TEXT NOT NULL DEFAULT '',
     analysis_error   TEXT NOT NULL DEFAULT '',
@@ -77,6 +78,7 @@ CREATE TABLE IF NOT EXISTS catalog_books (
     path        TEXT NOT NULL DEFAULT '',
     format      TEXT NOT NULL DEFAULT '',
     external_id TEXT NOT NULL DEFAULT '',
+    modified    TEXT NOT NULL DEFAULT '',  -- Calibre's last change to the entry or file (UTC), for delta scanning
     added_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (catalog_id, book_id, path)
 );

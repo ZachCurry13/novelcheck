@@ -29,6 +29,9 @@ becomes the release notes for that version and is shown in the app under
 - **One-click presets** on each kid's card: **👪 Strict Family (Max Level 2)** and the new **🧒 Young Reader (Level 1, ages 9–12)**, which also sets the age group and hides dark occult. Rules a preset doesn't cover stay as you set them.
 - The pepper limit for kids now offers **No limit** or **Level 0–3**.
 
+### ⚡ Changed books
+- **Only changed books are rated again**: NovelCheck now remembers when each book last changed in Calibre (its details or its file). Unchanged books are never rated twice; if you edit a book in Calibre after it was rated, it joins the **Re-rate** banner on the Admin page ("changed in Calibre since they were rated"), so nothing is spent without your say-so. **Re-rate whole library** is still there to redo everything.
+
 ### Fixed
 - **No more error when you reopen the app**: when a phone wakes NovelCheck before its connection is back, the app now waits for the network and quietly tries again (up to 3 times) instead of showing an error.
 - **Steadier server**: if something goes wrong while rating a book, syncing Calibre or sending a notification, NovelCheck now records the error and carries on instead of stopping (which made the app restart).

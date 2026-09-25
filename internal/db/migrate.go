@@ -33,6 +33,8 @@ func migrate(d *sqlx.DB) error {
 		{"books", "spice_reason", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "rules_version", "INTEGER NOT NULL DEFAULT 0"},
 		{"books", "flags_version", "INTEGER NOT NULL DEFAULT 0"},
+		{"books", "rated_modified", "TEXT NOT NULL DEFAULT ''"},
+		{"catalog_books", "modified", "TEXT NOT NULL DEFAULT ''"},
 		{"token_usage", "cost", "REAL"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {

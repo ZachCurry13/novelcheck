@@ -8,8 +8,8 @@ Latest release: **v1.16.0** (Check a book, pepper wording, feature switches, pho
 3. ✅ §2 live barcode scanner (`barcode.js`, vendored ZXing, camera allowed for self) + wishlist (`wishlist` table, ⭐ Wishlist tab, owned-aware actions, pending acquisition in Up Next).
 4. ✅ §5 KOReader OPDS catalog (`/opds/<token>`, QR, steps, kids' devices), Send-to-Kindle confirmation with the approved-sender steps, admin guide step. (VAPID push was done in v1.16.)
 5. ✅ §6 presets: Strict Family + Young Reader (age + pepper cap + rules in one click), kids' cap picker 0–3.
-6. ⏭ §8 delta scanning: re-rate when Calibre's last-modified or the file changes.
-7. §10 Admin sub-tabs (Users & Rules, AI & Scans, Delivery & Services, System & Toggles), user cards, accordions.
+6. ✅ §8 delta scanning: Calibre last_modified / file mtime per copy vs the rating's `rated_modified`; changed books join the re-rate banner (never automatic).
+7. ⏭ §10 Admin sub-tabs (Users & Rules, AI & Scans, Delivery & Services, System & Toggles), user cards, accordions.
 8. §9 tap-to-see values on Usage charts; §13 Ollama model list with disk use + delete.
 9. §11 title normalizer (strip "01 - ", "Book 2:") + push title/series to Calibre via the Content server.
 10. §12 suggested reads under Up Next with 👍/👎.

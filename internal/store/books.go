@@ -131,10 +131,11 @@ func (s *Store) SaveAnalysis(id int64, a Analysis) error {
 	_, err := s.DB.Exec(`UPDATE books SET status = 'analyzed', spice_level = ?, spice_reason = ?, classification = ?,
 		nudity = ?, solo_acts = ?, heavy_innuendo = ?, playful_fantasy = ?, dark_occult = ?, demonic_presence = ?,
 		lgbtq_content = ?, summary_verdict = ?, analysis_model = ?, analysis_error = '', rules_version = ?,
-		flags_version = ?, analyzed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+		flags_version = ?, rated_modified = (SELECT COALESCE(MAX(modified), '') FROM catalog_books WHERE book_id = ?),
+		analyzed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
 		a.SpiceLevel, strings.TrimSpace(a.SpiceReason), a.Classification, a.Nudity, a.SoloActs, a.HeavyInnuendo,
 		a.PlayfulFantasy, a.DarkOccult, a.DemonicPresence, a.LGBTQContent, a.SummaryVerdict, a.Model, RulesVersion,
-		s.FlagsVersion(), id)
+		s.FlagsVersion(), id, id)
 	if err != nil {
 		return err
 	}

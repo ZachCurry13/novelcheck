@@ -5,6 +5,7 @@ package calibre
 import (
 	"fmt"
 	"html"
+	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -22,12 +23,13 @@ type Result struct {
 }
 
 type calibreBook struct {
-	ID          int64  `db:"id"`
-	Title       string `db:"title"`
-	Path        string `db:"path"`
-	Authors     string `db:"authors"`
-	ISBN        string `db:"isbn"`
-	Description string `db:"description"`
+	ID           int64  `db:"id"`
+	Title        string `db:"title"`
+	Path         string `db:"path"`
+	Authors      string `db:"authors"`
+	ISBN         string `db:"isbn"`
+	Description  string `db:"description"`
+	LastModified string `db:"last_modified"` // e.g. "2024-03-01 18:23:45.123456+00:00"
 }
 
 type calibreFile struct {
@@ -53,13 +55,20 @@ func Sync(st *store.Store, dir string) (Result, error) {
 	}
 	defer cdb.Close()
 
+	// Calibre records each entry's last change; very old libraries may lack it.
+	lastMod := "''"
+	var hasLastMod int
+	if cdb.Get(&hasLastMod, `SELECT COUNT(*) FROM pragma_table_info('books') WHERE name = 'last_modified'`) == nil && hasLastMod > 0 {
+		lastMod = "COALESCE(b.last_modified, '')"
+	}
 	var books []calibreBook
 	err = cdb.Select(&books, `SELECT b.id, b.title, b.path,
 		COALESCE((SELECT GROUP_CONCAT(name, ' & ') FROM (SELECT a.name FROM books_authors_link l
 			JOIN authors a ON a.id = l.author WHERE l.book = b.id ORDER BY l.id)), '') AS authors,
 		COALESCE((SELECT val FROM identifiers i WHERE i.book = b.id
 			AND i.type = 'isbn' LIMIT 1), '') AS isbn,
-		COALESCE((SELECT text FROM comments c WHERE c.book = b.id), '') AS description
+		COALESCE((SELECT text FROM comments c WHERE c.book = b.id), '') AS description,
+		`+lastMod+` AS last_modified
 		FROM books b ORDER BY b.id`)
 	if err != nil {
 		return res, fmt.Errorf("read calibre books: %w", err)
@@ -92,23 +101,53 @@ func Sync(st *store.Store, dir string) (Result, error) {
 		keep[ext] = true
 		res.Books++
 		fs := byBook[b.ID]
+		entryMod := changeTime(b.LastModified)
 		if len(fs) == 0 {
 			// No files: a placeholder path keeps each Calibre entry distinct, so
 			// two empty entries of the same book still show as duplicates.
-			if err := st.AddCopy(catID, id, EntryPath(ext), "", ext); err != nil {
+			if err := st.AddCalibreCopy(catID, id, EntryPath(ext), "", ext, entryMod); err != nil {
 				return res, err
 			}
 			continue
 		}
 		for _, f := range fs {
-			if err := st.AddCopy(catID, id, FilePath(dir, b.Path, f.Name, f.Format), f.Format, ext); err != nil {
+			p := FilePath(dir, b.Path, f.Name, f.Format)
+			if err := st.AddCalibreCopy(catID, id, p, f.Format, ext, latest(entryMod, fileTime(p))); err != nil {
 				return res, err
 			}
 			res.Copies++
 		}
 	}
-	res.Removed, err = st.PruneCatalog(catID, keep)
-	return res, err
+	if res.Removed, err = st.PruneCatalog(catID, keep); err != nil {
+		return res, err
+	}
+	return res, st.BaselineModified()
+}
+
+// changeTime turns Calibre's "2024-03-01 18:23:45.123456+00:00" (UTC) into
+// "2024-03-01 18:23:45", which sorts as text.
+func changeTime(calibre string) string {
+	t := strings.Replace(strings.TrimSpace(calibre), "T", " ", 1)
+	if len(t) < 19 {
+		return ""
+	}
+	return t[:19]
+}
+
+// fileTime is the file's modification time in the same form ("" if unknown).
+func fileTime(p string) string {
+	st, err := os.Stat(p)
+	if err != nil {
+		return ""
+	}
+	return st.ModTime().UTC().Format("2006-01-02 15:04:05")
+}
+
+func latest(a, b string) string {
+	if b > a {
+		return b
+	}
+	return a
 }
 
 // EntryPath stands in for the file path of a Calibre entry with no files.
