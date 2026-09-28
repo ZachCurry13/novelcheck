@@ -1,8 +1,8 @@
 # NovelCheck handoff (2026-09-28, night)
 
-## 0. v1.21.0 (paper books) on `feature/v1.21-physical`, NOT released; v1.20.1 released
+## 0. v1.21.0 (paper books) and v1.20.1 (phone fixes) released (2026-09-28)
 - **v1.21 paper books** (the user's choices, 2026-09-28: parents only; a new Paper books page; the library name is the location): `catalogs.physical`, `/api/shelves`, `shelf.js` with continuous barcode scanning, typed titles and cover photos; ratings first in line within the token cap. Tested in Go and at 360px with stubs; live camera scanning couldn't be tried in the Browser pane (camera blocked), so the user should try it on the phone.
-- Next: the user's OK to release **1.21.0**, then **auto-rating + status badges**, **collections & seasonal**, **Stuff Your Kindle events**, **AI hardware tools**.
+- GitHub release v1.21.0 and its image were built on 2026-09-28. Next, in the user's order: **auto-rating + status badges**, **collections & seasonal**, **Stuff Your Kindle events**, **AI hardware tools**.
 - **v1.20.1** (phone fixes) was released on 2026-09-28 (GitHub release v1.20.1). Notes on it follow.
 - v1.20.0 was released on 2026-09-28 (the user had merged v1.20 on GitHub via PRs #2/#3; the stray files from PR #3 were removed).
 - The user reported the app "almost unusable" on a phone. Found at 360px with realistic stubbed data, and fixed:
