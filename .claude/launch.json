@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "novelcheck-local",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set NOVELCHECK_ADDR=127.0.0.1:18108&& set NOVELCHECK_DATA_DIR=C:\\Users\\zjboe\\AppData\\Local\\Temp\\claude\\C--novelcheck\\0355e7ed-a1eb-42d8-b557-bf295e200539\\scratchpad\\localdata&& set NOVELCHECK_CALIBRE_DIR=C:\\Users\\zjboe\\AppData\\Local\\Temp\\claude\\C--novelcheck\\0355e7ed-a1eb-42d8-b557-bf295e200539\\scratchpad\\localcalibre&& go run ./cmd/novelcheck"],
+      "port": 18108
+    }
+  ]
+}
