@@ -4,6 +4,30 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.20.1]
+
+### 📱 Phones
+- **Up Next is readable.** Titles get two full lines, and ▶ (start reading) and ✕ are small buttons beside them. Tap a title or cover to open the book.
+- **No more sideways scrolling, and the tabs stay put.** A drop-down with a long library name (such as "From" under Suggested Reads) could make a page wider than the screen. The bottom tabs then slid with it and **More** ended up off the edge. Nothing can widen a page any more.
+- **More opens from the bottom**, just above the tabs, with big buttons for every other page. Swipe it down or tap outside to close it. Admins now find **🧬 Deep Scan** there (and in the top menu on computers).
+- **Pop-up windows open as sheets from the bottom.** In the book window, ✕ stays at the top, and the main buttons (＋ Up Next, ⭐ Wishlist, Edit rating) stay at the bottom while you scroll.
+- **Updates show up right away.** Phones could keep parts of the old version for an hour or two after an update, and a mix of old and new files could break pages. Each version's files now have their own addresses, so a phone always runs one version. An app left open picks up a new version when you come back to it.
+
+### 🧬 Deep Scan page
+- **Four sections:** Review, Running, Results and Settings. The page opens on whatever needs you.
+- **Accept or Keep a raise without losing your place.** The card goes away, the count drops, and the page stays where it was. **Accept all** joins **Keep all old ratings**.
+- **Tap a title or cover** to open the book. What the AI found is folded under each card, so a long list is quick to scan.
+- **Running scans** show a progress bar.
+
+### 🔔 Notifications
+- **Deep Scans waiting for review are one card**: "14 Deep Scans wait for your review", with a **Review** button and the list of books.
+- **Each notice has a clear button** (Review, Open System…) and a ✕ to dismiss it. Copy and Diagnose appear only on errors.
+- A notice is marked read when you follow its button, and a Deep Scan's notice clears when you decide it.
+
+### 🧭 Discover
+- **Discover shows books you don't have.** Books already in your libraries are left out of the lists (Open Library's lists often repeat them), and the rows are refilled from longer lists. Tick **Also show books we already have** to see them again.
+- **Books you don't own open properly.** The book window treated a best-seller from Discover as one of your books. It now offers ⭐ **Add to Wishlist** and **Up Next (to get)**, and says it's not in your libraries yet.
+
 ## [1.20.0]
 
 ### 🧭 Discover

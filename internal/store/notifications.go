@@ -92,3 +92,23 @@ func (s *Store) ClearNotifications() error {
 	_, err := s.DB.Exec(`DELETE FROM notifications`)
 	return err
 }
+
+// DismissNotifications deletes the given notifications (the ✕ on a notice, or
+// a whole group at once).
+func (s *Store) DismissNotifications(ids []int64) error {
+	for _, id := range ids {
+		if _, err := s.DB.Exec(`DELETE FROM notifications WHERE id = ?`, id); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ResolveMentioning marks unread notifications from source that mention text
+// as read, e.g. the Deep Scan notice for one book once its scan is decided.
+func (s *Store) ResolveMentioning(source, text string) {
+	if text == "" {
+		return
+	}
+	_, _ = s.DB.Exec(`UPDATE notifications SET read = 1 WHERE read = 0 AND source = ? AND instr(message, ?) > 0`, source, text)
+}

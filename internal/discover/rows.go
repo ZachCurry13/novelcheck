@@ -62,12 +62,23 @@ var kidOrder = map[int][]string{
 
 const perRow = 20
 
+// olFetch is how many books an Open Library list asks for: more than a row
+// shows, because books the family already has are left out of the rows.
+const olFetch = 60
+
 // Compose builds the rows the viewer sees from the listed books and the
-// family's own new and favorite books. Empty rows are left out.
-func Compose(items, newInLibrary, family []store.DiscoverBook, u *store.User) []Row {
+// family's own new and favorite books. Empty rows are left out. Discover is
+// for finding books, so the outside lists leave out books the family already
+// has unless withOwned; owned says how many listed books were left out.
+func Compose(items, newInLibrary, family []store.DiscoverBook, u *store.User, withOwned bool) (rows []Row, owned int) {
 	byList := map[string][]store.DiscoverBook{}
 	var fresh []store.DiscoverBook
+	ownedIDs := map[int64]bool{}
 	for _, b := range items {
+		if b.Owned && !withOwned {
+			ownedIDs[b.ID] = true
+			continue
+		}
 		byList[b.List] = append(byList[b.List], b)
 		if strings.HasPrefix(b.List, "nyt:") && b.Weeks == 1 {
 			fresh = append(fresh, b)
@@ -87,13 +98,12 @@ func Compose(items, newInLibrary, family []store.DiscoverBook, u *store.User) []
 		}
 		books[d.key] = bs
 	}
-	var rows []Row
 	for _, d := range ordered(u) {
 		if bs := unique(books[d.key]); len(bs) > 0 {
 			rows = append(rows, Row{Key: d.key, Icon: d.icon, Title: d.title, Books: bs})
 		}
 	}
-	return rows
+	return rows, len(ownedIDs)
 }
 
 // ordered returns the row definitions in the order the viewer sees them.

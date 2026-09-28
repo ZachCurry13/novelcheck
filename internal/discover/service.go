@@ -100,14 +100,14 @@ func (s *Service) Refresh(ctx context.Context) (string, error) {
 		}
 		s.Store.Resolve("discover")
 	} else {
-		trending, err := s.Client.OLTrending(ctx, perRow)
+		trending, err := s.Client.OLTrending(ctx, olFetch)
 		save(listTrending, trending, err)
 		for _, l := range []string{listTeenOL, listKidsOL} {
-			entries, err := s.Client.OLSubject(ctx, strings.TrimPrefix(l, "ol:"), perRow)
+			entries, err := s.Client.OLSubject(ctx, strings.TrimPrefix(l, "ol:"), olFetch)
 			save(l, entries, err)
 		}
 	}
-	classics, err := s.Client.OLSubject(ctx, "classics", 30)
+	classics, err := s.Client.OLSubject(ctx, "classics", olFetch)
 	save(listClassics, classics, err)
 
 	queued := s.queueRatings(time.Now())

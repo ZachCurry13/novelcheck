@@ -1,67 +1,181 @@
-// Admin → 🧬 Deep Scan: scan the next Up Next books (with a cost estimate
-// first), pick up to 3 accounts to scan automatically, approve requests,
-// watch progress, and see which ratings the full text changed.
+// Admin → 🧬 Deep Scan, in four sections: Review (big raises waiting for a
+// decision), Running (requests, queued and reading scans), Results, and
+// Settings (scan the next Up Next books after a cost estimate; readers whose
+// Up Next is scanned automatically). Decisions apply in place; only the
+// Running section refreshes on its own.
 import { get, post, put } from "./api.js";
 import { $, $$, esc, attempt, toast, fmtNum, fmtMoney } from "./ui.js";
-import { deepChangeLine, when } from "./deepscan.js";
+import { openBook } from "./bookdialog.js";
+import { isOpen, reviewCard, reviewHeader, openRow, resultRow, setMeters } from "./deepscanlists.js";
 
-const SOURCE = { admin: "started by an admin", request: "requested", batch: "Up Next batch", auto: "automatic" };
+const TABS = [["review", "Review"], ["running", "Running"], ["results", "Results"], ["settings", "Settings"]];
+let timer = null;
 
-export async function renderDeepScanAdmin(view) {
+export async function renderDeepScanAdmin(view, state) {
+  clearInterval(timer);
   view.innerHTML = `
     <h1 class="mb-1 text-2xl font-bold">🧬 Deep Scan</h1>
-    <p class="mb-4 text-sm text-slate-400">The AI reads a book's whole EPUB, part by part, instead of guessing from the description.
-      A scan costs about as much as rating 100–200 books from their descriptions, so NovelCheck always shows the estimate first.</p>
+    <p class="mb-3 text-sm text-slate-400">The AI reads a book's whole EPUB, part by part, instead of guessing from the description.</p>
     <div id="model-warning"></div>
-    <section id="review" class="mb-6 scroll-mt-20 space-y-3"></section>
-    <div class="grid gap-4 lg:grid-cols-2">
-      <section class="card space-y-3">
-        <h2 class="text-lg font-semibold">Scan the next books in Up Next</h2>
-        <div class="flex flex-wrap items-center gap-2">
-          <select id="top-n" class="input w-auto">${[10, 20, 30].map((n) => `<option value="${n}">Next ${n} books</option>`).join("")}</select>
-          <button id="estimate" class="btn-primary">Estimate cost…</button>
-        </div>
-        <div id="estimate-out"></div>
-      </section>
-      <section class="card space-y-3">
-        <h2 class="text-lg font-semibold">Always scan these readers' Up Next</h2>
-        <p class="text-sm text-slate-400">Pick up to 3 accounts (for example the kids). New books in their Up Next are Deep Scanned automatically.</p>
-        <div id="deep-users" class="grid gap-1 sm:grid-cols-2"></div>
-        <button id="save-users" class="btn-secondary">Save</button>
-      </section>
+    <div class="mb-4 grid grid-cols-4 gap-1 rounded-xl bg-slate-900 p-1 ring-1 ring-slate-800" role="tablist">
+      ${TABS.map(([k, label]) => `<button type="button" role="tab" data-tab="${k}" class="rounded-lg px-1 py-2 text-sm text-slate-300">${label}<span data-count="${k}" class="block text-xs text-slate-500"></span></button>`).join("")}
     </div>
-    <section id="scans" class="mt-6 space-y-3"></section>`;
+    <section data-panel="review" class="space-y-3"><div data-head></div><ul data-list class="space-y-3"></ul></section>
+    <section data-panel="running" class="space-y-3"><ul data-list class="space-y-3"></ul></section>
+    <section data-panel="results"><ul data-list></ul></section>
+    <section data-panel="settings" class="space-y-4"></section>`;
 
-  const data = (await attempt(() => get("/api/admin/deep-scans"))) || { scans: [], users: [], top_n: 10 };
-  if (data.model_warning) {
-    const box = $("#model-warning", view);
-    box.innerHTML = `<div class="mb-4 space-y-2 rounded-lg bg-amber-950/50 p-3 text-sm text-amber-200"><p>⚠️ ${esc(data.model_warning)}</p>
-      ${data.suggest_model ? `<button id="use-model" class="btn-secondary py-1 text-sm">Use ${esc(data.suggest_model)} for Deep Scan</button>
-        <span class="text-xs text-amber-200/80">(already on your Ollama; other ratings keep their model)</span>` : ""}</div>`;
-    $("#use-model", box)?.addEventListener("click", async () => {
-      if (await attempt(() => put("/api/admin/settings", { deep_read_model: data.suggest_model }), `Deep Scan now uses ${data.suggest_model}`)) box.innerHTML = "";
+  let data = (await attempt(() => get("/api/admin/deep-scans"))) || { scans: [], users: [], top_n: 10 };
+  let held = data.scans.filter((d) => d.held);
+  const decided = new Set(); // a refresh already on its way mustn't bring these back
+  const panel = (k) => $(`[data-panel="${k}"]`, view);
+  const counts = () => {
+    const open = data.scans.filter(isOpen).length;
+    $('[data-count="review"]', view).textContent = held.length ? `${held.length} waiting` : "none";
+    $('[data-count="running"]', view).textContent = open ? String(open) : "none";
+  };
+  const paintReview = () => {
+    $("[data-head]", panel("review")).innerHTML = reviewHeader(held.length);
+    $("[data-list]", panel("review")).innerHTML = held.map(reviewCard).join("");
+  };
+  const paintRunning = () => {
+    const open = data.scans.filter(isOpen);
+    const list = $("[data-list]", panel("running"));
+    list.innerHTML = open.map(openRow).join("") || `<li class="card text-sm text-slate-400">Nothing waiting or running. Start scans under Settings.</li>`;
+    setMeters(list);
+  };
+  const paintResults = () => {
+    const done = data.scans.filter((d) => !isOpen(d) && !d.held);
+    $("[data-list]", panel("results")).innerHTML = done.map(resultRow).join("") || `<li class="text-sm text-slate-500">No Deep Scans yet.</li>`;
+  };
+  const show = (k) => {
+    TABS.forEach(([t]) => {
+      panel(t).classList.toggle("hidden", t !== k);
+      const b = $(`[data-tab="${t}"]`, view);
+      b.classList.toggle("bg-slate-800", t === k);
+      b.classList.toggle("text-white", t === k);
+      b.setAttribute("aria-selected", String(t === k));
     });
-  }
-  $("#top-n", view).value = String([10, 20, 30].includes(data.top_n) ? data.top_n : 10);
-  const users = (await attempt(() => get("/api/admin/users"))) || [];
-  $("#deep-users", view).innerHTML = users.map((u) => `<label class="toggle"><input type="checkbox" value="${u.id}" ${data.users.includes(u.id) ? "checked" : ""}> ${esc(u.username)}</label>`).join("");
-  renderScans(view, data.scans, () => renderDeepScanAdmin(view));
-  if (location.hash.includes("review") && data.scans.some((d) => d.held)) $("#review", view).scrollIntoView({ block: "start" });
+    history.replaceState(null, "", `#/deepscan?${k}`);
+  };
 
-  $("#deep-users", view).addEventListener("change", (e) => {
-    if ($$("#deep-users input:checked", view).length > 3) {
+  paintModelWarning($("#model-warning", view), data);
+  renderSettings(panel("settings"), data);
+  paintReview();
+  paintRunning();
+  paintResults();
+  counts();
+  const asked = TABS.map(([k]) => k).find((k) => location.hash.includes(`?${k}`));
+  show(asked || (held.length ? "review" : data.scans.some(isOpen) ? "running" : "results"));
+
+  view.onclick = async (e) => {
+    const tab = e.target.closest("[data-tab]")?.dataset.tab;
+    if (tab) return show(tab);
+    const item = e.target.closest("[data-scan]");
+    if (e.target.closest("[data-open]") && item) return openBook(Number(item.dataset.book), state);
+    const btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === "keep-all" || act === "accept-all") {
+      const accept = act === "accept-all";
+      if (!confirm(accept ? `Apply the Deep Scan level to all ${held.length} books?` : `Keep the current rating of all ${held.length} books? The scans' suggestions are dropped.`)) return;
+      const r = await attempt(() => post(`/api/admin/deep-scans/${act}`));
+      if (!r) return;
+      toast(accept ? `Accepted ${r.accepted} rating${r.accepted === 1 ? "" : "s"}` : `Kept ${r.kept} rating${r.kept === 1 ? "" : "s"}`);
+      return renderDeepScanAdmin(view, state);
+    }
+    if (!item) return;
+    btn.disabled = true;
+    const ok = await attempt(() => post(`/api/admin/deep-scans/${item.dataset.scan}/${act}`));
+    if (!ok) {
+      btn.disabled = false;
+      return;
+    }
+    // Decide in place: the card goes, the counts drop, the page stays where it is.
+    const id = Number(item.dataset.scan);
+    if (act === "accept" || act === "keep") {
+      decided.add(id);
+      held = held.filter((d) => d.id !== id);
+      data.scans = data.scans.map((d) => (d.id === id ? { ...d, held: false, status: act === "keep" ? "declined" : d.status, new_level: act === "accept" ? d.proposed_level : d.new_level } : d));
+      item.remove();
+      toast(act === "accept" ? "Accepted" : "Kept the old rating");
+      if (!held.length) paintReview();
+      else $("[data-head]", panel("review")).innerHTML = reviewHeader(held.length);
+      paintResults();
+    } else {
+      await refresh();
+    }
+    counts();
+  };
+
+  // Every 5 seconds: progress of running scans. Finished ones move to
+  // Results; new big raises are added to Review without redrawing the cards.
+  const refresh = async () => {
+    const d = await get("/api/admin/deep-scans").catch(() => null);
+    if (!d || !document.body.contains(view)) return clearInterval(timer);
+    const known = new Set(held.map((x) => x.id));
+    const arrived = d.scans.filter((x) => x.held && !known.has(x.id) && !decided.has(x.id));
+    data = d;
+    if (arrived.length) {
+      held = held.concat(arrived);
+      if (held.length === arrived.length) paintReview();
+      else {
+        $("[data-list]", panel("review")).insertAdjacentHTML("beforeend", arrived.map(reviewCard).join(""));
+        $("[data-head]", panel("review")).innerHTML = reviewHeader(held.length);
+      }
+    }
+    paintRunning();
+    paintResults();
+    counts();
+  };
+  timer = setInterval(refresh, 5000);
+  return () => clearInterval(timer);
+}
+
+function paintModelWarning(box, data) {
+  if (!data.model_warning) return;
+  box.innerHTML = `<div class="mb-4 space-y-2 rounded-lg bg-amber-950/50 p-3 text-sm text-amber-200"><p>⚠️ ${esc(data.model_warning)}</p>
+    ${data.suggest_model ? `<button id="use-model" class="btn-secondary py-1 text-sm">Use ${esc(data.suggest_model)} for Deep Scan</button>
+      <span class="text-xs text-amber-200/80">(already on your Ollama; other ratings keep their model)</span>` : ""}</div>`;
+  $("#use-model", box)?.addEventListener("click", async () => {
+    if (await attempt(() => put("/api/admin/settings", { deep_read_model: data.suggest_model }), `Deep Scan now uses ${data.suggest_model}`)) box.innerHTML = "";
+  });
+}
+
+async function renderSettings(host, data) {
+  host.innerHTML = `
+    <section class="card space-y-3">
+      <h2 class="text-lg font-semibold">Scan the next books in Up Next</h2>
+      <p class="text-sm text-slate-400">A scan costs about as much as rating 100–200 books from their descriptions, so you see the estimate first.</p>
+      <div class="flex flex-wrap items-center gap-2">
+        <select id="top-n" class="input w-auto">${[10, 20, 30].map((n) => `<option value="${n}">Next ${n} books</option>`).join("")}</select>
+        <button id="estimate" class="btn-primary">Estimate cost…</button>
+      </div>
+      <div id="estimate-out" class="space-y-2"></div>
+    </section>
+    <section class="card space-y-3">
+      <h2 class="text-lg font-semibold">Always scan these readers' Up Next</h2>
+      <p class="text-sm text-slate-400">Pick up to 3 accounts (for example the kids). New books in their Up Next are Deep Scanned automatically.</p>
+      <div id="deep-users" class="grid gap-1 sm:grid-cols-2"></div>
+      <button id="save-users" class="btn-secondary">Save</button>
+    </section>`;
+  $("#top-n", host).value = String([10, 20, 30].includes(data.top_n) ? data.top_n : 10);
+  const users = (await attempt(() => get("/api/admin/users"))) || [];
+  $("#deep-users", host).innerHTML = users.map((u) => `<label class="toggle min-h-[2.5rem]"><input type="checkbox" value="${u.id}" ${data.users.includes(u.id) ? "checked" : ""}> ${esc(u.username)}</label>`).join("");
+  $("#deep-users", host).addEventListener("change", (e) => {
+    if ($$("#deep-users input:checked", host).length > 3) {
       e.target.checked = false;
       toast("Pick up to 3 accounts", true);
     }
   });
-  $("#save-users", view).addEventListener("click", () => {
-    const ids = $$("#deep-users input:checked", view).map((cb) => cb.value).join(",");
+  $("#save-users", host).addEventListener("click", () => {
+    const ids = $$("#deep-users input:checked", host).map((cb) => cb.value).join(",");
     attempt(() => put("/api/admin/settings", { deep_scan_users: ids }), "Saved. Their new Up Next books will be Deep Scanned.");
   });
-  $("#estimate", view).addEventListener("click", async () => {
-    const n = $("#top-n", view).value;
+  $("#estimate", host).addEventListener("click", async () => {
+    const n = $("#top-n", host).value;
     const est = await attempt(() => get(`/api/admin/deep-scans/next?n=${n}`));
-    const out = $("#estimate-out", view);
+    const out = $("#estimate-out", host);
     if (!est) return;
     if (!est.books) {
       out.innerHTML = `<p class="text-sm text-slate-400">Nothing to scan: every book waiting in Up Next is already scanned or has no EPUB in Calibre.</p>`;
@@ -70,77 +184,12 @@ export async function renderDeepScanAdmin(view) {
     out.innerHTML = `<p class="rounded-lg bg-slate-800 p-3 text-sm">Deep Scanning <b>${est.books} book${est.books === 1 ? "" : "s"}</b>
         (~${fmtNum(est.estimate.tokens)} tokens / ~${fmtMoney(est.cost)}):<br><span class="text-slate-400">${est.titles.map(esc).join(" · ")}</span></p>
       <button id="go" class="btn-primary">Start ${est.books} Deep Scan${est.books === 1 ? "" : "s"}</button>`;
-    $("#go", view).onclick = async () => {
+    $("#go", host).onclick = async () => {
       const r = await attempt(() => post(`/api/admin/deep-scans/next?n=${n}`));
       if (r) {
         toast(`Started ${r.queued} Deep Scan${r.queued === 1 ? "" : "s"}`);
-        renderDeepScanAdmin(view);
+        location.hash = "#/deepscan?running"; // redraws the page on the Running section
       }
     };
   });
-  const timer = setInterval(async () => {
-    const d = await get("/api/admin/deep-scans").catch(() => null);
-    if (d && document.body.contains(view)) renderScans(view, d.scans, () => renderDeepScanAdmin(view));
-  }, 5000);
-  return () => clearInterval(timer);
-}
-
-function renderScans(view, scans, reload) {
-  const host = $("#scans", view);
-  const review = $("#review", view);
-  const open = scans.filter((d) => ["requested", "queued", "reading"].includes(d.status));
-  const held = scans.filter((d) => d.held);
-  const done = scans.filter((d) => !open.includes(d) && !d.held);
-  // A big raise waits here with what the AI found in the parts that set it.
-  const evidence = (d) => {
-    let notes = [];
-    try {
-      notes = JSON.parse(d.notes || "[]").filter((n) => n.level >= 3);
-    } catch {
-      /* no notes */
-    }
-    return notes.map((n) => `<li><b>${esc(n.label)}</b> · Level ${n.level}: ${esc(n.note)}</li>`).join("");
-  };
-  const heldRow = (d) => `<li class="card space-y-2" data-scan="${d.id}">
-    <p><b>${esc(d.title)}</b> <span class="text-sm text-slate-400">${esc(d.author || "")}</span></p>
-    <p class="text-sm font-semibold text-amber-300">⚠️ Suggests Level ${d.proposed_level} (now Level ${d.prev_level})</p>
-    <ul class="list-disc space-y-1 pl-5 text-sm text-slate-300">${evidence(d) || "<li>No parts with sexual content were noted.</li>"}</ul>
-    <p class="text-xs text-slate-400">Every part above passed a second check for sexual content on the page. Accept only if this matches the book.</p>
-    <div class="flex flex-wrap gap-2"><button data-act="accept" class="btn-primary py-1 text-sm">Accept Level ${d.proposed_level}</button>
-      <button data-act="keep" class="btn-ghost py-1 text-sm">Keep Level ${d.prev_level}</button></div></li>`;
-  const row = (d) => `<li class="card space-y-1" data-scan="${d.id}">
-    <p><b>${esc(d.title)}</b> <span class="text-sm text-slate-400">${esc(d.author || "")}</span></p>
-    <p class="text-xs text-slate-400">${esc(SOURCE[d.source] || d.source)}${d.requested_by ? ` by ${esc(d.requested_by)}` : ""} · ${esc(when(d.created_at).toLocaleString())}
-      · ${fmtNum(d.words)} words, ~${fmtNum(d.est_tokens)} tokens${d.reason ? ` · “${esc(d.reason)}”` : ""}</p>
-    ${d.status === "reading" ? `<p class="text-sm">📖 Reading part ${d.parts_done + 1} of ${d.parts_total}…</p>` : ""}
-    ${d.status === "error" ? `<p class="text-sm text-rose-300">Failed: ${esc(d.error)}</p>` : ""}
-    ${d.status === "done" ? deepChangeLine(d) || `<p class="text-sm text-slate-400">Done: Level ${d.new_level}${d.prev_level === d.new_level ? " (unchanged)" : ""}</p>` : ""}
-    ${["declined", "cancelled"].includes(d.status) ? `<p class="text-sm text-slate-500">${d.status === "declined" ? (d.proposed_level != null ? `Kept Level ${d.prev_level} (the scan suggested ${d.proposed_level})` : "Declined") : "Cancelled"}</p>` : ""}
-    <div class="flex flex-wrap gap-2">
-      ${d.status === "requested" ? `<button data-act="approve" class="btn-primary py-1 text-sm">Approve</button><button data-act="decline" class="btn-ghost py-1 text-sm">Decline</button>` : ""}
-      ${["queued", "reading"].includes(d.status) ? `<button data-act="cancel" class="btn-ghost py-1 text-sm">Cancel</button>` : ""}
-    </div></li>`;
-  review.innerHTML = held.length ? `<div class="flex flex-wrap items-center gap-2"><h2 class="text-lg font-semibold">⚠️ Waiting for your review (${held.length})</h2>
-      <button data-act="keep-all" class="btn-ghost ml-auto py-1 text-sm">Keep all old ratings</button></div>
-    <p class="text-sm text-slate-400">These scans would raise a book by 2 or more levels, so they don't apply until you accept them.
-      Scans made before NovelCheck 1.18.2 used the older Level 3 (now: desire or sex off the page), so check the evidence.</p>
-    <ul class="space-y-2">${held.map(heldRow).join("")}</ul>` : "";
-  host.innerHTML = `<h2 class="text-lg font-semibold">Waiting and running</h2>
-    <ul class="space-y-2">${open.map(row).join("") || `<li class="text-sm text-slate-500">Nothing waiting.</li>`}</ul>
-    <h2 class="pt-2 text-lg font-semibold">Recent results</h2>
-    <ul class="space-y-2">${done.map(row).join("") || `<li class="text-sm text-slate-500">No Deep Scans yet.</li>`}</ul>`;
-  const onclick = async (e) => {
-    const act = e.target.closest("[data-act]")?.dataset.act;
-    if (act === "keep-all") {
-      if (!confirm(`Keep the current rating of all ${held.length} books? The scans' suggestions are dropped.`)) return;
-      const r = await attempt(() => post("/api/admin/deep-scans/keep-all"));
-      if (r) { toast(`Kept ${r.kept} rating${r.kept === 1 ? "" : "s"}`); reload(); }
-      return;
-    }
-    const id = e.target.closest("[data-scan]")?.dataset.scan;
-    if (!act || !id) return;
-    if (await attempt(() => post(`/api/admin/deep-scans/${id}/${act}`))) reload();
-  };
-  host.onclick = onclick;
-  review.onclick = onclick;
 }

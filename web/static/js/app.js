@@ -20,6 +20,7 @@ import { renderDiscover } from "./discover.js";
 import { initBell } from "./notifications.js";
 import { on, applyModules } from "./modules.js";
 import { buildMobileNav, markMobileNav } from "./mobilenav.js";
+import { keepUpToDate } from "./appupdate.js";
 
 export const state = { user: null };
 
@@ -177,9 +178,7 @@ function setupInstallPrompt() {
     deferred = null;
     btn.classList.add("hidden");
   });
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
-  }
+  keepUpToDate();
 }
 
 boot();

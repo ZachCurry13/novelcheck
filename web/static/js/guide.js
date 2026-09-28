@@ -19,9 +19,9 @@ const EVERYONE = [
     <p class="mt-2">Tap <b>🌶️ What do the peppers mean?</b> in the Library for the full descriptions and examples.</p>
     <p class="mt-2">Purple tags such as <span class="chip-flag">Dark Occult</span> point out other content you may want to know about. Small icons such as ⚔️ violence, 🗣️ language, 🩸 gore, 🍺 drinking or drugs and 🧩 other themes mean the book has some; open the book to see exactly what.</p>`],
   ["🔎 Book details",
-    "Tap any book to open it. You'll see what it's about, its rating and content details, and which libraries or devices it's on. Tap <b>＋</b> or <b>Add to Up Next</b> to save it for later."],
+    "Tap any book to open it. You'll see what it's about, its rating and content details, and which libraries or devices it's on. Tap <b>＋</b> or <b>＋ Up Next</b> to save it for later."],
   ["▶️ Up Next",
-    "The <b>Up Next</b> tab is your reading list. Drag the <b>⠿</b> handle to reorder books. When you're ready, press <b>▶ Start Reading</b>. If you've set up your Kindle email, the book is sent to your Kindle. Below the list, <b>💡 Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (and a quick \"Why not?\" helps it learn)."],
+    "The <b>Up Next</b> tab is your reading list. Drag the <b>⠿</b> handle to reorder books, and tap a title to open the book. When you're ready, press <b>▶ Start Reading</b> (just <b>▶</b> on a phone). If you've set up your Kindle email, the book is sent to your Kindle. Below the list, <b>💡 Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (and a quick \"Why not?\" helps it learn)."],
   ["👤 Your profile",
     "In <b>Profile</b> you can set how books reach your e-reader, change your password, and mark books you know under <b>🎯 Your reading taste</b> so your suggestions fit you better. Something not working, or an idea? <b>🐞 Report a problem or idea</b> at the bottom of any page tells your admin."],
   ["📱 Put it on your phone",

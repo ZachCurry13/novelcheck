@@ -4,6 +4,7 @@ package api
 import (
 	"io/fs"
 	"net/http"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -25,23 +26,28 @@ import (
 )
 
 type Server struct {
-	Cfg      config.Config
-	Store    *store.Store
-	Auth     *auth.Manager
-	Worker   *analyzer.Worker
-	Syncer   *calibre.Syncer
-	Updates  *updates.Checker
-	Tunnel   *tunnel.Manager
-	Pulls    ollama.Puller // Ollama model downloads
-	SysInfo  *sysinfo.Sampler
-	Push     *push.Service     // phone notifications; nil turns them off
-	Deep     *deepread.Runner  // Deep Scans (full-text reading)
-	Covers   covers.Cache      // shrunk book covers under /data/covers
-	Genres   *genrefill.Filler // AI genres for books without Calibre tags
-	Suggest  *suggest.Service  // Suggested Reads under Up Next
-	Discover *discover.Service // the Discover tab's lists; nil in tests that don't need it
-	Web      fs.FS             // embedded static assets
-	logins   *loginLimiter
+	Cfg       config.Config
+	Store     *store.Store
+	Auth      *auth.Manager
+	Worker    *analyzer.Worker
+	Syncer    *calibre.Syncer
+	Updates   *updates.Checker
+	Tunnel    *tunnel.Manager
+	Pulls     ollama.Puller // Ollama model downloads
+	SysInfo   *sysinfo.Sampler
+	Push      *push.Service     // phone notifications; nil turns them off
+	Deep      *deepread.Runner  // Deep Scans (full-text reading)
+	Covers    covers.Cache      // shrunk book covers under /data/covers
+	Genres    *genrefill.Filler // AI genres for books without Calibre tags
+	Suggest   *suggest.Service  // Suggested Reads under Up Next
+	Discover  *discover.Service // the Discover tab's lists; nil in tests that don't need it
+	Web       fs.FS             // embedded static assets
+	logins    *loginLimiter
+	etags     sync.Map  // static file name → ETag
+	buildOnce sync.Once // buildID, computed once
+	build     string
+	indexOnce sync.Once // index.html with versioned addresses
+	index     []byte
 }
 
 func (s *Server) Router() http.Handler {
@@ -144,6 +150,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/rerate", s.handleRerate)
 				r.Get("/notifications", s.handleNotifications)
 				r.Post("/notifications/read", s.handleNotificationsRead)
+				r.Post("/notifications/dismiss", s.handleNotificationsDismiss)
 				r.Delete("/notifications", s.handleNotificationsClear)
 				r.Post("/admin/analyze-batch", s.handleAnalyzeBatch)
 				r.Get("/admin/errors", s.handleErrors)
@@ -167,6 +174,7 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/deep-scans/next", s.handleDeepScanNext)
 				r.Post("/admin/deep-scans/next", s.handleDeepScanNext)
 				r.Post("/admin/deep-scans/keep-all", s.handleKeepAllDeepScans)
+				r.Post("/admin/deep-scans/accept-all", s.handleAcceptAllDeepScans)
 				r.Post("/admin/deep-scans/{id}/{action}", s.handleDecideDeepScan)
 				r.Post("/admin/flags", s.handleAddFlag)
 				r.Put("/admin/flags/{id}", s.handleUpdateFlag)

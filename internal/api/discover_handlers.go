@@ -26,12 +26,13 @@ func (s *Server) handleDiscover(w http.ResponseWriter, r *http.Request) {
 	}
 	newIn, _ := s.Store.NewInLibraries(u, 20)
 	family, _ := s.Store.FamilyFavorites(u, 20)
-	rows := discover.Compose(items, newIn, family, u)
+	rows, owned := discover.Compose(items, newIn, family, u, r.URL.Query().Get("owned") == "1")
 	if rows == nil {
 		rows = []discover.Row{}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"rows":       rows,
+		"owned":      owned, // listed books the family has, left out unless ?owned=1
 		"nyt":        discover.FromNYT(rows),
 		"has_key":    strings.TrimSpace(s.Store.Setting(store.KeyNYTAPIKey)) != "",
 		"updated":    s.Store.Setting(store.KeyDiscoverLastRefresh),

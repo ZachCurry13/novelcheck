@@ -12,14 +12,35 @@ import { on } from "./modules.js";
 
 const GUIDE_URL = "https://github.com/ZachCurry13/novelcheck/blob/main/docs/DISCOVER.md";
 
+// Discover is for finding books: the lists leave out the ones the family
+// already has, unless this device asked to see them.
+const OWNED_KEY = "nc:discover-owned";
+function showOwned() {
+  try {
+    return localStorage.getItem(OWNED_KEY) === "1";
+  } catch {
+    return false; // private mode
+  }
+}
+
 export async function renderDiscover(view, state) {
   view.innerHTML = `
     <h1 class="mb-1 text-2xl font-bold">🧭 Discover</h1>
-    <p class="mb-4 text-sm text-slate-400">Popular and classic books with their peppers and content. Tap a book for details.</p>
+    <p class="mb-2 text-sm text-slate-400">Popular and classic books with their peppers and content. Tap a book for details.</p>
+    <label class="toggle mb-4 min-h-[2.5rem]"><input type="checkbox" id="show-owned" ${showOwned() ? "checked" : ""}> Also show books we already have <span id="owned-count" class="text-slate-500"></span></label>
     <div id="rows" class="space-y-6"><p class="text-slate-400">Loading…</p></div>
     <div id="credit" class="mt-8 space-y-1 text-xs text-slate-500"></div>`;
-  const [data] = await Promise.all([attempt(() => get("/api/discover")), loadContent()]);
+  $("#show-owned", view).addEventListener("change", (e) => {
+    try {
+      localStorage.setItem(OWNED_KEY, e.target.checked ? "1" : "0");
+    } catch {
+      /* private mode: this visit only */
+    }
+    renderDiscover(view, state);
+  });
+  const [data] = await Promise.all([attempt(() => get("/api/discover" + (showOwned() ? "?owned=1" : ""))), loadContent()]);
   if (!data) return;
+  if (data.owned) $("#owned-count", view).textContent = `(${data.owned} hidden)`;
   const kid = state.user.role === "restricted";
   const queueOn = on(state.user, "queue");
   const rows = $("#rows", view);

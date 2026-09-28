@@ -1,11 +1,18 @@
 # NovelCheck handoff (2026-09-28, night)
 
-## 0. v1.20.0 released (2026-09-28)
-- The user merged `feature/v1.20-discover` into `main` on GitHub (PRs #2 and #3), then asked for the release: GitHub release v1.20.0 and its image were built on 2026-09-28.
-- PR #3 ("feature v1.20") also committed `.claude/launch.json` (local paths with the Windows username) and `NOVELCHECK_SPEC.local-backup.md` (an old spec copy). A follow-up commit removed both and added them to `.gitignore`; they remain in history (removing that would need a force-push to `main`, which the user hasn't asked for).
-- Built and tested: the Discover tab, card premises (`books.premise`, `content.Version` 2, `blurb.js`), the phone sideways-scroll fix (`:where(.grid)`), the Deep Scan review fix (held scans first, `keep-all`) and title tidying. README, `NOVELCHECK_SPEC.md` (build item 50), `CHANGELOG.md` `[1.20.0]`, the guide and `docs/DISCOVER.md` are done.
-- Next: the user's priorities from the Gemini manifest (section 2), or the planned order: physical libraries, then parent profiles.
-- The user's *Bridget Jones's Diary* shows Level 0 from llama3.2 3B; advise switching the main model to qwen2.5:7b and re-rating (after 1.20, so one pass adds content details and premises).
+## 0. v1.20.1 (phone fixes) on `feature/v1.20.1-phone`, NOT released
+- v1.20.0 was released on 2026-09-28 (the user had merged v1.20 on GitHub via PRs #2/#3; the stray files from PR #3 were removed).
+- The user reported the app "almost unusable" on a phone. Found at 360px with realistic stubbed data, and fixed:
+  - Up Next titles got 0px (handle, number, cover, wide Start button, ✕). Rows now: cover, 2-line title, stacked ▶/✕; titles open the book.
+  - A `w-auto` select sized to a long library name (Suggested Reads "From") made the page 440px wide; the fixed tab bar stretched with it and More went off-screen. Phone rule: `#app-view { overflow-x: clip }`, selects capped at the screen.
+  - Stale files: JS/CSS had `max-age=3600` (plus Cloudflare), so phones ran old or mixed versions after updates. Now `index.html` points at `/v/<build>/…` (hash of all web files), immutable; plain addresses `no-cache` + ETag; `appupdate.js` reloads an open app when the server's build is newer; `sw.js` v53.
+  - More is a bottom sheet of tiles; all `.dialog`s are bottom sheets on phones; the book window keeps ✕ and main buttons in reach.
+  - Deep Scan page in sections (Review/Running/Results/Settings), decisions in place (no jump to top, no leaking timers), Accept all; titles open books.
+  - Notifications: Deep Scan reviews grouped in one card (source `deep-scan-review`), a button and ✕ per notice, `POST /api/notifications/dismiss`.
+  - Discover: the book window counted Discover-only books as owned (any copy not in "Looked up"); it now uses the server's `owned`. List rows leave out owned books unless "Also show books we already have" (`?owned=1`).
+- Tests pass (only the 6 known Windows failures). CHANGELOG `[1.20.1]`, README, spec (item 51) and guide are updated.
+- Next: the user's OK to release **1.20.1**. Then, in the user's order (2026-09-28): **physical libraries** (continuous barcode scanning, or title/ISBN/cover photo, into a named physical library; rated as added within the token cap), then **auto-rating + status badges**, **collections & seasonal** (kids limited to collections), **Stuff Your Kindle events**, **AI hardware tools** (model-update alerts, fast/heavy machines, power-cost labels, benchmarks).
+- Phone checks: `web/static/js/devfixture.js` (local only, in `.git/info/exclude`; source in the scratchpad as cat.js + fixture-body.js) stubs the API with awkward data; load it with `await import("/js/devfixture.js?t=" + Date.now())` at 360×760. The server embeds web files, so restart after edits. When the Browser pane is hidden, screenshots go stale: measure with scripts instead.
 - Release rules are allowed in `.claude/settings.local.json`; run each release command as its own call.
 
 ## 1. Goal and active task

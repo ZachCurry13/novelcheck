@@ -76,3 +76,29 @@ func (s *Store) OldDeepRatings() []int64 {
 		ORDER BY b.id`, DeepChecks)
 	return ids
 }
+
+// AcceptAllHeld saves every held scan's rating and says how many.
+func (s *Store) AcceptAllHeld(by string) (int, error) {
+	var ids []int64
+	if err := s.DB.Select(&ids, `SELECT id FROM deep_reads WHERE held = 1 ORDER BY id`); err != nil {
+		return 0, err
+	}
+	n := 0
+	for _, id := range ids {
+		ok, err := s.AcceptDeepRead(id, by)
+		if err != nil {
+			return n, err
+		}
+		if ok {
+			n++
+		}
+	}
+	return n, nil
+}
+
+// DeepReadTitle is the title of the book a scan read ("" if there's no such scan).
+func (s *Store) DeepReadTitle(id int64) string {
+	var t string
+	_ = s.DB.Get(&t, `SELECT b.title FROM deep_reads d JOIN books b ON b.id = d.book_id WHERE d.id = ?`, id)
+	return t
+}

@@ -108,6 +108,7 @@ func (s *Server) handleDecideDeepScan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	by := auth.UserFrom(r).Username
+	title := s.Store.DeepReadTitle(id)
 	var done bool
 	var err error
 	switch action := chi.URLParam(r, "action"); action {
@@ -118,8 +119,8 @@ func (s *Server) handleDecideDeepScan(w http.ResponseWriter, r *http.Request) {
 	default:
 		done, err = s.Store.DecideDeepRead(id, action, by)
 	}
-	if s.Store.HeldDeepReads() == 0 {
-		s.Store.Resolve("deep-scan")
+	if done {
+		s.resolveReviewNotice(title)
 	}
 	switch {
 	case err != nil:
@@ -228,6 +229,32 @@ func (s *Server) handleKeepAllDeepScans(w http.ResponseWriter, r *http.Request) 
 		writeStoreErr(w, err)
 		return
 	}
-	s.Store.Resolve("deep-scan")
+	s.resolveReviewNotice("")
 	writeJSON(w, http.StatusOK, map[string]int{"kept": n})
+}
+
+// handleAcceptAllDeepScans saves the rating of every held scan at once.
+func (s *Server) handleAcceptAllDeepScans(w http.ResponseWriter, r *http.Request) {
+	n, err := s.Store.AcceptAllHeld(auth.UserFrom(r).Username)
+	s.resolveReviewNotice("")
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]int{"accepted": n})
+}
+
+// resolveReviewNotice marks a decided book's "suggests raising" notice as read
+// (notices from before 1.20.1 used the source "deep-scan"), and all of them
+// once nothing waits any more.
+func (s *Server) resolveReviewNotice(title string) {
+	if title != "" {
+		for _, src := range []string{"deep-scan-review", "deep-scan"} {
+			s.Store.ResolveMentioning(src, "“"+title+"”")
+		}
+	}
+	if s.Store.HeldDeepReads() == 0 {
+		s.Store.Resolve("deep-scan-review")
+		s.Store.Resolve("deep-scan")
+	}
 }

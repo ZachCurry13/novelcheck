@@ -15,6 +15,10 @@ import { coverImg, reportCover } from "./covers.js";
 import { loadContent, contentIcons, contentSection } from "./content.js";
 import { blurbHTML } from "./blurb.js";
 
+// Lists that aren't the family's libraries: books only looked up (Check a
+// book) or on a Discover list.
+const HIDDEN_LISTS = ["Looked up", "Discover"];
+
 export async function openBook(id, state, onChange) {
   const dlg = $("#book-dialog");
   const [data] = await Promise.all([attempt(() => get(`/api/books/${id}`)), loadContent()]);
@@ -25,7 +29,7 @@ export async function openBook(id, state, onChange) {
   const parents = on(state.user, "parents"); // age groups and parents' notes
   // One row per catalog entry (a Calibre book id, or a Kindle/drive catalog), listing its formats.
   const entries = new Map();
-  for (const c of data.copies) {
+  for (const c of data.copies.filter((c) => !HIDDEN_LISTS.includes(c.catalog_name))) {
     const key = c.source === "calibre" ? `${c.catalog_id}#${c.external_id}` : String(c.catalog_id);
     if (!entries.has(key)) entries.set(key, { ...c, formats: [], paths: [] });
     const e = entries.get(key);
@@ -34,8 +38,9 @@ export async function openBook(id, state, onChange) {
   }
   const calibreCount = [...entries.values()].filter((e) => e.source === "calibre").length;
   const calibreIds = [...entries.values()].filter((e) => e.source === "calibre" && /^\d+$/.test(e.external_id)).map((e) => e.external_id);
-  // Only looked up (Check a book), not owned: never offer deleting or removing it.
-  const owned = data.copies.some((c) => c.catalog_name !== "Looked up");
+  // Only looked up (Check a book) or on a Discover list, not owned: offer the
+  // wishlist, never deleting or removing it. The server knows.
+  const owned = Boolean(data.owned);
   const cw = data.calibre_web_url; // set by an admin; only sent to admins and editors
   const copies = [...entries.values()].map((e) => `
     <li class="text-sm">
@@ -51,6 +56,7 @@ export async function openBook(id, state, onChange) {
   const dupNote = calibreCount > 1
     ? `<p class="mt-2 text-sm text-orange-300">⚠ This book is in Calibre ${calibreCount} times.${manager ? ` <a href="#/duplicates" data-close class="underline">Review duplicates</a>` : ""}</p>` : "";
   dlg.innerHTML = `
+    <button data-close class="btn-ghost absolute right-2 top-2 z-10 h-10 w-10 rounded-full bg-slate-900/80 p-0 text-xl" aria-label="Close">✕</button>
     <div class="max-h-[85vh] overflow-y-auto p-6 space-y-4">
       <div class="flex items-start justify-between gap-4">
         <div class="flex shrink-0 flex-col items-center gap-1">
@@ -58,13 +64,12 @@ export async function openBook(id, state, onChange) {
           ${data.my_cover_report ? `<span class="text-xs text-slate-500">🖼️ Cover reported</span>`
             : `<button type="button" data-act="wrong-cover" class="text-xs text-slate-500 underline">🖼️ Wrong cover?</button>`}
         </div>
-        <div class="min-w-0 flex-1">
+        <div class="min-w-0 flex-1 pr-8">
           <h2 class="text-xl font-bold">${esc(b.title)}</h2>
           ${b.series ? `<p>${seriesLink(b, seriesText(b))}</p>` : seriesLine(b)}
           <p class="text-slate-400">${authorLinks(b.author)}${b.isbn ? " · ISBN " + esc(b.isbn) : ""}</p>
           ${isAdmin && calibreIds.length ? `<p class="mt-1 text-xs ${b.title_fix ? "text-amber-300" : "text-slate-500"}">${b.title_fix ? `In Calibre: “${esc(b.title_fix)}” · ` : ""}<button type="button" data-act="calibre-title" class="underline">✏️ ${b.title_fix ? "Tidy it in Calibre" : "Edit title in Calibre"}</button></p>` : ""}
         </div>
-        <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>
       </div>
       <div class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
       ${b.genres || b.kind ? `<div class="flex flex-wrap gap-1">${genreChips(b)}</div>` : ""}
@@ -77,24 +82,26 @@ export async function openBook(id, state, onChange) {
         <button type="button" data-copy-err class="ml-1 text-xs underline">📋 Copy</button>${isAdmin ? ` <button type="button" data-dx-err class="text-xs underline">🩺 Diagnose</button>` : ""}</p>` : ""}
       ${(b.blurb || b.description) ? `<div><span class="label">Blurb</span>
         <p class="text-sm leading-relaxed text-slate-300 whitespace-pre-line">${esc(b.blurb || b.description)}</p></div>` : ""}
-      <div><span class="label">In libraries</span><ul class="space-y-2">${copies || "<li class='text-sm text-slate-500'>None</li>"}</ul>${dupNote}</div>
+      <div><span class="label">In libraries</span><ul class="space-y-2">${copies || "<li class='text-sm text-slate-500'>Not in your libraries yet</li>"}</ul>${dupNote}</div>
       ${b.analysis_model ? `<p class="text-xs text-slate-500">${b.analysis_model.startsWith("manual: ")
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : b.analysis_model.startsWith("deep: ") ? "🧬 Deep Scanned (whole book) by " + esc(b.analysis_model.slice(6)) : "Rated from the description by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
       ${b.approved ? `<p class="text-xs text-emerald-400">✓ Marked OK by ${esc(b.approved_by)}: shown to everyone, even if it matches their hide filters or content rules.</p>` : ""}
       <div id="deep-section"></div>
       ${manager ? verdictFormHTML(b) : ""}
       ${parents ? ageAndNotesHTML(b, data.notes || [], manager, state.user) : ""}
-      <div class="flex flex-wrap gap-2 pt-2">
-        ${on(state.user, "queue") ? `<button data-act="queue" class="btn-primary">${owned ? "Add to Up Next" : "Up Next (to get)"}</button>` : ""}
+      <div class="flex flex-wrap gap-2">
         ${data.downloadable ? `<a href="/api/books/${b.id}/download" class="btn-secondary">Download</a>` : ""}
         ${manager ? `<button data-act="analyze" class="btn-secondary">${b.classification ? "Re-analyze" : "Analyze now"}</button>
-          <button data-act="edit-verdict" class="btn-secondary">Edit rating</button>
           <button data-act="approve" class="btn-secondary" title="Show this book even when it matches someone's hide filters or content rules">${b.approved ? "Remove OK mark" : "✓ Mark as OK"}</button>` : ""}
-        ${!owned ? (data.my_wish ? `<button data-act="unwish" class="btn-ghost" title="Remove it from your wishlist">⭐ On your wishlist · Remove</button>` : `<button data-act="wish" class="btn-secondary">⭐ Add to Wishlist</button>`)
-          : data.my_delete_request
+        ${!owned ? "" : data.my_delete_request
             ? `<button data-act="cancel-delete" class="btn-ghost" title="${esc(data.my_delete_request.reason || "")}">🗑 Delete requested · Cancel</button>`
             : `<button data-act="request-delete" class="btn-ghost" title="Ask an admin to delete this book">🗑 Request to delete</button>`}
         ${owned && isAdmin && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
+      </div>
+      <div class="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap gap-2 border-t border-slate-800 bg-slate-900/95 px-6 py-3 backdrop-blur">
+        ${on(state.user, "queue") ? `<button data-act="queue" class="btn-primary">${owned ? "＋ Up Next" : "＋ Up Next (to get)"}</button>` : ""}
+        ${!owned ? (data.my_wish ? `<button data-act="unwish" class="btn-ghost" title="Remove it from your wishlist">⭐ On your wishlist · Remove</button>` : `<button data-act="wish" class="btn-secondary">⭐ Add to Wishlist</button>`) : ""}
+        ${manager ? `<button data-act="edit-verdict" class="btn-secondary">Edit rating</button>` : ""}
       </div>
     </div>`;
   const refresh = () => {
@@ -123,7 +130,9 @@ export async function openBook(id, state, onChange) {
       if (await reportCover(b)) e.target.closest("[data-act]").replaceWith(Object.assign(document.createElement("span"),
         { className: "text-xs text-slate-500", textContent: "🖼️ Cover reported" }));
     } else if (act === "edit-verdict" || act === "cancel-verdict") {
-      $("#verdict-form", dlg).classList.toggle("hidden", act === "cancel-verdict");
+      const form = $("#verdict-form", dlg);
+      form.classList.toggle("hidden", act === "cancel-verdict");
+      if (act === "edit-verdict") form.scrollIntoView({ block: "start", behavior: "smooth" });
     } else if (act === "approve") {
       const ok = await attempt(() => put(`/api/books/${b.id}/approval`, { approved: !b.approved }),
         b.approved ? "OK mark removed" : "Marked OK: it will show even when filters would hide it");
@@ -143,7 +152,11 @@ export async function openBook(id, state, onChange) {
       const ok = await attempt(() => del(`/api/books/${b.id}/delete-request`), "Delete request cancelled");
       if (ok) refresh();
     } else if (act === "queue") {
-      await attempt(() => post("/api/queue", { book_id: b.id }), "Added to Up Next");
+      const btn = e.target.closest("[data-act]");
+      if (await attempt(() => post("/api/queue", { book_id: b.id }), "Added to Up Next")) {
+        btn.textContent = "✓ In Up Next";
+        btn.disabled = true;
+      }
     } else if (act === "analyze") {
       const ok = await attempt(() => post(`/api/books/${b.id}/analyze`), "Queued for analysis");
       if (ok) {

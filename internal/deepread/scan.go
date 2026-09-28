@@ -69,8 +69,8 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 		if err := r.Store.HoldDeepRead(d.ID, string(raw), a, *a.SpiceLevel); err != nil {
 			return err
 		}
-		r.Store.Notify("warning", "deep-scan", fmt.Sprintf("Deep Scan suggests raising “%s” from Level %d to Level %d. Review it before it applies.",
-			book.Title, *prev, *a.SpiceLevel), "#/deepscan")
+		r.Store.Notify("warning", "deep-scan-review", fmt.Sprintf("Deep Scan suggests raising “%s” from Level %d to Level %d. Review it before it applies.",
+			book.Title, *prev, *a.SpiceLevel), "#/deepscan?review")
 		return nil
 	}
 	if err := r.Store.SaveAnalysis(book.ID, a); err != nil {

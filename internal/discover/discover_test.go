@@ -94,7 +94,7 @@ func TestRefreshWithKey(t *testing.T) {
 		t.Fatalf("second refresh: %q", summary)
 	}
 	items, _ := s.Store.DiscoverItems(nil)
-	rows := Compose(items, nil, nil, nil)
+	rows, _ := Compose(items, nil, nil, nil, false)
 	if len(rows) != 6 || rows[0].Key != "popular" || rows[0].Books[0].Title != "The Combined-Print-And-E-Book-Fiction Book 1" ||
 		rows[1].Key != "new" || len(rows[1].Books) != 5 || !FromNYT(rows) {
 		t.Fatalf("rows: %d %+v", len(rows), rows[0].Books[0].Title)
@@ -114,7 +114,7 @@ func TestRefreshWithoutAWorkingKey(t *testing.T) {
 		t.Fatalf("%q %v", summary, err)
 	}
 	items, _ := s.Store.DiscoverItems(nil)
-	rows := Compose(items, nil, nil, nil)
+	rows, _ := Compose(items, nil, nil, nil, false)
 	keys := []string{}
 	for _, r := range rows {
 		keys = append(keys, r.Key+":"+r.Books[0].Title)
@@ -134,7 +134,8 @@ func TestKidsSeeTheirRowsFirst(t *testing.T) {
 	items := []store.DiscoverBook{book(listFiction, 1), book(listTeen, 2), book(listMiddle, 3), book(listClassics, 4)}
 	order := func(u *store.User) string {
 		var keys []string
-		for _, r := range Compose(items, nil, nil, u) {
+		rows, _ := Compose(items, nil, nil, u, false)
+		for _, r := range rows {
 			keys = append(keys, r.Key)
 		}
 		return strings.Join(keys, ",")
@@ -148,3 +149,23 @@ func TestKidsSeeTheirRowsFirst(t *testing.T) {
 }
 
 func timeNow() time.Time { return time.Now() }
+
+func TestOwnedBooksLeftOutOfTheLists(t *testing.T) {
+	book := func(list string, id int64, owned bool) store.DiscoverBook {
+		return store.DiscoverBook{Book: store.Book{ID: id}, List: list, Owned: owned}
+	}
+	items := []store.DiscoverBook{book(listFiction, 1, true), book(listFiction, 2, false), book(listClassics, 3, true), book(listClassics, 1, true)}
+	family := []store.DiscoverBook{book("family", 1, true)}
+	rows, owned := Compose(items, nil, family, nil, false)
+	keys := []string{}
+	for _, r := range rows {
+		keys = append(keys, fmt.Sprintf("%s:%d", r.Key, len(r.Books)))
+	}
+	// Book 1 is on two lists but counts once; the family's own row keeps it.
+	if strings.Join(keys, ",") != "popular:1,family:1" || owned != 2 {
+		t.Fatalf("rows %v, owned %d", keys, owned)
+	}
+	if rows, owned = Compose(items, nil, family, nil, true); len(rows) != 3 || owned != 0 {
+		t.Fatalf("with owned: %d rows, %d", len(rows), owned)
+	}
+}

@@ -3,7 +3,7 @@
 // top menu's links, so it shows exactly what this account may open.
 
 const MAIN = [["check", "📷", "Check"], ["library", "📚", "Library"], ["discover", "🧭", "Discover"], ["queue", "▶️", "Up Next"], ["wishlist", "⭐", "Wishlist"], ["profile", "👤", "Profile"]];
-const ICON = { discover: "🧭", queue: "▶️", import: "💾", admin: "🛠️", usage: "📈", system: "🩺", profile: "👤", wishlist: "⭐" };
+const ICON = { discover: "🧭", queue: "▶️", import: "💾", admin: "🛠️", deepscan: "🧬", usage: "📈", system: "🩺", profile: "👤", wishlist: "⭐" };
 
 let moreRoutes = [];
 
@@ -32,23 +32,31 @@ export function markMobileNav(route) {
   bar.querySelector("[data-more]")?.classList.toggle("active", moreRoutes.includes(route));
 }
 
+// More opens as a sheet from the bottom (see .dialog in tailwind.input.css):
+// big tiles for the other pages, then help. A swipe down closes it.
 function openMore(links) {
   let d = document.getElementById("more-dialog");
   if (!d) {
     d = document.createElement("dialog");
     d.id = "more-dialog";
     d.className = "dialog";
+    d.setAttribute("aria-label", "More pages");
     document.body.append(d);
+    swipeToClose(d);
   }
-  const item = (href, ico, label, attrs = "") => `<a href="${href}" ${attrs} class="flex items-center gap-3 rounded-lg px-3 py-3 text-base hover:bg-slate-800">
+  const tile = (a) => `<a href="${a.getAttribute("href")}" class="flex flex-col items-center gap-1 rounded-xl bg-slate-800/70 px-1 py-3 text-center text-sm hover:bg-slate-700">
+    <span class="text-2xl" aria-hidden="true">${ICON[a.dataset.route] || "•"}</span>${a.textContent.replace(/^[^\p{L}]+/u, "").trim()}</a>`;
+  const item = (ico, label, attrs) => `<a href="#" ${attrs} class="flex items-center gap-3 rounded-lg px-3 py-3 text-base hover:bg-slate-800">
     <span class="w-6 text-center text-xl" aria-hidden="true">${ico}</span>${label}</a>`;
-  d.innerHTML = `<div class="space-y-1 p-4">
+  d.innerHTML = `<div class="space-y-3 p-4">
+    <div class="mx-auto h-1.5 w-10 rounded-full bg-slate-700" aria-hidden="true"></div>
     <div class="flex items-center justify-between"><h2 class="text-lg font-bold">More</h2>
-      <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
-    ${links.map((a) => item(a.getAttribute("href"), ICON[a.dataset.route] || "•", a.textContent.replace(/^[^\p{L}]+/u, "").trim())).join("")}
-    <hr class="my-2 border-slate-800">
-    ${item("#", "❔", "How to use NovelCheck", "data-help")}
-    ${item("#", "🐞", "Report a problem or idea", "data-report")}
+      <button data-close class="btn-ghost h-10 w-10 p-0 text-xl" aria-label="Close">✕</button></div>
+    <div class="grid grid-cols-3 gap-2">${links.map(tile).join("")}</div>
+    <div class="border-t border-slate-800 pt-2">
+      ${item("❔", "How to use NovelCheck", "data-help")}
+      ${item("🐞", "Report a problem or idea", "data-report")}
+    </div>
   </div>`;
   d.onclick = (e) => {
     const a = e.target.closest("a");
@@ -62,4 +70,16 @@ function openMore(links) {
     }
   };
   d.showModal();
+}
+
+// swipeToClose closes a bottom sheet dragged down by more than 80px.
+function swipeToClose(d) {
+  let startY = null;
+  d.addEventListener("touchstart", (e) => {
+    startY = d.scrollTop <= 0 && !d.querySelector(".overflow-y-auto")?.scrollTop ? e.touches[0].clientY : null;
+  }, { passive: true });
+  d.addEventListener("touchend", (e) => {
+    if (startY !== null && e.changedTouches[0].clientY - startY > 80) d.close();
+    startY = null;
+  }, { passive: true });
 }

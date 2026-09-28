@@ -1,7 +1,7 @@
 // NovelCheck service worker: caches the app shell for offline launch and
 // home-screen installs. API responses are never cached (they are private and
 // sent with Cache-Control: no-store).
-const CACHE = "novelcheck-shell-v52";
+const CACHE = "novelcheck-shell-v53";
 const SHELL = [
   "/",
   "/index.html",
@@ -71,6 +71,8 @@ const SHELL = [
   "/js/check.js",
   "/js/deepscan.js",
   "/js/deepscanadmin.js",
+  "/js/deepscanlists.js",
+  "/js/appupdate.js",
   "/js/barcode.js",
   "/js/wishlist.js",
   "/js/delivery.js",
@@ -78,7 +80,9 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: "reload" skips copies the browser may still hold from before (they
+  // used to be cached for an hour), so an install never stores old files.
+  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (event) => {
@@ -117,19 +121,24 @@ self.addEventListener("notificationclick", (event) => {
   }));
 });
 
-// Network-first for the shell so updates land immediately; cache as fallback.
+// Network first, so a new version shows at once; the cache is for offline.
+// index.html loads this build's files at /v/<build>/…, cached under that
+// address; the plain address (precached above) is the offline fallback.
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== location.origin || url.pathname.startsWith("/api/")) return;
+  const plain = url.pathname.replace(/^\/v\/[^/]+(?=\/)/, "");
   event.respondWith(
     fetch(event.request)
       .then((res) => {
-        if (res.ok && SHELL.includes(url.pathname)) {
+        if (res.ok && SHELL.includes(plain)) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(event.request, copy));
         }
         return res;
       })
-      .catch(() => caches.match(event.request).then((r) => r || caches.match("/index.html"))),
+      .catch(() => caches.match(event.request)
+        .then((r) => r || caches.match(plain))
+        .then((r) => r || (event.request.mode === "navigate" ? caches.match("/index.html") : Response.error()))),
   );
 });

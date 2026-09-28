@@ -37,7 +37,7 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
     host.innerHTML = `<section class="mt-10">
       <div class="mb-2 flex flex-wrap items-baseline justify-between gap-2">
         <h2 class="text-lg font-bold">💡 Suggested Reads${taste ? ` <button data-taste class="btn-ghost ml-1 px-2 py-0.5 text-xs font-normal">🎯 Your taste</button>` : ""}</h2>
-        <p class="flex flex-wrap items-center gap-2 text-xs text-slate-500">${libs.length > 1 ? `<label>From <select data-from class="input w-auto py-0.5 text-xs">
+        <p class="flex flex-wrap items-center gap-2 text-xs text-slate-500">${libs.length > 1 ? `<label class="flex min-w-0 items-center gap-1">From <select data-from class="input w-auto min-w-0 max-w-[60vw] py-0.5 text-xs">
           <option value="">All libraries</option>${libs.map((c) => `<option value="${c.id}" ${String(c.id) === from ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>` : ""}
           <span>${data.refreshing ? "✨ The AI is picking new suggestions…" : SUBTITLE[data.mode]}</span></p>
       </div>

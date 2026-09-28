@@ -5,6 +5,7 @@ import { on } from "./modules.js";
 import { confirmKindleSend, openKOReaderSetup } from "./delivery.js";
 import { renderSuggestions } from "./suggest.js";
 import { coverImg } from "./covers.js";
+import { openBook } from "./bookdialog.js";
 
 export async function renderQueue(view, state) {
   view.innerHTML = `
@@ -51,14 +52,16 @@ export async function renderQueue(view, state) {
   }
 
   view.addEventListener("click", async (e) => {
+    const open = e.target.closest("[data-open]");
+    if (open && open.closest("[data-item]")) return openBook(Number(open.closest("[data-item]").dataset.book), state, load);
     const btn = e.target.closest("[data-act]");
-    if (!btn) return;
+    if (!btn || !btn.closest("[data-item]")) return;
     const id = btn.closest("[data-item]").dataset.item;
     const act = btn.dataset.act;
     btn.disabled = true;
     if (act === "start") {
       // Send-to-Kindle: show who the email comes from (Amazon's approved list) first.
-      const title = btn.closest("[data-item]").querySelector(".font-semibold")?.textContent || "this book";
+      const title = btn.closest("[data-item]").querySelector("[data-title]")?.textContent || "this book";
       if (state.user.delivery_method === "email" && on(state.user, "send_to_kindle") && !(await confirmKindleSend(state.user, title))) {
         btn.disabled = false;
         return;
@@ -86,37 +89,46 @@ export async function renderQueue(view, state) {
   return () => sortable?.destroy();
 }
 
+// On phones the row is the cover, two lines of title and small ▶ / ✕
+// buttons; tapping the cover or title opens the book's window.
 function queueRow(i, idx) {
   return `
-    <li data-item="${i.id}" class="card flex items-center gap-3 py-3">
-      <span class="drag-handle" title="Drag to reorder">⠿</span>
-      <span data-pos class="w-6 text-right text-slate-500">${idx + 1}</span>
-      ${coverImg(i.book_id, "h-14 w-10")}
-      <div class="min-w-0 flex-1">
-        <p class="truncate font-semibold">${esc(i.title)}</p>
-        <p class="truncate text-sm text-slate-400">${esc(i.author)}</p>
-        ${deepBanner(i)}
-        ${i.owned ? "" : `<p class="text-xs text-sky-300">📦 Pending acquisition: not in your library yet</p>`}
-      </div>
-      <div class="hidden sm:block">${classChip(i)}</div>
-      ${i.owned ? `<button data-act="start" class="btn-primary">▶ Start Reading</button>` : `<a href="#/wishlist" class="btn-ghost text-sm" title="Get a copy first">⭐ Wishlist</a>`}
-      <button data-act="remove" class="btn-ghost px-2" title="Remove">✕</button>
+    <li data-item="${i.id}" data-book="${i.book_id}" class="card flex items-center gap-2 p-2 sm:gap-3 sm:p-3">
+      <span class="drag-handle px-1" title="Drag to reorder" aria-label="Drag to reorder">⠿</span>
+      <button type="button" data-open class="flex min-w-0 flex-1 items-center gap-2 text-left sm:gap-3" title="Book details">
+        ${coverImg(i.book_id, "h-16 w-11")}
+        <span class="min-w-0 flex-1 space-y-0.5">
+          <span data-title class="font-semibold leading-snug line-clamp-2">${esc(i.title)}</span>
+          <span class="block truncate text-xs text-slate-400"><span data-pos>${idx + 1}</span> · ${esc(i.author || "Unknown author")}</span>
+          ${deepBanner(i)}
+          ${i.owned ? "" : `<span class="block text-xs text-sky-300">📦 Not in your library yet</span>`}
+        </span>
+      </button>
+      <span class="hidden shrink-0 md:block">${classChip(i)}</span>
+      <span class="flex shrink-0 flex-col items-center gap-1 sm:flex-row sm:gap-2">
+        ${i.owned ? `<button data-act="start" class="btn-primary h-10 w-10 p-0 sm:w-auto sm:px-4" title="Start reading" aria-label="Start reading">▶&#xFE0E;<span class="hidden sm:inline"> Start Reading</span></button>`
+          : `<a href="#/wishlist" class="btn-ghost h-10 w-10 p-0 sm:w-auto sm:px-3" title="Get a copy first" aria-label="Wishlist">⭐<span class="hidden sm:inline"> Wishlist</span></a>`}
+        <button data-act="remove" class="btn-ghost h-9 w-10 p-0" title="Remove from Up Next" aria-label="Remove from Up Next">✕</button>
+      </span>
     </li>`;
 }
 
 // "2→4": a Deep Scan found more than the blurb suggested.
 const deepBanner = (i) => (i.deep_change
-  ? `<p class="text-xs font-semibold text-amber-300" title="The full text was rated higher than the description">⚠️ Rating changed via Deep Scan: Level ${esc(i.deep_change.replace("→", " → Level "))}</p>` : "");
+  ? `<span class="block text-xs font-semibold text-amber-300" title="The full text was rated higher than the description">⚠️ Deep Scan: Level ${esc(i.deep_change.replace("→", " → "))}</span>` : "");
 
 function readingCard(i) {
   return `
-    <div data-item="${i.id}" class="card flex gap-3 ring-indigo-700">
-      ${coverImg(i.book_id, "h-24 w-16")}<div class="flex min-w-0 flex-1 flex-col gap-2">
-      <p class="font-semibold">${esc(i.title)}</p>
-      <p class="text-sm text-slate-400">${esc(i.author)}</p>
-      ${deepBanner(i)}
-      ${i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
-      <div class="flex gap-2"><button data-act="finish" class="btn-secondary">Finished</button>
-        <button data-act="remove" class="btn-ghost">Remove</button></div></div>
+    <div data-item="${i.id}" data-book="${i.book_id}" class="card flex gap-3 ring-indigo-700">
+      <button type="button" data-open class="shrink-0" title="Book details">${coverImg(i.book_id, "h-24 w-16")}</button>
+      <div class="flex min-w-0 flex-1 flex-col gap-2">
+        <button type="button" data-open class="text-left" title="Book details">
+          <span data-title class="block font-semibold leading-snug">${esc(i.title)}</span>
+          <span class="block text-sm text-slate-400">${esc(i.author || "Unknown author")}</span>
+        </button>
+        ${deepBanner(i)}
+        ${i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
+        <div class="flex gap-2"><button data-act="finish" class="btn-secondary">Finished</button>
+          <button data-act="remove" class="btn-ghost">Remove</button></div></div>
     </div>`;
 }

@@ -85,3 +85,40 @@ func TestHeldScansAlwaysListed(t *testing.T) {
 		t.Fatalf("keep all: %d %v", res.StatusCode, r)
 	}
 }
+
+// "Accept all" applies every held raise, and deciding a scan clears its
+// book's "suggests raising" notice; a notice can also be dismissed.
+func TestAcceptAllAndReviewNotices(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	four := 4
+	var scans []int64
+	for _, title := range []string{"First", "Second", "Third"} {
+		id, _ := st.UpsertBook(title, "Author", "", "")
+		_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: new(int), Model: "gpt"})
+		scan, _ := st.RequestDeepRead(id, "admin", "admin", "", true, 1000, 1, 1)
+		_ = st.HoldDeepRead(scan, `[]`, store.Analysis{SpiceLevel: &four}, 4)
+		st.Notify("warning", "deep-scan-review", fmt.Sprintf("Deep Scan suggests raising “%s” from Level 0 to Level 4. Review it before it applies.", title), "#/deepscan?review")
+		scans = append(scans, scan)
+	}
+	unread := func() int {
+		_, n, _ := st.Notifications(10)
+		return n
+	}
+	if res, _ := admin.do("POST", fmt.Sprintf("/api/admin/deep-scans/%d/keep", scans[0]), nil, true); res.StatusCode != 200 || unread() != 2 {
+		t.Fatalf("keep: %d, unread %d", res.StatusCode, unread())
+	}
+	res, out := admin.do("POST", "/api/admin/deep-scans/accept-all", nil, true)
+	if res.StatusCode != 200 || out["accepted"].(float64) != 2 || st.HeldDeepReads() != 0 || unread() != 0 {
+		t.Fatalf("accept all: %d %v, held %d, unread %d", res.StatusCode, out, st.HeldDeepReads(), unread())
+	}
+	if b, _ := st.BookByID(st.MatchBook("Third", "Author"), nil); *b.SpiceLevel != 4 {
+		t.Fatalf("accepted level: %d", *b.SpiceLevel)
+	}
+
+	items, _, _ := st.Notifications(10)
+	res, out = admin.do("POST", "/api/notifications/dismiss", map[string]any{"ids": []int64{items[0].ID, items[1].ID}}, true)
+	if left, _, _ := st.Notifications(10); res.StatusCode != 200 || len(left) != 1 || len(out["items"].([]any)) != 1 {
+		t.Fatalf("dismiss: %d, left %d", res.StatusCode, len(left))
+	}
+}

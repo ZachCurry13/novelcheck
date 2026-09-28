@@ -86,6 +86,30 @@
   .content-picker .toggle, .content-picker [data-expand] { min-height: 2.75rem; }
 }
 
+/* Phones: nothing may widen the page. A drop-down grows to its longest option
+   (a long library name), so it's capped at the screen, and anything else too
+   wide is clipped: a page wider than the screen slides sideways and drags the
+   bottom tab bar (and More) off the edge. clip, unlike hidden, keeps the
+   sticky header working. */
+@media (max-width: 767px) {
+  #app-view { overflow-x: clip; }
+  select { max-width: calc(100vw - 2rem); }
+}
+
+/* Phones: pop-up windows open as sheets from the bottom of the screen, and
+   the book window keeps its ✕ and main buttons in reach (js/bookdialog.js). */
+@media (max-width: 767px) {
+  dialog.dialog {
+    width: 100%; max-width: 100%; margin: auto 0 0; max-height: 92dvh;
+    border-radius: 1rem 1rem 0 0; padding-bottom: env(safe-area-inset-bottom);
+  }
+  dialog.dialog > .overflow-y-auto { max-height: calc(92dvh - env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: no-preference) and (max-width: 767px) {
+  dialog.dialog[open] { animation: sheet-up 0.18s ease-out; }
+}
+@keyframes sheet-up { from { transform: translateY(2rem); opacity: 0.6; } }
+
 /* A grid without columns of its own (e.g. the Library's cards on a phone) gets
    one column that may shrink, so a long title or series name is cut short or
    wraps instead of stretching the card and the whole page sideways. :where()

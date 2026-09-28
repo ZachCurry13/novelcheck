@@ -86,6 +86,22 @@ func (s *Server) handleNotificationsRead(w http.ResponseWriter, r *http.Request)
 	s.handleNotifications(w, r)
 }
 
+// handleNotificationsDismiss deletes notices ({"ids": [1, 2]}): the ✕ on one,
+// or a whole group such as the Deep Scans waiting for review.
+func (s *Server) handleNotificationsDismiss(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		IDs []int64 `json:"ids"`
+	}
+	if !readJSON(w, r, &body, 16<<10) {
+		return
+	}
+	if err := s.Store.DismissNotifications(body.IDs); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	s.handleNotifications(w, r)
+}
+
 func (s *Server) handleNotificationsClear(w http.ResponseWriter, r *http.Request) {
 	if err := s.Store.ClearNotifications(); err != nil {
 		writeStoreErr(w, err)
