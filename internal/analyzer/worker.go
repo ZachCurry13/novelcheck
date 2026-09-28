@@ -252,7 +252,7 @@ func (w *Worker) rerateOne(ctx context.Context, id int64) (saved bool, err error
 		return false, err
 	}
 	if keep {
-		return true, w.Store.SaveContent(id, a.Content, store.SourceAI)
+		return true, w.Store.SaveContent(id, a.Content, store.SourceAI, a.Premise)
 	}
 	return true, w.Store.SaveAnalysis(id, *a)
 }

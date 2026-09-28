@@ -65,12 +65,11 @@ func (s *Store) SuggestPool(u *User, catalogID int64) ([]SuggestBook, error) {
 	where, args := visibilityClause(u)
 	out := []SuggestBook{}
 	err := s.DB.Select(&out, `SELECT `+suggestCols+` FROM books b
-		WHERE EXISTS (SELECT 1 FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
-			WHERE cb.book_id = b.id AND c.name != ?)
+		WHERE `+ownedCond+`
 		AND NOT EXISTS (SELECT 1 FROM queue_items q WHERE q.book_id = b.id AND q.user_id = ?)
 		AND NOT EXISTS (SELECT 1 FROM suggestion_votes v WHERE v.user_id = ? AND v.norm_key = b.norm_key)
 		AND (? = 0 OR EXISTS (SELECT 1 FROM catalog_books cx WHERE cx.book_id = b.id AND cx.catalog_id = ?))`+where,
-		append([]any{LookedUpCatalog, u.ID, u.ID, catalogID, catalogID}, args...)...)
+		append([]any{u.ID, u.ID, catalogID, catalogID}, args...)...)
 	return out, err
 }
 

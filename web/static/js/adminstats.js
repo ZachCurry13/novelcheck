@@ -26,7 +26,7 @@ export function renderStats(view, s) {
   banner($("#deep-banner", view), (s.pending_deep || s.deep_review) && admin, [
     s.deep_review && `🧬 <b>${fmtNum(s.deep_review)}</b> Deep Scan result${s.deep_review === 1 ? "" : "s"} would raise a rating a lot and ${s.deep_review === 1 ? "waits" : "wait"} for you to check.`,
     s.pending_deep && `🧬 <b>${fmtNum(s.pending_deep)}</b> Deep Scan request${s.pending_deep === 1 ? " is" : "s are"} waiting for your approval.`,
-  ].filter(Boolean).join(" ") + ` <a href="#/deepscan" class="ml-2 underline">Review</a>`);
+  ].filter(Boolean).join(" ") + ` <a href="#/deepscan?review" class="ml-2 underline">Review</a>`);
   banner($("#del-banner", view), s.pending_deletes && admin,
     `🗑 <b>${fmtNum(s.pending_deletes)}</b> book${s.pending_deletes === 1 ? " is" : "s are"} waiting for your delete review. <a href="#/deletions" class="ml-2 underline">Review</a>`);
   banner($("#problems-banner", view), s.problem_reports && admin,

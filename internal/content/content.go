@@ -7,8 +7,9 @@ package content
 import "strings"
 
 // Version goes up when items are added or their meaning changes, so books
-// checked under an older list are offered for a new check.
-const Version = 1
+// checked under an older list are offered for a new check. The same check
+// writes the card blurb (books.premise): 2 = the blurb was added (v1.20).
+const Version = 2
 
 // Item is one thing a book can contain, e.g. "Gun violence".
 type Item struct {

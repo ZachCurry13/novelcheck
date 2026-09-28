@@ -29,6 +29,7 @@ type Verdict struct {
 	ContentRaw     json.RawMessage `json:"content"`       // content item keys found (package content)
 	Content        []string        `json:"-"`
 	SummaryVerdict string          `json:"summary_verdict"`
+	Premise        string          `json:"premise"`      // spoiler-free "what it's about", for cards
 	CustomRaw      json.RawMessage `json:"custom_flags"` // the family's own filters: {"key": true} (or a list of keys)
 	CustomFlags    []string        `json:"-"`            // keys marked true
 }
@@ -60,6 +61,7 @@ func ParseVerdict(content string) (*Verdict, error) {
 		v.SpiritualElements.DarkOccult = true
 	}
 	v.SummaryVerdict = strings.TrimSpace(v.SummaryVerdict)
+	v.Premise = ShortPremise(v.Premise)
 	v.SpiceReason = ShortReason(v.SpiceReason)
 	v.CustomFlags = customFlagsFrom(v.CustomRaw)
 	v.Content = contentFrom(v.ContentRaw, v.LGBTQContent)
@@ -116,9 +118,22 @@ func (v *Verdict) ToAnalysis(model string) store.Analysis {
 		DarkOccult:      v.SpiritualElements.DarkOccult,
 		DemonicPresence: v.SpiritualElements.DemonicPresence,
 		SummaryVerdict:  v.SummaryVerdict,
+		Premise:         v.Premise,
 		Model:           model,
 		CustomFlags:     v.CustomFlags,
 		Content:         v.Content,
 		ContentSource:   store.SourceAI,
 	}
+}
+
+// maxPremiseRunes keeps the card blurb to about two sentences.
+const maxPremiseRunes = 320
+
+// ShortPremise tidies the AI's "what it's about" to one line of card size.
+func ShortPremise(s string) string {
+	s = strings.Join(strings.Fields(s), " ")
+	if r := []rune(s); len(r) > maxPremiseRunes {
+		s = strings.TrimSpace(string(r[:maxPremiseRunes-1])) + "…"
+	}
+	return s
 }

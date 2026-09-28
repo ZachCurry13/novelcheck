@@ -13,6 +13,7 @@ export async function renderDeepScanAdmin(view) {
     <p class="mb-4 text-sm text-slate-400">The AI reads a book's whole EPUB, part by part, instead of guessing from the description.
       A scan costs about as much as rating 100–200 books from their descriptions, so NovelCheck always shows the estimate first.</p>
     <div id="model-warning"></div>
+    <section id="review" class="mb-6 scroll-mt-20 space-y-3"></section>
     <div class="grid gap-4 lg:grid-cols-2">
       <section class="card space-y-3">
         <h2 class="text-lg font-semibold">Scan the next books in Up Next</h2>
@@ -44,7 +45,8 @@ export async function renderDeepScanAdmin(view) {
   $("#top-n", view).value = String([10, 20, 30].includes(data.top_n) ? data.top_n : 10);
   const users = (await attempt(() => get("/api/admin/users"))) || [];
   $("#deep-users", view).innerHTML = users.map((u) => `<label class="toggle"><input type="checkbox" value="${u.id}" ${data.users.includes(u.id) ? "checked" : ""}> ${esc(u.username)}</label>`).join("");
-  renderScans($("#scans", view), data.scans, () => renderDeepScanAdmin(view));
+  renderScans(view, data.scans, () => renderDeepScanAdmin(view));
+  if (location.hash.includes("review") && data.scans.some((d) => d.held)) $("#review", view).scrollIntoView({ block: "start" });
 
   $("#deep-users", view).addEventListener("change", (e) => {
     if ($$("#deep-users input:checked", view).length > 3) {
@@ -78,12 +80,14 @@ export async function renderDeepScanAdmin(view) {
   });
   const timer = setInterval(async () => {
     const d = await get("/api/admin/deep-scans").catch(() => null);
-    if (d && document.body.contains(view)) renderScans($("#scans", view), d.scans, () => renderDeepScanAdmin(view));
+    if (d && document.body.contains(view)) renderScans(view, d.scans, () => renderDeepScanAdmin(view));
   }, 5000);
   return () => clearInterval(timer);
 }
 
-function renderScans(host, scans, reload) {
+function renderScans(view, scans, reload) {
+  const host = $("#scans", view);
+  const review = $("#review", view);
   const open = scans.filter((d) => ["requested", "queued", "reading"].includes(d.status));
   const held = scans.filter((d) => d.held);
   const done = scans.filter((d) => !open.includes(d) && !d.held);
@@ -116,17 +120,27 @@ function renderScans(host, scans, reload) {
       ${d.status === "requested" ? `<button data-act="approve" class="btn-primary py-1 text-sm">Approve</button><button data-act="decline" class="btn-ghost py-1 text-sm">Decline</button>` : ""}
       ${["queued", "reading"].includes(d.status) ? `<button data-act="cancel" class="btn-ghost py-1 text-sm">Cancel</button>` : ""}
     </div></li>`;
-  host.innerHTML = `${held.length ? `<h2 class="text-lg font-semibold">Waiting for your review</h2>
-    <p class="text-sm text-slate-400">These scans would raise a book by 2 or more levels, so they don't apply until you accept them.</p>
-    <ul class="space-y-2">${held.map(heldRow).join("")}</ul>` : ""}
-    <h2 class="text-lg font-semibold">Waiting and running</h2>
+  review.innerHTML = held.length ? `<div class="flex flex-wrap items-center gap-2"><h2 class="text-lg font-semibold">⚠️ Waiting for your review (${held.length})</h2>
+      <button data-act="keep-all" class="btn-ghost ml-auto py-1 text-sm">Keep all old ratings</button></div>
+    <p class="text-sm text-slate-400">These scans would raise a book by 2 or more levels, so they don't apply until you accept them.
+      Scans made before NovelCheck 1.18.2 used the older Level 3 (now: desire or sex off the page), so check the evidence.</p>
+    <ul class="space-y-2">${held.map(heldRow).join("")}</ul>` : "";
+  host.innerHTML = `<h2 class="text-lg font-semibold">Waiting and running</h2>
     <ul class="space-y-2">${open.map(row).join("") || `<li class="text-sm text-slate-500">Nothing waiting.</li>`}</ul>
     <h2 class="pt-2 text-lg font-semibold">Recent results</h2>
     <ul class="space-y-2">${done.map(row).join("") || `<li class="text-sm text-slate-500">No Deep Scans yet.</li>`}</ul>`;
-  host.onclick = async (e) => {
+  const onclick = async (e) => {
     const act = e.target.closest("[data-act]")?.dataset.act;
+    if (act === "keep-all") {
+      if (!confirm(`Keep the current rating of all ${held.length} books? The scans' suggestions are dropped.`)) return;
+      const r = await attempt(() => post("/api/admin/deep-scans/keep-all"));
+      if (r) { toast(`Kept ${r.kept} rating${r.kept === 1 ? "" : "s"}`); reload(); }
+      return;
+    }
     const id = e.target.closest("[data-scan]")?.dataset.scan;
     if (!act || !id) return;
     if (await attempt(() => post(`/api/admin/deep-scans/${id}/${act}`))) reload();
   };
+  host.onclick = onclick;
+  review.onclick = onclick;
 }

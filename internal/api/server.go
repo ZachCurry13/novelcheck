@@ -13,6 +13,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
+	"github.com/zachcurry13/novelcheck/internal/discover"
 	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/ollama"
 	"github.com/zachcurry13/novelcheck/internal/push"
@@ -24,22 +25,23 @@ import (
 )
 
 type Server struct {
-	Cfg     config.Config
-	Store   *store.Store
-	Auth    *auth.Manager
-	Worker  *analyzer.Worker
-	Syncer  *calibre.Syncer
-	Updates *updates.Checker
-	Tunnel  *tunnel.Manager
-	Pulls   ollama.Puller // Ollama model downloads
-	SysInfo *sysinfo.Sampler
-	Push    *push.Service     // phone notifications; nil turns them off
-	Deep    *deepread.Runner  // Deep Scans (full-text reading)
-	Covers  covers.Cache      // shrunk book covers under /data/covers
-	Genres  *genrefill.Filler // AI genres for books without Calibre tags
-	Suggest *suggest.Service  // Suggested Reads under Up Next
-	Web     fs.FS             // embedded static assets
-	logins  *loginLimiter
+	Cfg      config.Config
+	Store    *store.Store
+	Auth     *auth.Manager
+	Worker   *analyzer.Worker
+	Syncer   *calibre.Syncer
+	Updates  *updates.Checker
+	Tunnel   *tunnel.Manager
+	Pulls    ollama.Puller // Ollama model downloads
+	SysInfo  *sysinfo.Sampler
+	Push     *push.Service     // phone notifications; nil turns them off
+	Deep     *deepread.Runner  // Deep Scans (full-text reading)
+	Covers   covers.Cache      // shrunk book covers under /data/covers
+	Genres   *genrefill.Filler // AI genres for books without Calibre tags
+	Suggest  *suggest.Service  // Suggested Reads under Up Next
+	Discover *discover.Service // the Discover tab's lists; nil in tests that don't need it
+	Web      fs.FS             // embedded static assets
+	logins   *loginLimiter
 }
 
 func (s *Server) Router() http.Handler {
@@ -86,6 +88,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/updates", s.handleUpdates)
 			r.Get("/flags", s.handleListFlags)
 			r.Get("/content", s.handleContentCatalog)
+			r.With(s.requireModule(store.KeyModuleDiscover, "Discover")).Get("/discover", s.handleDiscover)
 			r.Post("/books/{id}/wish", s.handleAddWish)
 			r.Delete("/books/{id}/wish", s.handleRemoveWish)
 			r.Get("/wishlist", s.handleWishlist)
@@ -157,9 +160,13 @@ func (s *Server) Router() http.Handler {
 			// Admins only: technical settings, secrets, destructive actions.
 			r.Group(func(r chi.Router) {
 				r.Use(auth.RequireAdmin)
+				r.Get("/admin/discover", s.handleDiscoverStatus)
+				r.Post("/admin/discover/refresh", s.handleDiscoverRefresh)
+				r.Post("/admin/discover/test", s.handleDiscoverTest)
 				r.Get("/admin/deep-scans", s.handleDeepScans)
 				r.Get("/admin/deep-scans/next", s.handleDeepScanNext)
 				r.Post("/admin/deep-scans/next", s.handleDeepScanNext)
+				r.Post("/admin/deep-scans/keep-all", s.handleKeepAllDeepScans)
 				r.Post("/admin/deep-scans/{id}/{action}", s.handleDecideDeepScan)
 				r.Post("/admin/flags", s.handleAddFlag)
 				r.Put("/admin/flags/{id}", s.handleUpdateFlag)

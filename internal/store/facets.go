@@ -59,8 +59,7 @@ func (s *Store) Facets(viewer *User) (Facets, error) {
 		Kind   string `db:"kind"`
 	}
 	if err := s.DB.Select(&rows, `SELECT b.author, b.series, b.genres, b.kind FROM books b
-		WHERE EXISTS (SELECT 1 FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id WHERE cb.book_id = b.id AND c.name != ?)`+where,
-		append([]any{LookedUpCatalog}, args...)...); err != nil {
+		WHERE `+ownedCond+where, args...); err != nil {
 		return Facets{}, err
 	}
 	genreN, kindN, authorN, seriesN := map[string]int{}, map[string]int{}, map[string]int{}, map[string]int{}
@@ -116,8 +115,7 @@ type GenreBook struct {
 }
 
 // ownedNoGenre: library books with no categories from Calibre's tags or the AI yet.
-const ownedNoGenre = `b.genre_source = '' AND EXISTS (SELECT 1 FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
-	WHERE cb.book_id = b.id AND c.name != '` + LookedUpCatalog + `')`
+const ownedNoGenre = `b.genre_source = '' AND ` + ownedCond
 
 // MissingGenres returns up to n library books without categories.
 func (s *Store) MissingGenres(n int) ([]GenreBook, error) {

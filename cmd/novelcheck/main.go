@@ -21,6 +21,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
+	"github.com/zachcurry13/novelcheck/internal/discover"
 	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -95,25 +96,30 @@ func main() {
 	deep := deepread.New(st, cfg.CalibreDir)
 	go deep.Run(ctx)
 
+	// Discover: outside book lists refreshed daily; their books are rated a few dozen a day.
+	discoverSvc := discover.New(st, func(ids ...int64) { worker.Enqueue(false, ids...) })
+	go discoverSvc.Loop(ctx)
+
 	// Phone notifications: every new 🔔 notice also goes to subscribed devices.
 	pusher := push.New(st)
 	st.OnNotify = pusher.FromNotice
 
 	srv := &api.Server{
-		Cfg:     cfg,
-		Store:   st,
-		Auth:    &auth.Manager{Store: st, SessionDays: cfg.SessionDays},
-		Worker:  worker,
-		Syncer:  syncer,
-		Updates: updates.New(),
-		Tunnel:  tun,
-		SysInfo: sampler,
-		Push:    pusher,
-		Deep:    deep,
-		Suggest: suggest.New(st),
-		Covers:  covers.Cache{Dir: filepath.Join(cfg.DataDir, "covers")},
-		Genres:  &genrefill.Filler{Store: st},
-		Web:     web.FS(),
+		Cfg:      cfg,
+		Store:    st,
+		Auth:     &auth.Manager{Store: st, SessionDays: cfg.SessionDays},
+		Worker:   worker,
+		Syncer:   syncer,
+		Updates:  updates.New(),
+		Tunnel:   tun,
+		SysInfo:  sampler,
+		Push:     pusher,
+		Deep:     deep,
+		Suggest:  suggest.New(st),
+		Covers:   covers.Cache{Dir: filepath.Join(cfg.DataDir, "covers")},
+		Genres:   &genrefill.Filler{Store: st},
+		Discover: discoverSvc,
+		Web:      web.FS(),
 	}
 	srv.Pulls.OnError = func(model string, err error) {
 		st.Notify("warning", "ollama", "Downloading "+model+" in Ollama failed: "+err.Error(), "#/admin")

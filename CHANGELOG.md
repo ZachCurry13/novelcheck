@@ -4,6 +4,27 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.20.0]
+
+### 🧭 Discover
+- **A new tab of books to swipe through:** 🔥 popular now, 🆕 new on the best-seller lists, 📰 popular nonfiction, 🧑‍🎓 top teen books, 🧒 top kids' books, 🏛️ all-time classics, 📚 new in your libraries and ❤️ popular in the family.
+- **Your rules apply.** Every book shows its peppers and content icons, everyone's content rules apply, and kids never see a book the AI hasn't rated yet. Younger kids see the kids' rows first; teens see the teen row first.
+- **Real best-seller lists** with a free New York Times key (**Admin → Delivery & Services → Discover**; the steps are in the guide linked there). Without a key, those rows come from Open Library.
+- **Rated in the background.** NovelCheck rates about 30 list books a day (you can change the number), best-ranked first, within your AI's hourly limit.
+- **Get it:** ⭐ **Wishlist** for books you don't have, ＋ **Up Next** for ones you do, and links to Amazon and Open Library. Kids don't get the Amazon link.
+- Discover books you don't own stay out of your Library. On phones, Discover is a tab at the bottom and Wishlist moved into **More**.
+
+### 📖 Real blurbs on book cards
+- **Cards now say what the book is about**: one or two spoiler-free sentences the AI writes when it rates a book (who, where, and what's at stake). There's no praise, "#1 bestseller" or rating talk.
+- Until the AI has written one, cards show the start of the book's own description, with review quotes and best-seller lines taken out.
+- The AI's rating note moved to the book window, under the blurb, labelled **Rating note**.
+- **Your books get their blurbs with the next re-rate** (the Admin banner offers it). Books you rated yourself and Deep Scanned books keep their rating: the AI only adds the blurb and content details. If you haven't run the 1.19 re-rate yet, one re-rate now does both.
+
+### 🔧 Fixes
+- **Phones: no more sideways scrolling.** A long title or series name could stretch the Library's cards, and with them the whole page, wider than the screen.
+- **Deep Scan review works.** Scans waiting for you could drop off the Deep Scan page once enough newer scans had finished, so **Review** showed nothing to review. They're now always listed first, at the top of the page, and **Keep all old ratings** turns them all down at once.
+- **Tidier titles:** `**` marks and a trailing ": A Novel" are removed from titles, including ones already in NovelCheck (Calibre keeps its own title; the book window offers to tidy it there).
+
 ## [1.19.0]
 
 ### 🧩 Content details: language, violence, gore, substances and more

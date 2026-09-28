@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS books (
     demonic_presence INTEGER NOT NULL DEFAULT 0,
     lgbtq_content    INTEGER NOT NULL DEFAULT 0,   -- retired in v1.19: now the book_content item "lgbtq"
     summary_verdict  TEXT NOT NULL DEFAULT '',
+    premise          TEXT NOT NULL DEFAULT '',     -- 1-2 spoiler-free sentences on what the book is about (the AI, from the blurb)
     approved         INTEGER NOT NULL DEFAULT 0,   -- parent marked "OK": bypasses filters
     approved_by      TEXT NOT NULL DEFAULT '',
     age_level        INTEGER NOT NULL DEFAULT 0,   -- parent-set age group, 1 young kids .. 5 adults; 0 = not set
@@ -313,3 +314,16 @@ CREATE TABLE IF NOT EXISTS problem_reports (
     status     TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'done')),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Discover: books on outside lists (New York Times best sellers, Open Library
+-- classics), refreshed daily. list is "nyt:<list name>" or "ol:<subject>".
+CREATE TABLE IF NOT EXISTS discover_items (
+    list          TEXT NOT NULL,
+    rank          INTEGER NOT NULL,
+    book_id       INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    weeks_on_list INTEGER NOT NULL DEFAULT 0,   -- NYT: 1 = new on the list this week
+    cover_url     TEXT NOT NULL DEFAULT '',     -- the list's cover image, used when Open Library has none
+    link          TEXT NOT NULL DEFAULT '',     -- the book's Open Library page, when known
+    PRIMARY KEY (list, book_id)
+);
+CREATE INDEX IF NOT EXISTS idx_discover_items_book ON discover_items(book_id);

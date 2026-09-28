@@ -46,12 +46,18 @@ var (
 	// "Title, Book 2", "Title: Book Two", "Title - Vol 2".
 	labelTail = regexp.MustCompile(`(?i)(?:\s*[,:;]|\s+` + dash + `)\s*` + label + `\s*` + number + `\s*$`)
 	spaces    = regexp.MustCompile(`\s+`)
+	// "Title: A Novel", "Title - A Novel", "Title (A Novel)": a store's label, not the title.
+	novelTail = regexp.MustCompile(`(?i)\s*(?:[:\-–—]\s*a\s+novel|\(\s*a\s+novel\s*\))\s*$`)
 )
 
 // Parse takes the series numbering out of a title. When nothing applies,
 // Title is the original (trimmed) and Index is 0.
 func Parse(raw string) Parsed {
 	title := strings.TrimSpace(spaces.ReplaceAllString(raw, " "))
+	// "**" is bold marking left over from lists copied out of AI chats.
+	if t := novelTail.ReplaceAllString(strings.ReplaceAll(title, "**", ""), ""); hasLetter(t) {
+		title = strings.TrimSpace(t)
+	}
 	out := Parsed{Title: title}
 	rest := title
 	if m := parenTail.FindStringSubmatch(rest); m != nil && hasLetter(rest[:len(rest)-len(m[0])]) {

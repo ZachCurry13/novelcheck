@@ -52,6 +52,12 @@ func (s *Server) handleCover(w http.ResponseWriter, r *http.Request) {
 	if p, info, found := s.Covers.OpenLibrary(r.Context(), b.ISBN); found && serve(p, info) {
 		return
 	}
+	// A Discover book: the cover its list pointed to.
+	if u := s.Store.DiscoverCoverURL(id); u != "" {
+		if p, info, found := s.Covers.Remote(r.Context(), u); found && serve(p, info) {
+			return
+		}
+	}
 	w.Header().Set("Content-Type", "image/svg+xml")
 	_, _ = w.Write(covers.Placeholder(b.Title, b.Author))
 }

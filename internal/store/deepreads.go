@@ -102,13 +102,25 @@ func (s *Store) DeepReadByID(id int64) (*DeepRead, error) {
 	return &d, err
 }
 
-// DeepReads lists open Deep Scans first, then the most recent finished ones
-// (the audit log of rating changes).
+// DeepReads lists scans waiting for an admin's review (all of them, however
+// old), then open scans, then the limit most recent finished ones (the audit
+// log of rating changes).
 func (s *Store) DeepReads(limit int) ([]DeepRead, error) {
 	out := []DeepRead{}
 	err := s.DB.Select(&out, `SELECT `+deepCols+` FROM deep_reads d JOIN books b ON b.id = d.book_id
-		ORDER BY d.status NOT IN ('requested', 'queued', 'reading'), d.id DESC LIMIT ?`, limit)
+		ORDER BY d.held DESC, d.status NOT IN ('requested', 'queued', 'reading'), d.id DESC LIMIT ?`, limit+s.HeldDeepReads())
 	return out, err
+}
+
+// KeepAllOldRatings turns down every held scan at once and says how many.
+func (s *Store) KeepAllOldRatings(by string) (int, error) {
+	res, err := s.DB.Exec(`UPDATE deep_reads SET held = 0, status = 'declined', approved_by = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE held = 1`, by)
+	if err != nil {
+		return 0, err
+	}
+	n, _ := res.RowsAffected()
+	return int(n), nil
 }
 
 // PendingDeepRequests counts requests waiting for an admin.

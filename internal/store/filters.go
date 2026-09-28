@@ -111,6 +111,9 @@ func visibilityClause(u *User) (string, []any) {
 // filterCond turns f (plus the viewer's content rules) into a WHERE clause.
 func filterCond(f BookFilter, viewer *User) (string, []any) {
 	where := []string{"1=1"}
+	if f.CatalogID == 0 {
+		where = append(where, "NOT "+discoverOnlyCond) // Discover books show on the Discover tab
+	}
 	var args []any
 	if q := strings.TrimSpace(f.Query); q != "" {
 		where = append(where, "(b.title LIKE ? OR b.author LIKE ? OR b.series LIKE ? OR b.tags LIKE ?)")

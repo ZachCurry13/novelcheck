@@ -60,3 +60,28 @@ func TestDeepScanReview(t *testing.T) {
 		t.Fatalf("old deep ratings: %v", ids)
 	}
 }
+
+// An old held scan stays on the Deep Scan page however many newer scans
+// finished since, and "Keep all" turns every held scan down at once.
+func TestHeldScansAlwaysListed(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	four := 4
+	id, _ := st.UpsertBook("Old Held", "Author", "", "")
+	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: new(int), Model: "gpt"})
+	scan, _ := st.RequestDeepRead(id, "admin", "admin", "", true, 1000, 1, 1)
+	_ = st.HoldDeepRead(scan, `[]`, store.Analysis{SpiceLevel: &four}, 4)
+	for i := range 70 {
+		b, _ := st.UpsertBook(fmt.Sprintf("Newer %d", i), "Author", "", "")
+		d, _ := st.RequestDeepRead(b, "auto", "", "", true, 1000, 1, 1)
+		_ = st.FinishDeepRead(d, "done", "[]", "", &four)
+	}
+	_, out := admin.do("GET", "/api/admin/deep-scans", nil, false)
+	scans := out["scans"].([]any)
+	if first := scans[0].(map[string]any); first["title"] != "Old Held" || first["held"] != true {
+		t.Fatalf("held scan not listed first: %v", first["title"])
+	}
+	if res, r := admin.do("POST", "/api/admin/deep-scans/keep-all", nil, true); res.StatusCode != 200 || r["kept"].(float64) != 1 || st.HeldDeepReads() != 0 {
+		t.Fatalf("keep all: %d %v", res.StatusCode, r)
+	}
+}

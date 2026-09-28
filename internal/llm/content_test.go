@@ -41,3 +41,16 @@ func TestContentInPrompts(t *testing.T) {
 		}
 	}
 }
+
+func TestPremise(t *testing.T) {
+	v, err := llm.ParseVerdict(`{"spice_level": 3, "premise": "  A thirty-something Londoner\n keeps a diary of her diets, her job and her love life.  "}`)
+	if err != nil || v.ToAnalysis("m").Premise != "A thirty-something Londoner keeps a diary of her diets, her job and her love life." {
+		t.Fatalf("%+v %v", v, err)
+	}
+	if long := llm.ShortPremise(strings.Repeat("word ", 100)); len([]rune(long)) != 320 || !strings.HasSuffix(long, "…") {
+		t.Fatalf("long premise not capped: %d", len([]rune(long)))
+	}
+	if !strings.Contains(llm.SystemPromptFor("Spanish", nil), `"premise": "1-2 spoiler-free sentences`) {
+		t.Fatal("the prompt asks for the premise")
+	}
+}

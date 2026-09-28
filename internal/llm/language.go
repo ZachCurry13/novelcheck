@@ -38,7 +38,7 @@ func languageName(lang string) string {
 // the analyzer prompt. Only the free text follows the language; JSON keys
 // stay exactly as specified.
 func SystemPromptFor(lang string, flags []store.CustomFlag) string {
-	return SystemPrompt + customFlagsSection(flags) + "\n\nLANGUAGE: Write summary_verdict in " + languageName(lang) +
+	return SystemPrompt + customFlagsSection(flags) + "\n\nLANGUAGE: Write summary_verdict and premise in " + languageName(lang) +
 		", even when the title, author or blurb is in another language, and spice_reason in the same language." +
 		" Keep every JSON key exactly as shown above."
 }

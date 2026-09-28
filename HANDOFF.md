@@ -1,4 +1,11 @@
-# NovelCheck handoff (2026-09-28, evening)
+# NovelCheck handoff (2026-09-28, night)
+
+## 0. In progress: v1.20 on `feature/v1.20-discover` (committed, NOT released)
+- Built and tested: the Discover tab (`internal/discover`, `internal/store/discover.go`, `internal/api/discover_handlers.go`, `web/static/js/discover.js`, `discoveradmin.js`, `docs/DISCOVER.md`), card blurbs (`books.premise`, prompt `premise`, `content.Version` 2, `web/static/js/blurb.js`), the phone sideways-scroll fix (`:where(.grid)` in `tailwind.input.css`), the Deep Scan review fix (held scans always listed first, `keep-all`), and title tidying (`**`, ": A Novel") in `titles.Parse`.
+- Go tests pass on Windows except the 6 known ones. Checked in the browser at 360px with stubbed data.
+- Left to do: README rows (Discover, blurbs), `NOVELCHECK_SPEC.md` (Discover section, premise, content version 2, owned/discover-only conditions, Deep Scan list order, build item 50), then push, check CI, and ask the user to release **1.20.0**. `CHANGELOG.md` `[1.20.0]` and the guide are done.
+- The user's *Bridget Jones's Diary* shows Level 0 from llama3.2 3B; advise switching the main model to qwen2.5:7b and re-rating.
+- Release rules are allowed in `.claude/settings.local.json` (may need a new session to load); run each release command as its own call.
 
 ## 1. Goal and active task
 NovelCheck (Go + vanilla JS PWA, self-hosted on the user's TrueNAS) rates a family's Calibre library for romance ("peppers") and content.

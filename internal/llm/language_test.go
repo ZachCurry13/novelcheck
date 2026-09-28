@@ -27,7 +27,7 @@ func TestSystemPromptFor(t *testing.T) {
 	if p := llm.SystemPromptFor("", nil); !strings.Contains(p, "American English") || !strings.HasPrefix(p, llm.SystemPrompt) {
 		t.Fatal("default language should be American English")
 	}
-	if p := llm.SystemPromptFor("Spanish", nil); !strings.Contains(p, "summary_verdict in Spanish") {
+	if p := llm.SystemPromptFor("Spanish", nil); !strings.Contains(p, "summary_verdict and premise in Spanish") {
 		t.Fatal("chosen language missing")
 	}
 	if !llm.ValidLanguage("English (UK)") || llm.ValidLanguage("Klingon") {

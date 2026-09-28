@@ -23,6 +23,7 @@ If unsure between two levels, choose the higher one.
 ` + EverydayGuard + `
 Vampires, werewolves and other fantasy creatures don't raise the level on their own; rate what happens between the characters. For calibration: Twilight (Stephenie Meyer) is about Level 2; Dead Until Dark (Charlaine Harris) is Level 4.
 Also give spice_reason: 3-8 modest words naming what sets the level (e.g. "No romance", "Kissing only", "Fade-to-black intimacy", "Heavy innuendo, on-page foreplay", "Several explicit scenes").
+Also give premise: 1-2 spoiler-free sentences telling a reader what the book is about: the main character(s), the setting and the central problem or goal. Be plain and specific. Never mention praise, awards, best-seller lists, sales, reviewers, age ratings or content, and give nothing away from later in the book.
 
 ` + ContentGuide + `
 
@@ -43,6 +44,7 @@ OUTPUT FORMAT (JSON ONLY):
     "demonic_presence": true | false
   },
   "content": ["key", ...],
+  "premise": "1-2 spoiler-free sentences on what the book is about",
   "summary_verdict": "1-2 sentence recommendation."
 }`
 
