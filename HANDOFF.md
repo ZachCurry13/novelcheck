@@ -28,14 +28,14 @@ NovelCheck (Go + vanilla JS PWA, self-hosted on the user's TrueNAS) rates a fami
 - `web/static/sw.js`: cache `novelcheck-shell-v49` + `/js/mobilenav.js`.
 
 ## 4. Current status
-- `main` = 4ef5470 (v1.18.1, released 2026-09-25, + the previous handoff). The branch has 1 commit, pushed; its CI run was in progress when written.
+- `main` = 4ef5470 (v1.18.1, released 2026-09-25, + the previous handoff). The branch has the phone commit (8fd0d5d, Linux tests passed on GitHub) and this handoff, both pushed.
 - Nothing uncommitted except this file; `.claude/` and `NOVELCHECK_SPEC.local-backup.md` stay untracked.
 - Phone layout checked at 375px with stubbed data (admin role); the kid-role tab bar has not been checked in the browser.
 - On Windows, `go test ./...` fails only the known tests in `internal/calibre` (3), `internal/db` (1) and `internal/tunnel` (2). Linux CI is the real gate.
 - The user's server showed v1.18.0 in diagnostics; v1.18.1 install is unconfirmed. AI: `llm_model = llama3.2:latest`, fallback `qwen2.5:7b`, `deep_read_model` empty. Advised: qwen2.5:7b as the main and Deep Scan model.
 
 ## 5. Next immediate steps
-1. `gh run list --branch feature/v1.18.2-mobile-peppers --limit 2`: confirm the tests passed.
+1. `git checkout feature/v1.18.2-mobile-peppers && git pull` (tests already passed for 8fd0d5d).
 2. Pepper wording (decision 1): `PepperLevels` in `internal/llm/prompt.go` and `PEPPERS` (names, descriptions, examples) in `web/static/js/peppers.js`. Then `grep -rn "Mild / Closed Door\|Heavy Tension\|Erotica\b"` for other copies, tests and docs.
 3. Vampire calibration (decision 2) in the `ContentGuide`/prompt text in `internal/llm/prompt.go`.
 4. `RulesVersion` 2→3 in `internal/store/spice.go`, so the re-rate banner offers new ratings.
