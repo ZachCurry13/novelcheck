@@ -27,6 +27,8 @@ const derivedCols = `, COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTIN
 // filling in any metadata the stored row is missing. Returns the book id.
 // Series numbering in the title ("01 - Dune") is stored as the series number.
 func (s *Store) UpsertBook(title, author, isbn, description string) (int64, error) {
+	// "**" is bold marking left over from lists copied out of AI chats.
+	title, author = strings.ReplaceAll(title, "**", ""), strings.ReplaceAll(author, "**", "")
 	t := titles.Parse(title)
 	if t.Title == "" {
 		return 0, errors.New("title required")

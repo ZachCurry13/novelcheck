@@ -105,7 +105,25 @@ func (c *Client) send(ctx context.Context, body chatRequest) (string, Usage, err
 	if len(cr.Choices) == 0 {
 		return "", cr.Usage, errors.New("LLM returned no choices")
 	}
-	return cr.Choices[0].Message.Content, cr.Usage, nil
+	out, err := stripThinking(cr.Choices[0].Message.Content)
+	return out, cr.Usage, err
+}
+
+// ErrOnlyThinking means a reasoning model ran out of room before answering.
+var ErrOnlyThinking = errors.New("the AI model used its whole answer thinking (a reasoning model such as DeepSeek-R1); choose a model without a thinking step")
+
+// stripThinking drops the <think>…</think> notes reasoning models (DeepSeek-R1,
+// QwQ) write before their answer: they can contain "{", which would confuse
+// the JSON readers. Some templates open the notes in the prompt, so the
+// answer is whatever follows the last closing tag.
+func stripThinking(s string) (string, error) {
+	if i := strings.LastIndex(s, "</think>"); i >= 0 {
+		return strings.TrimSpace(s[i+len("</think>"):]), nil
+	}
+	if strings.Contains(s, "<think>") {
+		return "", ErrOnlyThinking
+	}
+	return s, nil
 }
 
 func truncate(s string, n int) string {

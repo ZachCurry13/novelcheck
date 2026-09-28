@@ -35,8 +35,9 @@ STRICT RULES:
 ` + PepperLevels + `
 
 WHAT PEPPERS MEASURE: ONLY romantic and sexual content. Violence, fighting, killing, death, injury, monsters, danger, suspense, fear, horror, magic, science, religion, politics and every other mature theme are NOT romance: a part without romance or sexual content is level 0, however dark, violent, tense or frightening it is.
-First write in "romance" what romantic or sexual content actually happens on the page in THIS text, in your own words (e.g. "two characters kiss", "a couple has sex, described in detail"), or "none". Don't copy the level descriptions above. Then give the level that matches it. "none" means level 0.
-Level 3 or higher needs sexual content happening on the page in this text; if "romance" doesn't describe any, use level 2 or lower.
+` + EverydayGuard + `
+First write in "romance" what romantic or sexual content actually happens in THIS text, in your own words (e.g. "two characters kiss", "they spend the night together, off the page", "a couple has sex, described in detail"), or "none". Don't copy the level descriptions above. Then give the level that matches it. "none" means level 0.
+Level 3 needs sexual desire or heavy making out in this text, or sex that happens off the page or fades to black. Level 4 or higher needs sex described on the page in this text. If "romance" describes none of these, use level 2 or lower.
 
 ` + ContentGuide + `
 Only mark nudity, solo_acts or heavy_innuendo for sexual content on the page in this text. Mark playful_fantasy only for actual magic or fantasy creatures in this text.

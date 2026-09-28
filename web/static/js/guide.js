@@ -28,11 +28,11 @@ const EVERYONE = [
 
 const MANAGER = [
   ["🛠️ The Admin tab",
-    "Your account can manage NovelCheck. On the <b>Admin</b> tab, <b>AI &amp; Scans</b> shows how many books are rated and what the AI has cost so far. <b>Analyze batch</b> rates the next few unrated books, and <b>Sync Calibre now</b> picks up newly added books. Banners at the top point out anything waiting for you, such as delete requests or reported problems."],
+    "Your account can manage NovelCheck. On the <b>Admin</b> tab (<b>Manage</b> on editor accounts), <b>AI &amp; Scans</b> shows how many books are rated and what the AI has cost so far. <b>Analyze batch</b> rates the next few unrated books, and <b>Sync Calibre now</b> picks up newly added books. Banners at the top point out anything waiting for you, such as delete requests or reported problems."],
   ["✏️ Fixing a rating",
     "Open any book to set its <b>Age group</b> (Young kids, Middle grade, Teens, Young adult, Adults) and to leave <b>Parents' notes</b> after you've read it, for everyone or for parents only. If a rating looks wrong, choose <b>Edit rating</b>. Your correction is saved with your name. If a book is fine for your family even though a filter catches it (Harry Potter's magic, say), choose <b>✓ Mark as OK</b>: it then shows for everyone, kids included. <b>Find duplicates</b> (in the Library) lists books that are in Calibre twice."],
   ["👧 Kids' accounts",
-    "Under <b>Admin → Users &amp; Rules</b> you can add kid accounts by age group (they only see books rated for their age or younger), reset their passwords, and tick what each child should <b>not</b> see (for example Open Door or Dark Occult). Hidden books never show up for them, not even in search."],
+    "Under <b>Admin</b> (<b>Manage</b> on editor accounts) <b>→ Users &amp; Rules</b> you can add kid accounts by age group (they only see books rated for their age or younger), reset their passwords, and tick what each child should <b>not</b> see (for example Open Door or Dark Occult). Hidden books never show up for them, not even in search."],
   ["💾 Importing a Kindle",
     "Plug a Kindle into your computer, open <b>Import books</b>, and pick its <b>documents</b> folder (or bring in a list from Goodreads, Amazon and others). NovelCheck adds the books to a library you name, like \"Kids' Kindle\". It's yours: tick <b>🔒 Private</b> so only you and the admins see it, and manage it under <b>📚 Your libraries</b>."],
 ];

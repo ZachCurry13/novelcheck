@@ -16,10 +16,12 @@ func TestParsePartGuards(t *testing.T) {
 		{`{"romance": "No romantic or sexual content in this part", "level": 4, "note": "Bowman discovers the airlock doors are open"}`, 0},
 		{`{"romance": "", "level": 3, "note": "Moon-Watcher kills a warthog with a stone hammer"}`, 0},
 		// Pasting the pepper scale back is not evidence.
-		{`{"romance": "Romantic tension and kissing occur, including passionate kissing", "level": 4}`, 2},
+		{`{"romance": "More developed romance with stronger attraction and kissing, including passionate kissing", "level": 4}`, 2},
+		{`{"romance": "Strong sexual attraction and desire are present", "level": 3}`, 2},
 		{`{"romance": "Sexual encounters occur on-page and include clear descriptions of sexual activity", "level": 4}`, 2},
 		// Real romance keeps its level (the second look checks 3 and up).
 		{`{"romance": "No explicit scenes, but Harry and Ginny kiss", "level": 2}`, 2},
+		{`{"romance": "they spend the night together, off the page", "level": 3}`, 3},
 		{`{"romance": "a married couple has sex in their cabin, described in detail", "level": 4}`, 4},
 		{`{"romance": "a crush on a classmate", "level": 1}`, 1},
 	}
@@ -39,6 +41,9 @@ func TestConfirmedLevel(t *testing.T) {
 		{llm.Confirmation{SexOnPage: true, Evidence: "a couple has sex"}, 4},
 		{llm.Confirmation{SexOnPage: true}, 0}, // a yes without naming it doesn't count
 		{llm.Confirmation{Foreplay: true, Evidence: "heavy making out"}, 3},
+		{llm.Confirmation{FadeToBlack: true, Evidence: "a night together, off the page"}, 3},
+		{llm.Confirmation{Desire: true, Evidence: "open longing for each other"}, 3},
+		{llm.Confirmation{Desire: true, Kissing: true}, 2}, // desire has to be named
 		{llm.Confirmation{Kissing: true}, 2},
 		{llm.Confirmation{Romance: true}, 1},
 		{llm.Confirmation{}, 0},

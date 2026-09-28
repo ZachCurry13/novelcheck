@@ -26,6 +26,18 @@ func TestNormKeyMatchesAcrossSources(t *testing.T) {
 	}
 }
 
+func TestUpsertDropsBoldMarks(t *testing.T) {
+	s := newStore(t)
+	id, err := s.UpsertBook("**The Hobbit", "J.R.R. Tolkien**", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := s.BookByID(id, nil)
+	if err != nil || b.Title != "The Hobbit" || b.Author != "J.R.R. Tolkien" {
+		t.Fatalf("%+v %v", b, err)
+	}
+}
+
 func seed(t *testing.T, s *store.Store) (cal, kindle int64, ids map[string]int64) {
 	t.Helper()
 	cal, _ = s.EnsureCatalog(store.CalibreCatalogName, "calibre")

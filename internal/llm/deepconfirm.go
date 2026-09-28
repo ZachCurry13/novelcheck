@@ -26,21 +26,25 @@ TEXT:
 %s
 
 Answer with JSON only:
-{"sex_on_page": true | false, "foreplay_on_page": true | false, "kissing": true | false, "romance": true | false, "evidence": "..."}
+{"sex_on_page": true | false, "foreplay_on_page": true | false, "fade_to_black": true | false, "sexual_desire": true | false, "kissing": true | false, "romance": true | false, "evidence": "..."}
 - sex_on_page: characters have sex in this text and it is described, not just implied
 - foreplay_on_page: heavy sexual foreplay or clearly sexual touching in this text, short of sex
+- fade_to_black: characters have sex in this text, but off the page or the scene fades to black
+- sexual_desire: characters clearly feel, express or act on sexual desire in this text, e.g. heavy making out
 - kissing: characters kiss in this text
 - romance: crushes, attraction, flirting or dating in this text
-- evidence: if sex_on_page or foreplay_on_page, one modest phrase naming it; otherwise ""`, title, orUnknown(author), label, text)
+- evidence: if any of the first four is true, one modest phrase naming it; otherwise ""`, title, orUnknown(author), label, text)
 }
 
 // Confirmation is the answer to the second look.
 type Confirmation struct {
-	SexOnPage bool   `json:"sex_on_page"`
-	Foreplay  bool   `json:"foreplay_on_page"`
-	Kissing   bool   `json:"kissing"`
-	Romance   bool   `json:"romance"`
-	Evidence  string `json:"evidence"`
+	SexOnPage   bool   `json:"sex_on_page"`
+	Foreplay    bool   `json:"foreplay_on_page"`
+	FadeToBlack bool   `json:"fade_to_black"`
+	Desire      bool   `json:"sexual_desire"`
+	Kissing     bool   `json:"kissing"`
+	Romance     bool   `json:"romance"`
+	Evidence    string `json:"evidence"`
 }
 
 // ParseConfirm reads the answer.
@@ -59,12 +63,13 @@ func ParseConfirm(out string) (Confirmation, error) {
 
 // ConfirmedLevel is the pepper level a part keeps after the second look:
 // its own level only with sex described on the page (and named); heavy
-// foreplay alone makes it at most 3, kissing 2, romance 1, and nothing 0.
+// foreplay, sex off the page or clear sexual desire (named) make it at most 3,
+// kissing 2, romance 1, and nothing 0.
 func ConfirmedLevel(claimed int, c Confirmation) int {
 	switch {
 	case c.SexOnPage && c.Evidence != "":
 		return claimed
-	case c.Foreplay && c.Evidence != "":
+	case (c.Foreplay || c.FadeToBlack || c.Desire) && c.Evidence != "":
 		return min(claimed, 3)
 	case c.Kissing:
 		return min(claimed, 2)

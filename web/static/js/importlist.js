@@ -24,7 +24,8 @@ export function parseTitleList(text) {
   const seen = new Set();
   const out = [];
   for (let line of text.split(/\r?\n/)) {
-    line = line.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, "").trim();
+    // "**" is bold marking from lists copied out of AI chats.
+    line = line.replace(/\*\*/g, "").replace(/^\s*(?:[-*•]|\d+[.)])\s+/, "").trim();
     if (!line) continue;
     let title = line, author = "";
     const splitAt = (sep, last) => {

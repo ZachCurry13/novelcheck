@@ -3,15 +3,16 @@ package store
 // The pepper scale (0-5), in the family's own words (see the Library's
 // "What do the peppers mean?"):
 //
-//	0 No Romance · 1 Sweet Romance · 2 Mild / Closed Door ·
-//	3 Steamy Closed Door / Heavy Tension · 4 Explicit / Open Door ·
-//	5 Very Explicit / Erotica
+//	0 No Romance · 1 Sweet Romance · 2 Romantic ·
+//	3 Steamy Closed-Door · 4 Explicit / Open Door ·
+//	5 Very Explicit / Erotica-Level
 const MaxSpiceLevel = 5
 
 // RulesVersion identifies the AI's rating rules (pepper descriptions and
 // content flags). Bump it whenever they change: books the AI rated under an
-// older version are then offered for re-rating. 2 = v1.16 pepper wording.
-const RulesVersion = 2
+// older version are then offered for re-rating. 2 = v1.16 pepper wording,
+// 3 = v1.18.2 (level 2 without sexual desire, level 3 closed-door sex).
+const RulesVersion = 3
 
 // ValidSpice reports whether level is on the 0-5 pepper scale.
 func ValidSpice(level int) bool { return level >= 0 && level <= MaxSpiceLevel }

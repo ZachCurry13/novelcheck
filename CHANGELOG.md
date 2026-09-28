@@ -4,6 +4,27 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.18.2]
+
+### 📱 Easier on phones
+- **Tabs at the bottom.** On a phone, the menu that used to wrap across the top is now a tab bar within reach of your thumb: the first four of Check, Library, Up Next, Wishlist and Profile, with **More** for everything else.
+- **No more zooming in.** Tapping a search box or form field on an iPhone no longer zooms the page.
+- **Admin pages fit.** On a phone, the Admin tabs sit in a 2×2 grid and the number tiles two to a row.
+
+### 🌶️ Pepper levels in the family's own words
+- **Level 2 is now "Romantic"**: developed romance and passionate kissing, with no sexual desire and no hint of sex. It used to allow intimacy off the page.
+- **Level 3 is now "Steamy Closed-Door"**: strong sexual attraction and desire, heavy making out, and any sex happens off the page or fades to black.
+- **Level 5 is now "Very Explicit / Erotica-Level".**
+- **Everyday moments don't count.** Sharing a glass of wine or waiting for a taxi is not romance.
+- **Vampires and werewolves are ordinary fantasy.** They don't make a book steamier or "dark occult" on their own. For reference, the AI is told *Twilight* is about Level 2 and *Dead Until Dark* is Level 4.
+- **Deep Scan uses the new Level 3.** Desire, heavy making out or sex off the page count as Level 3; only sex on the page counts as 4 or more.
+- **Re-rating.** Because the levels changed, books the AI rated before this update are offered for re-rating in the Admin banner. Books you rated yourself and Deep Scan results are never changed. Once re-rated, books where sex happens off the page move from Level 2 to 3, so kids limited to Level 2 (Strict Family) no longer see them.
+
+### 🔧 Fixes
+- **AI models that "think" first** (such as DeepSeek-R1) no longer break ratings. If one runs out of room while thinking, the error now says so.
+- **Lists copied from AI chats**: bold marks (`**`) are removed from titles and authors when you import a list.
+- **The guide** now tells editor accounts that their admin tab is called **Manage**.
+
 ## [1.18.1]
 
 ### 🧬 Deep Scan: stricter and fairer

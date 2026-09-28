@@ -18,6 +18,8 @@ CATEGORIES & GUIDELINES:
 1. Spice Level (0-5 peppers). Pick the single best fit:
 ` + PepperLevels + `
 If unsure between two levels, choose the higher one.
+` + EverydayGuard + `
+Vampires, werewolves and other fantasy creatures don't raise the level on their own; rate what happens between the characters. For calibration: Twilight (Stephenie Meyer) is about Level 2; Dead Until Dark (Charlaine Harris) is Level 4.
 Also give spice_reason: 3-8 modest words naming what sets the level (e.g. "No romance", "Kissing only", "Fade-to-black intimacy", "Heavy innuendo, on-page foreplay", "Several explicit scenes").
 
 ` + ContentGuide + `
@@ -43,10 +45,14 @@ OUTPUT FORMAT (JSON ONLY):
 // PepperLevels defines the 0-5 pepper scale (shared with Deep read).
 const PepperLevels = `- 0 = No Romance: No meaningful romantic or sexual content. No romantic subplot, kissing, sexual attraction, or romantic physical affection. Examples: Harry Potter and the Sorcerer's Stone; The Hobbit.
 - 1 = Sweet Romance: Romance is present but mild and non-sexual. May include crushes, attraction, flirting, hand-holding, cuddling, and sweet/brief kisses. No sexual desire or sexualized physical intimacy. Examples: Uglies (Scott Westerfeld); Seeking Persephone (Sarah M. Eden).
-- 2 = Mild / Closed Door: Romantic tension and kissing occur, including passionate kissing. Any physical intimacy beyond kissing cuts to black or happens strictly off-page; nothing sexual is shown or described on the page. Example: My Phony Valentine (Courtney Walsh).
-- 3 = Steamy Closed Door / Heavy Tension: Heavy physical foreplay or suggestive on-page innuendo, such as heavy making out with clear sexual intent or sexually charged scenes that build toward intimacy, but it stops short of explicit sexual acts.
+- 2 = Romantic: More developed romance with stronger attraction and kissing, including passionate kissing or physical affection. No sexual activity, sexual desire, or implication of sex. The intimacy remains romantic rather than sexual. Example: My Phony Valentine (Courtney Walsh).
+- 3 = Steamy Closed-Door: Strong sexual attraction and desire are present. May include heavy/passionate making out, sexual tension, and characters expressing or acting on sexual desire. Any sexual encounter occurs off-page or fades to black; no explicit sexual activity is described. Example: a romance that is clearly sexually charged but remains true closed-door.
 - 4 = Explicit / Open Door: Sexual encounters occur on-page and include clear descriptions of sexual activity. Scenes contain meaningful sexual detail rather than simply implying what happens. There may be multiple or extended explicit scenes, but sex does not necessarily dominate the entire book. Examples: Fourth Wing (Rebecca Yarros); A Court of Thorns and Roses (Sarah J. Maas).
-- 5 = Very Explicit / Erotica: Frequent, extended, or highly graphic on-page sexual content with extensive detail. Sexual encounters are a major component of the book and may occupy a substantial portion of the story. Example: Fifty Shades of Grey (E. L. James).`
+- 5 = Very Explicit / Erotica-Level: Frequent, extended, or highly graphic on-page sexual content with extensive detail. Sexual encounters are a major component of the book and may occupy a substantial portion of the story. Example: Fifty Shades of Grey (E. L. James).`
+
+// EverydayGuard keeps ordinary moments from reading as romance (shared with
+// Deep read).
+const EverydayGuard = `Everyday moments are not romance: sharing a meal or a glass of wine, waiting for a taxi, friendship, family affection and ordinary conversation never raise the level on their own.`
 
 // ContentGuide defines the content flags and the occult classification.
 const ContentGuide = `2. Content Elements:
@@ -55,7 +61,7 @@ const ContentGuide = `2. Content Elements:
 - Heavy Innuendo: Detailed physical foreplay or highly suggestive text.
 
 3. Spiritual & Occult Classification:
-- Whimsical / Standard Fantasy: Fictional fairy-tale magic, standard wizards (e.g., Merlin, Gandalf), or light YA fantasy (e.g., Harry Potter). (Mark dark_occult: false)
+- Whimsical / Standard Fantasy: Fictional fairy-tale magic, standard wizards (e.g., Merlin, Gandalf), vampires, werewolves and other fantasy creatures, or light YA fantasy (e.g., Harry Potter). (Mark dark_occult: false)
 - Dark Occult / Demonic: Explicit real-world occult practices, black magic rituals, demonic possession, or active demonic themes. (Mark dark_occult: true)`
 
 // maxBlurbChars keeps prompts small (and cheap) for the lightweight model.
