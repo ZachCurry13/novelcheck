@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"sync"
 	"time"
 
@@ -239,15 +238,21 @@ func (w *Worker) fillBlurb(ctx context.Context, b *store.Book) {
 }
 
 // rerateOne re-rates an analyzed book without taking it out of the library:
-// its status stays "analyzed" and a failure keeps the old rating.
+// its status stays "analyzed" and a failure keeps the old rating. Books a
+// parent rated or a Deep Scan read keep their rating and only get their
+// content items checked.
 func (w *Worker) rerateOne(ctx context.Context, id int64) (saved bool, err error) {
 	b, err := w.Store.BookByID(id, nil)
-	if err != nil || b.Status != "analyzed" || strings.HasPrefix(b.AnalysisModel, "manual:") || strings.HasPrefix(b.AnalysisModel, store.DeepModelPrefix) {
-		return false, nil // gone, re-queued normally, or hand-rated by a parent
+	keep := err == nil && store.KeepsRating(b)
+	if err != nil || b.Status != "analyzed" || keep && store.ContentChecked(b) {
+		return false, nil // gone, re-queued normally, or nothing left to check
 	}
 	a, err := w.rate(ctx, b, func() bool { return true })
 	if err != nil || a == nil {
 		return false, err
+	}
+	if keep {
+		return true, w.Store.SaveContent(id, a.Content, store.SourceAI)
 	}
 	return true, w.Store.SaveAnalysis(id, *a)
 }

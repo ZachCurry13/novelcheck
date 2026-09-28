@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zachcurry13/novelcheck/internal/content"
 	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/safe"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -148,9 +149,14 @@ func limits(u *store.User) string {
 		on   bool
 		text string
 	}{{u.HideOpenDoor, "no open-door sex scenes"}, {u.HideNudity, "no nudity"}, {u.HideSoloActs, "no solo sexual acts"},
-		{u.HideInnuendo, "no heavy innuendo"}, {u.HideDarkOccult, "no dark occult or demonic themes"}, {u.HideLGBTQ, "no LGBTQ+ content"}} {
+		{u.HideInnuendo, "no heavy innuendo"}, {u.HideDarkOccult, "no dark occult or demonic themes"}} {
 		if r.on {
 			l = append(l, r.text)
+		}
+	}
+	for _, k := range u.HiddenContent {
+		if name := content.Label(strings.TrimPrefix(k, content.GroupPrefix)); name != "" {
+			l = append(l, "no "+strings.ToLower(name))
 		}
 	}
 	return strings.Join(l, "; ")

@@ -33,7 +33,6 @@ var flagColumns = map[string]string{
 	"nudity":           "b.nudity = 1",
 	"solo_acts":        "b.solo_acts = 1",
 	"heavy_innuendo":   "b.heavy_innuendo = 1",
-	"lgbtq":            "b.lgbtq_content = 1",
 	"dark_occult":      "(b.dark_occult = 1 OR b.demonic_presence = 1)",
 	"playful_fantasy":  "b.playful_fantasy = 1",
 	"demonic_presence": "b.demonic_presence = 1",
@@ -82,20 +81,18 @@ func visibilityClause(u *User) (string, []any) {
 	if u.HideDarkOccult {
 		parts = append(parts, "b.dark_occult = 0 AND b.demonic_presence = 0")
 	}
-	if u.HideLGBTQ {
-		parts = append(parts, "b.lgbtq_content = 0")
-	}
 	if u.MaxSpice >= 0 {
 		// Unrated books are governed by HideUnrated, so they pass here.
 		parts = append(parts, "COALESCE("+effectiveSpice+", 0) <= "+strconv.Itoa(u.MaxSpice))
 	}
+	cconds, args := contentRuleConds(u)
+	parts = append(parts, cconds...)
 	clause := ""
 	if len(parts) > 0 {
 		clause = " AND (b.approved = 1 OR (" + strings.Join(parts, " AND ") + "))"
 	}
 	// An age group set on the book always applies to kids of a younger group,
 	// even if a parent marked the book OK for its content.
-	var args []any
 	if u.Role == RoleRestricted && u.AgeLevel > 0 {
 		clause += " AND (b.age_level = 0 OR b.age_level <= ?)"
 		args = append(args, u.AgeLevel)

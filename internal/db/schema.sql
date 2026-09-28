@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     hide_solo_acts   INTEGER NOT NULL DEFAULT 0,
     hide_innuendo    INTEGER NOT NULL DEFAULT 0,
     hide_dark_occult INTEGER NOT NULL DEFAULT 0,
-    hide_lgbtq       INTEGER NOT NULL DEFAULT 0,
+    hide_lgbtq       INTEGER NOT NULL DEFAULT 0,   -- retired in v1.19: now the user_hidden_content rule "lgbtq"
     hide_unrated     INTEGER NOT NULL DEFAULT 0,
     delivery_method  TEXT NOT NULL DEFAULT 'none' CHECK (delivery_method IN ('none', 'email', 'koreader')),
     kindle_email     TEXT NOT NULL DEFAULT '',
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS books (
     playful_fantasy  INTEGER NOT NULL DEFAULT 0,
     dark_occult      INTEGER NOT NULL DEFAULT 0,
     demonic_presence INTEGER NOT NULL DEFAULT 0,
-    lgbtq_content    INTEGER NOT NULL DEFAULT 0,
+    lgbtq_content    INTEGER NOT NULL DEFAULT 0,   -- retired in v1.19: now the book_content item "lgbtq"
     summary_verdict  TEXT NOT NULL DEFAULT '',
     approved         INTEGER NOT NULL DEFAULT 0,   -- parent marked "OK": bypasses filters
     approved_by      TEXT NOT NULL DEFAULT '',
@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS books (
     spice_reason     TEXT NOT NULL DEFAULT '',     -- short "why this many peppers", e.g. "Heavy innuendo, on-page foreplay"
     rules_version    INTEGER NOT NULL DEFAULT 0,   -- store.RulesVersion the rating was made under
     flags_version    INTEGER NOT NULL DEFAULT 0,   -- custom filters version the rating checked
+    content_version  INTEGER NOT NULL DEFAULT 0,   -- content.Version the book was checked for content items; 0 = not yet
+    content_amounts  TEXT NOT NULL DEFAULT '',     -- Deep Scan amount per group, e.g. "violence:3,gore:1" (1 a little .. 3 a lot)
     rated_modified   TEXT NOT NULL DEFAULT '',     -- the Calibre change time the rating saw (delta scanning)
     series           TEXT NOT NULL DEFAULT '',     -- series name from Calibre, or taken from the title
     series_index     REAL NOT NULL DEFAULT 0,      -- number in the series; 0 = none
@@ -160,6 +162,23 @@ CREATE TABLE IF NOT EXISTS book_flags (
     book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
     flag_id INTEGER NOT NULL REFERENCES custom_flags(id) ON DELETE CASCADE,
     PRIMARY KEY (book_id, flag_id)
+);
+
+-- Detailed content items a book contains (package content) and who said so:
+-- the quick AI rating, a Deep Scan, or a parent.
+CREATE TABLE IF NOT EXISTS book_content (
+    book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    key     TEXT NOT NULL,
+    source  TEXT NOT NULL DEFAULT 'ai' CHECK (source IN ('ai', 'deep', 'parent')),
+    PRIMARY KEY (book_id, key)
+);
+CREATE INDEX IF NOT EXISTS idx_book_content_key ON book_content(key);
+
+-- A user's content hide rules: an item key, "g:<group>" or "flag:<custom key>".
+CREATE TABLE IF NOT EXISTS user_hidden_content (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    key     TEXT NOT NULL,
+    PRIMARY KEY (user_id, key)
 );
 
 -- Deep reads: the AI reads a book's whole EPUB in parts. Admins start them;

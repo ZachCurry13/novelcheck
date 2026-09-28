@@ -106,7 +106,6 @@ export const HIDE_LABELS = {
   nudity: "Nudity",
   solo_acts: "Solo Acts",
   heavy_innuendo: "Heavy Innuendo",
-  lgbtq: "LGBTQ+ Content",
   dark_occult: "Dark Occult / Demonic",
 };
 
@@ -114,7 +113,6 @@ export const FLAG_LABELS = {
   nudity: "Nudity",
   solo_acts: "Solo Acts",
   heavy_innuendo: "Heavy Innuendo",
-  lgbtq: "LGBTQ+ Content",
   dark_occult: "Dark Occult / Demonic",
 };
 
@@ -123,7 +121,6 @@ export function flagChips(b) {
   if (b.nudity) on.push("Nudity");
   if (b.solo_acts) on.push("Solo Acts");
   if (b.heavy_innuendo) on.push("Heavy Innuendo");
-  if (b.lgbtq_content) on.push("LGBTQ+");
   if (b.dark_occult || b.demonic_presence) on.push("Dark Occult");
   if (b.playful_fantasy && !b.dark_occult) on.push("Fantasy Magic");
   const chips = on.map((f) => `<span class="chip-flag">${esc(f)}</span>`);

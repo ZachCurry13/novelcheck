@@ -1,5 +1,7 @@
 package store
 
+import "github.com/zachcurry13/novelcheck/internal/content"
+
 // Age groups used for books (set by a parent) and kid accounts. A kid sees
 // books rated for their group or younger; books without an age group fall
 // back to the account's content rules.
@@ -29,6 +31,10 @@ var agePresets = map[int]User{
 	4: {MaxSpice: 3, HideOpenDoor: true, HideSoloActs: true, HideDarkOccult: true, HideUnrated: true},
 	5: {MaxSpice: -1},
 }
+
+// ageContent is the content items a new kid account hides, by age group (0 =
+// no age group). Young adults and adults start with none; parents can add any.
+var ageContent = map[int][]string{0: content.StrictPreset, 1: content.YoungPreset, 2: content.YoungPreset, 3: content.StrictPreset}
 
 // SetBookAge records a parent's age group for a book (0 clears it).
 func (s *Store) SetBookAge(id int64, level int, by string) error {

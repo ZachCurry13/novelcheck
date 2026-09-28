@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/zachcurry13/novelcheck/internal/content"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/epub"
 	"github.com/zachcurry13/novelcheck/internal/llm"
@@ -208,5 +209,29 @@ func TestSecondLookOverrulesAMisreadPart(t *testing.T) {
 	b, _ := st.BookByID(id, nil)
 	if *b.SpiceLevel != 1 || b.Nudity || st.LatestDeepRead(id).Held {
 		t.Fatalf("misread part must not count: level %d nudity %v", *b.SpiceLevel, b.Nudity)
+	}
+}
+
+// Content items count from a single part; each group's amount comes from how
+// many of the book's parts it shows up in.
+func TestCombineContentAmounts(t *testing.T) {
+	parts := make([]Part, 10)
+	results := make([]llm.PartResult, 10)
+	for i := range 4 {
+		results[i].Content = []string{"war"}
+	}
+	results[1].Content = append(results[1].Content, "weapons")
+	results[5].Content = []string{"corpses"}
+	for i := 6; i < 9; i++ {
+		results[i].Content = []string{"alcohol"}
+	}
+	a, _ := combine(parts, results)
+	if len(a.Content) != 4 || a.ContentSource != store.SourceDeep {
+		t.Fatalf("items: %v %s", a.Content, a.ContentSource)
+	}
+	want := map[string]int{"violence": content.ALot, "gore": content.ALittle, "substances": content.Some}
+	if len(a.ContentAmounts) != 3 || a.ContentAmounts["violence"] != want["violence"] ||
+		a.ContentAmounts["gore"] != want["gore"] || a.ContentAmounts["substances"] != want["substances"] {
+		t.Fatalf("amounts: %v", a.ContentAmounts)
 	}
 }

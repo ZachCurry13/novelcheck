@@ -25,7 +25,7 @@ func TestCoversAndReports(t *testing.T) {
 	f.Close()
 	mort, _ := st.UpsertBook("Mort", "Terry Pratchett", "", "")
 	_ = st.AddCopy(cat, mort, filepath.Join(dir, "Mort.epub"), "epub", "4")
-	_ = st.SaveAnalysis(mort, store.Analysis{Classification: "No Spice"})
+	_ = st.SaveAnalysis(mort, store.Analysis{ContentSource: store.SourceAI, Classification: "No Spice"})
 	plain, _ := st.UpsertBook("No Cover Here", "Someone", "", "")
 	_ = st.AddCopy(cat, plain, "calibre-entry:5", "", "5")
 

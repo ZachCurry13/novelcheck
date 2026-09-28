@@ -5,6 +5,7 @@ import { get, post, del, qs } from "./api.js";
 import { $, esc, attempt, classChip, flagChips, ageChip } from "./ui.js";
 import { PEPPERS, whyChip, openPepperGuide } from "./peppers.js";
 import { loadFlags, customChips } from "./customflags.js";
+import { loadContent, contentLine } from "./content.js";
 import { openBook } from "./bookdialog.js";
 import { liveBlocker, scanLive } from "./barcode.js";
 import { coverImg } from "./covers.js";
@@ -31,7 +32,7 @@ export async function renderCheck(view, state) {
       <div id="check-result" aria-live="polite"></div>
       <section id="recent"></section>
     </div>`;
-  await loadFlags(true);
+  await Promise.all([loadFlags(true), loadContent()]);
   const out = $("#check-result", view);
   const form = $("#check-form", view);
   let run = 0; // a newer check cancels the polling of an older one
@@ -154,6 +155,7 @@ function resultCard(b, res) {
     <p class="rounded-lg p-3 text-lg font-semibold ${verdict[0]}">${verdict[1]}</p>
     <div class="flex flex-wrap gap-1">${classChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
     ${b.spice_reason ? `<p class="text-sm"><b>Why:</b> ${esc(b.spice_reason)}</p>` : ""}
+    ${contentLine(b)}
     ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}
     <p class="text-xs text-slate-400">${esc(p.name)}: ${esc(p.desc)} <button data-act="peppers" class="underline">About peppers</button></p>
     ${where}

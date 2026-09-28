@@ -25,7 +25,9 @@ type Verdict struct {
 		DarkOccult      bool `json:"dark_occult"`
 		DemonicPresence bool `json:"demonic_presence"`
 	} `json:"spiritual_elements"`
-	LGBTQContent   bool            `json:"lgbtq_content"`
+	LGBTQContent   bool            `json:"lgbtq_content"` // before v1.19; now the content item "lgbtq"
+	ContentRaw     json.RawMessage `json:"content"`       // content item keys found (package content)
+	Content        []string        `json:"-"`
 	SummaryVerdict string          `json:"summary_verdict"`
 	CustomRaw      json.RawMessage `json:"custom_flags"` // the family's own filters: {"key": true} (or a list of keys)
 	CustomFlags    []string        `json:"-"`            // keys marked true
@@ -60,6 +62,7 @@ func ParseVerdict(content string) (*Verdict, error) {
 	v.SummaryVerdict = strings.TrimSpace(v.SummaryVerdict)
 	v.SpiceReason = ShortReason(v.SpiceReason)
 	v.CustomFlags = customFlagsFrom(v.CustomRaw)
+	v.Content = contentFrom(v.ContentRaw, v.LGBTQContent)
 	return &v, nil
 }
 
@@ -112,9 +115,10 @@ func (v *Verdict) ToAnalysis(model string) store.Analysis {
 		PlayfulFantasy:  v.SpiritualElements.PlayfulFantasy,
 		DarkOccult:      v.SpiritualElements.DarkOccult,
 		DemonicPresence: v.SpiritualElements.DemonicPresence,
-		LGBTQContent:    v.LGBTQContent,
 		SummaryVerdict:  v.SummaryVerdict,
 		Model:           model,
 		CustomFlags:     v.CustomFlags,
+		Content:         v.Content,
+		ContentSource:   store.SourceAI,
 	}
 }

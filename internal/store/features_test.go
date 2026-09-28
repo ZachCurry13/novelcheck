@@ -86,9 +86,9 @@ func TestAgeGroups(t *testing.T) {
 	s := newStore(t)
 	_, _, ids := seed(t, s)
 	zero := 0
-	_ = s.SaveAnalysis(ids["Clean"], store.Analysis{SpiceLevel: &zero}) // 0 peppers
-	_ = s.SetBookAge(ids["Clean"], 1, "mom")                            // young kids
-	_ = s.SetBookAge(ids["Spooky"], 3, "mom")                           // teens
+	_ = s.SaveAnalysis(ids["Clean"], store.Analysis{ContentSource: store.SourceAI, SpiceLevel: &zero}) // 0 peppers
+	_ = s.SetBookAge(ids["Clean"], 1, "mom")                                                           // young kids
+	_ = s.SetBookAge(ids["Spooky"], 3, "mom")                                                          // teens
 	_ = s.SetApproved(ids["Spooky"], true, "mom")
 
 	young, _ := s.CreateUserAge("little", "x", store.RoleRestricted, 1)
@@ -212,13 +212,13 @@ func TestPepperScale(t *testing.T) {
 	_, _, ids := seed(t, s) // Clean: old "No Spice"; Steamy: old "Open Door"
 	lv := func(n int) *int { return &n }
 	sweet, _ := s.UpsertBook("Sweet One", "A", "", "")
-	_ = s.SaveAnalysis(sweet, store.Analysis{SpiceLevel: lv(1), Classification: "Open Door"})
+	_ = s.SaveAnalysis(sweet, store.Analysis{ContentSource: store.SourceAI, SpiceLevel: lv(1), Classification: "Open Door"})
 	b, _ := s.BookByID(sweet, nil)
 	if b.SpiceLevel == nil || *b.SpiceLevel != 1 || *b.Classification != "No Spice" {
 		t.Fatalf("peppers should set the label: %+v", b)
 	}
 	steamy, _ := s.UpsertBook("Closed One", "B", "", "")
-	_ = s.SaveAnalysis(steamy, store.Analysis{SpiceLevel: lv(3)})
+	_ = s.SaveAnalysis(steamy, store.Analysis{ContentSource: store.SourceAI, SpiceLevel: lv(3)})
 
 	kid, _ := s.CreateUserAge("mid", "x", store.RoleRestricted, 2) // middle grade: up to 1 pepper
 	if kid.MaxSpice != 1 {

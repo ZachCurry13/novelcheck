@@ -12,10 +12,11 @@ import { renderDeepSection, deepChip } from "./deepscan.js";
 import { seriesLine, seriesText, openTitleEdit } from "./titlefix.js";
 import { genreChips, authorLinks, seriesLink } from "./genres.js";
 import { coverImg, reportCover } from "./covers.js";
+import { loadContent, contentIcons, contentSection } from "./content.js";
 
 export async function openBook(id, state, onChange) {
   const dlg = $("#book-dialog");
-  const data = await attempt(() => get(`/api/books/${id}`));
+  const [data] = await Promise.all([attempt(() => get(`/api/books/${id}`)), loadContent()]);
   if (!data) return;
   const b = data.book;
   const isAdmin = state.user.role === "admin";
@@ -64,11 +65,12 @@ export async function openBook(id, state, onChange) {
         </div>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
+      <div class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
       ${b.genres || b.kind ? `<div class="flex flex-wrap gap-1">${genreChips(b)}</div>` : ""}
       ${b.spice_level !== null && b.spice_level !== undefined
         ? `<p class="text-xs text-slate-400">${b.spice_reason ? `<b class="text-slate-200">Why ${b.spice_level} 🌶️:</b> ${esc(b.spice_reason)}. ` : ""}${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
       ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}
+      ${contentSection(b)}
       ${b.status === "error" && manager ? `<p class="text-sm text-rose-400">Last error: ${esc(b.analysis_error)}
         <button type="button" data-copy-err class="ml-1 text-xs underline">📋 Copy</button>${isAdmin ? ` <button type="button" data-dx-err class="text-xs underline">🩺 Diagnose</button>` : ""}</p>` : ""}
       ${(b.blurb || b.description) ? `<div><span class="label">Blurb</span>

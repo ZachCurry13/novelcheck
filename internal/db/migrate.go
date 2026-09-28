@@ -50,12 +50,38 @@ func migrate(d *sqlx.DB) error {
 		{"deep_reads", "proposed_level", "INTEGER"},
 		{"deep_reads", "proposal", "TEXT NOT NULL DEFAULT ''"},
 		{"token_usage", "cost", "REAL"},
+		{"books", "content_version", "INTEGER NOT NULL DEFAULT 0"},
+		{"books", "content_amounts", "TEXT NOT NULL DEFAULT ''"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {
 			return err
 		}
 	}
-	return nil
+	return moveLGBTQ(d)
+}
+
+// moveLGBTQ turns the LGBTQ+ flag and hide rule (before v1.19) into the
+// content item "lgbtq". The old columns are cleared, so it runs only once.
+func moveLGBTQ(d *sqlx.DB) error {
+	tx, err := d.Beginx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	for _, stmt := range []string{
+		`INSERT OR IGNORE INTO book_content (book_id, key, source)
+			SELECT id, 'lgbtq', CASE WHEN analysis_model LIKE 'manual:%' THEN 'parent'
+				WHEN analysis_model LIKE 'deep:%' THEN 'deep' ELSE 'ai' END
+			FROM books WHERE lgbtq_content = 1`,
+		`UPDATE books SET lgbtq_content = 0 WHERE lgbtq_content = 1`,
+		`INSERT OR IGNORE INTO user_hidden_content (user_id, key) SELECT id, 'lgbtq' FROM users WHERE hide_lgbtq = 1`,
+		`UPDATE users SET hide_lgbtq = 0 WHERE hide_lgbtq = 1`,
+	} {
+		if _, err := tx.Exec(stmt); err != nil {
+			return fmt.Errorf("move LGBTQ+ to content items: %w", err)
+		}
+	}
+	return tx.Commit()
 }
 
 // addColumn adds a column if an older database doesn't have it yet.

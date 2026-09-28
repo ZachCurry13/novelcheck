@@ -5,6 +5,7 @@ import { get, post, put, del } from "./api.js";
 import { $, $$, esc, attempt, AGE_GROUPS } from "./ui.js";
 import { on, deliveryOptions } from "./modules.js";
 import { openKOReaderSetup } from "./delivery.js";
+import { loadContent, contentPresets, hidePicker, bindHidePicker, pickedIn } from "./content.js";
 
 export const RULES = [
   ["hide_open_door", "Hide Open Door"],
@@ -12,7 +13,6 @@ export const RULES = [
   ["hide_solo_acts", "Hide Solo Acts"],
   ["hide_innuendo", "Hide Heavy Innuendo"],
   ["hide_dark_occult", "Hide Dark Occult / Demonic"],
-  ["hide_lgbtq", "Hide LGBTQ+ Content"],
   ["hide_unrated", "Hide books not yet analyzed"],
 ];
 
@@ -32,15 +32,16 @@ function typeOptions(role, age, isAdmin, kids = true) {
 }
 
 // One-click household presets for kids' accounts. They set the pepper cap
-// (and, for Young Reader, the age group) and switch the listed rules on;
-// other rules, like LGBTQ+, stay as the parent set them.
+// (and, for Young Reader, the age group) and switch the listed rules and a
+// starter set of content items on (the sets come from /api/content); other
+// rules stay as the parent set them.
 const STRICT_RULES = ["hide_open_door", "hide_nudity", "hide_solo_acts", "hide_innuendo", "hide_unrated"];
 const PRESETS = {
-  strict: { label: "👪 Strict Family (Max Level 2)", max_spice: 2, rules: STRICT_RULES,
-    title: "Up to Level 2; hides Open Door, nudity, solo acts, heavy innuendo and books not yet rated. Keeps the age group.",
+  strict: { label: "👪 Strict Family (Max Level 2)", max_spice: 2, rules: STRICT_RULES, content: "strict",
+    title: "Up to Level 2; hides Open Door, nudity, solo acts, heavy innuendo, books not yet rated, and a starter set of content (such as the F-word, torture and self-harm). Keeps the age group.",
     done: "Strict Family preset saved: up to Level 2, nothing explicit or unrated" },
-  young: { label: "🧒 Young Reader (Level 1, ages 9–12)", type: "restricted:2", max_spice: 1, rules: [...STRICT_RULES, "hide_dark_occult"],
-    title: "Middle grade (9–12), up to Level 1; also hides dark occult. Books a parent rated for older readers stay hidden.",
+  young: { label: "🧒 Young Reader (Level 1, ages 9–12)", type: "restricted:2", max_spice: 1, rules: [...STRICT_RULES, "hide_dark_occult"], content: "young",
+    title: "Middle grade (9–12), up to Level 1; also hides dark occult and a larger set of content (such as swearing, murder and drugs). Books a parent rated for older readers stay hidden.",
     done: "Young Reader preset saved: ages 9–12, up to Level 1" },
 };
 
@@ -52,7 +53,7 @@ const parseType = (v) => {
 export async function renderUsers(host, viewer) {
   const isAdmin = viewer?.role === "admin";
   const kids = on(viewer, "parents");
-  const users = (await attempt(() => get("/api/admin/users"))) || [];
+  const [users] = await Promise.all([attempt(() => get("/api/admin/users")).then((u) => u || []), loadContent()]);
   // Fresh container on each render so click listeners never stack up.
   const root = document.createElement("div");
   host.replaceChildren(root);
@@ -79,6 +80,7 @@ export async function renderUsers(host, viewer) {
     if (ok) renderUsers(host, viewer);
   });
 
+  bindHidePicker(root);
   root.addEventListener("click", async (e) => {
     const act = e.target.closest("[data-uact]")?.dataset.uact;
     if (!act) return;
@@ -89,12 +91,18 @@ export async function renderUsers(host, viewer) {
       if (preset.type) $("[name=type]", cardEl).value = preset.type;
       $("[name=max_spice]", cardEl).value = String(preset.max_spice);
       $$("[data-rule]", cardEl).forEach((cb) => (cb.checked = preset.rules.includes(cb.dataset.rule) || cb.checked));
+      const items = contentPresets()[preset.content] || [];
+      $$("[data-hide]", cardEl).filter((cb) => items.includes(cb.value) && !cb.checked && !cb.disabled).forEach((cb) => {
+        cb.checked = true;
+        cb.dispatchEvent(new Event("change", { bubbles: true })); // updates the group's count
+      });
     }
     if (act === "save" || preset) {
       const body = { ...parseType($("[name=type]", cardEl).value),
         delivery_method: $("[name=delivery_method]", cardEl).value,
         kindle_email: $("[name=kindle_email]", cardEl).value };
       $$("[data-rule]", cardEl).forEach((cb) => (body[cb.dataset.rule] = cb.checked));
+      body.hidden_content = pickedIn(cardEl);
       const ms = $("[name=max_spice]", cardEl);
       if (ms) body.max_spice = Number(ms.value);
       await attempt(() => put(`/api/admin/users/${id}`, body), preset ? preset.done : "User saved");
@@ -128,6 +136,8 @@ function userCard(u, isAdmin, viewer) {
       <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
         ${RULES.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-rule="${k}" ${u[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}
       </div>
+      <div><span class="label" title="Books with any ticked item are hidden from this account, unless a parent marked them OK">Hide content</span>
+        ${hidePicker(u.hidden_content || [], "data-hide")}</div>
       <div class="grid gap-2 sm:grid-cols-2">
         <select name="delivery_method" class="input">${deliveryOptions(viewer, u.delivery_method)}</select>
         <input name="kindle_email" value="${esc(u.kindle_email)}" placeholder="name@kindle.com" class="input">
@@ -149,6 +159,8 @@ function badges(u) {
     out.push(`<span class="chip-closed">${u.max_spice < 0 ? "No pepper limit" : `🌶️ Max Level ${u.max_spice}`}</span>`);
     const age = AGE_GROUPS.find(([l]) => l === u.age_level);
     if (age) out.push(`<span class="chip-cat">👪 ${esc(age[1])}</span>`);
+    const n = (u.hidden_content || []).length;
+    if (n) out.push(`<span class="chip-cat" title="Content items or groups hidden from this account">🚫 ${n} content rule${n === 1 ? "" : "s"}</span>`);
   }
   return out.join("");
 }

@@ -10,7 +10,7 @@ func TestPepperAPI(t *testing.T) {
 	srv, st := setup(t)
 	admin := login(t, srv, "admin", "adminpass1")
 	old, _ := st.UpsertBook("Old Rating", "A", "", "")
-	_ = st.SaveAnalysis(old, store.Analysis{Classification: "Closed Door", Model: "gpt"})
+	_ = st.SaveAnalysis(old, store.Analysis{ContentSource: store.SourceAI, Classification: "Closed Door", Model: "gpt"})
 	hand, _ := st.UpsertBook("Hand Rated", "B", "", "")
 
 	// A parent rates by peppers; the old label follows.
@@ -36,12 +36,13 @@ func TestPepperAPI(t *testing.T) {
 		t.Fatalf("2-pepper book must be hidden from a 1-pepper kid: %d", res.StatusCode)
 	}
 
-	// Re-rating only picks AI-rated books from before the pepper scale.
+	// Re-rating picks AI-rated books from before the pepper scale, plus a
+	// content-only check for the hand-rated one (its rating is kept).
 	_, s := admin.do("GET", "/api/admin/status", nil, false)
-	if s["rerate_candidates"].(float64) != 1 {
+	if s["rerate_candidates"].(float64) != 2 {
 		t.Fatalf("rerate candidates: %v", s["rerate_candidates"])
 	}
-	if res, out := admin.do("POST", "/api/admin/rerate", nil, true); res.StatusCode != 200 || out["queued"].(float64) != 1 {
+	if res, out := admin.do("POST", "/api/admin/rerate", nil, true); res.StatusCode != 200 || out["queued"].(float64) != 2 {
 		t.Fatalf("rerate: %d %v", res.StatusCode, out)
 	}
 	if b, _ := st.BookByID(old, nil); b.Status != "analyzed" {

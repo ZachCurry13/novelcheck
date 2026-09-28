@@ -80,3 +80,8 @@
   .above-tabbar { bottom: calc(3.9rem + env(safe-area-inset-bottom)) !important; }
   input, select, textarea { font-size: 16px !important; }
 }
+
+/* Content hide picker (js/content.js): rows big enough to tap on phones. */
+@media (max-width: 767px) {
+  .content-picker .toggle, .content-picker [data-expand] { min-height: 2.75rem; }
+}

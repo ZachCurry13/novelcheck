@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/zachcurry13/novelcheck/internal/content"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -20,11 +21,11 @@ type PartResult struct {
 	PlayfulFantasy  bool
 	DarkOccult      bool
 	DemonicPresence bool
-	LGBTQ           bool
+	Content         []string // content item keys found in this part (package content)
 	CustomFlags     []string
 }
 
-const deepPartPrompt = `You are reading one part of a book for parents who want to know about its romantic/sexual content and certain themes. Judge only the text you are given.
+var deepPartPrompt = `You are reading one part of a book for parents who want to know about its romantic/sexual content and certain themes. Judge only the text you are given.
 
 STRICT RULES:
 1. NO EXPLICIT/GRAPHIC LANGUAGE: describe things modestly (e.g., "an explicit scene", "solo acts", "heavy innuendo").
@@ -42,8 +43,11 @@ Level 3 needs sexual desire or heavy making out in this text, or sex that happen
 ` + ContentGuide + `
 Only mark nudity, solo_acts or heavy_innuendo for sexual content on the page in this text. Mark playful_fantasy only for actual magic or fantasy creatures in this text.
 
+4. Content Details. List the key of every item below that occurs in THIS text; use [] if none apply.
+` + content.PromptList() + `
+
 OUTPUT FORMAT (JSON ONLY, in this order):
-{"romance": "what romantic or sexual content happens on the page in this text, modestly, or \"none\"", "level": 0 | 1 | 2 | 3 | 4 | 5, "note": "one short, modest sentence on any romance/sexual content or flagged themes in this part, or \"\" if there is none", "nudity": true | false, "solo_acts": true | false, "heavy_innuendo": true | false, "playful_fantasy": true | false, "dark_occult": true | false, "demonic_presence": true | false, "lgbtq_content": true | false}`
+{"romance": "what romantic or sexual content happens on the page in this text, modestly, or \"none\"", "level": 0 | 1 | 2 | 3 | 4 | 5, "note": "one short, modest sentence on any romance/sexual content or flagged themes in this part, or \"\" if there is none", "nudity": true | false, "solo_acts": true | false, "heavy_innuendo": true | false, "playful_fantasy": true | false, "dark_occult": true | false, "demonic_presence": true | false, "content": ["key", ...]}`
 
 // DeepPartSystem is the instruction for reading one part, with the family's
 // custom filters.
@@ -72,7 +76,8 @@ func ParsePart(out string) (PartResult, error) {
 		PlayfulFantasy  bool            `json:"playful_fantasy"`
 		DarkOccult      bool            `json:"dark_occult"`
 		DemonicPresence bool            `json:"demonic_presence"`
-		LGBTQ           bool            `json:"lgbtq_content"`
+		LGBTQ           bool            `json:"lgbtq_content"` // before v1.19
+		Content         json.RawMessage `json:"content"`
 		Custom          json.RawMessage `json:"custom_flags"`
 	}
 	if err := json.Unmarshal([]byte(out[start:end+1]), &raw); err != nil {
@@ -91,7 +96,7 @@ func ParsePart(out string) (PartResult, error) {
 	}
 	return PartResult{Level: level, Evidence: evidence, Note: ShortNote(raw.Note), Nudity: raw.Nudity, SoloActs: raw.SoloActs,
 		HeavyInnuendo: raw.HeavyInnuendo, PlayfulFantasy: raw.PlayfulFantasy, DarkOccult: raw.DarkOccult || raw.DemonicPresence,
-		DemonicPresence: raw.DemonicPresence, LGBTQ: raw.LGBTQ, CustomFlags: customFlagsFrom(raw.Custom)}, nil
+		DemonicPresence: raw.DemonicPresence, Content: contentFrom(raw.Content, raw.LGBTQ), CustomFlags: customFlagsFrom(raw.Custom)}, nil
 }
 
 // ShortNote keeps a part note to one tidy line of at most 200 characters.

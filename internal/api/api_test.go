@@ -147,7 +147,7 @@ func TestEndToEnd(t *testing.T) {
 		if b.Title == "Spicy Book" {
 			c = "Open Door"
 		}
-		_ = st.SaveAnalysis(b.ID, store.Analysis{Classification: c})
+		_ = st.SaveAnalysis(b.ID, store.Analysis{ContentSource: store.SourceAI, Classification: c})
 	}
 
 	kid := login(t, srv, "kid", "kidpass12")

@@ -1,5 +1,7 @@
 package store
 
+import "github.com/zachcurry13/novelcheck/internal/content"
+
 // The pepper scale (0-5), in the family's own words (see the Library's
 // "What do the peppers mean?"):
 //
@@ -53,13 +55,15 @@ func (s *Store) AISummaries() ([]AISummary, error) {
 
 // RerateCandidates returns books the AI rated before the pepper scale, under
 // older rating rules, before the newest custom filters, or that changed in
-// Calibre since (hand-rated and Deep Scanned books are left alone).
+// Calibre since, plus any book not yet checked for the current content items.
+// Hand-rated and Deep Scanned books keep their rating: they only get the
+// content check (see KeepsRating).
 func (s *Store) RerateCandidates() ([]int64, error) {
 	var ids []int64
 	err := s.DB.Select(&ids, `SELECT b.id FROM books b WHERE b.status = 'analyzed'
-		AND (b.spice_level IS NULL OR b.rules_version < ? OR b.flags_version < ? OR `+changedCond+`)
-		AND b.analysis_model NOT LIKE 'manual:%' AND b.analysis_model NOT LIKE 'deep:%'
-		ORDER BY b.id`, RulesVersion, s.FlagsVersion())
+		AND (b.content_version < ? OR ((b.spice_level IS NULL OR b.rules_version < ? OR b.flags_version < ? OR `+changedCond+`)
+			AND b.analysis_model NOT LIKE 'manual:%' AND b.analysis_model NOT LIKE 'deep:%'))
+		ORDER BY b.id`, content.Version, RulesVersion, s.FlagsVersion())
 	return ids, err
 }
 

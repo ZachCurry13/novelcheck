@@ -52,6 +52,7 @@ func seed(t *testing.T, s *store.Store) (cal, kindle int64, ids map[string]int64
 			t.Fatal(err)
 		}
 		if a != nil {
+			a.ContentSource = store.SourceAI // a current rating checks content items
 			if err := s.SaveAnalysis(id, *a); err != nil {
 				t.Fatal(err)
 			}

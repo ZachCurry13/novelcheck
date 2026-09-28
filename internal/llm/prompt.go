@@ -3,10 +3,12 @@ package llm
 import (
 	"fmt"
 	"strings"
+
+	"github.com/zachcurry13/novelcheck/internal/content"
 )
 
 // SystemPrompt is the analyzer instruction from NOVELCHECK_SPEC.md §4 (Feature 7).
-const SystemPrompt = `You are an expert book content analyzer. Your sole purpose is to determine the nature of romantic/sexual content ("spice") and specific thematic elements (including spiritual/occult themes) in a given book using the provided book title, author, and blurb metadata. The user wants to avoid specific types of content. You must be precise and objective while strictly adhering to the formatting and safety rules below.
+var SystemPrompt = `You are an expert book content analyzer. Your sole purpose is to determine the nature of romantic/sexual content ("spice") and specific thematic elements (including spiritual/occult themes) in a given book using the provided book title, author, and blurb metadata. The user wants to avoid specific types of content. You must be precise and objective while strictly adhering to the formatting and safety rules below.
 
 STRICT RULES:
 1. NO SPOILERS: Do not reveal major plot twists, endings, or critical character deaths.
@@ -24,6 +26,8 @@ Also give spice_reason: 3-8 modest words naming what sets the level (e.g. "No ro
 
 ` + ContentGuide + `
 
+` + ContentDetails + `
+
 OUTPUT FORMAT (JSON ONLY):
 {
   "spice_level": 0 | 1 | 2 | 3 | 4 | 5,
@@ -38,7 +42,7 @@ OUTPUT FORMAT (JSON ONLY):
     "dark_occult": true | false,
     "demonic_presence": true | false
   },
-  "lgbtq_content": true | false,
+  "content": ["key", ...],
   "summary_verdict": "1-2 sentence recommendation."
 }`
 
@@ -53,6 +57,10 @@ const PepperLevels = `- 0 = No Romance: No meaningful romantic or sexual content
 // EverydayGuard keeps ordinary moments from reading as romance (shared with
 // Deep read).
 const EverydayGuard = `Everyday moments are not romance: sharing a meal or a glass of wine, waiting for a taxi, friendship, family affection and ordinary conversation never raise the level on their own.`
+
+// ContentDetails asks for the detailed content items (package content).
+var ContentDetails = `4. Content Details. List the key of every item below that the book clearly contains, going by the blurb and what is well known about this book. Don't guess; use [] if none apply.
+` + content.PromptList()
 
 // ContentGuide defines the content flags and the occult classification.
 const ContentGuide = `2. Content Elements:
@@ -91,4 +99,4 @@ func orUnknown(s string) string {
 func EstimateTokens(s string) int { return len(s)/4 + 1 }
 
 // ExpectedCompletionTokens approximates the size of the JSON verdict.
-const ExpectedCompletionTokens = 195
+const ExpectedCompletionTokens = 235

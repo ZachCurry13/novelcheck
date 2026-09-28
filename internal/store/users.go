@@ -9,7 +9,7 @@ import (
 var ErrNotFound = errors.New("not found")
 
 const userCols = `id, username, password_hash, role, hide_open_door, hide_nudity, hide_solo_acts,
-	hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, created_at`
+	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, created_at`
 
 func (s *Store) CountUsers() (int, error) {
 	var n int
@@ -19,15 +19,19 @@ func (s *Store) CountUsers() (int, error) {
 
 func (s *Store) ListUsers() ([]User, error) {
 	var us []User
-	err := s.DB.Select(&us, `SELECT `+userCols+` FROM users ORDER BY username`)
-	return us, err
+	if err := s.DB.Select(&us, `SELECT `+userCols+` FROM users ORDER BY username`); err != nil {
+		return nil, err
+	}
+	return s.withHiddenContent(us)
 }
 
 // ListUsersByRole returns only users with the given role.
 func (s *Store) ListUsersByRole(role string) ([]User, error) {
 	var us []User
-	err := s.DB.Select(&us, `SELECT `+userCols+` FROM users WHERE role = ? ORDER BY username`, role)
-	return us, err
+	if err := s.DB.Select(&us, `SELECT `+userCols+` FROM users WHERE role = ? ORDER BY username`, role); err != nil {
+		return nil, err
+	}
+	return s.withHiddenContent(us)
 }
 
 func (s *Store) UserByID(id int64) (*User, error) {
@@ -44,6 +48,10 @@ func (s *Store) getUser(q string, arg any) (*User, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}
+		return nil, err
+	}
+	var err error
+	if u.HiddenContent, err = s.hiddenContent(u.ID); err != nil {
 		return nil, err
 	}
 	return &u, nil
@@ -70,14 +78,19 @@ func (s *Store) CreateUserAge(username, hash, role string, age int) (*User, erro
 		p = preset
 	}
 	res, err := s.DB.Exec(`INSERT INTO users (username, password_hash, role, hide_open_door,
-		hide_nudity, hide_solo_acts, hide_innuendo, hide_dark_occult, hide_lgbtq, hide_unrated, age_level, max_spice)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		hide_nudity, hide_solo_acts, hide_innuendo, hide_dark_occult, hide_unrated, age_level, max_spice)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		username, hash, role, p.HideOpenDoor, p.HideNudity, p.HideSoloActs, p.HideInnuendo,
-		p.HideDarkOccult, p.HideLGBTQ, p.HideUnrated, age, p.MaxSpice)
+		p.HideDarkOccult, p.HideUnrated, age, p.MaxSpice)
 	if err != nil {
 		return nil, err
 	}
 	id, _ := res.LastInsertId()
+	if strict {
+		if err := s.setHiddenContent(id, ageContent[age]); err != nil {
+			return nil, err
+		}
+	}
 	return s.UserByID(id)
 }
 
@@ -103,11 +116,14 @@ func (s *Store) CreateFirstAdmin(username, hash string) (*User, error) {
 // UpdateUserProfile saves role, content rules and delivery preferences.
 func (s *Store) UpdateUserProfile(u *User) error {
 	_, err := s.DB.Exec(`UPDATE users SET role = ?, hide_open_door = ?, hide_nudity = ?,
-		hide_solo_acts = ?, hide_innuendo = ?, hide_dark_occult = ?, hide_lgbtq = ?,
+		hide_solo_acts = ?, hide_innuendo = ?, hide_dark_occult = ?,
 		hide_unrated = ?, delivery_method = ?, kindle_email = ?, age_level = ?, max_spice = ? WHERE id = ?`,
 		u.Role, u.HideOpenDoor, u.HideNudity, u.HideSoloActs, u.HideInnuendo,
-		u.HideDarkOccult, u.HideLGBTQ, u.HideUnrated, u.DeliveryMethod, u.KindleEmail, u.AgeLevel, u.MaxSpice, u.ID)
-	return err
+		u.HideDarkOccult, u.HideUnrated, u.DeliveryMethod, u.KindleEmail, u.AgeLevel, u.MaxSpice, u.ID)
+	if err != nil {
+		return err
+	}
+	return s.setHiddenContent(u.ID, u.HiddenContent)
 }
 
 // UpdateDelivery changes only a user's own delivery preferences.

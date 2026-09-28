@@ -11,8 +11,9 @@ import (
 
 const bookCols = `b.id, b.norm_key, b.title, b.author, b.isbn, b.description, b.blurb, b.status,
 	b.classification, b.nudity, b.solo_acts, b.heavy_innuendo, b.playful_fantasy, b.dark_occult,
-	b.demonic_presence, b.lgbtq_content, b.summary_verdict, b.approved, b.approved_by, b.age_level, b.age_set_by, b.spice_level, b.spice_reason, b.analysis_model, b.analysis_error,
-	b.series, b.series_index, b.title_fix, b.tags, b.genres, b.kind, b.genre_source, b.analyzed_at, b.created_at, b.updated_at`
+	b.demonic_presence, b.summary_verdict, b.approved, b.approved_by, b.age_level, b.age_set_by, b.spice_level, b.spice_reason, b.analysis_model, b.analysis_error,
+	b.series, b.series_index, b.title_fix, b.tags, b.genres, b.kind, b.genre_source, b.content_version, b.content_amounts,
+	b.analyzed_at, b.created_at, b.updated_at`
 
 // derivedCols adds each book's file formats and number of Calibre entries.
 const derivedCols = `, COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTINCT UPPER(fc.format) AS f
@@ -21,7 +22,9 @@ const derivedCols = `, COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTIN
 		AND dcat.source = 'calibre' WHERE dc.book_id = b.id) AS calibre_copies,
 	(SELECT COUNT(*) FROM delete_requests dq WHERE dq.book_id = b.id AND dq.status = 'pending') AS delete_requests,
 	COALESCE((SELECT GROUP_CONCAT(cf.key, ',') FROM book_flags bf JOIN custom_flags cf ON cf.id = bf.flag_id
-		WHERE bf.book_id = b.id), '') AS custom_flags`
+		WHERE bf.book_id = b.id), '') AS custom_flags,
+	COALESCE((SELECT GROUP_CONCAT(bc.key || ':' || bc.source, ',') FROM book_content bc
+		WHERE bc.book_id = b.id), '') AS content`
 
 // UpsertBook inserts a book or returns the existing one with the same NormKey,
 // filling in any metadata the stored row is missing. Returns the book id.
@@ -137,16 +140,22 @@ func (s *Store) SaveAnalysis(id int64, a Analysis) error {
 	}
 	_, err := s.DB.Exec(`UPDATE books SET status = 'analyzed', spice_level = ?, spice_reason = ?, classification = ?,
 		nudity = ?, solo_acts = ?, heavy_innuendo = ?, playful_fantasy = ?, dark_occult = ?, demonic_presence = ?,
-		lgbtq_content = ?, summary_verdict = ?, analysis_model = ?, analysis_error = '', rules_version = ?,
+		summary_verdict = ?, analysis_model = ?, analysis_error = '', rules_version = ?,
 		flags_version = ?, rated_modified = (SELECT COALESCE(MAX(modified), '') FROM catalog_books WHERE book_id = ?),
 		analyzed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
 		a.SpiceLevel, strings.TrimSpace(a.SpiceReason), a.Classification, a.Nudity, a.SoloActs, a.HeavyInnuendo,
-		a.PlayfulFantasy, a.DarkOccult, a.DemonicPresence, a.LGBTQContent, a.SummaryVerdict, a.Model, RulesVersion,
+		a.PlayfulFantasy, a.DarkOccult, a.DemonicPresence, a.SummaryVerdict, a.Model, RulesVersion,
 		s.FlagsVersion(), id, id)
 	if err != nil {
 		return err
 	}
-	return s.setBookFlags(id, a.CustomFlags)
+	if err := s.setBookFlags(id, a.CustomFlags); err != nil {
+		return err
+	}
+	if a.ContentSource == "" {
+		return nil // a rating that didn't check content items keeps the old ones
+	}
+	return s.setBookContent(id, a.Content, a.ContentSource, a.ContentAmounts)
 }
 
 // BooksCreatedSince counts books first added at or after t (e.g. by a sync).

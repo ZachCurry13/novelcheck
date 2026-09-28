@@ -4,12 +4,12 @@ import { put } from "./api.js";
 import { $, $$, esc, attempt } from "./ui.js";
 import { pepperOptions } from "./peppers.js";
 import { verdictBoxes } from "./customflags.js";
+import { contentTicks } from "./content.js";
 
 const FLAGS = [
   ["nudity", "Nudity"],
   ["solo_acts", "Solo Acts"],
   ["heavy_innuendo", "Heavy Innuendo"],
-  ["lgbtq_content", "LGBTQ+ Content"],
   ["playful_fantasy", "Whimsical / standard fantasy magic"],
   ["dark_occult", "Dark Occult"],
   ["demonic_presence", "Demonic presence"],
@@ -31,6 +31,7 @@ export function verdictFormHTML(b) {
         ${FLAGS.map(([k, l]) => `<label class="toggle"><input type="checkbox" data-flag="${k}" ${b[k] ? "checked" : ""}> ${esc(l)}</label>`).join("")}
         ${verdictBoxes(b)}
       </div>
+      ${contentTicks(b)}
       <textarea name="summary_verdict" rows="2" maxlength="1000" class="input" placeholder="1–2 sentence summary">${esc(b.summary_verdict)}</textarea>
       <div class="flex gap-2">
         <button class="btn-primary">Save rating</button>
@@ -50,6 +51,7 @@ export function bindVerdictForm(root, bookId, onSaved) {
     };
     $$("[data-flag]", form).forEach((cb) => (body[cb.dataset.flag] = cb.checked));
     body.custom_flags = $$("[data-cflag]", form).filter((cb) => cb.checked).map((cb) => cb.dataset.cflag);
+    body.content = $$("[data-content]", form).filter((cb) => cb.checked).map((cb) => cb.dataset.content);
     const ok = await attempt(() => put(`/api/books/${bookId}/verdict`, body), "Rating saved");
     if (ok) onSaved?.();
   });

@@ -29,23 +29,23 @@ const (
 func ValidRole(r string) bool { return r == RoleAdmin || r == RoleEditor || r == RoleRestricted }
 
 type User struct {
-	ID             int64  `db:"id" json:"id"`
-	Username       string `db:"username" json:"username"`
-	PasswordHash   string `db:"password_hash" json:"-"`
-	Role           string `db:"role" json:"role"`
-	HideOpenDoor   bool   `db:"hide_open_door" json:"hide_open_door"`
-	HideNudity     bool   `db:"hide_nudity" json:"hide_nudity"`
-	HideSoloActs   bool   `db:"hide_solo_acts" json:"hide_solo_acts"`
-	HideInnuendo   bool   `db:"hide_innuendo" json:"hide_innuendo"`
-	HideDarkOccult bool   `db:"hide_dark_occult" json:"hide_dark_occult"`
-	HideLGBTQ      bool   `db:"hide_lgbtq" json:"hide_lgbtq"`
-	HideUnrated    bool   `db:"hide_unrated" json:"hide_unrated"`
-	DeliveryMethod string `db:"delivery_method" json:"delivery_method"`
-	KindleEmail    string `db:"kindle_email" json:"kindle_email"`
-	GuideSeen      bool   `db:"guide_seen" json:"guide_seen"`
-	AgeLevel       int    `db:"age_level" json:"age_level"` // kid accounts only; 0 = not set
-	MaxSpice       int    `db:"max_spice" json:"max_spice"` // kid accounts: most peppers shown (0-5); -1 = no limit
-	CreatedAt      string `db:"created_at" json:"created_at"`
+	ID             int64    `db:"id" json:"id"`
+	Username       string   `db:"username" json:"username"`
+	PasswordHash   string   `db:"password_hash" json:"-"`
+	Role           string   `db:"role" json:"role"`
+	HideOpenDoor   bool     `db:"hide_open_door" json:"hide_open_door"`
+	HideNudity     bool     `db:"hide_nudity" json:"hide_nudity"`
+	HideSoloActs   bool     `db:"hide_solo_acts" json:"hide_solo_acts"`
+	HideInnuendo   bool     `db:"hide_innuendo" json:"hide_innuendo"`
+	HideDarkOccult bool     `db:"hide_dark_occult" json:"hide_dark_occult"`
+	HideUnrated    bool     `db:"hide_unrated" json:"hide_unrated"`
+	DeliveryMethod string   `db:"delivery_method" json:"delivery_method"`
+	KindleEmail    string   `db:"kindle_email" json:"kindle_email"`
+	GuideSeen      bool     `db:"guide_seen" json:"guide_seen"`
+	AgeLevel       int      `db:"age_level" json:"age_level"` // kid accounts only; 0 = not set
+	MaxSpice       int      `db:"max_spice" json:"max_spice"` // kid accounts: most peppers shown (0-5); -1 = no limit
+	CreatedAt      string   `db:"created_at" json:"created_at"`
+	HiddenContent  []string `db:"-" json:"hidden_content"` // content hide rules: items, "g:<group>", "flag:<custom key>"
 }
 
 func (u *User) IsAdmin() bool { return u.Role == RoleAdmin }
@@ -80,7 +80,6 @@ type Book struct {
 	PlayfulFantasy  bool    `db:"playful_fantasy" json:"playful_fantasy"`
 	DarkOccult      bool    `db:"dark_occult" json:"dark_occult"`
 	DemonicPresence bool    `db:"demonic_presence" json:"demonic_presence"`
-	LGBTQContent    bool    `db:"lgbtq_content" json:"lgbtq_content"`
 	SummaryVerdict  string  `db:"summary_verdict" json:"summary_verdict"`
 	Approved        bool    `db:"approved" json:"approved"`
 	ApprovedBy      string  `db:"approved_by" json:"approved_by"`
@@ -105,6 +104,9 @@ type Book struct {
 	CalibreCopies   int     `db:"calibre_copies" json:"calibre_copies"`   // Calibre entries for this book (2+ = duplicate)
 	DeleteRequests  int     `db:"delete_requests" json:"delete_requests"` // pending requests to delete it
 	CustomFlags     string  `db:"custom_flags" json:"custom_flags"`       // keys of the family's filters it matches, comma-separated
+	Content         string  `db:"content" json:"content"`                 // content items as "key:source", comma-separated (source ai, deep or parent)
+	ContentVersion  int     `db:"content_version" json:"content_version"` // content.Version it was checked with; 0 = not checked yet
+	ContentAmounts  string  `db:"content_amounts" json:"content_amounts"` // Deep Scan amount per group, e.g. "violence:3,gore:1"
 }
 
 // BookCopy is one physical copy of a book inside a catalog.
@@ -128,10 +130,12 @@ type Analysis struct {
 	PlayfulFantasy  bool
 	DarkOccult      bool
 	DemonicPresence bool
-	LGBTQContent    bool
 	SummaryVerdict  string
 	Model           string
-	CustomFlags     []string // keys of the family's filters the book matches
+	CustomFlags     []string       // keys of the family's filters the book matches
+	Content         []string       // content item keys the book contains
+	ContentSource   string         // who found them: ai, deep or parent; "" = the rating didn't check content
+	ContentAmounts  map[string]int // Deep Scan: amount per group (content.ALittle .. content.ALot)
 }
 
 type QueueItem struct {

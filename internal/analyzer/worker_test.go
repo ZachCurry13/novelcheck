@@ -27,7 +27,7 @@ func fakeLLM(calls *atomic.Int32) *httptest.Server {
 		content := "I cannot answer that."
 		if req.Model == "big-model" {
 			content = `{"classification":"No Spice","content_elements":{},"spiritual_elements":{"playful_fantasy":true},
-				"lgbtq_content":false,"summary_verdict":"Clean, whimsical adventure."}`
+				"content":["war","Alcohol use"],"summary_verdict":"Clean, whimsical adventure."}`
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"choices": []any{map[string]any{"message": map[string]string{"role": "assistant", "content": content}}},
@@ -161,4 +161,41 @@ func TestSlowModelGivesClearError(t *testing.T) {
 		time.Sleep(20 * time.Millisecond)
 	}
 	t.Fatal("slow model did not time out")
+}
+
+// A Deep Scanned book keeps its rating on a re-rate; it only gets its content
+// items checked.
+func TestRerateOnlyChecksContentOfDeepScans(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	var calls atomic.Int32
+	srv := fakeLLM(&calls)
+	defer srv.Close()
+	_ = st.SetSetting(store.KeyLLMBaseURL, srv.URL)
+	_ = st.SetSetting(store.KeyLLMModel, "big-model")
+	id, _ := st.UpsertBook("The Hobbit", "J.R.R. Tolkien", "", "")
+	_ = st.SetBlurb(id, "A hobbit goes on an adventure.")
+	three := 3
+	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &three, Model: store.DeepModelPrefix + "qwen2.5:7b"})
+
+	w := analyzer.New(st)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	w.Rerate(id)
+	go w.Run(ctx)
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if b, _ := st.BookByID(id, nil); store.ContentChecked(b) {
+			if *b.SpiceLevel != 3 || b.AnalysisModel != store.DeepModelPrefix+"qwen2.5:7b" || b.Content != "war:ai,alcohol:ai" && b.Content != "alcohol:ai,war:ai" {
+				t.Fatalf("content check changed more than the items: %+v", b)
+			}
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("content check did not finish")
 }

@@ -100,10 +100,11 @@ type Estimate struct {
 	Output int `json:"output"` // of which answer tokens
 }
 
-// Per call: instructions sent with every part, and the note that comes back.
+// Per call: instructions sent with every part (about 1,600 with the content
+// items of v1.19), and the note that comes back.
 const (
-	promptTokens = 900
-	answerTokens = 150
+	promptTokens = 1600
+	answerTokens = 180
 	wrapUpTokens = 700
 )
 

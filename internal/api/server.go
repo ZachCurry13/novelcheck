@@ -85,6 +85,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/age-groups", s.handleAgeGroups)
 			r.Get("/updates", s.handleUpdates)
 			r.Get("/flags", s.handleListFlags)
+			r.Get("/content", s.handleContentCatalog)
 			r.Post("/books/{id}/wish", s.handleAddWish)
 			r.Delete("/books/{id}/wish", s.handleRemoveWish)
 			r.Get("/wishlist", s.handleWishlist)

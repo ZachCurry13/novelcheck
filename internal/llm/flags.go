@@ -14,7 +14,7 @@ func customFlagsSection(flags []store.CustomFlag) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString("\n\n4. Custom Flags (the family's own topics). Mark a flag true only if the book clearly contains it:\n")
+	b.WriteString("\n\n5. Custom Flags (the family's own topics). Mark a flag true only if the book clearly contains it:\n")
 	keys := make([]string, 0, len(flags))
 	for _, f := range flags {
 		b.WriteString("- " + f.Key + " (" + oneLine(f.Label) + ")")

@@ -19,7 +19,7 @@ func TestNotesAndAgeAPI(t *testing.T) {
 
 	id, _ := st.UpsertBook("Mystery Book", "A. Writer", "", "")
 	one := 1 // Sweet Romance: fine for middle grade
-	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &one})
+	_ = st.SaveAnalysis(id, store.Analysis{ContentSource: store.SourceAI, SpiceLevel: &one})
 	path := "/api/books/" + itoa(id)
 
 	// Editor rates it for teens: the middle-grade kid can no longer see it.

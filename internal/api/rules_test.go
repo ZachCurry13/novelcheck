@@ -11,12 +11,12 @@ func TestRulesVersionAndRerateAll(t *testing.T) {
 	admin := login(t, srv, "admin", "adminpass1")
 	two := 2
 	cur, _ := st.UpsertBook("Current Rules", "A", "", "")
-	_ = st.SaveAnalysis(cur, store.Analysis{SpiceLevel: &two, SpiceReason: "Kissing only", Model: "gpt"})
+	_ = st.SaveAnalysis(cur, store.Analysis{ContentSource: store.SourceAI, SpiceLevel: &two, SpiceReason: "Kissing only", Model: "gpt"})
 	old, _ := st.UpsertBook("Older Rules", "B", "", "")
-	_ = st.SaveAnalysis(old, store.Analysis{SpiceLevel: &two, Model: "gpt"})
+	_ = st.SaveAnalysis(old, store.Analysis{ContentSource: store.SourceAI, SpiceLevel: &two, Model: "gpt"})
 	st.DB.MustExec(`UPDATE books SET rules_version = 1 WHERE id = ?`, old) // rated before the v1.16 wording
 	hand, _ := st.UpsertBook("Hand Rated", "C", "", "")
-	_ = st.SaveAnalysis(hand, store.Analysis{SpiceLevel: &two, Model: "manual: mom"})
+	_ = st.SaveAnalysis(hand, store.Analysis{ContentSource: store.SourceParent, SpiceLevel: &two, Model: "manual: mom"})
 
 	_, s := admin.do("GET", "/api/admin/status", nil, false)
 	if s["rerate_candidates"].(float64) != 1 || s["ai_rated"].(float64) != 2 {

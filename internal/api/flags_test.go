@@ -12,7 +12,7 @@ func TestCustomFilters(t *testing.T) {
 	admin := login(t, srv, "admin", "adminpass1")
 	one := 1
 	clean, _ := st.UpsertBook("Clean Book", "A", "", "")
-	_ = st.SaveAnalysis(clean, store.Analysis{SpiceLevel: &one, Model: "gpt"})
+	_ = st.SaveAnalysis(clean, store.Analysis{ContentSource: store.SourceAI, SpiceLevel: &one, Model: "gpt"})
 	if _, s := admin.do("GET", "/api/admin/status", nil, false); s["rerate_candidates"].(float64) != 0 {
 		t.Fatalf("nothing to re-rate yet: %v", s["rerate_candidates"])
 	}
@@ -31,7 +31,7 @@ func TestCustomFilters(t *testing.T) {
 
 	// A rating that matches the filter; the Library can hide it.
 	sweary, _ := st.UpsertBook("Sweary Book", "B", "", "")
-	_ = st.SaveAnalysis(sweary, store.Analysis{SpiceLevel: &one, Model: "gpt", CustomFlags: []string{"heavy_swearing_language", "unknown"}})
+	_ = st.SaveAnalysis(sweary, store.Analysis{ContentSource: store.SourceAI, SpiceLevel: &one, Model: "gpt", CustomFlags: []string{"heavy_swearing_language", "unknown"}})
 	_, b := admin.do("GET", "/api/books/"+itoa(sweary), nil, false)
 	if b["book"].(map[string]any)["custom_flags"] != "heavy_swearing_language" {
 		t.Fatalf("book flags: %v", b["book"])

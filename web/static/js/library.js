@@ -6,6 +6,7 @@ import { openBook } from "./bookdialog.js";
 import { pepperOptions, openPepperGuide, whyChip } from "./peppers.js";
 import { on } from "./modules.js";
 import { loadFlags, customChips, hideBoxes } from "./customflags.js";
+import { loadContent, contentIcons, hidePicker, bindHidePicker } from "./content.js";
 import { deepChip } from "./deepscan.js";
 import { seriesText } from "./titlefix.js";
 import { coverImg } from "./covers.js";
@@ -16,7 +17,7 @@ const PAGE = 60;
 export async function renderLibrary(view, state) {
   const manager = canManage(state.user);
   const [catalogs, , facets] = await Promise.all([attempt(() => get("/api/catalogs")).then((c) => c || []), loadFlags(true),
-    attempt(() => get("/api/books/facets")).then((f) => f || { genres: [], kinds: [], authors: [], series: [] })]);
+    attempt(() => get("/api/books/facets")).then((f) => f || { genres: [], kinds: [], authors: [], series: [] }), loadContent()]);
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
   const opt = (v, label, n) => `<option value="${esc(v)}">${esc(label)}${n === undefined ? "" : ` (${n.toLocaleString()})`}</option>`;
   view.innerHTML = `
@@ -55,6 +56,8 @@ export async function renderLibrary(view, state) {
         <option value="title">Sort: Title</option><option value="author">Sort: Author</option>
         <option value="recent">Sort: Recently added</option>
       </select>
+      <div class="filter-more col-span-full"><span class="label" title="Books with these are hidden (unless a parent marked them OK)">Hide content</span>
+        ${hidePicker()}</div>
       <div class="filter-more col-span-full flex flex-wrap items-center gap-x-5 gap-y-2">
         <span class="label mb-0" title="Books with these are hidden (unless a parent marked them OK)">Hide:</span>
         ${Object.entries(HIDE_LABELS).map(([k, v]) =>
@@ -137,6 +140,7 @@ export async function renderLibrary(view, state) {
     debounce = setTimeout(() => load(true), 250);
   });
   form.addEventListener("submit", (e) => e.preventDefault());
+  bindHidePicker(form);
   $("#more-btn", view).addEventListener("click", () => load(false));
   grid.addEventListener("click", async (e) => {
     const picked = e.target.closest("[data-book]");
@@ -195,7 +199,7 @@ function card(b, queueOn) {
         </div>
         ${queueOn ? `<button data-queue="${b.id}" title="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>` : ""}
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
+      <div class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
       ${b.summary_verdict ? `<p class="text-sm text-slate-300 line-clamp-3">${esc(b.summary_verdict)}</p>` : ""}
       <div class="mt-auto flex flex-wrap items-center gap-1">${cats} ${formatChips(b)}</div>
     </article>`;

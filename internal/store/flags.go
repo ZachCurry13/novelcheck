@@ -108,6 +108,7 @@ func (s *Store) UpdateCustomFlag(id int64, label, description string) error {
 
 // DeleteCustomFlag removes a filter and its marks on books.
 func (s *Store) DeleteCustomFlag(id int64) error {
+	_, _ = s.DB.Exec(`DELETE FROM user_hidden_content WHERE key IN (SELECT 'flag:' || key FROM custom_flags WHERE id = ?)`, id)
 	res, err := s.DB.Exec(`DELETE FROM custom_flags WHERE id = ?`, id)
 	if err != nil {
 		return err
@@ -137,7 +138,8 @@ func (s *Store) setBookFlags(bookID int64, keys []string) error {
 const customFlagCond = `EXISTS (SELECT 1 FROM book_flags bf JOIN custom_flags cf ON cf.id = bf.flag_id
 	WHERE bf.book_id = b.id AND cf.key = ?)`
 
-// flagPredicate resolves a filter name: a built-in flag, or "flag:<key>".
+// flagPredicate resolves a filter name: a built-in flag, "flag:<key>", a
+// content item ("murder") or a content group ("g:violence").
 func flagPredicate(name string) (string, []any, bool) {
 	if p, ok := flagColumns[name]; ok {
 		return p, nil, true
@@ -145,5 +147,5 @@ func flagPredicate(name string) (string, []any, bool) {
 	if k, ok := strings.CutPrefix(name, "flag:"); ok && k != "" {
 		return customFlagCond, []any{k}, true
 	}
-	return "", nil, false
+	return contentPredicate(name)
 }

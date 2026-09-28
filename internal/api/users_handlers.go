@@ -127,6 +127,10 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "most peppers must be 0 to 5, or no limit")
 		return
 	}
+	if k := invalidRule(upd.HiddenContent); k != "" {
+		writeErr(w, http.StatusBadRequest, "unknown content rule "+k)
+		return
+	}
 	if upd.Role != store.RoleRestricted {
 		upd.AgeLevel, upd.MaxSpice = 0, -1
 	}

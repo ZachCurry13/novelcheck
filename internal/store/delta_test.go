@@ -19,7 +19,7 @@ func TestDeltaScanning(t *testing.T) {
 	one := 1
 	id, _ := st.UpsertBook("Edited Later", "A", "", "")
 	_ = st.AddCalibreCopy(cat, id, "/calibre/a.epub", "epub", "1", "2026-01-01 10:00:00")
-	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &one, Model: "gpt"})
+	_ = st.SaveAnalysis(id, store.Analysis{ContentSource: store.SourceAI, SpiceLevel: &one, Model: "gpt"})
 
 	candidates := func() []int64 { ids, _ := st.RerateCandidates(); return ids }
 	if st.ChangedSinceRated() != 0 || slices.Contains(candidates(), id) {
@@ -34,7 +34,7 @@ func TestDeltaScanning(t *testing.T) {
 	if st.ChangedSinceRated() != 1 || !slices.Contains(candidates(), id) {
 		t.Fatal("a book changed in Calibre is offered for re-rating")
 	}
-	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &one, Model: "gpt"})
+	_ = st.SaveAnalysis(id, store.Analysis{ContentSource: store.SourceAI, SpiceLevel: &one, Model: "gpt"})
 	if st.ChangedSinceRated() != 0 {
 		t.Fatal("re-rating catches up")
 	}
@@ -49,7 +49,7 @@ func TestDeltaScanning(t *testing.T) {
 		t.Fatal("baseline")
 	}
 	// Hand ratings are the parent's call: never offered.
-	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &one, Model: "manual: mom"})
+	_ = st.SaveAnalysis(id, store.Analysis{ContentSource: store.SourceParent, SpiceLevel: &one, Model: "manual: mom"})
 	_ = st.AddCalibreCopy(cat, id, "/calibre/a.epub", "epub", "1", "2026-04-01 00:00:00")
 	if st.ChangedSinceRated() != 0 {
 		t.Fatal("hand ratings stay")

@@ -19,18 +19,18 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		SpiceLevel      *int     `json:"spice_level"` // 0-5 peppers (preferred)
-		SpiceReason     string   `json:"spice_reason"`
-		Classification  string   `json:"classification"`
-		Nudity          bool     `json:"nudity"`
-		SoloActs        bool     `json:"solo_acts"`
-		HeavyInnuendo   bool     `json:"heavy_innuendo"`
-		PlayfulFantasy  bool     `json:"playful_fantasy"`
-		DarkOccult      bool     `json:"dark_occult"`
-		DemonicPresence bool     `json:"demonic_presence"`
-		LGBTQContent    bool     `json:"lgbtq_content"`
-		SummaryVerdict  string   `json:"summary_verdict"`
-		CustomFlags     []string `json:"custom_flags"` // keys of the family's filters it matches
+		SpiceLevel      *int      `json:"spice_level"` // 0-5 peppers (preferred)
+		SpiceReason     string    `json:"spice_reason"`
+		Classification  string    `json:"classification"`
+		Nudity          bool      `json:"nudity"`
+		SoloActs        bool      `json:"solo_acts"`
+		HeavyInnuendo   bool      `json:"heavy_innuendo"`
+		PlayfulFantasy  bool      `json:"playful_fantasy"`
+		DarkOccult      bool      `json:"dark_occult"`
+		DemonicPresence bool      `json:"demonic_presence"`
+		SummaryVerdict  string    `json:"summary_verdict"`
+		CustomFlags     []string  `json:"custom_flags"` // keys of the family's filters it matches
+		Content         *[]string `json:"content"`      // content item keys; absent = leave them as they are
 	}
 	if !readJSON(w, r, &body, 8<<10) {
 		return
@@ -50,7 +50,8 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "summary is too long (max 1000 characters)")
 		return
 	}
-	if _, err := s.Store.BookByID(id, nil); err != nil {
+	book, err := s.Store.BookByID(id, nil)
+	if err != nil {
 		writeStoreErr(w, err)
 		return
 	}
@@ -64,10 +65,14 @@ func (s *Server) handleSetVerdict(w http.ResponseWriter, r *http.Request) {
 		PlayfulFantasy:  body.PlayfulFantasy,
 		DarkOccult:      body.DarkOccult || body.DemonicPresence,
 		DemonicPresence: body.DemonicPresence,
-		LGBTQContent:    body.LGBTQContent,
 		SummaryVerdict:  strings.TrimSpace(body.SummaryVerdict),
 		Model:           "manual: " + auth.UserFrom(r).Username,
 		CustomFlags:     body.CustomFlags,
+	}
+	// Ticking nothing on a book never checked for content items doesn't count as
+	// "checked, none found": the AI still checks it.
+	if body.Content != nil && (len(*body.Content) > 0 || book.ContentVersion > 0) {
+		a.Content, a.ContentSource = *body.Content, store.SourceParent
 	}
 	if err := s.Store.SaveAnalysis(id, a); err != nil {
 		writeStoreErr(w, err)

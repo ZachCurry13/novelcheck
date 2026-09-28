@@ -4,6 +4,22 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.19.0]
+
+### 🧩 Content details: language, violence, gore, substances and more
+- **45 things the AI now looks for**, in five groups: 🗣️ Language, ⚔️ Violence, 🩸 Gore, 🍺 Substance Use and 🧩 Other Content (such as self-harm, bullying, grief or religious themes). Peppers still rate romance on their own.
+- **See it at a glance.** Book cards show an icon for each group a book contains. The book window lists the items and says where they came from: the description, a Deep Scan (the whole book) or a parent.
+- **How much, from a Deep Scan.** Books read in full also show how much of each group there is: A little, Some or A lot.
+- **Hide exactly what you want.** In the Library, **Hide content** hides a whole group, or open a group and tick single items (just Torture and Gun violence, say).
+- **Kids' rules.** Each account under **Users & Rules** has the same **Hide content** choices, and kids' rules can now use your custom filters too. **Strict Family** ticks a starter set: the F-word, sexual language, slurs, torture, sexual violence, violence against children, dismemberment, mutilation, graphic deaths, drug dealing, overdose and self-harm. **Young Reader** adds more, such as swearing, murder and drugs. New kid accounts start with the set for their age group. Existing kids' accounts don't change until you tick items or press a preset. You can change any of it.
+- **Fix what the AI got wrong.** **Edit rating** has the items too. Books a parent marked **OK** still show for everyone.
+- **LGBTQ+ moved** into 🧩 Other Content. Books and kids' rules keep what they had.
+
+### ⏳ Checking the books you already have
+- The **re-rate** banner offers to check your books for the new details. It runs in the background; on a local AI a big library takes a few hours. Books the AI rated are re-rated as usual. Books you rated yourself and Deep Scanned books keep their rating: the AI only adds their content details.
+- Until a book is checked, kids who have content rules and **Hide books not yet analyzed** won't see it, unless a parent set its age group or marked it OK. Other kids see it under their existing rules.
+- Deep Scans read a little more per part, so their cost estimate is a bit higher.
+
 ## [1.18.2]
 
 ### 📱 Easier on phones
