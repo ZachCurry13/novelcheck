@@ -9,7 +9,7 @@ import (
 var ErrNotFound = errors.New("not found")
 
 const userCols = `id, username, password_hash, role, hide_open_door, hide_nudity, hide_solo_acts,
-	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, created_at`
+	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, only_collections, created_at`
 
 func (s *Store) CountUsers() (int, error) {
 	var n int
@@ -50,8 +50,7 @@ func (s *Store) getUser(q string, arg any) (*User, error) {
 		}
 		return nil, err
 	}
-	var err error
-	if u.HiddenContent, err = s.hiddenContent(u.ID); err != nil {
+	if err := s.userExtras(&u); err != nil {
 		return nil, err
 	}
 	return &u, nil
@@ -117,10 +116,14 @@ func (s *Store) CreateFirstAdmin(username, hash string) (*User, error) {
 func (s *Store) UpdateUserProfile(u *User) error {
 	_, err := s.DB.Exec(`UPDATE users SET role = ?, hide_open_door = ?, hide_nudity = ?,
 		hide_solo_acts = ?, hide_innuendo = ?, hide_dark_occult = ?,
-		hide_unrated = ?, delivery_method = ?, kindle_email = ?, age_level = ?, max_spice = ? WHERE id = ?`,
+		hide_unrated = ?, delivery_method = ?, kindle_email = ?, age_level = ?, max_spice = ?, only_collections = ? WHERE id = ?`,
 		u.Role, u.HideOpenDoor, u.HideNudity, u.HideSoloActs, u.HideInnuendo,
-		u.HideDarkOccult, u.HideUnrated, u.DeliveryMethod, u.KindleEmail, u.AgeLevel, u.MaxSpice, u.ID)
+		u.HideDarkOccult, u.HideUnrated, u.DeliveryMethod, u.KindleEmail, u.AgeLevel, u.MaxSpice,
+		u.OnlyCollections && u.Role == RoleRestricted, u.ID)
 	if err != nil {
+		return err
+	}
+	if err := s.setUserCollections(u.ID, u.Collections); err != nil {
 		return err
 	}
 	return s.setHiddenContent(u.ID, u.HiddenContent)

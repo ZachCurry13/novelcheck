@@ -6,6 +6,7 @@ import { $, $$, esc, attempt, AGE_GROUPS } from "./ui.js";
 import { on, deliveryOptions } from "./modules.js";
 import { openKOReaderSetup } from "./delivery.js";
 import { loadContent, contentPresets, hidePicker, bindHidePicker, pickedIn } from "./content.js";
+import { collectionLimitHTML, readCollectionLimit } from "./kidcollections.js";
 
 export const RULES = [
   ["hide_open_door", "Hide Open Door"],
@@ -50,10 +51,14 @@ const parseType = (v) => {
   return { role, age_level: Number(age) || 0 };
 };
 
+let collections = []; // for the kids' "only these collections" choice
+
 export async function renderUsers(host, viewer) {
   const isAdmin = viewer?.role === "admin";
   const kids = on(viewer, "parents");
-  const [users] = await Promise.all([attempt(() => get("/api/admin/users")).then((u) => u || []), loadContent()]);
+  const [users, cols] = await Promise.all([attempt(() => get("/api/admin/users")).then((u) => u || []),
+    get("/api/collections").then((d) => d.collections.filter((c) => c.kind !== "idea")).catch(() => []), loadContent()]);
+  collections = cols;
   // Fresh container on each render so click listeners never stack up.
   const root = document.createElement("div");
   host.replaceChildren(root);
@@ -103,6 +108,7 @@ export async function renderUsers(host, viewer) {
         kindle_email: $("[name=kindle_email]", cardEl).value };
       $$("[data-rule]", cardEl).forEach((cb) => (body[cb.dataset.rule] = cb.checked));
       body.hidden_content = pickedIn(cardEl);
+      readCollectionLimit(cardEl, body);
       const ms = $("[name=max_spice]", cardEl);
       if (ms) body.max_spice = Number(ms.value);
       await attempt(() => put(`/api/admin/users/${id}`, body), preset ? preset.done : "User saved");
@@ -138,6 +144,7 @@ function userCard(u, isAdmin, viewer) {
       </div>
       <div><span class="label" title="Books with any ticked item are hidden from this account, unless a parent marked them OK">Hide content</span>
         ${hidePicker(u.hidden_content || [], "data-hide")}</div>
+      ${u.role === "restricted" ? collectionLimitHTML(u, collections) : ""}
       <div class="grid gap-2 sm:grid-cols-2">
         <select name="delivery_method" class="input">${deliveryOptions(viewer, u.delivery_method)}</select>
         <input name="kindle_email" value="${esc(u.kindle_email)}" placeholder="name@kindle.com" class="input">
@@ -161,6 +168,7 @@ function badges(u) {
     if (age) out.push(`<span class="chip-cat">👪 ${esc(age[1])}</span>`);
     const n = (u.hidden_content || []).length;
     if (n) out.push(`<span class="chip-cat" title="Content items or groups hidden from this account">🚫 ${n} content rule${n === 1 ? "" : "s"}</span>`);
+    if (u.only_collections) out.push(`<span class="chip-cat" title="Sees only books in the collections chosen for them">📚 Collections only</span>`);
   }
   return out.join("");
 }

@@ -14,16 +14,25 @@ import { setupSelect } from "./libraryselect.js";
 import { blurbHTML } from "./blurb.js";
 import { liveCards } from "./livestatus.js";
 import { refreshActivity } from "./activity.js";
+import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
+import { shelfBanner } from "./collections.js";
 
 const PAGE = 60;
 
 export async function renderLibrary(view, state) {
   const manager = canManage(state.user);
-  const [catalogs, , facets] = await Promise.all([attempt(() => get("/api/catalogs")).then((c) => c || []), loadFlags(true),
-    attempt(() => get("/api/books/facets")).then((f) => f || { genres: [], kinds: [], authors: [], series: [] }), loadContent()]);
+  const [catalogs, , facets, , shelves] = await Promise.all([attempt(() => get("/api/catalogs")).then((c) => c || []), loadFlags(true),
+    attempt(() => get("/api/books/facets")).then((f) => f || { genres: [], kinds: [], authors: [], series: [] }), loadContent(),
+    get("/api/collections").catch(() => ({ collections: [], seasons: [] }))]);
+  // A collection or seasonal shelf chosen elsewhere (#/library?collection=3, ?season=advent).
+  const shelf = new URLSearchParams(location.hash.split("?")[1] || "");
+  const collection = shelf.get("collection") || "";
+  const season = collection ? "" : shelf.get("season") || "";
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
   const opt = (v, label, n) => `<option value="${esc(v)}">${esc(label)}${n === undefined ? "" : ` (${n.toLocaleString()})`}</option>`;
   view.innerHTML = `
+    ${seasonChipsHTML(shelves.seasons || [], season)}
+    <div id="shelf-banner"></div>
     <form id="filters" class="card mb-4 grid gap-3 md:grid-cols-4 xl:grid-cols-8">
       <div class="flex gap-2 md:col-span-2">
         <input name="q" type="search" placeholder="Search title, author, series or tag" class="input min-w-0 flex-1">
@@ -85,6 +94,8 @@ export async function renderLibrary(view, state) {
     <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>`;
 
   const form = $("#filters", view);
+  bindSeasonChips(view.querySelector("[data-season-chips]"));
+  if (collection || season) shelfBanner($("#shelf-banner", view), { collection, season, seasons: shelves.seasons }, state, () => load(true));
   const grid = $("#grid", view);
   const sel = setupSelect(view, grid, state, () => load(true));
   let offset = 0;
@@ -108,6 +119,8 @@ export async function renderLibrary(view, state) {
       multi: fd.get("multi") === "on",
       deep: fd.get("deep") === "on",
       exclude: fd.getAll("hide").join(","),
+      collection,
+      season,
       limit: PAGE,
     };
   }
@@ -189,7 +202,7 @@ export async function renderLibrary(view, state) {
   for (const k of ["q", "author", "series", "genre", "kind", "catalog", "spice"]) {
     if (preset.get(k) && form.elements[k]) form.elements[k].value = preset.get(k);
   }
-  if ([...preset.keys()].some((k) => k !== "q")) form.classList.add("filters-open");
+  if ([...preset.keys()].some((k) => !["q", "collection", "season"].includes(k))) form.classList.add("filters-open");
   countFilters();
   await load(true);
   // Parents see ratings arrive on the cards as the AI works.

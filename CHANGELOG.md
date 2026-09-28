@@ -4,6 +4,25 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.23.0]
+
+### 📚 Collections
+- **Shelves across your libraries.** The new **📚 Collections** page (under **More** on a phone) lists them with covers; tap one to browse it in the Library, where search and filters still work.
+- **Make one yourself:** **＋ New collection**, then add books from each book's window (**＋ Add to a collection**). Parents can take a book out with ✕ there too.
+- **Let the AI fill one:** press **✨ Describe one for the AI** and write what you want ("dragon adventures for ages 8-10, not too scary"). The AI looks through your libraries and suggests books with a reason each; untick any you don't want and save. **✨ Find more** later adds new books that fit, again for you to check first.
+- **Ideas from the AI:** about once a week the AI proposes up to three themed collections from your library, already filled. **Keep** or **Drop** them on the Collections page. On by default with a local AI, off with a paid one (**Admin → AI & Scans → Automatic rating**); it keeps to the automatic-rating hours.
+
+### 👧 Kids limited to collections
+- Under **Users & Rules**, a kid's account can be set to **Only books in chosen collections**. They then see no other books anywhere (Library, search, Discover, suggestions), not even ones you marked OK, and their content rules still apply on top.
+
+### 🗓️ Seasonal shelves
+- 🎃 Halloween, 🍂 Fall & Thanksgiving, 🕯️ Advent, 🎄 Christmas, ❄️ Winter, 💝 Valentine's & friendship (Level 2 at most), ✝️ Lent & Easter, 🌷 Spring, ☀️ Summer, 🎒 Back to school and 👼 Saints & feast days. The church seasons follow Easter and Advent each year.
+- **The ones in season come first** in a row of chips at the top of the Library and Discover, and Discover opens with your libraries' books for the season. **🗓️ More seasons** shows the rest.
+- Books are found by words in titles, Calibre tags and descriptions. For a better pick, parents can press **✨ Build with AI** on a season: the AI builds that season's collection, and the shelf uses it from then on.
+
+### 🔧 Fixes
+- **Phones:** with the activity pill showing, the header wrapped onto two lines. **Sign out** is now at the bottom of **More** on phones (the More tab is always there).
+
 ## [1.22.0]
 
 ### ⚡ Books rate themselves

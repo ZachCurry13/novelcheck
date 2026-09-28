@@ -29,23 +29,25 @@ const (
 func ValidRole(r string) bool { return r == RoleAdmin || r == RoleEditor || r == RoleRestricted }
 
 type User struct {
-	ID             int64    `db:"id" json:"id"`
-	Username       string   `db:"username" json:"username"`
-	PasswordHash   string   `db:"password_hash" json:"-"`
-	Role           string   `db:"role" json:"role"`
-	HideOpenDoor   bool     `db:"hide_open_door" json:"hide_open_door"`
-	HideNudity     bool     `db:"hide_nudity" json:"hide_nudity"`
-	HideSoloActs   bool     `db:"hide_solo_acts" json:"hide_solo_acts"`
-	HideInnuendo   bool     `db:"hide_innuendo" json:"hide_innuendo"`
-	HideDarkOccult bool     `db:"hide_dark_occult" json:"hide_dark_occult"`
-	HideUnrated    bool     `db:"hide_unrated" json:"hide_unrated"`
-	DeliveryMethod string   `db:"delivery_method" json:"delivery_method"`
-	KindleEmail    string   `db:"kindle_email" json:"kindle_email"`
-	GuideSeen      bool     `db:"guide_seen" json:"guide_seen"`
-	AgeLevel       int      `db:"age_level" json:"age_level"` // kid accounts only; 0 = not set
-	MaxSpice       int      `db:"max_spice" json:"max_spice"` // kid accounts: most peppers shown (0-5); -1 = no limit
-	CreatedAt      string   `db:"created_at" json:"created_at"`
-	HiddenContent  []string `db:"-" json:"hidden_content"` // content hide rules: items, "g:<group>", "flag:<custom key>"
+	ID              int64    `db:"id" json:"id"`
+	Username        string   `db:"username" json:"username"`
+	PasswordHash    string   `db:"password_hash" json:"-"`
+	Role            string   `db:"role" json:"role"`
+	HideOpenDoor    bool     `db:"hide_open_door" json:"hide_open_door"`
+	HideNudity      bool     `db:"hide_nudity" json:"hide_nudity"`
+	HideSoloActs    bool     `db:"hide_solo_acts" json:"hide_solo_acts"`
+	HideInnuendo    bool     `db:"hide_innuendo" json:"hide_innuendo"`
+	HideDarkOccult  bool     `db:"hide_dark_occult" json:"hide_dark_occult"`
+	HideUnrated     bool     `db:"hide_unrated" json:"hide_unrated"`
+	DeliveryMethod  string   `db:"delivery_method" json:"delivery_method"`
+	KindleEmail     string   `db:"kindle_email" json:"kindle_email"`
+	GuideSeen       bool     `db:"guide_seen" json:"guide_seen"`
+	AgeLevel        int      `db:"age_level" json:"age_level"` // kid accounts only; 0 = not set
+	MaxSpice        int      `db:"max_spice" json:"max_spice"` // kid accounts: most peppers shown (0-5); -1 = no limit
+	CreatedAt       string   `db:"created_at" json:"created_at"`
+	HiddenContent   []string `db:"-" json:"hidden_content"`                  // content hide rules: items, "g:<group>", "flag:<custom key>"
+	OnlyCollections bool     `db:"only_collections" json:"only_collections"` // kid accounts: only books in Collections
+	Collections     []int64  `db:"-" json:"collections"`                     // the collections they may see then
 }
 
 func (u *User) IsAdmin() bool { return u.Role == RoleAdmin }

@@ -30,6 +30,12 @@ func AutoRateOn(st *store.Store) bool {
 	case "off":
 		return false
 	}
+	return LocalAI(st)
+}
+
+// LocalAI reports whether the main AI runs on the home network (free to
+// use), which is when background AI work is on by default.
+func LocalAI(st *store.Store) bool {
 	ais := st.AIConfigs()
 	return len(ais) > 0 && ais[0].Provider != "anthropic" && llm.IsLocal(ais[0].BaseURL)
 }

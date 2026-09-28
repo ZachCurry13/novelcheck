@@ -11,6 +11,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/discover"
 	"github.com/zachcurry13/novelcheck/internal/safe"
+	"github.com/zachcurry13/novelcheck/internal/seasons"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -30,6 +31,7 @@ func (s *Server) handleDiscover(w http.ResponseWriter, r *http.Request) {
 	if rows == nil {
 		rows = []discover.Row{}
 	}
+	rows = append(s.seasonRows(u), rows...)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"rows":       rows,
 		"owned":      owned, // listed books the family has, left out unless ?owned=1
@@ -38,6 +40,29 @@ func (s *Server) handleDiscover(w http.ResponseWriter, r *http.Request) {
 		"updated":    s.Store.Setting(store.KeyDiscoverLastRefresh),
 		"refreshing": s.Discover != nil && s.Discover.Running(),
 	})
+}
+
+// seasonRows puts the family's books for the current seasons (at most two
+// shelves) at the top of Discover.
+func (s *Server) seasonRows(u *store.User) []discover.Row {
+	var rows []discover.Row
+	for _, se := range seasons.Current(time.Now()) {
+		if len(rows) == 2 {
+			break
+		}
+		f := store.BookFilter{Limit: 20, Sort: "recent"}
+		s.seasonFilter(&f, se.Key)
+		books, _, err := s.Store.ListBooks(f, u)
+		if err != nil || len(books) == 0 {
+			continue
+		}
+		row := discover.Row{Key: "season_" + se.Key, Icon: se.Icon, Title: se.Name + " from your libraries"}
+		for _, b := range books {
+			row.Books = append(row.Books, store.DiscoverBook{Book: b, List: "season", Owned: true, Queued: b.InQueue})
+		}
+		rows = append(rows, row)
+	}
+	return rows
 }
 
 // handleDiscoverStatus is the admin view: last refresh and how far rating got.

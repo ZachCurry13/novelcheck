@@ -95,8 +95,8 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		if k == store.KeyAutoRate && v != "" && v != "on" && v != "off" {
-			writeErr(w, http.StatusBadRequest, "automatic rating must be on, off or the default")
+		if (k == store.KeyAutoRate || k == store.KeyCollectionIdeas) && v != "" && v != "on" && v != "off" {
+			writeErr(w, http.StatusBadRequest, k+" must be on, off or the default")
 			return
 		}
 		if _, _, ok := analyzer.ParseHours(v); k == store.KeyAutoRateHours && v != "" && !ok {

@@ -3,6 +3,8 @@ package store
 import (
 	"strconv"
 	"strings"
+
+	"github.com/zachcurry13/novelcheck/internal/seasons"
 )
 
 // BookFilter describes a dashboard search across all catalogs.
@@ -24,6 +26,8 @@ type BookFilter struct {
 	Series         string // part of a series name
 	Genre          string // a category key (package genres)
 	Kind           string // "fiction", "nonfiction" or "unknown"
+	Collection     int64  // only books in this collection
+	Season         string // a seasonal shelf's key (package seasons), matched by its words
 	Sort           string // "title" (default) | "author" | "recent"
 	Limit, Offset  int
 }
@@ -98,6 +102,12 @@ func visibilityClause(u *User) (string, []any) {
 		clause += " AND (b.age_level = 0 OR b.age_level <= ?)"
 		args = append(args, u.AgeLevel)
 	}
+	// A kid limited to collections sees only the books in theirs, even ones
+	// a parent marked OK.
+	if u.Role == RoleRestricted && u.OnlyCollections {
+		clause += " AND EXISTS (SELECT 1 FROM collection_books kb JOIN user_collections kc ON kc.collection_id = kb.collection_id WHERE kb.book_id = b.id AND kc.user_id = ?)"
+		args = append(args, u.ID)
+	}
 	// Private libraries: a book only in someone else's private library is
 	// seen by its owner and the admins only.
 	if u.Role != RoleAdmin {
@@ -124,6 +134,15 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	if f.CatalogID > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM catalog_books x WHERE x.book_id = b.id AND x.catalog_id = ?)")
 		args = append(args, f.CatalogID)
+	}
+	if f.Collection > 0 {
+		where = append(where, "EXISTS (SELECT 1 FROM collection_books fc WHERE fc.book_id = b.id AND fc.collection_id = ?)")
+		args = append(args, f.Collection)
+	}
+	if season, ok := seasons.Find(f.Season); ok {
+		cond, sargs := season.Cond()
+		where = append(where, cond)
+		args = append(args, sargs...)
 	}
 	if f.OverlapWith > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM catalog_books y WHERE y.book_id = b.id AND y.catalog_id = ?)")

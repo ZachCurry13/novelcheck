@@ -29,7 +29,14 @@ export async function renderAutoRate(host, settings) {
     </div>
     <input type="hidden" data-key="auto_rate_hours" value="${esc(settings.auto_rate_hours || "")}">
     <input type="hidden" data-key="auto_rate_tz" value="${esc(settings.auto_rate_tz || "")}">
-    <p id="auto-status" class="text-xs text-slate-400"></p>`;
+    <p id="auto-status" class="text-xs text-slate-400"></p>
+    <div><label class="label" for="s-collection_ideas">AI collection ideas (about once a week)</label>
+      <select id="s-collection_ideas" data-key="collection_ideas" class="input">
+        <option value="" ${!settings.collection_ideas ? "selected" : ""}>Default: on with a local AI, off with a paid one</option>
+        <option value="on" ${settings.collection_ideas === "on" ? "selected" : ""}>On</option>
+        <option value="off" ${settings.collection_ideas === "off" ? "selected" : ""}>Off</option>
+      </select>
+      <p class="mt-1 text-xs text-slate-400">The AI proposes up to 3 themed collections from your library, within the hours above; keep or drop them on the Collections page.</p></div>`;
   const sync = () => {
     const on = $("#auto-hours-on", host).checked;
     $("#auto-hours", host).classList.toggle("hidden", !on);

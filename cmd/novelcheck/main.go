@@ -17,6 +17,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/api"
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/calibre"
+	"github.com/zachcurry13/novelcheck/internal/collections"
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/db"
@@ -69,6 +70,14 @@ func main() {
 		st.Notify("info", "deep-scan", fmt.Sprintf("Deep Scan got stricter. %d book(s) it rated before are being rated from their description again; "+
 			"you can Deep Scan them again from the Deep Scan page.", len(old)), "#/deepscan")
 	}
+	// AI collections: fills run in the background; weekly ideas only while
+	// the AI is idle and within automatic rating's hours.
+	collectionsSvc := collections.New(st)
+	collectionsSvc.Local = func() bool { return analyzer.LocalAI(st) }
+	collectionsSvc.Allowed = func() bool {
+		return worker.Status().State == "idle" && analyzer.RateHoursOpen(st, time.Now())
+	}
+	go collectionsSvc.Loop(ctx)
 	syncer := &calibre.Syncer{Store: st, Dir: cfg.CalibreDir}
 	syncer.NewBooks = func() bool {
 		worker.Kick()
@@ -109,21 +118,22 @@ func main() {
 	st.OnNotify = pusher.FromNotice
 
 	srv := &api.Server{
-		Cfg:      cfg,
-		Store:    st,
-		Auth:     &auth.Manager{Store: st, SessionDays: cfg.SessionDays},
-		Worker:   worker,
-		Syncer:   syncer,
-		Updates:  updates.New(),
-		Tunnel:   tun,
-		SysInfo:  sampler,
-		Push:     pusher,
-		Deep:     deep,
-		Suggest:  suggest.New(st),
-		Covers:   covers.Cache{Dir: filepath.Join(cfg.DataDir, "covers")},
-		Genres:   &genrefill.Filler{Store: st},
-		Discover: discoverSvc,
-		Web:      web.FS(),
+		Cfg:         cfg,
+		Store:       st,
+		Auth:        &auth.Manager{Store: st, SessionDays: cfg.SessionDays},
+		Worker:      worker,
+		Syncer:      syncer,
+		Updates:     updates.New(),
+		Tunnel:      tun,
+		SysInfo:     sampler,
+		Push:        pusher,
+		Deep:        deep,
+		Suggest:     suggest.New(st),
+		Covers:      covers.Cache{Dir: filepath.Join(cfg.DataDir, "covers")},
+		Genres:      &genrefill.Filler{Store: st},
+		Discover:    discoverSvc,
+		Collections: collectionsSvc,
+		Web:         web.FS(),
 	}
 	srv.Pulls.OnError = func(model string, err error) {
 		st.Notify("warning", "ollama", "Downloading "+model+" in Ollama failed: "+err.Error(), "#/admin")

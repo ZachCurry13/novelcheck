@@ -11,6 +11,8 @@ const EVERYONE = [
     "The <b>Library</b> tab shows every book with its cover. Search by title, author, series or tag, or narrow it down by <b>genre</b>, <b>fiction or nonfiction</b>, <b>author</b>, <b>series</b> and more. Tick the <b>Hide</b> boxes (like <b>Nudity</b>) to hide books that include those things. <b>☑ Select</b> lets you pick several books at once, to add them to Up Next or ask to delete them."],
   ["🧭 Discover",
     "The <b>Discover</b> tab suggests books: what's popular now, new on the best-seller lists, top teen and kids' books, classics, and what's new or popular in your family. Your content rules apply. Tap <b>⭐ Wishlist</b> to ask for a book you don't have."],
+  ["📚 Collections & seasons",
+    "<b>📚 Collections</b> are shelves across your libraries, like \"Summer reading\" or \"Dragon adventures\". The chips at the top of the Library show seasonal shelves such as 🎃 Halloween or 🕯️ Advent, the ones in season first. Tap one to see its books."],
   ["🌶️ What the ratings mean",
     `<p class="mb-2">Books get 0 to 5 peppers for romance and sexual content:</p>
     <ul class="space-y-1">${PEPPERS.map((p) => `<li>${pepperChip(p.n)}</li>`).join("")}

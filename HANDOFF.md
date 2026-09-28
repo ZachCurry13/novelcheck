@@ -1,8 +1,10 @@
 # NovelCheck handoff (2026-09-28, night)
 
-## 0. v1.22.0 (automatic rating + status) on `feature/v1.22-autorate`, NOT released; v1.21.0 and v1.20.1 released (2026-09-28)
+## 0. v1.23.0 (collections + seasonal shelves) on `feature/v1.23-collections`, NOT released; v1.22.0, v1.21.0 and v1.20.1 released (2026-09-28)
+- **v1.23** (the user's choices, 2026-09-28: AI collections both ways (describe + weekly ideas) and manual ones; optional per-kid collection limit; keywords + "Build with AI" for seasons; all seasons incl. church seasons and Valentine's; chips in the Library and Discover for everyone): see spec "Collections (v1.23)" and "Seasonal shelves (v1.23)". Tested in Go (kid limits, visibility, season windows and matching, AI fill and ideas with a fake AI) and at 360px (pages, AI dialog, banner, book window, kid limit). Also fixed: the phone header wrapped with the activity pill (Sign out moved into More).
+- Next: the user's OK to release **1.23.0**, then **Stuff Your Kindle events**, **AI hardware tools**.
 - **v1.22** (the user's choices, 2026-09-28: on by default only with a local AI; activity pill; quiet hours): see spec "Automatic rating (v1.22)". Tested in Go (feed order, defaults, hours across midnight and time zones, settings checks, activity) and at 360px with a simulated rating run (live cards, pill, ✓, admin card).
-- Next: the user's OK to release **1.22.0**, then **collections & seasonal**, **Stuff Your Kindle events**, **AI hardware tools**.
+- GitHub release v1.22.0 was built on 2026-09-28.
 - **v1.21 paper books** (the user's choices, 2026-09-28: parents only; a new Paper books page; the library name is the location): `catalogs.physical`, `/api/shelves`, `shelf.js` with continuous barcode scanning, typed titles and cover photos; ratings first in line within the token cap. Tested in Go and at 360px with stubs; live camera scanning couldn't be tried in the Browser pane (camera blocked), so the user should try it on the phone.
 - GitHub release v1.21.0 and its image were built on 2026-09-28.
 - **v1.20.1** (phone fixes) was released on 2026-09-28 (GitHub release v1.20.1). Notes on it follow.

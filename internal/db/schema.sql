@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     guide_seen       INTEGER NOT NULL DEFAULT 0,
     age_level        INTEGER NOT NULL DEFAULT 0,   -- kid accounts: 1 young kids .. 5 adults; 0 = not set
     max_spice        INTEGER NOT NULL DEFAULT -1,  -- kid accounts: hide books above this many peppers (0-5); -1 = no limit
+    only_collections INTEGER NOT NULL DEFAULT 0,   -- kid accounts: see only books in their collections (user_collections)
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -181,6 +182,36 @@ CREATE TABLE IF NOT EXISTS user_hidden_content (
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     key     TEXT NOT NULL,
     PRIMARY KEY (user_id, key)
+);
+
+-- Collections: shelves across libraries, made by a parent or filled by the AI
+-- from a theme. "idea" = the AI's weekly proposal, waiting for a parent.
+-- season = the seasonal shelf (internal/seasons) the collection stands for.
+CREATE TABLE IF NOT EXISTS collections (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    icon        TEXT NOT NULL DEFAULT '📚',
+    description TEXT NOT NULL DEFAULT '',
+    kind        TEXT NOT NULL DEFAULT 'manual' CHECK (kind IN ('manual', 'ai', 'idea')),
+    theme       TEXT NOT NULL DEFAULT '',
+    season      TEXT NOT NULL DEFAULT '',
+    created_by  TEXT NOT NULL DEFAULT '',
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS collection_books (
+    collection_id INTEGER NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+    book_id       INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    reason        TEXT NOT NULL DEFAULT '',  -- why the AI picked it
+    added_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (collection_id, book_id)
+);
+CREATE INDEX IF NOT EXISTS idx_collection_books_book ON collection_books(book_id);
+-- The collections a kid with only_collections may see.
+CREATE TABLE IF NOT EXISTS user_collections (
+    user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    collection_id INTEGER NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, collection_id)
 );
 
 -- Deep reads: the AI reads a book's whole EPUB in parts. Admins start them;

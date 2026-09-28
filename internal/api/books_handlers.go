@@ -47,7 +47,9 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		Sort:           q.Get("sort"),
 		Limit:          queryInt(r, "limit"),
 		Offset:         queryInt(r, "offset"),
+		Collection:     int64(queryInt(r, "collection")),
 	}
+	s.seasonFilter(&f, q.Get("season"))
 	books, total, err := s.Store.ListBooks(f, auth.UserFrom(r))
 	if err != nil {
 		writeStoreErr(w, err)
@@ -89,7 +91,8 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 	}
 	out := map[string]any{"book": b, "copies": copies, "downloadable": downloadable, "notes": notes,
 		"my_delete_request": s.Store.MyDeleteRequest(id, u.ID), "my_wish": s.Store.MyWish(id, u.ID), "owned": s.Store.Owned(id),
-		"my_cover_report": s.Store.MyCoverReport(id, u.ID), "editable_catalogs": s.editableCatalogs(copies, u)}
+		"my_cover_report": s.Store.MyCoverReport(id, u.ID), "editable_catalogs": s.editableCatalogs(copies, u),
+		"collections": s.Store.BookCollections(id, u)}
 	if u.Role == store.RoleAdmin || u.Role == store.RoleEditor {
 		out["calibre_web_url"] = s.Store.Setting(store.KeyCalibreWebURL) // "Open in Calibre-Web" links
 	}

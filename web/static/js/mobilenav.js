@@ -3,7 +3,7 @@
 // top menu's links, so it shows exactly what this account may open.
 
 const MAIN = [["check", "📷", "Check"], ["library", "📚", "Library"], ["discover", "🧭", "Discover"], ["queue", "▶️", "Up Next"], ["wishlist", "⭐", "Wishlist"], ["profile", "👤", "Profile"]];
-const ICON = { discover: "🧭", queue: "▶️", import: "💾", shelf: "📚", admin: "🛠️", deepscan: "🧬", usage: "📈", system: "🩺", profile: "👤", wishlist: "⭐" };
+const ICON = { discover: "🧭", queue: "▶️", import: "💾", shelf: "📕", collections: "📚", admin: "🛠️", deepscan: "🧬", usage: "📈", system: "🩺", profile: "👤", wishlist: "⭐" };
 
 let moreRoutes = [];
 
@@ -17,7 +17,7 @@ export function buildMobileNav() {
   const more = links.filter((a) => !main.some(([r]) => r === a.dataset.route));
   moreRoutes = more.map((a) => a.dataset.route);
   bar.innerHTML = main.map(([r, ico, label]) => `<a href="#/${r}" data-route="${r}"><span class="ico" aria-hidden="true">${ico}</span>${label}</a>`).join("")
-    + (more.length ? `<button type="button" data-more aria-haspopup="dialog"><span class="ico" aria-hidden="true">☰</span>More</button>` : "");
+    + `<button type="button" data-more aria-haspopup="dialog"><span class="ico" aria-hidden="true">☰</span>More</button>`; // also Help and Sign out
   bar.onclick = (e) => {
     if (e.target.closest("[data-more]")) openMore(more);
   };
@@ -56,6 +56,7 @@ function openMore(links) {
     <div class="border-t border-slate-800 pt-2">
       ${item("❔", "How to use NovelCheck", "data-help")}
       ${item("🐞", "Report a problem or idea", "data-report")}
+      ${item("🚪", "Sign out", "data-logout")}
     </div>
   </div>`;
   d.onclick = (e) => {
@@ -64,6 +65,9 @@ function openMore(links) {
     if (e.target.closest("[data-help]")) {
       e.preventDefault();
       document.getElementById("help-btn")?.click();
+    } else if (e.target.closest("[data-logout]")) {
+      e.preventDefault();
+      document.getElementById("logout-btn")?.click();
     } else if (e.target.closest("[data-report]")) {
       e.preventDefault();
       document.getElementById("report-link")?.click();

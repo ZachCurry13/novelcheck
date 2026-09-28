@@ -18,6 +18,7 @@ import { renderDeepScanAdmin } from "./deepscanadmin.js";
 import { renderWishlist } from "./wishlist.js";
 import { renderDiscover } from "./discover.js";
 import { renderShelf } from "./shelf.js";
+import { renderCollections } from "./collections.js";
 import { initBell } from "./notifications.js";
 import { on, applyModules } from "./modules.js";
 import { buildMobileNav, markMobileNav } from "./mobilenav.js";
@@ -42,6 +43,7 @@ const routes = {
   wishlist: renderWishlist,
   discover: renderDiscover,
   shelf: renderShelf,
+  collections: renderCollections,
 };
 const managerRoutes = new Set(["check", "import", "shelf", "admin", "duplicates"]);
 const adminRoutes = new Set(["system", "usage", "deletions", "deepscan"]);

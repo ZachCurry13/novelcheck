@@ -11,6 +11,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/calibre"
+	"github.com/zachcurry13/novelcheck/internal/collections"
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
@@ -26,28 +27,29 @@ import (
 )
 
 type Server struct {
-	Cfg       config.Config
-	Store     *store.Store
-	Auth      *auth.Manager
-	Worker    *analyzer.Worker
-	Syncer    *calibre.Syncer
-	Updates   *updates.Checker
-	Tunnel    *tunnel.Manager
-	Pulls     ollama.Puller // Ollama model downloads
-	SysInfo   *sysinfo.Sampler
-	Push      *push.Service     // phone notifications; nil turns them off
-	Deep      *deepread.Runner  // Deep Scans (full-text reading)
-	Covers    covers.Cache      // shrunk book covers under /data/covers
-	Genres    *genrefill.Filler // AI genres for books without Calibre tags
-	Suggest   *suggest.Service  // Suggested Reads under Up Next
-	Discover  *discover.Service // the Discover tab's lists; nil in tests that don't need it
-	Web       fs.FS             // embedded static assets
-	logins    *loginLimiter
-	etags     sync.Map  // static file name → ETag
-	buildOnce sync.Once // buildID, computed once
-	build     string
-	indexOnce sync.Once // index.html with versioned addresses
-	index     []byte
+	Cfg         config.Config
+	Store       *store.Store
+	Auth        *auth.Manager
+	Worker      *analyzer.Worker
+	Syncer      *calibre.Syncer
+	Updates     *updates.Checker
+	Tunnel      *tunnel.Manager
+	Pulls       ollama.Puller // Ollama model downloads
+	SysInfo     *sysinfo.Sampler
+	Push        *push.Service        // phone notifications; nil turns them off
+	Deep        *deepread.Runner     // Deep Scans (full-text reading)
+	Covers      covers.Cache         // shrunk book covers under /data/covers
+	Genres      *genrefill.Filler    // AI genres for books without Calibre tags
+	Suggest     *suggest.Service     // Suggested Reads under Up Next
+	Discover    *discover.Service    // the Discover tab's lists; nil in tests that don't need it
+	Collections *collections.Service // AI-filled collections and weekly ideas
+	Web         fs.FS                // embedded static assets
+	logins      *loginLimiter
+	etags       sync.Map  // static file name → ETag
+	buildOnce   sync.Once // buildID, computed once
+	build       string
+	indexOnce   sync.Once // index.html with versioned addresses
+	index       []byte
 }
 
 func (s *Server) Router() http.Handler {
@@ -83,6 +85,8 @@ func (s *Server) Router() http.Handler {
 			r.Get("/books", s.handleListBooks)
 			r.Get("/books/facets", s.handleBookFacets)
 			r.Get("/books/states", s.handleBookStates)
+			r.Get("/collections", s.handleListCollections)
+			r.Get("/collections/{id}", s.handleGetCollection)
 			r.Post("/books/bulk", s.handleBulkBooks)
 			r.Get("/books/{id}", s.handleGetBook)
 			r.Get("/books/{id}/download", s.handleDownload)
@@ -132,6 +136,14 @@ func (s *Server) Router() http.Handler {
 				r.Use(auth.RequireManager)
 				r.Post("/check", s.handleCheck)
 				r.Get("/activity", s.handleActivity)
+				r.Post("/collections", s.handleCreateCollection)
+				r.Patch("/collections/{id}", s.handleUpdateCollection)
+				r.Delete("/collections/{id}", s.handleDeleteCollection)
+				r.Post("/collections/{id}/keep", s.handleKeepIdea)
+				r.Post("/collections/{id}/books", s.handleAddToCollection)
+				r.Delete("/collections/{id}/books/{book}", s.handleRemoveFromCollection)
+				r.Post("/collections/ai", s.handleStartFill)
+				r.Get("/collections/ai/{job}", s.handleFillJob)
 				r.Post("/wishlist/{id}/{action}", s.handleDecideWish)
 				r.Get("/admin/users/{id}/opds", s.handleUserOPDS)
 				r.Post("/catalogs", s.handleCreateCatalog)

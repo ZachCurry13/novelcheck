@@ -87,15 +87,25 @@ func (s *Store) hiddenContent(userID int64) ([]string, error) {
 	return keys, err
 }
 
-// withHiddenContent fills in each user's content hide rules.
+// withHiddenContent fills in each user's content hide rules and collections.
 func (s *Store) withHiddenContent(us []User) ([]User, error) {
 	for i := range us {
-		var err error
-		if us[i].HiddenContent, err = s.hiddenContent(us[i].ID); err != nil {
+		if err := s.userExtras(&us[i]); err != nil {
 			return nil, err
 		}
 	}
 	return us, nil
+}
+
+// userExtras loads what lives outside the users row: content hide rules and
+// the collections a kid may be limited to.
+func (s *Store) userExtras(u *User) error {
+	var err error
+	if u.HiddenContent, err = s.hiddenContent(u.ID); err != nil {
+		return err
+	}
+	u.Collections, err = s.userCollections(u.ID)
+	return err
 }
 
 // setHiddenContent replaces a user's content hide rules (invalid keys are
