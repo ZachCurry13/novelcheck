@@ -90,10 +90,12 @@ func (s *Server) handleStartReading(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err) // profile rules changed since it was queued
 		return
 	}
-	note, err := s.deliver(u, item.BookID)
-	if err != nil {
-		writeErr(w, http.StatusBadGateway, "delivery failed: "+err.Error())
-		return
+	note := "📕 Paper book: marked as reading"
+	if !s.Store.PaperOnly(item.BookID) { // a printed book has nothing to send
+		if note, err = s.deliver(u, item.BookID); err != nil {
+			writeErr(w, http.StatusBadGateway, "delivery failed: "+err.Error())
+			return
+		}
 	}
 	if err := s.Store.SetQueueStatus(u.ID, id, "reading", note); err != nil {
 		writeStoreErr(w, err)

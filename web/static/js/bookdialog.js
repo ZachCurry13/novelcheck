@@ -33,8 +33,8 @@ export async function openBook(id, state, onChange) {
     const key = c.source === "calibre" ? `${c.catalog_id}#${c.external_id}` : String(c.catalog_id);
     if (!entries.has(key)) entries.set(key, { ...c, formats: [], paths: [] });
     const e = entries.get(key);
-    if (c.format && c.format !== "list") e.formats.push(c.format.toUpperCase());
-    if (c.path && !c.path.startsWith("list:") && !c.path.startsWith("calibre-entry:")) e.paths.push(c.path);
+    if (c.format && c.format !== "list") e.formats.push(c.format === "paper" ? "📕 Paper" : c.format.toUpperCase());
+    if (c.path && c.path !== "paper" && !c.path.startsWith("list:") && !c.path.startsWith("calibre-entry:")) e.paths.push(c.path);
   }
   const calibreCount = [...entries.values()].filter((e) => e.source === "calibre").length;
   const calibreIds = [...entries.values()].filter((e) => e.source === "calibre" && /^\d+$/.test(e.external_id)).map((e) => e.external_id);

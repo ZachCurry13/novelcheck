@@ -1,6 +1,9 @@
 # NovelCheck handoff (2026-09-28, night)
 
-## 0. v1.20.1 (phone fixes) on `feature/v1.20.1-phone`, NOT released
+## 0. v1.21.0 (paper books) on `feature/v1.21-physical`, NOT released; v1.20.1 released
+- **v1.21 paper books** (the user's choices, 2026-09-28: parents only; a new Paper books page; the library name is the location): `catalogs.physical`, `/api/shelves`, `shelf.js` with continuous barcode scanning, typed titles and cover photos; ratings first in line within the token cap. Tested in Go and at 360px with stubs; live camera scanning couldn't be tried in the Browser pane (camera blocked), so the user should try it on the phone.
+- Next: the user's OK to release **1.21.0**, then **auto-rating + status badges**, **collections & seasonal**, **Stuff Your Kindle events**, **AI hardware tools**.
+- **v1.20.1** (phone fixes) was released on 2026-09-28 (GitHub release v1.20.1). Notes on it follow.
 - v1.20.0 was released on 2026-09-28 (the user had merged v1.20 on GitHub via PRs #2/#3; the stray files from PR #3 were removed).
 - The user reported the app "almost unusable" on a phone. Found at 360px with realistic stubbed data, and fixed:
   - Up Next titles got 0px (handle, number, cover, wide Start button, ✕). Rows now: cover, 2-line title, stacked ▶/✕; titles open the book.
@@ -11,7 +14,6 @@
   - Notifications: Deep Scan reviews grouped in one card (source `deep-scan-review`), a button and ✕ per notice, `POST /api/notifications/dismiss`.
   - Discover: the book window counted Discover-only books as owned (any copy not in "Looked up"); it now uses the server's `owned`. List rows leave out owned books unless "Also show books we already have" (`?owned=1`).
 - Tests pass (only the 6 known Windows failures). CHANGELOG `[1.20.1]`, README, spec (item 51) and guide are updated.
-- Next: the user's OK to release **1.20.1**. Then, in the user's order (2026-09-28): **physical libraries** (continuous barcode scanning, or title/ISBN/cover photo, into a named physical library; rated as added within the token cap), then **auto-rating + status badges**, **collections & seasonal** (kids limited to collections), **Stuff Your Kindle events**, **AI hardware tools** (model-update alerts, fast/heavy machines, power-cost labels, benchmarks).
 - Phone checks: `web/static/js/devfixture.js` (local only, in `.git/info/exclude`; source in the scratchpad as cat.js + fixture-body.js) stubs the API with awkward data; load it with `await import("/js/devfixture.js?t=" + Date.now())` at 360×760. The server embeds web files, so restart after edits. When the Browser pane is hidden, screenshots go stale: measure with scripts instead.
 - Release rules are allowed in `.claude/settings.local.json`; run each release command as its own call.
 

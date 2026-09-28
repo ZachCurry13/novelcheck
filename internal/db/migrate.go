@@ -53,6 +53,7 @@ func migrate(d *sqlx.DB) error {
 		{"books", "content_version", "INTEGER NOT NULL DEFAULT 0"},
 		{"books", "content_amounts", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "premise", "TEXT NOT NULL DEFAULT ''"},
+		{"catalogs", "physical", "INTEGER NOT NULL DEFAULT 0"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {
 			return err

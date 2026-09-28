@@ -8,7 +8,7 @@ import (
 	"errors"
 )
 
-const catalogCols = `c.id, c.name, c.source, c.created_at, c.owner_id, COALESCE(u.username, '') AS owner, c.private`
+const catalogCols = `c.id, c.name, c.source, c.created_at, c.owner_id, COALESCE(u.username, '') AS owner, c.private, c.physical`
 
 // ListCatalogs returns the libraries viewer may see (nil = all), with how
 // many books each holds.

@@ -60,6 +60,7 @@ type Catalog struct {
 	OwnerID   *int64 `db:"owner_id" json:"owner_id"` // who imported it; nil = the family's
 	Owner     string `db:"owner" json:"owner"`       // their username
 	Private   bool   `db:"private" json:"private"`   // only the owner and admins see its books
+	Physical  bool   `db:"physical" json:"physical"` // paper books on a shelf
 	CreatedAt string `db:"created_at" json:"created_at"`
 	BookCount int    `db:"book_count" json:"book_count"`
 }

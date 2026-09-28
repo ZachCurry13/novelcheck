@@ -49,6 +49,7 @@ export async function renderLibrary(view, state) {
       <select name="format" class="input filter-more" title="File format">
         <option value="">Any format</option>
         ${["epub", "azw3", "mobi", "kfx", "pdf"].map((f) => `<option value="${f}">${f.toUpperCase()}</option>`).join("")}
+        <option value="paper">📕 Paper books</option>
         <option value="multi">2+ formats</option>
         <option value="dupes">Duplicates</option>
         <option value="none">No file</option>
@@ -179,7 +180,7 @@ export async function renderLibrary(view, state) {
   }
   // Links such as #/library?author=… (from a book's window) open with that filter set.
   const preset = new URLSearchParams(location.hash.split("?")[1] || "");
-  for (const k of ["q", "author", "series", "genre", "kind"]) {
+  for (const k of ["q", "author", "series", "genre", "kind", "catalog"]) {
     if (preset.get(k) && form.elements[k]) form.elements[k].value = preset.get(k);
   }
   if ([...preset.keys()].some((k) => k !== "q")) form.classList.add("filters-open");
@@ -208,7 +209,7 @@ function card(b, queueOn) {
 
 // File formats (EPUB, AZW3…) and a warning when Calibre has the book twice.
 export function formatChips(b) {
-  const fmts = b.formats ? b.formats.split(",").map((f) => `<span class="chip-fmt">${esc(f)}</span>`).join(" ") : "";
+  const fmts = b.formats ? b.formats.split(",").map((f) => `<span class="chip-fmt">${f === "PAPER" ? "📕 Paper" : esc(f)}</span>`).join(" ") : "";
   const del = b.delete_requests ? `<span class="chip-dup" title="Someone asked to delete this book">🗑 Delete requested</span>` : "";
   const dup = b.calibre_copies > 1
     ? `<span class="chip-dup" title="This book is in Calibre ${b.calibre_copies} times">⚠ ${b.calibre_copies}× in Calibre</span>` : "";

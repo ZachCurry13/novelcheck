@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS catalogs (
     source     TEXT NOT NULL DEFAULT 'custom' CHECK (source IN ('calibre', 'drive', 'custom')),
     owner_id   INTEGER REFERENCES users(id) ON DELETE SET NULL,  -- who imported it; NULL = the family's (e.g. Calibre)
     private    INTEGER NOT NULL DEFAULT 0,                        -- 1 = only the owner and admins see its books
+    physical   INTEGER NOT NULL DEFAULT 0,                        -- 1 = paper books on a shelf (no files)
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

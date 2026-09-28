@@ -10,6 +10,7 @@ import { blurbHTML } from "./blurb.js";
 import { openBook } from "./bookdialog.js";
 import { liveBlocker, scanLive } from "./barcode.js";
 import { coverImg } from "./covers.js";
+import { shrinkPhoto, barcodeInPhoto } from "./photo.js";
 
 export async function renderCheck(view, state) {
   view.innerHTML = `
@@ -75,9 +76,9 @@ export async function renderCheck(view, state) {
     const file = e.target.files[0];
     e.target.value = "";
     if (!file) return;
-    const isbn = await barcode(file); // Android can read the barcode on the back, free and instant
+    const isbn = await barcodeInPhoto(file); // Android can read the barcode on the back, free and instant
     if (isbn) return check({ query: isbn }, "Reading the barcode…");
-    const image = await shrink(file).catch(() => "");
+    const image = await shrinkPhoto(file).catch(() => "");
     if (!image) {
       out.innerHTML = `<p class="card text-sm text-rose-300">That photo couldn't be opened (some phones save photos in a format the browser can't read).
         Try <b>Choose a photo</b>, take the picture again, or type the title below.</p>`;
@@ -192,26 +193,4 @@ async function loadRecent(view, state) {
     const id = e.target.closest("[data-open]")?.dataset.open;
     if (id) openBook(Number(id), state);
   };
-}
-
-// shrink turns a phone photo into a ~1280 px JPEG data: URL (small and quick to send).
-async function shrink(file) {
-  const bmp = await createImageBitmap(file);
-  const scale = Math.min(1, 1280 / Math.max(bmp.width, bmp.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bmp.width * scale);
-  canvas.height = Math.round(bmp.height * scale);
-  canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.85);
-}
-
-// barcode reads an ISBN barcode where the browser can (Chrome on Android).
-async function barcode(file) {
-  if (!("BarcodeDetector" in window)) return "";
-  try {
-    const codes = await new window.BarcodeDetector({ formats: ["ean_13"] }).detect(await createImageBitmap(file));
-    return codes.map((c) => c.rawValue).find((v) => /^97[89]\d{10}$/.test(v)) || "";
-  } catch {
-    return "";
-  }
 }

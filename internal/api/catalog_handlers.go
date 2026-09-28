@@ -108,6 +108,10 @@ func (s *Server) handleImportDrive(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "books can't be imported into the Calibre library; choose or name another library")
 		return
 	}
+	if c.Physical {
+		writeErr(w, http.StatusBadRequest, "that's a paper-book library; add paper books under Paper books, or choose another library")
+		return
+	}
 	if !c.CanEdit(u) {
 		writeErr(w, http.StatusForbidden, "that library belongs to "+c.Owner+"; choose another name")
 		return

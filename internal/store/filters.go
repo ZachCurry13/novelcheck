@@ -39,12 +39,13 @@ var flagColumns = map[string]string{
 	"open_door":        "b.classification = 'Open Door'",
 }
 
-// fileFormats are the e-book formats the Format filter offers.
-var fileFormats = map[string]bool{"epub": true, "azw3": true, "azw": true, "mobi": true, "kfx": true, "pdf": true}
+// fileFormats are the formats the Format filter offers: e-book files, and
+// "paper" for books on a shelf.
+var fileFormats = map[string]bool{"epub": true, "azw3": true, "azw": true, "mobi": true, "kfx": true, "pdf": true, "paper": true}
 
 var formatConds = map[string]string{
-	"multi": "(SELECT COUNT(DISTINCT LOWER(fm.format)) FROM catalog_books fm WHERE fm.book_id = b.id AND fm.format NOT IN ('', 'list')) > 1",
-	"none":  "NOT EXISTS (SELECT 1 FROM catalog_books fn WHERE fn.book_id = b.id AND fn.format NOT IN ('', 'list'))",
+	"multi": "(SELECT COUNT(DISTINCT LOWER(fm.format)) FROM catalog_books fm WHERE fm.book_id = b.id AND fm.format NOT IN ('', 'list', 'paper')) > 1",
+	"none":  "NOT EXISTS (SELECT 1 FROM catalog_books fn WHERE fn.book_id = b.id AND fn.format NOT IN ('', 'list', 'paper'))",
 	"dupes": `(SELECT COUNT(DISTINCT dd.external_id) FROM catalog_books dd JOIN catalogs dk ON dk.id = dd.catalog_id
 		AND dk.source = 'calibre' WHERE dd.book_id = b.id) > 1`,
 }

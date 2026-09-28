@@ -28,56 +28,14 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &body, maxPhoto*4/3+4096) {
 		return
 	}
-	ctx := r.Context()
-	ec := s.Worker.Enricher()
-	var found, canonical enrich.Found
-	source := "search"
-	switch query := strings.TrimSpace(body.Query); {
-	case body.Image != "":
-		img, mediaType, ok := decodePhoto(body.Image)
-		if !ok {
-			writeErr(w, http.StatusBadRequest, "that photo couldn't be opened; please take it again")
-			return
-		}
-		f, err := s.Worker.ReadCover(ctx, img, mediaType)
-		if err != nil {
-			log.Printf("check a book: %v", err)
-			msg := "Your AI couldn't read the cover. Type the title instead."
-			if !errors.Is(err, analyzer.ErrCantSee) {
-				msg = "Reading the photo failed: " + err.Error()
-			}
-			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": msg, "detail": err.Error()})
-			return
-		}
-		found, source = f, "photo"
-		canonical, _ = ec.FindTitle(ctx, f.Title, f.Author)
-	case query != "":
-		f, ok := ec.Find(ctx, query)
-		switch {
-		case ok:
-			found = f
-		case enrich.CleanISBN(query) != "":
-			writeErr(w, http.StatusNotFound, "no book found with that ISBN; try typing the title")
-			return
-		default:
-			found = enrich.Found{Title: query} // not in Open Library: rate what was typed
-		}
-	default:
-		writeErr(w, http.StatusBadRequest, "type a title or take a photo of the cover")
+	look, ok := s.lookUp(w, r, body.Query, body.Image)
+	if !ok {
 		return
 	}
-
-	id := s.Store.MatchBook(found.Title, found.Author)
-	if id == 0 && canonical.Title != "" {
-		id = s.Store.MatchBook(canonical.Title, canonical.Author)
-	}
+	id := look.id
 	if id == 0 {
-		t := found
-		if canonical.Title != "" {
-			t = canonical
-		}
 		var err error
-		if id, err = s.saveLookup(t); err != nil {
+		if id, err = s.saveLookup(look.best()); err != nil {
 			writeStoreErr(w, err)
 			return
 		}
@@ -99,8 +57,72 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"book": b, "rating": b.Status == "processing",
-		"in_library": len(catalogs) > 0, "catalogs": catalogs, "found": found, "source": source,
+		"in_library": len(catalogs) > 0, "catalogs": catalogs, "found": look.found, "source": look.source,
 		"my_wish": s.Store.MyWish(id, auth.UserFrom(r).ID)})
+}
+
+// lookup is the book a photo or a typed title, author or ISBN points to.
+type lookup struct {
+	found     enrich.Found // what was read or typed, completed by Open Library
+	canonical enrich.Found // for a photo: Open Library's own title and author
+	source    string       // "photo" or "search"
+	id        int64        // the book NovelCheck already has, or 0
+}
+
+// best is the title and author to save for a book NovelCheck doesn't have yet.
+func (l lookup) best() enrich.Found {
+	if l.canonical.Title != "" {
+		return l.canonical
+	}
+	return l.found
+}
+
+// lookUp finds the book a cover photo or a typed query means (Check a book
+// and paper books). On failure it has already written the reply.
+func (s *Server) lookUp(w http.ResponseWriter, r *http.Request, query, image string) (lookup, bool) {
+	ctx := r.Context()
+	ec := s.Worker.Enricher()
+	var l lookup
+	l.source = "search"
+	switch query = strings.TrimSpace(query); {
+	case image != "":
+		img, mediaType, ok := decodePhoto(image)
+		if !ok {
+			writeErr(w, http.StatusBadRequest, "that photo couldn't be opened; please take it again")
+			return l, false
+		}
+		f, err := s.Worker.ReadCover(ctx, img, mediaType)
+		if err != nil {
+			log.Printf("check a book: %v", err)
+			msg := "Your AI couldn't read the cover. Type the title instead."
+			if !errors.Is(err, analyzer.ErrCantSee) {
+				msg = "Reading the photo failed: " + err.Error()
+			}
+			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": msg, "detail": err.Error()})
+			return l, false
+		}
+		l.found, l.source = f, "photo"
+		l.canonical, _ = ec.FindTitle(ctx, f.Title, f.Author)
+	case query != "":
+		f, ok := ec.Find(ctx, query)
+		switch {
+		case ok:
+			l.found = f
+		case enrich.CleanISBN(query) != "":
+			writeErr(w, http.StatusNotFound, "no book found with that ISBN; try typing the title")
+			return l, false
+		default:
+			l.found = enrich.Found{Title: query} // not in Open Library: rate what was typed
+		}
+	default:
+		writeErr(w, http.StatusBadRequest, "type a title or take a photo of the cover")
+		return l, false
+	}
+	l.id = s.Store.MatchBook(l.found.Title, l.found.Author)
+	if l.id == 0 && l.canonical.Title != "" {
+		l.id = s.Store.MatchBook(l.canonical.Title, l.canonical.Author)
+	}
+	return l, true
 }
 
 // saveLookup adds a checked book to the "Looked up" list.

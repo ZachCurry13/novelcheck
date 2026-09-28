@@ -137,6 +137,8 @@ func (s *Server) Router() http.Handler {
 				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)
 				r.Delete("/catalogs/{id}/books/{book}", s.handleRemoveFromCatalog)
 				r.With(s.requireModule(store.KeyModuleImport, "Importing books")).Post("/import/drive", s.handleImportDrive)
+				r.With(s.requireModule(store.KeyModuleImport, "Paper books")).Post("/shelves", s.handleCreateShelf)
+				r.With(s.requireModule(store.KeyModuleImport, "Paper books")).Post("/shelves/{id}/books", s.handleAddToShelf)
 				r.Post("/books/{id}/analyze", s.handleAnalyzeBook)
 				r.Put("/books/{id}/verdict", s.handleSetVerdict)
 				r.Put("/books/{id}/approval", s.handleSetApproval)

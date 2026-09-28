@@ -28,7 +28,8 @@ export function liveBlocker() {
 
 const isISBN = (v) => /^97[89]\d{10}$/.test(v || "");
 
-function cameraError(err) {
+// cameraError explains why the camera didn't start (HTML).
+export function cameraError(err) {
   switch (err?.name) {
     case "NotAllowedError":
     case "SecurityError":
@@ -43,14 +44,55 @@ function cameraError(err) {
   }
 }
 
+// startCamera shows the back camera in video and calls onCode with every
+// ISBN it reads. cam.ready settles once the camera runs (or fails);
+// cam.stop() turns it off, even before it has started.
+function startCamera(video, onCode) {
+  const cam = { stopped: false, release: null, stop() {
+    this.stopped = true;
+    this.release?.();
+  } };
+  const back = { video: { facingMode: "environment" } };
+  cam.ready = (async () => {
+    const native = "BarcodeDetector" in window && (await window.BarcodeDetector.getSupportedFormats?.())?.includes("ean_13");
+    if (native) {
+      const stream = await navigator.mediaDevices.getUserMedia(back);
+      cam.release = () => stream.getTracks().forEach((t) => t.stop());
+      if (cam.stopped) return cam.release();
+      video.srcObject = stream;
+      await video.play();
+      const detector = new window.BarcodeDetector({ formats: ["ean_13"] });
+      const tick = async () => {
+        if (cam.stopped) return;
+        const codes = await detector.detect(video).catch(() => []);
+        const hit = codes.map((c) => c.rawValue).find(isISBN);
+        if (hit) onCode(hit);
+        setTimeout(tick, 200);
+      };
+      tick();
+    } else {
+      const ZXing = await loadZXing();
+      const hints = new Map([[ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13]]]);
+      const reader = new ZXing.BrowserMultiFormatReader(hints);
+      cam.release = () => reader.reset();
+      if (cam.stopped) return cam.release();
+      await reader.decodeFromConstraints(back, video, (res) => {
+        const text = res?.getText();
+        if (isISBN(text) && !cam.stopped) onCode(text);
+      });
+    }
+  })();
+  return cam;
+}
+
 // scanLive shows the camera in dlg and resolves with an ISBN-13, or "" when
 // the person closes it.
 export async function scanLive(dlg) {
-  let stop = () => {};
+  let cam = null;
   let done;
   const result = new Promise((r) => (done = r));
   const finish = (isbn) => {
-    stop();
+    cam?.stop();
     if (dlg.open) dlg.close();
     done(isbn);
   };
@@ -64,43 +106,29 @@ export async function scanLive(dlg) {
   };
   dlg.oncancel = () => finish("");
   dlg.showModal();
-  const video = dlg.querySelector("video");
   const msg = dlg.querySelector("[data-msg]");
-  const back = { video: { facingMode: "environment" } };
+  cam = startCamera(dlg.querySelector("video"), finish);
   try {
-    const native = "BarcodeDetector" in window && (await window.BarcodeDetector.getSupportedFormats?.())?.includes("ean_13");
-    if (native) {
-      const stream = await navigator.mediaDevices.getUserMedia(back);
-      let alive = true;
-      stop = () => {
-        alive = false;
-        stream.getTracks().forEach((t) => t.stop());
-      };
-      video.srcObject = stream;
-      await video.play();
-      const detector = new window.BarcodeDetector({ formats: ["ean_13"] });
-      const tick = async () => {
-        if (!alive) return;
-        const codes = await detector.detect(video).catch(() => []);
-        const hit = codes.map((c) => c.rawValue).find(isISBN);
-        if (hit) return finish(hit);
-        setTimeout(tick, 200);
-      };
-      tick();
-    } else {
-      const ZXing = await loadZXing();
-      const hints = new Map([[ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13]]]);
-      const reader = new ZXing.BrowserMultiFormatReader(hints);
-      stop = () => reader.reset();
-      await reader.decodeFromConstraints(back, video, (res) => {
-        const text = res?.getText();
-        if (isISBN(text)) finish(text);
-      });
-    }
+    await cam.ready;
   } catch (err) {
-    stop();
+    cam.stop();
     msg.className = "text-sm text-rose-300";
     msg.innerHTML = cameraError(err);
   }
   return result;
+}
+
+// scanContinuous keeps the camera on in video and calls onISBN for each
+// book held up to it (the same barcode again only after a few seconds).
+// It returns the camera: await cam.ready for errors, cam.stop() to finish.
+export function scanContinuous(video, onISBN) {
+  let last = "";
+  let lastAt = 0;
+  return startCamera(video, (isbn) => {
+    const now = Date.now();
+    if (isbn === last && now - lastAt < 4000) return;
+    last = isbn;
+    lastAt = now;
+    onISBN(isbn);
+  });
 }

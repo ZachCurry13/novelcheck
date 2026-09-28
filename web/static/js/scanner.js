@@ -18,6 +18,8 @@ export async function renderImport(view, state) {
     <p class="mb-6 text-sm text-slate-400">Plug in a Kindle or e-reader and pick its <code>documents</code> folder, or,
       with no cable, bring in a list from Amazon, Goodreads, StoryGraph, Hardcover or a spreadsheet (second box).
       Everything is read in your browser; only titles, authors and identifiers are sent to NovelCheck.</p>
+    <a href="#/shelf" class="card mb-4 flex items-center gap-3 hover:ring-indigo-600"><span class="text-2xl" aria-hidden="true">📚</span>
+      <span class="min-w-0 flex-1 text-sm"><b>Printed books?</b> Scan their barcodes one after another under <b>Paper books</b>.</span><span aria-hidden="true">→</span></a>
     <div class="card mb-4 space-y-4">
       <div class="flex flex-wrap gap-3">
         ${supportsPicker ? `<button id="pick-btn" class="btn-primary">Choose folder…</button>` : ""}

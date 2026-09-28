@@ -17,6 +17,7 @@ import { renderDeletions } from "./deletions.js";
 import { renderDeepScanAdmin } from "./deepscanadmin.js";
 import { renderWishlist } from "./wishlist.js";
 import { renderDiscover } from "./discover.js";
+import { renderShelf } from "./shelf.js";
 import { initBell } from "./notifications.js";
 import { on, applyModules } from "./modules.js";
 import { buildMobileNav, markMobileNav } from "./mobilenav.js";
@@ -39,10 +40,11 @@ const routes = {
   deepscan: renderDeepScanAdmin,
   wishlist: renderWishlist,
   discover: renderDiscover,
+  shelf: renderShelf,
 };
-const managerRoutes = new Set(["check", "import", "admin", "duplicates"]);
+const managerRoutes = new Set(["check", "import", "shelf", "admin", "duplicates"]);
 const adminRoutes = new Set(["system", "usage", "deletions", "deepscan"]);
-const moduleRoutes = { queue: "queue", import: "import" }; // pages an admin can turn off
+const moduleRoutes = { queue: "queue", import: "import", shelf: "import" }; // pages an admin can turn off
 
 function showOnly(id) {
   for (const v of ["#setup-view", "#login-view", "#app-view"]) $(v).classList.toggle("hidden", v !== id);

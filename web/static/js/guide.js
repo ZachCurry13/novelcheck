@@ -37,6 +37,8 @@ const MANAGER = [
     "Under <b>Admin</b> (<b>Manage</b> on editor accounts) <b>→ Users &amp; Rules</b> you can add kid accounts by age group (they only see books rated for their age or younger), reset their passwords, and tick what each child should <b>not</b> see: Open Door or Dark Occult, say, and under <b>Hide content</b> whole groups (🗣️ Language, ⚔️ Violence, 🩸 Gore, 🍺 Substance Use, 🧩 Other) or single items like the F-word or self-harm. Hidden books never show up for them, not even in search."],
   ["💾 Importing a Kindle",
     "Plug a Kindle into your computer, open <b>Import books</b>, and pick its <b>documents</b> folder (or bring in a list from Goodreads, Amazon and others). NovelCheck adds the books to a library you name, like \"Kids' Kindle\". It's yours: tick <b>🔒 Private</b> so only you and the admins see it, and manage it under <b>📚 Your libraries</b>."],
+  ["📕 Paper books",
+    "Printed books count too. Open <b>📚 Paper books</b> (under <b>More</b> on a phone), pick or create a library such as \"Living room shelf\", and press <b>▦ Scan barcodes</b>: hold up one book after another and each is added and rated. You can also type a title or ISBN, or take a photo of the cover."],
 ];
 
 const ADMIN = [

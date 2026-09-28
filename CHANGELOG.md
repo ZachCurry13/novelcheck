@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.21.0]
+
+### 📕 Paper books
+- **Your printed books, rated like the rest.** Open **📚 Paper books** (under **More** on a phone), pick or create a library such as "Living room shelf" or "Kids' room", and press **▦ Scan barcodes**. Hold up one book after another: each is looked up, added and rated.
+- **No barcode?** Type the title or ISBN, or take a photo of the cover.
+- **Ratings come in as you scan.** New books are rated one after another, first in line and within your AI's hourly limit, and the list shows each rating as it arrives. Tap a book for its details, or ✕ to take it back off.
+- **Paper books are everywhere your e-books are:** the Library (with a 📕 Paper chip, and **📕 Paper books** under Format), Discover, Up Next and Suggested Reads, and kids see them under their usual rules. **▶ Start Reading** on a paper book just marks it as reading.
+- Parents add paper books; the libraries belong to the family, so every parent can add to them. Import books links here too.
+
 ## [1.20.1]
 
 ### 📱 Phones
