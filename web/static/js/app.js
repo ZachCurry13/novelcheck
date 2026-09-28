@@ -18,6 +18,7 @@ import { renderDeepScanAdmin } from "./deepscanadmin.js";
 import { renderWishlist } from "./wishlist.js";
 import { initBell } from "./notifications.js";
 import { on, applyModules } from "./modules.js";
+import { buildMobileNav, markMobileNav } from "./mobilenav.js";
 
 export const state = { user: null };
 
@@ -57,6 +58,7 @@ function showApp() {
   applyModules(state.user);
   initBell(state);
   $("#admin-tab").textContent = state.user.role === "admin" ? "Admin" : "Manage";
+  buildMobileNav();
   route();
   if (!state.user.guide_seen) openGuide(state);
   checkForUpdates(state);
@@ -71,6 +73,7 @@ async function route() {
     (adminRoutes.has(name) && state.user.role !== "admin") ||
     (moduleRoutes[name] && !on(state.user, moduleRoutes[name]))) name = "library";
   $$("#nav .nav-link").forEach((a) => a.classList.toggle("active", a.dataset.route === name));
+  markMobileNav(name);
   if (typeof currentCleanup === "function") currentCleanup();
   // Fresh container per route so listeners never leak between views.
   const view = document.createElement("div");
@@ -152,6 +155,7 @@ async function submitSetup(e) {
 export async function refreshUser() {
   state.user = await get("/api/me");
   applyModules(state.user);
+  buildMobileNav();
   return state.user;
 }
 

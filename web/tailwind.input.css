@@ -57,3 +57,26 @@
 
 /* Features the admin turned off (Admin → Features); see js/modules.js. */
 .module-off { display: none !important; }
+
+/* Phones: a bottom tab bar (js/mobilenav.js) instead of the long top menu,
+   16px text in fields so iPhones don't zoom in when one is tapped, and room
+   at the bottom so the bar never covers content, messages or the selection bar. */
+.mobile-nav { display: none; }
+@media (max-width: 767px) {
+  #nav { display: none; }
+  .mobile-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex;
+    border-top: 1px solid rgb(30 41 59); background: rgb(2 6 23 / 0.95); backdrop-filter: blur(8px);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mobile-nav a, .mobile-nav button {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
+    padding: 0.5rem 0 0.45rem; font-size: 0.72rem; color: rgb(148 163 184);
+  }
+  .mobile-nav .active { color: rgb(165 180 252); }
+  .mobile-nav .ico { font-size: 1.3rem; line-height: 1; }
+  #app-view { padding-bottom: calc(4.25rem + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(5rem + env(safe-area-inset-bottom)); }
+  .above-tabbar { bottom: calc(3.9rem + env(safe-area-inset-bottom)) !important; }
+  input, select, textarea { font-size: 16px !important; }
+}

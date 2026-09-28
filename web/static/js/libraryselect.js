@@ -15,7 +15,7 @@ export function setupSelect(view, grid, state, reload) {
   let last = null; // the last card clicked, for Shift-click
   const toggleBtn = view.querySelector("#select-toggle");
   const bar = document.createElement("div");
-  bar.className = "fixed inset-x-0 bottom-0 z-30 hidden border-t border-slate-700 bg-slate-900/95 p-3 pb-safe backdrop-blur";
+  bar.className = "above-tabbar fixed inset-x-0 bottom-0 z-30 hidden border-t border-slate-700 bg-slate-900/95 p-3 pb-safe backdrop-blur";
   document.body.append(bar);
 
   const cards = () => [...grid.querySelectorAll("[data-book]")];

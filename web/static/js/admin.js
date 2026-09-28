@@ -30,10 +30,10 @@ export async function renderAdmin(view, state) {
     <div id="titles-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="covers-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="problems-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
-    <nav id="admin-tabs" class="mb-4 flex gap-1 overflow-x-auto border-b border-slate-800">${tabs.map(([k, l]) =>
+    <nav id="admin-tabs" class="mb-4 grid grid-cols-2 gap-1 border-b border-slate-800 sm:flex sm:overflow-x-auto">${tabs.map(([k, l]) =>
       `<button data-tab="${k}" class="nav-link rounded-b-none">${l}</button>`).join("")}</nav>
     <section data-panel="ai" class="space-y-6">
-      <div id="stats" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>
+      <div id="stats" class="grid grid-cols-2 gap-3 lg:grid-cols-4"></div>
       <div id="errors"></div>
       <div class="card flex flex-wrap items-end gap-3">
         <div><label class="label" for="batch-size">Batch size</label>
