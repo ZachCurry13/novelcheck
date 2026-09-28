@@ -1,10 +1,10 @@
 # NovelCheck handoff (2026-09-28, night)
 
-## 0. v1.20 is on `main`, NOT released as a version yet
-- The user merged `feature/v1.20-discover` into `main` on GitHub (PRs #2 and #3), so `:latest` already has v1.20; no `v1.20.0` tag or release exists yet.
+## 0. v1.20.0 released (2026-09-28)
+- The user merged `feature/v1.20-discover` into `main` on GitHub (PRs #2 and #3), then asked for the release: GitHub release v1.20.0 and its image were built on 2026-09-28.
 - PR #3 ("feature v1.20") also committed `.claude/launch.json` (local paths with the Windows username) and `NOVELCHECK_SPEC.local-backup.md` (an old spec copy). A follow-up commit removed both and added them to `.gitignore`; they remain in history (removing that would need a force-push to `main`, which the user hasn't asked for).
 - Built and tested: the Discover tab, card premises (`books.premise`, `content.Version` 2, `blurb.js`), the phone sideways-scroll fix (`:where(.grid)`), the Deep Scan review fix (held scans first, `keep-all`) and title tidying. README, `NOVELCHECK_SPEC.md` (build item 50), `CHANGELOG.md` `[1.20.0]`, the guide and `docs/DISCOVER.md` are done.
-- Next: with the user's OK, release **1.20.0** (`gh workflow run docker.yml --ref main -f version=1.20.0`).
+- Next: the user's priorities from the Gemini manifest (section 2), or the planned order: physical libraries, then parent profiles.
 - The user's *Bridget Jones's Diary* shows Level 0 from llama3.2 3B; advise switching the main model to qwen2.5:7b and re-rating (after 1.20, so one pass adds content details and premises).
 - Release rules are allowed in `.claude/settings.local.json`; run each release command as its own call.
 
