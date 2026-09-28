@@ -5,7 +5,9 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -92,6 +94,18 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 				writeErr(w, http.StatusBadRequest, "books per batch must be a whole number from 0 (all waiting books) to 500")
 				return
 			}
+		}
+		if k == store.KeyAutoRate && v != "" && v != "on" && v != "off" {
+			writeErr(w, http.StatusBadRequest, "automatic rating must be on, off or the default")
+			return
+		}
+		if _, _, ok := analyzer.ParseHours(v); k == store.KeyAutoRateHours && v != "" && !ok {
+			writeErr(w, http.StatusBadRequest, "hours must look like 23-7 (from 23:00 until 07:00)")
+			return
+		}
+		if _, err := time.LoadLocation(v); k == store.KeyAutoRateTZ && v != "" && err != nil {
+			writeErr(w, http.StatusBadRequest, "unknown time zone "+v)
+			return
 		}
 		if k == store.KeyDeepUsers {
 			v = s.normalizeDeepUsers(v) // up to 3 existing accounts

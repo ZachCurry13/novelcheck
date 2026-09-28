@@ -17,13 +17,22 @@ export const messageLog = [];
 
 let toastTimer;
 // toast shows a short message. Errors stay until closed (so they can't vanish
-// before you read them) and every message is kept in messageLog.
-export function toast(msg, isError = false) {
+// before you read them) and every message is kept in messageLog. link, if
+// given ({label, href}), adds a link such as "View Up Next".
+export function toast(msg, isError = false, link = null) {
   const t = $("#toast");
   t.replaceChildren();
   const text = document.createElement("span");
   text.textContent = msg;
   t.append(text);
+  if (link) {
+    const a = document.createElement("a");
+    a.href = link.href;
+    a.textContent = link.label;
+    a.className = "ml-3 whitespace-nowrap font-semibold text-indigo-300 underline";
+    a.onclick = () => t.classList.add("hidden");
+    t.append(a);
+  }
   if (isError) {
     const btn = (label, title, fn) => {
       const b = document.createElement("button");
@@ -53,7 +62,7 @@ export function toast(msg, isError = false) {
   t.classList.toggle("toast-error", isError);
   t.classList.remove("hidden");
   clearTimeout(toastTimer);
-  if (!isError) toastTimer = setTimeout(() => t.classList.add("hidden"), 3500);
+  if (!isError) toastTimer = setTimeout(() => t.classList.add("hidden"), link ? 6000 : 3500);
   messageLog.unshift({ at: new Date(), text: String(msg), isError });
   messageLog.length = Math.min(messageLog.length, 30);
   window.dispatchEvent(new CustomEvent("nc:message"));
@@ -71,12 +80,20 @@ export async function attempt(fn, okMsg) {
   }
 }
 
+// Books without a rating yet: where they are on the way to one.
+const STATUS_CHIPS = {
+  pending: ["chip-wait", "⏳ Waiting", "Waiting to be rated"],
+  queued: ["chip-wait", "⏳ In line", "In line to be rated"],
+  processing: ["chip-busy", "⚡ Rating now…", "The AI is rating this book"],
+  error: ["chip-fail", "⚠ Rating failed", "Rating this book failed; a parent can try again"],
+};
+
 export function classChip(book) {
   if (book.spice_level !== null && book.spice_level !== undefined) return pepperChip(book.spice_level);
   const c = book.classification;
   if (!c) {
-    const label = { queued: "Queued", processing: "Analyzing…", error: "Analysis Error" }[book.status || book.book_status];
-    return `<span class="chip-pending">${esc(label || "Pending Analysis")}</span>`;
+    const [cls, label, tip] = STATUS_CHIPS[book.status || book.book_status] || STATUS_CHIPS.pending;
+    return `<span class="${cls}" data-status title="${tip}">${label}</span>`;
   }
   const cls = { "No Spice": "chip-none", "Closed Door": "chip-closed", "Open Door": "chip-open" }[c] || "chip-pending";
   // Rated before the pepper scale: show the older label until re-rated.

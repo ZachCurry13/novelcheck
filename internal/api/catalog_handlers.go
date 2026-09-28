@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -139,7 +140,11 @@ func (s *Server) handleImportDrive(w http.ResponseWriter, r *http.Request) {
 		}
 		imported++
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"catalog_id": catID, "imported": imported, "skipped": skipped})
+	if imported > 0 {
+		s.Worker.Kick() // automatic rating picks them up now, if it is on
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"catalog_id": catID, "imported": imported, "skipped": skipped,
+		"auto_rate": analyzer.AutoRateOn(s.Store)})
 }
 
 func truncateStr(s string, n int) string {

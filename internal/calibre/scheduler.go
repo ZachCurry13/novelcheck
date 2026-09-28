@@ -16,7 +16,10 @@ import (
 type Syncer struct {
 	Store *store.Store
 	Dir   string // container mount point (NOVELCHECK_CALIBRE_DIR)
-	mu    sync.Mutex
+	// NewBooks, when set, runs after a sync added books and reports whether
+	// they will be rated automatically (it wakes the rating worker).
+	NewBooks func() bool
+	mu       sync.Mutex
 }
 
 // Available reports whether the selected folder is a Calibre library.
@@ -37,8 +40,12 @@ func (s *Syncer) Run() (Result, error) {
 	} else {
 		s.Store.Resolve("calibre-sync")
 		if n := s.Store.BooksCreatedSince(start); n > 0 {
-			s.Store.NotifyRoutine("calibre-new", fmt.Sprintf("Calibre sync added %d new book%s. They're waiting to be rated.",
-				n, map[bool]string{true: "", false: "s"}[n == 1]), "#/library")
+			next := "They're waiting to be rated."
+			if s.NewBooks != nil && s.NewBooks() {
+				next = "They'll be rated automatically."
+			}
+			s.Store.NotifyRoutine("calibre-new", fmt.Sprintf("Calibre sync added %d new book%s. %s",
+				n, map[bool]string{true: "", false: "s"}[n == 1], next), "#/library?spice=Pending")
 		}
 	}
 	b, _ := json.Marshal(summary)

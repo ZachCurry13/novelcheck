@@ -12,6 +12,8 @@ import { seriesText } from "./titlefix.js";
 import { coverImg } from "./covers.js";
 import { setupSelect } from "./libraryselect.js";
 import { blurbHTML } from "./blurb.js";
+import { liveCards } from "./livestatus.js";
+import { refreshActivity } from "./activity.js";
 
 const PAGE = 60;
 
@@ -150,7 +152,10 @@ export async function renderLibrary(view, state) {
     const q = e.target.closest("[data-queue]");
     if (q) {
       e.stopPropagation();
-      await attempt(() => post("/api/queue", { book_id: Number(q.dataset.queue) }), "Added to Up Next");
+      if (await attempt(() => post("/api/queue", { book_id: Number(q.dataset.queue) }))) {
+        q.outerHTML = IN_QUEUE;
+        toast("Added to Up Next", false, { label: "View Up Next", href: "#/queue" });
+      }
       return;
     }
     const c = e.target.closest("[data-book]");
@@ -167,8 +172,9 @@ export async function renderLibrary(view, state) {
     batch.addEventListener("click", async () => {
       const r = await attempt(() => post("/api/admin/analyze-batch"));
       if (!r) return;
-      toast(`Queued ${r.queued} books for analysis`);
+      toast(`Queued ${r.queued} books for rating`);
       setTimeout(() => load(true), 400);
+      refreshActivity();
     });
   }
   // "Show in Library" from Rating errors opens this page filtered to failures.
@@ -180,28 +186,37 @@ export async function renderLibrary(view, state) {
   }
   // Links such as #/library?author=… (from a book's window) open with that filter set.
   const preset = new URLSearchParams(location.hash.split("?")[1] || "");
-  for (const k of ["q", "author", "series", "genre", "kind", "catalog"]) {
+  for (const k of ["q", "author", "series", "genre", "kind", "catalog", "spice"]) {
     if (preset.get(k) && form.elements[k]) form.elements[k].value = preset.get(k);
   }
   if ([...preset.keys()].some((k) => k !== "q")) form.classList.add("filters-open");
   countFilters();
   await load(true);
-  return sel.cleanup;
+  // Parents see ratings arrive on the cards as the AI works.
+  const stopLive = manager ? liveCards(grid, (b) => card(b, on(state.user, "queue")), () => sel.repaint()) : null;
+  if (stopLive) refreshActivity();
+  return () => {
+    stopLive?.();
+    sel.cleanup?.();
+  };
 }
+
+// A book already in your Up Next.
+const IN_QUEUE = `<span class="px-2 py-1 text-lg text-emerald-300" title="In your Up Next" aria-label="In your Up Next">✓</span>`;
 
 function card(b, queueOn) {
   const cats = b.catalogs ? b.catalogs.split(", ").map((c) => `<span class="chip-cat">${esc(c)}</span>`).join(" ") : "";
   return `
-    <article data-book="${b.id}" class="card cursor-pointer transition hover:ring-indigo-600 flex flex-col gap-2">
+    <article data-book="${b.id}" data-state="${esc(b.status || "")}" class="card cursor-pointer transition hover:ring-indigo-600 flex flex-col gap-2">
       <div class="flex items-start justify-between gap-3">
         ${coverImg(b.id, "h-24 w-16")}
         <div class="min-w-0 flex-1">
           <h3 class="font-semibold leading-tight line-clamp-2">${esc(b.title)}</h3>
           <p class="text-sm text-slate-400 truncate">${esc(b.author || "Unknown author")}${seriesText(b) ? ` · <span class="text-sky-300">${esc(seriesText(b))}</span>` : ""}</p>
         </div>
-        ${queueOn ? `<button data-queue="${b.id}" title="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>` : ""}
+        ${!queueOn ? "" : b.in_queue ? IN_QUEUE : `<button data-queue="${b.id}" title="Add to Up Next" aria-label="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>`}
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
+      <div data-chips class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
       ${blurbHTML(b)}
       <div class="mt-auto flex flex-wrap items-center gap-1">${cats} ${formatChips(b)}</div>
     </article>`;

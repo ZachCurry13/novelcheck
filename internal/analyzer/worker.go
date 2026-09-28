@@ -145,12 +145,17 @@ func (w *Worker) Run(ctx context.Context) {
 	for {
 		id, ok := w.pop()
 		if !ok {
+			if w.feed(time.Now()) > 0 { // automatic rating: the next waiting books
+				continue
+			}
 			w.runDone()
 			w.setState("idle", 0, "")
 			select {
 			case <-ctx.Done():
 				return
 			case <-w.wake:
+				continue
+			case <-time.After(feedEvery):
 				continue
 			}
 		}

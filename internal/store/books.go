@@ -165,11 +165,12 @@ func (s *Store) BooksCreatedSince(t time.Time) int {
 	return n
 }
 
-// QueueForAnalysis flips up to limit pending books to 'queued' and returns their ids.
+// QueueForAnalysis flips up to limit pending books to 'queued' and returns
+// their ids: books in someone's Up Next or wishlist first, then the newest.
 func (s *Store) QueueForAnalysis(limit int) ([]int64, error) {
 	var ids []int64
 	if err := s.DB.Select(&ids, `SELECT id FROM books b WHERE status = 'pending' AND NOT `+discoverOnlyCond+`
-		ORDER BY id LIMIT ?`, limit); err != nil {
+		ORDER BY `+rateOrder+` LIMIT ?`, limit); err != nil {
 		return nil, err
 	}
 	for _, id := range ids {

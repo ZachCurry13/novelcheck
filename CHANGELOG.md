@@ -4,6 +4,20 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.22.0]
+
+### ⚡ Books rate themselves
+- **No more "Analyze next batch" to get new books rated.** When the AI has nothing to do, NovelCheck rates the books waiting for a rating by itself: books in someone's Up Next or wishlist first, then the newest. It starts right after a Calibre sync or an import and keeps to the hourly token limit.
+- **On by default with a local AI** (Ollama and the like, which cost nothing). With a paid AI it stays off until you turn it on, so there's no surprise bill. **Admin → AI & Scans → Automatic rating** has the switch and says how many books are waiting.
+- **Quiet hours:** rate automatically only between set hours (say 11 pm to 7 am) so the GPU is free the rest of the day. Check a book, paper books and "Analyze next batch" still work any time.
+- After a Calibre sync or an import, the notice says the new books will be rated automatically, with a **Watch progress** link.
+
+### 👀 See what's happening
+- **Clear status on every unrated book:** ⏳ Waiting, ⏳ In line, ⚡ Rating now… and ⚠ Rating failed, instead of a grey "Pending Analysis".
+- **The Library updates as you watch:** the book being rated shows ⚡, a Deep Scan shows 🧬 Part 4 of 12, and each rating appears on its card as soon as it's saved, without reloading the page.
+- **Activity in the header** for parents: ⚡ 38 while books are being rated (38 waiting), ⏸ while paused for the hourly limit, 🌙 while waiting for the rating hours, and 🧬 4/12 during a Deep Scan. Tap it for the waiting books or the Deep Scan page.
+- **＋ turns into ✓** on Library cards once a book is in your Up Next (and books already there show ✓), with a **View Up Next** link.
+
 ## [1.21.0]
 
 ### 📕 Paper books

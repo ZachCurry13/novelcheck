@@ -70,6 +70,10 @@ func main() {
 			"you can Deep Scan them again from the Deep Scan page.", len(old)), "#/deepscan")
 	}
 	syncer := &calibre.Syncer{Store: st, Dir: cfg.CalibreDir}
+	syncer.NewBooks = func() bool {
+		worker.Kick()
+		return analyzer.AutoRateOn(st)
+	}
 	go syncer.Loop(ctx)
 
 	sampler := sysinfo.New(cfg.DataDir)

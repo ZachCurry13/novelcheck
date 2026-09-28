@@ -14,7 +14,7 @@ const EVERYONE = [
   ["🌶️ What the ratings mean",
     `<p class="mb-2">Books get 0 to 5 peppers for romance and sexual content:</p>
     <ul class="space-y-1">${PEPPERS.map((p) => `<li>${pepperChip(p.n)}</li>`).join("")}
-      <li><span class="chip-pending">Pending Analysis</span>: not rated yet.</li>
+      <li><span class="chip-wait">⏳ Waiting</span> or <span class="chip-busy">⚡ Rating now…</span>: not rated yet; the rating shows up by itself.</li>
     </ul>
     <p class="mt-2">Tap <b>🌶️ What do the peppers mean?</b> in the Library for the full descriptions and examples.</p>
     <p class="mt-2">Purple tags such as <span class="chip-flag">Dark Occult</span> point out other content you may want to know about. Small icons such as ⚔️ violence, 🗣️ language, 🩸 gore, 🍺 drinking or drugs and 🧩 other themes mean the book has some; open the book to see exactly what.</p>`],

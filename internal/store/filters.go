@@ -214,7 +214,8 @@ func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
 	}
 	q := `SELECT ` + bookCols + derivedCols + `, COALESCE((SELECT GROUP_CONCAT(name, ', ') FROM (
 			SELECT DISTINCT c.name FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
-			WHERE cb.book_id = b.id)), '') AS catalogs
+			WHERE cb.book_id = b.id)), '') AS catalogs,
+		EXISTS (SELECT 1 FROM queue_items qv WHERE qv.book_id = b.id AND qv.user_id = ` + strconv.FormatInt(viewerID(viewer), 10) + `) AS in_queue
 		FROM books b WHERE ` + cond + ` ORDER BY ` + order + ` LIMIT ? OFFSET ?`
 	var books []Book
 	err := s.DB.Select(&books, q, append(args, limit, max(f.Offset, 0))...)

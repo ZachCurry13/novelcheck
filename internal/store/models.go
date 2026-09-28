@@ -103,6 +103,7 @@ type Book struct {
 	UpdatedAt       string  `db:"updated_at" json:"updated_at"`
 	Catalogs        string  `db:"catalogs" json:"catalogs"`               // comma-joined names (list queries)
 	Formats         string  `db:"formats" json:"formats"`                 // e.g. "AZW3,EPUB": file formats across copies
+	InQueue         bool    `db:"in_queue" json:"in_queue,omitempty"`     // Library lists: in the viewer's Up Next
 	CalibreCopies   int     `db:"calibre_copies" json:"calibre_copies"`   // Calibre entries for this book (2+ = duplicate)
 	DeleteRequests  int     `db:"delete_requests" json:"delete_requests"` // pending requests to delete it
 	CustomFlags     string  `db:"custom_flags" json:"custom_flags"`       // keys of the family's filters it matches, comma-separated

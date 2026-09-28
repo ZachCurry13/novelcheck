@@ -32,6 +32,7 @@ const SECTIONS = [
   ["ai", "Suggested Reads", [
     ["suggest_mode", "How suggestions under Up Next are picked", "AI picks + books you don't own|AI picks from your library|Free matching only (no AI)", "select"],
   ]],
+  ["ai", "Automatic rating", []],
   ["ai", "Rate Caps & Batching", [
     ["batch_size", "Books per batch (0 = all waiting books)", "20", "number"],
     ["tokens_per_hour_cap", "Max tokens per hour (0 = unlimited)", "25000", "number"],
@@ -81,6 +82,7 @@ const EXTRA = {
   "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,
   "Calibre Library": `<div id="calibre-picker"></div><div id="calibre-server"></div>`,
   Discover: `<div id="discover-admin" class="space-y-2"></div>`,
+  "Automatic rating": `<div id="auto-rate-host" class="space-y-3"></div>`,
   Features: `<p class="text-xs text-slate-400">Turn off what your family doesn't use. It disappears for everyone; kids' content rules always keep applying.</p>`,
 };
 
@@ -104,6 +106,8 @@ export function renderSettingsTab(host, tab, settings, user) {
     llmHost.parentElement.prepend(llmHost); // provider menu first
     initProviderPicker(llmHost, form, settings);
   }
+  const autoHost = $("#auto-rate-host", form);
+  if (autoHost) import("./autorateadmin.js").then((m) => m.renderAutoRate(autoHost, settings));
   const discoverHost = $("#discover-admin", form);
   if (discoverHost) import("./discoveradmin.js").then((m) => m.renderDiscoverAdmin(discoverHost, form));
   const backupHost = $("#backup-preset-host", form);

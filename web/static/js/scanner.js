@@ -186,7 +186,9 @@ export async function renderImport(view, state) {
     const r = await attempt(() => post("/api/import/drive", body));
     e.target.disabled = false;
     if (r) {
-      toast(`Imported ${r.imported} books${r.skipped ? `, skipped ${r.skipped}` : ""}`);
+      const skipped = r.skipped ? `, skipped ${r.skipped}` : "";
+      if (r.auto_rate && r.imported) toast(`Imported ${r.imported} books${skipped}. They'll be rated automatically.`, false, { label: "Watch progress", href: "#/library?spice=Pending" });
+      else toast(`Imported ${r.imported} books${skipped}`);
       location.hash = `#/library`;
     }
   });

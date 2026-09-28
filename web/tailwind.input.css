@@ -23,6 +23,10 @@
   .chip-closed { @apply chip bg-amber-900/60 text-amber-300; }
   .chip-open { @apply chip bg-rose-900/60 text-rose-300; }
   .chip-pending { @apply chip bg-slate-800 text-slate-400; }
+  .chip-wait { @apply chip bg-amber-900/50 text-amber-200 ring-1 ring-amber-700/60; }
+  .chip-busy { @apply chip bg-indigo-900/70 text-indigo-100 ring-1 ring-indigo-500 motion-safe:animate-pulse; }
+  .chip-fail { @apply chip bg-rose-900/60 text-rose-200; }
+  .chip-deep { @apply chip bg-teal-900/60 text-teal-200 ring-1 ring-teal-700/60; }
   .chip-flag { @apply chip bg-violet-900/60 text-violet-300; }
   .chip-cat { @apply chip bg-sky-900/50 text-sky-300; }
   .chip-fmt { @apply chip rounded-md bg-slate-800 font-mono text-[10px] tracking-wide text-slate-300; }

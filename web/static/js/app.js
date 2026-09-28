@@ -22,6 +22,7 @@ import { initBell } from "./notifications.js";
 import { on, applyModules } from "./modules.js";
 import { buildMobileNav, markMobileNav } from "./mobilenav.js";
 import { keepUpToDate } from "./appupdate.js";
+import { initActivity } from "./activity.js";
 
 export const state = { user: null };
 
@@ -62,6 +63,7 @@ function showApp() {
   $$(".admin-only").forEach((el) => el.classList.toggle("hidden", state.user.role !== "admin"));
   applyModules(state.user);
   initBell(state);
+  initActivity(state);
   $("#admin-tab").textContent = state.user.role === "admin" ? "Admin" : "Manage";
   buildMobileNav();
   route();

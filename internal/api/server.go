@@ -82,6 +82,7 @@ func (s *Server) Router() http.Handler {
 
 			r.Get("/books", s.handleListBooks)
 			r.Get("/books/facets", s.handleBookFacets)
+			r.Get("/books/states", s.handleBookStates)
 			r.Post("/books/bulk", s.handleBulkBooks)
 			r.Get("/books/{id}", s.handleGetBook)
 			r.Get("/books/{id}/download", s.handleDownload)
@@ -130,6 +131,7 @@ func (s *Server) Router() http.Handler {
 			r.Group(func(r chi.Router) {
 				r.Use(auth.RequireManager)
 				r.Post("/check", s.handleCheck)
+				r.Get("/activity", s.handleActivity)
 				r.Post("/wishlist/{id}/{action}", s.handleDecideWish)
 				r.Get("/admin/users/{id}/opds", s.handleUserOPDS)
 				r.Post("/catalogs", s.handleCreateCatalog)
