@@ -1,11 +1,12 @@
 # NovelCheck handoff (2026-09-28, night)
 
-## 0. In progress: v1.20 on `feature/v1.20-discover` (committed, NOT released)
-- Built and tested: the Discover tab (`internal/discover`, `internal/store/discover.go`, `internal/api/discover_handlers.go`, `web/static/js/discover.js`, `discoveradmin.js`, `docs/DISCOVER.md`), card blurbs (`books.premise`, prompt `premise`, `content.Version` 2, `web/static/js/blurb.js`), the phone sideways-scroll fix (`:where(.grid)` in `tailwind.input.css`), the Deep Scan review fix (held scans always listed first, `keep-all`), and title tidying (`**`, ": A Novel") in `titles.Parse`.
-- Go tests pass on Windows except the 6 known ones. Checked in the browser at 360px with stubbed data.
-- Left to do: README rows (Discover, blurbs), `NOVELCHECK_SPEC.md` (Discover section, premise, content version 2, owned/discover-only conditions, Deep Scan list order, build item 50), then push, check CI, and ask the user to release **1.20.0**. `CHANGELOG.md` `[1.20.0]` and the guide are done.
-- The user's *Bridget Jones's Diary* shows Level 0 from llama3.2 3B; advise switching the main model to qwen2.5:7b and re-rating.
-- Release rules are allowed in `.claude/settings.local.json` (may need a new session to load); run each release command as its own call.
+## 0. v1.20 is on `main`, NOT released as a version yet
+- The user merged `feature/v1.20-discover` into `main` on GitHub (PRs #2 and #3), so `:latest` already has v1.20; no `v1.20.0` tag or release exists yet.
+- PR #3 ("feature v1.20") also committed `.claude/launch.json` (local paths with the Windows username) and `NOVELCHECK_SPEC.local-backup.md` (an old spec copy). A follow-up commit removed both and added them to `.gitignore`; they remain in history (removing that would need a force-push to `main`, which the user hasn't asked for).
+- Built and tested: the Discover tab, card premises (`books.premise`, `content.Version` 2, `blurb.js`), the phone sideways-scroll fix (`:where(.grid)`), the Deep Scan review fix (held scans first, `keep-all`) and title tidying. README, `NOVELCHECK_SPEC.md` (build item 50), `CHANGELOG.md` `[1.20.0]`, the guide and `docs/DISCOVER.md` are done.
+- Next: with the user's OK, release **1.20.0** (`gh workflow run docker.yml --ref main -f version=1.20.0`).
+- The user's *Bridget Jones's Diary* shows Level 0 from llama3.2 3B; advise switching the main model to qwen2.5:7b and re-rating (after 1.20, so one pass adds content details and premises).
+- Release rules are allowed in `.claude/settings.local.json`; run each release command as its own call.
 
 ## 1. Goal and active task
 NovelCheck (Go + vanilla JS PWA, self-hosted on the user's TrueNAS) rates a family's Calibre library for romance ("peppers") and content.
