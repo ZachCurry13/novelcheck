@@ -36,9 +36,17 @@ func (c Cache) OpenLibrary(ctx context.Context, isbn string) (string, os.FileInf
 	if base == "" {
 		base = openLibrary
 	}
+	return c.fetch(ctx, base+"/b/isbn/"+isbn+"-M.jpg?default=false", out, miss)
+}
+
+// fetch downloads an image to out once; a 404 is remembered in miss.
+func (c Cache) fetch(ctx context.Context, url, out, miss string) (string, os.FileInfo, bool) {
 	ctx, cancel := context.WithTimeout(ctx, 8*time.Second)
 	defer cancel()
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, base+"/b/isbn/"+isbn+"-M.jpg?default=false", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", nil, false
+	}
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", nil, false // offline: try again next time

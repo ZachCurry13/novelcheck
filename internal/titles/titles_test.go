@@ -38,6 +38,12 @@ func TestParse(t *testing.T) {
 		{"The Book Thief", "The Book Thief", "", 0},
 		{"Book Club Picks (Book Club Edition)", "Book Club Picks (Book Club Edition)", "", 0},
 		{"Book 2", "Book 2", "", 0},
+		// Leftover bold marks and a store's "A Novel" label go.
+		{"**Bridget Jones's Diary : A Novel", "Bridget Jones's Diary", "", 0},
+		{"The Paris Library: A Novel", "The Paris Library", "", 0},
+		{"Circe (A Novel)", "Circe", "", 0},
+		{"A Novel", "A Novel", "", 0},
+		{"Wolf Hall: A Novel of Tudor England", "Wolf Hall: A Novel of Tudor England", "", 0},
 		{"  Plain   Title  ", "Plain Title", "", 0},
 	}
 	for _, c := range cases {

@@ -6,6 +6,7 @@ import { $, esc, attempt, classChip, flagChips, ageChip } from "./ui.js";
 import { PEPPERS, whyChip, openPepperGuide } from "./peppers.js";
 import { loadFlags, customChips } from "./customflags.js";
 import { loadContent, contentLine } from "./content.js";
+import { blurbHTML } from "./blurb.js";
 import { openBook } from "./bookdialog.js";
 import { liveBlocker, scanLive } from "./barcode.js";
 import { coverImg } from "./covers.js";
@@ -156,7 +157,8 @@ function resultCard(b, res) {
     <div class="flex flex-wrap gap-1">${classChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
     ${b.spice_reason ? `<p class="text-sm"><b>Why:</b> ${esc(b.spice_reason)}</p>` : ""}
     ${contentLine(b)}
-    ${b.summary_verdict ? `<p class="rounded-lg bg-slate-800 p-3 text-slate-200">${esc(b.summary_verdict)}</p>` : ""}
+    ${blurbHTML(b, "rounded-lg bg-slate-800 p-3 text-slate-200")}
+    ${b.summary_verdict ? `<p class="text-xs text-slate-400"><b class="text-slate-300">Rating note:</b> ${esc(b.summary_verdict)}</p>` : ""}
     <p class="text-xs text-slate-400">${esc(p.name)}: ${esc(p.desc)} <button data-act="peppers" class="underline">About peppers</button></p>
     ${where}
     <div class="flex flex-wrap gap-2">${actions(res)}<button data-act="open" class="btn-secondary">Open details</button>

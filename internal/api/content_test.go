@@ -35,7 +35,7 @@ func TestContentAPI(t *testing.T) {
 		t.Fatalf("empty ticks: %d %v", res.StatusCode, b)
 	}
 	if res, b := admin.do("PUT", verdict, map[string]any{"spice_level": 1, "content": []string{"war", "blood"}}, true); res.StatusCode != 200 ||
-		b["content_version"].(float64) != 1 || b["content"] != "blood:parent,war:parent" && b["content"] != "war:parent,blood:parent" {
+		b["content_version"].(float64) != 2 || b["content"] != "blood:parent,war:parent" && b["content"] != "war:parent,blood:parent" {
 		t.Fatalf("ticked items: %d %v", res.StatusCode, b)
 	}
 	if res, b := admin.do("PUT", verdict, map[string]any{"spice_level": 1, "content": []string{}}, true); res.StatusCode != 200 || b["content"] != "" {

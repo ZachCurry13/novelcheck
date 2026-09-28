@@ -219,3 +219,15 @@ func (s *Server) deepModelWarning(ctx context.Context) (warning, suggest string)
 	return fmt.Sprintf("Deep Scan uses %s (%s parameters). Models this small often mistake tense or violent scenes for romance. "+
 		"A 7B or bigger model is much more reliable, e.g. qwen2.5:7b or llama3.1:8b (about 5 GB), if your GPU fits it.", model, current.Params), suggest
 }
+
+// handleKeepAllDeepScans turns down every scan waiting for review: each book
+// keeps the rating it had.
+func (s *Server) handleKeepAllDeepScans(w http.ResponseWriter, r *http.Request) {
+	n, err := s.Store.KeepAllOldRatings(auth.UserFrom(r).Username)
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	s.Store.Resolve("deep-scan")
+	writeJSON(w, http.StatusOK, map[string]int{"kept": n})
+}

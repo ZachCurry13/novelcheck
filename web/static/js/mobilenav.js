@@ -2,8 +2,8 @@
 // because the full top menu doesn't fit a phone screen. It's built from the
 // top menu's links, so it shows exactly what this account may open.
 
-const MAIN = [["check", "📷", "Check"], ["library", "📚", "Library"], ["queue", "▶️", "Up Next"], ["wishlist", "⭐", "Wishlist"], ["profile", "👤", "Profile"]];
-const ICON = { import: "💾", admin: "🛠️", usage: "📈", system: "🩺", profile: "👤", wishlist: "⭐" };
+const MAIN = [["check", "📷", "Check"], ["library", "📚", "Library"], ["discover", "🧭", "Discover"], ["queue", "▶️", "Up Next"], ["wishlist", "⭐", "Wishlist"], ["profile", "👤", "Profile"]];
+const ICON = { discover: "🧭", queue: "▶️", import: "💾", admin: "🛠️", usage: "📈", system: "🩺", profile: "👤", wishlist: "⭐" };
 
 let moreRoutes = [];
 

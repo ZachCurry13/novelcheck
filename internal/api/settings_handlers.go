@@ -14,7 +14,7 @@ var numericKeys = map[string]bool{
 	store.KeyPriceInputPerM: true, store.KeyPriceOutputPerM: true, store.KeyBatchSize: true,
 	store.KeyTokensPerHour: true, store.KeyScanDelaySeconds: true, store.KeyLLMTimeoutSeconds: true,
 	store.KeyBackupPriceIn: true, store.KeyBackupPriceOut: true, store.KeySMTPPort: true,
-	store.KeyCalibrePollHours: true, store.KeySessionDays: true,
+	store.KeyCalibrePollHours: true, store.KeySessionDays: true, store.KeyDiscoverDaily: true,
 }
 
 // editableKeys are the settings the admin panel may change.

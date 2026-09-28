@@ -11,6 +11,7 @@ const (
 	KeyModuleParents  = "module_parents"        // kids' accounts, age groups, parents' notes
 	KeyModuleSuggest  = "module_suggestions"    // 💡 Suggested Reads under Up Next
 	KeyModuleTaste    = "module_taste"          // 🎯 taste profile: rate books to steer suggestions
+	KeyModuleDiscover = "module_discover"       // 🧭 Discover tab: best sellers, classics, new and popular books
 	KeyNotifyRoutine  = "notify_routine"        // 🔔 also lists routine events, not just problems
 )
 
@@ -23,6 +24,7 @@ var moduleNames = map[string]string{
 	KeyModuleParents:  "parents",
 	KeyModuleSuggest:  "suggestions",
 	KeyModuleTaste:    "taste",
+	KeyModuleDiscover: "discover",
 }
 
 func init() {

@@ -9,15 +9,17 @@ const EVERYONE = [
     "NovelCheck helps you pick books that fit your family. Each book gets a simple rating for romance (\"spice\") and a few content flags, so you know what's inside before you start reading."],
   ["📚 The Library",
     "The <b>Library</b> tab shows every book with its cover. Search by title, author, series or tag, or narrow it down by <b>genre</b>, <b>fiction or nonfiction</b>, <b>author</b>, <b>series</b> and more. Tick the <b>Hide</b> boxes (like <b>Nudity</b>) to hide books that include those things. <b>☑ Select</b> lets you pick several books at once, to add them to Up Next or ask to delete them."],
+  ["🧭 Discover",
+    "The <b>Discover</b> tab suggests books: what's popular now, new on the best-seller lists, top teen and kids' books, classics, and what's new or popular in your family. Your content rules apply. Tap <b>⭐ Wishlist</b> to ask for a book you don't have."],
   ["🌶️ What the ratings mean",
     `<p class="mb-2">Books get 0 to 5 peppers for romance and sexual content:</p>
     <ul class="space-y-1">${PEPPERS.map((p) => `<li>${pepperChip(p.n)}</li>`).join("")}
       <li><span class="chip-pending">Pending Analysis</span>: not rated yet.</li>
     </ul>
     <p class="mt-2">Tap <b>🌶️ What do the peppers mean?</b> in the Library for the full descriptions and examples.</p>
-    <p class="mt-2">Purple tags such as <span class="chip-flag">Dark Occult</span> point out other content you may want to know about.</p>`],
+    <p class="mt-2">Purple tags such as <span class="chip-flag">Dark Occult</span> point out other content you may want to know about. Small icons such as ⚔️ violence, 🗣️ language, 🩸 gore, 🍺 drinking or drugs and 🧩 other themes mean the book has some; open the book to see exactly what.</p>`],
   ["🔎 Book details",
-    "Tap any book to open it. You'll see its summary, the rating, and which libraries or devices it's on. Tap <b>＋</b> or <b>Add to Up Next</b> to save it for later."],
+    "Tap any book to open it. You'll see what it's about, its rating and content details, and which libraries or devices it's on. Tap <b>＋</b> or <b>Add to Up Next</b> to save it for later."],
   ["▶️ Up Next",
     "The <b>Up Next</b> tab is your reading list. Drag the <b>⠿</b> handle to reorder books. When you're ready, press <b>▶ Start Reading</b>. If you've set up your Kindle email, the book is sent to your Kindle. Below the list, <b>💡 Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (and a quick \"Why not?\" helps it learn)."],
   ["👤 Your profile",

@@ -81,6 +81,7 @@ type Book struct {
 	DarkOccult      bool    `db:"dark_occult" json:"dark_occult"`
 	DemonicPresence bool    `db:"demonic_presence" json:"demonic_presence"`
 	SummaryVerdict  string  `db:"summary_verdict" json:"summary_verdict"`
+	Premise         string  `db:"premise" json:"premise"` // spoiler-free "what it's about", for cards
 	Approved        bool    `db:"approved" json:"approved"`
 	ApprovedBy      string  `db:"approved_by" json:"approved_by"`
 	AgeLevel        int     `db:"age_level" json:"age_level"`
@@ -131,6 +132,7 @@ type Analysis struct {
 	DarkOccult      bool
 	DemonicPresence bool
 	SummaryVerdict  string
+	Premise         string // spoiler-free "what it's about"; "" keeps the one the book has
 	Model           string
 	CustomFlags     []string       // keys of the family's filters the book matches
 	Content         []string       // content item keys the book contains

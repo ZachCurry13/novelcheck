@@ -51,6 +51,10 @@ const SECTIONS = [
     ["calibre_poll_hours", "Sync every N hours (0 = manual only)", "6", "number"],
     ["calibre_web_url", "Calibre-Web address (optional)", "http://192.168.1.10:8083 · adds \"Open in Calibre-Web\" to each book"],
   ]],
+  ["delivery", "Discover", [
+    ["nyt_api_key", "New York Times Books API key (optional, free)", "Paste the key from developer.nytimes.com", "password"],
+    ["discover_daily_ratings", "Discover books the AI rates per day (0 = none)", "30", "number"],
+  ]],
   ["system", "Features", [
     ["module_queue", "Up Next reading queue", "", "bool"],
     ["module_send_to_kindle", "Send-to-Kindle email delivery", "", "bool"],
@@ -59,6 +63,7 @@ const SECTIONS = [
     ["module_parents", "Parent tools (kids' accounts, age groups, parents' notes)", "", "bool"],
     ["module_suggestions", "💡 Suggested Reads under Up Next", "", "bool"],
     ["module_taste", "🎯 Taste profile: people can rate books they know to improve their suggestions (uses no AI)", "", "bool"],
+    ["module_discover", "🧭 Discover tab: best sellers, classics, and the family's new and popular books", "", "bool"],
     ["notify_routine", "🔔 Also show everyday events: new books from Calibre, rating finished, someone started a book", "", "bool"],
   ]],
   ["system", "Sign-in & Updates", [
@@ -68,13 +73,14 @@ const SECTIONS = [
 ];
 
 // Cards that only matter while a feature is on.
-const SECTION_MODULE = { "SMTP / Send-to-Kindle": "send_to_kindle" };
+const SECTION_MODULE = { "SMTP / Send-to-Kindle": "send_to_kindle", Discover: "discover" };
 
 const EXTRA = {
   "LLM Analysis Engine": `<div id="llm-preset-host"></div>`,
   "Backup AI (optional)": `<p class="text-xs text-slate-400" data-when="backup_llm_enabled">Tried only when the main AI fails on a book. If the main server is switched off, NovelCheck goes straight to the backup. You'll get a 🔔 notice when the backup is used.</p><div id="backup-preset-host" data-when="backup_llm_enabled"></div>`,
   "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,
   "Calibre Library": `<div id="calibre-picker"></div><div id="calibre-server"></div>`,
+  Discover: `<div id="discover-admin" class="space-y-2"></div>`,
   Features: `<p class="text-xs text-slate-400">Turn off what your family doesn't use. It disappears for everyone; kids' content rules always keep applying.</p>`,
 };
 
@@ -98,6 +104,8 @@ export function renderSettingsTab(host, tab, settings, user) {
     llmHost.parentElement.prepend(llmHost); // provider menu first
     initProviderPicker(llmHost, form, settings);
   }
+  const discoverHost = $("#discover-admin", form);
+  if (discoverHost) import("./discoveradmin.js").then((m) => m.renderDiscoverAdmin(discoverHost, form));
   const backupHost = $("#backup-preset-host", form);
   if (backupHost) {
     // Under the on/off switch: the note, then the provider menu.

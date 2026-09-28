@@ -130,7 +130,7 @@ func TestStarterRulesAndContentChecks(t *testing.T) {
 	if !store.KeepsRating(b) || store.ContentChecked(b) {
 		t.Fatalf("hand-rated book: %+v", b)
 	}
-	_ = s.SaveContent(hand, []string{"alcohol"}, store.SourceAI)
+	_ = s.SaveContent(hand, []string{"alcohol"}, store.SourceAI, "")
 	if ids, _ = s.RerateCandidates(); len(ids) != 0 {
 		t.Fatalf("after the content check: %v", ids)
 	}

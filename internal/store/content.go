@@ -46,9 +46,15 @@ func (s *Store) setBookContent(bookID int64, keys []string, source string, amoun
 	return err
 }
 
-// SaveContent stores only a book's content items, leaving its peppers and
-// flags alone (the content check for Deep Scanned and hand-rated books).
-func (s *Store) SaveContent(bookID int64, keys []string, source string) error {
+// SaveContent stores only a book's content items and premise, leaving its
+// peppers and flags alone (the content check for Deep Scanned and hand-rated
+// books). An empty premise keeps the one the book has.
+func (s *Store) SaveContent(bookID int64, keys []string, source, premise string) error {
+	if premise = strings.TrimSpace(premise); premise != "" {
+		if _, err := s.DB.Exec(`UPDATE books SET premise = ? WHERE id = ?`, premise, bookID); err != nil {
+			return err
+		}
+	}
 	return s.setBookContent(bookID, keys, source, nil)
 }
 

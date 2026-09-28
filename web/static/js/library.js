@@ -11,6 +11,7 @@ import { deepChip } from "./deepscan.js";
 import { seriesText } from "./titlefix.js";
 import { coverImg } from "./covers.js";
 import { setupSelect } from "./libraryselect.js";
+import { blurbHTML } from "./blurb.js";
 
 const PAGE = 60;
 
@@ -200,7 +201,7 @@ function card(b, queueOn) {
         ${queueOn ? `<button data-queue="${b.id}" title="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>` : ""}
       </div>
       <div class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
-      ${b.summary_verdict ? `<p class="text-sm text-slate-300 line-clamp-3">${esc(b.summary_verdict)}</p>` : ""}
+      ${blurbHTML(b)}
       <div class="mt-auto flex flex-wrap items-center gap-1">${cats} ${formatChips(b)}</div>
     </article>`;
 }

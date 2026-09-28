@@ -88,7 +88,7 @@ func (s *Server) handleImportDrive(w http.ResponseWriter, r *http.Request) {
 	catID := body.CatalogID
 	if catID == 0 {
 		name, ok := validCatalogName(body.CatalogName)
-		if !ok || strings.EqualFold(name, store.CalibreCatalogName) || strings.EqualFold(name, store.LookedUpCatalog) {
+		if !ok || store.ReservedCatalogName(name) {
 			writeErr(w, http.StatusBadRequest, "choose a library or enter a valid new library name")
 			return
 		}

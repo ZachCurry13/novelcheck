@@ -5,7 +5,6 @@ package api
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -74,7 +73,7 @@ func (s *Server) handleUpdateCatalog(w http.ResponseWriter, r *http.Request) {
 	}
 	if body.Name != nil {
 		name, valid := validCatalogName(*body.Name)
-		if !valid || strings.EqualFold(name, store.CalibreCatalogName) || strings.EqualFold(name, store.LookedUpCatalog) {
+		if !valid || store.ReservedCatalogName(name) {
 			writeErr(w, http.StatusBadRequest, "invalid library name")
 			return
 		}
