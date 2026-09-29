@@ -33,14 +33,16 @@ export async function openBook(id, state, onChange) {
   // One row per catalog entry (a Calibre book id, or a Kindle/drive catalog), listing its formats.
   const entries = new Map();
   for (const c of data.copies.filter((c) => !HIDDEN_LISTS.includes(c.catalog_name))) {
-    const key = c.source === "calibre" ? `${c.catalog_id}#${c.external_id}` : String(c.catalog_id);
+    const key = (c.source === "calibre" ? `${c.catalog_id}#${c.external_id}` : String(c.catalog_id)) + (c.from_box ? "|box" : "");
     if (!entries.has(key)) entries.set(key, { ...c, formats: [], paths: [] });
     const e = entries.get(key);
     if (c.format && c.format !== "list") e.formats.push(c.format === "paper" ? "📕 Paper" : c.format.toUpperCase());
     if (c.path && c.path !== "paper" && !c.path.startsWith("list:") && !c.path.startsWith("calibre-entry:")) e.paths.push(c.path);
   }
-  const calibreCount = [...entries.values()].filter((e) => e.source === "calibre").length;
-  const calibreIds = [...entries.values()].filter((e) => e.source === "calibre" && /^\d+$/.test(e.external_id)).map((e) => e.external_id);
+  // A split box set's book shows the box set's copies (📦) but never edits or removes them.
+  const own = [...entries.values()].filter((e) => !e.from_box);
+  const calibreCount = own.filter((e) => e.source === "calibre").length;
+  const calibreIds = own.filter((e) => e.source === "calibre" && /^\d+$/.test(e.external_id)).map((e) => e.external_id);
   // Only looked up (Check a book) or on a Discover list, not owned: offer the
   // wishlist, never deleting or removing it. The server knows.
   const owned = Boolean(data.owned);
@@ -52,7 +54,8 @@ export async function openBook(id, state, onChange) {
         ${e.source === "calibre" && e.external_id ? `<span class="text-xs text-slate-500">Calibre #${esc(e.external_id)}</span>` : ""}
         ${cw && e.source === "calibre" && /^\d+$/.test(e.external_id) ? `<a href="${esc(cw)}/book/${e.external_id}" target="_blank" rel="noopener noreferrer" class="text-xs text-sky-300 underline">Open in Calibre-Web ↗</a>` : ""}
         ${e.formats.length ? e.formats.map((f) => `<span class="chip-fmt">${esc(f)}</span>`).join(" ") : `<span class="text-xs text-slate-500">no file</span>`}
-        ${(data.editable_catalogs || []).includes(e.catalog_id) && e.source !== "calibre" ? `<button type="button" data-act="remove-from" data-cat="${e.catalog_id}" class="text-xs text-rose-300 underline">Remove from this library</button>` : ""}
+        ${e.from_box ? `<span class="text-xs text-slate-400">📦 in the box set “${esc(e.from_box)}”</span>` : ""}
+        ${!e.from_box && (data.editable_catalogs || []).includes(e.catalog_id) && e.source !== "calibre" ? `<button type="button" data-act="remove-from" data-cat="${e.catalog_id}" class="text-xs text-rose-300 underline">Remove from this library</button>` : ""}
       </div>
       ${isAdmin && realPaths(e).length ? `<p class="mt-0.5 break-all text-xs text-slate-500">${realPaths(e).map(esc).join("<br>")}</p>` : ""}
     </li>`).join("");
@@ -89,6 +92,8 @@ export async function openBook(id, state, onChange) {
         <p class="text-sm leading-relaxed text-slate-300 whitespace-pre-line">${esc(b.blurb || b.description)}</p></div>` : ""}
       ${bookCollectionsHTML(data.collections || [], manager)}
       <div><span class="label">In libraries</span><ul class="space-y-2">${copies || "<li class='text-sm text-slate-500'>Not in your libraries yet</li>"}</ul>${dupNote}
+        ${manager && data.box_state === "found" ? `<button type="button" data-act="box-split" class="mt-1 block text-xs font-semibold text-sky-300 underline">📦 This is a box set: split it into its books…</button>` : ""}
+        ${manager && data.box_state === "split" ? `<p class="mt-1 text-xs text-slate-400">📦 Split into its books (they show in the Library instead). <button type="button" data-act="box-split" class="underline">Change</button></p>` : ""}
         ${manager ? `<button type="button" data-act="same-as" class="mt-1 text-xs text-slate-400 underline">🔗 Same book as another title? (a TV tie-in, a reissue)</button>` : ""}</div>
       ${b.analysis_model ? `<p class="text-xs text-slate-500">${b.analysis_model.startsWith("manual: ")
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : b.analysis_model.startsWith("deep: ") ? "🧬 Deep Scanned (whole book) by " + esc(b.analysis_model.slice(6)) : "Rated from the description by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
@@ -128,6 +133,8 @@ export async function openBook(id, state, onChange) {
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (act === "rerate-big") {
       if (await attempt(() => post(`/api/books/${b.id}/rerate-big`), "Re-rating on the Deep Scan machine; the new rating shows when it's done")) e.target.closest("[data-act]").remove();
+    } else if (act === "box-split") {
+      import("./boxsets.js").then((m) => m.openBoxSets(refresh, b.id));
     } else if (act === "same-as") {
       import("./sameas.js").then((m) => m.openSameAs(b, (kept) => {
         dlg.close();

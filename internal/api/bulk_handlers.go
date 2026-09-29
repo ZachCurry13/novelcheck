@@ -91,7 +91,7 @@ func (s *Server) bulkDeep(b *store.Book, u *store.User, reason string) string {
 // bulkDelete takes a book out of the libraries u owns; a book that isn't in
 // any of them gets a delete request instead.
 func (s *Server) bulkDelete(b *store.Book, u *store.User, reason string, owners map[int64]*int64) string {
-	copies, err := s.Store.BookCopies(b.ID)
+	copies, err := s.Store.OwnCopies(b.ID)
 	if err != nil {
 		return "skipped"
 	}

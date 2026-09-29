@@ -89,7 +89,7 @@ func (s *Store) PendingDeletes() ([]DeleteGroup, error) {
 				continue
 			}
 			g := DeleteGroup{BookID: b.ID, Title: b.Title, Author: b.Author, Formats: b.Formats, CalibreIDs: []string{}}
-			copies, _ := s.BookCopies(b.ID)
+			copies, _ := s.OwnCopies(b.ID)
 			seen := map[string]bool{}
 			var cats []string
 			for _, c := range copies {

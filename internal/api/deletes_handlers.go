@@ -123,7 +123,7 @@ func (s *Server) handleDecideDeletes(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				continue
 			}
-			copies, _ := s.Store.BookCopies(bid)
+			copies, _ := s.Store.OwnCopies(bid)
 			found := false
 			for _, c := range copies {
 				if c.Source != "calibre" {

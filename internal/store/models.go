@@ -140,6 +140,7 @@ type BookCopy struct {
 	Path        string `db:"path" json:"path"`
 	Format      string `db:"format" json:"format"`
 	ExternalID  string `db:"external_id" json:"external_id"`
+	FromBox     string `db:"from_box" json:"from_box,omitempty"` // the box set whose copy this is (a split box set's book)
 }
 
 // Analysis is the structured LLM verdict persisted onto a book.

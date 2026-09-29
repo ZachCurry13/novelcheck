@@ -113,9 +113,10 @@ func visibilityClause(u *User) (string, []any) {
 	// Private libraries: a book only in someone else's private library is
 	// seen by its owner and the admins only.
 	if u.Role != RoleAdmin {
-		clause += ` AND (NOT EXISTS (SELECT 1 FROM catalog_books pn WHERE pn.book_id = b.id)
+		// (A split box set's book is where the box set is.)
+		clause += ` AND (NOT EXISTS (SELECT 1 FROM catalog_books pn WHERE pn.book_id = b.id OR pn.book_id IN (SELECT pm.box_id FROM box_members pm WHERE pm.book_id = b.id))
 			OR EXISTS (SELECT 1 FROM catalog_books pv JOIN catalogs pc ON pc.id = pv.catalog_id
-				WHERE pv.book_id = b.id AND (pc.private = 0 OR pc.owner_id = ?)))`
+				WHERE (pv.book_id = b.id OR pv.book_id IN (SELECT pm.box_id FROM box_members pm WHERE pm.book_id = b.id)) AND (pc.private = 0 OR pc.owner_id = ?)))`
 		args = append(args, u.ID)
 	}
 	return clause, args
@@ -127,6 +128,7 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	if f.CatalogID == 0 && f.Event == 0 {
 		where = append(where, "NOT "+discoverOnlyCond) // Discover books show on the Discover tab
 	}
+	where = append(where, "NOT "+splitBoxCond) // its books show instead
 	var args []any
 	if f.Event > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM event_books fe WHERE fe.book_id = b.id AND fe.event_id = ?)")

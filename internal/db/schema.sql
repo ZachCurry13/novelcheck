@@ -413,3 +413,22 @@ CREATE TABLE IF NOT EXISTS book_aliases (
     norm_key TEXT PRIMARY KEY,
     book_id  INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE
 );
+
+-- Box sets (omnibus editions, "Books 1-3"): found by title, split into their
+-- books only after a parent confirms. A split box set's books share its
+-- files and count as owned wherever the box set is.
+CREATE TABLE IF NOT EXISTS box_sets (
+    book_id    INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
+    state      TEXT NOT NULL DEFAULT 'found' CHECK (state IN ('found', 'split', 'not_box')),
+    proposal   TEXT NOT NULL DEFAULT '[]',
+    decided_by TEXT NOT NULL DEFAULT '',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS box_members (
+    box_id   INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    book_id  INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    position INTEGER NOT NULL DEFAULT 0,
+    created  INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (box_id, book_id)
+);
+CREATE INDEX IF NOT EXISTS idx_box_members_book ON box_members(book_id);

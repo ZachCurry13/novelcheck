@@ -74,7 +74,7 @@ func (r *Runner) Run(ctx context.Context) {
 
 // EPUBFor finds the book's EPUB inside the Calibre library.
 func (r *Runner) EPUBFor(bookID int64) (string, bool) {
-	copies, err := r.Store.BookCopies(bookID)
+	copies, err := r.Store.OwnCopies(bookID) // not a box set's file: that's the whole box
 	if err != nil {
 		return "", false
 	}

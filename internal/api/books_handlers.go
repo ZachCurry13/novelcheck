@@ -100,6 +100,7 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		if ai, ok := s.Store.DeepAI(); ok {
 			out["big_model"] = ai.Models[0] // "Re-rate with the big model"
 		}
+		out["box_state"] = s.Store.BoxState(id) // a box set: "found" (split it?) or "split"
 	}
 	writeJSON(w, http.StatusOK, out)
 }

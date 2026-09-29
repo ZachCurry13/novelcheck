@@ -29,7 +29,7 @@ type SeriesBook struct {
 // seriesWhere is the series' books the family has that the viewer may see.
 func seriesWhere(u *User) (string, []any) {
 	vis, args := visibilityClause(u)
-	return ` AND b.series != '' AND ` + ownedCond + vis, args
+	return ` AND b.series != '' AND NOT ` + splitBoxCond + ` AND ` + ownedCond + vis, args
 }
 
 // SeriesList returns every series the viewer can see, by name.

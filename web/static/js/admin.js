@@ -30,6 +30,7 @@ export async function renderAdmin(view, state) {
     <div id="deep-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="titles-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="covers-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
+    <div id="box-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="problems-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     ${adminNavHTML(current, isAdmin)}
     <section data-panel="ai" class="space-y-6">
@@ -90,6 +91,8 @@ export async function renderAdmin(view, state) {
     } else if (act === "genres-fill" || act === "genres-stop") {
       if (act === "genres-fill" && !confirm("Ask the AI for the genres of the books Calibre has no tags for? It runs in the background, within your hourly token cap, and you can stop it any time.")) return;
       await attempt(() => post(`/api/admin/genres/${act === "genres-fill" ? "fill" : "stop"}`), act === "genres-fill" ? "Filling in genres…" : "Stopping after the current batch");
+    } else if (act === "box-sets") {
+      import("./boxsets.js").then((m) => m.openBoxSets());
     } else if (act === "cover-reports") {
       import("./covers.js").then((m) => m.openCoverReports());
     } else if (act === "tidy-titles") {

@@ -180,6 +180,7 @@ func (s *Service) Loop(ctx context.Context) {
 	for {
 		// Seasonal shelves' matches, ready before anyone opens Discover.
 		_ = safe.Run("seasonal shelves", func() error { s.Store.WarmSeasons(time.Now()); return nil })
+		_ = safe.Run("box sets", func() error { _, err := s.Store.FindBoxSets(); return err }) // for the Admin banner
 		if s.Store.SettingBool(store.KeyModuleDiscover) && s.Due(time.Now()) {
 			_ = safe.Run("discover refresh", func() error {
 				summary, err := s.Refresh(ctx, false)

@@ -105,10 +105,27 @@ func (s *Store) BookByID(id int64, viewer *User) (*Book, error) {
 
 func (s *Store) BookCopies(bookID int64) ([]BookCopy, error) {
 	var cs []BookCopy
-	err := s.DB.Select(&cs, `SELECT cb.catalog_id, c.name AS catalog_name, c.source, cb.path,
-		cb.format, cb.external_id FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
-		WHERE cb.book_id = ? ORDER BY c.name`, bookID)
+	err := s.DB.Select(&cs, `SELECT * FROM (SELECT cb.catalog_id, c.name AS catalog_name, c.source, cb.path,
+		cb.format, cb.external_id, '' AS from_box FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
+		WHERE cb.book_id = ?
+		UNION ALL
+		SELECT cb.catalog_id, c.name, c.source, cb.path, cb.format, cb.external_id, bx.title
+		FROM box_members m JOIN books bx ON bx.id = m.box_id JOIN catalog_books cb ON cb.book_id = m.box_id
+		JOIN catalogs c ON c.id = cb.catalog_id WHERE m.book_id = ?) ORDER BY catalog_name, from_box`, bookID, bookID)
 	return cs, err
+}
+
+// OwnCopies are a book's own copies, without a box set's: for anything that
+// deletes or writes to Calibre (a book of a box set mustn't touch the box).
+func (s *Store) OwnCopies(bookID int64) ([]BookCopy, error) {
+	all, err := s.BookCopies(bookID)
+	own := all[:0]
+	for _, c := range all {
+		if c.FromBox == "" {
+			own = append(own, c)
+		}
+	}
+	return own, err
 }
 
 // SetApproved marks a book "OK" (shown despite filters and content rules) or
