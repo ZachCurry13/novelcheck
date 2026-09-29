@@ -1,6 +1,6 @@
 # Setting up the AI that rates your books
 
-NovelCheck sends each book's title, author, and back-cover blurb to an AI service, which answers with a rating (spice level, content flags, and a short summary). You choose which service in **Admin → AI & Scans → LLM Analysis Engine → AI provider**. Only book information is sent, never your files or anything about your family.
+NovelCheck sends each book's title, author, and back-cover blurb to an AI service, which answers with a rating (spice level, content flags, and a short summary). You choose which service in **Admin → AI & Scans → LLM Analysis Engine → AI provider**. Only book information is sent (and, for a 🧬 Deep Scan, the book's text), never anything about your family.
 
 ## Which one should I pick?
 
@@ -73,7 +73,7 @@ Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and
 
 ## Deep Scan (reading the whole book)
 
-A **🧬 Deep Scan** sends the book's full text to your AI in parts, so it uses far more tokens than a normal rating: a typical novel is around 150,000 tokens, or about 2–5 cents with `gpt-4o-mini`. NovelCheck shows the estimate before every scan. You can pick a separate **Deep Scan model** under **Admin → AI & Scans → LLM Analysis Engine**, for example a cheap model with a large context window. With Ollama the book is cut into small parts (about 2,000 words) to fit local models' memory; it's free, but a whole book can take a long time on a small GPU.
+A **🧬 Deep Scan** sends the book's full text to your AI in parts, so it uses far more tokens than a normal rating: a typical novel is around 150,000 tokens, or about 2–5 cents with `gpt-4o-mini`. NovelCheck shows the estimate before every scan. You can pick a separate **Deep Scan model** under **Admin → AI & Scans → LLM Analysis Engine**, for example a cheap model with a large context window. With a local AI the book is cut into parts that fit its context window: about 1,000 words with Ollama's default of 4,096 tokens (if you raised it on the server, enter the new size under **Admin → AI & Scans → Rate Caps & Batching → Context size of your local AI** so parts can be bigger). It's free, but a whole book can take a long time on a small GPU.
 
 If you have a stronger computer that isn't always on, set it up under **Admin → AI & Scans → AI machines** as the **Deep Scan machine**: Deep Scans run there with a bigger model, ratings stay on the main AI, and scans wait while it's switched off. The **speed test** there times each model on a sample book, so Deep Scan estimates can say how long a book takes; add your electricity price and each machine's watts to see what local AI costs you. NovelCheck also checks once a day for newer versions of the Ollama models you use and offers an **Update** button.
 

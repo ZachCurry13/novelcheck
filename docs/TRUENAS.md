@@ -4,7 +4,7 @@ This guide is for TrueNAS SCALE **24.10 (Electric Eel) or newer**. It takes abou
 
 You'll need:
 - Your TrueNAS web address (for example `http://192.168.1.50`).
-- To know roughly where your **Calibre library** is (for example somewhere inside your `plex` share). You'll pick the exact folder later, inside NovelCheck.
+- To know roughly where your **Calibre library** is (for example somewhere inside your `media` share). You'll pick the exact folder later, inside NovelCheck.
 
 ---
 
@@ -22,9 +22,9 @@ NovelCheck keeps its settings, users, and book ratings in one small file. It nee
 
 ## Step 2: Note the folder that contains your books
 
-You don't need the exact Calibre folder. A **parent** folder is fine, for example your whole `plex` share at `/mnt/red14/plex`. In Step 5 you'll click through it inside NovelCheck to the exact library (for example `books/Clean Library`), or let NovelCheck find it for you.
+You don't need the exact Calibre folder. A **parent** folder is fine, for example your whole `media` share at `/mnt/tank/media`. In Step 5 you'll click through it inside NovelCheck to the exact library (for example `books/Calibre Library`), or let NovelCheck find it for you.
 
-1. In **Datasets**, find the dataset that holds your books and write down its path, for example `/mnt/red14/plex`.
+1. In **Datasets**, find the dataset that holds your books and write down its path, for example `/mnt/tank/media`.
 2. **Permissions:** NovelCheck only *reads* this folder, it never changes your books. If Plex or Calibre already run as TrueNAS apps, it's usually readable already. If NovelCheck later can't see it, see [Troubleshooting](#troubleshooting).
 
 ## Step 3: Install the app
@@ -33,7 +33,7 @@ TrueNAS has two ways to install an app that isn't in its catalog. They give the 
 - **Option A: Install Custom App**, a fill-in-the-boxes form.
 - **Option B: Install via YAML**, pasting one block of text.
 
-Both use the NovelCheck image `ghcr.io/zachcurry13/novelcheck`, and both set the pull policy to **Always**. That setting matters: without it, TrueNAS keeps reusing the copy it already downloaded, and updates never arrive.
+Both use the NovelCheck image `ghcr.io/zachcurry13/novelcheck` and keep TrueNAS's default pull policy, **only pull the image if it isn't on the NAS yet**. NovelCheck then starts from its own copy, even at boot before the internet is up. New versions arrive through TrueNAS's **Update** button (see [Updating NovelCheck](#updating-novelcheck)).
 
 ### Option A: Install Custom App (form)
 
@@ -45,13 +45,13 @@ Both use the NovelCheck image `ghcr.io/zachcurry13/novelcheck`, and both set the
 | Application Name | Application Name | `novelcheck` |
 | Image Configuration | Repository | `ghcr.io/zachcurry13/novelcheck` |
 | | Tag | `latest` |
-| | Pull Policy | **Always pull an image even if it is present on the host** |
-| Container Configuration | Timezone | your timezone, for example `America/Chicago` |
+| | Pull Policy | **Only pull image if not present on host** (the default) |
+| Container Configuration | Timezone | your time zone, for example `America/New_York` |
 | | Restart Policy | **Unless Stopped** |
 | Security Context Configuration | Custom User | tick it, then **User ID** `568` and **Group ID** `568` |
 | Network Configuration | Ports → **Add** | Container Port `8080`, Host Port `30080`, Protocol **TCP** |
 | Storage Configuration | Storage → **Add** (1st) | Type **Host Path**, Mount Path `/data`, Host Path = your **Step 1** folder (for example `/mnt/ssd/novelcheck`) |
-| | Storage → **Add** (2nd) | Type **Host Path**, Mount Path `/calibre`, Host Path = your **Step 2** folder (for example `/mnt/red14/plex`), and tick **Read Only** |
+| | Storage → **Add** (2nd) | Type **Host Path**, Mount Path `/calibre`, Host Path = your **Step 2** folder (for example `/mnt/tank/media`), and tick **Read Only** |
 
 3. Click **Install**. TrueNAS downloads NovelCheck, which takes a minute or two. Wait until the app shows **Running**.
 
@@ -62,26 +62,26 @@ Field names can differ slightly between TrueNAS versions (for example "Ports" ma
 1. Open **Apps** from the left menu, then click **Discover Apps** (top right).
 2. Click the **⋮** (three dots) menu at the top right and choose **Install via YAML**.
 3. **Name:** `novelcheck`
-4. Paste the text below into the big box, then change the **two lines marked `👈 CHANGE`**:
+4. Paste the text below into the big box, then change the **three lines marked `👈 CHANGE`**:
 
 ```yaml
 services:
   novelcheck:
     image: ghcr.io/zachcurry13/novelcheck:latest
-    pull_policy: always
+    pull_policy: missing
     container_name: novelcheck
     restart: unless-stopped
     user: "568:568"
     ports:
       - "30080:8080"
     environment:
-      TZ: America/Chicago
+      TZ: America/New_York                   # 👈 CHANGE to your time zone
     volumes:
       - /mnt/ssd/novelcheck:/data            # 👈 CHANGE left side to your Step 1 path
-      - /mnt/red14/plex:/calibre:ro          # 👈 CHANGE left side to your Step 2 path
+      - /mnt/tank/media:/calibre:ro          # 👈 CHANGE left side to your Step 2 path
 ```
 
-   - Only change the part **before** the `:` on those lines. Leave `:/data` and `:/calibre:ro` exactly as they are.
+   - On the two volume lines, only change the part **before** the `:`. Leave `:/data` and `:/calibre:ro` exactly as they are.
 5. Click **Save**. TrueNAS downloads NovelCheck, which takes a minute or two. Wait until the app shows **Running**.
 
 ## Step 4: Create your admin account
@@ -95,16 +95,16 @@ services:
 
 Open the **Admin** tab.
 
-1. **Pick your Calibre library:** in the **Calibre Library** box, click **Find libraries automatically** and then **Use this** next to your library. Or click **Browse folders…**, click through to it (for example `books` → `Clean Library`), and click **Use this**. Folders that are Calibre libraries show a 📚 **Calibre library** badge. NovelCheck then loads your books, which takes a few seconds.
-2. **AI settings** (the AI that rates books), in the **LLM Analysis Engine** box:
+1. **Pick your Calibre library:** under **Delivery & Services**, in the **Calibre Library** box, click **Find libraries automatically** and then **Use this** next to your library. Or click **Browse folders…**, click through to it (for example `books` → `Clean Library`), and click **Use this**. Folders that are Calibre libraries show a 📚 **Calibre library** badge. NovelCheck then loads your books, which takes a few seconds.
+2. **AI settings** (the AI that rates books), under **AI & Scans**, in the **LLM Analysis Engine** box:
    - Pick your **AI provider**: OpenAI, Anthropic Claude, Google Gemini, Perplexity, or Ollama (a free AI running on your own server). NovelCheck fills in the right address, a small low-cost model, and prices.
    - Paste the provider's **API key**. Click **Show setup steps** under the menu for step-by-step instructions for that provider, or see [AI_PROVIDERS.md](AI_PROVIDERS.md). Not sure which to choose? Click **Which one should I pick?**. Ollama doesn't need a key.
    - Click **Save settings**.
-3. Set **Batch size** to something small like `5`, then click **Analyze batch**. Watch "Tokens this hour" and "Spent to date" to see real costs before running bigger batches.
-4. **Accounts:** under **Users & Content Rules**, add everyone else:
+3. Under **AI & Scans → Rate Caps & Batching**, set **Books per batch** to something small like `5`, then click **Analyze batch**. Watch "Tokens this hour" and "Spent to date" to see real costs before running bigger batches. With a local AI such as Ollama, NovelCheck also rates waiting books by itself while it's idle (**AI & Scans → Automatic rating**).
+4. **Accounts:** under **Users & Rules**, add everyone else:
    - **Editor**: for a spouse or co-parent. They can check and correct ratings, run scans, import Kindles, and manage kids' accounts, but can't change AI or email settings, API keys, or backups.
    - **Restricted (Kid)**: starts with the strictest content rules on. Untick any you don't need.
-5. **Send-to-Kindle (optional):** fill in the SMTP box. With Gmail, use host `smtp.gmail.com`, port `587`, your Gmail address, and a Gmail *App Password*. Click **Send test email**. Then add that Gmail address to Amazon's **Approved Personal Document E-mail List**.
+5. **Send-to-Kindle (optional):** under **Delivery & Services**, fill in the SMTP box. With Gmail, use host `smtp.gmail.com`, port `587`, your Gmail address, and a Gmail *App Password*. Click **Send test email**. Then add that Gmail address to Amazon's **Approved Personal Document E-mail List**.
 
 ## Step 6: Put it on your phone's home screen
 
@@ -119,11 +119,17 @@ To use NovelCheck away from home (on cellular, or at a friend's house), turn on 
 
 When a new version comes out, admins and editors see a green **"NovelCheck x.y.z is available"** banner in the app, and **What's new** (bottom of every page) shows the release notes.
 
-To update: go to **Apps**, click **novelcheck**, and click **Update** if TrueNAS offers it. If it doesn't, click **Edit** and then **Save** (or **Update**) without changing anything. Because the pull policy is **Always**, TrueNAS downloads the newest version while it restarts the app. Your books, ratings, and users are kept.
+To update, go to **Apps** and click **novelcheck**. When TrueNAS shows that an update is available, click **Update**. Your books, ratings, and users are kept. (TrueNAS checks for new images now and then, so it may take a while to notice a new version. The update notice for custom apps needs TrueNAS 24.10.1 or newer.)
 
-Check the version number at the top right afterwards. If it didn't change, your app was probably installed before the pull policy was added to this guide: edit the app, set **Pull Policy** to **Always pull…** (form), or add the line `pull_policy: always` under `image:` (YAML), then save.
+If TrueNAS doesn't offer the update, download it yourself, then restart the app on it:
+1. **Apps → Configuration → Manage Container Images → Pull Image** (the menu names can differ slightly between TrueNAS versions). Enter `ghcr.io/zachcurry13/novelcheck` with the tag `latest`, and pull it.
+2. Click **novelcheck → Edit**, then **Save** without changing anything. The app restarts on the new version.
 
-The version you are running shows at the top right (next to **Sign out**) and at the bottom of every page. Admins can turn the update check off under **Admin → System & Toggles → Sign-in & Updates**.
+Or, from **System → Shell**: `sudo docker pull ghcr.io/zachcurry13/novelcheck:latest`, then step 2.
+
+The version you are running shows at the bottom of every page (and at the top right on a computer). Admins can turn the update check off under **Admin → System & Toggles → Sign-in & Updates**.
+
+**Installed before version 1.26.1 with the pull policy "Always"?** That still works, but then TrueNAS must download NovelCheck on every start, including at boot, and the app may fail to start when the internet or GitHub is slow (for example "Timed out waiting for response"). To switch, **Edit** the app and set **Pull Policy** to **Only pull image if not present on host** (form), or change `pull_policy: always` to `pull_policy: missing` (YAML), then **Save**.
 
 ## Backups
 
@@ -140,5 +146,6 @@ In NovelCheck: **Admin → System & Toggles → Download novelcheck.db**. Keep t
 | Forgot a password | Another admin can reset it under **Admin → Users & Rules → Reset password**. Editors can reset kids' passwords the same way under **Manage**. |
 | Locked out of the only admin account | Last resort, which erases all NovelCheck data: stop the app, delete `novelcheck.db` from the Step 1 dataset, start the app, and create a new admin in the browser (Step 4). |
 | Asked to sign in every time | Make sure **Keep me signed in on this device** is ticked when you sign in. You then stay signed in as long as you use NovelCheck at least once every 30 days (admins can change this under **Admin → System & Toggles → Sign-in & Updates**). Some things always need a separate sign-in: the iPhone home-screen app and Safari keep separate logins, each address you use (for example your TrueNAS IP and a Cloudflare address) needs its own sign-in, and private browsing windows forget you when closed. |
-| Updated but the version number didn't change | The app's pull policy isn't **Always**, so TrueNAS reused the old download. Fix it as described in [Updating NovelCheck](#updating-novelcheck). |
+| Updated but the version number didn't change | TrueNAS restarted the copy it already had. Pull the new image and **Edit → Save** the app, as described in [Updating NovelCheck](#updating-novelcheck). |
+| The app doesn't start after a reboot, or TrueNAS says **Timed out waiting for response** | TrueNAS is trying to download NovelCheck at boot. Set the pull policy to **Only pull image if not present on host** as described at the end of [Updating NovelCheck](#updating-novelcheck). |
 | See what's going on | **Apps → novelcheck → Logs** (the icon on the container row). |

@@ -51,7 +51,7 @@ func TestQuietHours(t *testing.T) {
 		}
 	}
 	// The hours are the admin's: 23:30 in UTC-5 is 04:30 UTC.
-	_ = st.SetSetting(store.KeyAutoRateTZ, "America/Chicago")
+	_ = st.SetSetting(store.KeyAutoRateTZ, "America/Lima")
 	if !RateHoursOpen(st, time.Date(2026, 9, 29, 4, 30, 0, 0, time.UTC)) || RateHoursOpen(st, at(23)) {
 		t.Fatal("hours not in the admin's time zone")
 	}

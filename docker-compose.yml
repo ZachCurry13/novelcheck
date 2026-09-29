@@ -6,8 +6,8 @@
 # On first visit the web page asks you to create the admin account.
 services:
   novelcheck:
-    image: ghcr.io/zachcurry13/novelcheck:latest   # prebuilt by GitHub Actions
-    pull_policy: always                            # fetch the newest :latest on every redeploy
+    image: ghcr.io/zachcurry13/novelcheck:latest   # the newest release, prebuilt by GitHub Actions
+    pull_policy: missing                           # start from the local copy; update with `docker compose pull && docker compose up -d`
     # build: .                                     # uncomment to build from source instead
     container_name: novelcheck
     restart: unless-stopped
@@ -18,10 +18,10 @@ services:
       NOVELCHECK_TRUST_PROXY: "true"                              # honor CF-Connecting-IP / X-Forwarded-For
       NOVELCHECK_CORS_ORIGINS: ""                                 # comma-separated; blank = same-origin only
       NOVELCHECK_SESSION_DAYS: "30"
-      TZ: America/Chicago
+      TZ: America/New_York                                        # change to your time zone
     volumes:
       - /mnt/ssd/novelcheck:/data                  # change to your SSD dataset
-      - /mnt/red14/plex:/calibre:ro                # change to the folder containing your library
+      - /mnt/tank/media:/calibre:ro                # change to the folder containing your library
 
   # Optional: expose NovelCheck through a Cloudflare Tunnel (no open ports).
   # Create a tunnel in Cloudflare Zero Trust, route it to http://novelcheck:8080,

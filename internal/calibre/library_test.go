@@ -10,7 +10,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// mountTree mimics a TrueNAS share mounted at /calibre, e.g. red14/plex:
+// mountTree mimics a TrueNAS share mounted at /calibre, e.g. tank/media:
 //
 //	books/Clean Library/metadata.db   (the library we want)
 //	books/Other Library/metadata.db

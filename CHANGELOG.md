@@ -6,6 +6,9 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.26.1]
 
+### 🖥️ TrueNAS: surer starts
+- **NovelCheck no longer has to download itself at every boot.** The install guide now keeps TrueNAS's default pull policy (*only pull the image if it isn't on the NAS yet*), so NovelCheck starts from its own copy even before the internet is up. With *Always*, TrueNAS downloaded it on every start and could fail with "Timed out waiting for response". Installed with *Always*? The end of **Updating NovelCheck** in the TrueNAS guide shows how to switch; updates then come through TrueNAS's **Update** button.
+
 ### 🔧 Fixes
 - **Admin → Deep Scan → Settings works again.** Until readers were picked for automatic Deep Scans, the section showed no accounts, and **Estimate cost…** and **Save** did nothing.
 - **The version under the menu is right after an update.** `:latest` is now published only by a release, so the app no longer shows a label like "1.24.0-1-…" after updating.

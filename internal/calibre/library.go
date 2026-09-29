@@ -10,7 +10,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// The container mounts a parent folder at Dir (e.g. TrueNAS "red14/plex" at
+// The container mounts a parent folder at Dir (e.g. TrueNAS "tank/media" at
 // /calibre). The admin picks the actual library inside it from the web UI;
 // that relative subfolder (e.g. "books/Clean Library") is stored in settings.
 

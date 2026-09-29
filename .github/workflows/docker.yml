@@ -98,7 +98,7 @@ jobs:
           v="${TAG#v}"
           awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > notes.md
           [ -s notes.md ] || echo "See CHANGELOG.md for details." > notes.md
-          printf '\n---\n**Update on TrueNAS:** Apps → novelcheck → Update (or Edit → Save).\nImage: `ghcr.io/zachcurry13/novelcheck:%s` (also `:latest`).\n' "$v" >> notes.md
+          printf '\n---\n**Update on TrueNAS:** Apps → novelcheck → Update when TrueNAS offers it (or follow Updating NovelCheck in docs/TRUENAS.md).\nImage: `ghcr.io/zachcurry13/novelcheck:%s` (also `:latest`).\n' "$v" >> notes.md
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG }}
