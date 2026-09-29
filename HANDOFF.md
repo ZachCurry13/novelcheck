@@ -11,7 +11,9 @@ NovelCheck (Go + vanilla JS PWA, self-hosted on the user's TrueNAS) rates a fami
 - **v1.28.1** (2026-09-29): Up Next no longer emails books with no EPUB/PDF (they're just marked as reading, and the row says so).
 - **v1.29.0** (2026-09-29): reading progress (Up Next, the book window, kids' cards), KOReader reading statistics through a WebDAV folder per reader (`/dav/`, same name + sync code) listing **📱 On your KOReader**, and the Deep Scan small-model warning checking the Deep Scan machine (with **Keep using it**). See status item 61.
   - Not yet tried with a real Kindle: the statistics Cloud sync to `/dav/`, and the KOReader menu names in the setup steps. Readest (phones) speaks kosync too; its tracker has reports of position mismatches.
-  - Next ideas the user raised: Hardcover sync (API with a personal token) and a built-in phone reader that keeps the place with KOReader were offered for later; Goodreads and StoryGraph have no API.
+- **v1.30.0** (2026-09-29): family devices ("Who's reading?": kids tap in, PINs, parents without a PIN use the password; status item 62) and the start page fix (the home-screen `start_url` is now `/`; sign-in and profile switches open the start page).
+- **Next (agreed 2026-09-29, released one at a time with the user's OK):** 1.31 Hardcover sync (one-way, a personal token per person, hourly), 1.32 Read in NovelCheck (a phone reader in the browser that keeps the place with KOReader through kosync). Goodreads and StoryGraph have no API.
+- A "2.0" was discussed: no rewrite; instead one job system for background work, one reading-progress model (fold it into 1.31/1.32), books with editions and files underneath (the one migration worth a 2.0), and a small component layer for the screens, page by page.
 - The user's server runs on TrueNAS with the pull policy now "only if missing" (switched 2026-09-29).
 
 ## 2. Rules
