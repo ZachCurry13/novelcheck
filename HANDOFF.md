@@ -3,14 +3,14 @@
 NovelCheck (Go + vanilla JS PWA, self-hosted on the user's TrueNAS) rates a family's Calibre library for romance ("peppers") and content. What each version does is in `CHANGELOG.md`; how it's built is in `NOVELCHECK_SPEC.md` (Section 4 by feature, Section 6 by version).
 
 ## 1. Where things stand
-- **Released:** v1.26.0 on 2026-09-29 (AI machines; events with "Load more", Library view, end time and archive). Releases 1.20.0 to 1.25.0 were built on 2026-09-28.
-- **On `feature/v1.26-aitools`, not released: v1.26.1**
+- **Released:** v1.26.1 on 2026-09-29 (`:latest` and `:1.26.1` are the same image; `:main` is separate, so the race is gone). v1.26.0 on 2026-09-29 (AI machines; events with "Load more", Library view, end time and archive). Releases 1.20.0 to 1.25.0 were built on 2026-09-28.
+- **v1.26.1**
   - Admin → Deep Scan → Settings did nothing until readers were picked: `/api/admin/deep-scans` sent `users: null` and `renderSettings` threw. `DeepUsers` returns `[]`, the page guards too, and `deepscan_test.go` checks it.
   - Pushes to `main` publish `:main`; only release builds move `:latest`. The push build used to race the release build, leaving `git describe` labels such as "1.24.0-1-g9d42cab" under the menu.
   - TrueNAS: the guide, compose file and README now keep the pull policy at "only if missing". "Always" made TrueNAS download NovelCheck at every start, including boot, which failed with "[EFAULT] Failed to render compose templates: Timed out waiting for response". Updates come through TrueNAS's Update, or Pull Image and then Edit → Save.
   - Docs review (2026-09-29): README, spec, AI_PROVIDERS, TRUENAS, the feedback form and this file match the app again; the example pool and time zone are generic.
 - The user's server still ran the 1.25 code on 2026-09-29.
-- **Next:** the user's OK to release 1.26.1. After it, remind them to switch their app's pull policy (end of "Updating NovelCheck" in `docs/TRUENAS.md`).
+- **Next:** the user switches their app's pull policy to "Only pull image if not present on host" (end of "Updating NovelCheck" in `docs/TRUENAS.md`) and updates to 1.26.1. Then whatever they ask.
 
 ## 2. Rules
 - Releases only with the user's OK. The release commands are allowed in `.claude/settings.local.json` (git-excluded). Run each as its own Bash call, exactly: `git checkout main`, `git pull --ff-only`, `git merge --ff-only feature/…`, `git push origin main`, `gh workflow run docker.yml --ref main -f version=X.Y.Z`; then watch the run id that call printed (`gh run watch <id>`), never a guessed one.
