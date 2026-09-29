@@ -103,7 +103,7 @@ export async function renderLibrary(view, state) {
   const evShelf = event ? await eventShelf($("#shelf-banner", view), event, state, () => load(true)) : null;
   const cardFor = (b) => card(b, on(state.user, "queue"), evShelf?.extra(b) || "");
   const grid = $("#grid", view);
-  const sel = setupSelect(view, grid, state, () => load(true));
+  const sel = setupSelect(view, grid, state, () => load(true), collection || season ? { collection_id: Number(collection) || 0, season } : null);
   let offset = 0;
 
   function params() {

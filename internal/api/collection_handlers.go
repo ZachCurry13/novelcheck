@@ -202,6 +202,7 @@ func (s *Server) handleStartFill(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Theme        string `json:"theme"`
 		CollectionID int64  `json:"collection_id"`
+		Season       string `json:"season"` // building a seasonal shelf
 	}
 	if !readJSON(w, r, &body, 8<<10) {
 		return
@@ -214,10 +215,7 @@ func (s *Server) handleStartFill(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "describe the collection in a sentence (up to 500 characters)")
 		return
 	}
-	var exclude []int64
-	if body.CollectionID > 0 {
-		exclude = s.Store.CollectionBookIDs(body.CollectionID)
-	}
+	exclude := s.fillExclude(body.CollectionID, body.Season)
 	writeJSON(w, http.StatusAccepted, map[string]string{"job": s.Collections.Start(body.Theme, exclude)})
 }
 

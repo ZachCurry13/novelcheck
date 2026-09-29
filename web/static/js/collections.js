@@ -78,15 +78,17 @@ export async function shelfBanner(host, { collection, season, seasons }, state, 
     if (!c) return (host.innerHTML = "");
     host.innerHTML = `<div class="card mb-3 flex flex-wrap items-center gap-2">
       <span class="text-2xl" aria-hidden="true">${esc(c.icon)}</span>
-      <div class="min-w-0 flex-1"><p class="font-semibold">${esc(c.name)}${c.kind === "idea" ? ` <span class="chip-closed">💡 idea</span>` : ""}</p>
+      <div class="min-w-0 grow basis-48"><p class="font-semibold">${esc(c.name)}${c.kind === "idea" ? ` <span class="chip-closed">💡 idea</span>` : ""}</p>
         <p class="text-xs text-slate-400">${esc(c.description || c.theme || "")}</p></div>
       ${manager ? `${c.theme ? `<button data-b="more" class="btn-secondary py-1.5 text-sm">✨ Find more</button>` : ""}
+        ${c.books ? `<button data-b="check" class="btn-ghost py-1.5 text-sm" title="The AI lists the books that don't fit">🔍 Check these books</button>` : ""}
         <button data-b="edit" class="btn-ghost py-1.5 text-sm">✏️ Edit</button>
         <button data-b="delete" class="btn-ghost py-1.5 text-sm" title="Delete this collection (the books stay)">🗑</button>` : ""}
       ${clear}</div>`;
     host.onclick = async (e) => {
       const b = e.target.closest("[data-b]")?.dataset.b;
       if (b === "more") openAICollection({ collection: c }, onChange);
+      else if (b === "check") import("./shelfcheck.js").then((m) => m.openShelfCheck({ collection_id: c.id }, c.name, onChange));
       else if (b === "edit") openNewCollection(onChange, c);
       else if (b === "delete" && confirm(`Delete the collection "${c.name}"? Its books stay in your libraries.`)) {
         if (await attempt(() => del(`/api/collections/${c.id}`), "Collection deleted")) location.hash = "#/collections";
@@ -98,11 +100,14 @@ export async function shelfBanner(host, { collection, season, seasons }, state, 
   if (!s) return (host.innerHTML = "");
   host.innerHTML = `<div class="card mb-3 flex flex-wrap items-center gap-2">
     <span class="text-2xl" aria-hidden="true">${s.icon}</span>
-    <div class="min-w-0 flex-1"><p class="font-semibold">${esc(s.name)}</p>
+    <div class="min-w-0 grow basis-48"><p class="font-semibold">${esc(s.name)}</p>
       <p class="text-xs text-slate-400">${s.collection ? "Your AI-built collection" : "Found by words in titles, tags and descriptions"}</p></div>
-    ${manager ? `<button data-b="build" class="btn-secondary py-1.5 text-sm">✨ ${s.collection ? "Build again" : "Build with AI"}</button>` : ""}
+    ${manager ? `<button data-b="build" class="btn-secondary py-1.5 text-sm">✨ ${s.collection ? "Build again" : "Build with AI"}</button>
+      <button data-b="check" class="btn-ghost py-1.5 text-sm" title="The AI lists the books that don't fit">🔍 Check these books</button>` : ""}
     ${clear}</div>`;
   host.onclick = (e) => {
-    if (e.target.closest('[data-b="build"]')) openAICollection({ theme: s.theme, name: s.name, icon: s.icon, season: s.key }, onChange);
+    const b = e.target.closest("[data-b]")?.dataset.b;
+    if (b === "build") openAICollection({ theme: s.theme, name: s.name, icon: s.icon, season: s.key }, onChange);
+    else if (b === "check") import("./shelfcheck.js").then((m) => m.openShelfCheck({ season: s.key }, s.name, onChange));
   };
 }

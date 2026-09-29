@@ -15,6 +15,12 @@ becomes the release notes for that version and is shown in the app under
 - **Split books are real books:** each gets its own card and rating, counts as yours, and opens and downloads the box set's file. **Undo the split** puts it back.
 - The box set's file can't be removed or renamed from a split book, only from the box set.
 
+### 🎯 Shelves that stay on theme
+- **Stricter AI picks.** When the AI fills a collection or builds a seasonal shelf, it keeps only books that are clearly *about* the theme (their subject, setting or main characters), not ones that just share a mood or a lesson. It no longer tries to fill the list, and it checks each pick a second time with a differently worded question. A theme "for families" or "for ages 8–10" no longer pulls in every children's book.
+- **Seasonal shelves match whole words.** "Saint" finds saints but not "saintly" or "Saint Louis", "Lent" no longer catches "lent him a book", and vague phrases like "lives of the" are gone.
+- **✕ Not for this shelf.** On a collection or seasonal shelf, **☑ Select** books and take them off it. They stay in your libraries, and neither the shelf's words nor the AI (**Build again**, **Find more**) bring them back.
+- **🔍 Check these books** (on a shelf's banner, parents) has the AI read every book on the shelf and list the ones that don't fit, with a reason. Untick any to keep, and the rest come off the shelf.
+
 ### 🔗 Same book, other titles
 - **TV and movie tie-ins** ("Dune (Movie Tie-In)", "Title: Now a Major Motion Picture") are recognized as the same book as the original.
 - **Same book as…** (on a book, for parents) joins two cards for one book, like a reissue under another name. The better-rated one stays, and its libraries, Up Next places, notes and wishes come together. Later imports under the other title find it.
@@ -31,7 +37,7 @@ becomes the release notes for that version and is shown in the app under
 - Uses the Content server connection from **One-click removal**, with a Calibre user allowed to make changes.
 
 ### 🔧 Fixes
-- On phones, the safe mode banner puts **Leave safe mode** under its text instead of squeezing the text into a narrow column.
+- On phones, the safe mode banner and a shelf's banner put their buttons under the text instead of squeezing the text into a narrow column.
 
 ## [1.27.0]
 

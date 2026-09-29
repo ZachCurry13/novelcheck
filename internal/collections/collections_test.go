@@ -15,27 +15,51 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// fakeAI answers the plan with "dragon", then picks every listed book with
-// "Dragon" in its title (plus an id that wasn't offered, which is dropped).
+// fakeAI answers the plan with "dragon" (and the children's genre, which
+// mustn't bring in every book), then picks every listed book with "Dragon"
+// in its title, plus Plain Book 1 "loosely" and Plain Book 2 "clearly" (the
+// second look says no to it) and an id that wasn't offered: all three are
+// dropped. The second look says yes only to dragon books.
 func fakeAI(t *testing.T) *httptest.Server {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, _ := io.ReadAll(r.Body)
 		body := string(raw)
-		answer := `{"words": ["dragon"], "genres": [], "kind": ""}`
+		answer := `{"words": ["dragon", "plain book 1", "plain book 2"], "genres": ["children"], "kind": ""}`
+		lines := func(each func(id int64, line string) string) string {
+			var out []string
+			for _, line := range strings.Split(body, `\n`) {
+				var id int64
+				if _, err := fmt.Sscanf(line, "%d |", &id); err == nil && strings.Contains(line, " | ") {
+					if s := each(id, line); s != "" {
+						out = append(out, s)
+					}
+				}
+			}
+			return strings.Join(out, ",")
+		}
 		switch {
 		case strings.Contains(body, "suggest themed book collections"):
 			answer = `{"ideas": [{"name": "Dragon tales", "icon": "🐉", "theme": "stories with dragons"}]}`
-		case strings.Contains(body, "Books (id"):
-			var picks []string
-			for _, line := range strings.Split(body, `\n`) {
-				var id int64
-				if strings.Contains(line, "Dragon") && strings.Contains(line, " | ") {
-					fmt.Sscanf(line, "%d |", &id)
-					picks = append(picks, fmt.Sprintf(`{"id": %d, "reason": "a dragon story"}`, id))
+		case strings.Contains(body, "Shelf check"):
+			answer = `{"answers": [` + lines(func(id int64, line string) string {
+				if strings.Contains(line, "Dragon") {
+					return fmt.Sprintf(`{"id": %d, "fits": "yes", "reason": "dragons"}`, id)
 				}
-			}
-			picks = append(picks, `{"id": 99999, "reason": "not offered"}`)
-			answer = `{"picks": [` + strings.Join(picks, ",") + `]}`
+				return fmt.Sprintf(`{"id": %d, "fits": "no", "reason": "no dragons in it"}`, id)
+			}) + `]}`
+		case strings.Contains(body, "Books (id"):
+			picks := lines(func(id int64, line string) string {
+				switch {
+				case strings.Contains(line, "Dragon"):
+					return fmt.Sprintf(`{"id": %d, "fit": "clearly", "reason": "a dragon story"}`, id)
+				case strings.Contains(line, "Plain Book 1 |"):
+					return fmt.Sprintf(`{"id": %d, "fit": "loosely", "reason": "a book"}`, id)
+				case strings.Contains(line, "Plain Book 2 |"):
+					return fmt.Sprintf(`{"id": %d, "fit": "clearly", "reason": "sounds right"}`, id)
+				}
+				return ""
+			})
+			answer = `{"picks": [` + picks + `, {"id": 99999, "fit": "clearly", "reason": "not offered"}]}`
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"choices": []any{map[string]any{"message": map[string]string{"role": "assistant", "content": answer}}},
@@ -93,6 +117,31 @@ func TestFillPicksMatchingBooks(t *testing.T) {
 	}
 	if _, err := Fill(context.Background(), st, " ", nil); err == nil {
 		t.Fatal("an empty theme")
+	}
+}
+
+func TestCheckShelf(t *testing.T) {
+	st := setup(t)
+	books, err := st.ThemeCandidates([]string{"book"}, nil, "", nil, 100)
+	if err != nil || len(books) != 40 {
+		t.Fatalf("books %d: %v", len(books), err)
+	}
+	s := New(st)
+	id, err := s.StartCheck("stories with dragons", books)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for deadline := time.Now().Add(5 * time.Second); ; time.Sleep(20 * time.Millisecond) {
+		j := s.Job(id)
+		if j != nil && j.Status == "done" {
+			if len(j.Picks) != 35 || j.Done != 40 || j.Total != 40 || j.Picks[0].Reason != "no dragons in it" {
+				t.Fatalf("misfits %d, done %d/%d: %+v", len(j.Picks), j.Done, j.Total, j.Picks[0])
+			}
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("job: %+v", s.Job(id))
+		}
 	}
 }
 

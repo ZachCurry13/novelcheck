@@ -22,8 +22,13 @@ import (
 const (
 	maxPicks      = 40
 	maxCandidates = 150
-	estTokens     = 13000 // plan + pick, for the hourly cap
+	estTokens     = 17000 // plan + pick + second look, for the hourly cap
 )
+
+// audience genres say who a book is for, not what it's about: a theme "for
+// Catholic families" or "for ages 8-10" mustn't bring in every children's
+// book. The AI still respects the ages when it picks.
+var audience = map[string]bool{"children": true, "ya": true}
 
 // Pick is a book the AI chose, with its reason.
 type Pick struct {
@@ -47,7 +52,7 @@ func Fill(ctx context.Context, st *store.Store, theme string, exclude []int64) (
 	if theme == "" {
 		return nil, errors.New("describe the collection first")
 	}
-	if !withinBudget(st) {
+	if !withinBudget(st, estTokens) {
 		return nil, ErrBudget
 	}
 	ais := st.AIConfigs()
@@ -57,7 +62,13 @@ func Fill(ctx context.Context, st *store.Store, theme string, exclude []int64) (
 	}); err != nil {
 		return nil, fmt.Errorf("the AI couldn't plan the search: %w", err)
 	}
-	books, err := st.ThemeCandidates(p.Words, p.Genres, p.Kind, exclude, maxCandidates)
+	var subjects []string
+	for _, g := range p.Genres {
+		if !audience[strings.ToLower(strings.TrimSpace(g))] {
+			subjects = append(subjects, g)
+		}
+	}
+	books, err := st.ThemeCandidates(p.Words, subjects, p.Kind, exclude, maxCandidates)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +84,7 @@ func Fill(ctx context.Context, st *store.Store, theme string, exclude []int64) (
 	var raw struct {
 		Picks []struct {
 			ID     int64  `json:"id"`
+			Fit    string `json:"fit"`
 			Reason string `json:"reason"`
 		} `json:"picks"`
 	}
@@ -85,12 +97,36 @@ func Fill(ctx context.Context, st *store.Store, theme string, exclude []int64) (
 	out := []Pick{}
 	seen := map[int64]bool{}
 	for _, r := range raw.Picks {
-		if b, ok := byID[r.ID]; ok && !seen[r.ID] && len(out) < maxPicks {
+		loose := strings.EqualFold(strings.TrimSpace(r.Fit), "loosely")
+		if b, ok := byID[r.ID]; ok && !seen[r.ID] && !loose && len(out) < maxPicks {
 			seen[r.ID] = true
 			out = append(out, Pick{Book: b, Reason: llm.ShortReason(r.Reason)})
 		}
 	}
-	return out, nil
+	return secondLook(ctx, st, theme, out), nil
+}
+
+// secondLook keeps the picks a differently worded question agrees fit. If
+// that question fails, the picks stand (the parent reviews them anyway).
+func secondLook(ctx context.Context, st *store.Store, theme string, picks []Pick) []Pick {
+	if len(picks) == 0 {
+		return picks
+	}
+	books := make([]store.Book, len(picks))
+	for i, p := range picks {
+		books[i] = p.Book
+	}
+	answers, err := Verify(ctx, st, theme, books)
+	if err != nil || len(answers) == 0 {
+		return picks
+	}
+	kept := []Pick{}
+	for _, p := range picks {
+		if answers[p.Book.ID].Fits == "yes" {
+			kept = append(kept, p)
+		}
+	}
+	return kept
 }
 
 func planSystem() string {
@@ -106,10 +142,12 @@ Turn the theme into a search. Reply with JSON only:
 }
 
 func pickSystem(lang string) string {
-	return `You pick books for a family's themed collection from the list given. Choose the books that truly fit the theme
-(up to ` + strconv.Itoa(maxPicks) + `, best first). Leave out books that only share a word with it. Respect ages or limits the theme mentions.
-Give each a short reason (under 15 words, no spoilers) in ` + lang + `. Use only ids from the list.
-Reply with JSON only: {"picks": [{"id": 123, "reason": "..."}]}`
+	return `You pick books for a family's themed collection from the list given. A book fits only when the theme is what the book
+is about: its subject, its setting or its main characters. Sharing a mood, a lesson (hope, courage, family, perseverance), a genre
+or a single word with the theme is not a fit. Respect ages or limits the theme mentions.
+Pick up to ` + strconv.Itoa(maxPicks) + `, best first. Picking only a few books, or none, is fine: never fill the list with loose matches.
+For each pick, say what in the book fits the theme (under 15 words, no spoilers) in ` + lang + `, and whether it fits "clearly" or only "loosely".
+Use only ids from the list. Reply with JSON only: {"picks": [{"id": 123, "fit": "clearly", "reason": "..."}]}`
 }
 
 // describe is one candidate line for the AI.
@@ -146,8 +184,8 @@ func decode(out string, v any) error {
 }
 
 // withinBudget: collection work never pushes past the hourly token cap.
-func withinBudget(st *store.Store) bool {
+func withinBudget(st *store.Store, tokens int) bool {
 	limit := st.SettingInt(store.KeyTokensPerHour)
 	used, err := st.TokensSince("-1 hour")
-	return limit <= 0 || (err == nil && used+estTokens <= limit)
+	return limit <= 0 || (err == nil && used+tokens <= limit)
 }

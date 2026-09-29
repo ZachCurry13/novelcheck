@@ -104,6 +104,7 @@ const SHELL = [
   "/js/sameas.js",
   "/js/boxsets.js",
   "/js/formats.js",
+  "/js/shelfcheck.js",
   "/vendor/qrcode.esm.js",
 ];
 

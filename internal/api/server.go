@@ -167,6 +167,8 @@ func (s *Server) Router() http.Handler {
 				r.Post("/collections/{id}/books", s.handleAddToCollection)
 				r.Delete("/collections/{id}/books/{book}", s.handleRemoveFromCollection)
 				r.Post("/collections/ai", s.handleStartFill)
+				r.Post("/shelves/reject", s.handleRejectFromShelf)
+				r.Post("/shelves/check", s.handleCheckShelf)
 				r.Post("/events/preview", s.handlePreviewEvent)
 				r.Post("/events", s.handleCreateEvent)
 				r.Patch("/events/{id}", s.handleUpdateEvent)

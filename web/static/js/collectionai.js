@@ -59,8 +59,8 @@ export function openAICollection(opts = {}, onDone) {
       <textarea name="theme" rows="2" required maxlength="500" class="input" placeholder="e.g. Dragon adventures for ages 8-10, not too scary">${esc(opts.theme || into?.theme || "")}</textarea>
       ${into ? "" : `<div class="flex gap-2">${iconSelect(opts.icon || "✨")}
         <input name="name" maxlength="80" class="input min-w-0 flex-1" placeholder="Name, e.g. Dragon adventures" value="${esc(opts.name || "")}"></div>`}
-      <p class="text-xs text-slate-400">The AI looks through your libraries and suggests books with a reason (about 13,000 tokens; free with a local AI).
-        Nothing is saved until you press Save.</p>
+      <p class="text-xs text-slate-400">The AI looks through your libraries, picks the books that are clearly about this, and checks each pick a second time
+        (about 17,000 tokens; free with a local AI). Nothing is saved until you press Save.</p>
       <button class="btn-primary w-full">Find books</button>
     </form>
     <div data-out class="space-y-2"></div></div>`;
@@ -76,7 +76,7 @@ export function openAICollection(opts = {}, onDone) {
   form.onsubmit = async (e) => {
     e.preventDefault();
     const theme = form.theme.value.trim();
-    const start = await attempt(() => post("/api/collections/ai", { theme, collection_id: into?.id || 0 }));
+    const start = await attempt(() => post("/api/collections/ai", { theme, collection_id: into?.id || 0, season: opts.season || "" }));
     if (!start) return;
     form.querySelector("button").disabled = true;
     const t0 = Date.now();

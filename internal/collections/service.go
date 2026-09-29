@@ -26,10 +26,14 @@ type Service struct {
 	jobs map[string]*Job
 }
 
-// Job is one AI fill in progress or done.
+// Job is one AI fill, or one shelf check, in progress or done. A check's
+// Picks are the books that don't fit, with the AI's reason.
 type Job struct {
 	Status  string `json:"status"` // running | done | error
+	Kind    string `json:"kind"`   // fill | check
 	Picks   []Pick `json:"picks"`
+	Done    int    `json:"done"` // books checked so far
+	Total   int    `json:"total"`
 	Error   string `json:"error,omitempty"`
 	started time.Time
 }
@@ -39,20 +43,62 @@ func New(st *store.Store) *Service {
 	return &Service{Store: st, jobs: map[string]*Job{}}
 }
 
-// Start begins filling theme (skipping exclude) and returns the job id.
-func (s *Service) Start(theme string, exclude []int64) string {
+// newJob registers a running job and returns its id.
+func (s *Service) newJob(job *Job) string {
 	b := make([]byte, 8)
 	_, _ = rand.Read(b)
 	id := hex.EncodeToString(b)
-	job := &Job{Status: "running", started: time.Now()}
+	job.Status, job.started = "running", time.Now()
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	for k, j := range s.jobs { // forget jobs nobody collected within an hour
 		if time.Since(j.started) > time.Hour {
 			delete(s.jobs, k)
 		}
 	}
 	s.jobs[id] = job
-	s.mu.Unlock()
+	return id
+}
+
+// StartCheck gives a shelf's books the second look in the background.
+func (s *Service) StartCheck(theme string, books []store.Book) (string, error) {
+	if !withinBudget(s.Store, CheckTokens(len(books))) {
+		return "", ErrBudget
+	}
+	job := &Job{Kind: "check", Total: len(books)}
+	id := s.newJob(job)
+	safe.Go("shelf check", func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+		defer cancel()
+		answers, err := Verify(ctx, s.Store, theme, books, func(done int) {
+			s.mu.Lock()
+			job.Done = done
+			s.mu.Unlock()
+		})
+		misfits := []Pick{}
+		for _, b := range books {
+			if a, ok := answers[b.ID]; ok && a.Fits == "no" {
+				misfits = append(misfits, Pick{Book: b, Reason: a.Reason})
+			}
+		}
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		switch {
+		case err != nil && len(answers) == 0:
+			job.Status, job.Error = "error", err.Error()
+		case err != nil: // part of the shelf was checked
+			job.Status, job.Picks, job.Error = "done", misfits, "Only part of the shelf was checked: "+err.Error()
+		default:
+			job.Status, job.Picks = "done", misfits
+		}
+	})
+	return id, nil
+}
+
+// Start begins filling theme (skipping exclude) and returns the job id.
+func (s *Service) Start(theme string, exclude []int64) string {
+	job := &Job{Kind: "fill"}
+	id := s.newJob(job)
 	safe.Go("AI collection", func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 		defer cancel()

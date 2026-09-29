@@ -1,13 +1,16 @@
 // ☑ Select books in the Library, then act on all of them at once: add to
-// Up Next, Deep Scan, or delete. Tap cards to tick them; with a mouse you
-// can also drag across cards, or Shift-click to tick everything in between.
+// Up Next, Deep Scan, or delete, and on a collection or seasonal shelf
+// (parents) take them off it. Tap cards to tick them; with a mouse you can
+// also drag across cards, or Shift-click to tick everything in between.
 import { post } from "./api.js";
-import { attempt, toast } from "./ui.js";
+import { attempt, toast, canManage } from "./ui.js";
 import { on } from "./modules.js";
 
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-export function setupSelect(view, grid, state, reload) {
+// shelf is {collection_id, season} when the Library shows one.
+export function setupSelect(view, grid, state, reload, shelf = null) {
+  const unshelve = shelf && canManage(state.user);
   const selected = new Set();
   let active = false;
   let pointer = "";
@@ -31,6 +34,7 @@ export function setupSelect(view, grid, state, reload) {
       ${n && on(state.user, "queue") ? `<button data-bulk="queue" class="btn-primary py-1">＋ Up Next</button>` : ""}
       ${n ? `<button data-bulk="deep" class="btn-secondary py-1">🧬 ${admin ? "Deep Scan" : "Ask for Deep Scan"}</button>
         <button data-bulk="delete" class="btn-ghost py-1 text-rose-300">🗑 Delete…</button>` : ""}
+      ${n && unshelve ? `<button data-bulk="unshelve" class="btn-ghost py-1">✕ Not for this shelf</button>` : ""}
       <span class="flex-1"></span>
       <button data-all class="btn-ghost py-1">Select all shown</button>
       ${n ? `<button data-clear class="btn-ghost py-1">Clear</button>` : ""}
@@ -86,6 +90,14 @@ export function setupSelect(view, grid, state, reload) {
     const action = e.target.closest("[data-bulk]")?.dataset.bulk;
     if (!action) return;
     const ids = [...selected].map(Number);
+    if (action === "unshelve") {
+      if (!confirm(`Take ${plural(ids.length, "book")} off this shelf? ${ids.length === 1 ? "It stays" : "They stay"} in your libraries, and ${ids.length === 1 ? "isn't" : "aren't"} suggested for this shelf again.`)) return;
+      const r = await attempt(() => post("/api/shelves/reject", { ...shelf, ids }));
+      if (!r) return;
+      toast(`Took ${plural(r.removed, "book")} off this shelf`);
+      setActive(false);
+      return reload();
+    }
     let reason = "";
     if (action === "delete") {
       reason = prompt(`Delete ${plural(ids.length, "book")}?\n\nBooks in your own libraries are taken out of them right away. For the rest, a delete request goes to the admins.\n\nWhy? (optional)`, "");

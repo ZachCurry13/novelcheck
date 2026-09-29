@@ -5,26 +5,27 @@ import (
 	"strings"
 )
 
-// themeText is a book's searchable words (as in package seasons).
+// themeText is a book's searchable words.
 const themeText = `(' ' || LOWER(b.title || ' ' || b.tags || ' ' || b.premise || ' ' || b.blurb || ' ' || b.description) || ' ')`
 
 // ThemeCandidates finds the family's books that may fit a collection theme:
 // those with any of words in their title, tags or description, or in one of
-// genres (a genre counts double), most matches first, rated books before
-// unrated ones, up to limit. With no words or genres it returns a spread of
-// the library. exclude skips books already chosen.
+// genres (a word counts double: it says more than a broad genre), most
+// matches first, rated books before unrated ones, up to limit. With no words
+// or genres it returns a spread of the library. exclude skips books already
+// chosen or taken off the shelf.
 func (s *Store) ThemeCandidates(words, genres []string, kind string, exclude []int64, limit int) ([]Book, error) {
 	var score []string
 	var args []any
 	for _, w := range words {
 		if w = strings.ToLower(strings.TrimSpace(w)); len(w) >= 3 {
-			score = append(score, `(`+themeText+` LIKE ?)`)
+			score = append(score, `2 * (`+themeText+` LIKE ?)`)
 			args = append(args, "% "+w+"%")
 		}
 	}
 	for _, g := range genres {
 		if g = strings.ToLower(strings.TrimSpace(g)); g != "" {
-			score = append(score, `2 * (b.genres LIKE ?)`)
+			score = append(score, `(b.genres LIKE ?)`)
 			args = append(args, "%,"+g+",%")
 		}
 	}

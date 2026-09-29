@@ -4,10 +4,7 @@
 // each year.
 package seasons
 
-import (
-	"strings"
-	"time"
-)
+import "time"
 
 // Season is one seasonal shelf.
 type Season struct {
@@ -17,9 +14,12 @@ type Season struct {
 	Theme string `json:"theme"` // what "Build with AI" asks for
 	// MaxSpice caps peppers for the shelf (-1 = no cap): Valentine's is for
 	// clean romance and friendship.
-	MaxSpice int                                 `json:"-"`
-	Words    []string                            `json:"-"`
-	span     func(year int) (from, to time.Time) // inclusive days
+	MaxSpice int `json:"-"`
+	// Words find the shelf's books (whole words, see Matches); Not are
+	// phrases that only look like them ("Saint Louis").
+	Words []string                            `json:"-"`
+	Not   []string                            `json:"-"`
+	span  func(year int) (from, to time.Time) // inclusive days
 }
 
 func day(y int, m time.Month, d int) time.Time { return time.Date(y, m, d, 0, 0, 0, 0, time.UTC) }
@@ -64,16 +64,18 @@ func AdventSunday(year int) time.Time {
 var All = []Season{
 	{Key: "halloween", Icon: "🎃", Name: "Halloween & spooky", Theme: "not-too-scary spooky and Halloween stories: ghosts, haunted houses, monsters, costumes and trick-or-treating",
 		MaxSpice: -1, span: fixed(time.September, 20, time.October, 31),
-		Words: []string{"halloween", "haunted", "haunting", "ghost", "spooky", "monster", "vampire", "zombie", "pumpkin", "skeleton", "graveyard", "trick-or-treat", "trick or treat", "goosebumps", "werewolf", "all hallows"}},
+		Words: []string{"halloween", "haunted", "haunting", "ghost", "ghostly", "spooky", "monster", "vampire", "zombie", "pumpkin", "skeleton", "graveyard", "trick or treat", "trick or treating", "goosebumps", "werewolf", "werewolves", "all hallows"}},
 	{Key: "fall", Icon: "🍂", Name: "Fall & Thanksgiving", Theme: "cozy autumn and Thanksgiving books: harvest, falling leaves, gratitude and family gatherings",
 		MaxSpice: -1, span: fixed(time.September, 22, time.November, 30),
-		Words: []string{"autumn", "thanksgiving", "harvest", "scarecrow", "apple orchard", "fall leaves", "hayride", "corn maze", "pilgrim"}},
+		Words: []string{"autumn", "thanksgiving", "harvest", "scarecrow", "apple orchard", "fall leaves", "hayride", "corn maze", "pilgrim"},
+		Not:   []string{"pilgrim's progress"}},
 	{Key: "advent", Icon: "🕯️", Name: "Advent", Theme: "books for Advent: waiting for Christmas, the Nativity story, St. Nicholas and preparing our hearts",
 		MaxSpice: -1, span: func(y int) (time.Time, time.Time) { return AdventSunday(y), day(y, time.December, 24) },
-		Words: []string{"advent", "nativity", "jesse tree", "st. nicholas", "saint nicholas", "bethlehem", "manger"}},
+		Words: []string{"Advent", "nativity", "jesse tree", "st. nicholas", "saint nicholas", "bethlehem", "manger"}},
 	{Key: "christmas", Icon: "🎄", Name: "Christmas", Theme: "Christmas stories: the Nativity, Santa and St. Nicholas, family traditions, snow and giving",
 		MaxSpice: -1, span: fixed(time.November, 20, time.January, 6),
-		Words: []string{"christmas", "santa", "reindeer", "north pole", "nativity", "grinch", "yuletide", "mistletoe", "noel", "nutcracker", "gingerbread", "polar express", "elves"}},
+		Words: []string{"christmas", "santa", "reindeer", "north pole", "nativity", "grinch", "yuletide", "mistletoe", "nutcracker", "gingerbread", "polar express"},
+		Not:   []string{"santa fe", "santa monica", "santa barbara", "santa cruz", "santa clara", "santa maria"}},
 	{Key: "winter", Icon: "❄️", Name: "Winter", Theme: "winter books: snow days, ice, cold adventures and cozy stories by the fire",
 		MaxSpice: -1, span: fixed(time.December, 1, time.February, 28),
 		Words: []string{"winter", "snowman", "snowflake", "snowy", "blizzard", "ice skating", "sled", "frozen", "arctic", "hot cocoa", "mittens"}},
@@ -82,10 +84,11 @@ var All = []Season{
 		Words: []string{"valentine", "friendship", "best friend", "cupid", "love letter", "kindness"}},
 	{Key: "lent_easter", Icon: "✝️", Name: "Lent & Easter", Theme: "books for Lent and Easter: the Passion and Resurrection of Jesus, sacrifice, forgiveness and new life",
 		MaxSpice: -1, span: func(y int) (time.Time, time.Time) { e := Easter(y); return e.AddDate(0, 0, -46), e.AddDate(0, 0, 49) },
-		Words: []string{"easter", "lent", "lenten", "resurrection", "holy week", "good friday", "stations of the cross", "palm sunday", "empty tomb", "crucifixion"}},
+		Words: []string{"easter", "Lent", "lenten", "resurrection", "holy week", "good friday", "stations of the cross", "palm sunday", "empty tomb", "crucifixion"},
+		Not:   []string{"easter island"}},
 	{Key: "spring", Icon: "🌷", Name: "Spring", Theme: "spring books: gardens, flowers, baby animals, rain and new beginnings",
 		MaxSpice: -1, span: fixed(time.March, 20, time.June, 20),
-		Words: []string{"springtime", "garden", "blossom", "bloom", "butterfly", "butterflies", "baby animals", "tulip"}},
+		Words: []string{"springtime", "garden", "blossom", "blossoming", "bloom", "blooming", "butterfly", "baby animals", "tulip"}},
 	{Key: "summer", Icon: "☀️", Name: "Summer", Theme: "summer reads: beaches, camp, vacations, road trips and outdoor adventures",
 		MaxSpice: -1, span: fixed(time.June, 1, time.August, 31),
 		Words: []string{"summer", "beach", "camping", "summer camp", "vacation", "ocean", "island", "road trip", "lemonade", "swimming"}},
@@ -94,7 +97,8 @@ var All = []Season{
 		Words: []string{"back to school", "first day of school", "new school", "classroom", "teacher", "kindergarten", "school year", "school bus"}},
 	{Key: "saints", Icon: "👼", Name: "Saints & feast days", Theme: "lives of the saints, feast days, and stories of faith for Catholic families",
 		MaxSpice: -1, span: fixed(time.October, 25, time.November, 8),
-		Words: []string{"saint", "martyr", "our lady", "feast day", "patron saint", "canonized", "lives of the"}},
+		Words: []string{"saint", "martyr", "martyrdom", "our lady", "feast day", "canonized", "canonization", "beatified", "beatification", "hagiography"},
+		Not:   []string{"saint louis", "saint petersburg", "saint-exupéry", "saint-exupery"}},
 }
 
 // Find returns the season with key.
@@ -129,21 +133,4 @@ func Current(now time.Time) []Season {
 		}
 	}
 	return out
-}
-
-// text is a book's searchable words, with a space on each side so a word
-// can be matched at its start.
-const text = `(' ' || LOWER(b.title || ' ' || b.tags || ' ' || b.premise || ' ' || b.blurb || ' ' || b.description) || ' ')`
-
-// WordsCond is the SQL (over books b) for the season's books by its words.
-// It reads every book's description, so the store keeps its matches
-// (season_books) rather than running it on each visit.
-func (s Season) WordsCond() (string, []any) {
-	parts := make([]string, 0, len(s.Words))
-	args := make([]any, 0, len(s.Words))
-	for _, w := range s.Words {
-		parts = append(parts, text+" LIKE ?")
-		args = append(args, "% "+strings.ToLower(w)+"%")
-	}
-	return "(" + strings.Join(parts, " OR ") + ")", args
 }

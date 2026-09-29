@@ -407,6 +407,15 @@ CREATE TABLE IF NOT EXISTS season_books (
     book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
     PRIMARY KEY (season, book_id)
 );
+-- Books a parent took off a shelf ("Not for this shelf"): shelf is
+-- "season:<key>" or "collection:<id>". Words and the AI never put them back.
+CREATE TABLE IF NOT EXISTS shelf_rejects (
+    shelf       TEXT NOT NULL,
+    book_id     INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    rejected_by TEXT NOT NULL DEFAULT '',
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (shelf, book_id)
+);
 
 -- Titles a parent said are the same book as another ("Same book as…"): a
 -- book under one of these keys joins that book instead of becoming a new one.

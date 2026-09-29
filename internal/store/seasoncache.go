@@ -38,7 +38,28 @@ func (s *Store) seasonReady(se seasons.Season) error {
 	if st, ok := s.seasonAt[se.Key]; ok && st.print == print && time.Since(st.at) < seasonTTL {
 		return nil
 	}
-	cond, args := se.WordsCond()
+	// Matching reads every book's text, so it runs here, not on each visit.
+	rows, err := s.DB.Queryx(`SELECT b.id, b.title || ' ' || b.tags || ' ' || b.premise || ' ' || b.blurb || ' ' || b.description
+		FROM books b WHERE NOT EXISTS (SELECT 1 FROM shelf_rejects r WHERE r.shelf = ? AND r.book_id = b.id)`, SeasonShelf(se.Key))
+	if err != nil {
+		return err
+	}
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		var text string
+		if err := rows.Scan(&id, &text); err != nil {
+			rows.Close()
+			return err
+		}
+		if se.Matches(text) {
+			ids = append(ids, id)
+		}
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
 	tx, err := s.DB.Beginx()
 	if err != nil {
 		return err
@@ -47,8 +68,10 @@ func (s *Store) seasonReady(se seasons.Season) error {
 	if _, err := tx.Exec(`DELETE FROM season_books WHERE season = ?`, se.Key); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(`INSERT INTO season_books (season, book_id) SELECT ?, b.id FROM books b WHERE `+cond, append([]any{se.Key}, args...)...); err != nil {
-		return err
+	for _, id := range ids {
+		if _, err := tx.Exec(`INSERT INTO season_books (season, book_id) VALUES (?, ?)`, se.Key, id); err != nil {
+			return err
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		return err
