@@ -89,8 +89,9 @@ func (s *Store) followRename(catalogID int64, extID, title, author string) error
 	if key != cur.Key {
 		var others int
 		if err := s.DB.Get(&others, `SELECT (SELECT COUNT(*) FROM catalog_books WHERE book_id = ?
-			AND NOT (catalog_id = ? AND external_id = ?)) + (SELECT COUNT(*) FROM books WHERE norm_key = ?)`,
-			cur.ID, catalogID, extID, key); err != nil || others > 0 {
+			AND NOT (catalog_id = ? AND external_id = ?)) + (SELECT COUNT(*) FROM books WHERE norm_key = ?)
+			+ (SELECT COUNT(*) FROM book_aliases WHERE norm_key = ?)`,
+			cur.ID, catalogID, extID, key, key); err != nil || others > 0 {
 			return err
 		}
 	}

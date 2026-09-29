@@ -5,13 +5,14 @@ import { get, post, del } from "./api.js";
 import { $, esc, attempt, canManage } from "./ui.js";
 import { coverImg } from "./covers.js";
 import { openNewCollection, openAICollection } from "./collectionai.js";
+import { shelfTabsHTML } from "./shelftabs.js";
 
 const covers = (c) => `<span class="flex gap-1">${(c.covers || []).map((id) => coverImg(id, "h-16 w-11")).join("")}</span>`;
 const kindChip = (c) => (c.kind === "manual" ? `<span class="chip-cat">✋ ${esc(c.created_by || "Parent")}</span>` : `<span class="chip-flag">✨ AI</span>`);
 
 export async function renderCollections(view, state) {
   const manager = canManage(state.user);
-  view.innerHTML = `
+  view.innerHTML = `${shelfTabsHTML("collections")}
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <h1 class="text-2xl font-bold">📚 Collections</h1>
       ${manager ? `<div class="flex flex-wrap gap-2"><button data-act="new" class="btn-secondary">＋ New collection</button>

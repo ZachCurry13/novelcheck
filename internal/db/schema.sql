@@ -406,3 +406,10 @@ CREATE TABLE IF NOT EXISTS season_books (
     book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
     PRIMARY KEY (season, book_id)
 );
+
+-- Titles a parent said are the same book as another ("Same book as…"): a
+-- book under one of these keys joins that book instead of becoming a new one.
+CREATE TABLE IF NOT EXISTS book_aliases (
+    norm_key TEXT PRIMARY KEY,
+    book_id  INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE
+);

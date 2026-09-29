@@ -48,6 +48,10 @@ var (
 	spaces    = regexp.MustCompile(`\s+`)
 	// "Title: A Novel", "Title - A Novel", "Title (A Novel)": a store's label, not the title.
 	novelTail = regexp.MustCompile(`(?i)\s*(?:[:\-–—]\s*a\s+novel|\(\s*a\s+novel\s*\))\s*$`)
+	// "Title (TV Tie-In)", "Title (Movie Tie-in Edition)", "Title: Netflix Tie-In",
+	// "Title (Now a Major Motion Picture)": an edition for a show or film,
+	// the same book as the original.
+	tieInTail = regexp.MustCompile(`(?i)\s*(?:[(\[]\s*|[:\-–—]\s*)(?:(?:the\s+)?(?:(?:tv|television|movie|film|motion\s+picture|netflix|hbo|hulu|disney\+?|apple\s+tv\+?|prime\s+video|amazon|media)(?:\s+(?:series|show|original))?\s+)?tie[\s-]?in(?:\s+edition)?|now\s+a\s+(?:major\s+)?(?:motion\s+picture|film|movie|netflix\s+(?:original\s+)?series|(?:tv|television)\s+series))\s*[)\]]?\s*$`)
 )
 
 // Parse takes the series numbering out of a title. When nothing applies,
@@ -57,6 +61,11 @@ func Parse(raw string) Parsed {
 	// "**" is bold marking left over from lists copied out of AI chats.
 	if t := novelTail.ReplaceAllString(strings.ReplaceAll(title, "**", ""), ""); hasLetter(t) {
 		title = strings.TrimSpace(t)
+	}
+	for i := 0; i < 2; i++ { // "Title (Movie Tie-In): A Novel" and the like
+		if t := novelTail.ReplaceAllString(tieInTail.ReplaceAllString(title, ""), ""); hasLetter(t) {
+			title = strings.TrimSpace(t)
+		}
 	}
 	out := Parsed{Title: title}
 	rest := title

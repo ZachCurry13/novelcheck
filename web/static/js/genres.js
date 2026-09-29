@@ -24,4 +24,4 @@ export function genreChips(b) {
 export const authorLinks = (author) => (author || "Unknown author").split(" & ").map((a) => author
   ? `<a href="${link("author", a.trim())}" data-close class="hover:underline">${esc(a.trim())}</a>` : esc(a)).join(" &amp; ");
 
-export const seriesLink = (b, text) => `<a href="${link("series", b.series)}" data-close class="text-sm text-sky-300 hover:underline">📚 ${esc(text)}</a>`;
+export const seriesLink = (b, text) => `<a href="#/series?name=${encodeURIComponent(b.series)}" data-close class="text-sm text-sky-300 hover:underline">📚 ${esc(text)}</a>`;

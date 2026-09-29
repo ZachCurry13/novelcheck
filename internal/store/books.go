@@ -36,7 +36,7 @@ func (s *Store) UpsertBook(title, author, isbn, description string) (int64, erro
 	if t.Title == "" {
 		return 0, errors.New("title required")
 	}
-	key := NormKey(t.Title, author)
+	key := s.aliasKey(NormKey(t.Title, author)) // a title merged into another book joins it
 	_, err := s.DB.Exec(`INSERT INTO books (norm_key, title, author, isbn, description, series, series_index)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(norm_key) DO UPDATE SET

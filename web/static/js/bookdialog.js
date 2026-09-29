@@ -88,7 +88,8 @@ export async function openBook(id, state, onChange) {
       ${(b.blurb || b.description) ? `<div><span class="label">Blurb</span>
         <p class="text-sm leading-relaxed text-slate-300 whitespace-pre-line">${esc(b.blurb || b.description)}</p></div>` : ""}
       ${bookCollectionsHTML(data.collections || [], manager)}
-      <div><span class="label">In libraries</span><ul class="space-y-2">${copies || "<li class='text-sm text-slate-500'>Not in your libraries yet</li>"}</ul>${dupNote}</div>
+      <div><span class="label">In libraries</span><ul class="space-y-2">${copies || "<li class='text-sm text-slate-500'>Not in your libraries yet</li>"}</ul>${dupNote}
+        ${manager ? `<button type="button" data-act="same-as" class="mt-1 text-xs text-slate-400 underline">🔗 Same book as another title? (a TV tie-in, a reissue)</button>` : ""}</div>
       ${b.analysis_model ? `<p class="text-xs text-slate-500">${b.analysis_model.startsWith("manual: ")
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : b.analysis_model.startsWith("deep: ") ? "🧬 Deep Scanned (whole book) by " + esc(b.analysis_model.slice(6)) : "Rated from the description by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
       ${b.approved ? `<p class="text-xs text-emerald-400">✓ Marked OK by ${esc(b.approved_by)}: shown to everyone, even if it matches their hide filters or content rules.</p>` : ""}
@@ -127,6 +128,12 @@ export async function openBook(id, state, onChange) {
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (act === "rerate-big") {
       if (await attempt(() => post(`/api/books/${b.id}/rerate-big`), "Re-rating on the Deep Scan machine; the new rating shows when it's done")) e.target.closest("[data-act]").remove();
+    } else if (act === "same-as") {
+      import("./sameas.js").then((m) => m.openSameAs(b, (kept) => {
+        dlg.close();
+        openBook(kept, state, onChange);
+        onChange?.();
+      }));
     } else if (act === "calibre-title") {
       openTitleEdit(b, calibreIds, cw, refresh);
     } else if (act === "remove-from") {
