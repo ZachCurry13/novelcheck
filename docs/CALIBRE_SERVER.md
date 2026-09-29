@@ -36,9 +36,20 @@ Before removing anything, NovelCheck checks each book's title with Calibre. If t
 
 To undo, open Calibre and use **Remove books → Restore recently deleted** (the recycle bin).
 
+## Formats: keep some, convert to EPUB
+
+The same connection runs **Formats…** (Admin → Delivery & Services → Calibre Library).
+
+**Keep only some formats.** Tick the formats to keep, for example EPUB. Every book that has a kept format loses its other formats (MOBI, AZW3…); books without a kept format are left alone. NovelCheck shows the books, the files and the space saved first. When you click **Remove**, it checks each title with Calibre, and checks that each book really has a kept format in Calibre, before removing anything from it. Calibre moves the removed files to its recycle bin.
+
+**Undo.** **Removed formats** lists each cleanup for 7 days, with **Undo all** and **Undo** for single files. NovelCheck reads the file back from Calibre's recycle bin (the `.caltrash` folder inside the library) and gives it to Calibre again. Calibre empties its recycle bin after 14 days unless you changed that; files it has emptied can't come back. A very large file (over 400 MB) is restored in Calibre itself: **Remove books → Restore recently deleted**.
+
+**Convert to EPUB.** Books with no EPUB but a MOBI, AZW3, AZW, DOCX, FB2 or similar file are listed. **Convert** has Calibre make the EPUB, one book at a time, on the computer Calibre runs on, with Calibre's own conversion settings. The original file stays. That computer must stay on (and Calibre open) until the list is done; **Stop** ends it after the current book.
+
 ## Troubleshooting
 
 - **"can't reach the calibre Content server":** Calibre isn't running, the server isn't started, or the address or port is wrong. If Calibre runs on a computer, that computer must be on (and Calibre open) when you remove books.
 - **"calibre didn't accept the username or password":** re-enter them. Passwords are case-sensitive.
 - **"does not have permission to make changes":** in Calibre's **User accounts**, allow that user to make changes.
 - **"stopped: calibre's book #… is …":** the Content server is sharing a different library than the one NovelCheck reads. Pick the right library in **One-click removal**, or check the Calibre folder in NovelCheck's **Calibre Library** settings.
+- **"Stopped after one file: … it isn't in calibre's recycle bin":** Calibre removed the file, but NovelCheck can't see it in the library's `.caltrash` folder, so Undo couldn't work. Usually NovelCheck is reading a copy of the library, not the one Calibre uses. Restore that one file in Calibre (**Remove books → Restore recently deleted**) and check the Calibre folder in NovelCheck's settings.

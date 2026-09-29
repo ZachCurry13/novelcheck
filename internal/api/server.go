@@ -49,6 +49,7 @@ type Server struct {
 	Safe        *safemode.State      // safe mode: background work off until an admin leaves it
 	Web         fs.FS                // embedded static assets
 	logins      *loginLimiter
+	formats     formatJob // format cleanup's background job
 	etags       sync.Map  // static file name → ETag
 	buildOnce   sync.Once // buildID, computed once
 	build       string
@@ -250,6 +251,12 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/calibre/removal", s.handleCalibreRemoval)
 				r.Post("/admin/calibre/remove", s.handleCalibreRemove)
 				r.Post("/admin/calibre/duplicates/remove", s.handleRemoveDuplicates)
+				r.Get("/admin/formats", s.handleFormats)
+				r.Post("/admin/formats/remove", s.handleRemoveFormats)
+				r.Post("/admin/formats/undo", s.handleUndoFormats)
+				r.Post("/admin/formats/convert", s.handleConvertFormats)
+				r.Get("/admin/formats/job", s.handleFormatJob)
+				r.Post("/admin/formats/job/stop", s.handleStopFormatJob)
 				r.Get("/admin/title-fixes", s.handleTitleFixes)
 				r.Post("/admin/title-fixes", s.handleFixTitles)
 				r.Get("/admin/problems", s.handleProblemReports)

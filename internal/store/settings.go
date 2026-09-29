@@ -49,6 +49,7 @@ const (
 	KeyCalibreSrvPassword = "calibre_server_password"
 	KeyCalibreSrvLibrary  = "calibre_server_library"
 	KeyCalibreWebURL      = "calibre_web_url" // optional Calibre-Web address for "Open in Calibre-Web" links
+	KeyFormatKeep         = "format_keep"     // format cleanup's kept formats, e.g. "EPUB,PDF"
 	KeyCalibreLastSync    = "calibre_last_sync"
 	KeyCalibreLastResult  = "calibre_last_result"
 )

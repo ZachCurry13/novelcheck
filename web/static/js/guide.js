@@ -14,7 +14,7 @@ const EVERYONE = [
   ["🎉 Events",
     "On free-book days such as <b>Stuff Your Kindle</b>, a parent pastes the event's list under <b>Discover → 🎉 Events</b>. You see each book's rating, which ones you already have, and a <b>Claim on Amazon</b> button; <b>✓ I claimed it</b> puts the book in your library. An event opens in the Library, so every filter and sort works on it, plus <b>Hide books we have</b>. When an event ends it moves to the archive."],
   ["📚 Collections & seasons",
-    "<b>📚 Collections</b> are shelves across your libraries, like \"Summer reading\" or \"Dragon adventures\". The chips at the top of the Library show seasonal shelves such as 🎃 Halloween or 🕯️ Advent, the ones in season first. Tap one to see its books."],
+    "<b>📚 Collections</b> are shelves across your libraries, like \"Summer reading\" or \"Dragon adventures\". The chips at the top of the Library show seasonal shelves such as 🎃 Halloween or 🕯️ Advent, the ones in season first. Tap one to see its books. <b>🗂 Series</b> (next to Collections) shows each series in order: the books you have, what you've read, and what's next."],
   ["🌶️ What the ratings mean",
     `<p class="mb-2">Books get 0 to 5 peppers for romance and sexual content:</p>
     <ul class="space-y-1">${PEPPERS.map((p) => `<li>${pepperChip(p.n)}</li>`).join("")}
@@ -52,7 +52,7 @@ const ADMIN = [
     `<p class="mb-2">When someone presses <b>▶ Start Reading</b> in Up Next, NovelCheck can put the book on their e-reader:</p>
     <ul class="list-disc space-y-1 pl-5">
       <li><b>Kindle</b>: fill in <b>Admin → Delivery & Services → SMTP / Send-to-Kindle</b> (for Gmail, an App Password) and press <b>Send test email</b>. Each reader adds that sender to their Amazon approved list; <b>Profile</b> shows how.</li>
-      <li><b>KOReader</b>: nothing to set up here. Each reader opens <b>Profile → KOReader setup</b> for their private catalog address and QR code (parents can do it for kids from their account card).</li>
+      <li><b>KOReader</b>: nothing to set up here. Each reader opens <b>Profile → KOReader setup</b> for their private catalog address and QR code, and for reading sync, which marks books Reading and Finished in Up Next (parents can do it for kids from their account card).</li>
     </ul>
     <p class="mt-2">Don't use either? Switch them off under <b>Admin → System & Toggles → Features</b>.</p>`],
 ];

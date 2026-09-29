@@ -25,7 +25,7 @@ export async function renderProfile(view, state) {
         <details class="text-xs text-slate-400${on(u, "send_to_kindle") ? "" : " module-off"}"><summary class="cursor-pointer">Books are emailed from
           <b>${esc(u.delivery_from || "the admin's sender address")}</b>. How to approve it on Amazon</summary>
           <div class="mt-2">${amazonStepsHTML(u.delivery_from)}</div></details>
-        <button type="button" id="ko-setup" class="btn-ghost w-full text-sm${on(u, "koreader") ? "" : " module-off"}">📖 KOReader setup: catalog address and QR code</button>
+        <button type="button" id="ko-setup" class="btn-ghost w-full text-sm${on(u, "koreader") ? "" : " module-off"}">📖 KOReader setup: catalog address, QR code and reading sync</button>
         <button class="btn-primary">Save delivery settings</button>
       </form>
       <form id="password" class="card space-y-3">

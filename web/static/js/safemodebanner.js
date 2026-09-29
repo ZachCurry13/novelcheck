@@ -17,7 +17,7 @@ export function showSafeMode(user) {
   bar.id = "safe-banner";
   bar.className = "border-b border-amber-800 bg-amber-950/60";
   bar.innerHTML = `<div class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2 text-sm text-amber-200">
-    <span class="min-w-0 flex-1"><b>🛟 Safe mode:</b> Calibre sync, rating and Deep Scans are paused. ${esc(WHY[reason] || "")}</span>
+    <span class="min-w-0 grow basis-60"><b>🛟 Safe mode:</b> Calibre sync, rating and Deep Scans are paused. ${esc(WHY[reason] || "")}</span>
     ${reason === "env" ? "" : `<button type="button" data-leave class="btn-secondary py-1 text-sm">Leave safe mode</button>`}
   </div>`;
   document.getElementById("update-banner").after(bar);

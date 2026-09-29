@@ -5,12 +5,9 @@ NovelCheck (Go + vanilla JS PWA, self-hosted on the user's TrueNAS) rates a fami
 ## 1. Where things stand
 - **v1.27.0** (2026-09-29, the user's OK to release it before the rest): Deep Scan review redesign, Discover speed/NYT tags/weekly NYT, appearance (light theme following the device, OpenDyslexic, reduce motion), search history and sorts, safe mode and `novelcheck` commands, phone Admin sheet, Up Next suggestions kept in place. See spec "Deep Scan review (v1.27)" and "Comfort, search and safety (v1.27)".
 - Why the Deep Scan changed: a held scan of an adult mystery novel (0 → 4) rested on a fade-out scene (part 60 of 107, "about 55% in") that a small model called Level 5 and the old second check confirmed. By the scale it's a Level 3 book. The user shared the EPUB for analysis; it's only in the session scratchpad (and the local test Calibre folder), never in the repo. The user wants single-passage raises decided by an admin, with a note for parents.
-- **Next: v1.28** (planned and agreed 2026-09-29):
-  - **Series page** (`#/series`: every series with progress; one series in order with gaps, what's read, Next up → Up Next).
-  - **Box sets**: found by title ("Box Set", "Books 1–3", "Trilogy", "Omnibus", "Complete Series"; the AI names contents otherwise) and split into their books **after a parent confirms**; owning the box set counts as owning its books; each member opens the box set's file.
-  - **TV/movie tie-ins**: "(TV Tie-In)", "Movie Tie-In Edition" ignored in matching; **Same book as…** in the book window links two titles for good.
-  - **Read-status sync**: NovelCheck as a KOReader progress-sync (kosync) server: `/users/auth`, `PUT /syncs/progress`, `GET /syncs/progress/:document`, headers `x-auth-user`/`x-auth-key` (md5 of the password; a per-person sync code from Profile), document = KOReader's partial MD5 (md5 of 1024-byte reads at 0 and 1024·4^i, i=0..10) of the file NovelCheck served; opening → Reading, the end → Finished. Stock Kindle: no API; manual ✓ Finished, plus Goodreads/StoryGraph "read" shelves on import.
-  - **Format cleanup**: keep chosen formats (e.g. EPUB), remove others through the Content server (`/cdb/cmd/remove_format`; Calibre moves them to `.caltrash/f/<book id>/`), Undo for 7 days (re-add from the trash); **Convert to EPUB** via `/conversion/start/{book_id}` and `/conversion/status/{job_id}`.
+- **v1.28.0 is built on `feature/v1.28`, not released** (waiting for the user's OK). It has the Series page, box sets (split after a parent confirms), tie-ins and **Same book as…**, KOReader progress sync (`/kosync`) with read shelves on import, and **Formats…** (keep chosen formats with a 7-day Undo, and Convert to EPUB, both through the Content server). See the spec entry "Series, box sets, other titles, reading sync and formats (v1.28)" and status item 60.
+  - Format cleanup was tested against a fake Content server (`internal/api/formats_test.go`), never against a real calibre. Worth watching on the first real run: the recycle bin path (`<library>/.caltrash/f/<id>/<fmt>`; the job stops after one file if it can't see it), `add_format` over msgpack for Undo, and conversions finishing (calibre adds the EPUB when the finished status is read).
+  - KOReader sync was tested with KOReader's protocol in Go tests, not with a real e-reader.
 - The user's server runs on TrueNAS with the pull policy now "only if missing" (switched 2026-09-29).
 
 ## 2. Rules
@@ -41,13 +38,7 @@ NovelCheck (Go + vanilla JS PWA, self-hosted on the user's TrueNAS) rates a fami
 - The users (a parent admin and an editor) run this on TrueNAS and mostly on phones; keep explanations non-technical.
 
 ## 6. Not built yet (from the user's wishlist, a local file kept out of the repo)
-- Light/dark theme, dyslexia font and reduced motion
-- Series page, box-set splitting and TV-title aliases
-- Format pruning with a 7-day trash, and EPUB conversion
-- Safe mode and a CLI
-- Search history and "The"-stripping sort
-- Read-status sync
 - Parent profiles with an optional 4-digit PIN
 - Open questions to the user: Kindle `.kfx` file names; whether "user login information" meant a TrueNAS API key.
 
-Done from that list: Stuff Your Kindle events, seasonal shelves and AI collections with kid limits, Deep Scans on a second machine, electricity cost, the speed test and model-update alerts.
+Done from that list: Stuff Your Kindle events, seasonal shelves and AI collections with kid limits, Deep Scans on a second machine, electricity cost, the speed test and model-update alerts, light/dark theme, the dyslexia font and reduced motion, safe mode and the CLI, search history and sorts (1.27), and in 1.28 the Series page, box sets, tie-in titles, format cleanup with EPUB conversion, and read-status sync.

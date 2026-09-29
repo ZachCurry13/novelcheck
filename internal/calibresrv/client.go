@@ -52,14 +52,20 @@ func (c *Client) httpc() *http.Client {
 // do sends a request, answering a Basic or Digest login challenge if the
 // server asks for one.
 func (c *Client) do(ctx context.Context, method, path string, body []byte) ([]byte, error) {
+	return c.doType(ctx, method, path, body, "application/json")
+}
+
+// doType is do with the body's content type (msgpack carries file data).
+func (c *Client) doType(ctx context.Context, method, path string, body []byte, ctype string) ([]byte, error) {
 	send := func(auth string) (*http.Response, error) {
 		req, err := http.NewRequestWithContext(ctx, method, c.URL+path, bytes.NewReader(body))
 		if err != nil {
 			return nil, err
 		}
 		if body != nil {
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Content-Type", ctype)
 		}
+		req.Header.Set("Accept", "application/json")
 		if auth != "" {
 			req.Header.Set("Authorization", auth)
 		}

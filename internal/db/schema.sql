@@ -440,6 +440,22 @@ CREATE TABLE IF NOT EXISTS kosync_docs (
     document TEXT PRIMARY KEY,
     book_id  INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE
 );
+-- Formats a parent removed from Calibre (format cleanup), for Undo: calibre
+-- keeps the files in its recycle bin (.caltrash/f/<calibre id>/).
+CREATE TABLE IF NOT EXISTS format_removals (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id     INTEGER REFERENCES books(id) ON DELETE SET NULL,
+    title       TEXT NOT NULL,
+    calibre_id  TEXT NOT NULL,
+    format      TEXT NOT NULL,
+    file_name   TEXT NOT NULL,
+    size        INTEGER NOT NULL DEFAULT 0,
+    batch       TEXT NOT NULL DEFAULT '',  -- one cleanup run, for "Undo all"
+    removed_by  TEXT NOT NULL DEFAULT '',
+    removed_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    restored_at DATETIME
+);
+CREATE INDEX IF NOT EXISTS idx_format_removals_batch ON format_removals(batch);
 CREATE TABLE IF NOT EXISTS kosync_progress (
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     document   TEXT NOT NULL,

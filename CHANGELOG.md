@@ -4,6 +4,35 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.28.0]
+
+### 🗂 Series
+- **A Series page** (Collections → **Series**): every series in your libraries, with how many you've read. Open one to see it in order: the numbers you don't have, what you've read or are reading, and **Next up** with **＋ Up Next**.
+- A book's series name opens its series page.
+
+### 📦 Box sets
+- **Books that hold several books** ("Books 1–3", "Trilogy", "Box Set") are found by their titles, and parents see a 📦 banner in Admin. A parent checks what's inside (**✨ Ask the AI** can list it), then splits it, or marks it **Not a box set**.
+- **Split books are real books:** each gets its own card and rating, counts as yours, and opens and downloads the box set's file. **Undo the split** puts it back.
+- The box set's file can't be removed or renamed from a split book, only from the box set.
+
+### 🔗 Same book, other titles
+- **TV and movie tie-ins** ("Dune (Movie Tie-In)", "Title: Now a Major Motion Picture") are recognized as the same book as the original.
+- **Same book as…** (on a book, for parents) joins two cards for one book, like a reissue under another name. The better-rated one stays, and its libraries, Up Next places, notes and wishes come together. Later imports under the other title find it.
+
+### 📖 Reading sync
+- **KOReader progress sync.** Point KOReader's **Progress sync** at NovelCheck (Profile → **KOReader setup** shows how, with your sync code). Opening a book marks it **▶ Reading** in Up Next, and reaching the end marks it **✓ Finished**; KOReader also keeps your place between devices. Parents can set it up for a kid's device from **Users**.
+- **Read shelves on import.** Importing a Goodreads or StoryGraph export marks the books on your **read** shelf as finished.
+- Stock Kindles can't report what's been read; mark those books finished in Up Next.
+
+### 🗂️ Formats in Calibre (Admin → Delivery & Services → Calibre Library → Formats…)
+- **Keep only the formats you want.** Tick the formats to keep (say EPUB): every book that has one loses its other formats, into Calibre's recycle bin. Books without a kept format are left alone, and NovelCheck checks with Calibre first. You see the list and the space saved before anything happens.
+- **Undo for 7 days** puts a whole cleanup, or one file, back from Calibre's recycle bin.
+- **Convert to EPUB.** Books with no EPUB but a MOBI, AZW3 or similar file can be converted by Calibre, one at a time, with its own conversion settings. The original file stays.
+- Uses the Content server connection from **One-click removal**, with a Calibre user allowed to make changes.
+
+### 🔧 Fixes
+- On phones, the safe mode banner puts **Leave safe mode** under its text instead of squeezing the text into a narrow column.
+
 ## [1.27.0]
 
 ### 🧬 Deep Scan: fewer false alarms, and you decide

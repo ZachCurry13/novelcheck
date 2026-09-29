@@ -27,12 +27,18 @@ export async function renderCalibreServer(host) {
         <button type="button" data-cs="save" class="btn-secondary">Test &amp; save</button>
         ${data.configured ? `<button type="button" data-cs="off" class="btn-ghost">Turn off</button>` : ""}
       </div>
+      <div class="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
+        <button type="button" data-cs="formats" class="btn-secondary">🗂️ Formats…</button>
+        <span class="text-xs text-slate-400">Keep only the formats you want (e.g. EPUB), with Undo, and convert books with no EPUB.</span>
+      </div>
     </div>`;
   const field = (n) => $(`[data-cs-f="${n}"]`, host);
 
   host.addEventListener("click", async (e) => {
     const act = e.target.closest("[data-cs]")?.dataset.cs;
-    if (act === "guide") {
+    if (act === "formats") {
+      import("./formats.js").then((m) => m.openFormats());
+    } else if (act === "guide") {
       const g = $("#cs-guide", host);
       g.innerHTML = renderMarkdown(data.guide);
       g.classList.toggle("hidden");
