@@ -178,4 +178,8 @@ type QueueItem struct {
 	SpiceLevel     *int    `db:"spice_level" json:"spice_level"`
 	DeepChange     string  `db:"deep_change" json:"deep_change"` // e.g. "2→4" when a Deep Scan raised the rating
 	Owned          bool    `db:"owned" json:"owned"`             // false = only looked up: still to get
+	// File is what Start Reading can deliver (set by the API): "send" (a file
+	// for the reader's delivery method), "other" (only formats Amazon no longer
+	// takes by email, like AZW3 or MOBI) or "none" (paper, an imported list).
+	File string `db:"-" json:"file"`
 }

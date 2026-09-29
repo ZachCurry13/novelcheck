@@ -1,10 +1,10 @@
 package api
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/delivery"
@@ -12,7 +12,8 @@ import (
 )
 
 func (s *Server) handleListQueue(w http.ResponseWriter, r *http.Request) {
-	items, err := s.Store.ListQueue(auth.UserFrom(r).ID, r.URL.Query().Get("all") == "1")
+	u := auth.UserFrom(r)
+	items, err := s.Store.ListQueue(u.ID, r.URL.Query().Get("all") == "1")
 	if err != nil {
 		writeStoreErr(w, err)
 		return
@@ -20,7 +21,30 @@ func (s *Server) handleListQueue(w http.ResponseWriter, r *http.Request) {
 	if items == nil {
 		items = []store.QueueItem{}
 	}
+	for i := range items {
+		items[i].File = "none"
+		if items[i].Owned && items[i].Status != "finished" {
+			_, items[i].File = s.fileFor(items[i].BookID, u.DeliveryMethod == "email")
+		}
+	}
 	writeJSON(w, http.StatusOK, items)
+}
+
+// fileFor is the file Start Reading would deliver and what kind it is:
+// "send" (one the reader's delivery takes; email takes only EPUB and PDF),
+// "other" (only formats Amazon no longer takes by email) or "none".
+func (s *Server) fileFor(bookID int64, email bool) (store.BookCopy, string) {
+	copies, err := s.Store.BookCopies(bookID)
+	if err != nil {
+		return store.BookCopy{}, "none"
+	}
+	if best, ok := delivery.BestFile(copies, email); ok && s.insideCalibre(best.Path) {
+		return best, "send"
+	}
+	if best, ok := delivery.BestFile(copies, false); ok && email && s.insideCalibre(best.Path) {
+		return best, "other"
+	}
+	return store.BookCopy{}, "none"
 }
 
 func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) {
@@ -112,18 +136,23 @@ func (s *Server) deliver(u *store.User, bookID int64) (string, error) {
 		if !s.Store.SettingBool(store.KeyModuleKOReader) {
 			return "Marked as reading (KOReader sync is turned off)", nil
 		}
+		if _, kind := s.fileFor(bookID, false); kind != "send" {
+			return "Marked as reading (the library has no file of it for KOReader)", nil
+		}
 		return "Ready in your KOReader catalog (Up Next)", nil
 	case "email":
 		if !s.Store.SettingBool(store.KeyModuleKindle) {
 			return "Marked as reading (Send-to-Kindle is turned off)", nil
 		}
-		copies, err := s.Store.BookCopies(bookID)
-		if err != nil {
-			return "", err
-		}
-		best, ok := delivery.BestFile(copies, true)
-		if !ok || !s.insideCalibre(best.Path) {
-			return "", fmt.Errorf("no EPUB or PDF copy of this book exists in the Calibre library")
+		// A book with nothing Amazon takes is just marked as reading: the
+		// reader may have it already (a paper copy, a Kindle purchase).
+		best, kind := s.fileFor(bookID, true)
+		switch kind {
+		case "other":
+			return "Marked as reading. Nothing was sent: the library only has it as " + strings.ToUpper(best.Format) +
+				", which Amazon doesn't take by email. An admin can convert it to EPUB (Admin → Calibre Library → Formats).", nil
+		case "none":
+			return "Marked as reading. Nothing was sent: the library has no EPUB or PDF of it.", nil
 		}
 		cfg := delivery.SMTPConfig{
 			Host:     s.Store.Setting(store.KeySMTPHost),

@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.28.1]
+
+### 🔧 Fixes
+- **Up Next no longer tries to email a book there's no file for.** A book with nothing Amazon takes, like a paper book, one from an imported Kindle or Goodreads list, or one only in AZW3/MOBI, says so on its row. **▶** then just marks it as reading instead of failing with an error. For AZW3/MOBI-only books, an admin can make an EPUB with **Formats… → Convert to EPUB**.
+
 ## [1.28.0]
 
 ### 🗂 Series

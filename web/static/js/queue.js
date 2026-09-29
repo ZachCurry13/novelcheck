@@ -41,7 +41,7 @@ export async function renderQueue(view, state) {
     const next = items.filter((i) => i.status === "queued");
     reading.innerHTML = cur.length ? cur.map(readingCard).join("")
       : `<p class="text-sm text-slate-500">Nothing in progress. Press ▶ Start Reading on a queued book.</p>`;
-    queued.innerHTML = next.length ? next.map(queueRow).join("")
+    queued.innerHTML = next.length ? next.map((i, idx) => queueRow(i, idx, state.user)).join("")
       : `<li class="text-sm text-slate-500">Your queue is empty. Add books from the Library with ＋.</li>`;
   }
 
@@ -61,8 +61,10 @@ export async function renderQueue(view, state) {
     btn.disabled = true;
     if (act === "start") {
       // Send-to-Kindle: show who the email comes from (Amazon's approved list) first.
-      const title = btn.closest("[data-item]").querySelector("[data-title]")?.textContent || "this book";
-      if (state.user.delivery_method === "email" && on(state.user, "send_to_kindle") && !(await confirmKindleSend(state.user, title))) {
+      const row = btn.closest("[data-item]");
+      const title = row.querySelector("[data-title]")?.textContent || "this book";
+      const sends = row.dataset.file === "send"; // nothing to email: it's just marked as reading
+      if (sends && state.user.delivery_method === "email" && on(state.user, "send_to_kindle") && !(await confirmKindleSend(state.user, title))) {
         btn.disabled = false;
         return;
       }
@@ -99,11 +101,21 @@ export async function renderQueue(view, state) {
   return () => sortable?.destroy();
 }
 
+// noFile says, before ▶ is pressed, that a book has nothing to deliver (a
+// paper book, one from an imported list, AZW3/MOBI only), so ▶ only marks it
+// as reading.
+function noFile(i, user) {
+  const method = user.delivery_method;
+  if (!i.owned || i.file === "send" || !["email", "koreader"].includes(method)) return "";
+  const why = i.file === "other" ? "AZW3/MOBI only, which Amazon won't take" : `No ${method === "email" ? "EPUB or PDF" : "file"} to send`;
+  return `<span class="block text-xs text-slate-400" title="▶ marks it as reading without sending anything">${i.file === "other" ? "🔄" : "📕"} ${why}: ▶ marks it as reading</span>`;
+}
+
 // On phones the row is the cover, two lines of title and small ▶ / ✕
 // buttons; tapping the cover or title opens the book's window.
-function queueRow(i, idx) {
+function queueRow(i, idx, user) {
   return `
-    <li data-item="${i.id}" data-book="${i.book_id}" class="card flex items-center gap-2 p-2 sm:gap-3 sm:p-3">
+    <li data-item="${i.id}" data-book="${i.book_id}" data-file="${esc(i.file || "none")}" class="card flex items-center gap-2 p-2 sm:gap-3 sm:p-3">
       <span class="drag-handle px-1" title="Drag to reorder" aria-label="Drag to reorder">⠿</span>
       <button type="button" data-open class="flex min-w-0 flex-1 items-center gap-2 text-left sm:gap-3" title="Book details">
         ${coverImg(i.book_id, "h-16 w-11")}
@@ -111,7 +123,7 @@ function queueRow(i, idx) {
           <span data-title class="font-semibold leading-snug line-clamp-2">${esc(i.title)}</span>
           <span class="block truncate text-xs text-slate-400"><span data-pos>${idx + 1}</span> · ${esc(i.author || "Unknown author")}</span>
           ${deepBanner(i)}
-          ${i.owned ? "" : `<span class="block text-xs text-sky-300">📦 Not in your library yet</span>`}
+          ${i.owned ? noFile(i, user) : `<span class="block text-xs text-sky-300">📦 Not in your library yet</span>`}
         </span>
       </button>
       <span class="hidden shrink-0 md:block">${classChip(i)}</span>
