@@ -74,24 +74,47 @@ function koreaderHTML(url, username, own) {
 // openKOReaderSetup shows the address for the signed-in person (no userId)
 // or for a kid's device (userId, parents only).
 export async function openKOReaderSetup(userId) {
-  const info = await attempt(() => get(userId ? `/api/admin/users/${userId}/opds` : "/api/me/opds"));
+  const syncURL = userId ? `/api/admin/users/${userId}/kosync` : "/api/me/kosync";
+  const [info, sync] = await Promise.all([attempt(() => get(userId ? `/api/admin/users/${userId}/opds` : "/api/me/opds")),
+    get(syncURL).catch(() => null)]);
   if (!info) return;
   const d = dialog();
-  const render = (i) => {
+  const render = (i, s) => {
     const url = location.origin + i.path;
     d.innerHTML = `<div class="max-h-[85vh] space-y-4 overflow-y-auto p-5">
       <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">📖 Set up KOReader</h2>
-        <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>${koreaderHTML(url, i.username, !userId)}</div>`;
+        <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>${koreaderHTML(url, i.username, !userId)}
+      ${s ? syncHTML(location.origin + s.path, s.username, s.code) : ""}</div>`;
     d.onclick = async (e) => {
       const ko = e.target.closest("[data-ko]")?.dataset.ko;
       if (e.target === d || e.target.closest("[data-close]")) d.close();
       else if (ko === "copy") copyText(url);
+      else if (ko === "copy-sync") copyText(location.origin + s.path);
       else if (ko === "reset" && confirm("Make a new address? KOReader will need the new one.")) {
         const n = await attempt(() => post("/api/me/opds/reset"), "New address made");
-        if (n) render(n);
+        if (n) render(n, s);
+      } else if (ko === "new-code" && confirm("Make a new sync code? KOReader has to sign in again with it.")) {
+        const n = await attempt(() => post(syncURL), "New sync code made");
+        if (n) render(i, n);
       }
     };
   };
-  render(info);
+  render(info, sync);
   d.showModal();
+}
+
+// syncHTML: KOReader's progress sync pointed at NovelCheck, so Up Next
+// follows what's being read.
+function syncHTML(url, username, code) {
+  return `<div class="space-y-2 border-t border-slate-800 pt-4">
+    <h3 class="font-semibold">🔄 Reading sync</h3>
+    <p class="text-sm text-slate-400">KOReader tells NovelCheck how far each book is: opening one marks it ▶ Reading in Up Next, and reaching the end marks it ✓ Finished. It also keeps your place between devices. It works for books from this catalog.</p>
+    <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
+      <li>In a book, open the top menu → <b>🛠 Tools</b> → <b>Progress sync</b> → <b>Custom sync server</b>, and enter:
+        <span class="mt-1 flex items-center gap-2"><code class="min-w-0 break-all rounded bg-slate-800 px-2 py-1 text-xs">${esc(url)}</code>
+        <button type="button" data-ko="copy-sync" class="btn-ghost shrink-0 py-1 text-xs">📋 Copy</button></span></li>
+      <li>Choose <b>Register / Login</b>: username <b>${esc(username)}</b>, password <code class="rounded bg-slate-800 px-2 py-0.5">${esc(code)}</code>, then <b>Login</b>.</li>
+      <li>Turn on <b>Auto sync</b>. Leave <b>Document matching method</b> on <b>Binary</b>.</li>
+    </ol>
+    <button type="button" data-ko="new-code" class="btn-ghost py-1 text-xs">Make a new sync code</button></div>`;
 }

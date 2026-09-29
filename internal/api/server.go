@@ -69,6 +69,14 @@ func (s *Server) Router() http.Handler {
 	// KOReader's OPDS catalog: the private token in the address stands in for signing in.
 	r.Get("/opds/{token}", s.handleOPDSFeed)
 	r.Get("/opds/{token}/book/{id}/{name}", s.handleOPDSBook)
+	// KOReader progress sync: signed in with the NovelCheck name and a sync code.
+	r.Route("/kosync", func(r chi.Router) {
+		r.Use(noStore)
+		r.Post("/users/create", s.handleKosyncCreate)
+		r.Get("/users/auth", s.handleKosyncAuth)
+		r.Put("/syncs/progress", s.handleKosyncPut)
+		r.Get("/syncs/progress/{document}", s.handleKosyncGet)
+	})
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(noStore, cors(s.Cfg.CORSOrigins), csrfGuard)
@@ -90,6 +98,8 @@ func (s *Server) Router() http.Handler {
 			r.Delete("/me/searches", s.handleClearSearches)
 			r.Get("/me/opds", s.handleMyOPDS)
 			r.Post("/me/opds/reset", s.handleResetMyOPDS)
+			r.Get("/me/kosync", s.handleMyKosync)
+			r.Post("/me/kosync", s.handleMyKosync)
 
 			r.Get("/books", s.handleListBooks)
 			r.Get("/books/facets", s.handleBookFacets)
@@ -166,6 +176,8 @@ func (s *Server) Router() http.Handler {
 				r.Get("/collections/ai/{job}", s.handleFillJob)
 				r.Post("/wishlist/{id}/{action}", s.handleDecideWish)
 				r.Get("/admin/users/{id}/opds", s.handleUserOPDS)
+				r.Get("/admin/users/{id}/kosync", s.handleUserKosync)
+				r.Post("/admin/users/{id}/kosync", s.handleUserKosync)
 				r.Post("/catalogs", s.handleCreateCatalog)
 				r.Patch("/catalogs/{id}", s.handleUpdateCatalog)
 				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)

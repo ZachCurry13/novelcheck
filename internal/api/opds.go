@@ -147,6 +147,9 @@ func (s *Server) handleOPDSBook(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", mime)
 	}
 	w.Header().Set("Content-Disposition", `attachment; filename="`+fileName(b.Title, format)+`"`)
+	if r.Method == http.MethodGet {
+		go s.rememberFingerprint(id, best.Path) // KOReader's progress sync names the book by it
+	}
 	http.ServeContent(w, r, filepath.Base(best.Path), st.ModTime(), f)
 }
 

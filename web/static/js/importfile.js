@@ -84,6 +84,8 @@ export function rowsToBooks(rows, cols, shelves) {
       title, author, format: "list", path: `list:${title} | ${author}`,
       isbn: cols.isbn >= 0 ? cleanISBN(r[cols.isbn]) : "",
       asin: cols.asin >= 0 ? (r[cols.asin] || "").trim() : "",
+      // On the "read" shelf (Goodreads) or read (StoryGraph): counts as finished.
+      read: cols.shelf >= 0 && /^read$/i.test((r[cols.shelf] || "").trim()),
     });
   }
   return out;

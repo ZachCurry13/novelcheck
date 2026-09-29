@@ -62,6 +62,7 @@ type driveBook struct {
 	Path   string `json:"path"`   // path relative to the picked folder
 	Format string `json:"format"` // epub | mobi | azw3 | azw | kfx | pdf | list
 	ASIN   string `json:"asin"`
+	Read   bool   `json:"read"` // a list's "read" shelf (Goodreads, StoryGraph): finished by the importer
 }
 
 var driveFormats = map[string]bool{"epub": true, "mobi": true, "azw3": true, "azw": true, "kfx": true, "pdf": true,
@@ -137,6 +138,9 @@ func (s *Server) handleImportDrive(w http.ResponseWriter, r *http.Request) {
 		if err := s.Store.AddCopy(catID, id, truncateStr(b.Path, 1000), format, truncateStr(ext, 1000)); err != nil {
 			writeStoreErr(w, err)
 			return
+		}
+		if b.Read {
+			_, _ = s.Store.SyncReading(auth.UserFrom(r).ID, id, true) // ✓ Finished in the importer's Up Next history
 		}
 		imported++
 	}

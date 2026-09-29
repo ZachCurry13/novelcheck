@@ -19,10 +19,11 @@ CREATE TABLE IF NOT EXISTS users (
     max_spice        INTEGER NOT NULL DEFAULT -1,  -- kid accounts: hide books above this many peppers (0-5); -1 = no limit
     only_collections INTEGER NOT NULL DEFAULT 0,   -- kid accounts: see only books in their collections (user_collections)
     ai_features      INTEGER NOT NULL DEFAULT 0,   -- kid accounts: a parent allowed AI features (AI suggestions, Deep Scan requests)
-    start_page       TEXT NOT NULL DEFAULT '',
-    theme            TEXT NOT NULL DEFAULT '',
-    font             TEXT NOT NULL DEFAULT '',
-    motion           TEXT NOT NULL DEFAULT '',     -- the page NovelCheck opens on ('' = Check a book for parents, Library for kids)
+    start_page       TEXT NOT NULL DEFAULT '',     -- the page NovelCheck opens on ('' = Check a book for parents, Library for kids)
+    theme            TEXT NOT NULL DEFAULT '',     -- '' = match the device, 'dark', 'light'
+    font             TEXT NOT NULL DEFAULT '',     -- '' or 'dyslexic'
+    motion           TEXT NOT NULL DEFAULT '',     -- '' = match the device, 'reduce'
+    kosync_code      TEXT NOT NULL DEFAULT '',     -- KOReader progress sync code ('' = not set up)
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -432,3 +433,20 @@ CREATE TABLE IF NOT EXISTS box_members (
     PRIMARY KEY (box_id, book_id)
 );
 CREATE INDEX IF NOT EXISTS idx_box_members_book ON box_members(book_id);
+
+-- KOReader progress sync: which book each KOReader fingerprint is (worked
+-- out from the files NovelCheck has), and where each reader is in it.
+CREATE TABLE IF NOT EXISTS kosync_docs (
+    document TEXT PRIMARY KEY,
+    book_id  INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS kosync_progress (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    document   TEXT NOT NULL,
+    progress   TEXT NOT NULL DEFAULT '',
+    percentage REAL NOT NULL DEFAULT 0,
+    device     TEXT NOT NULL DEFAULT '',
+    device_id  TEXT NOT NULL DEFAULT '',
+    updated_at INTEGER NOT NULL DEFAULT 0,  -- Unix seconds, as KOReader expects
+    PRIMARY KEY (user_id, document)
+);
