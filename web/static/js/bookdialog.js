@@ -18,7 +18,7 @@ import { bookCollectionsHTML, bindBookCollections } from "./bookcollections.js";
 
 // Lists that aren't the family's libraries: books only looked up (Check a
 // book) or on a Discover list.
-const HIDDEN_LISTS = ["Looked up", "Discover"];
+const HIDDEN_LISTS = ["Looked up", "Discover", "Events"];
 
 export async function openBook(id, state, onChange) {
   const dlg = $("#book-dialog");

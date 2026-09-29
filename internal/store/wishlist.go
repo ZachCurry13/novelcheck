@@ -26,7 +26,7 @@ var ErrAlreadyWished = errors.New("this book is already on your wishlist")
 // ownedCond is true when the book (alias b) is in a real library, not only
 // looked up with Check a book or listed in Discover.
 const ownedCond = `EXISTS (SELECT 1 FROM catalog_books oc JOIN catalogs ocat ON ocat.id = oc.catalog_id
-	WHERE oc.book_id = b.id AND ocat.name NOT IN ('` + LookedUpCatalog + `', '` + DiscoverCatalog + `'))`
+	WHERE oc.book_id = b.id AND ocat.name NOT IN ('` + LookedUpCatalog + `', '` + DiscoverCatalog + `', '` + EventsCatalog + `'))`
 
 const wishCols = `w.id, w.book_id, b.title, b.author, b.spice_level, w.username, w.note, w.status, w.decided_by,
 	w.created_at, w.updated_at`

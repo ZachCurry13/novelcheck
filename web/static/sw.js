@@ -1,7 +1,7 @@
 // NovelCheck service worker: caches the app shell for offline launch and
 // home-screen installs. API responses are never cached (they are private and
 // sent with Cache-Control: no-store).
-const CACHE = "novelcheck-shell-v57";
+const CACHE = "novelcheck-shell-v58";
 const SHELL = [
   "/",
   "/index.html",
@@ -87,6 +87,8 @@ const SHELL = [
   "/js/adminnav.js",
   "/js/discovertabs.js",
   "/js/profileextras.js",
+  "/js/events.js",
+  "/js/eventnew.js",
   "/js/barcode.js",
   "/js/wishlist.js",
   "/js/delivery.js",

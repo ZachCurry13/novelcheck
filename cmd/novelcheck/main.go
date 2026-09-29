@@ -23,6 +23,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/discover"
+	"github.com/zachcurry13/novelcheck/internal/events"
 	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -78,6 +79,7 @@ func main() {
 		return worker.Status().State == "idle" && analyzer.RateHoursOpen(st, time.Now())
 	}
 	go collectionsSvc.Loop(ctx)
+	go events.Loop(ctx, st) // unpinned events go after 30 days
 	syncer := &calibre.Syncer{Store: st, Dir: cfg.CalibreDir}
 	syncer.NewBooks = func() bool {
 		worker.Kick()

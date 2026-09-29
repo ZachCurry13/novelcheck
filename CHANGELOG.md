@@ -4,7 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
-() => `## [1.24.0]
+() => `## [1.25.0]
+
+### 🎉 Stuff Your Kindle events
+- **Free-book days, sorted for your family.** Under **Discover → 🎉 Events**, a parent presses **＋ New event**, then pastes the event's list (copy it from the event's page or email: the Amazon links come along) or types the page's address.
+- **Every book is rated.** Books NovelCheck doesn't know yet are rated first in line, within your hourly AI limit, and the page fills in as the ratings arrive.
+- **See what fits:** each book shows its peppers and content icons, and whether it's already yours, on a wishlist or in Up Next. Tick **Hide Level 3+**, **Hide books we have** or **Rated only**, or sort **Mildest first**.
+- **Claim on Amazon ↗** opens the book's Amazon page. Then **✓ I claimed it** puts it in the library you pick (for example "Kindle (Amazon)"), so it counts as yours everywhere.
+- **The whole family can look.** Kids see the rated books their rules allow, without the Amazon buttons. Events clean themselves up after 30 days unless a parent pins them; **🗑** discards one sooner.
+
+## [1.24.0]
 
 ### 🧭 A shorter menu
 - **Check a book · Library · Discover · Up Next · Collections · Admin · Profile.** That's all that's left at the top (on phones: Check, Library, Discover, Up Next and More).

@@ -186,6 +186,25 @@ CREATE TABLE IF NOT EXISTS user_hidden_content (
     PRIMARY KEY (user_id, key)
 );
 
+-- Stuff Your Kindle events: an event's list of books (often free for a
+-- day), kept 30 days unless pinned. asin/link point at Amazon when known.
+CREATE TABLE IF NOT EXISTS events (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT NOT NULL,
+    source_url TEXT NOT NULL DEFAULT '',
+    created_by TEXT NOT NULL DEFAULT '',
+    pinned     INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS event_books (
+    event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    book_id  INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    position INTEGER NOT NULL DEFAULT 0,
+    asin     TEXT NOT NULL DEFAULT '',
+    link     TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (event_id, book_id)
+);
+
 -- Collections: shelves across libraries, made by a parent or filled by the AI
 -- from a theme. "idea" = the AI's weekly proposal, waiting for a parent.
 -- season = the seasonal shelf (internal/seasons) the collection stands for.

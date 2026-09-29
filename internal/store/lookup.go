@@ -18,8 +18,8 @@ const DiscoverCatalog = "Discover"
 // discoverOnlyCond is true when the book (alias b) is only listed in Discover:
 // it's kept out of the Library, the status counts and "Analyze batch".
 const discoverOnlyCond = `(EXISTS (SELECT 1 FROM catalog_books dq JOIN catalogs dqc ON dqc.id = dq.catalog_id
-	WHERE dq.book_id = b.id AND dqc.name = '` + DiscoverCatalog + `') AND NOT EXISTS (SELECT 1 FROM catalog_books dn
-	JOIN catalogs dnc ON dnc.id = dn.catalog_id WHERE dn.book_id = b.id AND dnc.name != '` + DiscoverCatalog + `'))`
+	WHERE dq.book_id = b.id AND dqc.name IN ('` + DiscoverCatalog + `', '` + EventsCatalog + `')) AND NOT EXISTS (SELECT 1 FROM catalog_books dn
+	JOIN catalogs dnc ON dnc.id = dn.catalog_id WHERE dn.book_id = b.id AND dnc.name NOT IN ('` + DiscoverCatalog + `', '` + EventsCatalog + `')))`
 
 // Owned reports whether a book is in one of the family's libraries, not just
 // looked up with Check a book or listed in Discover.
@@ -51,7 +51,7 @@ func (s *Store) MatchBook(title, author string) int64 {
 // ReservedCatalogName reports whether name belongs to one of NovelCheck's own
 // libraries (Calibre, Looked up, Discover), so nobody can create or take it.
 func ReservedCatalogName(name string) bool {
-	for _, r := range []string{CalibreCatalogName, LookedUpCatalog, DiscoverCatalog} {
+	for _, r := range []string{CalibreCatalogName, LookedUpCatalog, DiscoverCatalog, EventsCatalog} {
 		if strings.EqualFold(name, r) {
 			return true
 		}

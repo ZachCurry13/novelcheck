@@ -11,6 +11,8 @@ const EVERYONE = [
     "The <b>Library</b> tab shows every book with its cover. Search by title, author, series or tag, or narrow it down by <b>genre</b>, <b>fiction or nonfiction</b>, <b>author</b>, <b>series</b> and more. Tick the <b>Hide</b> boxes (like <b>Nudity</b>) to hide books that include those things. <b>☑ Select</b> lets you pick several books at once, to add them to Up Next or ask to delete them."],
   ["🧭 Discover",
     "The <b>Discover</b> tab suggests books: what's popular now, new on the best-seller lists, top teen and kids' books, classics, and what's new or popular in your family. Your content rules apply. Tap <b>⭐ Wishlist</b> to ask for a book you don't have."],
+  ["🎉 Events",
+    "On free-book days such as <b>Stuff Your Kindle</b>, a parent pastes the event's list under <b>Discover → 🎉 Events</b>. You see each book's rating, which ones you already have, and a <b>Claim on Amazon</b> button; <b>✓ I claimed it</b> puts the book in your library. Tick <b>Hide Level 3+</b> or <b>Hide books we have</b> to narrow a long list."],
   ["📚 Collections & seasons",
     "<b>📚 Collections</b> are shelves across your libraries, like \"Summer reading\" or \"Dragon adventures\". The chips at the top of the Library show seasonal shelves such as 🎃 Halloween or 🕯️ Advent, the ones in season first. Tap one to see its books."],
   ["🌶️ What the ratings mean",
