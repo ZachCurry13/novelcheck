@@ -1,5 +1,6 @@
 // Admin → Usage: NovelCheck's CPU, memory, network and disk, recent history
 // charts, AI token use, library progress, and what Ollama has loaded.
+import { adminNavHTML } from "./adminnav.js";
 import { get } from "./api.js";
 import { $, esc } from "./ui.js";
 import { lineChart, columnChart } from "./charts.js";
@@ -76,6 +77,7 @@ function libraryTiles(s) {
 
 export async function renderUsage(view) {
   view.innerHTML = `
+    ${adminNavHTML("@usage", true)}
     <h1 class="mb-1 text-2xl font-bold">Usage</h1>
     <p class="mb-4 text-sm text-slate-400">What NovelCheck is using right now. Refreshes every 5 seconds; charts show the last 15 minutes.</p>
     <div id="nc-tiles" class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>

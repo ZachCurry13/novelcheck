@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/content"
 	"github.com/zachcurry13/novelcheck/internal/db"
@@ -113,6 +114,7 @@ func TestScanRaisesRatingAndLogsIt(t *testing.T) {
 	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &two, Model: "gpt", SummaryVerdict: "From the blurb."})
 
 	r := New(st, calibreDir)
+	_ = st.SetSetting(store.KeyLocalContext, "32768")                                              // big enough for the largest local parts
 	if n, e := r.Queue([]int64{id}, "admin", "admin"); n != 1 || e.Words != 6004 || e.Parts != 4 { // each 3,002-word chapter is two local-size parts
 		t.Fatalf("queue: %d %+v", n, e) // ai.URL is on 127.0.0.1, so parts are the local size
 	}
@@ -233,5 +235,62 @@ func TestCombineContentAmounts(t *testing.T) {
 	if len(a.ContentAmounts) != 3 || a.ContentAmounts["violence"] != want["violence"] ||
 		a.ContentAmounts["gore"] != want["gore"] || a.ContentAmounts["substances"] != want["substances"] {
 		t.Fatalf("amounts: %v", a.ContentAmounts)
+	}
+}
+
+// Parts fit a local AI's context; a part the AI calls too long is split in
+// two, and a fumbled answer is tried again.
+func TestPartsFitAndRetry(t *testing.T) {
+	if n := WordsToFit(4096, 6300); n < 800 || n > 1200 {
+		t.Fatalf("4,096-token context: %d words", n)
+	}
+	if WordsToFit(32768, 6300) != LocalWordsPerPart || WordsToFit(1000, 6300) != minWordsPerPart {
+		t.Fatal("bounds")
+	}
+	fumbled := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		if len(raw) > 12000 { // over this fake AI's context
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"error":{"message":"the request exceeds the available context size, try increasing it","type":"exceed_context_size_error"}}`))
+			return
+		}
+		answer := `{"romance": "", "level": 0, "note": "No romance."}`
+		if fumbled == 0 {
+			fumbled++
+			answer = `{"romance": "", "note": "no level given"}`
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"choices": []any{map[string]any{"message": map[string]string{"role": "assistant", "content": answer}}},
+			"usage":   map[string]int{"prompt_tokens": 1000, "completion_tokens": 50},
+		})
+	}))
+	defer srv.Close()
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	_ = st.SetSetting(store.KeyLLMBaseURL, srv.URL)
+	_ = st.SetSetting(store.KeyLLMModel, "small-model")
+	_ = st.SetSetting(store.KeyLocalContext, "32768") // the AI claims more than it has
+	calibreDir := t.TempDir()
+	path := writeBook(t, calibreDir)
+	cat, _ := st.EnsureCatalog("Calibre Main", "calibre")
+	id, _ := st.UpsertBook("Mixed Book", "Author", "", "")
+	_ = st.AddCopy(cat, id, path, "epub", "5")
+	retryWait = time.Millisecond
+	r := New(st, calibreDir)
+	if n, _ := r.Queue([]int64{id}, "admin", "admin"); n != 1 {
+		t.Fatal("not queued")
+	}
+	next, _ := st.NextDeepRead()
+	if err := r.scan(context.Background(), next); err != nil {
+		t.Fatal(err)
+	}
+	dr := st.LatestDeepRead(id)
+	if dr.Status != "done" || dr.PartsTotal <= 4 || fumbled != 1 {
+		t.Fatalf("scan: %s, %d parts, fumbled %d", dr.Status, dr.PartsTotal, fumbled)
 	}
 }

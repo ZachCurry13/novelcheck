@@ -10,6 +10,7 @@ import { loadContent, contentIcons } from "./content.js";
 import { cardBlurb } from "./blurb.js";
 import { on } from "./modules.js";
 import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
+import { discoverTabsHTML } from "./discovertabs.js";
 
 const GUIDE_URL = "https://github.com/ZachCurry13/novelcheck/blob/main/docs/DISCOVER.md";
 
@@ -26,6 +27,7 @@ function showOwned() {
 
 export async function renderDiscover(view, state) {
   view.innerHTML = `
+    ${discoverTabsHTML("discover", state.user)}
     <h1 class="mb-1 text-2xl font-bold">🧭 Discover</h1>
     <p class="mb-2 text-sm text-slate-400">Popular and classic books with their peppers and content. Tap a book for details.</p>
     <div id="discover-seasons"></div>

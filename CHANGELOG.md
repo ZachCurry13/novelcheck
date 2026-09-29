@@ -4,8 +4,31 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
-## [1.23.0]
+() => `## [1.24.0]
 
+### 🧭 A shorter menu
+- **Check a book · Library · Discover · Up Next · Collections · Admin · Profile.** That's all that's left at the top (on phones: Check, Library, Discover, Up Next and More).
+- **Deep Scan, Usage and System checks are tabs in Admin**, next to AI & Scans, Users & Rules and the rest.
+- **⭐ Wishlist is inside Discover:** a Discover | Wishlist switch at the top of both.
+- **Import books and 📕 Paper books are under Profile → ➕ Add books.**
+- **Pick your start page** under **Profile → Start page**. By default parents open on Check a book and kids on the Library.
+
+### 📕 Asks instead of guessing
+- **Typing a title in Paper books or Check a book no longer adds the wrong book.** If Open Library's best match doesn't contain every word you typed (or several books do), NovelCheck shows the likely books with author and year to pick from, or **None of these: use it as typed**. Barcodes are still added straight away.
+
+### 🧬 Deep Scan
+- **The Running list is in the order the scans run:** the one reading now, then Next, #2 in line and so on, then requests. **Drag ⠿** to change the order.
+- **Scans stop failing on local AIs.** Parts now fit your AI's context window (4,096 tokens unless you raised it: **Admin → AI & Scans → Rate Caps → Context size of your local AI**). A part the AI still calls too long is split in two, and a fumbled answer is tried again up to 3 times before the scan fails. This fixes "exceeds the available context size", "level must be 0-5" and "token repeat limit reached".
+- **A server that's down or stuck no longer costs one wait per model:** NovelCheck moves straight to your backup AI (for ratings too).
+
+### 👧 Kids and AI
+- **Parents decide whether each kid gets AI features:** Suggested Reads picked by the AI, and asking for a Deep Scan. Tick **🤖 Allow AI features** on a kid's card under **Users & Rules**. It's off until you do; kids still get suggestions from free matching.
+
+### 🔧 Fixes
+- **Suggested Reads keeps its place:** 👍, 👎 or ＋ on a book no longer jumps the row back to the start.
+
+## [1.23.0]
+`
 ### 📚 Collections
 - **Shelves across your libraries.** The new **📚 Collections** page (under **More** on a phone) lists them with covers; tap one to browse it in the Library, where search and filters still work.
 - **Make one yourself:** **＋ New collection**, then add books from each book's window (**＋ Add to a collection**). Parents can take a book out with ✕ there too.

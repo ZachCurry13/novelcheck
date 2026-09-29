@@ -9,7 +9,7 @@ import (
 var ErrNotFound = errors.New("not found")
 
 const userCols = `id, username, password_hash, role, hide_open_door, hide_nudity, hide_solo_acts,
-	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, only_collections, created_at`
+	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, only_collections, ai_features, start_page, created_at`
 
 func (s *Store) CountUsers() (int, error) {
 	var n int
@@ -116,10 +116,10 @@ func (s *Store) CreateFirstAdmin(username, hash string) (*User, error) {
 func (s *Store) UpdateUserProfile(u *User) error {
 	_, err := s.DB.Exec(`UPDATE users SET role = ?, hide_open_door = ?, hide_nudity = ?,
 		hide_solo_acts = ?, hide_innuendo = ?, hide_dark_occult = ?,
-		hide_unrated = ?, delivery_method = ?, kindle_email = ?, age_level = ?, max_spice = ?, only_collections = ? WHERE id = ?`,
+		hide_unrated = ?, delivery_method = ?, kindle_email = ?, age_level = ?, max_spice = ?, only_collections = ?, ai_features = ? WHERE id = ?`,
 		u.Role, u.HideOpenDoor, u.HideNudity, u.HideSoloActs, u.HideInnuendo,
 		u.HideDarkOccult, u.HideUnrated, u.DeliveryMethod, u.KindleEmail, u.AgeLevel, u.MaxSpice,
-		u.OnlyCollections && u.Role == RoleRestricted, u.ID)
+		u.OnlyCollections && u.Role == RoleRestricted, u.AIFeatures, u.ID)
 	if err != nil {
 		return err
 	}
@@ -217,5 +217,14 @@ func (s *Store) DeleteUserSessions(userID int64) error {
 
 func (s *Store) PurgeExpiredSessions() error {
 	_, err := s.DB.Exec(`DELETE FROM sessions WHERE expires_at <= datetime('now')`)
+	return err
+}
+
+// StartPages are the pages someone may pick to open NovelCheck on.
+var StartPages = map[string]bool{"check": true, "library": true, "discover": true, "queue": true, "collections": true, "wishlist": true}
+
+// SetStartPage saves the page a user wants NovelCheck to open on ("" = the default).
+func (s *Store) SetStartPage(id int64, page string) error {
+	_, err := s.DB.Exec(`UPDATE users SET start_page = ? WHERE id = ?`, page, id)
 	return err
 }

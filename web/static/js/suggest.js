@@ -31,7 +31,10 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
   const asking = new Set(); // cards just given a 👎: they ask "Why not?"
   const outside = data.outside.map((o, i) => ({ ...o, key: `o${i}` }));
 
+  // draw keeps the strip where it was scrolled to, so a 👍, 👎 or ＋ doesn't
+  // jump back to the first book.
   const draw = () => {
+    const x = host.querySelector("[data-strip]")?.scrollLeft || 0;
     const cards = data.items.map((it) => (asking.has(`b${it.book.id}`) ? whyCard(`b${it.book.id}`, it.book) : libraryCard(it, liked.has(`b${it.book.id}`))))
       .concat(outside.map((o) => (asking.has(o.key) ? whyCard(o.key, {}) : outsideCard(o, liked.has(o.key)))));
     host.innerHTML = `<section class="mt-10">
@@ -41,11 +44,13 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
           <option value="">All libraries</option>${libs.map((c) => `<option value="${c.id}" ${String(c.id) === from ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>` : ""}
           <span>${data.refreshing ? "✨ The AI is picking new suggestions…" : SUBTITLE[data.mode]}</span></p>
       </div>
-      ${cards.length ? `<ul class="flex max-w-full snap-x gap-3 overflow-x-auto pb-2">${cards.join("")}</ul>`
+      ${cards.length ? `<ul data-strip class="flex max-w-full snap-x gap-3 overflow-x-auto pb-2">${cards.join("")}</ul>`
         : `<p class="text-sm text-slate-500">Add a few books to Up Next (or finish some) and suggestions will show up here.${taste ? ` Or <button data-taste class="underline">🎯 mark a few books you know</button> to get started.` : ""}</p>`}
       ${data.up + data.down ? `<p class="mt-1 text-xs text-slate-500">Your feedback so far: 👍 ${data.up} · 👎 ${data.down} ·
         <button data-reset class="underline">Start over</button></p>` : ""}
     </section>`;
+    const strip = host.querySelector("[data-strip]");
+    if (strip) strip.scrollLeft = x;
   };
   draw();
 

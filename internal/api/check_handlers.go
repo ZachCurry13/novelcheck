@@ -22,13 +22,14 @@ const maxPhoto = 5 << 20
 // each request short (Cloudflare Tunnel gives up after 100 seconds).
 func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Query string `json:"query"` // title, author or ISBN as typed
-		Image string `json:"image"` // data:image/jpeg;base64,… of the cover
+		Query string        `json:"query"` // title, author or ISBN as typed
+		Image string        `json:"image"` // data:image/jpeg;base64,… of the cover
+		Pick  *enrich.Found `json:"pick"`  // the book chosen from the choices offered
 	}
 	if !readJSON(w, r, &body, maxPhoto*4/3+4096) {
 		return
 	}
-	look, ok := s.lookUp(w, r, body.Query, body.Image)
+	look, ok := s.lookUp(w, r, body.Query, body.Image, body.Pick)
 	if !ok {
 		return
 	}
@@ -77,14 +78,22 @@ func (l lookup) best() enrich.Found {
 	return l.found
 }
 
+// maxChoices is how many books are offered when a typed title isn't clear.
+const maxChoices = 6
+
 // lookUp finds the book a cover photo or a typed query means (Check a book
-// and paper books). On failure it has already written the reply.
-func (s *Server) lookUp(w http.ResponseWriter, r *http.Request, query, image string) (lookup, bool) {
+// and paper books). A typed title Open Library can't match for certain
+// (every word typed in the title or author, and in only one result) gets
+// {"choices": [...]} back to pick from, and comes again with pick. On
+// failure, or with choices, it has already written the reply.
+func (s *Server) lookUp(w http.ResponseWriter, r *http.Request, query, image string, pick *enrich.Found) (lookup, bool) {
 	ctx := r.Context()
 	ec := s.Worker.Enricher()
 	var l lookup
 	l.source = "search"
 	switch query = strings.TrimSpace(query); {
+	case pick != nil && strings.TrimSpace(pick.Title) != "":
+		l.found = enrich.Found{Title: strings.TrimSpace(pick.Title), Author: strings.TrimSpace(pick.Author), ISBN: enrich.CleanISBN(pick.ISBN)}
 	case image != "":
 		img, mediaType, ok := decodePhoto(image)
 		if !ok {
@@ -103,16 +112,23 @@ func (s *Server) lookUp(w http.ResponseWriter, r *http.Request, query, image str
 		}
 		l.found, l.source = f, "photo"
 		l.canonical, _ = ec.FindTitle(ctx, f.Title, f.Author)
-	case query != "":
+	case enrich.CleanISBN(query) != "":
 		f, ok := ec.Find(ctx, query)
-		switch {
-		case ok:
-			l.found = f
-		case enrich.CleanISBN(query) != "":
+		if !ok {
 			writeErr(w, http.StatusNotFound, "no book found with that ISBN; try typing the title")
 			return l, false
-		default:
+		}
+		l.found = f
+	case query != "":
+		choices := ec.Search(ctx, query, maxChoices)
+		switch {
+		case len(choices) == 0:
 			l.found = enrich.Found{Title: query} // not in Open Library: rate what was typed
+		case enrich.Sure(query, choices):
+			l.found = choices[0].Found()
+		default:
+			writeJSON(w, http.StatusOK, map[string]any{"choices": choices, "query": query})
+			return l, false
 		}
 	default:
 		writeErr(w, http.StatusBadRequest, "type a title or take a photo of the cover")

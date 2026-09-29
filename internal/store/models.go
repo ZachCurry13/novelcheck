@@ -48,9 +48,16 @@ type User struct {
 	HiddenContent   []string `db:"-" json:"hidden_content"`                  // content hide rules: items, "g:<group>", "flag:<custom key>"
 	OnlyCollections bool     `db:"only_collections" json:"only_collections"` // kid accounts: only books in Collections
 	Collections     []int64  `db:"-" json:"collections"`                     // the collections they may see then
+	AIFeatures      bool     `db:"ai_features" json:"ai_features"`           // kid accounts: a parent allowed AI features
+	StartPage       string   `db:"start_page" json:"start_page"`             // the page NovelCheck opens on
 }
 
 func (u *User) IsAdmin() bool { return u.Role == RoleAdmin }
+
+// MayUseAI reports whether the account may use AI features (AI-picked
+// suggestions, Deep Scan requests): parents always, kids when a parent
+// allowed it.
+func (u *User) MayUseAI() bool { return u.Role != RoleRestricted || u.AIFeatures }
 
 // CanManage is true for admins and editors (the non-technical management tier).
 func (u *User) CanManage() bool { return u.Role == RoleAdmin || u.Role == RoleEditor }

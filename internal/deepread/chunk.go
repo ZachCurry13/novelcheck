@@ -10,12 +10,36 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/epub"
 )
 
-// Words per part: local models often have a small default context window
-// (Ollama: a few thousand tokens), cloud models take much more at once.
+// Words per part: a local model's part must fit its context window next to
+// the instructions and the answer (Ollama's default is 4,096 tokens); cloud
+// models take much more at once.
 const (
-	LocalWordsPerPart = 2000
+	LocalWordsPerPart = 2000 // the most, with a big enough context
 	CloudWordsPerPart = 8000
+	minWordsPerPart   = 300
+	answerRoom        = 600 // max_tokens of a part's answer
+	marginTokens      = 300 // the part's heading, and estimates being rough
 )
+
+// WordsToFit is how many words of a part fit a context of contextTokens next
+// to instructions of systemChars characters (about 3.5 characters and 1.4
+// tokens per word of English prose).
+func WordsToFit(contextTokens, systemChars int) int {
+	free := contextTokens - systemChars*10/35 - answerRoom - marginTokens
+	return max(minWordsPerPart, min(LocalWordsPerPart, free*10/14))
+}
+
+// Halve splits a part that was still too long for the AI into two.
+func Halve(p Part) (Part, Part, bool) {
+	words := strings.Fields(p.Text)
+	if len(words) < 2*minWordsPerPart/3 {
+		return p, p, false
+	}
+	mid := len(words) / 2
+	a := Part{Label: p.Label + " (a)", Text: strings.Join(words[:mid], " "), Words: mid}
+	b := Part{Label: p.Label + " (b)", Text: strings.Join(words[mid:], " "), Words: len(words) - mid}
+	return a, b, true
+}
 
 // Part is the slice of the book sent to the AI in one call.
 type Part struct {

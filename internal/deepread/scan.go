@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -17,6 +18,12 @@ type Note struct {
 	Level int    `json:"level"`
 	Note  string `json:"note"`
 }
+
+// partTries is how often a part is tried before the scan fails; retryWait
+// grows with each try (5 s, 20 s).
+const partTries = 3
+
+var retryWait = 5 * time.Second
 
 // scan reads one book part by part and saves the combined rating.
 func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
@@ -33,14 +40,33 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 	prev := book.SpiceLevel
 	var results []llm.PartResult
 	model := ""
-	for i, p := range parts {
+	for i := 0; i < len(parts); i++ {
+		p := parts[i]
 		if r.Store.DeepReadStatus(d.ID) == "cancelled" {
 			return nil
 		}
 		_ = r.Store.SetDeepProgress(d.ID, i, len(parts), model, prev)
 		var res llm.PartResult
-		res, model, err = ask(ctx, r, book.ID, system, llm.DeepPartUser(book.Title, book.Author, p.Label, i+1, len(parts), p.Text),
-			func(out string) (llm.PartResult, error) { return llm.ParsePart(out) })
+		// Up to 3 tries: a model can fumble its JSON or loop once. A part the
+		// AI says is too long for it is split in two instead.
+		for try := 1; ; try++ {
+			res, model, err = ask(ctx, r, book.ID, system, llm.DeepPartUser(book.Title, book.Author, p.Label, i+1, len(parts), p.Text),
+				func(out string) (llm.PartResult, error) { return llm.ParsePart(out) })
+			if err == nil || ctx.Err() != nil || try == partTries {
+				break
+			}
+			if llm.TooLong(err) {
+				if a, b, ok := Halve(p); ok {
+					parts = append(parts[:i], append([]Part{a, b}, parts[i+1:]...)...)
+					p = a
+					try-- // a split isn't a failed try; Halve stops at small parts
+					continue
+				}
+			}
+			if !sleep(ctx, time.Duration(try*try)*retryWait) {
+				return nil
+			}
+		}
 		if ctx.Err() != nil {
 			return nil // shutting down: it resumes after the restart
 		}
@@ -148,6 +174,9 @@ func ask[T any](ctx context.Context, r *Runner, bookID int64, system, user strin
 				return zero, "", ctx.Err()
 			}
 			errs = append(errs, fmt.Sprintf("%s AI (%s): %v", ai.Name, model, err))
+			if llm.HostDown(err) || llm.TooLong(err) {
+				break // a down or stuck server (or a part too long for it): on to the backup AI
+			}
 		}
 	}
 	if len(errs) == 0 {
@@ -163,4 +192,16 @@ func (r *Runner) aiChain() []store.AIConfig {
 		ais[0].Models = []string{m}
 	}
 	return ais
+}
+
+// sleep waits d, or reports false if the app is shutting down.
+func sleep(ctx context.Context, d time.Duration) bool {
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-t.C:
+		return true
+	}
 }

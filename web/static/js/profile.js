@@ -8,6 +8,7 @@ import { on, deliveryOptions } from "./modules.js";
 import { renderPushCard } from "./push.js";
 import { amazonStepsHTML, openKOReaderSetup } from "./delivery.js";
 import { openTaste } from "./taste.js";
+import { profileExtrasHTML, bindProfileExtras } from "./profileextras.js";
 
 export async function renderProfile(view, state) {
   const u = state.user;
@@ -15,6 +16,7 @@ export async function renderProfile(view, state) {
   view.innerHTML = `
     <h1 class="mb-4 text-2xl font-bold">Profile — ${esc(u.username)}</h1>
     <div class="grid gap-4 lg:grid-cols-2">
+      ${profileExtrasHTML(u)}
       <form id="delivery" class="card space-y-3${on(u, "queue") ? "" : " module-off"}">
         <h2 class="text-lg font-semibold">"Start Reading" delivery</h2>
         <select name="delivery_method" class="input">${deliveryOptions(u, u.delivery_method)}</select>
@@ -64,6 +66,7 @@ export async function renderProfile(view, state) {
   });
 
   $("#replay-guide", view).addEventListener("click", () => openGuide(state));
+  bindProfileExtras(view);
   renderPushCard($("#push-card", view), u);
   $("#ko-setup", view).addEventListener("click", () => openKOReaderSetup());
   $("#taste-open", view)?.addEventListener("click", () => openTaste());

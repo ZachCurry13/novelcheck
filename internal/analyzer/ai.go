@@ -12,8 +12,9 @@ import (
 )
 
 // askAIs rates a book with the main AI's models in order, then, if they all
-// fail, the backup AI's. When a server can't be reached at all its other
-// models are skipped, so a switched-off Ollama doesn't cost a wait per model.
+// fail, the backup AI's. When a server can't be reached or doesn't answer in
+// time, its other models are skipped, so a switched-off or stuck Ollama
+// doesn't cost a wait per model before the backup AI.
 func (w *Worker) askAIs(ctx context.Context, id int64, user string) (*store.Analysis, error) {
 	var errs []string
 	var lastErr error
@@ -41,8 +42,8 @@ func (w *Worker) askAIs(ctx context.Context, id int64, user string) (*store.Anal
 			}
 			lastErr = err
 			errs = append(errs, fmt.Sprintf("%s AI (%s): %v", ai.Name, model, err))
-			if Unreachable(err) {
-				break // the server is down: its other models won't answer either
+			if llm.HostDown(err) {
+				break // the server is down or stuck: its other models won't answer either
 			}
 		}
 	}
@@ -95,6 +96,13 @@ func (w *Worker) analyzeWith(ctx context.Context, ai store.AIConfig, c llm.Compl
 	return llm.ParseVerdict(out)
 }
 
+// timedOut is a model that didn't answer in time; it counts as a deadline
+// (llm.HostDown) while keeping its explanation.
+type timedOut struct{ msg string }
+
+func (e timedOut) Error() string { return e.msg }
+func (e timedOut) Unwrap() error { return context.DeadlineExceeded }
+
 // timeoutError explains a model that didn't answer in time.
 func timeoutError(model string, limit time.Duration, local bool) error {
 	msg := fmt.Sprintf("%s didn't answer within %s", model, limit.Round(time.Second))
@@ -105,5 +113,5 @@ func timeoutError(model string, limit time.Duration, local bool) error {
 	} else {
 		msg += ". The AI service may be overloaded; it will be retried next batch. You can raise the AI time limit in Admin."
 	}
-	return errors.New(msg)
+	return timedOut{msg}
 }

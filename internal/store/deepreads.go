@@ -71,8 +71,9 @@ func (s *Store) RequestDeepRead(bookID int64, source, by, reason string, approve
 	if approved {
 		status, approver = "queued", by
 	}
-	res, err := s.DB.Exec(`INSERT INTO deep_reads (book_id, status, source, requested_by, reason, approved_by, words, parts_total, est_tokens)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, bookID, status, source, by, strings.TrimSpace(reason), approver, words, parts, estTokens)
+	res, err := s.DB.Exec(`INSERT INTO deep_reads (book_id, status, source, requested_by, reason, approved_by, words, parts_total, est_tokens, position)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(position), 0) + 1 FROM deep_reads))`,
+		bookID, status, source, by, strings.TrimSpace(reason), approver, words, parts, estTokens)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			return 0, ErrDeepReadOpen
@@ -103,12 +104,15 @@ func (s *Store) DeepReadByID(id int64) (*DeepRead, error) {
 }
 
 // DeepReads lists scans waiting for an admin's review (all of them, however
-// old), then open scans, then the limit most recent finished ones (the audit
-// log of rating changes).
+// old), then open scans in the order they run (the one reading, the queue,
+// then requests), then the limit most recent finished ones (the audit log of
+// rating changes).
 func (s *Store) DeepReads(limit int) ([]DeepRead, error) {
 	out := []DeepRead{}
 	err := s.DB.Select(&out, `SELECT `+deepCols+` FROM deep_reads d JOIN books b ON b.id = d.book_id
-		ORDER BY d.held DESC, d.status NOT IN ('requested', 'queued', 'reading'), d.id DESC LIMIT ?`, limit+s.HeldDeepReads())
+		ORDER BY d.held DESC, CASE d.status WHEN 'reading' THEN 0 WHEN 'queued' THEN 1 WHEN 'requested' THEN 2 ELSE 3 END,
+			CASE WHEN d.status IN ('reading', 'queued', 'requested') THEN d.position END,
+			CASE WHEN d.status IN ('reading', 'queued', 'requested') THEN d.id END, d.id DESC LIMIT ?`, limit+s.HeldDeepReads())
 	return out, err
 }
 
@@ -152,11 +156,12 @@ func (s *Store) DecideDeepRead(id int64, action, by string) (bool, error) {
 	return n > 0, nil
 }
 
-// NextDeepRead is the oldest approved Deep Scan waiting to start.
+// NextDeepRead is the approved Deep Scan first in line (queue order, which
+// an admin can change, then the oldest).
 func (s *Store) NextDeepRead() (*DeepRead, bool) {
 	var d DeepRead
 	if err := s.DB.Get(&d, `SELECT `+deepCols+` FROM deep_reads d JOIN books b ON b.id = d.book_id
-		WHERE d.status = 'queued' ORDER BY d.id LIMIT 1`); err != nil {
+		WHERE d.status = 'queued' ORDER BY d.position, d.id LIMIT 1`); err != nil {
 		return nil, false
 	}
 	return &d, true
@@ -209,4 +214,14 @@ func (s *Store) DeepCandidates(userIDs []int64, limit int) ([]int64, error) {
 	var ids []int64
 	err := s.DB.Select(&ids, q, append(args, limit)...)
 	return ids, err
+}
+
+// OrderDeepReads puts waiting scans in the given order (an admin dragged them).
+func (s *Store) OrderDeepReads(ids []int64) error {
+	for i, id := range ids {
+		if _, err := s.DB.Exec(`UPDATE deep_reads SET position = ? WHERE id = ? AND status IN ('queued', 'requested')`, i+1, id); err != nil {
+			return err
+		}
+	}
+	return nil
 }

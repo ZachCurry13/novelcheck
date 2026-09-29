@@ -79,6 +79,7 @@ func (s *Server) Router() http.Handler {
 			r.Put("/me/password", s.handleChangePassword)
 			r.Put("/me/delivery", s.handleUpdateDelivery)
 			r.Put("/me/guide-seen", s.handleGuideSeen)
+			r.Put("/me/start-page", s.handleStartPage)
 			r.Get("/me/opds", s.handleMyOPDS)
 			r.Post("/me/opds/reset", s.handleResetMyOPDS)
 
@@ -191,6 +192,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/deep-scans/next", s.handleDeepScanNext)
 				r.Post("/admin/deep-scans/keep-all", s.handleKeepAllDeepScans)
 				r.Post("/admin/deep-scans/accept-all", s.handleAcceptAllDeepScans)
+				r.Put("/admin/deep-scans/order", s.handleOrderDeepScans)
 				r.Post("/admin/deep-scans/{id}/{action}", s.handleDecideDeepScan)
 				r.Post("/admin/flags", s.handleAddFlag)
 				r.Put("/admin/flags/{id}", s.handleUpdateFlag)

@@ -1,6 +1,7 @@
 // ⭐ The family wishlist: books someone would like to get (usually found with
 // Check a book). Parents approve & track them, decline them, or mark them as
 // got; books that turn up in the library are marked as got automatically.
+import { discoverTabsHTML } from "./discovertabs.js";
 import { get, post, del } from "./api.js";
 import { esc, attempt } from "./ui.js";
 import { pepperChip } from "./peppers.js";
@@ -38,6 +39,7 @@ export async function renderWishlist(view, state) {
       </li>`;
     };
     view.innerHTML = `
+      ${discoverTabsHTML("wishlist", state.user)}
       <h1 class="mb-1 text-2xl font-bold">⭐ Wishlist</h1>
       <p class="mb-4 text-sm text-slate-400">${data.manager
         ? "Books the family would like to get. <b>Approve & Track</b> the ones you'll buy; they're marked as got by themselves once they show up in your library."

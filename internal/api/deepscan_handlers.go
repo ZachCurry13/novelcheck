@@ -38,7 +38,9 @@ func (s *Server) handleBookDeepScan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out := map[string]any{"latest": s.Store.LatestDeepRead(id), "available": false}
-	if _, e, err := s.Deep.Prepare(id); err != nil {
+	if !auth.UserFrom(r).MayUseAI() {
+		out["why"] = "A parent hasn't turned on AI features for this account."
+	} else if _, e, err := s.Deep.Prepare(id); err != nil {
 		out["why"] = err.Error()
 	} else {
 		out["available"], out["estimate"], out["cost"] = true, e, s.deepCost(e)
@@ -54,6 +56,10 @@ func (s *Server) handleStartDeepScan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u := auth.UserFrom(r)
+	if !u.MayUseAI() {
+		writeErr(w, http.StatusForbidden, "a parent hasn't turned on AI features for this account")
+		return
+	}
 	if _, err := s.Store.BookByID(id, u); err != nil {
 		writeStoreErr(w, err)
 		return
@@ -231,6 +237,21 @@ func (s *Server) handleKeepAllDeepScans(w http.ResponseWriter, r *http.Request) 
 	}
 	s.resolveReviewNotice("")
 	writeJSON(w, http.StatusOK, map[string]int{"kept": n})
+}
+
+// handleOrderDeepScans sets the queue's order ({"ids": [...]}, first first).
+func (s *Server) handleOrderDeepScans(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		IDs []int64 `json:"ids"`
+	}
+	if !readJSON(w, r, &body, 16<<10) {
+		return
+	}
+	if err := s.Store.OrderDeepReads(body.IDs); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 // handleAcceptAllDeepScans saves the rating of every held scan at once.

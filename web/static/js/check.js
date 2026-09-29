@@ -11,6 +11,7 @@ import { openBook } from "./bookdialog.js";
 import { liveBlocker, scanLive } from "./barcode.js";
 import { coverImg } from "./covers.js";
 import { shrinkPhoto, barcodeInPhoto } from "./photo.js";
+import { pickBook } from "./bookchoices.js";
 
 export async function renderCheck(view, state) {
   view.innerHTML = `
@@ -49,6 +50,11 @@ export async function renderCheck(view, state) {
       out.innerHTML = `<p class="card text-sm text-rose-300">${esc(e.message)}</p>`;
       form.q.focus();
       return;
+    }
+    if (res.choices) { // not sure which book was meant: ask
+      out.innerHTML = "";
+      const pick = await pickBook(res.choices, res.query);
+      return pick ? check({ ...body, pick }, working) : undefined;
     }
     const found = `Found <b>${esc(res.book.title)}</b>${res.book.author ? ` by ${esc(res.book.author)}` : ""}.`;
     let book = res.book;

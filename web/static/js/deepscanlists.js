@@ -57,10 +57,15 @@ export function reviewHeader(n) {
     </div></div>`;
 }
 
-export function openRow(d) {
+// openRow is a scan waiting or running; place is its place in line (1 =
+// next), and waiting ones can be dragged to change the order.
+export function openRow(d, place) {
   const pct = d.parts_total ? Math.round((100 * d.parts_done) / d.parts_total) : 0;
-  return `<li class="card space-y-2" data-scan="${d.id}" data-book="${d.book_id}">
-    <div>${title(d)} <span class="text-sm text-slate-400">${esc(d.author || "")}</span></div>
+  const waiting = d.status !== "reading";
+  return `<li class="card space-y-2" data-scan="${d.id}" data-book="${d.book_id}" ${waiting ? "data-sortable" : ""}>
+    <div class="flex items-start gap-2">${waiting ? `<span class="drag-handle -ml-2" title="Drag to change the order" aria-label="Drag to change the order">⠿</span>` : ""}
+      <div class="min-w-0 flex-1"><span class="text-xs font-semibold ${waiting ? "text-slate-400" : "text-indigo-300"}">${waiting ? (place === 1 ? "Next" : `#${place} in line`) : "Reading now"}</span><br>
+      ${title(d)} <span class="text-sm text-slate-400">${esc(d.author || "")}</span></div></div>
     <p class="text-xs text-slate-400">${esc(SOURCE[d.source] || d.source)}${d.requested_by ? ` by ${esc(d.requested_by)}` : ""}
       · ${fmtNum(d.words)} words${d.reason ? ` · “${esc(d.reason)}”` : ""}</p>
     ${d.status === "reading" ? `<div class="space-y-1"><div class="meter-track bg-slate-800"><div class="meter-fill bg-indigo-500" data-pct="${pct}"></div></div>

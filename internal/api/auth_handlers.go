@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
+	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -117,4 +118,25 @@ func validateDelivery(method, email string) string {
 		return "delivery_method must be none, email or koreader"
 	}
 	return ""
+}
+
+// handleStartPage saves the page NovelCheck opens on ({"page": "library"},
+// "" for the default).
+func (s *Server) handleStartPage(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Page string `json:"page"`
+	}
+	if !readJSON(w, r, &body, 1<<10) {
+		return
+	}
+	u := auth.UserFrom(r)
+	if body.Page != "" && (!store.StartPages[body.Page] || (body.Page == "check" && !u.CanManage())) {
+		writeErr(w, http.StatusBadRequest, "that page can't be a start page")
+		return
+	}
+	if err := s.Store.SetStartPage(u.ID, body.Page); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"start_page": body.Page})
 }

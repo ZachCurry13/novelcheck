@@ -7,6 +7,8 @@ export const on = (user, name) => user?.modules?.[name] !== false;
 // Anything marked data-module="queue" (etc.) disappears while it's off.
 export function applyModules(user) {
   document.querySelectorAll("[data-module]").forEach((el) => el.classList.toggle("module-off", !on(user, el.dataset.module)));
+  // Shown only while a feature is off (the Wishlist link stands in for Discover).
+  document.querySelectorAll("[data-module-off]").forEach((el) => el.classList.toggle("module-off", on(user, el.dataset.moduleOff)));
 }
 
 // Delivery choices for "Start Reading", minus the ones turned off.

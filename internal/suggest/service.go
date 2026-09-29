@@ -58,6 +58,9 @@ type saved struct {
 // a new AI pick in the background when due.
 func (s *Service) For(u *store.User, catalogID int64) (Result, error) {
 	mode := s.Store.Setting(store.KeySuggestMode)
+	if !u.MayUseAI() {
+		mode = store.SuggestFree // a kid a parent hasn't allowed AI features
+	}
 	pool, err := s.Store.SuggestPool(u, catalogID)
 	if err != nil {
 		return Result{}, err

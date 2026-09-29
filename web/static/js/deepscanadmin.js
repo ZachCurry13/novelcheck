@@ -7,6 +7,7 @@ import { get, post, put } from "./api.js";
 import { $, $$, esc, attempt, toast, fmtNum, fmtMoney } from "./ui.js";
 import { openBook } from "./bookdialog.js";
 import { isOpen, reviewCard, reviewHeader, openRow, resultRow, setMeters } from "./deepscanlists.js";
+import { adminNavHTML } from "./adminnav.js";
 
 const TABS = [["review", "Review"], ["running", "Running"], ["results", "Results"], ["settings", "Settings"]];
 let timer = null;
@@ -14,6 +15,7 @@ let timer = null;
 export async function renderDeepScanAdmin(view, state) {
   clearInterval(timer);
   view.innerHTML = `
+    ${adminNavHTML("@deepscan", true)}
     <h1 class="mb-1 text-2xl font-bold">🧬 Deep Scan</h1>
     <p class="mb-3 text-sm text-slate-400">The AI reads a book's whole EPUB, part by part, instead of guessing from the description.</p>
     <div id="model-warning"></div>
@@ -38,11 +40,36 @@ export async function renderDeepScanAdmin(view, state) {
     $("[data-head]", panel("review")).innerHTML = reviewHeader(held.length);
     $("[data-list]", panel("review")).innerHTML = held.map(reviewCard).join("");
   };
+  // The Running list in run order; waiting scans can be dragged. It's only
+  // redrawn when something changed, and never mid-drag.
+  let sortable = null;
+  let dragging = false;
+  let shown = "";
   const paintRunning = () => {
     const open = data.scans.filter(isOpen);
+    const sig = open.map((d) => `${d.id}:${d.status}:${d.parts_done}`).join(",");
+    if (dragging || sig === shown) return;
+    shown = sig;
     const list = $("[data-list]", panel("running"));
-    list.innerHTML = open.map(openRow).join("") || `<li class="card text-sm text-slate-400">Nothing waiting or running. Start scans under Settings.</li>`;
+    let place = 0;
+    list.innerHTML = open.map((d) => openRow(d, d.status === "reading" ? 0 : ++place)).join("")
+      || `<li class="card text-sm text-slate-400">Nothing waiting or running. Start scans under Settings.</li>`;
     setMeters(list);
+    sortable?.destroy();
+    sortable = window.Sortable?.create(list, {
+      handle: ".drag-handle", draggable: "[data-sortable]", animation: 150, ghostClass: "sortable-ghost",
+      onStart: () => (dragging = true),
+      onEnd: async () => {
+        dragging = false;
+        const ids = [...list.querySelectorAll("[data-sortable]")].map((li) => Number(li.dataset.scan));
+        if (await attempt(() => put("/api/admin/deep-scans/order", { ids }), "Order saved")) {
+          const byID = new Map(data.scans.map((d) => [d.id, d]));
+          data.scans = [...data.scans.filter((d) => !ids.includes(d.id)), ...ids.map((id) => byID.get(id))];
+          shown = "";
+          paintRunning();
+        }
+      },
+    });
   };
   const paintResults = () => {
     const done = data.scans.filter((d) => !isOpen(d) && !d.held);
@@ -129,7 +156,10 @@ export async function renderDeepScanAdmin(view, state) {
     counts();
   };
   timer = setInterval(refresh, 5000);
-  return () => clearInterval(timer);
+  return () => {
+    clearInterval(timer);
+    sortable?.destroy();
+  };
 }
 
 function paintModelWarning(box, data) {

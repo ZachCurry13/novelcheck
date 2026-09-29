@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/zachcurry13/novelcheck/internal/enrich"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -46,13 +47,14 @@ func (s *Server) handleAddToShelf(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		Query string `json:"query"`
-		Image string `json:"image"`
+		Query string        `json:"query"`
+		Image string        `json:"image"`
+		Pick  *enrich.Found `json:"pick"`
 	}
 	if !readJSON(w, r, &body, maxPhoto*4/3+4096) {
 		return
 	}
-	look, ok := s.lookUp(w, r, body.Query, body.Image)
+	look, ok := s.lookUp(w, r, body.Query, body.Image, body.Pick)
 	if !ok {
 		return
 	}

@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS users (
     age_level        INTEGER NOT NULL DEFAULT 0,   -- kid accounts: 1 young kids .. 5 adults; 0 = not set
     max_spice        INTEGER NOT NULL DEFAULT -1,  -- kid accounts: hide books above this many peppers (0-5); -1 = no limit
     only_collections INTEGER NOT NULL DEFAULT 0,   -- kid accounts: see only books in their collections (user_collections)
+    ai_features      INTEGER NOT NULL DEFAULT 0,   -- kid accounts: a parent allowed AI features (AI suggestions, Deep Scan requests)
+    start_page       TEXT NOT NULL DEFAULT '',     -- the page NovelCheck opens on ('' = Check a book for parents, Library for kids)
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -219,6 +221,7 @@ CREATE TABLE IF NOT EXISTS user_collections (
 -- what each part contained.
 CREATE TABLE IF NOT EXISTS deep_reads (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    position     INTEGER NOT NULL DEFAULT 0,  -- order in the queue (an admin can drag it)
     book_id      INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
     status       TEXT NOT NULL DEFAULT 'requested'
                  CHECK (status IN ('requested', 'queued', 'reading', 'done', 'error', 'declined', 'cancelled')),

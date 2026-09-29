@@ -48,6 +48,9 @@ const routes = {
 const managerRoutes = new Set(["check", "import", "shelf", "admin", "duplicates"]);
 const adminRoutes = new Set(["system", "usage", "deletions", "deepscan"]);
 const moduleRoutes = { queue: "queue", import: "import", shelf: "import" }; // pages an admin can turn off
+// Pages without a menu item of their own light up the one they belong to.
+const NAV_OF = { wishlist: "discover", import: "profile", shelf: "profile", deepscan: "admin", usage: "admin", system: "admin",
+  duplicates: "admin", deletions: "admin" };
 
 function showOnly(id) {
   for (const v of ["#setup-view", "#login-view", "#app-view"]) $(v).classList.toggle("hidden", v !== id);
@@ -76,13 +79,15 @@ function showApp() {
 let currentCleanup = null;
 async function route() {
   if (!state.user) return;
-  // Parents land on Check a book (the main feature); kids on the Library.
-  let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || (canManage(state.user) ? "check" : "library");
+  // Everyone lands on their chosen start page; by default parents on Check a
+  // book (the main feature), kids on the Library.
+  let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || state.user.start_page || (canManage(state.user) ? "check" : "library");
   if (!routes[name] || (managerRoutes.has(name) && !canManage(state.user)) ||
     (adminRoutes.has(name) && state.user.role !== "admin") ||
     (moduleRoutes[name] && !on(state.user, moduleRoutes[name]))) name = "library";
-  $$("#nav .nav-link").forEach((a) => a.classList.toggle("active", a.dataset.route === name));
-  markMobileNav(name);
+  const menu = NAV_OF[name] || name;
+  $$("#nav .nav-link").forEach((a) => a.classList.toggle("active", a.dataset.route === menu));
+  markMobileNav(menu);
   if (typeof currentCleanup === "function") currentCleanup();
   // Fresh container per route so listeners never leak between views.
   const view = document.createElement("div");

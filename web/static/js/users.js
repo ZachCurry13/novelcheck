@@ -109,6 +109,8 @@ export async function renderUsers(host, viewer) {
       $$("[data-rule]", cardEl).forEach((cb) => (body[cb.dataset.rule] = cb.checked));
       body.hidden_content = pickedIn(cardEl);
       readCollectionLimit(cardEl, body);
+      const ai = $("[data-ai-features]", cardEl);
+      if (ai) body.ai_features = ai.checked;
       const ms = $("[name=max_spice]", cardEl);
       if (ms) body.max_spice = Number(ms.value);
       await attempt(() => put(`/api/admin/users/${id}`, body), preset ? preset.done : "User saved");
@@ -144,7 +146,8 @@ function userCard(u, isAdmin, viewer) {
       </div>
       <div><span class="label" title="Books with any ticked item are hidden from this account, unless a parent marked them OK">Hide content</span>
         ${hidePicker(u.hidden_content || [], "data-hide")}</div>
-      ${u.role === "restricted" ? collectionLimitHTML(u, collections) : ""}
+      ${u.role === "restricted" ? `<label class="toggle min-h-[2.5rem]"><input type="checkbox" data-ai-features ${u.ai_features ? "checked" : ""}>
+        🤖 Allow AI features (Suggested Reads picked by the AI, asking for a Deep Scan)</label>${collectionLimitHTML(u, collections)}` : ""}
       <div class="grid gap-2 sm:grid-cols-2">
         <select name="delivery_method" class="input">${deliveryOptions(viewer, u.delivery_method)}</select>
         <input name="kindle_email" value="${esc(u.kindle_email)}" placeholder="name@kindle.com" class="input">
@@ -168,6 +171,7 @@ function badges(u) {
     if (age) out.push(`<span class="chip-cat">👪 ${esc(age[1])}</span>`);
     const n = (u.hidden_content || []).length;
     if (n) out.push(`<span class="chip-cat" title="Content items or groups hidden from this account">🚫 ${n} content rule${n === 1 ? "" : "s"}</span>`);
+    if (u.ai_features) out.push(`<span class="chip-cat" title="A parent allowed AI features">🤖 AI on</span>`);
     if (u.only_collections) out.push(`<span class="chip-cat" title="Sees only books in the collections chosen for them">📚 Collections only</span>`);
   }
   return out.join("");

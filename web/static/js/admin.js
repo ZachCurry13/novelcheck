@@ -12,6 +12,7 @@ import { on } from "./modules.js";
 import { renderFlagsAdmin } from "./customflags.js";
 import { renderSettingsTab } from "./adminsettings.js";
 import { renderStats, perBookCost } from "./adminstats.js";
+import { adminNavHTML } from "./adminnav.js";
 
 const TABS = [["ai", "🤖 AI & Scans"], ["users", "👪 Users & Rules"], ["delivery", "📬 Delivery & Services"], ["system", "⚙️ System & Toggles"]];
 
@@ -30,8 +31,7 @@ export async function renderAdmin(view, state) {
     <div id="titles-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="covers-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="problems-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
-    <nav id="admin-tabs" class="mb-4 grid grid-cols-2 gap-1 border-b border-slate-800 sm:flex sm:overflow-x-auto">${tabs.map(([k, l]) =>
-      `<button data-tab="${k}" class="nav-link rounded-b-none">${l}</button>`).join("")}</nav>
+    ${adminNavHTML(current, isAdmin)}
     <section data-panel="ai" class="space-y-6">
       <div id="stats" class="grid grid-cols-2 gap-3 lg:grid-cols-4"></div>
       <div id="errors"></div>
@@ -75,7 +75,10 @@ export async function renderAdmin(view, state) {
   show(current);
   $("#admin-tabs", view).addEventListener("click", (e) => {
     const t = e.target.closest("[data-tab]")?.dataset.tab;
-    if (t) show(t);
+    if (t) {
+      e.preventDefault(); // a section of this page: switch in place
+      show(t);
+    }
   });
 
   view.addEventListener("click", async (e) => {

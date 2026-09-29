@@ -9,6 +9,7 @@ import { openBook } from "./bookdialog.js";
 import { loadContent, contentIcons } from "./content.js";
 import { scanContinuous, liveBlocker, cameraError } from "./barcode.js";
 import { shrinkPhoto, barcodeInPhoto } from "./photo.js";
+import { pickBook } from "./bookchoices.js";
 
 const PICK_KEY = "nc:shelf";
 const remember = (id) => {
@@ -115,6 +116,10 @@ export async function renderShelf(view, state) {
     }
     const r = await attempt(() => post(`/api/shelves/${shelf}/books`, body));
     if (!r) return;
+    if (r.choices) { // not sure which book was meant: ask
+      const pick = await pickBook(r.choices, r.query);
+      return pick ? add({ ...body, pick }, key) : undefined;
+    }
     if (key) seen.add(key);
     navigator.vibrate?.(40);
     added.unshift({ book: r.book, fresh: r.added, shelf });

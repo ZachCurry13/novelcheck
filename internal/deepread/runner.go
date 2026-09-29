@@ -85,7 +85,8 @@ func inside(dir, p string) bool {
 // partSize picks words per part for the AI that will do the reading.
 func (r *Runner) partSize() int {
 	if ais := r.Store.AIConfigs(); len(ais) > 0 && ais[0].Provider != "anthropic" && llm.IsLocal(ais[0].BaseURL) {
-		return LocalWordsPerPart
+		flags, _ := r.Store.CustomFlags()
+		return WordsToFit(r.Store.SettingInt(store.KeyLocalContext), len(llm.DeepPartSystem(flags)))
 	}
 	return CloudWordsPerPart
 }

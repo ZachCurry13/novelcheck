@@ -1,5 +1,6 @@
 // Admin → System: a "Check everything" button that tests every connection
 // NovelCheck uses. Resource use lives on the Usage page.
+import { adminNavHTML } from "./adminnav.js";
 import { post } from "./api.js";
 import { $, esc, attempt } from "./ui.js";
 import { renderDiagnose } from "./diagnose.js";
@@ -26,7 +27,8 @@ function checksTable(res) {
 
 export async function renderSystem(view) {
   view.innerHTML = `
-    <h1 class="mb-1 text-2xl font-bold">System</h1>
+    ${adminNavHTML("@system", true)}
+    <h1 class="mb-1 text-2xl font-bold">System checks</h1>
     <p class="mb-4 text-sm text-slate-400">Check that every service NovelCheck talks to is working.</p>
     <div id="diagnose"></div>
     <section class="card mb-6">

@@ -38,6 +38,7 @@ const SECTIONS = [
     ["tokens_per_hour_cap", "Max tokens per hour (0 = unlimited)", "25000", "number"],
     ["scan_delay_seconds", "Delay between scans (seconds)", "2", "number"],
     ["llm_timeout_seconds", "AI time limit per book (seconds)", "0 = automatic: 10 minutes for Ollama, 2 for cloud", "number"],
+    ["local_context_tokens", "Context size of your local AI (tokens)", "4096", "number"],
     ["price_input_per_million", "Input price per 1M tokens (USD)", "0.15", "number"],
     ["price_output_per_million", "Output price per 1M tokens (USD)", "0.60", "number"],
   ]],
@@ -149,6 +150,7 @@ function field(key, label, placeholder, type, value, when) {
 
 // Extra help under a few fields.
 const HELP = {
+  local_context_tokens: `<p class="mt-1 text-xs text-slate-400">How much text your local AI takes at once. Ollama's default is 4096; Deep Scan cuts books into parts that fit it. If you raised it on the server (e.g. OLLAMA_CONTEXT_LENGTH=8192), enter the new size so parts can be bigger and scans faster.</p>`,
   deep_read_model: `<p class="mt-1 text-xs text-slate-400">Deep Scan reads whole books, so it needs a model that can tell romance from a tense or violent scene: 7B or bigger is recommended (e.g. qwen2.5:7b or llama3.1:8b on Ollama, or a cloud model). Small 1–3B models often over-rate books.</p>`,
   suggest_mode: `<p class="mt-1 text-xs text-slate-400">Free matching looks for the next book in a series, the same authors and similar descriptions. With AI, your AI then picks the best 10 with a reason, at most once a day per person and within the hourly token cap. Kids' accounts (and anyone hiding unrated books) never get books you don't own.</p>`,
   smtp_password: `<p class="mt-1 text-xs text-slate-400">Gmail: your normal Google password won't work. Turn on 2-Step Verification,
