@@ -4,11 +4,13 @@ import (
 	"archive/zip"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -21,6 +23,17 @@ import (
 )
 
 func words(n int, w string) string { return strings.TrimSpace(strings.Repeat(w+" ", n)) }
+
+// spicyText is n/6 numbered sentences, so every sentence starts differently.
+func spicyText(n int) string {
+	var b strings.Builder
+	for i := 1; i <= n/6; i++ {
+		fmt.Fprintf(&b, "spicy scene number %d goes on. ", i)
+	}
+	return strings.TrimSpace(b.String())
+}
+
+var openingRE = regexp.MustCompile(`spicy scene number \d+`)
 
 func TestSplitKeepsChaptersAndCutsLongOnes(t *testing.T) {
 	secs := []epub.Section{
@@ -50,7 +63,10 @@ func TestSplitKeepsChaptersAndCutsLongOnes(t *testing.T) {
 // fakeAI answers each part by what's in it, and the final wrap-up.
 // fakeAI answers like a small model; confirms says whether the second look
 // agrees that the "spicy" chapter is explicit.
-func fakeAI(t *testing.T, confirms bool) *httptest.Server {
+func fakeAI(t *testing.T, confirms bool) *httptest.Server { return fakeAIWith(t, confirms, confirms) }
+
+// fakeAIWith also sets the second opinion (described) on its own.
+func fakeAIWith(t *testing.T, confirms, described bool) *httptest.Server {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, _ := io.ReadAll(r.Body)
 		body := string(raw)
@@ -58,10 +74,14 @@ func fakeAI(t *testing.T, confirms bool) *httptest.Server {
 		switch {
 		case strings.Contains(body, "spice_reason") && strings.Contains(body, "Highest pepper level"):
 			answer = `{"spice_reason": "Explicit scene in Chapter 2", "summary_verdict": "Mostly sweet, with one explicit chapter."}`
-		case strings.Contains(body, "sex_on_page") && strings.Contains(body, "spicy") && confirms:
-			answer = `{"sex_on_page": true, "foreplay_on_page": true, "kissing": true, "romance": true, "evidence": "a couple has sex"}`
-		case strings.Contains(body, "sex_on_page"):
-			answer = `{"sex_on_page": false, "foreplay_on_page": false, "kissing": false, "romance": false, "evidence": ""}`
+		case strings.Contains(body, "how_far") && strings.Contains(body, "spicy") && confirms:
+			// The first words of three sentences of this very part.
+			open, _ := json.Marshal(openingRE.FindAllString(body, 3))
+			answer = `{"how_far": "detailed_sex", "sex_sentences": ` + string(open) + `, "evidence": "a couple has sex", "scene": "Two adults have sex, described."}`
+		case strings.Contains(body, "how_far"):
+			answer = `{"how_far": "none", "sex_sentences": [], "evidence": "", "scene": ""}`
+		case strings.Contains(body, `described\": true | false`) && strings.Contains(body, "spicy"): // the second opinion
+			answer = `{"described": ` + fmt.Sprint(described) + `, "why": "the scene is on the page"}`
 		case strings.Contains(body, "spicy"):
 			answer = `{"romance": "a couple has sex, described in detail", "level": 4, "note": "An explicit scene.", "nudity": true}`
 		}
@@ -85,7 +105,7 @@ func writeBook(t *testing.T, dir string) string {
 			<item id="b" href="b.xhtml" media-type="application/xhtml+xml"/></manifest>
 			<spine><itemref idref="a"/><itemref idref="b"/></spine></package>`,
 		"a.xhtml": "<html><body><h1>Chapter 1</h1><p>" + words(3000, "sweet") + "</p></body></html>",
-		"b.xhtml": "<html><body><h1>Chapter 2</h1><p>" + words(3000, "spicy") + "</p></body></html>",
+		"b.xhtml": "<html><body><h1>Chapter 2</h1><p>" + spicyText(3000) + "</p></body></html>",
 	} {
 		w, _ := zw.Create(name)
 		_, _ = w.Write([]byte(body))

@@ -18,7 +18,12 @@ import (
 const (
 	keyRatedDay   = "discover_rated_day"   // the day ratings were last queued (2006-01-02)
 	keyRatedCount = "discover_rated_count" // how many that day
+	keyNYTFetched = "discover_nyt_fetched" // RFC 3339 time of the last good New York Times fetch
 )
+
+// nytEvery is how often the New York Times lists are fetched: they change
+// once a week.
+const nytEvery = 7 * 24 * time.Hour
 
 // ErrBusy means a refresh is already running.
 var ErrBusy = errors.New("Discover is already refreshing its lists")
@@ -51,8 +56,16 @@ func (s *Service) Running() bool {
 	return s.running
 }
 
-// Refresh fetches every list, queues today's ratings and returns a summary.
-func (s *Service) Refresh(ctx context.Context) (string, error) {
+// nytDue reports whether the New York Times lists are a week old (or were
+// never fetched).
+func (s *Service) nytDue(now time.Time) bool {
+	last, err := time.Parse(time.RFC3339, s.Store.Setting(keyNYTFetched))
+	return err != nil || now.Sub(last) >= nytEvery-time.Hour
+}
+
+// Refresh fetches the lists (the New York Times ones weekly, or now when
+// force is set), queues today's ratings and returns a summary.
+func (s *Service) Refresh(ctx context.Context, force bool) (string, error) {
 	s.mu.Lock()
 	if s.running {
 		s.mu.Unlock()
@@ -79,20 +92,27 @@ func (s *Service) Refresh(ctx context.Context) (string, error) {
 			problems = append(problems, err.Error())
 		}
 	}
-	nytOK := false
-	if key := strings.TrimSpace(s.Store.Setting(store.KeyNYTAPIKey)); key != "" {
+	nytOK, fetched := false, false
+	key := strings.TrimSpace(s.Store.Setting(store.KeyNYTAPIKey))
+	if key != "" && !force && !s.nytDue(time.Now()) {
+		nytOK = true // this week's lists are already here
+	} else if key != "" {
 		for i, list := range nytLists {
 			if i > 0 && !sleep(ctx, s.Pause) {
 				return "", ctx.Err()
 			}
 			entries, err := s.Client.NYTList(ctx, key, strings.TrimPrefix(list, "nyt:"))
 			save(list, entries, err)
-			nytOK = nytOK || err == nil && len(entries) > 0
+			fetched = fetched || err == nil && len(entries) > 0
+			nytOK = fetched
 			if errors.Is(err, ErrNYTKey) {
 				s.Store.Notify("warning", "discover", err.Error(), "#/admin")
 				break
 			}
 		}
+	}
+	if fetched {
+		_ = s.Store.SetSetting(keyNYTFetched, time.Now().UTC().Format(time.RFC3339))
 	}
 	if nytOK {
 		for _, l := range fallbackLists {
@@ -149,7 +169,8 @@ func (s *Service) Test(ctx context.Context, key string) (int, error) {
 	return len(entries), err
 }
 
-// Loop refreshes the lists once a day while Discover is switched on.
+// Loop refreshes the lists once a day while Discover is switched on (the
+// New York Times ones once a week).
 func (s *Service) Loop(ctx context.Context) {
 	if !sleep(ctx, 2*time.Minute) { // let start-up (and a Calibre sync) settle first
 		return
@@ -157,9 +178,11 @@ func (s *Service) Loop(ctx context.Context) {
 	t := time.NewTicker(10 * time.Minute)
 	defer t.Stop()
 	for {
+		// Seasonal shelves' matches, ready before anyone opens Discover.
+		_ = safe.Run("seasonal shelves", func() error { s.Store.WarmSeasons(time.Now()); return nil })
 		if s.Store.SettingBool(store.KeyModuleDiscover) && s.Due(time.Now()) {
 			_ = safe.Run("discover refresh", func() error {
-				summary, err := s.Refresh(ctx)
+				summary, err := s.Refresh(ctx, false)
 				if err != nil && !errors.Is(err, ErrBusy) {
 					log.Printf("discover: %v", err)
 				} else if summary != "" {

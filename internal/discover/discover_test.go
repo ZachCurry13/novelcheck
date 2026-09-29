@@ -82,16 +82,24 @@ func TestRefreshWithKey(t *testing.T) {
 	s, queued := newService(t, srv)
 	_ = s.Store.SetSetting(store.KeyNYTAPIKey, "good")
 	_ = s.Store.SetSetting(store.KeyDiscoverDaily, "4")
-	summary, err := s.Refresh(context.Background())
+	summary, err := s.Refresh(context.Background(), false)
 	if err != nil || !strings.HasPrefix(summary, "16 books on 6 lists; 4 sent to be rated") {
 		t.Fatalf("%q %v", summary, err)
 	}
 	if len(*queued) != 4 || s.Due(timeNow()) {
 		t.Fatalf("queued %v, due %v", *queued, s.Due(timeNow()))
 	}
-	// Today's allowance is used up: refreshing again rates nothing more.
-	if summary, _ = s.Refresh(context.Background()); !strings.Contains(summary, "0 sent to be rated") {
+	// Today's allowance is used up: refreshing again rates nothing more. The
+	// New York Times lists are this week's, so only Open Library is asked.
+	if summary, _ = s.Refresh(context.Background(), false); !strings.Contains(summary, "0 sent to be rated") || !strings.Contains(summary, "on 1 lists") {
 		t.Fatalf("second refresh: %q", summary)
+	}
+	if s.nytDue(timeNow()) || !s.nytDue(timeNow().Add(7*24*time.Hour)) {
+		t.Fatal("the New York Times lists are due once a week")
+	}
+	// A parent's "Refresh lists now" fetches them anyway.
+	if summary, _ = s.Refresh(context.Background(), true); !strings.Contains(summary, "on 6 lists") {
+		t.Fatalf("forced refresh: %q", summary)
 	}
 	items, _ := s.Store.DiscoverItems(nil)
 	rows, _ := Compose(items, nil, nil, nil, false)
@@ -109,7 +117,7 @@ func TestRefreshWithoutAWorkingKey(t *testing.T) {
 	defer srv.Close()
 	s, _ := newService(t, srv)
 	_ = s.Store.SetSetting(store.KeyNYTAPIKey, "bad")
-	summary, err := s.Refresh(context.Background())
+	summary, err := s.Refresh(context.Background(), false)
 	if err != nil || !strings.Contains(summary, "refused the API key") {
 		t.Fatalf("%q %v", summary, err)
 	}

@@ -17,6 +17,9 @@ type Note struct {
 	Label string `json:"label"`
 	Level int    `json:"level"`
 	Note  string `json:"note"`
+	Scene string `json:"scene,omitempty"` // for the admin: what happens in the scene (parts at 3+)
+	From  int    `json:"from"`            // where the part is in the book, in words (for the reader)
+	To    int    `json:"to"`
 }
 
 // partTries is how often a part is tried before the scan fails; retryWait
@@ -93,7 +96,7 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 		a.SummaryVerdict = book.SummaryVerdict
 	}
 	raw, _ := json.Marshal(notes)
-	if bigJump(prev, *a.SpiceLevel) {
+	if bigJump(prev, *a.SpiceLevel) || onePassage(prev, *a.SpiceLevel, results) {
 		// A big raise waits for an admin, with the evidence, instead of applying.
 		if err := r.Store.HoldDeepRead(d.ID, string(raw), a, *a.SpiceLevel); err != nil {
 			return err

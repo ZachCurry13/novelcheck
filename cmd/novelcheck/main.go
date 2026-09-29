@@ -4,12 +4,13 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -18,15 +19,16 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/api"
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/calibre"
+	"github.com/zachcurry13/novelcheck/internal/cli"
 	"github.com/zachcurry13/novelcheck/internal/collections"
 	"github.com/zachcurry13/novelcheck/internal/config"
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/discover"
-	"github.com/zachcurry13/novelcheck/internal/events"
 	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/push"
+	"github.com/zachcurry13/novelcheck/internal/safemode"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/suggest"
 	"github.com/zachcurry13/novelcheck/internal/sysinfo"
@@ -38,6 +40,11 @@ import (
 
 func main() {
 	cfg := config.Load()
+	// Maintenance commands (novelcheck help) run and exit instead of the web app.
+	if code, handled := cli.Run(os.Args[1:], cfg.DataDir, os.Stdout, os.Stderr); handled {
+		os.Exit(code)
+	}
+	safeReason := safemode.Starting(cfg.DataDir, time.Now())
 	database, err := db.Open(cfg.DataDir)
 	if err != nil {
 		log.Fatalf("open database: %v", err)
@@ -55,23 +62,11 @@ func main() {
 		log.Printf("reset %d interrupted analyses to pending", n)
 	}
 	_ = st.PurgeExpiredSessions()
-	// Titles stored before tidying ("01 - Dune") get their plain title and series number.
-	if n, err := st.TidyTitles(); err == nil && n > 0 {
-		log.Printf("tidied %d titles with track or series numbers", n)
-	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	worker := analyzer.New(st)
-	go worker.Run(ctx)
-	// Ratings from Deep Scans made before the stricter checks could come from
-	// one misread part: they go back to a rating from the book's description.
-	if old := st.OldDeepRatings(); len(old) > 0 {
-		worker.Enqueue(false, old...)
-		st.Notify("info", "deep-scan", fmt.Sprintf("Deep Scan got stricter. %d book(s) it rated before are being rated from their description again; "+
-			"you can Deep Scan them again from the Deep Scan page.", len(old)), "#/deepscan")
-	}
 	// AI collections: fills run in the background; weekly ideas only while
 	// the AI is idle and within automatic rating's hours.
 	collectionsSvc := collections.New(st)
@@ -79,16 +74,12 @@ func main() {
 	collectionsSvc.Allowed = func() bool {
 		return worker.Status().State == "idle" && analyzer.RateHoursOpen(st, time.Now())
 	}
-	go collectionsSvc.Loop(ctx)
-	go events.Loop(ctx, st) // events are archived when they end
 	aiTools := aitools.New(st)
-	go aiTools.Loop(ctx) // daily: newer versions of the Ollama models in use
 	syncer := &calibre.Syncer{Store: st, Dir: cfg.CalibreDir}
 	syncer.NewBooks = func() bool {
 		worker.Kick()
 		return analyzer.AutoRateOn(st)
 	}
-	go syncer.Loop(ctx)
 
 	sampler := sysinfo.New(cfg.DataDir)
 	go sampler.Loop(ctx)
@@ -110,13 +101,27 @@ func main() {
 	}
 	defer tun.Stop()
 
-	// Deep Scans: full-text reading of chosen books, one at a time.
 	deep := deepread.New(st, cfg.CalibreDir)
-	go deep.Run(ctx)
-
-	// Discover: outside book lists refreshed daily; their books are rated a few dozen a day.
 	discoverSvc := discover.New(st, func(ids ...int64) { worker.Enqueue(false, ids...) })
-	go discoverSvc.Loop(ctx)
+
+	// Background work, unless safe mode is on (then an admin starts it by
+	// leaving safe mode).
+	bg := &background{st: st, worker: worker, collections: collectionsSvc, aiTools: aiTools, syncer: syncer, deep: deep, discover: discoverSvc}
+	safe := safemode.NewState(cfg.DataDir, safeReason, sync.OnceFunc(func() { bg.start(ctx) }))
+	if safeReason == "" {
+		bg.start(ctx)
+	} else {
+		log.Printf("SAFE MODE (%s): background work is off until an admin leaves safe mode", safeReason)
+		st.Notify("warning", "safe-mode", "NovelCheck started in safe mode: Calibre sync, rating and Deep Scans are paused. Leave safe mode from the banner at the top.", "#/admin")
+	}
+	// A start that runs a while (or shuts down normally) wasn't a crash.
+	go func() {
+		select {
+		case <-ctx.Done():
+		case <-time.After(safemode.HealthyAt):
+			safemode.Clean(cfg.DataDir)
+		}
+	}()
 
 	// Phone notifications: every new 🔔 notice also goes to subscribed devices.
 	pusher := push.New(st)
@@ -139,6 +144,7 @@ func main() {
 		Discover:    discoverSvc,
 		Collections: collectionsSvc,
 		AITools:     aiTools,
+		Safe:        safe,
 		Web:         web.FS(),
 	}
 	srv.Pulls.OnError = func(model string, err error) {
@@ -160,4 +166,5 @@ func main() {
 	if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
+	safemode.Clean(cfg.DataDir) // a normal shutdown
 }

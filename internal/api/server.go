@@ -20,6 +20,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/ollama"
 	"github.com/zachcurry13/novelcheck/internal/push"
+	"github.com/zachcurry13/novelcheck/internal/safemode"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/suggest"
 	"github.com/zachcurry13/novelcheck/internal/sysinfo"
@@ -45,6 +46,7 @@ type Server struct {
 	Discover    *discover.Service    // the Discover tab's lists; nil in tests that don't need it
 	Collections *collections.Service // AI-filled collections and weekly ideas
 	AITools     *aitools.Service     // model updates and the speed test
+	Safe        *safemode.State      // safe mode: background work off until an admin leaves it
 	Web         fs.FS                // embedded static assets
 	logins      *loginLimiter
 	etags       sync.Map  // static file name → ETag
@@ -82,6 +84,10 @@ func (s *Server) Router() http.Handler {
 			r.Put("/me/delivery", s.handleUpdateDelivery)
 			r.Put("/me/guide-seen", s.handleGuideSeen)
 			r.Put("/me/start-page", s.handleStartPage)
+			r.Put("/me/appearance", s.handleAppearance)
+			r.Get("/me/searches", s.handleSearches)
+			r.Post("/me/searches", s.handleAddSearch)
+			r.Delete("/me/searches", s.handleClearSearches)
 			r.Get("/me/opds", s.handleMyOPDS)
 			r.Post("/me/opds/reset", s.handleResetMyOPDS)
 
@@ -205,7 +211,9 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/deep-scans/keep-all", s.handleKeepAllDeepScans)
 				r.Post("/admin/deep-scans/accept-all", s.handleAcceptAllDeepScans)
 				r.Put("/admin/deep-scans/order", s.handleOrderDeepScans)
+				r.Get("/admin/deep-scans/{id}/passage", s.handleDeepPassage)
 				r.Get("/admin/aitools", s.handleAIToolsStatus)
+				r.Post("/admin/safe-mode/leave", s.handleLeaveSafeMode)
 				r.Post("/admin/aitools/check-updates", s.handleCheckModelUpdates)
 				r.Post("/admin/aitools/updated", s.handleModelUpdated)
 				r.Post("/admin/aitools/bench", s.handleStartBench)

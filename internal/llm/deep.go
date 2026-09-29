@@ -14,6 +14,7 @@ import (
 type PartResult struct {
 	Level           int
 	Evidence        string // the romantic or sexual content on the page, in the AI's words
+	Scene           string // the second look's fuller, modest account of the scene, for the admin
 	Note            string
 	Nudity          bool
 	SoloActs        bool

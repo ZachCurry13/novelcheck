@@ -25,32 +25,42 @@ const title = (d, cls = "font-semibold leading-snug") =>
 
 export function reviewCard(d) {
   const notes = evidence(d);
+  const explicit = notes.filter((n) => n.level >= 4).length;
+  const levels = [0, 1, 2, 3, 4, 5].map((l) => `<option value="${l}" ${l === d.proposed_level ? "selected" : ""}>Level ${l}</option>`).join("");
   return `<li class="card space-y-3" data-scan="${d.id}" data-book="${d.book_id}">
     <div class="flex gap-3">
       <button type="button" data-open class="shrink-0" title="Book details">${coverImg(d.book_id, "h-20 w-14")}</button>
       <div class="min-w-0 flex-1 space-y-1">
         ${title(d)}
         <p class="truncate text-sm text-slate-400">${esc(d.author || "")}</p>
-        <p class="text-sm font-semibold text-amber-300">⚠️ Level ${d.prev_level} → Level ${d.proposed_level}</p>
+        <p class="text-sm font-semibold text-amber-300">⚠️ Level ${d.prev_level ?? "–"} → Level ${d.proposed_level}</p>
       </div>
     </div>
-    <details class="rounded-lg bg-slate-800/60 px-3 py-2 text-sm">
+    ${d.proposed_level >= 4 && explicit === 1 ? `<p class="rounded-lg bg-amber-950/40 p-2 text-sm text-amber-200">This rests on one passage. Read it and decide; the book gets a note for parents either way.</p>` : ""}
+    <details class="rounded-lg bg-slate-800/60 px-3 py-2 text-sm" ${explicit === 1 ? "open" : ""}>
       <summary class="cursor-pointer py-1 text-slate-300">What the AI found (${notes.length} part${notes.length === 1 ? "" : "s"})</summary>
-      <ul class="mt-1 list-disc space-y-1 pl-5 text-slate-300">${notes.map((n) => `<li><b>${esc(n.label)}</b> · Level ${n.level}: ${esc(n.note)}</li>`).join("")
+      <ul class="mt-1 space-y-2 text-slate-300">${notes.map((n) => `<li class="rounded-md bg-slate-900/60 p-2">
+        <p><b>${esc(n.label)}</b> · Level ${n.level}: ${esc(n.note)}</p>
+        ${n.scene ? `<p class="mt-1 text-xs text-slate-400">${esc(n.scene)}</p>` : ""}
+        <button type="button" data-read data-from="${n.from || 0}" data-to="${n.to || 0}" data-label="${esc(n.label)}"
+          class="mt-1 text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button></li>`).join("")
         || "<li>No parts with sexual content were noted.</li>"}</ul>
-      <p class="mt-2 text-xs text-slate-400">Every part listed passed a second check for sexual content on the page.</p>
+      <p class="mt-2 text-xs text-slate-400">A part counts as Level 4 or more only when the AI names sentences that really are in the book and a second question agrees.</p>
     </details>
     <div class="grid grid-cols-2 gap-2">
       <button data-act="accept" class="btn-primary">Accept Level ${d.proposed_level}</button>
-      <button data-act="keep" class="btn-secondary">Keep Level ${d.prev_level}</button>
-    </div></li>`;
+      <button data-act="keep" class="btn-secondary">${d.prev_level === null || d.prev_level === undefined ? "Keep the old rating" : `Keep Level ${d.prev_level}`}</button>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 text-sm text-slate-400">Or set
+      <select data-level class="input w-auto py-1 text-sm">${levels}</select>
+      <button data-act="set" class="btn-ghost py-1 text-sm">Set this level</button></div></li>`;
 }
 
 export function reviewHeader(n) {
   if (!n) return `<p class="card text-sm text-slate-300">✓ Nothing waits for your review.</p>`;
   return `<div class="space-y-2">
-    <p class="text-sm text-slate-400">These scans would raise a book by 2 or more levels, so they don't apply until you decide.
-      Scans made before NovelCheck 1.18.2 used an older Level 3, so check what the AI found.</p>
+    <p class="text-sm text-slate-400">These scans would raise a book by 2 or more levels, or to Level 4 or more on one passage, so they don't apply until you decide.
+      Tap 📖 to read a part in the book; the right level can also be one in between (Or set…). Each decision leaves a note for parents on the book.</p>
     <div class="flex flex-wrap gap-2">
       <button data-act="accept-all" class="btn-secondary py-1.5 text-sm">Accept all ${n}</button>
       <button data-act="keep-all" class="btn-ghost py-1.5 text-sm">Keep all old ratings</button>

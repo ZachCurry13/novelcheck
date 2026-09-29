@@ -92,7 +92,7 @@ func (s *Server) handleDiscoverRefresh(w http.ResponseWriter, r *http.Request) {
 		_ = safe.Run("discover refresh", func() error {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 			defer cancel()
-			if _, err := s.Discover.Refresh(ctx); err != nil && !errors.Is(err, discover.ErrBusy) {
+			if _, err := s.Discover.Refresh(ctx, true); err != nil && !errors.Is(err, discover.ErrBusy) {
 				log.Printf("discover refresh: %v", err)
 			}
 			return nil

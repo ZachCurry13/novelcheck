@@ -151,10 +151,13 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 		where = append(where, "EXISTS (SELECT 1 FROM collection_books fc WHERE fc.book_id = b.id AND fc.collection_id = ?)")
 		args = append(args, f.Collection)
 	}
-	if season, ok := seasons.Find(f.Season); ok {
-		cond, sargs := season.Cond()
-		where = append(where, cond)
-		args = append(args, sargs...)
+	if season, ok := seasons.Find(f.Season); ok { // matches kept in season_books (seasonReady)
+		where = append(where, "EXISTS (SELECT 1 FROM season_books sn WHERE sn.book_id = b.id AND sn.season = ?)")
+		args = append(args, season.Key)
+		if season.MaxSpice >= 0 {
+			where = append(where, "COALESCE(b.spice_level, 0) <= ?")
+			args = append(args, season.MaxSpice)
+		}
 	}
 	if f.OverlapWith > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM catalog_books y WHERE y.book_id = b.id AND y.catalog_id = ?)")
@@ -229,19 +232,24 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 // ListBooks returns books matching f that viewer is allowed to see, plus the
 // total match count for pagination.
 func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
+	if season, ok := seasons.Find(f.Season); ok {
+		if err := s.seasonReady(season); err != nil {
+			return nil, 0, err
+		}
+	}
 	cond, args := filterCond(f, viewer)
 	var total int
 	if err := s.DB.Get(&total, `SELECT COUNT(*) FROM books b WHERE `+cond, args...); err != nil {
 		return nil, 0, err
 	}
-	order := "b.title COLLATE NOCASE"
+	order := "sort_title(b.title), b.id" // "The Hobbit" under H
 	switch f.Sort {
 	case "author":
-		order = "b.author COLLATE NOCASE, b.title COLLATE NOCASE"
+		order = "sort_author(b.author), b.series COLLATE NOCASE, b.series_index, sort_title(b.title)" // by last name, series in order
 	case "recent":
 		order = "b.created_at DESC, b.id DESC"
 	case "mild":
-		order = "COALESCE(b.spice_level, 9), b.title COLLATE NOCASE"
+		order = "COALESCE(b.spice_level, 9), sort_title(b.title)"
 	case "list":
 		if f.Event > 0 {
 			order = "(SELECT MIN(lo.position) FROM event_books lo WHERE lo.book_id = b.id AND lo.event_id = " + strconv.FormatInt(f.Event, 10) + "), b.id"

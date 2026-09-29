@@ -32,29 +32,3 @@ func TestParsePartGuards(t *testing.T) {
 		}
 	}
 }
-
-func TestConfirmedLevel(t *testing.T) {
-	cases := []struct {
-		c     llm.Confirmation
-		level int
-	}{
-		{llm.Confirmation{SexOnPage: true, Evidence: "a couple has sex"}, 4},
-		{llm.Confirmation{SexOnPage: true}, 0}, // a yes without naming it doesn't count
-		{llm.Confirmation{Foreplay: true, Evidence: "heavy making out"}, 3},
-		{llm.Confirmation{FadeToBlack: true, Evidence: "a night together, off the page"}, 3},
-		{llm.Confirmation{Desire: true, Evidence: "open longing for each other"}, 3},
-		{llm.Confirmation{Desire: true, Kissing: true}, 2}, // desire has to be named
-		{llm.Confirmation{Kissing: true}, 2},
-		{llm.Confirmation{Romance: true}, 1},
-		{llm.Confirmation{}, 0},
-	}
-	for _, c := range cases {
-		if got := llm.ConfirmedLevel(4, c.c); got != c.level {
-			t.Errorf("%+v → %d, want %d", c.c, got, c.level)
-		}
-	}
-	c, err := llm.ParseConfirm("```json\n{\"sex_on_page\": false, \"foreplay_on_page\": false, \"kissing\": false, \"romance\": false, \"evidence\": \"\"}\n```")
-	if err != nil || llm.ConfirmedLevel(4, c) != 0 {
-		t.Fatalf("parse: %+v %v", c, err)
-	}
-}

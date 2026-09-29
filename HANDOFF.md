@@ -3,14 +3,15 @@
 NovelCheck (Go + vanilla JS PWA, self-hosted on the user's TrueNAS) rates a family's Calibre library for romance ("peppers") and content. What each version does is in `CHANGELOG.md`; how it's built is in `NOVELCHECK_SPEC.md` (Section 4 by feature, Section 6 by version).
 
 ## 1. Where things stand
-- **Released:** v1.26.1 on 2026-09-29 (`:latest` and `:1.26.1` are the same image; `:main` is separate, so the race is gone). v1.26.0 on 2026-09-29 (AI machines; events with "Load more", Library view, end time and archive). Releases 1.20.0 to 1.25.0 were built on 2026-09-28.
-- **v1.26.1**
-  - Admin → Deep Scan → Settings did nothing until readers were picked: `/api/admin/deep-scans` sent `users: null` and `renderSettings` threw. `DeepUsers` returns `[]`, the page guards too, and `deepscan_test.go` checks it.
-  - Pushes to `main` publish `:main`; only release builds move `:latest`. The push build used to race the release build, leaving `git describe` labels such as "1.24.0-1-g9d42cab" under the menu.
-  - TrueNAS: the guide, compose file and README now keep the pull policy at "only if missing". "Always" made TrueNAS download NovelCheck at every start, including boot, which failed with "[EFAULT] Failed to render compose templates: Timed out waiting for response". Updates come through TrueNAS's Update, or Pull Image and then Edit → Save.
-  - Docs review (2026-09-29): README, spec, AI_PROVIDERS, TRUENAS, the feedback form and this file match the app again; the example pool and time zone are generic.
-- The user's server still ran the 1.25 code on 2026-09-29.
-- **Next:** the user switches their app's pull policy to "Only pull image if not present on host" (end of "Updating NovelCheck" in `docs/TRUENAS.md`) and updates to 1.26.1. Then whatever they ask.
+- **v1.27.0** (2026-09-29, the user's OK to release it before the rest): Deep Scan review redesign, Discover speed/NYT tags/weekly NYT, appearance (light theme following the device, OpenDyslexic, reduce motion), search history and sorts, safe mode and `novelcheck` commands, phone Admin sheet, Up Next suggestions kept in place. See spec "Deep Scan review (v1.27)" and "Comfort, search and safety (v1.27)".
+- Why the Deep Scan changed: a held scan of an adult mystery novel (0 → 4) rested on a fade-out scene (part 60 of 107, "about 55% in") that a small model called Level 5 and the old second check confirmed. By the scale it's a Level 3 book. The user shared the EPUB for analysis; it's only in the session scratchpad (and the local test Calibre folder), never in the repo. The user wants single-passage raises decided by an admin, with a note for parents.
+- **Next: v1.28** (planned and agreed 2026-09-29):
+  - **Series page** (`#/series`: every series with progress; one series in order with gaps, what's read, Next up → Up Next).
+  - **Box sets**: found by title ("Box Set", "Books 1–3", "Trilogy", "Omnibus", "Complete Series"; the AI names contents otherwise) and split into their books **after a parent confirms**; owning the box set counts as owning its books; each member opens the box set's file.
+  - **TV/movie tie-ins**: "(TV Tie-In)", "Movie Tie-In Edition" ignored in matching; **Same book as…** in the book window links two titles for good.
+  - **Read-status sync**: NovelCheck as a KOReader progress-sync (kosync) server: `/users/auth`, `PUT /syncs/progress`, `GET /syncs/progress/:document`, headers `x-auth-user`/`x-auth-key` (md5 of the password; a per-person sync code from Profile), document = KOReader's partial MD5 (md5 of 1024-byte reads at 0 and 1024·4^i, i=0..10) of the file NovelCheck served; opening → Reading, the end → Finished. Stock Kindle: no API; manual ✓ Finished, plus Goodreads/StoryGraph "read" shelves on import.
+  - **Format cleanup**: keep chosen formats (e.g. EPUB), remove others through the Content server (`/cdb/cmd/remove_format`; Calibre moves them to `.caltrash/f/<book id>/`), Undo for 7 days (re-add from the trash); **Convert to EPUB** via `/conversion/start/{book_id}` and `/conversion/status/{job_id}`.
+- The user's server runs on TrueNAS with the pull policy now "only if missing" (switched 2026-09-29).
 
 ## 2. Rules
 - Releases only with the user's OK. The release commands are allowed in `.claude/settings.local.json` (git-excluded). Run each as its own Bash call, exactly: `git checkout main`, `git pull --ff-only`, `git merge --ff-only feature/…`, `git push origin main`, `gh workflow run docker.yml --ref main -f version=X.Y.Z`; then watch the run id that call printed (`gh run watch <id>`), never a guessed one.

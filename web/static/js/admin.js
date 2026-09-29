@@ -12,7 +12,7 @@ import { on } from "./modules.js";
 import { renderFlagsAdmin } from "./customflags.js";
 import { renderSettingsTab } from "./adminsettings.js";
 import { renderStats, perBookCost } from "./adminstats.js";
-import { adminNavHTML } from "./adminnav.js";
+import { adminNavHTML, markAdminSection } from "./adminnav.js";
 
 const TABS = [["ai", "🤖 AI & Scans"], ["users", "👪 Users & Rules"], ["delivery", "📬 Delivery & Services"], ["system", "⚙️ System & Toggles"]];
 
@@ -70,6 +70,7 @@ export async function renderAdmin(view, state) {
     current = tab;
     $$("[data-panel]", view).forEach((p) => p.classList.toggle("hidden", p.dataset.panel !== tab));
     $$("[data-tab]", view).forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+    markAdminSection(view, tab);
     history.replaceState(null, "", `#/admin?tab=${tab}`);
   };
   show(current);

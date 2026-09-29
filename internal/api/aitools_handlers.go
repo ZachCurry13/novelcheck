@@ -118,3 +118,13 @@ func (s *Server) deepTime(e deepread.Estimate) (minutes, power float64) {
 	price := s.Store.SettingFloat(store.KeyPowerPrice)
 	return secs / 60, ai.Watts / 1000 * secs / 3600 * price
 }
+
+// handleLeaveSafeMode starts the background work that safe mode kept off.
+func (s *Server) handleLeaveSafeMode(w http.ResponseWriter, r *http.Request) {
+	if err := s.Safe.Leave(); err != nil {
+		writeErr(w, http.StatusConflict, err.Error())
+		return
+	}
+	s.Store.Resolve("safe-mode")
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}

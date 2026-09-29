@@ -123,11 +123,22 @@ func (s *Server) handleDecideDeepScan(w http.ResponseWriter, r *http.Request) {
 		done, err = s.Store.AcceptDeepRead(id, by)
 	case "keep": // a held big jump: keep the rating the book had
 		done, err = s.Store.KeepOldRating(id, by)
+	case "set": // a held scan: the admin's own level ({"level": 0-5})
+		var body struct {
+			Level int `json:"level"`
+		}
+		if !readJSON(w, r, &body, 1<<10) {
+			return
+		}
+		done, err = s.Store.SetHeldLevel(id, body.Level, by)
 	default:
 		done, err = s.Store.DecideDeepRead(id, action, by)
 	}
 	if done {
 		s.resolveReviewNotice(title)
+		if a := chi.URLParam(r, "action"); a == "accept" || a == "keep" || a == "set" {
+			s.noteDecisions(r, id)
+		}
 	}
 	switch {
 	case err != nil:
@@ -232,7 +243,9 @@ func (s *Server) deepModelWarning(ctx context.Context) (warning, suggest string)
 // handleKeepAllDeepScans turns down every scan waiting for review: each book
 // keeps the rating it had.
 func (s *Server) handleKeepAllDeepScans(w http.ResponseWriter, r *http.Request) {
+	held := s.Store.HeldDeepReadIDs()
 	n, err := s.Store.KeepAllOldRatings(auth.UserFrom(r).Username)
+	s.noteDecisions(r, held...)
 	if err != nil {
 		writeStoreErr(w, err)
 		return
@@ -258,7 +271,9 @@ func (s *Server) handleOrderDeepScans(w http.ResponseWriter, r *http.Request) {
 
 // handleAcceptAllDeepScans saves the rating of every held scan at once.
 func (s *Server) handleAcceptAllDeepScans(w http.ResponseWriter, r *http.Request) {
+	held := s.Store.HeldDeepReadIDs()
 	n, err := s.Store.AcceptAllHeld(auth.UserFrom(r).Username)
+	s.noteDecisions(r, held...)
 	s.resolveReviewNotice("")
 	if err != nil {
 		writeStoreErr(w, err)

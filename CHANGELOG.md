@@ -4,6 +4,40 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.27.0]
+
+### 🧬 Deep Scan: fewer false alarms, and you decide
+- **A stricter second look.** For a part rated Level 3 or more, the AI now says how far the scene goes (kissing, making out, sexual touching, implied or cut away, briefly described, described in detail). A part counts as Level 4 or more only when the sex act is described in detail, the AI names the sentences that describe it and they really are in the book, and a second, differently worded question agrees. Scenes that fade out or cut to the next morning stay at Level 3.
+- **One passage, your call.** A raise to Level 4 or more that rests on a single passage always waits for your review, however small the raise.
+- **Read it yourself.** In **Review**, each flagged part has a short description of the scene and **📖 Read this part in the book**: the part the AI read, highlighted, with the text before and after it and **◀ Earlier / Later ▶**.
+- **Any level.** Besides Accept and Keep, **Or set Level…** picks the level in between when that's the right one.
+- **A note for parents.** Every decision adds a parents-only note to the book: the scenes the scan found, where, and the level chosen.
+- Scans made before 1.27 aren't changed: decide them in Review with the reader and **Or set Level…**, or scan the book again.
+
+### 🧭 Discover
+- **Opens at once** with the lists you saw last time, then refreshes them. Each row keeps where you'd scrolled to.
+- **Much faster to load:** seasonal shelves (like Fall and Halloween) no longer search every book description on each visit.
+- **📰 NYT list** tags books from The New York Times Best Sellers lists (with how many weeks they've been on), and each such row credits The New York Times.
+- The New York Times lists are fetched **once a week** (they change weekly). **Refresh lists now** still fetches them straight away.
+
+### 🎨 Appearance (Profile → Appearance)
+- **A light theme.** NovelCheck follows each device's light or dark setting, or you can pick Dark or Light.
+- **OpenDyslexic,** a font some people with dyslexia find easier to read.
+- **Reduce motion** turns off animations and smooth scrolling (it also follows the device's setting).
+- These are per person and follow you to every device.
+
+### 🔎 Search
+- The Library remembers your **last 10 searches**; they appear under the search box (with **Clear**) on every device you use.
+- **Sort: Title** ignores "The", "A" and "An"; **Sort: Author** goes by last name; there's also **Sort: Fewest peppers**.
+
+### 🛟 Safe mode and commands
+- **Safe mode** starts NovelCheck without its background work (Calibre sync, rating, Deep Scans). It turns on by itself if NovelCheck stops unexpectedly 3 times within a few minutes of starting; admins see a banner with **Leave safe mode**.
+- **Commands** for the TrueNAS app's Shell: `novelcheck reset-password <user>` (for a locked-out admin), `novelcheck backup`, `novelcheck check`, `novelcheck users` and `novelcheck safe-mode on|off`. `novelcheck help` lists them.
+
+### 📱 Phones
+- **Admin:** one button at the top names the section you're in and opens all sections as a sheet from the bottom, like More.
+- **Up Next:** adding a suggestion to Up Next no longer moves the suggestions on iPhone.
+
 ## [1.26.1]
 
 ### 🖥️ TrueNAS: surer starts

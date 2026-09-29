@@ -43,10 +43,10 @@ func TestInSeason(t *testing.T) {
 	}
 }
 
-func TestCond(t *testing.T) {
+func TestWordsCond(t *testing.T) {
 	s, _ := Find("valentines")
-	cond, args := s.Cond()
-	if len(args) != len(s.Words)+1 || args[0] != "% valentine%" || args[len(args)-1] != 2 || cond == "" {
+	cond, args := s.WordsCond()
+	if len(args) != len(s.Words) || args[0] != "% valentine%" || s.MaxSpice != 2 || cond == "" {
 		t.Fatalf("%s %v", cond, args)
 	}
 }

@@ -2,6 +2,7 @@
 // ("Living room shelf") by scanning barcodes one after another, typing a
 // title or ISBN, or taking a photo of the cover. Each book shows its rating
 // as soon as the AI has one.
+import { reduceMotion } from "./appearance.js";
 import { get, post, del } from "./api.js";
 import { $, esc, attempt, toast, classChip } from "./ui.js";
 import { coverImg } from "./covers.js";
@@ -160,7 +161,7 @@ export async function renderShelf(view, state) {
     if (!shelfId()) return toast("Pick or create a paper library first", true);
     stopCamera();
     $("#camera", view).classList.remove("hidden");
-    $("#camera", view).scrollIntoView({ block: "start", behavior: "smooth" });
+    $("#camera", view).scrollIntoView({ block: "start", behavior: reduceMotion() ? "auto" : "smooth" });
     const msg = $("#cam-msg", view);
     cam = scanContinuous($("#camera video", view), (isbn) => {
       msg.textContent = `Looking up ${isbn}…`;

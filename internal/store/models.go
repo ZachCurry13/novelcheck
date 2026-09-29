@@ -3,13 +3,20 @@
 // at one connection; never nest queries inside a rows iteration.
 package store
 
-import "github.com/jmoiron/sqlx"
+import (
+	"sync"
+
+	"github.com/jmoiron/sqlx"
+)
 
 type Store struct {
 	DB *sqlx.DB
 	// OnNotify, if set, hears about each new notification (not repeats of an
 	// unread one), e.g. to push it to phones. It must not block.
 	OnNotify func(level, source, message, link string)
+
+	seasonMu sync.Mutex
+	seasonAt map[string]seasonStamp // when each shelf's season_books was made
 }
 
 func New(db *sqlx.DB) *Store { return &Store{DB: db} }
@@ -50,6 +57,9 @@ type User struct {
 	Collections     []int64  `db:"-" json:"collections"`                     // the collections they may see then
 	AIFeatures      bool     `db:"ai_features" json:"ai_features"`           // kid accounts: a parent allowed AI features
 	StartPage       string   `db:"start_page" json:"start_page"`             // the page NovelCheck opens on
+	Theme           string   `db:"theme" json:"theme"`                       // "" = match the device, "dark", "light"
+	Font            string   `db:"font" json:"font"`                         // "" or "dyslexic"
+	Motion          string   `db:"motion" json:"motion"`                     // "" = match the device, "reduce"
 }
 
 func (u *User) IsAdmin() bool { return u.Role == RoleAdmin }

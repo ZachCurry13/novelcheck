@@ -10,6 +10,7 @@ import { loadContent, hidePicker, bindHidePicker } from "./content.js";
 import { setupSelect } from "./libraryselect.js";
 import { card, IN_QUEUE } from "./librarycard.js";
 import { eventShelf } from "./eventshelf.js";
+import { recentSearches } from "./recentsearches.js";
 import { liveCards } from "./livestatus.js";
 import { refreshActivity } from "./activity.js";
 import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
@@ -67,7 +68,7 @@ export async function renderLibrary(view, state) {
       </select>
       <select name="sort" class="input filter-more">
         ${event ? `<option value="list">Sort: The event's order</option>` : ""}
-        <option value="title">Sort: Title</option><option value="author">Sort: Author</option>
+        <option value="title">Sort: Title</option><option value="author">Sort: Author (last name)</option>
         <option value="recent">Sort: Recently added</option><option value="mild">Sort: Fewest peppers</option>
       </select>
       <div class="filter-more col-span-full"><span class="label" title="Books with these are hidden (unless a parent marked them OK)">Hide content</span>
@@ -96,6 +97,7 @@ export async function renderLibrary(view, state) {
     <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>`;
 
   const form = $("#filters", view);
+  const recent = recentSearches(form.q, () => load(true));
   if (!event) bindSeasonChips(view.querySelector("[data-season-chips]"));
   if (collection || season) shelfBanner($("#shelf-banner", view), { collection, season, seasons: shelves.seasons }, state, () => load(true));
   const evShelf = event ? await eventShelf($("#shelf-banner", view), event, state, () => load(true)) : null;
@@ -138,6 +140,7 @@ export async function renderLibrary(view, state) {
     if (reset) grid.innerHTML = "";
     grid.insertAdjacentHTML("beforeend", data.books.map(cardFor).join(""));
     offset += data.books.length;
+    if (reset && data.total) recent.remember(form.q.value);
     $("#result-count", view).textContent = `${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}`;
     $("#more-btn", view).classList.toggle("hidden", offset >= data.total);
     if (!data.total) grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>`;

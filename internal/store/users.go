@@ -9,7 +9,7 @@ import (
 var ErrNotFound = errors.New("not found")
 
 const userCols = `id, username, password_hash, role, hide_open_door, hide_nudity, hide_solo_acts,
-	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, only_collections, ai_features, start_page, created_at`
+	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, only_collections, ai_features, start_page, theme, font, motion, created_at`
 
 func (s *Store) CountUsers() (int, error) {
 	var n int
@@ -222,6 +222,19 @@ func (s *Store) PurgeExpiredSessions() error {
 
 // StartPages are the pages someone may pick to open NovelCheck on.
 var StartPages = map[string]bool{"check": true, "library": true, "discover": true, "queue": true, "collections": true, "wishlist": true}
+
+// Appearance choices ("" = follow the device / the standard).
+var (
+	Themes  = map[string]bool{"": true, "dark": true, "light": true}
+	Fonts   = map[string]bool{"": true, "dyslexic": true}
+	Motions = map[string]bool{"": true, "reduce": true}
+)
+
+// SetAppearance saves someone's theme, font and motion choices.
+func (s *Store) SetAppearance(id int64, theme, font, motion string) error {
+	_, err := s.DB.Exec(`UPDATE users SET theme = ?, font = ?, motion = ? WHERE id = ?`, theme, font, motion, id)
+	return err
+}
 
 // SetStartPage saves the page a user wants NovelCheck to open on ("" = the default).
 func (s *Store) SetStartPage(id int64, page string) error {

@@ -77,7 +77,17 @@ export async function renderQueue(view, state) {
   });
 
   await load();
-  if (on(state.user, "suggestions")) renderSuggestions($("#suggestions", view), state, load);
+  if (on(state.user, "suggestions")) {
+    // A suggestion added to Up Next grows the list above; keep the suggestions
+    // where they were on screen (iPhones don't do this by themselves).
+    const host = $("#suggestions", view);
+    renderSuggestions(host, state, async () => {
+      const before = host.getBoundingClientRect().top;
+      await load();
+      const moved = host.getBoundingClientRect().top - before;
+      if (moved) window.scrollBy(0, moved);
+    });
+  }
   if (window.Sortable) {
     sortable = window.Sortable.create(queued, {
       handle: ".drag-handle",

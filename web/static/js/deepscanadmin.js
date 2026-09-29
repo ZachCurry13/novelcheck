@@ -102,6 +102,12 @@ export async function renderDeepScanAdmin(view, state) {
     if (tab) return show(tab);
     const item = e.target.closest("[data-scan]");
     if (e.target.closest("[data-open]") && item) return openBook(Number(item.dataset.book), state);
+    const read = e.target.closest("[data-read]");
+    if (read && item) {
+      const d = held.find((x) => x.id === Number(item.dataset.scan));
+      return import("./deepreader.js").then((m) => m.openPassage(item.dataset.scan, d?.title || "",
+        { from: Number(read.dataset.from), to: Number(read.dataset.to), label: read.dataset.label }));
+    }
     const btn = e.target.closest("[data-act]");
     if (!btn) return;
     const act = btn.dataset.act;
@@ -115,19 +121,21 @@ export async function renderDeepScanAdmin(view, state) {
     }
     if (!item) return;
     btn.disabled = true;
-    const ok = await attempt(() => post(`/api/admin/deep-scans/${item.dataset.scan}/${act}`));
+    const level = act === "set" ? Number(item.querySelector("[data-level]").value) : null;
+    const ok = await attempt(() => post(`/api/admin/deep-scans/${item.dataset.scan}/${act}`, level === null ? {} : { level }));
     if (!ok) {
       btn.disabled = false;
       return;
     }
     // Decide in place: the card goes, the counts drop, the page stays where it is.
     const id = Number(item.dataset.scan);
-    if (act === "accept" || act === "keep") {
+    if (act === "accept" || act === "keep" || act === "set") {
       decided.add(id);
       held = held.filter((d) => d.id !== id);
-      data.scans = data.scans.map((d) => (d.id === id ? { ...d, held: false, status: act === "keep" ? "declined" : d.status, new_level: act === "accept" ? d.proposed_level : d.new_level } : d));
+      const newLevel = (d) => (act === "accept" ? d.proposed_level : act === "set" ? level : d.new_level);
+      data.scans = data.scans.map((d) => (d.id === id ? { ...d, held: false, status: act === "keep" ? "declined" : d.status, new_level: newLevel(d) } : d));
       item.remove();
-      toast(act === "accept" ? "Accepted" : "Kept the old rating");
+      toast(act === "accept" ? "Accepted" : act === "set" ? `Set to Level ${level}; parents get a note on the book` : "Kept the old rating");
       if (!held.length) paintReview();
       else $("[data-head]", panel("review")).innerHTML = reviewHeader(held.length);
       paintResults();

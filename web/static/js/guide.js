@@ -27,7 +27,7 @@ const EVERYONE = [
   ["▶️ Up Next",
     "The <b>Up Next</b> tab is your reading list. Drag the <b>⠿</b> handle to reorder books, and tap a title to open the book. When you're ready, press <b>▶ Start Reading</b> (just <b>▶</b> on a phone). If you've set up your Kindle email, the book is sent to your Kindle. Below the list, <b>💡 Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (and a quick \"Why not?\" helps it learn)."],
   ["👤 Your profile",
-    "In <b>Profile</b> you can set how books reach your e-reader, change your password, and mark books you know under <b>🎯 Your reading taste</b> so your suggestions fit you better. Something not working, or an idea? <b>🐞 Report a problem or idea</b> at the bottom of any page tells your admin."],
+    "In <b>Profile</b> you can pick a light or dark look, an easier-to-read font and less motion under <b>🎨 Appearance</b>, set how books reach your e-reader, change your password, and mark books you know under <b>🎯 Your reading taste</b> so your suggestions fit you better. Something not working, or an idea? <b>🐞 Report a problem or idea</b> at the bottom of any page tells your admin."],
   ["📱 Put it on your phone",
     "<b>iPhone:</b> tap <b>Share</b>, then <b>Add to Home Screen</b>.<br><b>Android:</b> tap <b>Install app</b> (or ⋮ → <b>Add to Home screen</b>). It then opens like a regular app."],
 ];

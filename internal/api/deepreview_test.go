@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -120,5 +121,40 @@ func TestAcceptAllAndReviewNotices(t *testing.T) {
 	res, out = admin.do("POST", "/api/notifications/dismiss", map[string]any{"ids": []int64{items[0].ID, items[1].ID}}, true)
 	if left, _, _ := st.Notifications(10); res.StatusCode != 200 || len(left) != 1 || len(out["items"].([]any)) != 1 {
 		t.Fatalf("dismiss: %d, left %d", res.StatusCode, len(left))
+	}
+}
+
+// An admin can pick a level of their own; each decision leaves a note for
+// parents on the book with what the scan found.
+func TestDeepScanSetLevelAndParentNote(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cat, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	zero, four := 0, 4
+	id, _ := st.UpsertBook("Fade Out", "Author", "", "")
+	_ = st.AddCopy(cat, id, "/calibre/fade.epub", "epub", "1")
+	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &zero, Model: "small-model"})
+	scan, _ := st.RequestDeepRead(id, "admin", "admin", "", true, 1000, 1, 1)
+	_ = st.HoldDeepRead(scan, `[{"label":"about 55% in","level":4,"note":"an intimate scene","scene":"Two adults kiss in a parked car; the chapter ends before anything is described.","from":100,"to":200}]`,
+		store.Analysis{SpiceLevel: &four, Nudity: true, Model: store.DeepModelPrefix + "qwen2.5:7b"}, 4)
+
+	if res, _ := admin.do("POST", fmt.Sprintf("/api/admin/deep-scans/%d/set", scan), map[string]int{"level": 9}, true); res.StatusCode != 400 {
+		t.Fatalf("level 9: %d", res.StatusCode)
+	}
+	if res, _ := admin.do("POST", fmt.Sprintf("/api/admin/deep-scans/%d/set", scan), map[string]int{"level": 3}, true); res.StatusCode != 200 {
+		t.Fatalf("set: %d", res.StatusCode)
+	}
+	b, _ := st.BookByID(id, nil)
+	if *b.SpiceLevel != 3 || !b.Nudity || b.SpiceReason != "Set by a parent after a Deep Scan" {
+		t.Fatalf("book: level %d nudity %v reason %q", *b.SpiceLevel, b.Nudity, b.SpiceReason)
+	}
+	parent, _ := st.UserByName("admin")
+	notes, _ := st.BookNotes(id, parent)
+	if len(notes) != 1 || notes[0].Visibility != "parents" || !strings.Contains(notes[0].Body, "about 55% in: Two adults kiss") ||
+		!strings.Contains(notes[0].Body, "admin decided on Level 3") {
+		t.Fatalf("parents' note: %+v", notes)
+	}
+	if st.LatestDeepRead(id).Held {
+		t.Fatal("still held")
 	}
 }

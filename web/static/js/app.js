@@ -10,6 +10,8 @@ import { renderProfile } from "./profile.js";
 import { renderWhatsNew } from "./whatsnew.js";
 import { openGuide } from "./guide.js";
 import { checkForUpdates } from "./updatebanner.js";
+import { showSafeMode } from "./safemodebanner.js";
+import { applyAppearance } from "./appearance.js";
 import { renderSystem } from "./system.js";
 import { renderUsage } from "./usage.js";
 import { renderDuplicates } from "./duplicates.js";
@@ -66,6 +68,7 @@ function showLogin() {
 function showApp() {
   showOnly("#app-view");
   document.body.dataset.role = state.user.role;
+  applyAppearance(state.user);
   $$(".manager-only").forEach((el) => el.classList.toggle("hidden", !canManage(state.user)));
   $$(".admin-only").forEach((el) => el.classList.toggle("hidden", state.user.role !== "admin"));
   applyModules(state.user);
@@ -76,6 +79,7 @@ function showApp() {
   route();
   if (!state.user.guide_seen) openGuide(state);
   checkForUpdates(state);
+  showSafeMode(state.user);
 }
 
 let currentCleanup = null;

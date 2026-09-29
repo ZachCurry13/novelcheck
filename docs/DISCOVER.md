@@ -19,8 +19,8 @@ Without a key, the Popular, teen and kids' rows come from Open Library. They wor
 
 ## Good to know
 
-- NovelCheck asks for five lists once a day, well within the free allowance.
-- The New York Times asks apps to credit them, so the Discover tab shows "Data provided by The New York Times" at the bottom.
+- NovelCheck asks for the five lists once a week (they change weekly), well within the free allowance. **Refresh lists now** fetches them straight away.
+- The New York Times asks apps to credit them: each row from their lists says "From The New York Times Best Sellers lists · Data provided by The New York Times", each of those books has a **📰 NYT list** tag (with its weeks on the list), and the credit is repeated at the bottom of the tab.
 - **Discover books the AI rates per day** (default 30) limits how many new list books are rated each day, best-ranked first, within your AI's hourly token cap. Until a book is rated, parents see "Not rated yet" and kids don't see it.
 - Discover books you don't own stay out of your Library. Tap ⭐ **Wishlist** to ask for one, or use the **Amazon** and **Open Library** links. (Kids' accounts don't get the Amazon link.)
 - Turn the whole tab off under **Admin → System & Toggles → Features**.

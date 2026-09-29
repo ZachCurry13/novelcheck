@@ -10,6 +10,7 @@ import { on } from "./modules.js";
 import { customChips } from "./customflags.js";
 import { renderDeepSection, deepChip } from "./deepscan.js";
 import { reviewChip } from "./librarycard.js";
+import { reduceMotion } from "./appearance.js";
 import { seriesLine, seriesText, openTitleEdit } from "./titlefix.js";
 import { genreChips, authorLinks, seriesLink } from "./genres.js";
 import { coverImg, reportCover } from "./covers.js";
@@ -139,7 +140,7 @@ export async function openBook(id, state, onChange) {
     } else if (act === "edit-verdict" || act === "cancel-verdict") {
       const form = $("#verdict-form", dlg);
       form.classList.toggle("hidden", act === "cancel-verdict");
-      if (act === "edit-verdict") form.scrollIntoView({ block: "start", behavior: "smooth" });
+      if (act === "edit-verdict") form.scrollIntoView({ block: "start", behavior: reduceMotion() ? "auto" : "smooth" });
     } else if (act === "approve") {
       const ok = await attempt(() => put(`/api/books/${b.id}/approval`, { approved: !b.approved }),
         b.approved ? "OK mark removed" : "Marked OK: it will show even when filters would hide it");

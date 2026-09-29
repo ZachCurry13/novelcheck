@@ -2,8 +2,10 @@ package deepread
 
 // Checks on what the AI found in each part, so one misread part (a battle,
 // a monster, a tense moment) can't decide a whole book:
-//   - a part rated 3 or more gets a second, stricter look (yes/no questions
-//     about what is on the page) and keeps only what that confirms;
+//   - a part rated 3 or more gets a second, stricter look (how far the scene
+//     goes on the page) and keeps only what that confirms: 4 or more needs a
+//     sex scene described over 3 sentences that really are in the text, and
+//     a second opinion that agrees;
 //   - nudity, solo acts and heavy innuendo only count in parts with
 //     confirmed sexual content;
 //   - in books of more than 4 parts, a flag needs 2 parts;
@@ -27,9 +29,19 @@ func (r *Runner) confirm(ctx context.Context, book *store.Book, p Part, res llm.
 		if err != nil {
 			return res, err
 		}
-		res.Level = llm.ConfirmedLevel(res.Level, c)
+		res.Level = llm.ConfirmedLevel(res.Level, c, llm.VerifyOpenings(p.Text, c.SexSentences))
 		if c.Evidence != "" {
 			res.Evidence = c.Evidence
+		}
+		res.Scene = c.Scene
+		if res.Level >= 4 {
+			s, _, err := ask(ctx, r, book.ID, llm.DeepSecondSystem, llm.DeepSecondUser(book.Title, book.Author, p.Label, p.Text), llm.ParseSecond)
+			if err != nil {
+				return res, err
+			}
+			if !s.Described {
+				res.Level = 3 // the second opinion sees it led up to, hinted at or cut away
+			}
 		}
 	}
 	if res.Level < 3 {
@@ -47,9 +59,11 @@ func combine(parts []Part, results []llm.PartResult) (store.Analysis, []Note) {
 	count := map[string]int{}
 	var found []string
 	groupParts := map[string]int{}
-	level, explicitParts := 0, 0
+	level, explicitParts, at := 0, 0, 0
 	var notes []Note
 	for i, res := range results {
+		from := at
+		at += parts[i].Words
 		level = max(level, res.Level)
 		if res.Level >= 4 {
 			explicitParts++
@@ -78,7 +92,11 @@ func combine(parts []Part, results []llm.PartResult) (store.Analysis, []Note) {
 			if res.Level >= 3 && res.Evidence != "" {
 				note = res.Evidence
 			}
-			notes = append(notes, Note{Label: parts[i].Label, Level: res.Level, Note: note})
+			n := Note{Label: parts[i].Label, Level: res.Level, Note: note, From: from, To: at}
+			if res.Level >= 3 {
+				n.Scene = res.Scene
+			}
+			notes = append(notes, n)
 		}
 	}
 	if level == 5 && explicitParts < 3 {
@@ -104,3 +122,18 @@ func combine(parts []Part, results []llm.PartResult) (store.Analysis, []Note) {
 // bigJump reports whether a result raises a rated book by 2 or more
 // levels; those wait for an admin instead of applying.
 func bigJump(prev *int, level int) bool { return prev != nil && level >= *prev+2 }
+
+// onePassage reports whether a raise to 4 or more rests on a single part:
+// an admin decides those too, whatever the size of the raise.
+func onePassage(prev *int, level int, results []llm.PartResult) bool {
+	if prev == nil || level < 4 || level <= *prev {
+		return false
+	}
+	n := 0
+	for _, r := range results {
+		if r.Level >= 4 {
+			n++
+		}
+	}
+	return n == 1
+}

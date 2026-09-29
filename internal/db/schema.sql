@@ -19,7 +19,10 @@ CREATE TABLE IF NOT EXISTS users (
     max_spice        INTEGER NOT NULL DEFAULT -1,  -- kid accounts: hide books above this many peppers (0-5); -1 = no limit
     only_collections INTEGER NOT NULL DEFAULT 0,   -- kid accounts: see only books in their collections (user_collections)
     ai_features      INTEGER NOT NULL DEFAULT 0,   -- kid accounts: a parent allowed AI features (AI suggestions, Deep Scan requests)
-    start_page       TEXT NOT NULL DEFAULT '',     -- the page NovelCheck opens on ('' = Check a book for parents, Library for kids)
+    start_page       TEXT NOT NULL DEFAULT '',
+    theme            TEXT NOT NULL DEFAULT '',
+    font             TEXT NOT NULL DEFAULT '',
+    motion           TEXT NOT NULL DEFAULT '',     -- the page NovelCheck opens on ('' = Check a book for parents, Library for kids)
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -386,3 +389,20 @@ CREATE TABLE IF NOT EXISTS discover_items (
     PRIMARY KEY (list, book_id)
 );
 CREATE INDEX IF NOT EXISTS idx_discover_items_book ON discover_items(book_id);
+
+-- Each person's last searches in the Library (newest first, 10 kept).
+CREATE TABLE IF NOT EXISTS search_history (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    query       TEXT NOT NULL COLLATE NOCASE,
+    searched_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, query)
+);
+
+-- Books a seasonal shelf matches by its words (see store.seasonReady): made
+-- again when the books change, so Discover and the Library needn't search
+-- every description on each visit.
+CREATE TABLE IF NOT EXISTS season_books (
+    season  TEXT NOT NULL,
+    book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    PRIMARY KEY (season, book_id)
+);

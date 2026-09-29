@@ -135,19 +135,15 @@ func Current(now time.Time) []Season {
 // can be matched at its start.
 const text = `(' ' || LOWER(b.title || ' ' || b.tags || ' ' || b.premise || ' ' || b.blurb || ' ' || b.description) || ' ')`
 
-// Cond is the SQL (over books b) for the season's books by its words, plus
-// its pepper cap.
-func (s Season) Cond() (string, []any) {
+// WordsCond is the SQL (over books b) for the season's books by its words.
+// It reads every book's description, so the store keeps its matches
+// (season_books) rather than running it on each visit.
+func (s Season) WordsCond() (string, []any) {
 	parts := make([]string, 0, len(s.Words))
-	args := make([]any, 0, len(s.Words)+1)
+	args := make([]any, 0, len(s.Words))
 	for _, w := range s.Words {
 		parts = append(parts, text+" LIKE ?")
 		args = append(args, "% "+strings.ToLower(w)+"%")
 	}
-	cond := "(" + strings.Join(parts, " OR ") + ")"
-	if s.MaxSpice >= 0 {
-		cond += " AND COALESCE(b.spice_level, 0) <= ?"
-		args = append(args, s.MaxSpice)
-	}
-	return cond, args
+	return "(" + strings.Join(parts, " OR ") + ")", args
 }

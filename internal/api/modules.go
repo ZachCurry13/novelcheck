@@ -11,11 +11,16 @@ import (
 type meJSON struct {
 	*store.User
 	Modules      map[string]bool `json:"modules"`
-	DeliveryFrom string          `json:"delivery_from"` // the Send-to-Kindle sender, for Amazon's approved list
+	DeliveryFrom string          `json:"delivery_from"`       // the Send-to-Kindle sender, for Amazon's approved list
+	SafeMode     string          `json:"safe_mode,omitempty"` // admins: why background work is off (env, flag, crash)
 }
 
 func (s *Server) me(u *store.User) meJSON {
-	return meJSON{User: u, Modules: s.Store.Modules(), DeliveryFrom: s.Store.Setting(store.KeySMTPFrom)}
+	out := meJSON{User: u, Modules: s.Store.Modules(), DeliveryFrom: s.Store.Setting(store.KeySMTPFrom)}
+	if u != nil && u.Role == store.RoleAdmin {
+		out.SafeMode = s.Safe.Reason()
+	}
+	return out
 }
 
 // requireModule refuses API calls for a feature the admin turned off.

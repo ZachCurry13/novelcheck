@@ -48,6 +48,32 @@
   .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem); }
 }
 
+/* Themes. The palette is CSS variables (see tailwind.config.js): dark is
+   Tailwind's own colors; the light theme (js/appearance.js sets html.light)
+   swaps grays around and darkens the accent colors used for text. */
+:root { color-scheme: dark; --slate-50:248 250 252;--slate-100:241 245 249;--slate-200:226 232 240;--slate-300:203 213 225;--slate-400:148 163 184;--slate-500:100 116 139;--slate-600:71 85 105;--slate-700:51 65 85;--slate-800:30 41 59;--slate-900:15 23 42;--slate-950:2 6 23;--indigo-50:238 242 255;--indigo-100:224 231 255;--indigo-200:199 210 254;--indigo-300:165 180 252;--indigo-400:129 140 248;--indigo-500:99 102 241;--indigo-600:79 70 229;--indigo-700:67 56 202;--indigo-800:55 48 163;--indigo-900:49 46 129;--indigo-950:30 27 75;--sky-50:240 249 255;--sky-100:224 242 254;--sky-200:186 230 253;--sky-300:125 211 252;--sky-400:56 189 248;--sky-500:14 165 233;--sky-600:2 132 199;--sky-700:3 105 161;--sky-800:7 89 133;--sky-900:12 74 110;--sky-950:8 47 73;--emerald-50:236 253 245;--emerald-100:209 250 229;--emerald-200:167 243 208;--emerald-300:110 231 183;--emerald-400:52 211 153;--emerald-500:16 185 129;--emerald-600:5 150 105;--emerald-700:4 120 87;--emerald-800:6 95 70;--emerald-900:6 78 59;--emerald-950:2 44 34;--amber-50:255 251 235;--amber-100:254 243 199;--amber-200:253 230 138;--amber-300:252 211 77;--amber-400:251 191 36;--amber-500:245 158 11;--amber-600:217 119 6;--amber-700:180 83 9;--amber-800:146 64 14;--amber-900:120 53 15;--amber-950:69 26 3;--rose-50:255 241 242;--rose-100:255 228 230;--rose-200:254 205 211;--rose-300:253 164 175;--rose-400:251 113 133;--rose-500:244 63 94;--rose-600:225 29 72;--rose-700:190 18 60;--rose-800:159 18 57;--rose-900:136 19 55;--rose-950:76 5 25;--orange-50:255 247 237;--orange-100:255 237 213;--orange-200:254 215 170;--orange-300:253 186 116;--orange-400:251 146 60;--orange-500:249 115 22;--orange-600:234 88 12;--orange-700:194 65 12;--orange-800:154 52 18;--orange-900:124 45 18;--orange-950:67 20 7;--teal-50:240 253 250;--teal-100:204 251 241;--teal-200:153 246 228;--teal-300:94 234 212;--teal-400:45 212 191;--teal-500:20 184 166;--teal-600:13 148 136;--teal-700:15 118 110;--teal-800:17 94 89;--teal-900:19 78 74;--teal-950:4 47 46;--violet-50:245 243 255;--violet-100:237 233 254;--violet-200:221 214 254;--violet-300:196 181 253;--violet-400:167 139 250;--violet-500:139 92 246;--violet-600:124 58 237;--violet-700:109 40 217;--violet-800:91 33 182;--violet-900:76 29 149;--violet-950:46 16 101; }
+html.light { color-scheme: light; --slate-50:2 6 23;--slate-100:15 23 42;--slate-200:30 41 59;--slate-300:51 65 85;--slate-400:71 85 105;--slate-600:148 163 184;--slate-700:203 213 225;--slate-800:226 232 240;--slate-900:255 255 255;--slate-950:241 245 249;--indigo-50:30 27 75;--indigo-100:49 46 129;--indigo-200:55 48 163;--indigo-300:67 56 202;--indigo-400:79 70 229;--indigo-800:199 210 254;--indigo-900:224 231 255;--indigo-950:238 242 255;--sky-50:8 47 73;--sky-100:12 74 110;--sky-200:7 89 133;--sky-300:3 105 161;--sky-400:2 132 199;--sky-800:186 230 253;--sky-900:224 242 254;--sky-950:240 249 255;--emerald-50:2 44 34;--emerald-100:6 78 59;--emerald-200:6 95 70;--emerald-300:4 120 87;--emerald-400:5 150 105;--emerald-800:167 243 208;--emerald-900:209 250 229;--emerald-950:236 253 245;--amber-50:69 26 3;--amber-100:120 53 15;--amber-200:146 64 14;--amber-300:180 83 9;--amber-400:217 119 6;--amber-800:253 230 138;--amber-900:254 243 199;--amber-950:255 251 235;--rose-50:76 5 25;--rose-100:136 19 55;--rose-200:159 18 57;--rose-300:190 18 60;--rose-400:225 29 72;--rose-800:254 205 211;--rose-900:255 228 230;--rose-950:255 241 242;--orange-50:67 20 7;--orange-100:124 45 18;--orange-200:154 52 18;--orange-300:194 65 12;--orange-400:234 88 12;--orange-800:254 215 170;--orange-900:255 237 213;--orange-950:255 247 237;--teal-50:4 47 46;--teal-100:19 78 74;--teal-200:17 94 89;--teal-300:15 118 110;--teal-400:13 148 136;--teal-800:153 246 228;--teal-900:204 251 241;--teal-950:240 253 250;--violet-50:46 16 101;--violet-100:76 29 149;--violet-200:91 33 182;--violet-300:109 40 217;--violet-400:124 58 237;--violet-800:221 214 254;--violet-900:237 233 254;--violet-950:245 243 255; }
+/* White text on a gray surface (tabs, menu links, close buttons) turns dark in
+   the light theme; on a colored button it stays white. */
+/* (Attribute selectors, so Tailwind doesn't copy this into components that @apply text-white.) */
+html.light [class~="text-white"]:not([class*="bg-indigo"]):not([class*="bg-rose"]):not([class*="bg-teal"]):not([class*="bg-emerald"]),
+html.light [class~="hover:text-white"]:hover, html.light .nav-link:hover, html.light .nav-link.active { color: rgb(var(--slate-100)); }
+html.light .dialog::backdrop { background: rgb(15 23 42 / 0.45); }
+
+/* Reduce motion (Profile → Appearance, or the device's own setting). */
+html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
+  animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+}
+
+/* OpenDyslexic (SIL Open Font License, fonts/OFL.txt), for those who pick it. */
+@font-face { font-family: "OpenDyslexic"; src: url("../fonts/OpenDyslexic-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "OpenDyslexic"; src: url("../fonts/OpenDyslexic-Bold.woff2") format("woff2"); font-weight: 600 800; font-display: swap; }
+html.font-dyslexic body, html.font-dyslexic input, html.font-dyslexic select, html.font-dyslexic textarea, html.font-dyslexic button {
+  font-family: "OpenDyslexic", ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.01em;
+}
+html.font-dyslexic .leading-tight, html.font-dyslexic .leading-snug { line-height: 1.4; }
+
 /* Plain CSS outside the layers: Tailwind copies it unchanged. Without Node it
    can be appended to app.css by hand; `make css` then produces the same rules. */
 
@@ -70,14 +96,14 @@
   #nav { display: none; }
   .mobile-nav {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex;
-    border-top: 1px solid rgb(30 41 59); background: rgb(2 6 23 / 0.95); backdrop-filter: blur(8px);
+    border-top: 1px solid rgb(var(--slate-800)); background: rgb(var(--slate-950) / 0.95); backdrop-filter: blur(8px);
     padding-bottom: env(safe-area-inset-bottom);
   }
   .mobile-nav a, .mobile-nav button {
     flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
-    padding: 0.5rem 0 0.45rem; font-size: 0.72rem; color: rgb(148 163 184);
+    padding: 0.5rem 0 0.45rem; font-size: 0.72rem; color: rgb(var(--slate-400));
   }
-  .mobile-nav .active { color: rgb(165 180 252); }
+  .mobile-nav .active { color: rgb(var(--indigo-300)); }
   .mobile-nav .ico { font-size: 1.3rem; line-height: 1; }
   #app-view { padding-bottom: calc(4.25rem + env(safe-area-inset-bottom)); }
   .toast { bottom: calc(5rem + env(safe-area-inset-bottom)); }
