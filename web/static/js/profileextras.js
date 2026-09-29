@@ -38,7 +38,7 @@ export function profileExtrasHTML(u) {
         <select data-look="${k}" class="input">${opts.map(([v, l]) => `<option value="${v}" ${(u[k] || "") === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>`).join("")}</div></div>
     <div class="card space-y-2">
       <h2 class="text-lg font-semibold">🏠 Start page</h2>
-      <label class="label" for="start-page">NovelCheck opens on</label>
+      <label class="label" for="start-page">When you open NovelCheck or sign in, it starts on</label>
       <select id="start-page" class="input">
         <option value="">Default (${def})</option>
         ${PAGES.filter(([, , ok]) => ok(u)).map(([k, l]) => `<option value="${k}" ${u.start_page === k ? "selected" : ""}>${l}</option>`).join("")}
@@ -52,6 +52,6 @@ export function bindProfileExtras(view) {
     if (await attempt(() => put("/api/me/appearance", looks), "Appearance saved")) await refreshUser();
   }));
   $("#start-page", view)?.addEventListener("change", async (e) => {
-    if (await attempt(() => put("/api/me/start-page", { page: e.target.value }), "Start page saved")) await refreshUser();
+    if (await attempt(() => put("/api/me/start-page", { page: e.target.value }), "Start page saved: NovelCheck opens there next time")) await refreshUser();
   });
 }

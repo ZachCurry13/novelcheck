@@ -3,7 +3,7 @@
   "short_name": "NovelCheck",
   "description": "Scan and catalog your e-book library for spice and sensitive content.",
   "id": "/",
-  "start_url": "/#/library",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",

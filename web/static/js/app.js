@@ -69,11 +69,25 @@ function showLogin(family = false) {
   showOnly("#login-view");
 }
 
+// toStartPage drops the page from the address, so route() opens the
+// person's start page (after signing in, or switching profile).
+function toStartPage() {
+  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+}
+
+// launchedFromHomeScreen: the installed app opened fresh (not a reload). Older
+// installs open on "#/library", their start address before 1.30.
+function launchedFromHomeScreen() {
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  return standalone && performance.getEntriesByType?.("navigation")[0]?.type === "navigate";
+}
+
 // showSignIn opens "Who's reading?" on a family device, else the sign-in form.
 async function showSignIn() {
   state.user = null;
   const signedIn = (u) => {
     state.user = u;
+    toStartPage();
     showApp();
   };
   if (await showFamily(signedIn, () => showLogin(true))) showOnly("#family-view");
@@ -132,6 +146,7 @@ async function boot() {
         remember: fd.get("remember") === "on",
       });
       e.target.reset();
+      toStartPage();
       showApp();
     } catch (ex) {
       err.textContent = ex.message;
@@ -159,6 +174,7 @@ async function boot() {
 
   try {
     state.user = await get("/api/me");
+    if (launchedFromHomeScreen() && location.hash === "#/library") toStartPage();
     showApp();
   } catch {
     const setup = await get("/api/setup").catch(() => ({}));

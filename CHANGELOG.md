@@ -13,6 +13,9 @@ becomes the release notes for that version and is shown in the app under
 - **PINs:** set or change your own in Profile (your password confirms it). Parents can set a kid's PIN with **🔢 PIN** on their card under Admin → Users, where family devices are also listed and can be removed.
 - Signing in on your own devices doesn't change.
 
+### 🔧 Fixes
+- **Start page works.** NovelCheck now opens on the page you picked in **Profile → Start page** when you open it from the home screen, sign in, or switch profile. Before, the home-screen app always opened on the Library, and signing in kept the page from before. A reload still stays where you are.
+
 ## [1.29.0]
 
 ### 📖 Reading progress
