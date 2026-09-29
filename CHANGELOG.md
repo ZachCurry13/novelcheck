@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.26.1]
+
+### 🔧 Fixes
+- **Admin → Deep Scan → Settings works again.** Until readers were picked for automatic Deep Scans, the section showed no accounts, and **Estimate cost…** and **Save** did nothing.
+- **The version under the menu is right after an update.** `:latest` is now published only by a release, so the app no longer shows a label like "1.24.0-1-…" after updating.
+
 ## [1.26.0]
 
 ### 🎉 Events

@@ -194,7 +194,9 @@ async function renderSettings(host, data) {
     </section>`;
   $("#top-n", host).value = String([10, 20, 30].includes(data.top_n) ? data.top_n : 10);
   const users = (await attempt(() => get("/api/admin/users"))) || [];
-  $("#deep-users", host).innerHTML = users.map((u) => `<label class="toggle min-h-[2.5rem]"><input type="checkbox" value="${u.id}" ${data.users.includes(u.id) ? "checked" : ""}> ${esc(u.username)}</label>`).join("");
+  const picked = data.users || [];
+  $("#deep-users", host).innerHTML = users.map((u) => `<label class="toggle min-h-[2.5rem]"><input type="checkbox" value="${u.id}" ${picked.includes(u.id) ? "checked" : ""}> ${esc(u.username)}</label>`).join("")
+    || `<p class="text-sm text-slate-400">No accounts yet.</p>`;
   $("#deep-users", host).addEventListener("change", (e) => {
     if ($$("#deep-users input:checked", host).length > 3) {
       e.target.checked = false;

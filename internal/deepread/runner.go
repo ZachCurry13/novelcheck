@@ -175,7 +175,7 @@ func (r *Runner) autoQueue() {
 
 // DeepUsers reads the "deep_scan_users" setting (up to 3 user ids).
 func DeepUsers(setting string) []int64 {
-	var ids []int64
+	ids := []int64{} // [] in JSON, never null
 	for _, f := range strings.Split(setting, ",") {
 		if id, err := strconv.ParseInt(strings.TrimSpace(f), 10, 64); err == nil && id > 0 && len(ids) < store.MaxDeepUsers {
 			ids = append(ids, id)

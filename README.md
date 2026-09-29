@@ -67,7 +67,7 @@ Follow **[docs/TRUENAS.md](docs/TRUENAS.md)**. It's a click-by-click guide for e
 
 ## Quick start (Docker / Docker Compose)
 
-A prebuilt image is published to GitHub Packages as `ghcr.io/zachcurry13/novelcheck` (`:latest` tracks `main`, and `:X.Y.Z` is published for each release tag), for `linux/amd64` and `linux/arm64`.
+A prebuilt image is published to GitHub Packages as `ghcr.io/zachcurry13/novelcheck` (`:latest` is the newest release, `:X.Y.Z` each release, and `:main` the newest commit on `main`), for `linux/amd64` and `linux/arm64`.
 
 ```bash
 curl -O https://raw.githubusercontent.com/ZachCurry13/novelcheck/main/docker-compose.yml
@@ -140,7 +140,7 @@ On Windows without `make`, run the same command directly: `npx tailwindcss@3 -c 
 
 The version shown in the app comes from `-ldflags -X .../internal/version.Version=…`. The Makefile and CI set it from the git tag. Add a `## [x.y.z]` section to `CHANGELOG.md` before releasing, because it becomes the release notes.
 
-CI (`.github/workflows/docker.yml`) runs `go vet` and `go test` on every push and pull request. On `main` it publishes `ghcr.io/zachcurry13/novelcheck:latest`. To cut a release, go to **Actions → Docker image → Run workflow** and enter a version such as `1.1.0`. That publishes `:1.1.0` and `:latest` and creates the `v1.1.0` tag and GitHub Release. Pushing a `vX.Y.Z` tag does the same.
+CI (`.github/workflows/docker.yml`) runs `go vet` and `go test` on every push and pull request. On `main` it publishes `ghcr.io/zachcurry13/novelcheck:main`; only releases move `:latest`. To cut a release, go to **Actions → Docker image → Run workflow** and enter a version such as `1.1.0`. That publishes `:1.1.0` and `:latest` and creates the `v1.1.0` tag and GitHub Release. Pushing a `vX.Y.Z` tag does the same.
 
 Go 1.26+, no CGO (pure-Go `modernc.org/sqlite`). Front-end assets are embedded with `embed.FS`, so the binary is fully self-contained. Per the spec's rule, no source file is longer than about 300 lines.
 

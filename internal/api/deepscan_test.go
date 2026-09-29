@@ -79,6 +79,9 @@ func TestDeepScanWorkflow(t *testing.T) {
 	if scan["status"] != "requested" || scan["source"] != "request" || scan["reason"] != "check the middle" {
 		t.Fatalf("scan listing: %v", scan)
 	}
+	if _, ok := list["users"].([]any); !ok { // null broke the Settings section
+		t.Fatalf("no readers picked must be an empty list: %v", list["users"])
+	}
 	if res, _ := mom.do("POST", "/api/admin/deep-scans/1/approve", nil, true); res.StatusCode != 403 {
 		t.Fatalf("only admins approve: %d", res.StatusCode)
 	}

@@ -1,6 +1,8 @@
 # NovelCheck handoff (2026-09-29)
 
-## 0. v1.26.0 (AI machines, events over time) released (2026-09-29)
+## 0. v1.26.1 (fixes) on `feature/v1.26-aitools`, NOT released; v1.26.0 released (2026-09-29)
+- **v1.26.1** (the user's report, 2026-09-29: Deep Scan Settings "still does nothing"): with no readers picked, `/api/admin/deep-scans` sent `users: null` and `renderSettings` threw, so no accounts showed and Estimate/Save had no handlers. `DeepUsers` returns `[]`; the page guards too; test in `deepscan_test.go`. Also: pushes to main no longer publish `:latest` (they raced the release build and left labels like "1.24.0-1-g9d42cab" under the menu); only releases move `:latest`, and main pushes publish `:main`.
+- Next: the user's OK to release **1.26.1**. The user's server still showed the 1.25 code (label 1.24.0-1-g9d42cab) on 2026-09-29.
 - **v1.26 AI machines** (the user's choices, 2026-09-28: Deep Scans wait for the heavy machine; notify + 1-click update; speed test, Needs review + re-rate, reasoning models, electricity cost): see spec "AI machines (v1.26)".
 - **v1.26 events** (the user's report, 2026-09-29: "Load more books" pages only gave the first books; events should have the Library's filters and sorts; end time that archives; archive instead of delete, delete kept): see spec "Events over time (v1.26)". Checked against the live stuffyourkindle.com event page (46 books with authors, name and day) and in the browser at 360px (banner, Claim/I claimed it/Wishlist, archive, restore, edit).
 - Also fixed: stray arrow-function leftovers (`() =>`) from scripted doc edits in CHANGELOG (they broke the 1.25 heading in What's new), README and spec; after scripted doc edits, grep the docs for `() =>`.
