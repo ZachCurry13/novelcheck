@@ -1,7 +1,7 @@
 // 🧬 Deep Scan: the AI reads a whole book (EPUB) in parts. In the book
 // window: status, notes per part, and start / request buttons.
 import { get, post } from "./api.js";
-import { esc, attempt, toast, fmtNum, fmtMoney } from "./ui.js";
+import { esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes } from "./ui.js";
 
 const STATUS = {
   requested: "🕓 Deep Scan requested; waiting for an admin to approve it.",
@@ -51,7 +51,7 @@ export async function renderDeepSection(host, bookId, user) {
   let action = "";
   if (!open && info.available) {
     const e = info.estimate;
-    const cost = `${fmtNum(e.tokens)} tokens${info.cost ? `, about ${fmtMoney(info.cost)}` : ""}`;
+    const cost = `${fmtNum(e.tokens)} tokens${info.cost ? `, about ${fmtMoney(info.cost)}` : ""}${info.minutes ? `, ${fmtMinutes(info.minutes)}` : ""}`;
     action = admin
       ? `<button data-deep="start" class="btn-secondary" title="Reads the whole book: ${esc(cost)}">🧬 ${d?.status === "done" ? "Deep Scan again" : "Deep Scan this book"}</button>
          <span class="text-xs text-slate-500">${fmtNum(e.words)} words in ${e.parts} parts · ${esc(cost)}</span>`

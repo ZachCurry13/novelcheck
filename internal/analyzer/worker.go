@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -231,7 +232,17 @@ func (w *Worker) rate(ctx context.Context, b *store.Book, still func() bool) (*s
 	}
 
 	w.setState("analyzing", id, b.Title)
-	return w.askAIs(ctx, id, user)
+	a, err := w.askAIs(ctx, id, user)
+	return unsureWithout(a, b.Blurb), err
+}
+
+// unsureWithout marks a rating made without any description as unsure: the
+// AI could only guess from the title (⚠ Needs review).
+func unsureWithout(a *store.Analysis, blurb string) *store.Analysis {
+	if a != nil && strings.TrimSpace(blurb) == "" {
+		a.Confidence = "low"
+	}
+	return a
 }
 
 // fillBlurb looks up a book's description (Open Library, then Google Books,

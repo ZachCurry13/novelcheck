@@ -17,6 +17,7 @@ var numericKeys = map[string]bool{
 	store.KeyTokensPerHour: true, store.KeyScanDelaySeconds: true, store.KeyLLMTimeoutSeconds: true,
 	store.KeyBackupPriceIn: true, store.KeyBackupPriceOut: true, store.KeySMTPPort: true,
 	store.KeyCalibrePollHours: true, store.KeySessionDays: true, store.KeyDiscoverDaily: true, store.KeyLocalContext: true,
+	store.KeyPowerPrice: true, store.KeyMainWatts: true, store.KeyBackupWatts: true, store.KeyDeepWatts: true,
 }
 
 // editableKeys are the settings the admin panel may change.
@@ -77,7 +78,7 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		if (k == store.KeyLLMProvider || k == store.KeyBackupProvider) && v != "openai" && v != "anthropic" {
+		if (k == store.KeyLLMProvider || k == store.KeyBackupProvider || k == store.KeyDeepProvider) && v != "openai" && v != "anthropic" {
 			writeErr(w, http.StatusBadRequest, "llm_provider must be openai or anthropic")
 			return
 		}

@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/epub"
@@ -24,6 +27,7 @@ type Runner struct {
 	Store      *store.Store
 	CalibreDir string // the read-only mount; EPUBs must be inside it
 	wake       chan struct{}
+	waiting    atomic.Bool // scans wait for the Deep Scan machine
 }
 
 func New(st *store.Store, calibreDir string) *Runner {
@@ -44,8 +48,16 @@ func (r *Runner) Run(ctx context.Context) {
 	r.Store.ResumeDeepReads()
 	for ctx.Err() == nil { // on shutdown a scan stops mid-way and resumes after the restart
 		_ = safe.Run("queueing automatic Deep Scans", func() error { r.autoQueue(); return nil })
-		if d, ok := r.Store.NextDeepRead(); ok {
-			if err := safe.Run("Deep Scan of "+d.Title, func() error { return r.scan(ctx, d) }); err != nil {
+		r.waiting.Store(false)
+		if d, ok := r.Store.NextDeepRead(); ok && r.machineAway() {
+			r.waiting.Store(true) // scans wait for the Deep Scan machine to be switched on
+		} else if ok {
+			err := safe.Run("Deep Scan of "+d.Title, func() error { return r.scan(ctx, d) })
+			if errors.Is(err, errMachineAway) {
+				_ = r.Store.RequeueDeepRead(d.ID)
+				continue
+			}
+			if err != nil {
 				log.Printf("deep scan %d: %v", d.ID, err)
 				_ = r.Store.FinishDeepRead(d.ID, "error", "", err.Error(), nil)
 			}
@@ -84,7 +96,7 @@ func inside(dir, p string) bool {
 
 // partSize picks words per part for the AI that will do the reading.
 func (r *Runner) partSize() int {
-	if ais := r.Store.AIConfigs(); len(ais) > 0 && ais[0].Provider != "anthropic" && llm.IsLocal(ais[0].BaseURL) {
+	if ais := r.aiChain(); len(ais) > 0 && ais[0].Provider != "anthropic" && llm.IsLocal(ais[0].BaseURL) {
 		flags, _ := r.Store.CustomFlags()
 		return WordsToFit(r.Store.SettingInt(store.KeyLocalContext), len(llm.DeepPartSystem(flags)))
 	}
@@ -174,4 +186,49 @@ func DeepUsers(setting string) []int64 {
 
 func add(a, b Estimate) Estimate {
 	return Estimate{Words: a.Words + b.Words, Parts: a.Parts + b.Parts, Tokens: a.Tokens + b.Tokens, Output: a.Output + b.Output}
+}
+
+// errMachineAway stops a scan when the Deep Scan machine stops answering; the
+// scan goes back in line.
+var errMachineAway = errors.New("the Deep Scan machine isn't answering")
+
+// Waiting reports whether scans are waiting for the Deep Scan machine.
+func (r *Runner) Waiting() bool { return r.waiting.Load() }
+
+// machineAway reports whether a separate Deep Scan machine is set up but
+// can't be reached (switched off or asleep).
+func (r *Runner) machineAway() bool {
+	ai, ok := r.Store.DeepAI()
+	if !ok || ai.Provider == "anthropic" {
+		return false
+	}
+	u, err := url.Parse(llm.NormalizeBaseURL(ai.BaseURL))
+	if err != nil || u.Host == "" {
+		return false
+	}
+	port := u.Port()
+	if port == "" {
+		port = "80"
+		if u.Scheme == "https" {
+			port = "443"
+		}
+	}
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(u.Hostname(), port), 3*time.Second)
+	if err != nil {
+		return true
+	}
+	_ = conn.Close()
+	return false
+}
+
+// MachineAway reports whether the separate Deep Scan machine is off.
+func (r *Runner) MachineAway() bool { return r.machineAway() }
+
+// Reader is the AI and model that read Deep Scans.
+func (r *Runner) Reader() (store.AIConfig, string) {
+	ais := r.aiChain()
+	if len(ais) == 0 || len(ais[0].Models) == 0 {
+		return store.AIConfig{}, ""
+	}
+	return ais[0], ais[0].Models[0]
 }

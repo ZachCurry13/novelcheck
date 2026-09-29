@@ -13,6 +13,7 @@ import (
 // address); everyone sees the books with their ratings, within their rules.
 
 func (s *Server) handleListEvents(w http.ResponseWriter, r *http.Request) {
+	_, _ = s.Store.ArchiveEnded() // right away, not only when the loop comes round
 	evs, err := s.Store.ListEvents(auth.UserFrom(r))
 	if err != nil {
 		writeStoreErr(w, err)
@@ -27,6 +28,7 @@ func (s *Server) handleGetEvent(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "invalid id")
 		return
 	}
+	_, _ = s.Store.ArchiveEnded()
 	u := auth.UserFrom(r)
 	ev, err := s.Store.EventByID(id, u)
 	if err != nil {
@@ -42,7 +44,9 @@ func (s *Server) handleGetEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 // handlePreviewEvent reads a pasted list ({"html", "text"}) or a page
-// ({"url"}) and returns the books found, without saving anything.
+// ({"url"}, following its "Load more" and next pages) and returns the books
+// found, with the event's name and day when the page gives them, without
+// saving anything.
 func (s *Server) handlePreviewEvent(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		HTML string `json:"html"`
@@ -65,15 +69,17 @@ func (s *Server) handlePreviewEvent(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "no books found; copy the list of books (with its Amazon links, if you can) and paste it here")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"books": entries})
+	name, day := events.Info(page)
+	writeJSON(w, http.StatusOK, map[string]any{"books": entries, "name": name, "day": day})
 }
 
-// handleCreateEvent saves an event ({"name", "source_url", "books"}) and puts
-// its unrated books first in line to be rated.
+// handleCreateEvent saves an event ({"name", "source_url", "ends_at",
+// "books"}) and puts its unrated books first in line to be rated.
 func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Name      string `json:"name"`
 		SourceURL string `json:"source_url"`
+		EndsAt    string `json:"ends_at"`
 		Books     []struct {
 			Title  string `json:"title"`
 			Author string `json:"author"`
@@ -89,6 +95,11 @@ func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "give the event a name (up to 100 characters)")
 		return
 	}
+	ends, good := store.EventTime(body.EndsAt)
+	if !good {
+		writeErr(w, http.StatusBadRequest, "that end time isn't a date and time")
+		return
+	}
 	if len(body.Books) == 0 || len(body.Books) > events.MaxBooks {
 		writeErr(w, http.StatusBadRequest, "an event needs 1 to 500 books")
 		return
@@ -97,7 +108,7 @@ func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	for _, b := range body.Books {
 		entries = append(entries, store.EventEntry{Title: b.Title, Author: b.Author, ASIN: b.ASIN, Link: safeLink(b.Link)})
 	}
-	id, unrated, err := s.Store.CreateEvent(name, safeLink(body.SourceURL), auth.UserFrom(r).Username, entries)
+	id, unrated, err := s.Store.CreateEvent(name, safeLink(body.SourceURL), auth.UserFrom(r).Username, ends, entries)
 	if err != nil {
 		writeStoreErr(w, err)
 		return
@@ -115,34 +126,6 @@ func safeLink(l string) string {
 		return l
 	}
 	return ""
-}
-
-func (s *Server) handlePinEvent(w http.ResponseWriter, r *http.Request) {
-	id, ok := pathID(r, "id")
-	var body struct {
-		Pinned bool `json:"pinned"`
-	}
-	if !ok || !readJSON(w, r, &body, 1<<10) {
-		return
-	}
-	if err := s.Store.PinEvent(id, body.Pinned); err != nil {
-		writeStoreErr(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]bool{"pinned": body.Pinned})
-}
-
-func (s *Server) handleDeleteEvent(w http.ResponseWriter, r *http.Request) {
-	id, ok := pathID(r, "id")
-	if !ok {
-		writeErr(w, http.StatusBadRequest, "invalid id")
-		return
-	}
-	if err := s.Store.DeleteEvent(id); err != nil {
-		writeStoreErr(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 // handleClaimEventBook: "✓ I claimed it" puts the book in the chosen library.

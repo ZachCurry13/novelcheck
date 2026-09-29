@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -18,10 +19,11 @@ func Ask(ctx context.Context, st *store.Store, ais []store.AIConfig, bookID int6
 		client := New(ai.Provider, ai.BaseURL, ai.APIKey, ai.JSONMode)
 		for _, model := range ai.Models {
 			cctx, cancel := context.WithTimeout(ctx, Timeout(ai.BaseURL, st.SettingInt(store.KeyLLMTimeoutSeconds)))
+			start := time.Now()
 			out, usage, err := client.Complete(cctx, model, system, user)
 			cancel()
 			if usage.Total() > 0 {
-				_ = st.RecordUsageCost(bookID, model, usage.PromptTokens, usage.CompletionTokens, ai)
+				_ = st.RecordUsageCost(bookID, model, usage.PromptTokens, usage.CompletionTokens, ai, time.Since(start))
 			}
 			if err == nil {
 				if err = parse(out); err == nil {

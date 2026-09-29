@@ -23,10 +23,10 @@ func (s *Store) RecordUsage(bookID int64, model string, prompt, completion int) 
 
 // RecordUsageCost records a call priced with that AI's own rates, so a paid
 // backup and a free local model are both counted correctly.
-func (s *Store) RecordUsageCost(bookID int64, model string, prompt, completion int, ai AIConfig) error {
-	cost := float64(prompt)*ai.PriceIn/1e6 + float64(completion)*ai.PriceOut/1e6
-	_, err := s.DB.Exec(`INSERT INTO token_usage (book_id, model, prompt_tokens, completion_tokens, cost)
-		VALUES (?, ?, ?, ?, ?)`, bookID, model, prompt, completion, cost)
+func (s *Store) RecordUsageCost(bookID int64, model string, prompt, completion int, ai AIConfig, took time.Duration) error {
+	cost := float64(prompt)*ai.PriceIn/1e6 + float64(completion)*ai.PriceOut/1e6 + s.powerCost(ai, took)
+	_, err := s.DB.Exec(`INSERT INTO token_usage (book_id, model, prompt_tokens, completion_tokens, cost, seconds)
+		VALUES (?, ?, ?, ?, ?, ?)`, bookID, model, prompt, completion, cost, took.Seconds())
 	return err
 }
 

@@ -32,13 +32,13 @@ function gpuText(g, msg) {
 }
 
 
-// prefix "" sets up the main AI; "backup_" the backup AI.
+// prefix "" sets up the main AI; "backup_" the backup AI; "deep_" the Deep Scan machine.
 export function renderOllamaHelper(host, form, prefix = "") {
   const field = (key) => { const k = keyFor(prefix, key); return k && $(`[data-key="${k}"]`, form); };
   host.innerHTML = `
     <div class="space-y-3 rounded-lg bg-slate-800/60 p-4 text-sm">
-      <p class="font-semibold">Ollama easy setup${prefix ? " (backup)" : ""}</p>
-      ${prefix ? `<p class="text-slate-400">For a second Ollama on your network, type its address (e.g. <code>192.168.1.60:11434</code>) and click Find.</p>` : ""}
+      <p class="font-semibold">Ollama easy setup${prefix === "deep_" ? " (Deep Scan machine)" : prefix ? " (backup)" : ""}</p>
+      ${prefix ? `<p class="text-slate-400">For ${prefix === "deep_" ? "the Ollama on your bigger machine" : "a second Ollama on your network"}, type its address (e.g. <code>192.168.1.60:11434</code>) and click Find.</p>` : ""}
       <p class="text-slate-400">First install the <b>Ollama</b> app from TrueNAS <b>Apps → Discover Apps</b> (turn on your GPU there if you have one). Then:</p>
       <div class="flex flex-wrap gap-2">
         <button type="button" data-ol="find" class="btn-primary py-1">1. Find Ollama</button>
@@ -161,7 +161,7 @@ export function renderOllamaHelper(host, form, prefix = "") {
   async function use(url) {
     const models = (orders[url]?.list || []).filter((m) => m.on).map((m) => m.name);
     if (!models.length) return toast("Tick at least one model", true);
-    const r = await attempt(() => post("/api/admin/ollama/use", { url, models, target: prefix ? "backup" : "" }));
+    const r = await attempt(() => post("/api/admin/ollama/use", { url, models, target: prefix ? prefix.replace(/_$/, "") : "" }));
     if (!r) return;
     // Reflect the saved settings in the form without reloading the page.
     const set = (k, v) => {
@@ -176,7 +176,8 @@ export function renderOllamaHelper(host, form, prefix = "") {
       set("llm_json_mode", true);
       set("price_input_per_million", "0");
       set("price_output_per_million", "0");
-      return toast(`Backup AI set: ${r.model.split(",").join(" then ")} at ${r.base_url}. It's used when the main AI fails.`);
+      return toast(prefix === "deep_" ? `Deep Scan machine set: ${r.model.split(",").join(" then ")} at ${r.base_url}. Deep Scans run there.`
+        : `Backup AI set: ${r.model.split(",").join(" then ")} at ${r.base_url}. It's used when the main AI fails.`);
     }
     set("llm_provider", "openai");
     set("llm_base_url", r.base_url);

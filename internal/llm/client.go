@@ -60,7 +60,7 @@ func (c *Client) Complete(ctx context.Context, model, system, user string) (stri
 		Model:       model,
 		Messages:    []any{message{"system", system}, message{"user", user}},
 		Temperature: 0,
-		MaxTokens:   600,
+		MaxTokens:   MaxTokens(model),
 	})
 }
 

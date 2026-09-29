@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS books (
     demonic_presence INTEGER NOT NULL DEFAULT 0,
     lgbtq_content    INTEGER NOT NULL DEFAULT 0,   -- retired in v1.19: now the book_content item "lgbtq"
     summary_verdict  TEXT NOT NULL DEFAULT '',
+    confidence       TEXT NOT NULL DEFAULT '',      -- the AI's certainty (high, medium, low)
     premise          TEXT NOT NULL DEFAULT '',     -- 1-2 spoiler-free sentences on what the book is about (the AI, from the blurb)
     approved         INTEGER NOT NULL DEFAULT 0,   -- parent marked "OK": bypasses filters
     approved_by      TEXT NOT NULL DEFAULT '',
@@ -123,7 +124,8 @@ CREATE TABLE IF NOT EXISTS token_usage (
     model             TEXT NOT NULL,
     prompt_tokens     INTEGER NOT NULL DEFAULT 0,
     completion_tokens INTEGER NOT NULL DEFAULT 0,
-    cost              REAL                           -- USD at the time; NULL on older rows
+    cost              REAL,                          -- USD at the time (tokens and electricity); NULL on older rows
+    seconds           REAL NOT NULL DEFAULT 0        -- how long the call took
 );
 CREATE INDEX IF NOT EXISTS idx_token_usage_at ON token_usage(at);
 
@@ -187,14 +189,17 @@ CREATE TABLE IF NOT EXISTS user_hidden_content (
 );
 
 -- Stuff Your Kindle events: an event's list of books (often free for a
--- day), kept 30 days unless pinned. asin/link point at Amazon when known.
+-- day). An event is archived when it ends (ends_at, UTC), or else after 30
+-- days unless pinned. asin/link point at Amazon when known.
 CREATE TABLE IF NOT EXISTS events (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    name       TEXT NOT NULL,
-    source_url TEXT NOT NULL DEFAULT '',
-    created_by TEXT NOT NULL DEFAULT '',
-    pinned     INTEGER NOT NULL DEFAULT 0,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    source_url  TEXT NOT NULL DEFAULT '',
+    created_by  TEXT NOT NULL DEFAULT '',
+    pinned      INTEGER NOT NULL DEFAULT 0,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ends_at     TEXT NOT NULL DEFAULT '',
+    archived_at TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS event_books (
     event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,

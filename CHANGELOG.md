@@ -4,7 +4,27 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
-() => `## [1.25.0]
+## [1.26.0]
+
+### 🎉 Events
+- **Whole lists from "Load more books" pages.** Give NovelCheck an event page's address and it presses **Load more books** for you (and follows next pages), so it finds every book, not just the first ten. It also picks up each book's author, and fills in the event's name and day from the page.
+- **An event opens in the Library,** with every filter and sort: peppers (including ⚠ Needs review), content, age group, genre, author, hidden content and **Hide books we have**; sort by the event's order, title, author or **Fewest peppers**. **Claim on Amazon ↗**, **✓ I claimed it** and **⭐ Wishlist** are on each card.
+- **Events end on their own.** Give an event an end day and time (filled in when the page says its day). When it ends, it moves to the **🗄 Archive** with its books and ratings. Without an end, an event is archived after 30 days unless pinned.
+- **Archive instead of delete.** Parents can **🗄 Archive** or **↩ Restore** an event and **✏️ Edit** its name or end. **🗑 Delete** is still there.
+
+### 🤖 AI machines (Admin → AI & Scans → AI machines)
+- **Deep Scans on a bigger machine.** Point Deep Scans at a separate, stronger AI machine (the Ollama easy setup works for it too). Ratings stay on the main AI. While that machine is off or asleep, Deep Scans wait (**🧬⏸** in the top bar, and a note on the Deep Scan page) and carry on by themselves when it answers.
+- **Model updates.** Once a day NovelCheck checks whether a newer version of the Ollama models you use is out and sends a 🔔 notice; **Update** downloads it with one click.
+- **Speed test.** Times each model on a made-up sample book: one rating and one Deep Scan part. Deep Scan estimates then say how long a book takes.
+- **Electricity cost.** Enter your price per kWh and each machine's extra watts while it works. **Usage** then counts what your own AI machines cost in electricity, and Deep Scan estimates include it.
+- **⚠ Needs review.** The AI now says how sure it is of each rating. Ratings it wasn't sure of (often books with little description) get a **⚠ Not sure** chip and show under **⚠ Needs review** in the Library's pepper filter; the book's window offers **Re-rate with the big model** when a Deep Scan machine is set up.
+- **Thinking models.** Reasoning models (such as DeepSeek-R1, QwQ or Qwen3) get room to think before they answer, and their thinking is left out of the rating.
+
+### 🔧 Fixes
+- The 1.25 notes under **What's new** show properly again.
+- A claimed book's window no longer shows an internal code under its library.
+
+## [1.25.0]
 
 ### 🎉 Stuff Your Kindle events
 - **Free-book days, sorted for your family.** Under **Discover → 🎉 Events**, a parent presses **＋ New event**, then pastes the event's list (copy it from the event's page or email: the Amazon links come along) or types the page's address.
@@ -37,7 +57,7 @@ becomes the release notes for that version and is shown in the app under
 - **Suggested Reads keeps its place:** 👍, 👎 or ＋ on a book no longer jumps the row back to the start.
 
 ## [1.23.0]
-`
+
 ### 📚 Collections
 - **Shelves across your libraries.** The new **📚 Collections** page (under **More** on a phone) lists them with covers; tap one to browse it in the Library, where search and filters still work.
 - **Make one yourself:** **＋ New collection**, then add books from each book's window (**＋ Add to a collection**). Parents can take a book out with ✕ there too.

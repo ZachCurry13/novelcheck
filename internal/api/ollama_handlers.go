@@ -36,7 +36,7 @@ type ollamaModelReq struct {
 	URL    string   `json:"url"`
 	Model  string   `json:"model"`
 	Models []string `json:"models"` // "use": in order, main model first
-	Target string   `json:"target"` // "use": "" = main AI, "backup" = backup AI
+	Target string   `json:"target"` // "use": "" = main AI, "backup" = backup AI, "deep" = Deep Scan machine
 }
 
 func (s *Server) handleOllamaPull(w http.ResponseWriter, r *http.Request) {
@@ -100,18 +100,25 @@ func (s *Server) handleOllamaUse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	model, fallbacks := chosen[0], strings.Join(chosen[1:], ",")
-	if body.Target == "backup" {
-		for k, v := range map[string]string{
+	if body.Target == "backup" || body.Target == "deep" {
+		set := map[string]string{
 			store.KeyBackupEnabled: "true", store.KeyBackupProvider: "openai", store.KeyBackupBaseURL: base + "/v1",
 			store.KeyBackupAPIKey: "", store.KeyBackupModel: strings.Join(chosen, ","), store.KeyBackupJSONMode: "true",
 			store.KeyBackupPriceIn: "0", store.KeyBackupPriceOut: "0",
-		} {
+		}
+		if body.Target == "deep" {
+			set = map[string]string{
+				store.KeyDeepEnabled: "true", store.KeyDeepProvider: "openai", store.KeyDeepBaseURL: base + "/v1",
+				store.KeyDeepAPIKey: "", store.KeyDeepModels: strings.Join(chosen, ","), store.KeyDeepJSONMode: "true",
+			}
+		}
+		for k, v := range set {
 			if err := s.Store.SetSetting(k, v); err != nil {
 				writeStoreErr(w, err)
 				return
 			}
 		}
-		writeJSON(w, http.StatusOK, map[string]string{"base_url": base + "/v1", "model": strings.Join(chosen, ","), "target": "backup"})
+		writeJSON(w, http.StatusOK, map[string]string{"base_url": base + "/v1", "model": strings.Join(chosen, ","), "target": body.Target})
 		return
 	}
 	for k, v := range map[string]string{

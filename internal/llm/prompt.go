@@ -25,6 +25,8 @@ Vampires, werewolves and other fantasy creatures don't raise the level on their 
 Also give spice_reason: 3-8 modest words naming what sets the level (e.g. "No romance", "Kissing only", "Fade-to-black intimacy", "Heavy innuendo, on-page foreplay", "Several explicit scenes").
 Also give premise: 1-2 spoiler-free sentences telling a reader what the book is about: the main character(s), the setting and the central problem or goal. Be plain and specific. Never mention praise, awards, best-seller lists, sales, reviewers, age ratings or content, and give nothing away from later in the book.
 
+Also give confidence: "high" when the description (or what you know of this book) clearly shows how much romance it has; "medium" when you are inferring it; "low" when you are mostly guessing (a vague or missing description, a book you don't know, or it could easily be two levels higher).
+
 ` + ContentGuide + `
 
 ` + ContentDetails + `
@@ -45,6 +47,7 @@ OUTPUT FORMAT (JSON ONLY):
   },
   "content": ["key", ...],
   "premise": "1-2 spoiler-free sentences on what the book is about",
+  "confidence": "high" | "medium" | "low",
   "summary_verdict": "1-2 sentence recommendation."
 }`
 

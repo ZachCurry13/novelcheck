@@ -20,15 +20,17 @@ type BookFilter struct {
 	AnyFlags       []string // books with ANY of these flags (used for the Calibre removal list)
 	Status         string
 	Age            string // "" any | "unset" | "1".."5" = suitable up to that age group
-	Spice          string // "" any | "0".."5" exact peppers | "old" = rated before the pepper scale
+	Spice          string // "" any | "0".."5" exact peppers | "old" = rated before the pepper scale | "review" = the AI was unsure
 	Format         string // "" any | "epub" etc. | "multi" (2+ formats) | "none" (no file) | "dupes" (2+ Calibre entries)
 	Author         string // part of an author's name
 	Series         string // part of a series name
 	Genre          string // a category key (package genres)
 	Kind           string // "fiction", "nonfiction" or "unknown"
 	Collection     int64  // only books in this collection
+	Event          int64  // only books an event lists (kids: rated ones)
+	NotOwned       bool   // hide books the family has
 	Season         string // a seasonal shelf's key (package seasons), matched by its words
-	Sort           string // "title" (default) | "author" | "recent"
+	Sort           string // "title" (default) | "author" | "recent" | "mild" (fewest peppers) | "list" (the event's order)
 	Limit, Offset  int
 }
 
@@ -122,10 +124,20 @@ func visibilityClause(u *User) (string, []any) {
 // filterCond turns f (plus the viewer's content rules) into a WHERE clause.
 func filterCond(f BookFilter, viewer *User) (string, []any) {
 	where := []string{"1=1"}
-	if f.CatalogID == 0 {
+	if f.CatalogID == 0 && f.Event == 0 {
 		where = append(where, "NOT "+discoverOnlyCond) // Discover books show on the Discover tab
 	}
 	var args []any
+	if f.Event > 0 {
+		where = append(where, "EXISTS (SELECT 1 FROM event_books fe WHERE fe.book_id = b.id AND fe.event_id = ?)")
+		args = append(args, f.Event)
+		if viewer != nil && viewer.Role == RoleRestricted {
+			where = append(where, "(b.status = 'analyzed' OR b.age_level > 0)")
+		}
+	}
+	if f.NotOwned {
+		where = append(where, "NOT "+ownedCond)
+	}
 	if q := strings.TrimSpace(f.Query); q != "" {
 		where = append(where, "(b.title LIKE ? OR b.author LIKE ? OR b.series LIKE ? OR b.tags LIKE ?)")
 		like := "%" + q + "%"
@@ -193,6 +205,8 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	switch {
 	case f.Spice == "old":
 		where = append(where, "b.status = 'analyzed' AND b.spice_level IS NULL")
+	case f.Spice == "review": // the AI wasn't sure, and no parent looked yet
+		where = append(where, "b.status = 'analyzed' AND b.confidence = 'low' AND b.approved = 0")
 	case len(f.Spice) == 1 && f.Spice >= "0" && f.Spice <= "5":
 		where = append(where, "b.spice_level = ?")
 		args = append(args, int(f.Spice[0]-'0'))
@@ -226,6 +240,12 @@ func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
 		order = "b.author COLLATE NOCASE, b.title COLLATE NOCASE"
 	case "recent":
 		order = "b.created_at DESC, b.id DESC"
+	case "mild":
+		order = "COALESCE(b.spice_level, 9), b.title COLLATE NOCASE"
+	case "list":
+		if f.Event > 0 {
+			order = "(SELECT MIN(lo.position) FROM event_books lo WHERE lo.book_id = b.id AND lo.event_id = " + strconv.FormatInt(f.Event, 10) + "), b.id"
+		}
 	}
 	limit := f.Limit
 	if limit <= 0 || limit > 200 {

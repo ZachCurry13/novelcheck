@@ -4,8 +4,9 @@ package store
 // e-books; NovelCheck lists them with their ratings, what the family already
 // has, and a Claim on Amazon link. Books only on an event's list live in the
 // hidden "Events" catalog, like Discover's, until someone claims one ("✓ I
-// claimed it" adds it to a library). Unpinned events are cleaned up after
-// 30 days.
+// claimed it" adds it to a library). An event is archived when it ends, or
+// after 30 days unless pinned; archived events keep their books and can be
+// restored or deleted.
 
 import (
 	"database/sql"
@@ -17,28 +18,31 @@ import (
 // EventsCatalog holds the books only listed on an event.
 const EventsCatalog = "Events"
 
-// eventDays is how long an unpinned event is kept.
-const (
-	eventDays    = 30
-	eventDaysSQL = "30"
-)
+// eventDaysSQL is how long an unpinned event without an end stays out of
+// the archive.
+const eventDaysSQL = "30"
 
 // Event is one event as someone sees it.
 type Event struct {
-	ID        int64  `db:"id" json:"id"`
-	Name      string `db:"name" json:"name"`
-	SourceURL string `db:"source_url" json:"source_url"`
-	CreatedBy string `db:"created_by" json:"created_by"`
-	CreatedAt string `db:"created_at" json:"created_at"`
-	Pinned    bool   `db:"pinned" json:"pinned"`
-	Books     int    `db:"books" json:"books"`         // listed books the viewer may see
-	Rated     int    `db:"rated" json:"rated"`         // of those, rated
-	DaysLeft  int    `db:"days_left" json:"days_left"` // before an unpinned event goes
+	ID         int64  `db:"id" json:"id"`
+	Name       string `db:"name" json:"name"`
+	SourceURL  string `db:"source_url" json:"source_url"`
+	CreatedBy  string `db:"created_by" json:"created_by"`
+	CreatedAt  string `db:"created_at" json:"created_at"`
+	Pinned     bool   `db:"pinned" json:"pinned"`
+	EndsAt     string `db:"ends_at" json:"ends_at"`         // RFC 3339 UTC, or ""
+	ArchivedAt string `db:"archived_at" json:"archived_at"` // RFC 3339 UTC, or "" while it's on
+	Books      int    `db:"books" json:"books"`             // listed books the viewer may see
+	Rated      int    `db:"rated" json:"rated"`             // of those, rated
+	DaysLeft   int    `db:"days_left" json:"days_left"`     // before an unpinned event without an end is archived
 }
 
 // EventEntry is one book as an event lists it.
 type EventEntry struct {
-	Title, Author, ASIN, Link string
+	Title  string `json:"title"`
+	Author string `json:"author"`
+	ASIN   string `json:"asin"`
+	Link   string `json:"link"`
 }
 
 // EventBook is a listed book with the viewer's marks.
@@ -52,18 +56,18 @@ type EventBook struct {
 	Queued   bool   `db:"queued" json:"queued"`
 }
 
-const eventCols = `e.id, e.name, e.source_url, e.created_by, e.created_at, e.pinned,
+const eventCols = `e.id, e.name, e.source_url, e.created_by, e.created_at, e.pinned, e.ends_at, e.archived_at,
 	CAST(MAX(0, ` + eventDaysSQL + ` - (julianday('now') - julianday(e.created_at))) AS INTEGER) AS days_left`
 
 // CreateEvent saves an event with its books (matched to books NovelCheck
 // has, or new ones filed under Events) and returns its id and the books that
-// still need a rating.
-func (s *Store) CreateEvent(name, sourceURL, by string, entries []EventEntry) (int64, []int64, error) {
+// still need a rating. endsAt is when it's archived (UTC, RFC 3339), or "".
+func (s *Store) CreateEvent(name, sourceURL, by, endsAt string, entries []EventEntry) (int64, []int64, error) {
 	cat, err := s.EnsureCatalog(EventsCatalog, "custom")
 	if err != nil {
 		return 0, nil, err
 	}
-	res, err := s.DB.Exec(`INSERT INTO events (name, source_url, created_by) VALUES (?, ?, ?)`, strings.TrimSpace(name), sourceURL, by)
+	res, err := s.DB.Exec(`INSERT INTO events (name, source_url, created_by, ends_at) VALUES (?, ?, ?, ?)`, strings.TrimSpace(name), sourceURL, by, endsAt)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -100,15 +104,15 @@ func (s *Store) CreateEvent(name, sourceURL, by string, entries []EventEntry) (i
 // eventWhere is the viewer's content rules; kids never see unrated books.
 func eventWhere(u *User) (string, []any) { return discoverWhere(u) }
 
-// ListEvents returns the events, newest first, with how many of their books
-// the viewer may see.
+// ListEvents returns the events (pinned, then newest; the archive last,
+// latest first) with how many of their books the viewer may see.
 func (s *Store) ListEvents(u *User) ([]Event, error) {
 	where, args := eventWhere(u)
 	out := []Event{}
 	err := s.DB.Select(&out, `SELECT `+eventCols+`,
 		(SELECT COUNT(*) FROM event_books eb JOIN books b ON b.id = eb.book_id WHERE eb.event_id = e.id`+where+`) AS books,
 		(SELECT COUNT(*) FROM event_books eb JOIN books b ON b.id = eb.book_id WHERE eb.event_id = e.id AND b.status = 'analyzed'`+where+`) AS rated
-		FROM events e ORDER BY e.pinned DESC, e.created_at DESC, e.id DESC`, append(args, args...)...)
+		FROM events e ORDER BY e.archived_at != '', e.archived_at DESC, e.pinned DESC, e.created_at DESC, e.id DESC`, append(args, args...)...)
 	return out, err
 }
 
@@ -134,38 +138,6 @@ func (s *Store) EventBooks(id int64, u *User) ([]EventBook, error) {
 		FROM event_books eb JOIN books b ON b.id = eb.book_id WHERE eb.event_id = ?`+where+` ORDER BY eb.position`,
 		append([]any{viewerID(u), viewerID(u), id}, args...)...)
 	return out, err
-}
-
-// PinEvent keeps (or no longer keeps) an event past its 30 days.
-func (s *Store) PinEvent(id int64, pinned bool) error {
-	_, err := s.DB.Exec(`UPDATE events SET pinned = ? WHERE id = ?`, pinned, id)
-	return err
-}
-
-// DeleteEvent removes an event; its books stay only where the family has them.
-func (s *Store) DeleteEvent(id int64) error {
-	if _, err := s.DB.Exec(`DELETE FROM events WHERE id = ?`, id); err != nil {
-		return err
-	}
-	return s.dropUnlistedEventCopies()
-}
-
-// CleanEvents deletes unpinned events older than 30 days and says how many.
-func (s *Store) CleanEvents() (int, error) {
-	res, err := s.DB.Exec(`DELETE FROM events WHERE pinned = 0 AND created_at < datetime('now', ?)`, "-"+eventDaysSQL+" days")
-	if err != nil {
-		return 0, err
-	}
-	n, _ := res.RowsAffected()
-	return int(n), s.dropUnlistedEventCopies()
-}
-
-// dropUnlistedEventCopies takes books off the Events catalog once no event
-// lists them (a claimed book keeps its library).
-func (s *Store) dropUnlistedEventCopies() error {
-	_, err := s.DB.Exec(`DELETE FROM catalog_books WHERE catalog_id = (SELECT id FROM catalogs WHERE name = ?)
-		AND book_id NOT IN (SELECT book_id FROM event_books)`, EventsCatalog)
-	return err
 }
 
 // ErrNotLibrary is returned when a claimed book can't go into that library.

@@ -31,3 +31,25 @@ func TooLong(err error) bool {
 	return strings.Contains(msg, "context") && (strings.Contains(msg, "exceed") || strings.Contains(msg, "maximum") ||
 		strings.Contains(msg, "too long") || strings.Contains(msg, "n_ctx"))
 }
+
+// Reasoning reports whether a model thinks before it answers (DeepSeek-R1,
+// QwQ, Qwen3, gpt-oss, o1/o3…): it needs room for its thinking, which is
+// stripped from the answer (stripThinking).
+func Reasoning(model string) bool {
+	m := strings.ToLower(model)
+	for _, k := range []string{"deepseek-r1", "-r1", "r1:", "qwq", "qwen3", "gpt-oss", "magistral", "reason", "think", "o1-", "o3", "o4-mini"} {
+		if strings.Contains(m, k) {
+			return true
+		}
+	}
+	return m == "o1" || strings.HasPrefix(m, "o1:")
+}
+
+// MaxTokens is how long an answer may be: a verdict is a few hundred tokens,
+// plus a reasoning model's thinking.
+func MaxTokens(model string) int {
+	if Reasoning(model) {
+		return 4000
+	}
+	return 600
+}

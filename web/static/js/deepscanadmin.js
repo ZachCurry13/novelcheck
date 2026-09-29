@@ -4,7 +4,7 @@
 // Up Next is scanned automatically). Decisions apply in place; only the
 // Running section refreshes on its own.
 import { get, post, put } from "./api.js";
-import { $, $$, esc, attempt, toast, fmtNum, fmtMoney } from "./ui.js";
+import { $, $$, esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes } from "./ui.js";
 import { openBook } from "./bookdialog.js";
 import { isOpen, reviewCard, reviewHeader, openRow, resultRow, setMeters } from "./deepscanlists.js";
 import { adminNavHTML } from "./adminnav.js";
@@ -19,6 +19,7 @@ export async function renderDeepScanAdmin(view, state) {
     <h1 class="mb-1 text-2xl font-bold">🧬 Deep Scan</h1>
     <p class="mb-3 text-sm text-slate-400">The AI reads a book's whole EPUB, part by part, instead of guessing from the description.</p>
     <div id="model-warning"></div>
+    <p id="deep-waiting" class="card mb-3 hidden text-sm text-amber-300">⏸ The Deep Scan machine isn't answering. Scans wait and carry on by themselves when it's switched on again.</p>
     <div class="mb-4 grid grid-cols-4 gap-1 rounded-xl bg-slate-900 p-1 ring-1 ring-slate-800" role="tablist">
       ${TABS.map(([k, label]) => `<button type="button" role="tab" data-tab="${k}" class="rounded-lg px-1 py-2 text-sm text-slate-300">${label}<span data-count="${k}" class="block text-xs text-slate-500"></span></button>`).join("")}
     </div>
@@ -87,6 +88,7 @@ export async function renderDeepScanAdmin(view, state) {
   };
 
   paintModelWarning($("#model-warning", view), data);
+  $("#deep-waiting", view).classList.toggle("hidden", !data.waiting);
   renderSettings(panel("settings"), data);
   paintReview();
   paintRunning();
@@ -143,6 +145,7 @@ export async function renderDeepScanAdmin(view, state) {
     const known = new Set(held.map((x) => x.id));
     const arrived = d.scans.filter((x) => x.held && !known.has(x.id) && !decided.has(x.id));
     data = d;
+    $("#deep-waiting", view).classList.toggle("hidden", !d.waiting);
     if (arrived.length) {
       held = held.concat(arrived);
       if (held.length === arrived.length) paintReview();
@@ -212,7 +215,7 @@ async function renderSettings(host, data) {
       return;
     }
     out.innerHTML = `<p class="rounded-lg bg-slate-800 p-3 text-sm">Deep Scanning <b>${est.books} book${est.books === 1 ? "" : "s"}</b>
-        (~${fmtNum(est.estimate.tokens)} tokens / ~${fmtMoney(est.cost)}):<br><span class="text-slate-400">${est.titles.map(esc).join(" · ")}</span></p>
+        (~${fmtNum(est.estimate.tokens)} tokens / ~${fmtMoney(est.cost)}${est.minutes ? ` / ${fmtMinutes(est.minutes)}` : ""}):<br><span class="text-slate-400">${est.titles.map(esc).join(" · ")}</span></p>
       <button id="go" class="btn-primary">Start ${est.books} Deep Scan${est.books === 1 ? "" : "s"}</button>`;
     $("#go", host).onclick = async () => {
       const r = await attempt(() => post(`/api/admin/deep-scans/next?n=${n}`));

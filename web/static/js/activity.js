@@ -43,7 +43,11 @@ function paint(pill, a) {
   let show = "";
   let title = "";
   let href = "#/library?spice=Pending";
-  if (a.deep) {
+  if (a.deep_waiting) {
+    show = "🧬⏸";
+    title = "Deep Scans wait for the Deep Scan machine to be switched on";
+    href = "#/deepscan?running";
+  } else if (a.deep) {
     show = `🧬 ${a.deep.part}/${a.deep.parts}`;
     title = `Deep Scan of “${a.deep.title}”: part ${a.deep.part} of ${a.deep.parts}`;
     href = "#/deepscan?running";

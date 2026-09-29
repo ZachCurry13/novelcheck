@@ -24,7 +24,7 @@ func splitCSV(s string) []string {
 // handleListBooks serves the unified dashboard across every catalog.
 // Query params: q, catalog, overlap_with, multi, classification, flags,
 // exclude, status, age, format, spice, author, series, genre, kind, sort,
-// limit, offset.
+// collection, season, event, not_owned, limit, offset.
 func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	f := store.BookFilter{
@@ -48,6 +48,8 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		Limit:          queryInt(r, "limit"),
 		Offset:         queryInt(r, "offset"),
 		Collection:     int64(queryInt(r, "collection")),
+		Event:          int64(queryInt(r, "event")),
+		NotOwned:       q.Get("not_owned") == "1",
 	}
 	s.seasonFilter(&f, q.Get("season"))
 	books, total, err := s.Store.ListBooks(f, auth.UserFrom(r))
@@ -95,6 +97,9 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		"collections": s.Store.BookCollections(id, u)}
 	if u.Role == store.RoleAdmin || u.Role == store.RoleEditor {
 		out["calibre_web_url"] = s.Store.Setting(store.KeyCalibreWebURL) // "Open in Calibre-Web" links
+		if ai, ok := s.Store.DeepAI(); ok {
+			out["big_model"] = ai.Models[0] // "Re-rate with the big model"
+		}
 	}
 	writeJSON(w, http.StatusOK, out)
 }

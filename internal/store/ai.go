@@ -13,6 +13,7 @@ type AIConfig struct {
 	Models   []string // tried in order
 	PriceIn  float64  // USD per 1M input tokens
 	PriceOut float64
+	Watts    float64 // extra power while it works (a local AI), for its electricity cost
 }
 
 // AIConfigs returns the AIs to try, in order: the main AI, then the backup
@@ -22,6 +23,7 @@ func (s *Store) AIConfigs() []AIConfig {
 		Name: "main", Provider: s.Setting(KeyLLMProvider), BaseURL: s.Setting(KeyLLMBaseURL),
 		APIKey: s.Setting(KeyLLMAPIKey), JSONMode: s.SettingBool(KeyLLMJSONMode), Models: s.LLMModels(),
 		PriceIn: s.SettingFloat(KeyPriceInputPerM), PriceOut: s.SettingFloat(KeyPriceOutputPerM),
+		Watts: s.SettingFloat(KeyMainWatts),
 	}}
 	if s.SettingBool(KeyBackupEnabled) {
 		b := AIConfig{
@@ -29,6 +31,7 @@ func (s *Store) AIConfigs() []AIConfig {
 			APIKey: s.Setting(KeyBackupAPIKey), JSONMode: s.SettingBool(KeyBackupJSONMode),
 			Models:  splitModels(s.Setting(KeyBackupModel)),
 			PriceIn: s.SettingFloat(KeyBackupPriceIn), PriceOut: s.SettingFloat(KeyBackupPriceOut),
+			Watts: s.SettingFloat(KeyBackupWatts),
 		}
 		if len(b.Models) > 0 && (b.Provider == "anthropic" || strings.TrimSpace(b.BaseURL) != "") {
 			out = append(out, b)

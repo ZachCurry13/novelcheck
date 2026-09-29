@@ -34,7 +34,7 @@ func (c *AnthropicClient) Complete(ctx context.Context, model, system, user stri
 	client := anthropic.NewClient(opts...)
 	resp, err := client.Messages.New(ctx, anthropic.MessageNewParams{
 		Model:     anthropic.Model(model),
-		MaxTokens: 1024, // the JSON verdict is ~200 tokens
+		MaxTokens: int64(max(1024, MaxTokens(model))), // the JSON verdict is ~200 tokens
 		System:    []anthropic.TextBlockParam{{Text: system}},
 		Messages: []anthropic.MessageParam{
 			anthropic.NewUserMessage(anthropic.NewTextBlock(user)),

@@ -29,6 +29,18 @@ const SECTIONS = [
     ["backup_price_input_per_million", "Input price per 1M tokens (USD)", "0 for Ollama", "number", "backup_llm_enabled"],
     ["backup_price_output_per_million", "Output price per 1M tokens (USD)", "0 for Ollama", "number", "backup_llm_enabled"],
   ]],
+  ["ai", "AI machines", [
+    ["deep_llm_enabled", "Run Deep Scans on a separate, bigger machine (they wait while it's switched off)", "", "bool"],
+    ["deep_llm_provider", "", "", "hidden"],
+    ["deep_llm_base_url", "API base URL", "http://<the machine's address>:11434/v1", "text", "deep_llm_enabled"],
+    ["deep_llm_api_key", "API key", "Leave blank for Ollama", "password", "deep_llm_enabled"],
+    ["deep_llm_model", "Model(s), in order", "e.g. qwen2.5:14b; several? separate with commas", "text", "deep_llm_enabled"],
+    ["deep_llm_json_mode", "JSON response mode", "", "bool", "deep_llm_enabled"],
+    ["power_price_kwh", "Electricity price per kWh (USD)", "0 = don't count electricity", "number"],
+    ["main_ai_watts", "Main AI machine: extra watts while it works", "e.g. 150 · 0 for a cloud AI", "number"],
+    ["backup_ai_watts", "Backup AI machine: extra watts while it works", "0 for a cloud AI", "number", "backup_llm_enabled"],
+    ["deep_ai_watts", "Deep Scan machine: extra watts while it works", "e.g. 350", "number", "deep_llm_enabled"],
+  ]],
   ["ai", "Suggested Reads", [
     ["suggest_mode", "How suggestions under Up Next are picked", "AI picks + books you don't own|AI picks from your library|Free matching only (no AI)", "select"],
   ]],
@@ -80,6 +92,7 @@ const SECTION_MODULE = { "SMTP / Send-to-Kindle": "send_to_kindle", Discover: "d
 const EXTRA = {
   "LLM Analysis Engine": `<div id="llm-preset-host"></div>`,
   "Backup AI (optional)": `<p class="text-xs text-slate-400" data-when="backup_llm_enabled">Tried only when the main AI fails on a book. If the main server is switched off, NovelCheck goes straight to the backup. You'll get a 🔔 notice when the backup is used.</p><div id="backup-preset-host" data-when="backup_llm_enabled"></div>`,
+  "AI machines": `<p class="text-xs text-slate-400" data-when="deep_llm_enabled">Deep Scans read whole books, so a bigger model on a stronger machine rates them better. Ratings stay on the main AI. While this machine is off or asleep, Deep Scans wait (🧬⏸) and carry on when it answers.</p><div id="deep-preset-host" data-when="deep_llm_enabled"></div><div id="aitools-host" class="space-y-3"></div>`,
   "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,
   "Calibre Library": `<div id="calibre-picker"></div><div id="calibre-server"></div>`,
   Discover: `<div id="discover-admin" class="space-y-2"></div>`,
@@ -117,6 +130,13 @@ export function renderSettingsTab(host, tab, settings, user) {
     $('[data-key="backup_llm_enabled"]', form).closest("label").after(backupHost.previousElementSibling, backupHost);
     initProviderPicker(backupHost, form, settings, "backup_");
   }
+  const deepHost = $("#deep-preset-host", form);
+  if (deepHost) {
+    $('[data-key="deep_llm_enabled"]', form).closest("label").after(deepHost.previousElementSibling, deepHost);
+    initProviderPicker(deepHost, form, settings, "deep_");
+  }
+  const toolsHost = $("#aitools-host", form);
+  if (toolsHost) import("./aitoolsadmin.js").then((m) => m.renderAITools(toolsHost));
   const disclose = () => $$("[data-when]", form).forEach((el) => {
     el.classList.toggle("hidden", !$(`[data-key="${el.dataset.when}"]`, form)?.checked);
   });
@@ -151,7 +171,8 @@ function field(key, label, placeholder, type, value, when) {
 // Extra help under a few fields.
 const HELP = {
   local_context_tokens: `<p class="mt-1 text-xs text-slate-400">How much text your local AI takes at once. Ollama's default is 4096; Deep Scan cuts books into parts that fit it. If you raised it on the server (e.g. OLLAMA_CONTEXT_LENGTH=8192), enter the new size so parts can be bigger and scans faster.</p>`,
-  deep_read_model: `<p class="mt-1 text-xs text-slate-400">Deep Scan reads whole books, so it needs a model that can tell romance from a tense or violent scene: 7B or bigger is recommended (e.g. qwen2.5:7b or llama3.1:8b on Ollama, or a cloud model). Small 1–3B models often over-rate books.</p>`,
+  power_price_kwh: `<p class="mt-1 text-xs text-slate-400">With the watts below, System → Usage counts what your own AI machines cost in electricity, and Deep Scan estimates show it. A plug-in power meter tells you a machine's watts while the AI works; count only the extra over idle.</p>`,
+  deep_read_model: `<p class="mt-1 text-xs text-slate-400">Deep Scan reads whole books, so it needs a model that can tell romance from a tense or violent scene: 7B or bigger is recommended (e.g. qwen2.5:7b or llama3.1:8b on Ollama, or a cloud model). Small 1–3B models often over-rate books. Not used when a Deep Scan machine is set up under AI machines.</p>`,
   suggest_mode: `<p class="mt-1 text-xs text-slate-400">Free matching looks for the next book in a series, the same authors and similar descriptions. With AI, your AI then picks the best 10 with a reason, at most once a day per person and within the hourly token cap. Kids' accounts (and anyone hiding unrated books) never get books you don't own.</p>`,
   smtp_password: `<p class="mt-1 text-xs text-slate-400">Gmail: your normal Google password won't work. Turn on 2-Step Verification,
     then create an <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" class="underline">App Password</a>

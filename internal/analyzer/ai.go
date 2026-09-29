@@ -16,9 +16,14 @@ import (
 // time, its other models are skipped, so a switched-off or stuck Ollama
 // doesn't cost a wait per model before the backup AI.
 func (w *Worker) askAIs(ctx context.Context, id int64, user string) (*store.Analysis, error) {
+	return w.askWith(ctx, w.Store.AIConfigs(), id, user)
+}
+
+// askWith rates a book with these AIs, in order.
+func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, user string) (*store.Analysis, error) {
 	var errs []string
 	var lastErr error
-	for _, ai := range w.Store.AIConfigs() {
+	for _, ai := range ais {
 		if len(ai.Models) == 0 {
 			lastErr = errors.New("LLM base URL and model must be configured")
 			errs = append(errs, ai.Name+" AI: no model set")
@@ -83,9 +88,10 @@ func (w *Worker) analyzeWith(ctx context.Context, ai store.AIConfig, c llm.Compl
 	limit := llm.Timeout(ai.BaseURL, w.Store.SettingInt(store.KeyLLMTimeoutSeconds))
 	cctx, cancel := context.WithTimeout(ctx, limit)
 	defer cancel()
+	start := time.Now()
 	out, usage, err := c.Complete(cctx, model, w.systemPrompt(), user)
 	if usage.Total() > 0 {
-		_ = w.Store.RecordUsageCost(id, model, usage.PromptTokens, usage.CompletionTokens, ai)
+		_ = w.Store.RecordUsageCost(id, model, usage.PromptTokens, usage.CompletionTokens, ai, time.Since(start))
 	}
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) && ctx.Err() == nil {

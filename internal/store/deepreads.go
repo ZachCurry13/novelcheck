@@ -225,3 +225,9 @@ func (s *Store) OrderDeepReads(ids []int64) error {
 	}
 	return nil
 }
+
+// RequeueDeepRead puts a scan cut short (its machine went off) back in line.
+func (s *Store) RequeueDeepRead(id int64) error {
+	_, err := s.DB.Exec(`UPDATE deep_reads SET status = 'queued', parts_done = 0 WHERE id = ? AND status = 'reading'`, id)
+	return err
+}

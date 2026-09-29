@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -62,17 +63,58 @@ func TestStuffYourKindleEvent(t *testing.T) {
 		t.Fatalf("the claimed book isn't in the Library: %d", total)
 	}
 
-	// Pinned events stay; others go after 30 days, and so do their list copies.
+	// The Library shows an event's books, with every filter and sort.
+	_, out = admin.do("GET", "/api/books?event="+ev+"&sort=list", nil, false)
+	if lb, _ := out["books"].([]any); len(lb) != 2 || lb[0].(map[string]any)["title"] != "Free Book One" {
+		t.Fatalf("event in the Library: %v", out)
+	}
+	if _, out = admin.do("GET", "/api/books?event="+ev+"&not_owned=1&spice=0", nil, false); out["total"].(float64) != 0 {
+		t.Fatalf("filters on an event: %v", out)
+	}
+	if _, out = kid.do("GET", "/api/books?event="+ev, nil, false); out["total"].(float64) != 1 {
+		t.Fatalf("kid sees unrated event books in the Library: %v", out)
+	}
+
+	// Pinned events stay; others are archived after 30 days, not deleted.
 	_, _ = st.DB.Exec(`UPDATE events SET created_at = datetime('now', '-31 days')`)
 	admin.do("POST", "/api/events/"+ev+"/pin", map[string]bool{"pinned": true}, true)
-	if n, _ := st.CleanEvents(); n != 0 {
-		t.Fatal("a pinned event was cleaned")
+	if n, _ := st.ArchiveEnded(); n != 0 {
+		t.Fatal("a pinned event was archived")
 	}
 	admin.do("POST", "/api/events/"+ev+"/pin", map[string]bool{"pinned": false}, true)
-	if n, _ := st.CleanEvents(); n != 1 {
-		t.Fatal("old event kept")
+	if n, _ := st.ArchiveEnded(); n != 1 {
+		t.Fatal("old event not archived")
+	}
+	if e, _ := st.EventByID(int64(out2id(ev)), nil); e == nil || e.ArchivedAt == "" || e.Books != 2 {
+		t.Fatalf("archived event: %+v", e)
+	}
+	// Restoring it keeps it (pinned, as it's old); an end that passes archives it.
+	if res, _ := admin.do("POST", "/api/events/"+ev+"/archive", map[string]bool{"archived": false}, true); res.StatusCode != 200 {
+		t.Fatalf("restore: %d", res.StatusCode)
+	}
+	if e, _ := st.EventByID(int64(out2id(ev)), nil); e.ArchivedAt != "" || !e.Pinned {
+		t.Fatalf("restored: %+v", e)
+	}
+	if res, _ := admin.do("PATCH", "/api/events/"+ev, map[string]string{"name": "Fall event", "ends_at": "2020-01-01T05:00:00.000Z"}, true); res.StatusCode != 200 {
+		t.Fatalf("edit: %d", res.StatusCode)
+	}
+	if e, _ := st.EventByID(int64(out2id(ev)), nil); e.ArchivedAt == "" || e.Name != "Fall event" || e.EndsAt != "2020-01-01T05:00:00Z" {
+		t.Fatalf("ended: %+v", e)
+	}
+	if res, _ := admin.do("PATCH", "/api/events/"+ev, map[string]string{"name": "x", "ends_at": "soon"}, true); res.StatusCode != 400 {
+		t.Fatalf("bad end: %d", res.StatusCode)
+	}
+
+	// Deleting is still there; claimed books stay.
+	if res, _ := admin.do("DELETE", "/api/events/"+ev, nil, true); res.StatusCode != 200 {
+		t.Fatalf("delete: %d", res.StatusCode)
 	}
 	if !st.Owned(fresh) {
-		t.Fatal("cleaning dropped a claimed book")
+		t.Fatal("deleting dropped a claimed book")
 	}
+}
+
+func out2id(s string) int64 {
+	n, _ := strconv.ParseInt(s, 10, 64)
+	return n
 }

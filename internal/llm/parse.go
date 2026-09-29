@@ -30,6 +30,7 @@ type Verdict struct {
 	Content        []string        `json:"-"`
 	SummaryVerdict string          `json:"summary_verdict"`
 	Premise        string          `json:"premise"`      // spoiler-free "what it's about", for cards
+	Confidence     string          `json:"confidence"`   // high | medium | low: how sure the AI is
 	CustomRaw      json.RawMessage `json:"custom_flags"` // the family's own filters: {"key": true} (or a list of keys)
 	CustomFlags    []string        `json:"-"`            // keys marked true
 }
@@ -119,6 +120,7 @@ func (v *Verdict) ToAnalysis(model string) store.Analysis {
 		DemonicPresence: v.SpiritualElements.DemonicPresence,
 		SummaryVerdict:  v.SummaryVerdict,
 		Premise:         v.Premise,
+		Confidence:      Confidence(v.Confidence),
 		Model:           model,
 		CustomFlags:     v.CustomFlags,
 		Content:         v.Content,
@@ -136,4 +138,14 @@ func ShortPremise(s string) string {
 		s = strings.TrimSpace(string(r[:maxPremiseRunes-1])) + "…"
 	}
 	return s
+}
+
+// Confidence is the AI's certainty as "high", "medium" or "low" ("" when it
+// didn't say).
+func Confidence(s string) string {
+	switch c := strings.ToLower(strings.TrimSpace(s)); c {
+	case "high", "medium", "low":
+		return c
+	}
+	return ""
 }

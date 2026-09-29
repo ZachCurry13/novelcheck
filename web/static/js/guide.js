@@ -12,7 +12,7 @@ const EVERYONE = [
   ["🧭 Discover",
     "The <b>Discover</b> tab suggests books: what's popular now, new on the best-seller lists, top teen and kids' books, classics, and what's new or popular in your family. Your content rules apply. Tap <b>⭐ Wishlist</b> to ask for a book you don't have."],
   ["🎉 Events",
-    "On free-book days such as <b>Stuff Your Kindle</b>, a parent pastes the event's list under <b>Discover → 🎉 Events</b>. You see each book's rating, which ones you already have, and a <b>Claim on Amazon</b> button; <b>✓ I claimed it</b> puts the book in your library. Tick <b>Hide Level 3+</b> or <b>Hide books we have</b> to narrow a long list."],
+    "On free-book days such as <b>Stuff Your Kindle</b>, a parent pastes the event's list under <b>Discover → 🎉 Events</b>. You see each book's rating, which ones you already have, and a <b>Claim on Amazon</b> button; <b>✓ I claimed it</b> puts the book in your library. An event opens in the Library, so every filter and sort works on it, plus <b>Hide books we have</b>. When an event ends it moves to the archive."],
   ["📚 Collections & seasons",
     "<b>📚 Collections</b> are shelves across your libraries, like \"Summer reading\" or \"Dragon adventures\". The chips at the top of the Library show seasonal shelves such as 🎃 Halloween or 🕯️ Advent, the ones in season first. Tap one to see its books."],
   ["🌶️ What the ratings mean",

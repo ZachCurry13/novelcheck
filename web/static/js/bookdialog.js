@@ -9,6 +9,7 @@ import { ageAndNotesHTML, bindAgeAndNotes } from "./booknotes.js";
 import { on } from "./modules.js";
 import { customChips } from "./customflags.js";
 import { renderDeepSection, deepChip } from "./deepscan.js";
+import { reviewChip } from "./librarycard.js";
 import { seriesLine, seriesText, openTitleEdit } from "./titlefix.js";
 import { genreChips, authorLinks, seriesLink } from "./genres.js";
 import { coverImg, reportCover } from "./covers.js";
@@ -52,7 +53,7 @@ export async function openBook(id, state, onChange) {
         ${e.formats.length ? e.formats.map((f) => `<span class="chip-fmt">${esc(f)}</span>`).join(" ") : `<span class="text-xs text-slate-500">no file</span>`}
         ${(data.editable_catalogs || []).includes(e.catalog_id) && e.source !== "calibre" ? `<button type="button" data-act="remove-from" data-cat="${e.catalog_id}" class="text-xs text-rose-300 underline">Remove from this library</button>` : ""}
       </div>
-      ${isAdmin && e.paths.length ? `<p class="mt-0.5 break-all text-xs text-slate-500">${e.paths.map(esc).join("<br>")}</p>` : ""}
+      ${isAdmin && realPaths(e).length ? `<p class="mt-0.5 break-all text-xs text-slate-500">${realPaths(e).map(esc).join("<br>")}</p>` : ""}
     </li>`).join("");
   const dupNote = calibreCount > 1
     ? `<p class="mt-2 text-sm text-orange-300">⚠ This book is in Calibre ${calibreCount} times.${manager ? ` <a href="#/duplicates" data-close class="underline">Review duplicates</a>` : ""}</p>` : "";
@@ -72,12 +73,14 @@ export async function openBook(id, state, onChange) {
           ${isAdmin && calibreIds.length ? `<p class="mt-1 text-xs ${b.title_fix ? "text-amber-300" : "text-slate-500"}">${b.title_fix ? `In Calibre: “${esc(b.title_fix)}” · ` : ""}<button type="button" data-act="calibre-title" class="underline">✏️ ${b.title_fix ? "Tidy it in Calibre" : "Edit title in Calibre"}</button></p>` : ""}
         </div>
       </div>
-      <div class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
+      <div class="flex flex-wrap gap-1">${classChip(b)} ${reviewChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
       ${b.genres || b.kind ? `<div class="flex flex-wrap gap-1">${genreChips(b)}</div>` : ""}
       ${b.spice_level !== null && b.spice_level !== undefined
         ? `<p class="text-xs text-slate-400">${b.spice_reason ? `<b class="text-slate-200">Why ${b.spice_level} 🌶️:</b> ${esc(b.spice_reason)}. ` : ""}${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
       ${blurbHTML(b, "rounded-lg bg-slate-800 p-3 text-slate-200")}
       ${b.summary_verdict ? `<p class="text-xs text-slate-400"><b class="text-slate-300">Rating note:</b> ${esc(b.summary_verdict)}</p>` : ""}
+      ${reviewChip(b) ? `<p class="rounded-lg bg-amber-900/30 p-2 text-sm text-amber-200">⚠ The AI wasn't sure of this rating${b.blurb || b.description ? "" : " (it had little to go on)"}.${!manager ? "" : data.big_model
+        ? ` <button type="button" data-act="rerate-big" class="underline">Re-rate with the big model (${esc(data.big_model)})</button>` : " Check it and edit it, or mark it OK."}</p>` : ""}
       ${contentSection(b)}
       ${b.status === "error" && manager ? `<p class="text-sm text-rose-400">Last error: ${esc(b.analysis_error)}
         <button type="button" data-copy-err class="ml-1 text-xs underline">📋 Copy</button>${isAdmin ? ` <button type="button" data-dx-err class="text-xs underline">🩺 Diagnose</button>` : ""}</p>` : ""}
@@ -121,7 +124,9 @@ export async function openBook(id, state, onChange) {
       return diagnoseLater(`Rating "${b.title}" failed: ${b.analysis_error}`);
     }
     const act = e.target.closest("[data-act]")?.dataset.act;
-    if (act === "calibre-title") {
+    if (act === "rerate-big") {
+      if (await attempt(() => post(`/api/books/${b.id}/rerate-big`), "Re-rating on the Deep Scan machine; the new rating shows when it's done")) e.target.closest("[data-act]").remove();
+    } else if (act === "calibre-title") {
       openTitleEdit(b, calibreIds, cw, refresh);
     } else if (act === "remove-from") {
       const cat = e.target.closest("[data-cat]").dataset.cat;
@@ -171,3 +176,7 @@ export async function openBook(id, state, onChange) {
   renderDeepSection($("#deep-section", dlg), b.id, state.user);
   bindBookCollections(dlg, b.id, manager, data.collections || []);
 }
+
+// realPaths are a copy's files, without the markers of books that came from a
+// list (claimed from an event, or listed on one).
+const realPaths = (e) => e.paths.filter((p) => !/^(claimed|event|discover|list):/.test(p));

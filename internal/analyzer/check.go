@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/enrich"
 	"github.com/zachcurry13/novelcheck/internal/llm"
@@ -27,10 +28,11 @@ func (w *Worker) ReadCover(ctx context.Context, image []byte, mediaType string) 
 		}
 		for _, model := range ai.Models {
 			cctx, cancel := context.WithTimeout(ctx, llm.Timeout(ai.BaseURL, w.Store.SettingInt(store.KeyLLMTimeoutSeconds)))
+			start := time.Now()
 			out, usage, err := reader.ReadImage(cctx, model, llm.CoverPrompt, image, mediaType)
 			cancel()
 			if usage.Total() > 0 {
-				_ = w.Store.RecordUsageCost(0, model, usage.PromptTokens, usage.CompletionTokens, ai)
+				_ = w.Store.RecordUsageCost(0, model, usage.PromptTokens, usage.CompletionTokens, ai, time.Since(start))
 			}
 			if err == nil {
 				if f, ok := parseCover(out); ok {
@@ -86,5 +88,23 @@ func (w *Worker) RateNow(ctx context.Context, id int64) error {
 		_ = w.Store.SetStatus(id, "error", err.Error())
 		return err
 	}
-	return w.Store.SaveAnalysis(id, *a)
+	return w.Store.SaveAnalysis(id, *unsureWithout(a, b.Blurb))
+}
+
+// RateWith rates one book again with the given AI (the bigger Deep Scan
+// machine, for a rating the small model wasn't sure of). The old rating
+// stays until the new one is saved; a failure leaves it as it was.
+func (w *Worker) RateWith(ctx context.Context, id int64, ai store.AIConfig) error {
+	b, err := w.Store.BookByID(id, nil)
+	if err != nil {
+		return err
+	}
+	if b.Blurb == "" {
+		w.fillBlurb(ctx, b)
+	}
+	a, err := w.askWith(ctx, []store.AIConfig{ai}, id, llm.UserPrompt(b.Title, b.Author, b.Blurb))
+	if err != nil {
+		return err
+	}
+	return w.Store.SaveAnalysis(id, *unsureWithout(a, b.Blurb))
 }

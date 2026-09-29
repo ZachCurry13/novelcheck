@@ -63,6 +63,9 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 					continue
 				}
 			}
+			if r.machineAway() {
+				return errMachineAway // the Deep Scan machine went off: the scan waits for it
+			}
 			if !sleep(ctx, time.Duration(try*try)*retryWait) {
 				return nil
 			}
@@ -159,10 +162,11 @@ func ask[T any](ctx context.Context, r *Runner, bookID int64, system, user strin
 		client := llm.New(ai.Provider, ai.BaseURL, ai.APIKey, ai.JSONMode)
 		for _, model := range ai.Models {
 			cctx, cancel := context.WithTimeout(ctx, llm.Timeout(ai.BaseURL, r.Store.SettingInt(store.KeyLLMTimeoutSeconds)))
+			start := time.Now()
 			out, usage, err := client.Complete(cctx, model, system, user)
 			cancel()
 			if usage.Total() > 0 {
-				_ = r.Store.RecordUsageCost(bookID, model, usage.PromptTokens, usage.CompletionTokens, ai)
+				_ = r.Store.RecordUsageCost(bookID, model, usage.PromptTokens, usage.CompletionTokens, ai, time.Since(start))
 			}
 			if err == nil {
 				var v T
@@ -187,6 +191,9 @@ func ask[T any](ctx context.Context, r *Runner, bookID int64, system, user strin
 
 // aiChain is the main AI (with the Deep Scan model, if set) then the backup.
 func (r *Runner) aiChain() []store.AIConfig {
+	if ai, ok := r.Store.DeepAI(); ok {
+		return []store.AIConfig{ai} // its own machine: scans wait for it rather than using another
+	}
 	ais := r.Store.AIConfigs()
 	if m := strings.TrimSpace(r.Store.Setting(store.KeyDeepModel)); m != "" && len(ais) > 0 {
 		ais[0].Models = []string{m}

@@ -24,7 +24,9 @@ var (
 	spaceRe   = regexp.MustCompile(`\s+`)
 	lineNoise = regexp.MustCompile(`(?i)^[\s\-•*·\d.)]+|\s*[(\[]?(free|\$\s?0\.00|0,00\s?€|kindle edition|ebook)[)\]]?\s*$`)
 	// Link texts that say what to do, not which book.
-	genericRe = regexp.MustCompile(`(?i)^(buy|get|grab|claim|download|free|view|see|shop|read|amazon|kindle|click|here|more|link|now|on|it|the|book|this|for|at|\W)+$`)
+	genericRe = regexp.MustCompile(`(?i)^(buy|get|grab|claim|download|free|view|see|shop|read|amazon|kindle|click|here|more|link|now|on|it|the|book|this|for|at|a|an|copy|your|you|store|e-?book|details|\W)+$`)
+	// "By Author" just after a book's link (or its heading's).
+	byRe = regexp.MustCompile(`(?is)^(?:[^<]{0,3}|.{0,600}?>)\s*by\s+([^<>]{2,80}?)\s*<`)
 )
 
 // Parse reads the books in pasted HTML (links to Amazon give the ASIN; the
@@ -32,7 +34,7 @@ var (
 // (lines like "Title by Author"). Repeats are dropped.
 func Parse(htmlText, plain string) []store.EventEntry {
 	var out []store.EventEntry
-	seen := map[string]bool{}
+	seen := map[string]int{} // ASIN or title -> its place in out
 	add := func(e store.EventEntry) {
 		e.Title = strings.TrimSpace(e.Title)
 		if t, a, ok := strings.Cut(e.Title, " by "); ok && e.Author == "" && len(a) < 80 {
@@ -42,10 +44,20 @@ func Parse(htmlText, plain string) []store.EventEntry {
 		if e.ASIN != "" {
 			key = e.ASIN
 		}
-		if len([]rune(e.Title)) < 2 || seen[key] || len(out) >= MaxBooks {
+		i, dup := seen[key]
+		if !dup {
+			i, dup = seen[strings.ToLower(e.Title)]
+		}
+		if dup {
+			if out[i].Author == "" {
+				out[i].Author = e.Author // a later link of the same book knew the author
+			}
 			return
 		}
-		seen[key], seen[strings.ToLower(e.Title)] = true, true
+		if len([]rune(e.Title)) < 2 || len(out) >= MaxBooks {
+			return
+		}
+		seen[key], seen[strings.ToLower(e.Title)] = len(out), len(out)
 		out = append(out, e)
 	}
 	if strings.TrimSpace(htmlText) != "" {
@@ -65,13 +77,15 @@ func Parse(htmlText, plain string) []store.EventEntry {
 
 func fromHTML(page string) []store.EventEntry {
 	var out []store.EventEntry
-	for _, m := range anchorRe.FindAllStringSubmatchIndex(page, -1) {
-		attrs, inner := page[m[2]:m[3]], page[m[4]:m[5]]
-		hm := hrefRe.FindStringSubmatch(attrs)
-		if hm == nil {
-			continue
+	ms := anchorRe.FindAllStringSubmatchIndex(page, -1)
+	hrefs := make([]string, len(ms))
+	for i, m := range ms {
+		if hm := hrefRe.FindStringSubmatch(page[m[2]:m[3]]); hm != nil {
+			hrefs[i] = html.UnescapeString(hm[1])
 		}
-		link := html.UnescapeString(hm[1])
+	}
+	for i, m := range ms {
+		attrs, inner, link := page[m[2]:m[3]], page[m[4]:m[5]], hrefs[i]
 		if !isAmazon(link) {
 			continue
 		}
@@ -88,10 +102,21 @@ func fromHTML(page string) []store.EventEntry {
 				title = text(hs[len(hs)-1][1]) // the nearest heading before the button
 			}
 		}
-		if title != "" {
-			e.Title = title
-			out = append(out, e)
+		if title == "" {
+			continue
 		}
+		e.Title = title
+		// The author: "By …" after the link, before the next book's link.
+		end := min(len(page), m[1]+700)
+		for j := i + 1; j < len(ms) && ms[j][0] < end; j++ {
+			if hrefs[j] != link && isAmazon(hrefs[j]) {
+				end = ms[j][0]
+			}
+		}
+		if bm := byRe.FindStringSubmatch(page[m[1]:end]); bm != nil {
+			e.Author = text(bm[1])
+		}
+		out = append(out, e)
 	}
 	return out
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/zachcurry13/novelcheck/internal/aitools"
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/calibre"
@@ -43,6 +44,7 @@ type Server struct {
 	Suggest     *suggest.Service     // Suggested Reads under Up Next
 	Discover    *discover.Service    // the Discover tab's lists; nil in tests that don't need it
 	Collections *collections.Service // AI-filled collections and weekly ideas
+	AITools     *aitools.Service     // model updates and the speed test
 	Web         fs.FS                // embedded static assets
 	logins      *loginLimiter
 	etags       sync.Map  // static file name → ETag
@@ -148,7 +150,9 @@ func (s *Server) Router() http.Handler {
 				r.Post("/collections/ai", s.handleStartFill)
 				r.Post("/events/preview", s.handlePreviewEvent)
 				r.Post("/events", s.handleCreateEvent)
+				r.Patch("/events/{id}", s.handleUpdateEvent)
 				r.Post("/events/{id}/pin", s.handlePinEvent)
+				r.Post("/events/{id}/archive", s.handleArchiveEvent)
 				r.Delete("/events/{id}", s.handleDeleteEvent)
 				r.Post("/events/{id}/books/{book}/claim", s.handleClaimEventBook)
 				r.Get("/collections/ai/{job}", s.handleFillJob)
@@ -162,6 +166,7 @@ func (s *Server) Router() http.Handler {
 				r.With(s.requireModule(store.KeyModuleImport, "Paper books")).Post("/shelves", s.handleCreateShelf)
 				r.With(s.requireModule(store.KeyModuleImport, "Paper books")).Post("/shelves/{id}/books", s.handleAddToShelf)
 				r.Post("/books/{id}/analyze", s.handleAnalyzeBook)
+				r.Post("/books/{id}/rerate-big", s.handleRerateBig)
 				r.Put("/books/{id}/verdict", s.handleSetVerdict)
 				r.Put("/books/{id}/approval", s.handleSetApproval)
 				r.Put("/books/{id}/age", s.handleSetAge)
@@ -200,6 +205,10 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/deep-scans/keep-all", s.handleKeepAllDeepScans)
 				r.Post("/admin/deep-scans/accept-all", s.handleAcceptAllDeepScans)
 				r.Put("/admin/deep-scans/order", s.handleOrderDeepScans)
+				r.Get("/admin/aitools", s.handleAIToolsStatus)
+				r.Post("/admin/aitools/check-updates", s.handleCheckModelUpdates)
+				r.Post("/admin/aitools/updated", s.handleModelUpdated)
+				r.Post("/admin/aitools/bench", s.handleStartBench)
 				r.Post("/admin/deep-scans/{id}/{action}", s.handleDecideDeepScan)
 				r.Post("/admin/flags", s.handleAddFlag)
 				r.Put("/admin/flags/{id}", s.handleUpdateFlag)

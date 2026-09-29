@@ -155,3 +155,8 @@ export function fmtNum(n) {
 export function fmtMoney(n) {
   return "$" + Number(n || 0).toFixed(n < 1 ? 4 : 2);
 }
+
+// fmtMinutes says roughly how long something takes ("about 40 min").
+export function fmtMinutes(m) {
+  return m >= 90 ? `about ${(m / 60).toFixed(1)} hours` : `about ${Math.max(1, Math.round(m))} min`;
+}

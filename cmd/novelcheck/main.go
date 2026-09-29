@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/zachcurry13/novelcheck/internal/aitools"
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/api"
 	"github.com/zachcurry13/novelcheck/internal/auth"
@@ -79,7 +80,9 @@ func main() {
 		return worker.Status().State == "idle" && analyzer.RateHoursOpen(st, time.Now())
 	}
 	go collectionsSvc.Loop(ctx)
-	go events.Loop(ctx, st) // unpinned events go after 30 days
+	go events.Loop(ctx, st) // events are archived when they end
+	aiTools := aitools.New(st)
+	go aiTools.Loop(ctx) // daily: newer versions of the Ollama models in use
 	syncer := &calibre.Syncer{Store: st, Dir: cfg.CalibreDir}
 	syncer.NewBooks = func() bool {
 		worker.Kick()
@@ -135,6 +138,7 @@ func main() {
 		Genres:      &genrefill.Filler{Store: st},
 		Discover:    discoverSvc,
 		Collections: collectionsSvc,
+		AITools:     aiTools,
 		Web:         web.FS(),
 	}
 	srv.Pulls.OnError = func(model string, err error) {

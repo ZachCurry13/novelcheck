@@ -75,6 +75,8 @@ Ollama runs an AI model on your own TrueNAS box. Nothing leaves your network and
 
 A **🧬 Deep Scan** sends the book's full text to your AI in parts, so it uses far more tokens than a normal rating: a typical novel is around 150,000 tokens, or about 2–5 cents with `gpt-4o-mini`. NovelCheck shows the estimate before every scan. You can pick a separate **Deep Scan model** under **Admin → AI & Scans → LLM Analysis Engine**, for example a cheap model with a large context window. With Ollama the book is cut into small parts (about 2,000 words) to fit local models' memory; it's free, but a whole book can take a long time on a small GPU.
 
+If you have a stronger computer that isn't always on, set it up under **Admin → AI & Scans → AI machines** as the **Deep Scan machine**: Deep Scans run there with a bigger model, ratings stay on the main AI, and scans wait while it's switched off. The **speed test** there times each model on a sample book, so Deep Scan estimates can say how long a book takes; add your electricity price and each machine's watts to see what local AI costs you. NovelCheck also checks once a day for newer versions of the Ollama models you use and offers an **Update** button.
+
 ## Suggested Reads
 
 **💡 Suggested Reads** (under Up Next) starts with free matching done by NovelCheck itself, with no AI: next in a series, same authors, similar descriptions. What the AI adds is up to you, under **Admin → AI & Scans → Suggested Reads**:

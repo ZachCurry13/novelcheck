@@ -43,7 +43,8 @@ func (s *Server) handleBookDeepScan(w http.ResponseWriter, r *http.Request) {
 	} else if _, e, err := s.Deep.Prepare(id); err != nil {
 		out["why"] = err.Error()
 	} else {
-		out["available"], out["estimate"], out["cost"] = true, e, s.deepCost(e)
+		minutes, power := s.deepTime(e)
+		out["available"], out["estimate"], out["cost"], out["minutes"] = true, e, s.deepCost(e)+power, minutes
 	}
 	writeJSON(w, http.StatusOK, out)
 }
@@ -102,7 +103,7 @@ func (s *Server) handleDeepScans(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	warning, suggest := s.deepModelWarning(r.Context())
-	writeJSON(w, http.StatusOK, map[string]any{"scans": scans, "model_warning": warning, "suggest_model": suggest,
+	writeJSON(w, http.StatusOK, map[string]any{"scans": scans, "model_warning": warning, "suggest_model": suggest, "waiting": s.Deep.Waiting(),
 		"users": deepread.DeepUsers(s.Store.Setting(store.KeyDeepUsers)), "top_n": s.Store.SettingInt(store.KeyDeepTopN)})
 }
 
@@ -167,7 +168,8 @@ func (s *Server) handleDeepScanNext(w http.ResponseWriter, r *http.Request) {
 			titles = append(titles, b.Title)
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"books": len(ids), "titles": titles, "estimate": e, "cost": s.deepCost(e)})
+	minutes, power := s.deepTime(e)
+	writeJSON(w, http.StatusOK, map[string]any{"books": len(ids), "titles": titles, "estimate": e, "cost": s.deepCost(e) + power, "minutes": minutes})
 }
 
 // normalizeDeepUsers keeps up to 3 existing accounts in "deep_scan_users".

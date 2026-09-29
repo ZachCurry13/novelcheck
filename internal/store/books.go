@@ -11,7 +11,7 @@ import (
 
 const bookCols = `b.id, b.norm_key, b.title, b.author, b.isbn, b.description, b.blurb, b.status,
 	b.classification, b.nudity, b.solo_acts, b.heavy_innuendo, b.playful_fantasy, b.dark_occult,
-	b.demonic_presence, b.summary_verdict, b.premise, b.approved, b.approved_by, b.age_level, b.age_set_by, b.spice_level, b.spice_reason, b.analysis_model, b.analysis_error,
+	b.demonic_presence, b.summary_verdict, b.premise, b.confidence, b.approved, b.approved_by, b.age_level, b.age_set_by, b.spice_level, b.spice_reason, b.analysis_model, b.analysis_error,
 	b.series, b.series_index, b.title_fix, b.tags, b.genres, b.kind, b.genre_source, b.content_version, b.content_amounts,
 	b.analyzed_at, b.created_at, b.updated_at`
 
@@ -138,12 +138,15 @@ func (s *Store) SaveAnalysis(id int64, a Analysis) error {
 	if a.SpiceLevel != nil {
 		a.Classification = ClassificationForSpice(*a.SpiceLevel)
 	}
-	_, err := s.DB.Exec(`UPDATE books SET status = 'analyzed', spice_level = ?, spice_reason = ?, classification = ?,
+	if a.Confidence == "" && (strings.HasPrefix(a.Model, DeepModelPrefix) || strings.HasPrefix(a.Model, "manual:")) {
+		a.Confidence = "high" // the whole book was read, or a parent rated it
+	}
+	_, err := s.DB.Exec(`UPDATE books SET status = 'analyzed', confidence = ?, spice_level = ?, spice_reason = ?, classification = ?,
 		nudity = ?, solo_acts = ?, heavy_innuendo = ?, playful_fantasy = ?, dark_occult = ?, demonic_presence = ?,
 		summary_verdict = ?, premise = CASE WHEN ? != '' THEN ? ELSE premise END, analysis_model = ?, analysis_error = '', rules_version = ?,
 		flags_version = ?, rated_modified = (SELECT COALESCE(MAX(modified), '') FROM catalog_books WHERE book_id = ?),
 		analyzed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-		a.SpiceLevel, strings.TrimSpace(a.SpiceReason), a.Classification, a.Nudity, a.SoloActs, a.HeavyInnuendo,
+		a.Confidence, a.SpiceLevel, strings.TrimSpace(a.SpiceReason), a.Classification, a.Nudity, a.SoloActs, a.HeavyInnuendo,
 		a.PlayfulFantasy, a.DarkOccult, a.DemonicPresence, a.SummaryVerdict, a.Premise, a.Premise, a.Model, RulesVersion,
 		s.FlagsVersion(), id, id)
 	if err != nil {

@@ -1,17 +1,15 @@
 // Unified dashboard: browse and filter books across every catalog.
 import { get, post, qs } from "./api.js";
-import { $, esc, attempt, toast, classChip, flagChips, ageChip, HIDE_LABELS, FILTER_IDEA_URL, AGE_GROUPS, canManage } from "./ui.js";
+import { $, esc, attempt, toast, HIDE_LABELS, FILTER_IDEA_URL, AGE_GROUPS, canManage } from "./ui.js";
 import { openCalibreRemoval } from "./calibreremove.js";
 import { openBook } from "./bookdialog.js";
-import { pepperOptions, openPepperGuide, whyChip } from "./peppers.js";
+import { pepperOptions, openPepperGuide } from "./peppers.js";
 import { on } from "./modules.js";
-import { loadFlags, customChips, hideBoxes } from "./customflags.js";
-import { loadContent, contentIcons, hidePicker, bindHidePicker } from "./content.js";
-import { deepChip } from "./deepscan.js";
-import { seriesText } from "./titlefix.js";
-import { coverImg } from "./covers.js";
+import { loadFlags, hideBoxes } from "./customflags.js";
+import { loadContent, hidePicker, bindHidePicker } from "./content.js";
 import { setupSelect } from "./libraryselect.js";
-import { blurbHTML } from "./blurb.js";
+import { card, IN_QUEUE } from "./librarycard.js";
+import { eventShelf } from "./eventshelf.js";
 import { liveCards } from "./livestatus.js";
 import { refreshActivity } from "./activity.js";
 import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
@@ -24,14 +22,15 @@ export async function renderLibrary(view, state) {
   const [catalogs, , facets, , shelves] = await Promise.all([attempt(() => get("/api/catalogs")).then((c) => c || []), loadFlags(true),
     attempt(() => get("/api/books/facets")).then((f) => f || { genres: [], kinds: [], authors: [], series: [] }), loadContent(),
     get("/api/collections").catch(() => ({ collections: [], seasons: [] }))]);
-  // A collection or seasonal shelf chosen elsewhere (#/library?collection=3, ?season=advent).
+  // A collection, seasonal shelf or event chosen elsewhere (#/library?collection=3, ?season=advent, ?event=5).
   const shelf = new URLSearchParams(location.hash.split("?")[1] || "");
-  const collection = shelf.get("collection") || "";
-  const season = collection ? "" : shelf.get("season") || "";
+  const event = shelf.get("event") || "";
+  const collection = event ? "" : shelf.get("collection") || "";
+  const season = collection || event ? "" : shelf.get("season") || "";
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
   const opt = (v, label, n) => `<option value="${esc(v)}">${esc(label)}${n === undefined ? "" : ` (${n.toLocaleString()})`}</option>`;
   view.innerHTML = `
-    ${seasonChipsHTML(shelves.seasons || [], season)}
+    ${event ? "" : seasonChipsHTML(shelves.seasons || [], season)}
     <div id="shelf-banner"></div>
     <form id="filters" class="card mb-4 grid gap-3 md:grid-cols-4 xl:grid-cols-8">
       <div class="flex gap-2 md:col-span-2">
@@ -49,6 +48,7 @@ export async function renderLibrary(view, state) {
         <option value="">…also in (overlap)</option>${catOpts}</select>
       <select name="spice" class="input filter-more" title="Peppers: how much romance and sexual content">
         <option value="">Any peppers</option>${pepperOptions(null)}
+        <option value="review">⚠ Needs review (the AI wasn't sure)</option>
         <option value="old">Older rating (not on pepper scale)</option><option value="Pending">Not rated yet</option>
         <option value="failed">Rating failed</option>
       </select>
@@ -66,8 +66,9 @@ export async function renderLibrary(view, state) {
         <option value="none">No file</option>
       </select>
       <select name="sort" class="input filter-more">
+        ${event ? `<option value="list">Sort: The event's order</option>` : ""}
         <option value="title">Sort: Title</option><option value="author">Sort: Author</option>
-        <option value="recent">Sort: Recently added</option>
+        <option value="recent">Sort: Recently added</option><option value="mild">Sort: Fewest peppers</option>
       </select>
       <div class="filter-more col-span-full"><span class="label" title="Books with these are hidden (unless a parent marked them OK)">Hide content</span>
         ${hidePicker()}</div>
@@ -76,6 +77,7 @@ export async function renderLibrary(view, state) {
         ${Object.entries(HIDE_LABELS).map(([k, v]) =>
           `<label class="toggle"><input type="checkbox" name="hide" value="${k}"> ${esc(v)}</label>`).join("")}
         ${hideBoxes()}
+        ${event ? `<label class="toggle"><input type="checkbox" name="not_owned"> Hide books we have</label>` : ""}
         <label class="toggle"><input type="checkbox" name="multi"> Only books in 2+ libraries</label>
         <label class="toggle" title="Books whose whole text was read by the AI"><input type="checkbox" name="deep"> 🧬 Deep Scanned only</label>
         <button type="button" id="pepper-help" class="text-xs text-slate-400 underline">🌶️ What do the peppers mean?</button>
@@ -94,8 +96,10 @@ export async function renderLibrary(view, state) {
     <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>`;
 
   const form = $("#filters", view);
-  bindSeasonChips(view.querySelector("[data-season-chips]"));
+  if (!event) bindSeasonChips(view.querySelector("[data-season-chips]"));
   if (collection || season) shelfBanner($("#shelf-banner", view), { collection, season, seasons: shelves.seasons }, state, () => load(true));
+  const evShelf = event ? await eventShelf($("#shelf-banner", view), event, state, () => load(true)) : null;
+  const cardFor = (b) => card(b, on(state.user, "queue"), evShelf?.extra(b) || "");
   const grid = $("#grid", view);
   const sel = setupSelect(view, grid, state, () => load(true));
   let offset = 0;
@@ -118,6 +122,8 @@ export async function renderLibrary(view, state) {
       sort: fd.get("sort"),
       multi: fd.get("multi") === "on",
       deep: fd.get("deep") === "on",
+      not_owned: fd.get("not_owned") === "on",
+      event,
       exclude: fd.getAll("hide").join(","),
       collection,
       season,
@@ -130,7 +136,7 @@ export async function renderLibrary(view, state) {
     const data = await attempt(() => get("/api/books" + qs({ ...params(), offset })));
     if (!data) return;
     if (reset) grid.innerHTML = "";
-    grid.insertAdjacentHTML("beforeend", data.books.map((b) => card(b, on(state.user, "queue"))).join(""));
+    grid.insertAdjacentHTML("beforeend", data.books.map(cardFor).join(""));
     offset += data.books.length;
     $("#result-count", view).textContent = `${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}`;
     $("#more-btn", view).classList.toggle("hidden", offset >= data.total);
@@ -160,6 +166,7 @@ export async function renderLibrary(view, state) {
   bindHidePicker(form);
   $("#more-btn", view).addEventListener("click", () => load(false));
   grid.addEventListener("click", async (e) => {
+    if (evShelf && e.target.closest("[data-ev]")) return void evShelf.click(e); // an event's Claim buttons
     const picked = e.target.closest("[data-book]");
     if (picked && sel.clicked(picked, e)) return; // selecting several books
     const q = e.target.closest("[data-queue]");
@@ -202,44 +209,14 @@ export async function renderLibrary(view, state) {
   for (const k of ["q", "author", "series", "genre", "kind", "catalog", "spice"]) {
     if (preset.get(k) && form.elements[k]) form.elements[k].value = preset.get(k);
   }
-  if ([...preset.keys()].some((k) => !["q", "collection", "season"].includes(k))) form.classList.add("filters-open");
+  if ([...preset.keys()].some((k) => !["q", "collection", "season", "event"].includes(k))) form.classList.add("filters-open");
   countFilters();
   await load(true);
   // Parents see ratings arrive on the cards as the AI works.
-  const stopLive = manager ? liveCards(grid, (b) => card(b, on(state.user, "queue")), () => sel.repaint()) : null;
+  const stopLive = manager ? liveCards(grid, cardFor, () => sel.repaint()) : null;
   if (stopLive) refreshActivity();
   return () => {
     stopLive?.();
     sel.cleanup?.();
   };
-}
-
-// A book already in your Up Next.
-const IN_QUEUE = `<span class="px-2 py-1 text-lg text-emerald-300" title="In your Up Next" aria-label="In your Up Next">✓</span>`;
-
-function card(b, queueOn) {
-  const cats = b.catalogs ? b.catalogs.split(", ").map((c) => `<span class="chip-cat">${esc(c)}</span>`).join(" ") : "";
-  return `
-    <article data-book="${b.id}" data-state="${esc(b.status || "")}" class="card cursor-pointer transition hover:ring-indigo-600 flex flex-col gap-2">
-      <div class="flex items-start justify-between gap-3">
-        ${coverImg(b.id, "h-24 w-16")}
-        <div class="min-w-0 flex-1">
-          <h3 class="font-semibold leading-tight line-clamp-2">${esc(b.title)}</h3>
-          <p class="text-sm text-slate-400 truncate">${esc(b.author || "Unknown author")}${seriesText(b) ? ` · <span class="text-sky-300">${esc(seriesText(b))}</span>` : ""}</p>
-        </div>
-        ${!queueOn ? "" : b.in_queue ? IN_QUEUE : `<button data-queue="${b.id}" title="Add to Up Next" aria-label="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>`}
-      </div>
-      <div data-chips class="flex flex-wrap gap-1">${classChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
-      ${blurbHTML(b)}
-      <div class="mt-auto flex flex-wrap items-center gap-1">${cats} ${formatChips(b)}</div>
-    </article>`;
-}
-
-// File formats (EPUB, AZW3…) and a warning when Calibre has the book twice.
-export function formatChips(b) {
-  const fmts = b.formats ? b.formats.split(",").map((f) => `<span class="chip-fmt">${f === "PAPER" ? "📕 Paper" : esc(f)}</span>`).join(" ") : "";
-  const del = b.delete_requests ? `<span class="chip-dup" title="Someone asked to delete this book">🗑 Delete requested</span>` : "";
-  const dup = b.calibre_copies > 1
-    ? `<span class="chip-dup" title="This book is in Calibre ${b.calibre_copies} times">⚠ ${b.calibre_copies}× in Calibre</span>` : "";
-  return `${fmts} ${dup} ${del}`;
 }

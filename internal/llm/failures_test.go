@@ -23,3 +23,15 @@ func TestFailures(t *testing.T) {
 		}
 	}
 }
+
+func TestReasoning(t *testing.T) {
+	for m, want := range map[string]bool{"deepseek-r1:1.5b": true, "qwen3:8b": true, "qwq": true, "gpt-oss:20b": true,
+		"qwen2.5:7b": false, "llama3.1:8b": false, "llama3.2": false, "gpt-4o-mini": false, "o3-mini": true} {
+		if Reasoning(m) != want {
+			t.Errorf("%s: %v", m, !want)
+		}
+	}
+	if MaxTokens("deepseek-r1:7b") <= MaxTokens("qwen2.5:7b") {
+		t.Fatal("reasoning models need room to think")
+	}
+}

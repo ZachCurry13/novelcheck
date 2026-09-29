@@ -17,13 +17,14 @@ import (
 func (s *Server) handleActivity(w http.ResponseWriter, r *http.Request) {
 	st := s.Worker.Status()
 	out := map[string]any{
-		"state":      st.State,
-		"book_id":    st.CurrentBook,
-		"title":      st.CurrentName,
-		"queue":      st.QueueLength,
-		"waiting":    s.Store.WaitingToRate(),
-		"auto":       analyzer.AutoRateOn(s.Store),
-		"hours_open": analyzer.RateHoursOpen(s.Store, time.Now()),
+		"state":        st.State,
+		"book_id":      st.CurrentBook,
+		"title":        st.CurrentName,
+		"queue":        st.QueueLength,
+		"waiting":      s.Store.WaitingToRate(),
+		"auto":         analyzer.AutoRateOn(s.Store),
+		"hours_open":   analyzer.RateHoursOpen(s.Store, time.Now()),
+		"deep_waiting": s.Deep != nil && s.Deep.Waiting(),
 	}
 	if d := s.Store.ReadingDeepScan(); d != nil {
 		out["deep"] = map[string]any{"id": d.ID, "book_id": d.BookID, "title": d.Title, "part": d.PartsDone + 1, "parts": d.PartsTotal}

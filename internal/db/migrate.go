@@ -58,6 +58,10 @@ func migrate(d *sqlx.DB) error {
 		{"deep_reads", "position", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "ai_features", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "start_page", "TEXT NOT NULL DEFAULT ''"},
+		{"token_usage", "seconds", "REAL NOT NULL DEFAULT 0"},
+		{"books", "confidence", "TEXT NOT NULL DEFAULT ''"},
+		{"events", "ends_at", "TEXT NOT NULL DEFAULT ''"},
+		{"events", "archived_at", "TEXT NOT NULL DEFAULT ''"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {
 			return err

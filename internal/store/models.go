@@ -91,7 +91,8 @@ type Book struct {
 	DarkOccult      bool    `db:"dark_occult" json:"dark_occult"`
 	DemonicPresence bool    `db:"demonic_presence" json:"demonic_presence"`
 	SummaryVerdict  string  `db:"summary_verdict" json:"summary_verdict"`
-	Premise         string  `db:"premise" json:"premise"` // spoiler-free "what it's about", for cards
+	Premise         string  `db:"premise" json:"premise"`       // spoiler-free "what it's about", for cards
+	Confidence      string  `db:"confidence" json:"confidence"` // low = the AI wasn't sure (⚠ Needs review)
 	Approved        bool    `db:"approved" json:"approved"`
 	ApprovedBy      string  `db:"approved_by" json:"approved_by"`
 	AgeLevel        int     `db:"age_level" json:"age_level"`
@@ -144,6 +145,7 @@ type Analysis struct {
 	DemonicPresence bool
 	SummaryVerdict  string
 	Premise         string // spoiler-free "what it's about"; "" keeps the one the book has
+	Confidence      string // the AI's certainty: high, medium or low ("" = high for Deep Scans and parents)
 	Model           string
 	CustomFlags     []string       // keys of the family's filters the book matches
 	Content         []string       // content item keys the book contains
