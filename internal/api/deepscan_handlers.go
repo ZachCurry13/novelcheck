@@ -102,8 +102,8 @@ func (s *Server) handleDeepScans(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	warning, suggest := s.deepModelWarning(r.Context())
-	writeJSON(w, http.StatusOK, map[string]any{"scans": scans, "model_warning": warning, "suggest_model": suggest, "waiting": s.Deep.Waiting(),
+	warning, suggest, warned := s.deepModelWarning(r.Context())
+	writeJSON(w, http.StatusOK, map[string]any{"scans": scans, "model_warning": warning, "suggest_model": suggest, "warned_model": warned, "waiting": s.Deep.Waiting(),
 		"users": deepread.DeepUsers(s.Store.Setting(store.KeyDeepUsers)), "top_n": s.Store.SettingInt(store.KeyDeepTopN)})
 }
 
@@ -196,25 +196,38 @@ func (s *Server) normalizeDeepUsers(v string) string {
 
 // deepModelWarning says so when Deep Scan uses a small local model (under
 // 7B parameters), which often mistakes tense or violent scenes for romance.
-// suggest is the smallest installed model of 7B or more, to switch to in one tap.
-func (s *Server) deepModelWarning(ctx context.Context) (warning, suggest string) {
-	ais := s.Store.AIConfigs()
-	if len(ais) == 0 || len(ais[0].Models) == 0 {
-		return "", ""
+// It checks the machine that really reads the books: the Deep Scan machine
+// when one is set up (AI machines), else the main AI with its Deep Scan
+// model. suggest is the smallest installed model of 7B or more, to switch to
+// in one tap (main AI only); model is the one warned about, which an admin
+// can choose to keep (KeyDeepModelOK).
+func (s *Server) deepModelWarning(ctx context.Context) (warning, suggest, model string) {
+	var baseURL string
+	machine := false
+	if ai, ok := s.Store.DeepAI(); ok {
+		baseURL, model, machine = ai.BaseURL, ai.Models[0], true
+	} else {
+		ais := s.Store.AIConfigs()
+		if len(ais) == 0 || len(ais[0].Models) == 0 {
+			return "", "", ""
+		}
+		baseURL, model = ais[0].BaseURL, ais[0].Models[0]
+		if m := strings.TrimSpace(s.Store.Setting(store.KeyDeepModel)); m != "" {
+			model = m
+		}
 	}
-	model := ais[0].Models[0]
-	if m := strings.TrimSpace(s.Store.Setting(store.KeyDeepModel)); m != "" {
-		model = m
+	if model == s.Store.Setting(store.KeyDeepModelOK) {
+		return "", "", "" // kept on purpose
 	}
-	base, err := ollama.Normalize(strings.TrimSuffix(strings.TrimSuffix(ais[0].BaseURL, "/"), "/v1"))
+	base, err := ollama.Normalize(strings.TrimSuffix(strings.TrimSuffix(baseURL, "/"), "/v1"))
 	if err != nil {
-		return "", ""
+		return "", "", ""
 	}
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	installed, err := ollama.Installed(ctx, base)
 	if err != nil {
-		return "", "" // not Ollama (a cloud AI), or not reachable
+		return "", "", "" // not Ollama (a cloud AI), or not reachable
 	}
 	size := func(m ollama.Model) float64 {
 		b, err := strconv.ParseFloat(strings.TrimSuffix(strings.ToUpper(m.Params), "B"), 64)
@@ -234,10 +247,14 @@ func (s *Server) deepModelWarning(ctx context.Context) (warning, suggest string)
 		}
 	}
 	if current == nil || size(*current) < 0 || size(*current) >= 7 {
-		return "", ""
+		return "", "", ""
 	}
-	return fmt.Sprintf("Deep Scan uses %s (%s parameters). Models this small often mistake tense or violent scenes for romance. "+
-		"A 7B or bigger model is much more reliable, e.g. qwen2.5:7b or llama3.1:8b (about 5 GB), if your GPU fits it.", model, current.Params), suggest
+	where := ""
+	if machine { // the one-tap switch sets the main AI's Deep Scan model, which this machine doesn't use
+		suggest, where = "", " on the Deep Scan machine (change it under Admin → AI & Scans → AI machines)"
+	}
+	return fmt.Sprintf("Deep Scan uses %s (%s parameters)%s. Models this small often mistake tense or violent scenes for romance. "+
+		"A 7B or bigger model is much more reliable, e.g. qwen2.5:7b or llama3.1:8b (about 5 GB), if your GPU fits it.", model, current.Params, where), suggest, model
 }
 
 // handleKeepAllDeepScans turns down every scan waiting for review: each book

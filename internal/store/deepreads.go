@@ -42,6 +42,9 @@ const (
 	KeyDeepModel = "deep_read_model" // optional model for Deep Scans ("" = the main AI's models)
 	KeyDeepUsers = "deep_scan_users" // up to 3 user ids whose Up Next is always Deep Scanned
 	KeyDeepTopN  = "deep_scan_top_n" // how many Up Next books "Deep Scan next" takes (10, 20, 30)
+	// KeyDeepModelOK is a small model an admin chose to keep for Deep Scans
+	// anyway: the "use a bigger model" warning stays away for it.
+	KeyDeepModelOK = "deep_model_ok"
 )
 
 // MaxDeepUsers is how many accounts can have their Up Next scanned automatically.
@@ -49,6 +52,7 @@ const MaxDeepUsers = 3
 
 func init() {
 	Defaults[KeyDeepModel] = ""
+	Defaults[KeyDeepModelOK] = ""
 	Defaults[KeyDeepUsers] = ""
 	Defaults[KeyDeepTopN] = "10"
 }

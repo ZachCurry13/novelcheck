@@ -21,7 +21,11 @@ func (s *Server) handleListQueue(w http.ResponseWriter, r *http.Request) {
 	if items == nil {
 		items = []store.QueueItem{}
 	}
+	progress := s.Store.ReadingProgress(u.ID)
 	for i := range items {
+		if p, ok := progress[items[i].BookID]; ok {
+			items[i].Progress = &p
+		}
 		items[i].File = "none"
 		if items[i].Owned && items[i].Status != "finished" {
 			_, items[i].File = s.fileFor(items[i].BookID, u.DeliveryMethod == "email")

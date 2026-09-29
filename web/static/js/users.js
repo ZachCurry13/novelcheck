@@ -7,6 +7,7 @@ import { on, deliveryOptions } from "./modules.js";
 import { openKOReaderSetup } from "./delivery.js";
 import { loadContent, contentPresets, hidePicker, bindHidePicker, pickedIn } from "./content.js";
 import { collectionLimitHTML, readCollectionLimit } from "./kidcollections.js";
+import { fillKidReading } from "./kidreading.js";
 
 export const RULES = [
   ["hide_open_door", "Hide Open Door"],
@@ -76,6 +77,7 @@ export async function renderUsers(host, viewer) {
     </form>
     ${kids ? "" : `<p class="mb-3 text-xs text-slate-500">Parent tools are turned off (Admin → System & Toggles → Features), so new kid accounts can't be added. Existing kids keep their rules.</p>`}
     <div class="grid gap-3 lg:grid-cols-2">${users.map((u) => userCard(u, isAdmin, viewer)).join("")}</div>`;
+  fillKidReading(root);
 
   $("#new-user", root).addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -134,6 +136,7 @@ function userCard(u, isAdmin, viewer) {
         <div class="min-w-0"><p class="font-semibold">${esc(u.username)}</p><p class="mt-1 flex flex-wrap gap-1">${badges(u)}</p></div>
         <select name="type" class="input w-auto max-w-[60%] py-1 text-sm">${typeOptions(u.role, u.age_level, isAdmin, on(viewer, "parents"))}</select>
       </div>
+      ${u.role === "restricted" && on(viewer, "queue") ? `<div data-reading="${u.id}"></div>` : ""}
       ${u.role === "restricted" ? `<label class="block"><span class="label">Most peppers allowed</span>
         <select name="max_spice" class="input">
           <option value="-1" ${u.max_spice < 0 ? "selected" : ""}>No limit</option>

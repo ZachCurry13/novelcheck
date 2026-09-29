@@ -95,6 +95,9 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		"my_delete_request": s.Store.MyDeleteRequest(id, u.ID), "my_wish": s.Store.MyWish(id, u.ID), "owned": s.Store.Owned(id),
 		"my_cover_report": s.Store.MyCoverReport(id, u.ID), "editable_catalogs": s.editableCatalogs(copies, u),
 		"collections": s.Store.BookCollections(id, u)}
+	if p, ok := s.Store.ReadingProgress(u.ID)[id]; ok {
+		out["my_progress"] = p // from their e-reader's sync
+	}
 	if u.Role == store.RoleAdmin || u.Role == store.RoleEditor {
 		out["calibre_web_url"] = s.Store.Setting(store.KeyCalibreWebURL) // "Open in Calibre-Web" links
 		if ai, ok := s.Store.DeepAI(); ok {

@@ -6,6 +6,8 @@ import { confirmKindleSend, openKOReaderSetup } from "./delivery.js";
 import { renderSuggestions } from "./suggest.js";
 import { coverImg } from "./covers.js";
 import { openBook } from "./bookdialog.js";
+import { progressBar, progressText, pct, ago, setBars } from "./progress.js";
+import { renderKOReaderBooks } from "./koreaderbooks.js";
 
 export async function renderQueue(view, state) {
   view.innerHTML = `
@@ -21,6 +23,7 @@ export async function renderQueue(view, state) {
       <h2 class="label">Queued — drag to reorder</h2>
       <ol id="queued" class="space-y-2"></ol>
     </section>
+    <section id="koreader-books"></section>
     <div id="suggestions"></div>`;
   $("#delivery-mode", view).textContent = {
     email: `Send-to-Kindle (${state.user.kindle_email})`,
@@ -43,6 +46,7 @@ export async function renderQueue(view, state) {
       : `<p class="text-sm text-slate-500">Nothing in progress. Press ▶ Start Reading on a queued book.</p>`;
     queued.innerHTML = next.length ? next.map((i, idx) => queueRow(i, idx, state.user)).join("")
       : `<li class="text-sm text-slate-500">Your queue is empty. Add books from the Library with ＋.</li>`;
+    setBars(reading);
   }
 
   async function saveOrder() {
@@ -79,6 +83,7 @@ export async function renderQueue(view, state) {
   });
 
   await load();
+  if (on(state.user, "koreader")) renderKOReaderBooks($("#koreader-books", view), state, load);
   if (on(state.user, "suggestions")) {
     // A suggestion added to Up Next grows the list above; keep the suggestions
     // where they were on screen (iPhones don't do this by themselves).
@@ -123,6 +128,7 @@ function queueRow(i, idx, user) {
           <span data-title class="font-semibold leading-snug line-clamp-2">${esc(i.title)}</span>
           <span class="block truncate text-xs text-slate-400"><span data-pos>${idx + 1}</span> · ${esc(i.author || "Unknown author")}</span>
           ${deepBanner(i)}
+          ${i.progress ? `<span class="block text-xs text-indigo-300">📖 ${pct(i.progress)}% read · ${ago(i.progress.at)}</span>` : ""}
           ${i.owned ? noFile(i, user) : `<span class="block text-xs text-sky-300">📦 Not in your library yet</span>`}
         </span>
       </button>
@@ -149,7 +155,8 @@ function readingCard(i) {
           <span class="block text-sm text-slate-400">${esc(i.author || "Unknown author")}</span>
         </button>
         ${deepBanner(i)}
-        ${i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
+        ${i.progress ? `<div class="space-y-1">${progressBar(i.progress)}<p class="text-xs text-slate-400">📖 ${progressText(i.progress)}</p></div>`
+          : i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
         <div class="flex gap-2"><button data-act="finish" class="btn-secondary">Finished</button>
           <button data-act="remove" class="btn-ghost">Remove</button></div></div>
     </div>`;

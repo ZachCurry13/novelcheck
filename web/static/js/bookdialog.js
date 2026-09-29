@@ -17,6 +17,7 @@ import { coverImg, reportCover } from "./covers.js";
 import { loadContent, contentIcons, contentSection } from "./content.js";
 import { blurbHTML } from "./blurb.js";
 import { bookCollectionsHTML, bindBookCollections } from "./bookcollections.js";
+import { progressText } from "./progress.js";
 
 // Lists that aren't the family's libraries: books only looked up (Check a
 // book) or on a Discover list.
@@ -74,6 +75,7 @@ export async function openBook(id, state, onChange) {
           <h2 class="text-xl font-bold">${esc(b.title)}</h2>
           ${b.series ? `<p>${seriesLink(b, seriesText(b))}</p>` : seriesLine(b)}
           <p class="text-slate-400">${authorLinks(b.author)}${b.isbn ? " · ISBN " + esc(b.isbn) : ""}</p>
+          ${data.my_progress ? `<p class="mt-1 text-sm text-indigo-300" title="From your e-reader's sync">📖 Your progress: ${progressText(data.my_progress)}</p>` : ""}
           ${isAdmin && calibreIds.length ? `<p class="mt-1 text-xs ${b.title_fix ? "text-amber-300" : "text-slate-500"}">${b.title_fix ? `In Calibre: “${esc(b.title_fix)}” · ` : ""}<button type="button" data-act="calibre-title" class="underline">✏️ ${b.title_fix ? "Tidy it in Calibre" : "Edit title in Calibre"}</button></p>` : ""}
         </div>
       </div>

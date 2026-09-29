@@ -4,6 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.29.0]
+
+### 📖 Reading progress
+- **How far you are, everywhere.** Books you read in KOReader (or an app that uses KOReader's progress sync, like Readest) show a progress bar in **Up Next** with the device and when you last read. A queued book you've started elsewhere shows its %, and a book's window says **Your progress**. With several devices, the newest place wins.
+- **📱 On your KOReader.** Point KOReader's **Reading statistics → Cloud sync** at NovelCheck (**KOReader setup** shows the steps) and Up Next lists every book opened on your KOReader devices, with how far you are, how long you've read and when. That includes books that didn't come from NovelCheck, and it combines all your KOReader devices. Books already in Up Next move to Reading when opened and to Finished at the end. Other books aren't added, since the statistics go back years.
+- **Parents see a kid's reading** on their card under **Admin → Users**: what they're reading now, how far along, and what they opened lately in KOReader.
+
+### 🔧 Fixes
+- **The Deep Scan "small model" warning checks the right machine.** With a Deep Scan machine set up under **AI machines**, it now looks at that machine's model instead of the main AI's. **Keep using it** hides the warning for a smaller model you chose on purpose.
+
 ## [1.28.1]
 
 ### 🔧 Fixes

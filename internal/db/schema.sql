@@ -465,6 +465,21 @@ CREATE TABLE IF NOT EXISTS format_removals (
     restored_at DATETIME
 );
 CREATE INDEX IF NOT EXISTS idx_format_removals_batch ON format_removals(batch);
+-- Books opened on a reader's KOReader devices, from KOReader's reading
+-- statistics (synced to their NovelCheck WebDAV folder); replaced on each sync.
+CREATE TABLE IF NOT EXISTS koreader_books (
+    user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title        TEXT NOT NULL,
+    authors      TEXT NOT NULL DEFAULT '',
+    md5          TEXT NOT NULL DEFAULT '',
+    book_id      INTEGER REFERENCES books(id) ON DELETE SET NULL,
+    pages        INTEGER NOT NULL DEFAULT 0,
+    percent      REAL NOT NULL DEFAULT 0,
+    read_seconds INTEGER NOT NULL DEFAULT 0,
+    last_open    INTEGER NOT NULL DEFAULT 0,  -- Unix seconds
+    PRIMARY KEY (user_id, title, authors, md5)
+);
+CREATE INDEX IF NOT EXISTS idx_koreader_books_book ON koreader_books(book_id);
 CREATE TABLE IF NOT EXISTS kosync_progress (
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     document   TEXT NOT NULL,

@@ -50,6 +50,7 @@ type Server struct {
 	Web         fs.FS                // embedded static assets
 	logins      *loginLimiter
 	formats     formatJob // format cleanup's background job
+	dav         davState  // KOReader statistics folders
 	etags       sync.Map  // static file name → ETag
 	buildOnce   sync.Once // buildID, computed once
 	build       string
@@ -78,6 +79,9 @@ func (s *Server) Router() http.Handler {
 		r.Put("/syncs/progress", s.handleKosyncPut)
 		r.Get("/syncs/progress/{document}", s.handleKosyncGet)
 	})
+	// KOReader's reading statistics (Cloud sync): a private WebDAV folder, same sign-in.
+	r.Handle("/dav", http.HandlerFunc(s.handleDAV))
+	r.Handle("/dav/*", http.HandlerFunc(s.handleDAV))
 
 	r.Route("/api", func(r chi.Router) {
 		r.Use(noStore, cors(s.Cfg.CORSOrigins), csrfGuard)
@@ -101,6 +105,7 @@ func (s *Server) Router() http.Handler {
 			r.Post("/me/opds/reset", s.handleResetMyOPDS)
 			r.Get("/me/kosync", s.handleMyKosync)
 			r.Post("/me/kosync", s.handleMyKosync)
+			r.Get("/me/koreader-books", s.handleMyKOReaderBooks)
 
 			r.Get("/books", s.handleListBooks)
 			r.Get("/books/facets", s.handleBookFacets)
@@ -182,6 +187,7 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/users/{id}/opds", s.handleUserOPDS)
 				r.Get("/admin/users/{id}/kosync", s.handleUserKosync)
 				r.Post("/admin/users/{id}/kosync", s.handleUserKosync)
+				r.Get("/admin/users/{id}/reading", s.handleUserReading)
 				r.Post("/catalogs", s.handleCreateCatalog)
 				r.Patch("/catalogs/{id}", s.handleUpdateCatalog)
 				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)

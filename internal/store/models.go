@@ -182,4 +182,6 @@ type QueueItem struct {
 	// for the reader's delivery method), "other" (only formats Amazon no longer
 	// takes by email, like AZW3 or MOBI) or "none" (paper, an imported list).
 	File string `db:"-" json:"file"`
+	// Progress is how far the reader is, from their e-reader (set by the API).
+	Progress *Progress `db:"-" json:"progress,omitempty"`
 }

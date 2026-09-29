@@ -135,7 +135,7 @@ func (s *Server) handleMyKosync(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"username": u.Username, "code": code, "path": "/kosync"})
+	writeJSON(w, http.StatusOK, map[string]string{"username": u.Username, "code": code, "path": "/kosync", "dav": "/dav/"})
 }
 
 // handleUserKosync is a kid's (or, for admins, anyone's) sync code, for a
@@ -160,5 +160,5 @@ func (s *Server) handleUserKosync(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"username": target.Username, "code": code, "path": "/kosync"})
+	writeJSON(w, http.StatusOK, map[string]string{"username": target.Username, "code": code, "path": "/kosync", "dav": "/dav/"})
 }

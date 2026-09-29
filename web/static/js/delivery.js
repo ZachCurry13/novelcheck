@@ -84,12 +84,13 @@ export async function openKOReaderSetup(userId) {
     d.innerHTML = `<div class="max-h-[85vh] space-y-4 overflow-y-auto p-5">
       <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">📖 Set up KOReader</h2>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>${koreaderHTML(url, i.username, !userId)}
-      ${s ? syncHTML(location.origin + s.path, s.username, s.code) : ""}</div>`;
+      ${s ? syncHTML(location.origin + s.path, s.username, s.code) + statsHTML(location.origin + s.dav, s.username, s.code) : ""}</div>`;
     d.onclick = async (e) => {
       const ko = e.target.closest("[data-ko]")?.dataset.ko;
       if (e.target === d || e.target.closest("[data-close]")) d.close();
       else if (ko === "copy") copyText(url);
       else if (ko === "copy-sync") copyText(location.origin + s.path);
+      else if (ko === "copy-dav") copyText(location.origin + s.dav);
       else if (ko === "reset" && confirm("Make a new address? KOReader will need the new one.")) {
         const n = await attempt(() => post("/api/me/opds/reset"), "New address made");
         if (n) render(n, s);
@@ -117,4 +118,21 @@ function syncHTML(url, username, code) {
       <li>Turn on <b>Auto sync</b>. Leave <b>Document matching method</b> on <b>Binary</b>.</li>
     </ol>
     <button type="button" data-ko="new-code" class="btn-ghost py-1 text-xs">Make a new sync code</button></div>`;
+}
+
+// statsHTML: KOReader's reading statistics synced to a private NovelCheck
+// folder, so Up Next shows every book opened on the reader's devices.
+function statsHTML(url, username, code) {
+  return `<div class="space-y-2 border-t border-slate-800 pt-4">
+    <h3 class="font-semibold">📊 Reading statistics</h3>
+    <p class="text-sm text-slate-400">NovelCheck can also keep KOReader's reading statistics: then Up Next shows every book opened on your KOReader devices (any book, not only ones from NovelCheck), how far you are and how long you've read. With several devices, each one syncs to the same place.</p>
+    <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
+      <li>In KOReader's file browser, tap the <b>🔍 search</b> icon in the top menu, then <b>Cloud storage</b> (next to OPDS catalog). Tap <b>＋</b>, choose <b>WebDAV</b> and enter:
+        <span class="mt-1 flex items-center gap-2"><code class="min-w-0 break-all rounded bg-slate-800 px-2 py-1 text-xs">${esc(url)}</code>
+        <button type="button" data-ko="copy-dav" class="btn-ghost shrink-0 py-1 text-xs">📋 Copy</button></span>
+        Username <b>${esc(username)}</b>, password <code class="rounded bg-slate-800 px-2 py-0.5">${esc(code)}</code> (the same sync code). Name it <b>NovelCheck</b>.</li>
+      <li>In a book, open the top menu → <b>🛠 Tools</b> → <b>Reading statistics</b> → <b>Settings</b> → <b>Cloud sync</b>, pick <b>NovelCheck</b> and its top folder.</li>
+      <li>Then <b>Reading statistics</b> → <b>Synchronize now</b>. Do that again whenever you want NovelCheck to catch up.</li>
+    </ol>
+    <p class="text-xs text-slate-500">Menu names can differ a little between KOReader versions.</p></div>`;
 }
