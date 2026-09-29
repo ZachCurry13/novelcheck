@@ -13,12 +13,17 @@ type meJSON struct {
 	Modules      map[string]bool `json:"modules"`
 	DeliveryFrom string          `json:"delivery_from"`       // the Send-to-Kindle sender, for Amazon's approved list
 	SafeMode     string          `json:"safe_mode,omitempty"` // admins: why background work is off (env, flag, crash)
+	FamilyDevice bool            `json:"family_device"`       // this device shows "Who's reading?"
+	HasPin       bool            `json:"has_pin"`
 }
 
 func (s *Server) me(u *store.User) meJSON {
 	out := meJSON{User: u, Modules: s.Store.Modules(), DeliveryFrom: s.Store.Setting(store.KeySMTPFrom)}
 	if u != nil && u.Role == store.RoleAdmin {
 		out.SafeMode = s.Safe.Reason()
+	}
+	if u != nil {
+		out.HasPin = s.Store.PinHash(u.ID) != ""
 	}
 	return out
 }

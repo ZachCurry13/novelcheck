@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
     font             TEXT NOT NULL DEFAULT '',     -- '' or 'dyslexic'
     motion           TEXT NOT NULL DEFAULT '',     -- '' = match the device, 'reduce'
     kosync_code      TEXT NOT NULL DEFAULT '',     -- KOReader progress sync code ('' = not set up)
+    pin_hash         TEXT NOT NULL DEFAULT '',     -- bcrypt of a 4-digit PIN for family devices ('' = none)
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -33,6 +34,17 @@ CREATE TABLE IF NOT EXISTS sessions (
     expires_at DATETIME NOT NULL,
     remember   INTEGER NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Shared devices where everyone picks their profile ("Who's reading?"):
+-- the device keeps a private key in a cookie; only its digest is stored.
+CREATE TABLE IF NOT EXISTS family_devices (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    token_hash TEXT NOT NULL UNIQUE,
+    name       TEXT NOT NULL DEFAULT '',
+    created_by TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS catalogs (

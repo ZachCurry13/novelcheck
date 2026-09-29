@@ -56,7 +56,7 @@ function openMore(links) {
     <div class="border-t border-slate-800 pt-2">
       ${item("❔", "How to use NovelCheck", "data-help")}
       ${item("🐞", "Report a problem or idea", "data-report")}
-      ${item("🚪", "Sign out", "data-logout")}
+      ${document.getElementById("logout-btn")?.textContent.includes("Switch") ? item("👥", "Switch profile", "data-logout") : item("🚪", "Sign out", "data-logout")}
     </div>
   </div>`;
   d.onclick = (e) => {

@@ -8,6 +8,7 @@ import { openKOReaderSetup } from "./delivery.js";
 import { loadContent, contentPresets, hidePicker, bindHidePicker, pickedIn } from "./content.js";
 import { collectionLimitHTML, readCollectionLimit } from "./kidcollections.js";
 import { fillKidReading } from "./kidreading.js";
+import { renderFamilyDevices, setUserPIN } from "./familysettings.js";
 
 export const RULES = [
   ["hide_open_door", "Hide Open Door"],
@@ -76,8 +77,10 @@ export async function renderUsers(host, viewer) {
       <button class="btn-primary">Add user</button>
     </form>
     ${kids ? "" : `<p class="mb-3 text-xs text-slate-500">Parent tools are turned off (Admin → System & Toggles → Features), so new kid accounts can't be added. Existing kids keep their rules.</p>`}
+    <div id="family-devices"></div>
     <div class="grid gap-3 lg:grid-cols-2">${users.map((u) => userCard(u, isAdmin, viewer)).join("")}</div>`;
   fillKidReading(root);
+  renderFamilyDevices($("#family-devices", root));
 
   $("#new-user", root).addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -118,6 +121,8 @@ export async function renderUsers(host, viewer) {
       await attempt(() => put(`/api/admin/users/${id}`, body), preset ? preset.done : "User saved");
     } else if (act === "koreader") {
       openKOReaderSetup(id);
+    } else if (act === "pin") {
+      setUserPIN(id, cardEl.querySelector("p.font-semibold")?.textContent || "this account");
     } else if (act === "password") {
       const pw = prompt("New password (8+ characters):");
       if (pw) await attempt(() => put(`/api/admin/users/${id}/password`, { password: pw }), "Password reset");
@@ -158,6 +163,7 @@ function userCard(u, isAdmin, viewer) {
       <div class="flex flex-wrap gap-2">
         <button data-uact="save" class="btn-primary">Save</button>
         <button data-uact="password" class="btn-secondary">Reset password</button>
+        ${isAdmin || u.role === "restricted" ? `<button data-uact="pin" class="btn-ghost" title="A 4-digit PIN for family devices">🔢 PIN</button>` : ""}
         ${(isAdmin || u.role === "restricted") && on(viewer, "koreader") ? `<button data-uact="koreader" class="btn-ghost" title="Set up this reader's KOReader">📖 KOReader</button>` : ""}
         <button data-uact="delete" class="btn-danger">Delete</button>
       </div>

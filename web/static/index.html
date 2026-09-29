@@ -30,7 +30,13 @@
       <label class="toggle"><input type="checkbox" name="remember" checked> Keep me signed in on this device</label>
       <p id="login-error" class="hidden text-sm text-rose-400"></p>
       <button class="btn-primary w-full">Sign in</button>
+      <button type="button" id="back-to-family" class="btn-ghost hidden w-full">‹ Back to profiles</button>
     </form>
+  </section>
+
+  <!-- Who's reading? (a family device a parent set up) -->
+  <section id="family-view" class="hidden min-h-screen p-6">
+    <div id="family-picker" class="mx-auto w-full max-w-lg"></div>
   </section>
 
   <!-- First-run setup (only while no accounts exist) -->

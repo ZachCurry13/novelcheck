@@ -27,7 +27,9 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusUnauthorized, "invalid username or password")
 		return
 	}
-	writeJSON(w, http.StatusOK, s.me(u))
+	out := s.me(u)
+	out.FamilyDevice = s.Auth.FamilyDevice(nil, r) != nil
+	writeJSON(w, http.StatusOK, out)
 }
 
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +38,9 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, s.me(auth.UserFrom(r)))
+	out := s.me(auth.UserFrom(r))
+	out.FamilyDevice = s.Auth.FamilyDevice(nil, r) != nil
+	writeJSON(w, http.StatusOK, out)
 }
 
 // handleGuideSeen marks the first-login "How to" guide as done (or, with

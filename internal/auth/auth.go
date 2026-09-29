@@ -104,15 +104,9 @@ func (m *Manager) Login(w http.ResponseWriter, r *http.Request, username, passwo
 	if !CheckPassword(u.PasswordHash, password) {
 		return nil, errors.New("invalid username or password")
 	}
-	token := RandomToken(32)
-	life := shortSession
-	if remember {
-		life = m.lifetime()
-	}
-	if err := m.Store.CreateSession(hashToken(token), u.ID, life, remember); err != nil {
+	if err := m.startSession(w, r, u.ID, remember); err != nil {
 		return nil, err
 	}
-	m.setCookie(w, r, token, remember)
 	return u, nil
 }
 

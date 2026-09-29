@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.30.0]
+
+### 👥 Who's reading? (family devices)
+- **A shared tablet or computer can open on everyone's profiles.** A parent turns it on in **Profile → Family device & PIN → Use this device for the whole family**. The device then opens on **Who's reading?**: kids tap their name, and anyone with a PIN types it on a big keypad.
+- **Parents stay protected.** A parent profile asks for its **4-digit PIN**, or the password if no PIN is set, so a kid can't tap into a parent's account. After 5 wrong tries, that profile is locked on that device for a while.
+- **Switch profile** replaces **Sign out** on a family device, in the top bar and in More on phones.
+- **PINs:** set or change your own in Profile (your password confirms it). Parents can set a kid's PIN with **🔢 PIN** on their card under Admin → Users, where family devices are also listed and can be removed.
+- Signing in on your own devices doesn't change.
+
 ## [1.29.0]
 
 ### 📖 Reading progress

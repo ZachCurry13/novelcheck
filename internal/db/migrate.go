@@ -66,6 +66,7 @@ func migrate(d *sqlx.DB) error {
 		{"users", "font", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "motion", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "kosync_code", "TEXT NOT NULL DEFAULT ''"},
+		{"users", "pin_hash", "TEXT NOT NULL DEFAULT ''"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {
 			return err

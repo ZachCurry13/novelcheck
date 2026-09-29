@@ -51,6 +51,7 @@ type Server struct {
 	logins      *loginLimiter
 	formats     formatJob // format cleanup's background job
 	dav         davState  // KOReader statistics folders
+	pins        pinTries  // wrong PINs on family devices
 	etags       sync.Map  // static file name → ETag
 	buildOnce   sync.Once // buildID, computed once
 	build       string
@@ -89,10 +90,14 @@ func (s *Server) Router() http.Handler {
 		r.Post("/auth/logout", s.handleLogout)
 		r.Get("/setup", s.handleSetupStatus)
 		r.Post("/setup", s.handleSetup)
+		// "Who's reading?": only answers on a device a parent marked.
+		r.Get("/family", s.handleFamily)
+		r.Post("/family/switch", s.handleFamilySwitch)
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.Auth.RequireUser)
 			r.Get("/me", s.handleMe)
+			r.Put("/me/pin", s.handleMyPIN)
 			r.Put("/me/password", s.handleChangePassword)
 			r.Put("/me/delivery", s.handleUpdateDelivery)
 			r.Put("/me/guide-seen", s.handleGuideSeen)
@@ -188,6 +193,11 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/users/{id}/kosync", s.handleUserKosync)
 				r.Post("/admin/users/{id}/kosync", s.handleUserKosync)
 				r.Get("/admin/users/{id}/reading", s.handleUserReading)
+				r.Put("/admin/users/{id}/pin", s.handleUserPIN)
+				r.Post("/me/family-device", s.handleMakeFamilyDevice)
+				r.Delete("/me/family-device", s.handleMakeFamilyDevice)
+				r.Get("/admin/family-devices", s.handleFamilyDevices)
+				r.Delete("/admin/family-devices/{id}", s.handleFamilyDevices)
 				r.Post("/catalogs", s.handleCreateCatalog)
 				r.Patch("/catalogs/{id}", s.handleUpdateCatalog)
 				r.Delete("/catalogs/{id}", s.handleDeleteCatalog)

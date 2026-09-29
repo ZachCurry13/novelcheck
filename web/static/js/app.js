@@ -28,6 +28,7 @@ import { on, applyModules } from "./modules.js";
 import { buildMobileNav, markMobileNav } from "./mobilenav.js";
 import { keepUpToDate } from "./appupdate.js";
 import { initActivity } from "./activity.js";
+import { showFamily } from "./family.js";
 
 export const state = { user: null };
 
@@ -59,12 +60,24 @@ const NAV_OF = { series: "collections", wishlist: "discover", events: "discover"
   duplicates: "admin", deletions: "admin" };
 
 function showOnly(id) {
-  for (const v of ["#setup-view", "#login-view", "#app-view"]) $(v).classList.toggle("hidden", v !== id);
+  for (const v of ["#setup-view", "#login-view", "#family-view", "#app-view"]) $(v).classList.toggle("hidden", v !== id);
 }
 
-function showLogin() {
+function showLogin(family = false) {
   state.user = null;
+  $("#back-to-family").classList.toggle("hidden", !family);
   showOnly("#login-view");
+}
+
+// showSignIn opens "Who's reading?" on a family device, else the sign-in form.
+async function showSignIn() {
+  state.user = null;
+  const signedIn = (u) => {
+    state.user = u;
+    showApp();
+  };
+  if (await showFamily(signedIn, () => showLogin(true))) showOnly("#family-view");
+  else showLogin();
 }
 
 function showApp() {
@@ -77,6 +90,7 @@ function showApp() {
   initBell(state);
   initActivity(state);
   $("#admin-tab").textContent = state.user.role === "admin" ? "Admin" : "Manage";
+  $("#logout-btn").textContent = state.user.family_device ? "👥 Switch profile" : "Sign out";
   buildMobileNav();
   route();
   if (!state.user.guide_seen) openGuide(state);
@@ -104,7 +118,8 @@ async function route() {
 }
 
 async function boot() {
-  setUnauthorizedHandler(showLogin);
+  setUnauthorizedHandler(showSignIn);
+  $("#back-to-family").addEventListener("click", showSignIn);
   $("#login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -125,7 +140,7 @@ async function boot() {
   });
   $("#logout-btn").addEventListener("click", async () => {
     await attempt(() => post("/api/auth/logout"));
-    showLogin();
+    showSignIn();
   });
   window.addEventListener("hashchange", route);
   for (const id of ["#help-btn", "#help-link"]) {
@@ -148,7 +163,7 @@ async function boot() {
   } catch {
     const setup = await get("/api/setup").catch(() => ({}));
     if (setup.needed) showOnly("#setup-view");
-    else showLogin();
+    else showSignIn();
   }
 }
 
