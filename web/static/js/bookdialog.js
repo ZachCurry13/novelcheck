@@ -188,7 +188,7 @@ export async function openBook(id, state, onChange) {
     }
   };
   dlg.showModal();
-  renderDeepSection($("#deep-section", dlg), b.id, state.user);
+  renderDeepSection($("#deep-section", dlg), b.id, state.user, b.title);
   bindBookCollections(dlg, b.id, manager, data.collections || []);
 }
 

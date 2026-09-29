@@ -1,7 +1,8 @@
 // 🧬 Deep Scan: the AI reads a whole book (EPUB) in parts. In the book
-// window: status, notes per part, and start / request buttons.
+// window: status, notes per part (for parents, each scene and 📖 to read it
+// in the book), and start / request buttons.
 import { get, post } from "./api.js";
-import { esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes } from "./ui.js";
+import { esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes, canManage } from "./ui.js";
 
 const STATUS = {
   requested: "🕓 Deep Scan requested; waiting for an admin to approve it.",
@@ -27,8 +28,21 @@ export function deepChangeLine(d) {
   return `<p class="text-sm font-semibold ${up ? "text-amber-300" : "text-emerald-300"}">${up ? "⚠️ Rating changed via Deep Scan" : "✓ Deep Scan lowered the rating"}: Level ${d.prev_level} → Level ${d.new_level}</p>`;
 }
 
+// foundHTML lists the parts a scan noted. Parents also get what happened in
+// each scene and 📖 to read that part in the book.
+function foundHTML(notes, parents) {
+  const list = `<ul class="space-y-2 text-sm">${notes.map((n) => `<li${parents ? ` class="rounded-md bg-slate-900/60 p-2"` : ""}>
+    <b>${esc(n.label)}</b> · Level ${n.level}${n.note ? `: ${esc(n.note)}` : ""}
+    ${parents && n.scene ? `<p class="mt-1 text-xs text-slate-400">${esc(n.scene)}</p>` : ""}
+    ${parents ? `<button type="button" data-read data-from="${n.from || 0}" data-to="${n.to || 0}" data-label="${esc(n.label)}"
+      class="mt-1 block text-left text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button>` : ""}</li>`).join("")}</ul>`;
+  if (!parents) return list;
+  return `<details class="rounded-lg bg-slate-900/40 px-3 py-2"><summary class="cursor-pointer py-1 text-sm text-slate-300">
+    What the AI found (${notes.length} part${notes.length === 1 ? "" : "s"})</summary><div class="mt-1">${list}</div></details>`;
+}
+
 // renderDeepSection fills host (in the book window) and wires its buttons.
-export async function renderDeepSection(host, bookId, user) {
+export async function renderDeepSection(host, bookId, user, title = "") {
   const info = await get(`/api/books/${bookId}/deep-scan`).catch(() => null);
   if (!info) return;
   const d = info.latest;
@@ -41,7 +55,7 @@ export async function renderDeepSection(host, bookId, user) {
     const notes = JSON.parse(d.notes || "[]");
     body = `<p class="text-sm text-emerald-300">🧬 Deep Scanned: the whole book was read${d.model ? ` by ${esc(d.model)}` : ""} (${esc(when(d.updated_at).toLocaleDateString())}).</p>
       ${deepChangeLine(d)}
-      ${notes.length ? `<ul class="space-y-1 text-sm">${notes.map((n) => `<li><b>${esc(n.label)}</b> · Level ${n.level}${n.note ? `: ${esc(n.note)}` : ""}</li>`).join("")}</ul>`
+      ${notes.length ? foundHTML(notes, canManage(user))
         : `<p class="text-sm text-slate-400">No romance or flagged content was noted anywhere in the text.</p>`}`;
   } else if (d?.status === "error") {
     body = `<p class="text-sm text-rose-300">The last Deep Scan failed: ${esc(d.error)}</p>`;
@@ -64,6 +78,11 @@ export async function renderDeepSection(host, bookId, user) {
     ${admin && d?.status === "reading" ? `<button data-deep="cancel" data-id="${d.id}" class="btn-ghost text-xs">Stop this Deep Scan</button>` : ""}
     <div class="flex flex-wrap items-center gap-2">${action}</div></div>`;
   host.onclick = async (e) => {
+    const read = e.target.closest("[data-read]");
+    if (read && d) {
+      return import("./deepreader.js").then((m) => m.openPassage(d.id, title,
+        { from: Number(read.dataset.from), to: Number(read.dataset.to), label: read.dataset.label }));
+    }
     const act = e.target.closest("[data-deep]")?.dataset.deep;
     if (act === "start") {
       if (!confirm(`Deep Scan this book? The AI reads all ${fmtNum(info.estimate.words)} words (${fmtNum(info.estimate.tokens)} tokens${info.cost ? `, about ${fmtMoney(info.cost)}` : ""}).`)) return;

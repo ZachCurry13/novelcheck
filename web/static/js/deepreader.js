@@ -1,4 +1,5 @@
-// The reader in Deep Scan Review: the part a scan flagged, highlighted in the
+// The reader in Deep Scan Review and in a scanned book's window (parents):
+// the part a scan noted, highlighted in the
 // book's own text with what comes before and after it, so a parent can read
 // the scene and decide. ◀ Earlier / Later ▶ move through the book a part at a
 // time. It follows each person's font and theme.

@@ -159,6 +159,7 @@ func (s *Server) Router() http.Handler {
 			r.Group(func(r chi.Router) {
 				r.Use(auth.RequireManager)
 				r.Post("/check", s.handleCheck)
+				r.Get("/admin/deep-scans/{id}/passage", s.handleDeepPassage) // parents read a scanned part
 				r.Get("/activity", s.handleActivity)
 				r.Post("/collections", s.handleCreateCollection)
 				r.Patch("/collections/{id}", s.handleUpdateCollection)
@@ -234,7 +235,6 @@ func (s *Server) Router() http.Handler {
 				r.Post("/admin/deep-scans/keep-all", s.handleKeepAllDeepScans)
 				r.Post("/admin/deep-scans/accept-all", s.handleAcceptAllDeepScans)
 				r.Put("/admin/deep-scans/order", s.handleOrderDeepScans)
-				r.Get("/admin/deep-scans/{id}/passage", s.handleDeepPassage)
 				r.Get("/admin/aitools", s.handleAIToolsStatus)
 				r.Post("/admin/safe-mode/leave", s.handleLeaveSafeMode)
 				r.Post("/admin/aitools/check-updates", s.handleCheckModelUpdates)

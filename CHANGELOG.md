@@ -15,6 +15,9 @@ becomes the release notes for that version and is shown in the app under
 - **Split books are real books:** each gets its own card and rating, counts as yours, and opens and downloads the box set's file. **Undo the split** puts it back.
 - The box set's file can't be removed or renamed from a split book, only from the box set.
 
+### 🧬 Deep Scan details on every scanned book
+- In the window of any Deep Scanned book, parents (admins and editors) get **What the AI found**: each part it noted, what happens in the scene, and **📖 Read this part in the book**, the same reader as in Review. Until now these were only there for scans waiting for review. Kids see the short list of parts as before.
+
 ### 🎯 Shelves that stay on theme
 - **Stricter AI picks.** When the AI fills a collection or builds a seasonal shelf, it keeps only books that are clearly *about* the theme (their subject, setting or main characters), not ones that just share a mood or a lesson. It no longer tries to fill the list, and it checks each pick a second time with a differently worded question. A theme "for families" or "for ages 8–10" no longer pulls in every children's book.
 - **Seasonal shelves match whole words.** "Saint" finds saints but not "saintly" or "Saint Louis", "Lent" no longer catches "lent him a book", and vague phrases like "lives of the" are gone.
