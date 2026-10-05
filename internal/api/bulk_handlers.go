@@ -77,7 +77,7 @@ func (s *Server) bulkDeep(b *store.Book, u *store.User, reason string) string {
 	if err != nil {
 		return "no_epub"
 	}
-	admin := u.Role == store.RoleAdmin
+	admin := u.Can(store.AreaDeep) // starts it; anyone else asks
 	source := map[bool]string{true: "admin", false: "request"}[admin]
 	if _, err := s.Store.RequestDeepRead(b.ID, source, u.Username, reason, admin, e.Words, e.Parts, e.Tokens); err != nil {
 		if errors.Is(err, store.ErrDeepReadOpen) {

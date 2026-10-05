@@ -67,12 +67,35 @@ func migrate(d *sqlx.DB) error {
 		{"users", "motion", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "kosync_code", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "pin_hash", "TEXT NOT NULL DEFAULT ''"},
+		{"users", "owner", "INTEGER NOT NULL DEFAULT 0"},
+		{"users", "admin_areas", "TEXT NOT NULL DEFAULT ''"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {
 			return err
 		}
 	}
+	if err := firstOwner(d); err != nil {
+		return err
+	}
 	return moveLGBTQ(d)
+}
+
+// firstOwner runs once, on the first start of a version with a main admin:
+// the earliest admin becomes the main admin, and the other admins keep
+// reaching everything (as before) until the main admin changes it.
+func firstOwner(d *sqlx.DB) error {
+	var owners, admins int
+	if err := d.Get(&owners, `SELECT COUNT(*) FROM users WHERE owner = 1`); err != nil || owners > 0 {
+		return err
+	}
+	if err := d.Get(&admins, `SELECT COUNT(*) FROM users WHERE role = 'admin'`); err != nil || admins == 0 {
+		return err
+	}
+	if _, err := d.Exec(`UPDATE users SET owner = 1 WHERE id = (SELECT MIN(id) FROM users WHERE role = 'admin')`); err != nil {
+		return err
+	}
+	_, err := d.Exec(`UPDATE users SET admin_areas = 'ai,deep,calibre,services,system,users' WHERE role = 'admin' AND owner = 0`)
+	return err
 }
 
 // moveLGBTQ turns the LGBTQ+ flag and hide rule (before v1.19) into the

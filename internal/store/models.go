@@ -60,6 +60,8 @@ type User struct {
 	Theme           string   `db:"theme" json:"theme"`                       // "" = match the device, "dark", "light"
 	Font            string   `db:"font" json:"font"`                         // "" or "dyslexic"
 	Motion          string   `db:"motion" json:"motion"`                     // "" = match the device, "reduce"
+	Owner           bool     `db:"owner" json:"owner"`                       // the main admin (see areas.go)
+	AdminAreas      string   `db:"admin_areas" json:"admin_areas"`           // other admins: the areas they may reach
 }
 
 func (u *User) IsAdmin() bool { return u.Role == RoleAdmin }

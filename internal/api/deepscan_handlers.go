@@ -76,7 +76,7 @@ func (s *Server) handleStartDeepScan(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	admin := u.Role == store.RoleAdmin
+	admin := u.Can(store.AreaDeep) // starts it; anyone else asks
 	source := map[bool]string{true: "admin", false: "request"}[admin]
 	if _, err := s.Store.RequestDeepRead(id, source, u.Username, body.Reason, admin, e.Words, e.Parts, e.Tokens); err != nil {
 		if errors.Is(err, store.ErrDeepReadOpen) {

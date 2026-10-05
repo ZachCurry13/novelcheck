@@ -229,8 +229,8 @@ func (s *Server) handleUserPIN(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "no such user")
 		return
 	}
-	if auth.UserFrom(r).Role != store.RoleAdmin && target.Role != store.RoleRestricted {
-		writeErr(w, http.StatusForbidden, "editors can only set kids' PINs")
+	if !canManageUser(auth.UserFrom(r), target) {
+		writeErr(w, http.StatusForbidden, "you can set kids' PINs; the main admin manages the other parents")
 		return
 	}
 	s.setPIN(w, target.ID, body.PIN)

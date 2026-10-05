@@ -151,8 +151,8 @@ func (s *Server) handleUserKosync(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "no such user")
 		return
 	}
-	if auth.UserFrom(r).Role != store.RoleAdmin && target.Role != store.RoleRestricted {
-		writeErr(w, http.StatusForbidden, "editors can only set up kids' devices")
+	if !canManageUser(auth.UserFrom(r), target) {
+		writeErr(w, http.StatusForbidden, "you can set up kids' devices; the main admin manages the other parents")
 		return
 	}
 	code, err := s.Store.KosyncCode(target.ID, r.Method == http.MethodPost)

@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS users (
     motion           TEXT NOT NULL DEFAULT '',     -- '' = match the device, 'reduce'
     kosync_code      TEXT NOT NULL DEFAULT '',     -- KOReader progress sync code ('' = not set up)
     pin_hash         TEXT NOT NULL DEFAULT '',     -- bcrypt of a 4-digit PIN for family devices ('' = none)
+    owner            INTEGER NOT NULL DEFAULT 0,   -- 1 = the main admin (decides other admins' areas)
+    admin_areas      TEXT NOT NULL DEFAULT '',     -- other admins: areas they may reach (ai,deep,calibre,services,system,users)
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

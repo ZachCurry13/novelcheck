@@ -47,8 +47,8 @@ func (s *Server) handleUserReading(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "no such user")
 		return
 	}
-	if auth.UserFrom(r).Role != store.RoleAdmin && target.Role != store.RoleRestricted {
-		writeErr(w, http.StatusForbidden, "editors can only see kids' reading")
+	if !canManageUser(auth.UserFrom(r), target) {
+		writeErr(w, http.StatusForbidden, "you can see kids' reading; the main admin manages the other parents")
 		return
 	}
 	items, err := s.Store.ListQueue(target.ID, false)

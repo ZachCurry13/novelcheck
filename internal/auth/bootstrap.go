@@ -26,6 +26,7 @@ func Bootstrap(s *store.Store, username, password string) error {
 	if _, err := s.CreateUser(username, hash, store.RoleAdmin); err != nil {
 		return err
 	}
+	s.EnsureOwner() // the first admin is the main admin
 	log.Printf("created admin user %q from NOVELCHECK_ADMIN_PASSWORD", username)
 	return nil
 }

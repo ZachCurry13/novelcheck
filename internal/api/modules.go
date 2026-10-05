@@ -15,15 +15,17 @@ type meJSON struct {
 	SafeMode     string          `json:"safe_mode,omitempty"` // admins: why background work is off (env, flag, crash)
 	FamilyDevice bool            `json:"family_device"`       // this device shows "Who's reading?"
 	HasPin       bool            `json:"has_pin"`
+	Areas        []string        `json:"areas"` // admins: the areas they may reach (all for the main admin)
 }
 
 func (s *Server) me(u *store.User) meJSON {
 	out := meJSON{User: u, Modules: s.Store.Modules(), DeliveryFrom: s.Store.Setting(store.KeySMTPFrom)}
-	if u != nil && u.Role == store.RoleAdmin {
+	if u.Can(store.AreaSystem) {
 		out.SafeMode = s.Safe.Reason()
 	}
 	if u != nil {
 		out.HasPin = s.Store.PinHash(u.ID) != ""
+		out.Areas = u.Areas()
 	}
 	return out
 }

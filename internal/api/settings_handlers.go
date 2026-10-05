@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
+	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -48,7 +49,11 @@ func (s *Server) handleGetSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out := map[string]string{}
+	u := auth.UserFrom(r)
 	for k := range editableKeys {
+		if !u.Can(settingArea(k)) {
+			continue // an area the main admin didn't give this admin
+		}
 		v := all[k]
 		if store.SecretKeys[k] && v != "" {
 			v = secretMask
@@ -63,9 +68,14 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &body, 64<<10) {
 		return
 	}
+	u := auth.UserFrom(r)
 	for k, v := range body {
 		if !editableKeys[k] {
 			writeErr(w, http.StatusBadRequest, "unknown setting "+k)
+			return
+		}
+		if !u.Can(settingArea(k)) {
+			writeErr(w, http.StatusForbidden, "the main admin hasn't given you "+areaNames[settingArea(k)])
 			return
 		}
 		v = strings.TrimSpace(v)

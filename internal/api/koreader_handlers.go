@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
-	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
 // handleMyOPDS gives the signed-in person their KOReader feed path.
@@ -42,8 +41,8 @@ func (s *Server) handleUserOPDS(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "no such user")
 		return
 	}
-	if auth.UserFrom(r).Role != store.RoleAdmin && target.Role != store.RoleRestricted {
-		writeErr(w, http.StatusForbidden, "editors can only set up kids' devices")
+	if !canManageUser(auth.UserFrom(r), target) {
+		writeErr(w, http.StatusForbidden, "you can set up kids' devices; the main admin manages the other parents")
 		return
 	}
 	tok, err := s.Store.OPDSToken(target.ID)

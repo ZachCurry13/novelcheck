@@ -11,14 +11,21 @@ import (
 
 var usernameRE = regexp.MustCompile(`^[A-Za-z0-9_.-]{2,40}$`)
 
-// Admins manage every account. Editors manage only restricted (kid) accounts
-// and can never create, promote, or edit admins or other editors.
+// Who manages whom: the main admin manages everyone; an admin with the
+// Users area manages editors and kids; every other admin and every editor
+// manages only kids. Only the main admin makes or removes admins.
 func canManageUser(actor, target *store.User) bool {
-	if actor.IsAdmin() {
+	switch {
+	case actor.Owner:
 		return true
+	case actor.Can(store.AreaUsers):
+		return !target.IsAdmin()
 	}
-	return actor.Role == store.RoleEditor && target.Role == store.RoleRestricted
+	return actor.CanManage() && target.Role == store.RoleRestricted
 }
+
+// managesParents: the main admin, or an admin with the Users area.
+func managesParents(u *store.User) bool { return u.Can(store.AreaUsers) }
 
 // targetUser loads the {id} user and checks the caller may manage it.
 func (s *Server) targetUser(w http.ResponseWriter, r *http.Request) (*store.User, bool) {
@@ -33,7 +40,7 @@ func (s *Server) targetUser(w http.ResponseWriter, r *http.Request) (*store.User
 		return nil, false
 	}
 	if !canManageUser(auth.UserFrom(r), target) {
-		writeErr(w, http.StatusForbidden, "editors can only manage restricted (kid) accounts")
+		writeErr(w, http.StatusForbidden, "you can manage kids' accounts here; the main admin manages the other parents")
 		return nil, false
 	}
 	return target, true
@@ -42,7 +49,7 @@ func (s *Server) targetUser(w http.ResponseWriter, r *http.Request) (*store.User
 func (s *Server) handleListUsers(w http.ResponseWriter, r *http.Request) {
 	var us []store.User
 	var err error
-	if auth.UserFrom(r).IsAdmin() {
+	if managesParents(auth.UserFrom(r)) {
 		us, err = s.Store.ListUsers()
 	} else {
 		us, err = s.Store.ListUsersByRole(store.RoleRestricted)
@@ -75,8 +82,13 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	if !store.ValidRole(body.Role) {
 		body.Role = store.RoleRestricted
 	}
-	if !auth.UserFrom(r).IsAdmin() && body.Role != store.RoleRestricted {
-		writeErr(w, http.StatusForbidden, "editors can only create restricted (kid) accounts")
+	actor := auth.UserFrom(r)
+	if body.Role == store.RoleAdmin && !actor.Owner {
+		writeErr(w, http.StatusForbidden, "only the main admin can make admins")
+		return
+	}
+	if body.Role == store.RoleEditor && !managesParents(actor) {
+		writeErr(w, http.StatusForbidden, "you can create kids' accounts; the main admin adds parents")
 		return
 	}
 	hash, err := auth.HashPassword(body.Password)
@@ -92,6 +104,10 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeErr(w, http.StatusConflict, "username already exists")
 		return
+	}
+	if u.IsAdmin() { // a new admin starts with the default areas
+		_ = s.Store.SetAdminAreas(u.ID, []string{store.DefaultAdminAreas})
+		u, _ = s.Store.UserByID(u.ID)
 	}
 	writeJSON(w, http.StatusCreated, u)
 }
@@ -111,8 +127,17 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "role must be admin, editor or restricted")
 		return
 	}
-	if !auth.UserFrom(r).IsAdmin() && upd.Role != store.RoleRestricted {
-		writeErr(w, http.StatusForbidden, "editors cannot change account roles")
+	actor := auth.UserFrom(r)
+	if upd.Role != existing.Role && (upd.IsAdmin() || existing.IsAdmin()) && !actor.Owner {
+		writeErr(w, http.StatusForbidden, "only the main admin can make or remove admins")
+		return
+	}
+	if upd.Role != store.RoleRestricted && !managesParents(actor) {
+		writeErr(w, http.StatusForbidden, "you can manage kids' accounts; the main admin manages parents")
+		return
+	}
+	if existing.Owner && !upd.IsAdmin() {
+		writeErr(w, http.StatusBadRequest, "hand over the main admin first (🔑 Make main admin on another admin's card)")
 		return
 	}
 	if existing.IsAdmin() && !upd.IsAdmin() && s.lastAdmin() {
@@ -142,6 +167,12 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	if err := s.Store.UpdateUserProfile(&upd); err != nil {
 		writeStoreErr(w, err)
 		return
+	}
+	if upd.IsAdmin() && !existing.IsAdmin() { // newly an admin: the default areas
+		_ = s.Store.SetAdminAreas(upd.ID, []string{store.DefaultAdminAreas})
+	}
+	if u, err := s.Store.UserByID(upd.ID); err == nil {
+		upd.Owner, upd.AdminAreas = u.Owner, u.AdminAreas // never set from the request
 	}
 	writeJSON(w, http.StatusOK, upd)
 }
@@ -177,6 +208,10 @@ func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 	if target.ID == auth.UserFrom(r).ID {
 		writeErr(w, http.StatusBadRequest, "you cannot delete your own account")
+		return
+	}
+	if target.Owner {
+		writeErr(w, http.StatusBadRequest, "the main admin can't be deleted; hand it over first")
 		return
 	}
 	if target.IsAdmin() && s.lastAdmin() {

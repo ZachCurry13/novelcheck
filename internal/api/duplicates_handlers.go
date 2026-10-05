@@ -17,7 +17,7 @@ func (s *Server) handleDuplicates(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	isAdmin := auth.UserFrom(r).IsAdmin()
+	isAdmin := auth.UserFrom(r).Can(store.AreaCalibre) // may remove extra copies
 	type group struct {
 		store.DupGroup
 		Keep string `json:"keep"`
