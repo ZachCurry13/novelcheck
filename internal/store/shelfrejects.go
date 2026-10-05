@@ -94,6 +94,14 @@ func (s *Store) ShelfRejects(collectionID int64, season string) []int64 {
 	return ids
 }
 
+// OccultIDs lists the books flagged Dark Occult / Demonic that no parent
+// marked OK: faith shelves leave them out, so the AI doesn't pick them either.
+func (s *Store) OccultIDs() []int64 {
+	ids := []int64{}
+	_ = s.DB.Select(&ids, `SELECT id FROM books WHERE (dark_occult = 1 OR demonic_presence = 1) AND approved = 0`)
+	return ids
+}
+
 // ShelfToCheck is a shelf's theme and books (up to limit) for the AI to
 // check: a collection's, or a seasonal shelf's (its collection's when a
 // parent built one).

@@ -6,6 +6,7 @@ import (
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/collections"
+	"github.com/zachcurry13/novelcheck/internal/seasons"
 )
 
 // Keeping shelves on theme (parents): take books off a collection or a
@@ -74,8 +75,9 @@ func (s *Server) handleCheckShelf(w http.ResponseWriter, r *http.Request) {
 		"tokens": collections.CheckTokens(len(books))})
 }
 
-// fillExclude is what an AI fill skips: the collection's books, and the
-// books a parent took off it (or off the seasonal shelf it's built for).
+// fillExclude is what an AI fill skips: the collection's books, the books a
+// parent took off it (or off the seasonal shelf it's built for), and for a
+// faith shelf the books flagged Dark Occult / Demonic.
 func (s *Server) fillExclude(collectionID int64, season string) []int64 {
 	var out []int64
 	if collectionID > 0 {
@@ -83,6 +85,9 @@ func (s *Server) fillExclude(collectionID int64, season string) []int64 {
 	}
 	if collectionID > 0 || season != "" {
 		out = append(out, s.Store.ShelfRejects(collectionID, season)...)
+	}
+	if se, ok := seasons.Find(season); ok && se.Faith {
+		out = append(out, s.Store.OccultIDs()...)
 	}
 	return out
 }
