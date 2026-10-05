@@ -40,7 +40,8 @@ Claude doesn't need the "API base URL" or "JSON response mode" settings, so Nove
 2. Click **Get API key**, then **Create API key**. Copy the key.
 3. Free tier or paid: Gemini has a free tier with daily limits. On the free tier Google may use what you send to improve its products. That's only book blurbs, but if you'd rather it didn't, turn on billing in Google Cloud for that project.
 4. In NovelCheck: **Admin → AI & Scans → LLM Analysis Engine**, set **AI provider** to **Google Gemini**, paste the key into **API key**, and click **Save settings**.
-5. The preset fills in `gemini-2.5-flash`. Google renames models from time to time, so check AI Studio's model list for the current **Flash** model and its price, and update **Primary (small) model** and the two price boxes if they differ.
+5. The preset fills in `gemini-3.5-flash-lite` (with `gemini-3.1-flash-lite` as the fallback). Google retires models from time to time (the 2.5 models only still work for accounts that used them before), so check AI Studio's model list for the current **Flash** or **Flash-Lite** model and its price, and update **Primary (small) model** and the two price boxes if they differ.
+6. If saving or rating fails, the error shows Google's own message: "not found" means the model name is out of date; "API key not valid" means the key was copied wrong; "quota" or "rate limit" means the free tier's daily limit was reached.
 6. If you hit "rate limit" errors on the free tier, raise **Delay between scans** to 5 seconds or more, or use smaller batches.
 
 ## Perplexity

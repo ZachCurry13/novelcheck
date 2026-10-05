@@ -44,7 +44,7 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
           <option value="">All libraries</option>${libs.map((c) => `<option value="${c.id}" ${String(c.id) === from ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>` : ""}
           <span>${data.refreshing ? "✨ The AI is picking new suggestions…" : SUBTITLE[data.mode]}</span></p>
       </div>
-      ${cards.length ? `<ul data-strip class="flex max-w-full snap-x gap-3 overflow-x-auto pb-2">${cards.join("")}</ul>`
+      ${cards.length ? `<ul data-strip class="flex max-w-full snap-x gap-3 overflow-x-auto px-px pt-1 pb-2">${cards.join("")}</ul>`
         : `<p class="text-sm text-slate-500">Add a few books to Up Next (or finish some) and suggestions will show up here.${taste ? ` Or <button data-taste class="underline">🎯 mark a few books you know</button> to get started.` : ""}</p>`}
       ${data.up + data.down ? `<p class="mt-1 text-xs text-slate-500">Your feedback so far: 👍 ${data.up} · 👎 ${data.down} ·
         <button data-reset class="underline">Start over</button></p>` : ""}

@@ -11,7 +11,8 @@ export function seasonChipsHTML(seasons, active = "") {
     title="${esc(s.name)}${s.now ? " (in season now)" : ""}">${s.icon} ${esc(s.name)}</a>`;
   const now = seasons.filter((s) => s.now);
   const rest = seasons.filter((s) => !s.now);
-  return `<div data-season-chips class="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1">
+  // py-1: a scrolling row clips what sticks out, like the in-season chips' outline.
+  return `<div data-season-chips class="-mx-4 mb-2 flex gap-2 overflow-x-auto px-4 py-1">
     ${now.map((s) => chip(s, false)).join("")}
     <a href="#/collections" class="${chipCls} bg-slate-800 text-slate-300">📚 Collections</a>
     ${rest.length ? `<button type="button" data-more-seasons class="${chipCls} bg-slate-800 text-slate-400">🗓️ More seasons</button>` : ""}

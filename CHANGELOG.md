@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.30.1]
+
+### 🔧 Fixes
+- **No spoilers in "What the AI found".** A Deep Scanned book's window now lists only where each part is and its level. What happens there shows when you open **📖 Read this part in the book**, at the top of the highlighted part. The notes a review decision adds to a book no longer describe the scenes, and Review keeps the description folded under **What happens (spoilers)**.
+- **Faith shelves leave out the occult.** Advent, Lent & Easter, and Saints & feast days never show books flagged Dark Occult / Demonic, whether the shelf is found by words or built with the AI. A parent's ✓ OK still counts.
+- **Google Gemini works again.** The Gemini preset now uses `gemini-3.5-flash-lite` (with `gemini-3.1-flash-lite` as the fallback): Google limits the older 2.5 models to accounts that already used them. Gemini's thinking is kept low with room for the answer, and its errors now show Google's own message instead of a cut-off code. Already set up with Gemini? Change **Primary (small) model** to `gemini-3.5-flash-lite` under Admin → AI & Scans.
+- **Seasonal chips and card rows aren't cut off.** The outline of an in-season chip, and of the cards in Discover and Suggested Reads, was clipped at the top.
+
 ## [1.30.0]
 
 ### 👥 Who's reading? (family devices)

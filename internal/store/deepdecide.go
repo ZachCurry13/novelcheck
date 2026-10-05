@@ -78,11 +78,9 @@ func (s *Store) NoteDeepDecision(id, userID int64, by string, level int) error {
 		if n.Level < 3 {
 			continue
 		}
-		what := n.Scene
-		if what == "" {
-			what = n.Note
-		}
-		lines = append(lines, fmt.Sprintf("• %s: %s", n.Label, what))
+		// Where and how high only: what happens is a spoiler, kept in the
+		// Deep Scan section's 📖 reader for whoever wants it.
+		lines = append(lines, fmt.Sprintf("• %s: Level %d", n.Label, n.Level))
 	}
 	if len(lines) == 0 {
 		return nil

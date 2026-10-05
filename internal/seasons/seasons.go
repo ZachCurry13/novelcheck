@@ -15,6 +15,9 @@ type Season struct {
 	// MaxSpice caps peppers for the shelf (-1 = no cap): Valentine's is for
 	// clean romance and friendship.
 	MaxSpice int `json:"-"`
+	// Faith shelves (Advent, Lent & Easter, Saints) never show books flagged
+	// Dark Occult / Demonic, whatever their words.
+	Faith bool `json:"-"`
 	// Words find the shelf's books (whole words, see Matches); Not are
 	// phrases that only look like them ("Saint Louis").
 	Words []string                            `json:"-"`
@@ -70,7 +73,7 @@ var All = []Season{
 		Words: []string{"autumn", "thanksgiving", "harvest", "scarecrow", "apple orchard", "fall leaves", "hayride", "corn maze", "pilgrim"},
 		Not:   []string{"pilgrim's progress"}},
 	{Key: "advent", Icon: "🕯️", Name: "Advent", Theme: "books for Advent: waiting for Christmas, the Nativity story, St. Nicholas and preparing our hearts",
-		MaxSpice: -1, span: func(y int) (time.Time, time.Time) { return AdventSunday(y), day(y, time.December, 24) },
+		MaxSpice: -1, Faith: true, span: func(y int) (time.Time, time.Time) { return AdventSunday(y), day(y, time.December, 24) },
 		Words: []string{"Advent", "nativity", "jesse tree", "st. nicholas", "saint nicholas", "bethlehem", "manger"}},
 	{Key: "christmas", Icon: "🎄", Name: "Christmas", Theme: "Christmas stories: the Nativity, Santa and St. Nicholas, family traditions, snow and giving",
 		MaxSpice: -1, span: fixed(time.November, 20, time.January, 6),
@@ -83,7 +86,7 @@ var All = []Season{
 		MaxSpice: 2, span: fixed(time.January, 25, time.February, 14),
 		Words: []string{"valentine", "friendship", "best friend", "cupid", "love letter", "kindness"}},
 	{Key: "lent_easter", Icon: "✝️", Name: "Lent & Easter", Theme: "books for Lent and Easter: the Passion and Resurrection of Jesus, sacrifice, forgiveness and new life",
-		MaxSpice: -1, span: func(y int) (time.Time, time.Time) { e := Easter(y); return e.AddDate(0, 0, -46), e.AddDate(0, 0, 49) },
+		MaxSpice: -1, Faith: true, span: func(y int) (time.Time, time.Time) { e := Easter(y); return e.AddDate(0, 0, -46), e.AddDate(0, 0, 49) },
 		Words: []string{"easter", "Lent", "lenten", "resurrection", "holy week", "good friday", "stations of the cross", "palm sunday", "empty tomb", "crucifixion"},
 		Not:   []string{"easter island"}},
 	{Key: "spring", Icon: "🌷", Name: "Spring", Theme: "spring books: gardens, flowers, baby animals, rain and new beginnings",
@@ -96,7 +99,7 @@ var All = []Season{
 		MaxSpice: -1, span: fixed(time.August, 1, time.September, 15),
 		Words: []string{"back to school", "first day of school", "new school", "classroom", "teacher", "kindergarten", "school year", "school bus"}},
 	{Key: "saints", Icon: "👼", Name: "Saints & feast days", Theme: "lives of the saints, feast days, and stories of faith for Catholic families",
-		MaxSpice: -1, span: fixed(time.October, 25, time.November, 8),
+		MaxSpice: -1, Faith: true, span: fixed(time.October, 25, time.November, 8),
 		Words: []string{"saint", "martyr", "martyrdom", "our lady", "feast day", "canonized", "canonization", "beatified", "beatification", "hagiography"},
 		Not:   []string{"saint louis", "saint petersburg", "saint-exupéry", "saint-exupery"}},
 }

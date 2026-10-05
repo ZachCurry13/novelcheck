@@ -150,8 +150,9 @@ func TestDeepScanSetLevelAndParentNote(t *testing.T) {
 	}
 	parent, _ := st.UserByName("admin")
 	notes, _ := st.BookNotes(id, parent)
-	if len(notes) != 1 || notes[0].Visibility != "parents" || !strings.Contains(notes[0].Body, "about 55% in: Two adults kiss") ||
-		!strings.Contains(notes[0].Body, "admin decided on Level 3") {
+	// Where and how high, not what happens (no spoilers in the book's notes).
+	if len(notes) != 1 || notes[0].Visibility != "parents" || !strings.Contains(notes[0].Body, "about 55% in: Level") ||
+		strings.Contains(notes[0].Body, "Two adults kiss") || !strings.Contains(notes[0].Body, "admin decided on Level 3") {
 		t.Fatalf("parents' note: %+v", notes)
 	}
 	if st.LatestDeepRead(id).Held {

@@ -9,7 +9,7 @@ It connects directly to a **Calibre Library** (via read-only SQLite database acc
 
 ## 2. Core Development Rules (Strict Enforcement)
 1. **File Length Limit (Max ~300 Lines):** Keep code modular. No single file (Go, JavaScript, CSS, or SQL) should exceed ~300 lines of code. Split API routes, handlers, database services, and UI components into small, logical sub-modules.
-2. **Model Delegation Strategy:** Default LLM calls to lightweight, high-efficiency models (e.g., `gpt-4o-mini`, `gemini-2.5-flash`, `llama3.2`) for fast structured JSON outputs. Only escalate to larger models if the primary model fails.
+2. **Model Delegation Strategy:** Default LLM calls to lightweight, high-efficiency models (e.g., `gpt-4o-mini`, `gemini-3.5-flash-lite`, `llama3.2`) for fast structured JSON outputs. Only escalate to larger models if the primary model fails.
 3. **Repository Source of Truth:** Keep GitHub repository files (`README.md`, `docker-compose.yml`, `NOVELCHECK_SPEC.md`) fully synchronized and up to date. Perform regular audits to ensure documentation matches codebase implementation without contradictions.
 
 ---

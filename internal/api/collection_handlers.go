@@ -33,10 +33,15 @@ func (s *Server) seasonViews() []seasonView {
 }
 
 // seasonFilter narrows a book search to a seasonal shelf: the collection a
-// parent built for it, or else its words.
+// parent built for it, or else its words. Faith shelves leave out books
+// flagged Dark Occult / Demonic either way (a parent's ✓ OK still counts).
 func (s *Server) seasonFilter(f *store.BookFilter, key string) {
-	if _, ok := seasons.Find(key); !ok {
+	se, ok := seasons.Find(key)
+	if !ok {
 		return
+	}
+	if se.Faith {
+		f.ExcludeFlags = append(f.ExcludeFlags, "dark_occult")
 	}
 	if id := s.Store.SeasonCollection(key); id > 0 && f.Collection == 0 {
 		f.Collection = id

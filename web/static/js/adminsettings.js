@@ -12,7 +12,7 @@ const SECTIONS = [
     ["llm_provider", "", "", "hidden"],
     ["llm_base_url", "API base URL", "https://api.openai.com/v1 · http://ollama:11434/v1"],
     ["llm_api_key", "API key", "Leave blank for local Ollama", "password"],
-    ["llm_model", "Primary (small) model", "gpt-4o-mini · claude-haiku-4-5 · gemini-2.5-flash · sonar · llama3.2"],
+    ["llm_model", "Primary (small) model", "gpt-4o-mini · claude-haiku-4-5 · gemini-3.5-flash-lite · sonar · llama3.2"],
     ["llm_fallback_model", "Fallback model(s)", "Only used when the main model fails. Several? Separate with commas, in order"],
     ["llm_json_mode", "JSON response mode", "true / false", "bool"],
     ["deep_read_model", "Deep Scan model (optional)", "Blank = the models above · e.g. a cheaper model with a big context window"],

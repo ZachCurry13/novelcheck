@@ -82,7 +82,7 @@ export async function renderDiscover(view, state) {
     <section>
       <h2 class="mb-2 text-lg font-semibold">${r.icon} ${esc(r.title)} <span class="text-sm font-normal text-slate-500">${r.books.length}</span></h2>
       ${r.books.some((b) => b.list?.startsWith("nyt:")) ? `<p class="-mt-1 mb-2 text-xs text-slate-500">From The New York Times Best Sellers lists · ${NYT_CREDIT}</p>` : ""}
-      <div data-row="${esc(r.key)}" class="flex snap-x gap-3 overflow-x-auto pb-2">${r.books.map((b) => card(b, kid, queueOn)).join("")}</div>
+      <div data-row="${esc(r.key)}" class="flex snap-x gap-3 overflow-x-auto px-px pt-1 pb-2">${r.books.map((b) => card(b, kid, queueOn)).join("")}</div>
     </section>`).join("") : `<p class="text-slate-400">${emptyText(data, state.user)}</p>`;
     rows.querySelectorAll("[data-row]").forEach((r) => (r.scrollLeft = scrolled[r.dataset.row] || 0));
     credit(data);

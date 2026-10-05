@@ -106,7 +106,7 @@ export async function renderDeepScanAdmin(view, state) {
     if (read && item) {
       const d = held.find((x) => x.id === Number(item.dataset.scan));
       return import("./deepreader.js").then((m) => m.openPassage(item.dataset.scan, d?.title || "",
-        { from: Number(read.dataset.from), to: Number(read.dataset.to), label: read.dataset.label }));
+        { from: Number(read.dataset.from), to: Number(read.dataset.to), label: read.dataset.label, about: read.dataset.about }));
     }
     const btn = e.target.closest("[data-act]");
     if (!btn) return;

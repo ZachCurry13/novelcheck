@@ -20,7 +20,7 @@ export const PRESETS = {
   },
   gemini: {
     label: "Google Gemini", guide: "Google Gemini", provider: "openai", base: "https://generativelanguage.googleapis.com/v1beta/openai",
-    model: "gemini-2.5-flash", fallback: "", json: true, pin: "0.30", pout: "2.50",
+    model: "gemini-3.5-flash-lite", fallback: "gemini-3.1-flash-lite", json: true, pin: "0.30", pout: "2.50",
     hint: "Get a key at aistudio.google.com → Get API key. Check the current Flash model name and price there.",
   },
   perplexity: {

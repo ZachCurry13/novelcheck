@@ -19,6 +19,7 @@ export async function openPassage(scanID, title, part) {
     document.body.append(d);
   }
   let { from, to, label } = part;
+  const about = part.about || ""; // what the AI saw there (asked for, so spoilers are fine)
   let flagged = null; // the part the AI read, once the server has found it
   const show = async () => {
     const q = to > from ? `from=${from}&to=${to}` : `label=${encodeURIComponent(label)}`;
@@ -36,7 +37,7 @@ export async function openPassage(scanID, title, part) {
         <button type="button" data-close class="btn-ghost h-10 w-10 shrink-0 p-0 text-xl" aria-label="Close">✕</button></div>
       <div data-scroll class="space-y-3 overflow-y-auto p-4 text-[0.95rem] leading-relaxed">
         ${p.before ? `<div class="space-y-3 text-slate-400">${paras(p.before)}</div>` : ""}
-        <div data-mark class="space-y-3 ${mark ? "rounded-lg border-l-4 border-amber-400 bg-amber-950/40 p-3" : ""} text-slate-100">${paras(p.text)}</div>
+        <div data-mark class="space-y-3 ${mark ? "rounded-lg border-l-4 border-amber-400 bg-amber-950/40 p-3" : ""} text-slate-100">${about && mark ? `<p class="rounded-md bg-slate-900/70 p-2 text-sm text-slate-300"><b>What the AI saw:</b> ${esc(about)}</p>` : ""}${paras(p.text)}</div>
         ${p.after ? `<div class="space-y-3 text-slate-400">${paras(p.after)}</div>` : ""}
       </div>
       <div class="grid grid-cols-2 gap-2 border-t border-slate-800 p-3">

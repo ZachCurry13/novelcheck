@@ -3,6 +3,7 @@
 // in the book), and start / request buttons.
 import { get, post } from "./api.js";
 import { esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes, canManage } from "./ui.js";
+import { PEPPERS } from "./peppers.js";
 
 const STATUS = {
   requested: "🕓 Deep Scan requested; waiting for an admin to approve it.",
@@ -28,14 +29,18 @@ export function deepChangeLine(d) {
   return `<p class="text-sm font-semibold ${up ? "text-amber-300" : "text-emerald-300"}">${up ? "⚠️ Rating changed via Deep Scan" : "✓ Deep Scan lowered the rating"}: Level ${d.prev_level} → Level ${d.new_level}</p>`;
 }
 
-// foundHTML lists the parts a scan noted. Parents also get what happened in
-// each scene and 📖 to read that part in the book.
+// aboutText is what the AI saw in a part (its note, then the scene), as
+// sentences. It's a spoiler, so it's shown only when asked for.
+export const aboutText = (n) => [n.note, n.scene].filter(Boolean).map((s) => s.trim())
+  .map((s) => (/[.!?…]$/.test(s) ? s : `${s}.`)).join(" ");
+
+// foundHTML lists the parts a scan noted: where and how high, without what
+// happens (no spoilers). Parents get 📖 to read the part in the book, which
+// also shows what the AI saw there.
 function foundHTML(notes, parents) {
-  const list = `<ul class="space-y-2 text-sm">${notes.map((n) => `<li${parents ? ` class="rounded-md bg-slate-900/60 p-2"` : ""}>
-    <b>${esc(n.label)}</b> · Level ${n.level}${n.note ? `: ${esc(n.note)}` : ""}
-    ${parents && n.scene ? `<p class="mt-1 text-xs text-slate-400">${esc(n.scene)}</p>` : ""}
-    ${parents ? `<button type="button" data-read data-from="${n.from || 0}" data-to="${n.to || 0}" data-label="${esc(n.label)}"
-      class="mt-1 block text-left text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button>` : ""}</li>`).join("")}</ul>`;
+  const list = `<ul class="space-y-2 text-sm">${notes.map((n, i) => `<li${parents ? ` class="rounded-md bg-slate-900/60 p-2"` : ""}>
+    <b>${esc(n.label)}</b> · Level ${n.level}${PEPPERS[n.level] ? ` (${esc(PEPPERS[n.level].name)})` : ""}
+    ${parents ? `<button type="button" data-read="${i}" class="mt-1 block text-left text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button>` : ""}</li>`).join("")}</ul>`;
   if (!parents) return list;
   return `<details class="rounded-lg bg-slate-900/40 px-3 py-2"><summary class="cursor-pointer py-1 text-sm text-slate-300">
     What the AI found (${notes.length} part${notes.length === 1 ? "" : "s"})</summary><div class="mt-1">${list}</div></details>`;
@@ -80,8 +85,10 @@ export async function renderDeepSection(host, bookId, user, title = "") {
   host.onclick = async (e) => {
     const read = e.target.closest("[data-read]");
     if (read && d) {
+      const n = JSON.parse(d.notes || "[]")[Number(read.dataset.read)];
+      if (!n) return;
       return import("./deepreader.js").then((m) => m.openPassage(d.id, title,
-        { from: Number(read.dataset.from), to: Number(read.dataset.to), label: read.dataset.label }));
+        { from: n.from || 0, to: n.to || 0, label: n.label, about: aboutText(n) }));
     }
     const act = e.target.closest("[data-deep]")?.dataset.deep;
     if (act === "start") {
