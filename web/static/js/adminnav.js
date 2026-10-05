@@ -1,34 +1,37 @@
 // The admin area's tabs: the Admin page's sections plus Deep Scan, Usage and
 // System checks, at the top of each of those pages (so they need no place in
 // the main menu). Sections switch in place on the Admin page; the others are
-// pages of their own. Editors see the first two. On phones a single button
+// pages of their own. Editors see the first two; other admins see the ones
+// their areas cover (the main admin gives areas). On phones a single button
 // names the section and opens all of them as a sheet from the bottom, like
 // More, instead of a strip to scroll sideways.
-import { esc } from "./ui.js";
+import { esc, canHere } from "./ui.js";
 
+// [key, icon, label, shown when]: no rule = every parent.
 const TABS = [
   ["ai", "🤖", "AI & Scans"],
   ["users", "👪", "Users & Rules"],
-  ["delivery", "📬", "Delivery & Services", true],
-  ["system", "⚙️", "System & Toggles", true],
-  ["@deepscan", "🧬", "Deep Scan", true],
-  ["@usage", "📈", "Usage", true],
-  ["@system", "🩺", "System checks", true],
+  ["delivery", "📬", "Delivery & Services", () => canHere("calibre") || canHere("services") || canHere("system")],
+  ["system", "⚙️", "System & Toggles", () => canHere("system")],
+  ["@deepscan", "🧬", "Deep Scan", () => canHere("deep")],
+  ["@usage", "📈", "Usage", () => canHere("system")],
+  ["@system", "🩺", "System checks", () => canHere("system")],
 ];
 
 const hrefOf = (k) => (k.startsWith("@") ? `#/${k.slice(1)}` : `#/admin?tab=${k}`);
-const tabsFor = (isAdmin) => TABS.filter(([, , , adminOnly]) => isAdmin || !adminOnly);
+// tabsFor lists the tabs this person may open.
+export const tabsFor = () => TABS.filter(([, , , shown]) => !shown || shown());
 
 // adminNavHTML: active is a section key ("users") or "@page".
-export function adminNavHTML(active, isAdmin) {
+export function adminNavHTML(active) {
   const cur = TABS.find(([k]) => k === active) || TABS[0];
   // After the page is drawn, the open tab is scrolled into view (not back to the first).
   setTimeout(() => document.querySelector("#admin-tabs .active")?.scrollIntoView({ block: "nearest", inline: "center" }), 0);
-  return `<button type="button" data-admin-picker="${isAdmin ? 1 : 0}" data-active="${esc(cur[0])}"
+  return `<button type="button" data-admin-picker data-active="${esc(cur[0])}"
       class="btn-secondary mb-4 w-full justify-between md:hidden">
       <span>${cur[1]} <b data-admin-current>${esc(cur[2])}</b></span><span class="text-xs font-normal text-slate-400">Admin sections ▾</span></button>
     <nav id="admin-tabs" class="-mx-4 mb-4 hidden gap-1 overflow-x-auto border-b border-slate-800 px-4 md:flex" aria-label="Admin">
-    ${tabsFor(isAdmin).map(([k, icon, label]) => `<a href="${hrefOf(k)}" ${k.startsWith("@") ? "" : `data-tab="${k}"`}
+    ${tabsFor().map(([k, icon, label]) => `<a href="${hrefOf(k)}" ${k.startsWith("@") ? "" : `data-tab="${k}"`}
       data-label="${esc(label)}" data-icon="${icon}" class="nav-link shrink-0 rounded-b-none${k === active ? " active" : ""}">${icon} ${esc(label)}</a>`).join("")}</nav>`;
 }
 
@@ -42,7 +45,7 @@ export function markAdminSection(root, tab) {
   btn.querySelector("span").innerHTML = `${t[1]} <b data-admin-current>${esc(t[2])}</b>`;
 }
 
-function openSheet(isAdmin, active) {
+function openSheet(active) {
   let d = document.getElementById("admin-sheet");
   if (!d) {
     d = document.createElement("dialog");
@@ -56,7 +59,7 @@ function openSheet(isAdmin, active) {
   d.innerHTML = `<div class="space-y-3 p-4">
     <div class="flex items-center justify-between"><h2 class="text-lg font-bold">Admin</h2>
       <button type="button" data-close class="btn-ghost h-10 w-10 p-0 text-xl" aria-label="Close">✕</button></div>
-    <div class="grid grid-cols-2 gap-2">${tabsFor(isAdmin).map(([k, icon, label]) => `<a href="${hrefOf(k)}"
+    <div class="grid grid-cols-2 gap-2">${tabsFor().map(([k, icon, label]) => `<a href="${hrefOf(k)}"
       class="card flex min-h-[4.5rem] flex-col items-center justify-center gap-1 p-3 text-center text-sm${k === active ? " ring-2 ring-indigo-500" : ""}">
       <span class="text-2xl" aria-hidden="true">${icon}</span>${esc(label)}</a>`).join("")}</div></div>`;
   d.showModal();
@@ -64,5 +67,5 @@ function openSheet(isAdmin, active) {
 
 document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-admin-picker]");
-  if (b) openSheet(b.dataset.adminPicker === "1", b.dataset.active);
+  if (b) openSheet(b.dataset.active);
 });

@@ -1,6 +1,6 @@
 // NovelCheck app bootstrap: session check, hash router, PWA install prompt.
 import { get, post, setUnauthorizedHandler } from "./api.js";
-import { $, $$, attempt, canManage } from "./ui.js";
+import { $, $$, attempt, canManage, can } from "./ui.js";
 import { renderLibrary } from "./library.js";
 import { renderCheck } from "./check.js";
 import { renderQueue } from "./queue.js";
@@ -53,7 +53,8 @@ const routes = {
   events: renderEvents,
 };
 const managerRoutes = new Set(["check", "import", "shelf", "admin", "duplicates"]);
-const adminRoutes = new Set(["system", "usage", "deletions", "deepscan"]);
+// Admin pages and the area each needs (the main admin gives areas).
+const ROUTE_AREA = { system: "system", usage: "system", deletions: "calibre", deepscan: "deep" };
 const moduleRoutes = { queue: "queue", import: "import", shelf: "import" }; // pages an admin can turn off
 // Pages without a menu item of their own light up the one they belong to.
 const NAV_OF = { series: "collections", wishlist: "discover", events: "discover", import: "profile", shelf: "profile", deepscan: "admin", usage: "admin", system: "admin",
@@ -97,6 +98,7 @@ async function showSignIn() {
 function showApp() {
   showOnly("#app-view");
   document.body.dataset.role = state.user.role;
+  document.body.dataset.areas = (state.user.areas || []).join(" ");
   applyAppearance(state.user);
   $$(".manager-only").forEach((el) => el.classList.toggle("hidden", !canManage(state.user)));
   $$(".admin-only").forEach((el) => el.classList.toggle("hidden", state.user.role !== "admin"));
@@ -119,7 +121,7 @@ async function route() {
   // book (the main feature), kids on the Library.
   let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || state.user.start_page || (canManage(state.user) ? "check" : "library");
   if (!routes[name] || (managerRoutes.has(name) && !canManage(state.user)) ||
-    (adminRoutes.has(name) && state.user.role !== "admin") ||
+    (ROUTE_AREA[name] && !can(state.user, ROUTE_AREA[name])) ||
     (moduleRoutes[name] && !on(state.user, moduleRoutes[name]))) name = "library";
   const menu = NAV_OF[name] || name;
   $$("#nav .nav-link").forEach((a) => a.classList.toggle("active", a.dataset.route === menu));

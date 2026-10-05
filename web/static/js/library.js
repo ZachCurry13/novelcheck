@@ -1,6 +1,6 @@
 // Unified dashboard: browse and filter books across every catalog.
 import { get, post, qs } from "./api.js";
-import { $, esc, attempt, toast, HIDE_LABELS, FILTER_IDEA_URL, AGE_GROUPS, canManage } from "./ui.js";
+import { $, esc, attempt, toast, HIDE_LABELS, FILTER_IDEA_URL, AGE_GROUPS, canManage, can } from "./ui.js";
 import { openCalibreRemoval } from "./calibreremove.js";
 import { openBook } from "./bookdialog.js";
 import { pepperOptions, openPepperGuide } from "./peppers.js";
@@ -84,9 +84,9 @@ export async function renderLibrary(view, state) {
         <button type="button" id="pepper-help" class="text-xs text-slate-400 underline">🌶️ What do the peppers mean?</button>
         <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-500 underline">Missing a filter? Suggest one</a>
         <span class="ml-auto flex flex-wrap gap-2">
-          ${state.user.role === "admin" ? `<button type="button" id="remove-btn" class="btn-ghost text-xs">Remove hidden books from Calibre…</button>` : ""}
+          ${can(state.user, "calibre") ? `<button type="button" id="remove-btn" class="btn-ghost text-xs">Remove hidden books from Calibre…</button>` : ""}
           ${manager ? `<a href="#/duplicates" class="btn-ghost text-xs">Find duplicates</a>` : ""}
-          ${state.user.role === "admin" ? `<a href="#/deletions" class="btn-ghost text-xs">Delete requests</a>` : ""}
+          ${can(state.user, "calibre") ? `<a href="#/deletions" class="btn-ghost text-xs">Delete requests</a>` : ""}
           ${manager ? `<button type="button" id="batch-btn" class="btn-secondary">Analyze next batch</button>` : ""}
         </span>
       </div>

@@ -50,8 +50,8 @@ export function toast(msg, isError = false, link = null) {
         setTimeout(() => (b.textContent = "📋"), 1500);
       }
     });
-    // Admins can ask the AI what went wrong.
-    if (document.body.dataset.role === "admin") btn("🩺", "Diagnose with AI", () => { t.classList.add("hidden"); diagnoseLater(String(msg)); });
+    // Admins with System can ask the AI what went wrong.
+    if (canHere("system")) btn("🩺", "Diagnose with AI", () => { t.classList.add("hidden"); diagnoseLater(String(msg)); });
     const close = document.createElement("button");
     close.textContent = "✕";
     close.title = "Close";
@@ -147,6 +147,12 @@ export function flagChips(b) {
 
 // Admins and editors share the management views; only admins see technical settings.
 export const canManage = (user) => user?.role === "admin" || user?.role === "editor";
+
+// can: an admin the main admin gave this area (ai, deep, calibre, services,
+// system, users); the main admin has them all. canHere is the same for code
+// without the user at hand (app.js puts the areas on <body>).
+export const can = (user, area) => user?.role === "admin" && (user.areas || []).includes(area);
+export const canHere = (area) => (document.body.dataset.areas || "").split(" ").includes(area);
 
 export function fmtNum(n) {
   return Number(n || 0).toLocaleString();

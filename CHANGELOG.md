@@ -4,6 +4,21 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.31.0]
+
+### 🔑 Main admin and admin areas
+- **One main admin.** The first admin (the earliest account) is now the **main admin**: they reach everything, and they alone make someone an admin and decide what each other admin can reach. **🔑 Make main admin** on another admin's card hands the role over (you keep every area as an ordinary admin). The main admin can't be deleted or demoted until it's handed over.
+- **Areas for the other admins.** On an admin's card under **Admin → Users & Rules**, the main admin ticks what they can reach:
+  - 🤖 **AI settings**: the AI engine, keys, models, prices and limits, AI machines, custom AI filters.
+  - 🧬 **Deep Scans**: starting scans, Review, Deep Scan settings.
+  - 📚 **Calibre & cleanup**: the library folder, the Content server, removing books, formats, duplicates, delete requests.
+  - ✉️ **Email & Discover**: Send-to-Kindle email, the Discover lists and the NYT key.
+  - 🖥️ **System**: features, remote access, safe mode, backups, updates, system checks, Usage.
+  - 👥 **Users**: the other parents' accounts. Every admin can always manage kids.
+- What an admin can't reach is hidden in the app and refused by NovelCheck, even through a link. Their Admin page lists their access at the top.
+- **After this update** every existing admin keeps everything they had, so nothing changes until the main admin unticks areas. **New admins** start with Deep Scans only.
+- Editors work as before.
+
 ## [1.30.1]
 
 ### 🔧 Fixes

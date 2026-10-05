@@ -2,7 +2,7 @@
 // window: status, notes per part (for parents, each scene and 📖 to read it
 // in the book), and start / request buttons.
 import { get, post } from "./api.js";
-import { esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes, canManage } from "./ui.js";
+import { esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes, canManage, can } from "./ui.js";
 import { PEPPERS } from "./peppers.js";
 
 const STATUS = {
@@ -52,7 +52,7 @@ export async function renderDeepSection(host, bookId, user, title = "") {
   if (!info) return;
   const d = info.latest;
   const open = d && ["requested", "queued", "reading"].includes(d.status);
-  const admin = user.role === "admin";
+  const admin = can(user, "deep"); // starts and stops scans; anyone else asks
   let body = "";
   if (d?.status === "reading") {
     body = `<p class="text-sm">📖 Reading part ${d.parts_done + 1} of ${d.parts_total}…</p>`;

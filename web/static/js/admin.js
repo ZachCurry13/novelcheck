@@ -1,8 +1,9 @@
 // Admin control panel in four tabs: AI & Scans, Users & Rules, Delivery &
 // Services, System & Toggles. Editors see the first two, without technical
-// settings, secrets, backups or the destructive queue wipe.
+// settings, secrets, backups or the destructive queue wipe. Admins other than
+// the main admin see what their areas cover (the main admin gives areas).
 import { get, post, qs } from "./api.js";
-import { $, $$, esc, attempt, toast, fmtNum, fmtMoney } from "./ui.js";
+import { $, $$, esc, attempt, toast, fmtNum, fmtMoney, can } from "./ui.js";
 import { renderUsers } from "./users.js";
 import { renderCalibrePicker } from "./calibrepicker.js";
 import { renderRemoteAccess } from "./remoteaccess.js";
@@ -12,7 +13,8 @@ import { on } from "./modules.js";
 import { renderFlagsAdmin } from "./customflags.js";
 import { renderSettingsTab } from "./adminsettings.js";
 import { renderStats, perBookCost } from "./adminstats.js";
-import { adminNavHTML, markAdminSection } from "./adminnav.js";
+import { adminNavHTML, markAdminSection, tabsFor } from "./adminnav.js";
+import { AREA_NAMES } from "./adminaccess.js";
 
 const TABS = [["ai", "🤖 AI & Scans"], ["users", "👪 Users & Rules"], ["delivery", "📬 Delivery & Services"], ["system", "⚙️ System & Toggles"]];
 
@@ -20,19 +22,24 @@ const TABS = [["ai", "🤖 AI & Scans"], ["users", "👪 Users & Rules"], ["deli
 const tabFromHash = () => new URLSearchParams(location.hash.split("?")[1] || "").get("tab");
 
 export async function renderAdmin(view, state) {
-  const isAdmin = state.user.role === "admin";
-  const adminOnly = (html) => (isAdmin ? html : "");
-  const tabs = isAdmin ? TABS : TABS.slice(0, 2);
+  const u = state.user;
+  const isAdmin = u.role === "admin";
+  const inArea = (area, html) => (can(u, area) ? html : "");
+  const tabs = TABS.filter(([k]) => tabsFor().some(([t]) => t === k));
+  const hasTab = (k) => tabs.some(([t]) => t === k);
+  const access = isAdmin && !u.owner ? `<p class="mb-3 text-sm text-slate-400">Your access: ${(u.areas || []).map((a) => esc(AREA_NAMES[a] || a)).join(" · ") || "kids' accounts only"}.
+    The main admin can change it.</p>` : "";
   let current = tabs.some(([k]) => k === tabFromHash()) ? tabFromHash() : "ai";
   view.innerHTML = `
     <h1 class="mb-3 text-2xl font-bold">${isAdmin ? "Admin Control Panel" : "Manage NovelCheck"}</h1>
+    ${access}
     <div id="del-banner" class="mb-2 hidden rounded-lg bg-rose-950/50 p-3 text-sm"></div>
     <div id="deep-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="titles-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="covers-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="box-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="problems-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
-    ${adminNavHTML(current, isAdmin)}
+    ${adminNavHTML(current)}
     <section data-panel="ai" class="space-y-6">
       <div id="stats" class="grid grid-cols-2 gap-3 lg:grid-cols-4"></div>
       <div id="errors"></div>
@@ -41,25 +48,25 @@ export async function renderAdmin(view, state) {
           <input id="batch-size" type="number" min="0" max="500" value="20" class="input w-28" title="0 = all waiting books (up to 500)"></div>
         <button data-act="batch" class="btn-primary">Analyze batch</button>
         <button data-act="sync" class="btn-secondary">Sync Calibre now</button>
-        ${adminOnly(`<a href="#/deepscan" class="btn-secondary">🧬 Deep Scan…</a>`)}
+        ${inArea("deep", `<a href="#/deepscan" class="btn-secondary">🧬 Deep Scan…</a>`)}
         <button data-act="rerate-all" class="btn-ghost" title="Rate every AI-rated book again, e.g. after changing the AI or its rules">Re-rate whole library…</button>
-        ${adminOnly(`<button data-act="wipe" class="btn-ghost">Wipe pending queue</button>`)}
+        ${inArea("ai", `<button data-act="wipe" class="btn-ghost">Wipe pending queue</button>`)}
         <p id="worker" class="basis-full text-sm text-slate-400"></p>
         <div id="rerate" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
         <div id="genres-banner" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
       </div>
-      ${adminOnly(`<div id="custom-flags"></div><div id="settings-ai"></div>`)}
+      ${inArea("ai", `<div id="custom-flags"></div><div id="settings-ai"></div>`)}
     </section>
     <section data-panel="users"><div id="users"></div></section>
-    ${adminOnly(`<section data-panel="delivery" class="space-y-4">
+    ${hasTab("delivery") ? `<section data-panel="delivery" class="space-y-4">
       <div id="settings-delivery"></div>
       <div class="card space-y-1 text-sm${on(state.user, "koreader") ? "" : " module-off"}" data-module="koreader">
         <p class="font-semibold">📖 KOReader</p>
         <p class="text-slate-400">Nothing to set up here: each reader finds their private catalog address and QR code under
           <b>Profile → KOReader setup</b>. For kids' e-readers, use the <b>📖 KOReader</b> button on their card in <b>Users &amp; Rules</b>.</p></div>
-      <div id="remote-access"></div>
-    </section>
-    <section data-panel="system" class="space-y-4">
+      ${inArea("system", `<div id="remote-access"></div>`)}
+    </section>` : ""}
+    ${inArea("system", `<section data-panel="system" class="space-y-4">
       <div id="settings-system"></div>
       <div class="card flex flex-wrap gap-2">
         <a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db (backup)</a>
@@ -137,16 +144,21 @@ export async function renderAdmin(view, state) {
     if (s) renderStats(view, s);
   }
   await refresh();
-  renderErrors($("#errors", view), isAdmin, refresh);
+  renderErrors($("#errors", view), can(u, "system"), refresh);
   let stopRemote = null;
   if (isAdmin) {
+    // Only the settings in this admin's areas come back; their cards are the ones shown.
     const settings = (await attempt(() => get("/api/admin/settings"))) || {};
     $("#batch-size", view).value = settings.batch_size ?? 20;
-    for (const tab of ["ai", "delivery", "system"]) renderSettingsTab($(`#settings-${tab}`, view), tab, settings, state.user);
-    renderFlagsAdmin($("#custom-flags", view), refresh);
-    renderCalibrePicker($("#calibre-picker", view), refresh);
-    renderCalibreServer($("#calibre-server", view));
-    stopRemote = await renderRemoteAccess($("#remote-access", view));
+    for (const tab of ["ai", "delivery", "system"]) {
+      const host = $(`#settings-${tab}`, view);
+      if (host) renderSettingsTab(host, tab, settings, u);
+    }
+    const here = (id) => $(id, view);
+    if (here("#custom-flags")) renderFlagsAdmin(here("#custom-flags"), refresh);
+    if (here("#calibre-picker")) renderCalibrePicker(here("#calibre-picker"), refresh);
+    if (here("#calibre-server")) renderCalibreServer(here("#calibre-server"));
+    if (here("#remote-access")) stopRemote = await renderRemoteAccess(here("#remote-access"));
   }
   const timer = setInterval(refresh, 5000);
   await renderUsers($("#users", view), state.user);

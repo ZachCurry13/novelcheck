@@ -1,6 +1,6 @@
 // Admin dashboard figures and banners: rating progress, tokens, spending,
 // waiting requests and the re-rate offer.
-import { $, esc, fmtNum, fmtMoney } from "./ui.js";
+import { $, esc, fmtNum, fmtMoney, canHere } from "./ui.js";
 
 // Rough cost of rating one book, from the running average (free with Ollama).
 export const perBookCost = (s) => (s.cost_spent && s.usage.total_calls ? s.cost_spent / s.usage.total_calls : 0);
@@ -22,20 +22,19 @@ export function renderStats(view, s) {
     tile("Spent to date", fmtMoney(s.cost_spent), `${fmtNum(s.usage.total_prompt_tokens + s.usage.total_completion_tokens)} tokens · ${fmtNum(s.usage.total_calls)} calls`),
     tile("Est. to finish library", fmtMoney(s.cost_projected), `≈ ${fmtNum(s.tokens_projected)} tokens remaining`),
   ].join("");
-  const admin = document.body.dataset.role === "admin";
-  banner($("#deep-banner", view), (s.pending_deep || s.deep_review) && admin, [
+  banner($("#deep-banner", view), (s.pending_deep || s.deep_review) && canHere("deep"), [
     s.deep_review && `🧬 <b>${fmtNum(s.deep_review)}</b> Deep Scan result${s.deep_review === 1 ? "" : "s"} would raise a rating a lot and ${s.deep_review === 1 ? "waits" : "wait"} for you to check.`,
     s.pending_deep && `🧬 <b>${fmtNum(s.pending_deep)}</b> Deep Scan request${s.pending_deep === 1 ? " is" : "s are"} waiting for your approval.`,
   ].filter(Boolean).join(" ") + ` <a href="#/deepscan?review" class="ml-2 underline">Review</a>`);
-  banner($("#del-banner", view), s.pending_deletes && admin,
+  banner($("#del-banner", view), s.pending_deletes && canHere("calibre"),
     `🗑 <b>${fmtNum(s.pending_deletes)}</b> book${s.pending_deletes === 1 ? " is" : "s are"} waiting for your delete review. <a href="#/deletions" class="ml-2 underline">Review</a>`);
-  banner($("#problems-banner", view), s.problem_reports && admin,
+  banner($("#problems-banner", view), s.problem_reports && canHere("system"),
     `🐞 <b>${fmtNum(s.problem_reports)}</b> problem${s.problem_reports === 1 ? " or idea" : "s or ideas"} from your family. <button data-act="problem-reports" class="ml-2 underline">Review</button>`);
   banner($("#box-banner", view), s.box_sets,
     `📦 <b>${fmtNum(s.box_sets)}</b> book${s.box_sets === 1 ? " looks" : "s look"} like a box set (several books in one). <button data-act="box-sets" class="ml-2 underline">Check and split</button>`);
-  banner($("#covers-banner", view), s.cover_reports && admin,
+  banner($("#covers-banner", view), s.cover_reports && canHere("calibre"),
     `🖼️ <b>${fmtNum(s.cover_reports)}</b> book cover${s.cover_reports === 1 ? " was" : "s were"} reported as wrong. <button data-act="cover-reports" class="ml-2 underline">Review</button>`);
-  banner($("#titles-banner", view), s.title_fixes && admin,
+  banner($("#titles-banner", view), s.title_fixes && canHere("calibre"),
     `🏷️ <b>${fmtNum(s.title_fixes)}</b> title${s.title_fixes === 1 ? "" : "s"} in Calibre carr${s.title_fixes === 1 ? "ies" : "y"} track or series numbers (like “01 - …”). NovelCheck already shows ${s.title_fixes === 1 ? "it" : "them"} tidied. <button data-act="tidy-titles" class="ml-2 underline">Tidy in Calibre</button>`);
 
   let rerate = "";
@@ -52,7 +51,7 @@ export function renderStats(view, s) {
   }
   banner($("#rerate", view), rerate !== "", rerate);
   const g = s.genres || {};
-  banner($("#genres-banner", view), admin && (g.missing || g.running), g.running
+  banner($("#genres-banner", view), canHere("ai") && (g.missing || g.running), g.running
     ? `🏷️ Filling in genres with AI… <b>${fmtNum(g.done)}</b> of ${fmtNum(g.total)} books. <button data-act="genres-stop" class="ml-2 underline">Stop</button>`
     : `🏷️ <b>${fmtNum(g.missing)}</b> library book${g.missing === 1 ? " has" : "s have"} no genre (no tags in Calibre).
       <button data-act="genres-fill" class="btn-secondary ml-2 py-1">Fill in with AI${g.est_cost ? ` (≈ ${fmtMoney(g.est_cost)})` : ""}</button>

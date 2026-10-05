@@ -3,7 +3,7 @@
 // (parents) take them off it. Tap cards to tick them; with a mouse you can
 // also drag across cards, or Shift-click to tick everything in between.
 import { post } from "./api.js";
-import { attempt, toast, canManage } from "./ui.js";
+import { attempt, toast, canManage, can } from "./ui.js";
 import { on } from "./modules.js";
 
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -28,7 +28,7 @@ export function setupSelect(view, grid, state, reload, shelf = null) {
       c.classList.toggle("ring-indigo-400", selected.has(c.dataset.book));
     }
     const n = selected.size;
-    const admin = state.user.role === "admin";
+    const admin = can(state.user, "deep"); // starts Deep Scans; anyone else asks
     bar.innerHTML = `<div class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 text-sm">
       <b>${n ? `${plural(n, "book")} selected` : "Tap books to select them"}</b>
       ${n && on(state.user, "queue") ? `<button data-bulk="queue" class="btn-primary py-1">＋ Up Next</button>` : ""}
@@ -103,7 +103,7 @@ export function setupSelect(view, grid, state, reload, shelf = null) {
       reason = prompt(`Delete ${plural(ids.length, "book")}?\n\nBooks in your own libraries are taken out of them right away. For the rest, a delete request goes to the admins.\n\nWhy? (optional)`, "");
       if (reason === null) return;
     } else if (action === "deep") {
-      const admin = state.user.role === "admin";
+      const admin = can(state.user, "deep");
       if (!confirm(admin ? `Start a Deep Scan (the AI reads the whole book) for ${plural(ids.length, "book")}? Books without an EPUB file are skipped; you can cancel scans on the Deep Scan page.`
         : `Ask an admin to Deep Scan ${plural(ids.length, "book")}?`)) return;
     }

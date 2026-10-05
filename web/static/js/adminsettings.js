@@ -1,7 +1,7 @@
 // Admin settings, grouped by Admin tab into collapsible cards. Fields tied to
 // a switch (for example the backup AI's details) stay hidden until it's on.
 import { put } from "./api.js";
-import { $, $$, esc, attempt } from "./ui.js";
+import { $, $$, esc, attempt, can } from "./ui.js";
 import { initProviderPicker } from "./llmpresets.js";
 import { on } from "./modules.js";
 import { refreshUser } from "./app.js";
@@ -89,6 +89,14 @@ const SECTIONS = [
 // Cards that only matter while a feature is on.
 const SECTION_MODULE = { "SMTP / Send-to-Kindle": "send_to_kindle", Discover: "discover" };
 
+// The area each card belongs to; an admin sees the cards of the areas the
+// main admin gave them (the server sorts each setting the same way: settingArea).
+const SECTION_AREA = {
+  "LLM Analysis Engine": "ai", "Backup AI (optional)": "ai", "AI machines": "ai", "Suggested Reads": "ai",
+  "Automatic rating": "ai", "Rate Caps & Batching": "ai", "SMTP / Send-to-Kindle": "services",
+  "Calibre Library": "calibre", Discover: "services", Features: "system", "Sign-in & Updates": "system",
+};
+
 const EXTRA = {
   "LLM Analysis Engine": `<div id="llm-preset-host"></div>`,
   "Backup AI (optional)": `<p class="text-xs text-slate-400" data-when="backup_llm_enabled">Tried only when the main AI fails on a book. If the main server is switched off, NovelCheck goes straight to the backup. You'll get a 🔔 notice when the backup is used.</p><div id="backup-preset-host" data-when="backup_llm_enabled"></div>`,
@@ -102,7 +110,7 @@ const EXTRA = {
 
 // renderSettingsTab puts one tab's settings (as collapsible cards) into host.
 export function renderSettingsTab(host, tab, settings, user) {
-  const sections = SECTIONS.filter(([t]) => t === tab);
+  const sections = SECTIONS.filter(([t, title]) => t === tab && can(user, SECTION_AREA[title]));
   if (!sections.length) return;
   const form = document.createElement("form");
   form.className = "space-y-3";

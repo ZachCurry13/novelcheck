@@ -3,7 +3,7 @@ import { PEPPERS, openPepperGuide, whyChip } from "./peppers.js";
 import { copyText } from "./copy.js";
 import { diagnoseLater } from "./diagnose.js";
 import { get, post, put, del } from "./api.js";
-import { $, esc, attempt, classChip, flagChips, ageChip, canManage } from "./ui.js";
+import { $, esc, attempt, classChip, flagChips, ageChip, canManage, can } from "./ui.js";
 import { verdictFormHTML, bindVerdictForm } from "./verdictform.js";
 import { ageAndNotesHTML, bindAgeAndNotes } from "./booknotes.js";
 import { on } from "./modules.js";
@@ -76,7 +76,7 @@ export async function openBook(id, state, onChange) {
           ${b.series ? `<p>${seriesLink(b, seriesText(b))}</p>` : seriesLine(b)}
           <p class="text-slate-400">${authorLinks(b.author)}${b.isbn ? " · ISBN " + esc(b.isbn) : ""}</p>
           ${data.my_progress ? `<p class="mt-1 text-sm text-indigo-300" title="From your e-reader's sync">📖 Your progress: ${progressText(data.my_progress)}</p>` : ""}
-          ${isAdmin && calibreIds.length ? `<p class="mt-1 text-xs ${b.title_fix ? "text-amber-300" : "text-slate-500"}">${b.title_fix ? `In Calibre: “${esc(b.title_fix)}” · ` : ""}<button type="button" data-act="calibre-title" class="underline">✏️ ${b.title_fix ? "Tidy it in Calibre" : "Edit title in Calibre"}</button></p>` : ""}
+          ${can(state.user, "calibre") && calibreIds.length ? `<p class="mt-1 text-xs ${b.title_fix ? "text-amber-300" : "text-slate-500"}">${b.title_fix ? `In Calibre: “${esc(b.title_fix)}” · ` : ""}<button type="button" data-act="calibre-title" class="underline">✏️ ${b.title_fix ? "Tidy it in Calibre" : "Edit title in Calibre"}</button></p>` : ""}
         </div>
       </div>
       <div class="flex flex-wrap gap-1">${classChip(b)} ${reviewChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
@@ -89,7 +89,7 @@ export async function openBook(id, state, onChange) {
         ? ` <button type="button" data-act="rerate-big" class="underline">Re-rate with the big model (${esc(data.big_model)})</button>` : " Check it and edit it, or mark it OK."}</p>` : ""}
       ${contentSection(b)}
       ${b.status === "error" && manager ? `<p class="text-sm text-rose-400">Last error: ${esc(b.analysis_error)}
-        <button type="button" data-copy-err class="ml-1 text-xs underline">📋 Copy</button>${isAdmin ? ` <button type="button" data-dx-err class="text-xs underline">🩺 Diagnose</button>` : ""}</p>` : ""}
+        <button type="button" data-copy-err class="ml-1 text-xs underline">📋 Copy</button>${can(state.user, "system") ? ` <button type="button" data-dx-err class="text-xs underline">🩺 Diagnose</button>` : ""}</p>` : ""}
       ${(b.blurb || b.description) ? `<div><span class="label">Blurb</span>
         <p class="text-sm leading-relaxed text-slate-300 whitespace-pre-line">${esc(b.blurb || b.description)}</p></div>` : ""}
       ${bookCollectionsHTML(data.collections || [], manager)}
@@ -110,7 +110,7 @@ export async function openBook(id, state, onChange) {
         ${!owned ? "" : data.my_delete_request
             ? `<button data-act="cancel-delete" class="btn-ghost" title="${esc(data.my_delete_request.reason || "")}">🗑 Delete requested · Cancel</button>`
             : `<button data-act="request-delete" class="btn-ghost" title="Ask an admin to delete this book">🗑 Request to delete</button>`}
-        ${owned && isAdmin && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
+        ${owned && can(state.user, "calibre") && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
       </div>
       <div class="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap gap-2 border-t border-slate-800 bg-slate-900/95 px-6 py-3 backdrop-blur">
         ${on(state.user, "queue") ? `<button data-act="queue" class="btn-primary">${owned ? "＋ Up Next" : "＋ Up Next (to get)"}</button>` : ""}

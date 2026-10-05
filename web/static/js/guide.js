@@ -47,7 +47,7 @@ const MANAGER = [
 
 const ADMIN = [
   ["⚙️ Admin settings",
-    "As an admin you also have the technical settings: the AI key and model, spending limits, the email account used for Send-to-Kindle, and which Calibre library folder to use. Editors can't see or change these."],
+    "As the main admin you also have the technical settings: the AI key and model, spending limits, the email account used for Send-to-Kindle, and which Calibre library folder to use. You also decide what each other admin can reach: tick their areas on their card under <b>Admin → Users & Rules</b>. Editors can't see or change these."],
   ["📬 Start Reading delivery (optional)",
     `<p class="mb-2">When someone presses <b>▶ Start Reading</b> in Up Next, NovelCheck can put the book on their e-reader:</p>
     <ul class="list-disc space-y-1 pl-5">
@@ -56,6 +56,10 @@ const ADMIN = [
     </ul>
     <p class="mt-2">Don't use either? Switch them off under <b>Admin → System & Toggles → Features</b>.</p>`],
 ];
+
+// Admins other than the main admin: their areas instead of the setup steps.
+const SUB_ADMIN = [["⚙️ Your admin areas",
+  "The main admin chose which admin areas you can reach (for example Deep Scans, or Email & Discover). The top of the <b>Admin</b> page lists them; ask the main admin if you need more."]];
 
 const DONE = [["✅ You're all set", "You can reopen this guide any time from the <b>Help</b> link at the top or bottom of the page."]];
 
@@ -69,7 +73,7 @@ function stepsFor(user) {
     s.splice(1, 0, CHECK);
     s.push(...MANAGER);
   }
-  if (user.role === "admin") s.push(...ADMIN);
+  if (user.role === "admin") s.push(...(user.owner ? ADMIN : SUB_ADMIN));
   return [...s, ...DONE];
 }
 

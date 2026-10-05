@@ -3,7 +3,7 @@
 import { copyText } from "./copy.js";
 import { diagnoseLater } from "./diagnose.js";
 import { get, post, api } from "./api.js";
-import { $, esc, messageLog, canManage } from "./ui.js";
+import { $, esc, messageLog, canManage, can } from "./ui.js";
 
 const LEVEL = {
   error: ["⛔", "Problem", "text-rose-300"],
@@ -124,7 +124,7 @@ function paintPanel() {
 export function initBell(state) {
   const bell = $("#bell-btn");
   const show = canManage(state.user);
-  admin = state.user.role === "admin";
+  admin = can(state.user, "system"); // Diagnose and "Check everything" need System
   bell.classList.toggle("hidden", !show);
   clearInterval(timer);
   if (!show) return;

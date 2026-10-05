@@ -77,7 +77,7 @@ function libraryTiles(s) {
 
 export async function renderUsage(view) {
   view.innerHTML = `
-    ${adminNavHTML("@usage", true)}
+    ${adminNavHTML("@usage")}
     <h1 class="mb-1 text-2xl font-bold">Usage</h1>
     <p class="mb-4 text-sm text-slate-400">What NovelCheck is using right now. Refreshes every 5 seconds; charts show the last 15 minutes.</p>
     <div id="nc-tiles" class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>

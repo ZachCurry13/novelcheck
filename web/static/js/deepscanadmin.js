@@ -4,7 +4,7 @@
 // Up Next is scanned automatically). Decisions apply in place; only the
 // Running section refreshes on its own.
 import { get, post, put } from "./api.js";
-import { $, $$, esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes } from "./ui.js";
+import { $, $$, esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes, canHere } from "./ui.js";
 import { openBook } from "./bookdialog.js";
 import { isOpen, reviewCard, reviewHeader, openRow, resultRow, setMeters } from "./deepscanlists.js";
 import { adminNavHTML } from "./adminnav.js";
@@ -15,7 +15,7 @@ let timer = null;
 export async function renderDeepScanAdmin(view, state) {
   clearInterval(timer);
   view.innerHTML = `
-    ${adminNavHTML("@deepscan", true)}
+    ${adminNavHTML("@deepscan")}
     <h1 class="mb-1 text-2xl font-bold">🧬 Deep Scan</h1>
     <p class="mb-3 text-sm text-slate-400">The AI reads a book's whole EPUB, part by part, instead of guessing from the description.</p>
     <div id="model-warning"></div>
@@ -177,7 +177,7 @@ function paintModelWarning(box, data) {
   if (!data.model_warning) return;
   box.innerHTML = `<div class="mb-4 space-y-2 rounded-lg bg-amber-950/50 p-3 text-sm text-amber-200"><p>⚠️ ${esc(data.model_warning)}</p>
     <div class="flex flex-wrap items-center gap-2">
-      ${data.suggest_model ? `<button id="use-model" class="btn-secondary py-1 text-sm">Use ${esc(data.suggest_model)} for Deep Scan</button>
+      ${data.suggest_model && canHere("ai") ? `<button id="use-model" class="btn-secondary py-1 text-sm">Use ${esc(data.suggest_model)} for Deep Scan</button>
         <span class="text-xs text-amber-200/80">(already on your Ollama; other ratings keep their model)</span>` : ""}
       ${data.warned_model ? `<button id="keep-model" class="btn-ghost py-1 text-sm" title="Hide this warning while Deep Scan uses this model">Keep using ${esc(data.warned_model)}</button>` : ""}
     </div></div>`;

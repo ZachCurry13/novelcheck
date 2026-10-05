@@ -2,7 +2,7 @@
 // each copy's formats and sizes. Admins can move the extra copies to
 // Calibre's recycle bin in one click (through the Content server).
 import { get, post } from "./api.js";
-import { $, $$, esc, attempt, toast } from "./ui.js";
+import { $, $$, esc, attempt, toast, can } from "./ui.js";
 
 const MB = 1 << 20;
 const fmtSize = (b) => (!b ? "" : b >= MB ? `${(b / MB).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
@@ -24,7 +24,7 @@ function entryHTML(g, e, isAdmin) {
 }
 
 export async function renderDuplicates(view, state) {
-  const isAdmin = state.user.role === "admin";
+  const isAdmin = can(state.user, "calibre"); // may remove the extra copies
   view.innerHTML = `
     <a href="#/library" class="text-sm text-slate-400 underline">← Library</a>
     <h1 class="mb-1 mt-2 text-2xl font-bold">Duplicates in Calibre</h1>

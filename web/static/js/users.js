@@ -1,14 +1,16 @@
 // User management: accounts, roles and parental content rules.
-// Admins manage everyone; editors see and manage only kid accounts.
+// The main admin manages everyone; admins with the Users area manage the
+// other parents and kids; other admins and editors manage only kids.
 import { PEPPERS } from "./peppers.js";
 import { get, post, put, del } from "./api.js";
-import { $, $$, esc, attempt, AGE_GROUPS } from "./ui.js";
+import { $, $$, esc, attempt, AGE_GROUPS, can } from "./ui.js";
 import { on, deliveryOptions } from "./modules.js";
 import { openKOReaderSetup } from "./delivery.js";
 import { loadContent, contentPresets, hidePicker, bindHidePicker, pickedIn } from "./content.js";
 import { collectionLimitHTML, readCollectionLimit } from "./kidcollections.js";
 import { fillKidReading } from "./kidreading.js";
 import { renderFamilyDevices, setUserPIN } from "./familysettings.js";
+import { accessHTML, accessAction } from "./adminaccess.js";
 
 export const RULES = [
   ["hide_open_door", "Hide Open Door"],
@@ -23,14 +25,15 @@ export const RULES = [
 // their age or younger), plus Editor and Admin. Values are "role:age".
 // kids=false (parent tools turned off) leaves out kid types, except on an
 // existing kid's card, whose rules keep applying.
-function typeOptions(role, age, isAdmin, kids = true) {
+function typeOptions(role, age, viewer, kids = true) {
   const cur = `${role}:${role === "restricted" ? age || 0 : 0}`;
   const opts = [];
   if (kids || role === "restricted") {
     opts.push(...AGE_GROUPS.filter(([l]) => l < 5).map(([l, n, r]) => [`restricted:${l}`, `Kid · ${n} (${r})`]));
     opts.push(["restricted:0", "Kid · no age group (content rules only)"]);
   }
-  if (isAdmin) opts.push(["editor:0", "Editor (parent, no technical settings)"], ["admin:0", "Admin"]);
+  if (viewer?.owner || can(viewer, "users")) opts.push(["editor:0", "Editor (parent, no technical settings)"]);
+  if (viewer?.owner || role === "admin") opts.push(["admin:0", "Admin"]); // only the main admin makes admins
   return opts.map(([v, l]) => `<option value="${v}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`).join("");
 }
 
@@ -56,7 +59,7 @@ const parseType = (v) => {
 let collections = []; // for the kids' "only these collections" choice
 
 export async function renderUsers(host, viewer) {
-  const isAdmin = viewer?.role === "admin";
+  const parents = !!viewer?.owner || can(viewer, "users"); // may manage the other parents
   const kids = on(viewer, "parents");
   const [users, cols] = await Promise.all([attempt(() => get("/api/admin/users")).then((u) => u || []),
     get("/api/collections").then((d) => d.collections.filter((c) => c.kind !== "idea")).catch(() => []), loadContent()]);
@@ -65,20 +68,20 @@ export async function renderUsers(host, viewer) {
   const root = document.createElement("div");
   host.replaceChildren(root);
   root.innerHTML = `
-    <h2 class="mb-1 text-xl font-bold">${isAdmin ? "Users & Content Rules" : "Kids' Accounts & Content Rules"}</h2>
-    <p class="mb-3 text-sm text-slate-400">${isAdmin
-      ? "Admin: full control. Editor: manages books, scans and kids' accounts, but no technical settings. Restricted: kid account filtered by its rules."
+    <h2 class="mb-1 text-xl font-bold">${parents ? "Users & Content Rules" : "Kids' Accounts & Content Rules"}</h2>
+    <p class="mb-3 text-sm text-slate-400">${parents
+      ? `Main admin: everything, and decides what each other admin can reach. Admin: what the main admin ticks on their card. Editor: manages books, scans and kids' accounts, but no technical settings. Kid: an account filtered by its rules.`
       : "Add kid accounts, reset their passwords, and choose what each one can see."}</p>
-    <form id="new-user" class="card mb-4 grid gap-3 md:grid-cols-4${kids || isAdmin ? "" : " module-off"}">
+    <form id="new-user" class="card mb-4 grid gap-3 md:grid-cols-4${kids || parents ? "" : " module-off"}">
       <input name="username" required placeholder="Username" class="input">
       <input name="password" type="password" required minlength="8" placeholder="Password (8+ chars)" class="input" autocomplete="new-password">
       <select name="type" class="input" title="Kids start with content rules suited to their age group; you can change them after.">${
-        kids ? typeOptions("restricted", 2, isAdmin) : typeOptions("editor", 0, isAdmin, false)}</select>
+        kids ? typeOptions("restricted", 2, viewer) : typeOptions("editor", 0, viewer, false)}</select>
       <button class="btn-primary">Add user</button>
     </form>
     ${kids ? "" : `<p class="mb-3 text-xs text-slate-500">Parent tools are turned off (Admin → System & Toggles → Features), so new kid accounts can't be added. Existing kids keep their rules.</p>`}
     <div id="family-devices"></div>
-    <div class="grid gap-3 lg:grid-cols-2">${users.map((u) => userCard(u, isAdmin, viewer)).join("")}</div>`;
+    <div class="grid gap-3 lg:grid-cols-2">${users.map((u) => userCard(u, parents, viewer)).join("")}</div>`;
   fillKidReading(root);
   renderFamilyDevices($("#family-devices", root));
 
@@ -119,6 +122,8 @@ export async function renderUsers(host, viewer) {
       const ms = $("[name=max_spice]", cardEl);
       if (ms) body.max_spice = Number(ms.value);
       await attempt(() => put(`/api/admin/users/${id}`, body), preset ? preset.done : "User saved");
+    } else if (act === "access" || act === "owner") {
+      accessAction(act, id, cardEl, cardEl.querySelector("p.font-semibold")?.textContent || "this admin", () => renderUsers(host, viewer));
     } else if (act === "koreader") {
       openKOReaderSetup(id);
     } else if (act === "pin") {
@@ -134,13 +139,14 @@ export async function renderUsers(host, viewer) {
   });
 }
 
-function userCard(u, isAdmin, viewer) {
+function userCard(u, parents, viewer) {
   return `
     <div data-user="${u.id}" class="card space-y-3">
       <div class="flex items-center justify-between">
         <div class="min-w-0"><p class="font-semibold">${esc(u.username)}</p><p class="mt-1 flex flex-wrap gap-1">${badges(u)}</p></div>
-        <select name="type" class="input w-auto max-w-[60%] py-1 text-sm">${typeOptions(u.role, u.age_level, isAdmin, on(viewer, "parents"))}</select>
+        <select name="type" class="input w-auto max-w-[60%] py-1 text-sm">${typeOptions(u.role, u.age_level, viewer, on(viewer, "parents"))}</select>
       </div>
+      ${accessHTML(u, viewer)}
       ${u.role === "restricted" && on(viewer, "queue") ? `<div data-reading="${u.id}"></div>` : ""}
       ${u.role === "restricted" ? `<label class="block"><span class="label">Most peppers allowed</span>
         <select name="max_spice" class="input">
@@ -163,17 +169,21 @@ function userCard(u, isAdmin, viewer) {
       <div class="flex flex-wrap gap-2">
         <button data-uact="save" class="btn-primary">Save</button>
         <button data-uact="password" class="btn-secondary">Reset password</button>
-        ${isAdmin || u.role === "restricted" ? `<button data-uact="pin" class="btn-ghost" title="A 4-digit PIN for family devices">🔢 PIN</button>` : ""}
-        ${(isAdmin || u.role === "restricted") && on(viewer, "koreader") ? `<button data-uact="koreader" class="btn-ghost" title="Set up this reader's KOReader">📖 KOReader</button>` : ""}
-        <button data-uact="delete" class="btn-danger">Delete</button>
+        ${parents || u.role === "restricted" ? `<button data-uact="pin" class="btn-ghost" title="A 4-digit PIN for family devices">🔢 PIN</button>` : ""}
+        ${(parents || u.role === "restricted") && on(viewer, "koreader") ? `<button data-uact="koreader" class="btn-ghost" title="Set up this reader's KOReader">📖 KOReader</button>` : ""}
+        ${u.owner ? "" : `<button data-uact="delete" class="btn-danger">Delete</button>`}
       </div>
     </div>`;
 }
 
 // badges sum an account up at a glance: role, and for kids their limits.
 function badges(u) {
-  const role = { admin: ["Admin", "chip-open"], editor: ["Parent (editor)", "chip-cat"], restricted: ["Kid", "chip-none"] }[u.role] || [u.role, "chip-pending"];
+  const role = { admin: [u.owner ? "🔑 Main admin" : "Admin", "chip-open"], editor: ["Parent (editor)", "chip-cat"], restricted: ["Kid", "chip-none"] }[u.role] || [u.role, "chip-pending"];
   const out = [`<span class="${role[1]}">${esc(role[0])}</span>`];
+  if (u.role === "admin" && !u.owner) {
+    const n = (u.admin_areas || "").split(",").filter(Boolean).length;
+    out.push(`<span class="chip-cat" title="Areas the main admin gave">${n} of 6 areas</span>`);
+  }
   if (u.role === "restricted") {
     out.push(`<span class="chip-closed">${u.max_spice < 0 ? "No pepper limit" : `🌶️ Max Level ${u.max_spice}`}</span>`);
     const age = AGE_GROUPS.find(([l]) => l === u.age_level);

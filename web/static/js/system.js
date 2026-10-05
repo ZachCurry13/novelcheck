@@ -27,7 +27,7 @@ function checksTable(res) {
 
 export async function renderSystem(view) {
   view.innerHTML = `
-    ${adminNavHTML("@system", true)}
+    ${adminNavHTML("@system")}
     <h1 class="mb-1 text-2xl font-bold">System checks</h1>
     <p class="mb-4 text-sm text-slate-400">Check that every service NovelCheck talks to is working.</p>
     <div id="diagnose"></div>
