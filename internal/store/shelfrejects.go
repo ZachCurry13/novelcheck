@@ -124,7 +124,11 @@ func (s *Store) ShelfToCheck(collectionID int64, season string, limit int) (them
 	if err := s.seasonReady(se); err != nil {
 		return "", nil, err
 	}
+	cond := ownedCond
+	if se.Faith { // the shelf never shows these, so don't check them
+		cond += " AND (b.approved = 1 OR NOT (b.dark_occult = 1 OR b.demonic_presence = 1))"
+	}
 	err = s.DB.Select(&books, `SELECT `+bookCols+derivedCols+`, '' AS catalogs FROM books b
-		JOIN season_books sn ON sn.book_id = b.id AND sn.season = ? WHERE `+ownedCond+` ORDER BY b.title COLLATE NOCASE LIMIT ?`, se.Key, limit)
+		JOIN season_books sn ON sn.book_id = b.id AND sn.season = ? WHERE `+cond+` ORDER BY b.title COLLATE NOCASE LIMIT ?`, se.Key, limit)
 	return se.Theme, books, err
 }

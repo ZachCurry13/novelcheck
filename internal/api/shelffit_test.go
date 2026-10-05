@@ -102,6 +102,17 @@ func TestShelvesStayOnTheme(t *testing.T) {
 		t.Fatalf("saints shelf: %s", got)
 	}
 
+	// A faith shelf leaves out books flagged Dark Occult, whatever their words.
+	occult, _ := st.UpsertBook("The Haunted Abbey", "Author", "", "")
+	_, _ = st.DB.Exec(`UPDATE books SET description = 'A saint fights demons.', dark_occult = 1 WHERE id = ?`, occult)
+	_ = st.AddCopy(cal, occult, "/c/occult.epub", "epub", "99")
+	_, _ = st.DB.Exec(`DELETE FROM season_books`) // the shelf's matches are remade on the next visit
+	for _, title := range shelfTitles(t, admin, "season=saints") {
+		if title == "The Haunted Abbey" {
+			t.Fatal("a Dark Occult book on the Saints shelf")
+		}
+	}
+
 	// Not for this shelf: gone at once, and remembered.
 	res, out := admin.do("POST", "/api/shelves/reject", map[string]any{"season": "saints", "ids": []int64{ids["Brother Francis"]}}, true)
 	if res.StatusCode != 200 || out["removed"].(float64) != 1 {
