@@ -116,3 +116,16 @@ func deviceName(d string) string {
 	}
 	return d
 }
+
+// LastKosync is when (Unix seconds) and from which device someone's KOReader
+// last reported progress; at 0 means never.
+func (s *Store) LastKosync(userID int64) (at int64, device string) {
+	var row struct {
+		At     int64  `db:"updated_at"`
+		Device string `db:"device"`
+	}
+	if s.DB.Get(&row, `SELECT updated_at, device FROM kosync_progress WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1`, userID) == nil {
+		return row.At, deviceName(row.Device)
+	}
+	return 0, ""
+}

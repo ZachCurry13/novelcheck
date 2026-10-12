@@ -81,6 +81,12 @@ func TestKOReaderStatisticsFolder(t *testing.T) {
 	if res := dav("PROPFIND", "/dav/", code["code"].(string), nil); res.StatusCode != 207 {
 		t.Fatalf("browse the folder: %d", res.StatusCode)
 	}
+	// Whatever "start folder" KOReader is given exists once it asks (and can't climb out).
+	for _, folder := range []string{"/dav/NovelCheck/", "/dav/a/b/", "/dav/../../etc/"} {
+		if res := dav("PROPFIND", folder, code["code"].(string), nil); res.StatusCode != 207 {
+			t.Fatalf("start folder %s: %d", folder, res.StatusCode)
+		}
+	}
 	if res := dav("GET", "/dav/statistics.sqlite3", code["code"].(string), nil); res.StatusCode != 404 {
 		t.Fatalf("first sync finds nothing: %d", res.StatusCode)
 	}

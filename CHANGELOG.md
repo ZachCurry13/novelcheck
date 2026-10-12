@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.31.1]
+
+### 🔧 Fixes
+- **KOReader's WebDAV "start folder" works.** KOReader asks for a start folder when you add the NovelCheck folder, and any name gave "can't fetch the folder list". NovelCheck now creates whatever folder KOReader asks for, and the steps say to type `/`.
+- **Busy Google Gemini is retried.** When Gemini answers "high demand" (503) or "too many requests", NovelCheck waits a few seconds and tries again, up to three more times, before moving to your fallback model.
+- **Is reading sync working?** **Profile → 🔄 Reading sync** shows when KOReader last reported your place (and from which device) and when its statistics last arrived, with a hint when it never has.
+
 ## [1.31.0]
 
 ### 🔑 Main admin and admin areas

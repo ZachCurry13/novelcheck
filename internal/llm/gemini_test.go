@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 // toServer sends every request to srv, whatever host it was for.
@@ -61,5 +62,32 @@ func TestGemini(t *testing.T) {
 	}
 	if _, ok := got["reasoning_effort"]; ok || got["max_tokens"].(float64) != 600 {
 		t.Fatalf("non-Gemini request: %v", got)
+	}
+}
+
+// "High demand" (503) is retried; a steady 503 fails with Google's message.
+func TestBusyRetries(t *testing.T) {
+	old := busyWaits
+	busyWaits = []time.Duration{time.Millisecond, time.Millisecond, time.Millisecond}
+	defer func() { busyWaits = old }()
+	calls, busyFor := 0, 2
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls <= busyFor {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			io.WriteString(w, `[{"error": {"code": 503, "message": "This model is currently experiencing high demand."}}]`)
+			return
+		}
+		io.WriteString(w, `{"choices": [{"message": {"content": "ok"}}], "usage": {}}`)
+	}))
+	defer srv.Close()
+	c := &Client{BaseURL: srv.URL, APIKey: "k"}
+	if out, _, err := c.Complete(context.Background(), "m", "s", "u"); err != nil || out != "ok" || calls != 3 {
+		t.Fatalf("after two busy answers: %q %v (%d calls)", out, err, calls)
+	}
+	calls, busyFor = 0, 99
+	_, _, err := c.Complete(context.Background(), "m", "s", "u")
+	if err == nil || !strings.Contains(err.Error(), "high demand") || calls != 4 {
+		t.Fatalf("always busy: %v (%d calls)", err, calls)
 	}
 }

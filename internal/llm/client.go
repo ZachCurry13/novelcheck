@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -75,8 +76,38 @@ func (c *Client) Complete(ctx context.Context, model, system, user string) (stri
 	})
 }
 
-// send posts a chat request and returns the assistant text and usage.
+// errBusy marks an answer of "busy, try again" (429 or 503: Gemini's "high
+// demand", for one). send waits and tries again before giving up.
+var errBusy = errors.New("the AI service is busy")
+
+// busyWaits are the pauses before each retry (so up to 4 tries).
+var busyWaits = []time.Duration{3 * time.Second, 8 * time.Second, 20 * time.Second}
+
+// send posts a chat request, trying again a few times while the service says
+// it's busy, and returns the assistant text and usage.
 func (c *Client) send(ctx context.Context, body chatRequest) (string, Usage, error) {
+	for try := 0; ; try++ {
+		out, u, err := c.sendOnce(ctx, body)
+		if err == nil || !errors.Is(err, errBusy) || try >= len(busyWaits) {
+			return out, u, err
+		}
+		select {
+		case <-ctx.Done():
+			return out, u, err
+		case <-time.After(busyWaits[try]):
+		}
+	}
+}
+
+// busy wraps err so send retries it when the status says "busy".
+func busy(status int, err error) error {
+	if status == http.StatusServiceUnavailable || status == http.StatusTooManyRequests {
+		return fmt.Errorf("%w: %w", errBusy, err)
+	}
+	return err
+}
+
+func (c *Client) sendOnce(ctx context.Context, body chatRequest) (string, Usage, error) {
 	if c.JSONMode {
 		body.ResponseFormat = map[string]string{"type": "json_object"}
 	}
@@ -112,15 +143,15 @@ func (c *Client) send(ctx context.Context, body chatRequest) (string, Usage, err
 		// Gemini sends its errors as a list: [{"error": {"message": …}}].
 		var list []chatResponse
 		if json.Unmarshal(raw, &list) == nil && len(list) > 0 && list[0].Error != nil {
-			return "", Usage{}, fmt.Errorf("LLM error (%s): %s", resp.Status, list[0].Error.Message)
+			return "", Usage{}, busy(resp.StatusCode, fmt.Errorf("LLM error (%s): %s", resp.Status, list[0].Error.Message))
 		}
-		return "", Usage{}, fmt.Errorf("LLM %s: %s", resp.Status, truncate(string(raw), 200))
+		return "", Usage{}, busy(resp.StatusCode, fmt.Errorf("LLM %s: %s", resp.Status, truncate(string(raw), 200)))
 	}
 	if cr.Error != nil {
-		return "", cr.Usage, fmt.Errorf("LLM error: %s", cr.Error.Message)
+		return "", cr.Usage, busy(resp.StatusCode, fmt.Errorf("LLM error: %s", cr.Error.Message))
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", cr.Usage, fmt.Errorf("LLM %s", resp.Status)
+		return "", cr.Usage, busy(resp.StatusCode, fmt.Errorf("LLM %s", resp.Status))
 	}
 	if len(cr.Choices) == 0 {
 		return "", cr.Usage, errors.New("LLM returned no choices")

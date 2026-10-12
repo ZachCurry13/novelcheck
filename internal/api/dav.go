@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -97,6 +98,11 @@ func (s *Server) handleDAV(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		r.Body = http.MaxBytesReader(w, r.Body, davMaxBytes)
+	}
+	if r.Method == "PROPFIND" { // KOReader asks for its "start folder": make it, whatever it's called
+		if rel := strings.Trim(path.Clean("/"+strings.TrimPrefix(r.URL.Path, "/dav")), "/"); rel != "" && len(rel) < 200 {
+			_ = os.MkdirAll(filepath.Join(dir, filepath.FromSlash(rel)), 0o700)
+		}
 	}
 	locks, running := s.dav.forUser(u.ID)
 	rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}

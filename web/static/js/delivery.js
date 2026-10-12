@@ -130,7 +130,7 @@ function statsHTML(url, username, code) {
       <li>In KOReader's file browser, tap the <b>🔍 search</b> icon in the top menu, then <b>Cloud storage</b> (next to OPDS catalog). Tap <b>＋</b>, choose <b>WebDAV</b> and enter:
         <span class="mt-1 flex items-center gap-2"><code class="min-w-0 break-all rounded bg-slate-800 px-2 py-1 text-xs">${esc(url)}</code>
         <button type="button" data-ko="copy-dav" class="btn-ghost shrink-0 py-1 text-xs">📋 Copy</button></span>
-        Username <b>${esc(username)}</b>, password <code class="rounded bg-slate-800 px-2 py-0.5">${esc(code)}</code> (the same sync code). Name it <b>NovelCheck</b>.</li>
+        Username <b>${esc(username)}</b>, password <code class="rounded bg-slate-800 px-2 py-0.5">${esc(code)}</code> (the same sync code). Name it <b>NovelCheck</b>. When it asks for a <b>start folder</b>, type <b>/</b> (a single slash), not the name or the username.</li>
       <li>In a book, open the top menu → <b>🛠 Tools</b> → <b>Reading statistics</b> → <b>Settings</b> → <b>Cloud sync</b>, pick <b>NovelCheck</b> and its top folder.</li>
       <li>Then <b>Reading statistics</b> → <b>Synchronize now</b>. Do that again whenever you want NovelCheck to catch up.</li>
     </ol>

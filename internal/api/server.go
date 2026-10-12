@@ -111,6 +111,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/me/kosync", s.handleMyKosync)
 			r.Post("/me/kosync", s.handleMyKosync)
 			r.Get("/me/koreader-books", s.handleMyKOReaderBooks)
+			r.Get("/me/reading-sync", s.handleMyReadingSync)
 
 			r.Get("/books", s.handleListBooks)
 			r.Get("/books/facets", s.handleBookFacets)

@@ -75,3 +75,18 @@ func (s *Server) handleUserReading(w http.ResponseWriter, r *http.Request) {
 	out["reading"] = reading
 	writeJSON(w, http.StatusOK, out)
 }
+
+// handleMyReadingSync: GET /api/me/reading-sync, so Profile can show that
+// syncing really happens: when KOReader last reported progress (and from
+// which device), when its statistics file last arrived, and how many books
+// it holds.
+func (s *Server) handleMyReadingSync(w http.ResponseWriter, r *http.Request) {
+	u := auth.UserFrom(r)
+	at, device := s.Store.LastKosync(u.ID)
+	var statsAt int64
+	if _, t := s.statsPath(u.ID); !t.IsZero() {
+		statsAt = t.Unix()
+	}
+	books, _ := s.Store.KOReaderBooks(u.ID, 1000)
+	writeJSON(w, http.StatusOK, map[string]any{"progress_at": at, "progress_device": device, "stats_at": statsAt, "stats_books": len(books)})
+}
