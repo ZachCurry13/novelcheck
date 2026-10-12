@@ -58,3 +58,9 @@ Open **Profile > KOReader plugin** in NovelCheck and press **Download the plugin
 ## One-tap setup (NovelCheck 1.40 or newer, plugin 1.40.0)
 
 **NovelCheck > Set up everything** connects KOReader's Progress sync and Reading statistics sync to NovelCheck using the details already in the plugin. You do not need to add a Cloud storage (WebDAV) account or an OPDS catalog by hand. After it finishes, restart KOReader. **Sync reading statistics now** (same menu) runs the sync; **Automatic > Sync reading statistics when online** does it by itself.
+
+## Matching and tidy names (NovelCheck 1.41 or newer, plugin 1.41.0)
+
+The plugin now sends each book's real title and author, so NovelCheck matches your Kindle's books to your library far more often. In NovelCheck, **Profile > KOReader plugin > Match books on my e-readers** fixes the rest by hand. **NovelCheck > Tidy book names** (in KOReader) then shows your library's titles and authors for the matched books (display only; the files are not touched).
+
+On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reopen it from KUAL. **NovelCheck > Set up everything** usually needs no restart.

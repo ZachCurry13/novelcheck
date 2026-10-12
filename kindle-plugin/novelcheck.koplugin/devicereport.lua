@@ -5,6 +5,7 @@ It adds its functions to the NovelCheck plugin class (see main.lua).
 
 local ConfirmBox = require("ui/widget/confirmbox")
 local DataStorage = require("datastorage")
+local LuaSettings = require("luasettings")
 local Device = require("device")
 local InfoMessage = require("ui/widget/infomessage")
 local NetworkMgr = require("ui/network/manager")
@@ -55,8 +56,47 @@ return function(NovelCheck, ctx)
 
     -- scanBooks lists the books under dir (without folder names): file name,
     -- format, size and KOReader's fingerprint of the file.
+    -- bookProps is a book's own title and author. It asks KOReader's book info
+    -- (which knows opened books and cached ones) and, for up to PROPS_OPENS books
+    -- per scan, opens the book itself. Answers are kept in a small cache file
+    -- (by fingerprint), so after a few reports every book is known.
+    local PROPS_OPENS = 25
+
+    function NovelCheck:bookProps(path, md5)
+        if not self.props_cache then
+            self.props_cache = LuaSettings:open(DataStorage:getSettingsDir() .. "/novelcheck_props.lua")
+        end
+        local cached = md5 ~= "" and self.props_cache:readSetting(md5) or nil
+        if cached then
+            return cached.t, cached.a
+        end
+        local info = self.ui and self.ui.bookinfo
+        if not info then
+            return nil
+        end
+        local may_open = (self.props_opens or 0) < PROPS_OPENS
+        local ok, props = pcall(info.getDocProps, info, path, nil, not may_open)
+        if may_open then
+            self.props_opens = (self.props_opens or 0) + 1
+        end
+        if ok and type(props) == "table" and type(props.title) == "string" and props.title ~= "" then
+            local author = tostring(props.authors or ""):match("([^\n]+)") or ""
+            if author == "N/A" then
+                author = ""
+            end
+            if md5 ~= "" then
+                self.props_cache:saveSetting(md5, { t = props.title, a = author })
+            end
+            return props.title, author
+        end
+        return nil
+    end
+
     function NovelCheck:scanBooks(dir, books, depth, no_md5)
         if #books >= MAX_BOOKS or depth > 4 then return end
+        if depth == 0 then
+            self.props_opens = 0
+        end
         for entry in lfs.dir(dir) do
             if entry:sub(1, 1) ~= "." and not entry:match("%.sdr$") then
                 local path = dir .. "/" .. entry
@@ -71,10 +111,15 @@ return function(NovelCheck, ctx)
                             local ok, got = pcall(util.partialMD5, path)
                             sum = ok and got or ""
                         end
+                        local ptitle, pauthor
+                        if not no_md5 then
+                            ptitle, pauthor = self:bookProps(path, sum)
+                        end
                         table.insert(books, {
                             filename = entry,
                             path = path,
-                            title = (entry:gsub("%.[^.]+$", ""):gsub("[-_]", " ")),
+                            title = ptitle or (entry:gsub("%.[^.]+$", ""):gsub("[-_]", " ")),
+                            author = pauthor or "",
                             format = ext:lower(),
                             size = attr.size,
                             md5 = sum,
@@ -90,7 +135,10 @@ return function(NovelCheck, ctx)
     function NovelCheck:withoutPaths(books)
         local out = {}
         for _i, b in ipairs(books) do
-            table.insert(out, { filename = b.filename, title = b.title, format = b.format, size = b.size, md5 = b.md5 })
+            table.insert(out, { filename = b.filename, title = b.title, author = b.author, format = b.format, size = b.size, md5 = b.md5 })
+        end
+        if self.props_cache then
+            self.props_cache:flush()
         end
         return out
     end
@@ -102,8 +150,18 @@ return function(NovelCheck, ctx)
         pcall(function()
             local books = {}
             self:scanBooks(self:downloadDir(), books, 0)
-            self:request("/kosync/plugin/device", nil, json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) })
+            local code = self:request("/kosync/plugin/device", nil, json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) })
+            self:noteReported(code)
         end)
+    end
+
+    -- noteReported remembers which plugin version NovelCheck last heard of, so
+    -- a freshly updated plugin reports again at once (the Profile page shows it).
+    function NovelCheck:noteReported(code)
+        if code == 200 then
+            self.settings:saveSetting("reported_version", VERSION)
+            self.settings:flush()
+        end
     end
 
     function NovelCheck:reportDevice()
@@ -122,6 +180,7 @@ return function(NovelCheck, ctx)
                 end
                 local body = json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) }
                 local code, answer = self:request("/kosync/plugin/device", nil, body)
+                self:noteReported(code)
                 if code == 200 then
                     local good, data = pcall(json.decode, answer)
                     local text = _("Reported to NovelCheck:") .. " " .. tostring(#books) .. " " .. _("books")

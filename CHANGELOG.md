@@ -4,6 +4,18 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.41.0]
+
+### 🔎 Books on your Kindle find their match, and you can fix the rest
+- **Every file in your library is fingerprinted** (KOReader's own file fingerprint), slowly in the background, so a book copied to the Kindle is recognised by its file whatever it is called. This is the exact way, and should catch most of your books.
+- **The plugin sends each book's real title and author** (read from the book itself, a few more each time and remembered), instead of guessing from the file name. NovelCheck also reads file names better: `Author - Title`, `Title - Author`, underscores, ID suffixes and "(z-lib.org)" tags.
+- **🔗 Match books on my e-readers** (Profile → KOReader plugin, and the "Match the unmatched" link under On your KOReader in Up Next): for each book NovelCheck couldn't match, search your library and pick it, or mark it **🚫 Not a book** (thumbnails, KOReader's own guide). Your choice is remembered by the file, so every later sync keeps it. A book you match joins Up Next like the others.
+- Books still unmatched after all that are looked up in Open Library (a cover and real title), now for the files on your devices as well as the statistics.
+- **Set up everything fixed after the first real try:** it no longer stops when it cannot see KOReader's Cloud storage plugin (it was wrong to ask you to turn it on), and no longer ends with a Restart button, which on a Kindle just closes KOReader. Progress sync is now changed in place when a book is open. Restart (reopen KOReader from KUAL) only if progress sync doesn't pick the settings up.
+- **The plugin reports itself after an update:** Profile no longer keeps saying "plugin 1.39.0: update to 1.40.0" after you updated. A newly updated plugin tells NovelCheck its version at its next start (and when Wi-Fi connects), instead of waiting for the six-hour timer.
+- **NovelCheck → About (plugin)** shows the version, your server, and the project's GitHub link with a button that shows it as a QR code (KOReader has no browser), so you can open it on your phone.
+- **Plugin 1.41.0 → Tidy book names:** shows your library's title and author in KOReader for the books NovelCheck matched (it asks first, changes only the displayed name, never the files, and can be reset in KOReader's book info). Update the plugin from **NovelCheck → Update plugin**.
+
 ## [1.40.0]
 
 ### ⚡ One-tap setup in the KOReader plugin

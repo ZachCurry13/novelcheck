@@ -8,9 +8,15 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/zachcurry13/novelcheck/internal/api"
+	"github.com/zachcurry13/novelcheck/internal/enrich"
+	"github.com/zachcurry13/novelcheck/internal/kosync"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	kindleplugin "github.com/zachcurry13/novelcheck/kindle-plugin"
 )
@@ -51,7 +57,7 @@ func TestKOReaderPluginDownload(t *testing.T) {
 	if !strings.Contains(cfg, `user = "admin"`) || !strings.Contains(cfg, `code = "`+code+`"`) || !strings.Contains(cfg, "server = ") {
 		t.Fatalf("config.lua: %q", cfg)
 	}
-	for _, name := range []string{"_meta.lua", "main.lua", "devicebooks.lua", "updater.lua", "devicereport.lua", "setup.lua"} {
+	for _, name := range []string{"_meta.lua", "main.lua", "devicebooks.lua", "updater.lua", "devicereport.lua", "setup.lua", "tidynames.lua"} {
 		if files["novelcheck.koplugin/"+name] == "" {
 			t.Fatalf("%s missing from the zip", name)
 		}
@@ -202,5 +208,155 @@ func TestKOReaderPluginUpdate(t *testing.T) {
 		if code, _ := get("/kosync/plugin/file/"+bad, key); code != 404 {
 			t.Fatalf("%s: %d", bad, code)
 		}
+	}
+}
+
+// A book on the Kindle is recognised by its file even when the file name
+// says nothing about the title.
+func TestDeviceBooksMatchByFingerprint(t *testing.T) {
+	lib := t.TempDir()
+	var app *api.Server
+	srv, st := setupWith(t, func(s *api.Server) {
+		app = s
+		s.Cfg.CalibreDir = lib
+	})
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	path := filepath.Join(lib, "Author", "Odd Title (1)", "odd.epub")
+	_ = os.MkdirAll(filepath.Dir(path), 0o755)
+	_ = os.WriteFile(path, []byte(strings.Repeat("a book that is a bit long ", 300)), 0o644)
+	book, _ := st.UpsertBook("The Odd Title", "Some Author", "", "")
+	_ = st.AddCopy(cal, book, path, "epub", "1")
+	if n := app.IndexFingerprintsOnce(10); n != 1 {
+		t.Fatalf("indexed %d", n)
+	}
+	if n := app.IndexFingerprintsOnce(10); n != 0 {
+		t.Fatalf("a file is fingerprinted once, got %d", n)
+	}
+	fp, _ := kosync.PartialMD5(path)
+
+	body := `{"device":"Kindle","books":[{"filename":"x7f3-download-final.epub","title":"x7f3 download final","format":"epub","size":1,"md5":"` + fp + `"}]}`
+	req, _ := http.NewRequest("POST", srv.URL+"/kosync/plugin/device", strings.NewReader(body))
+	req.Header.Set("x-auth-user", "admin")
+	req.Header.Set("x-auth-key", hex.EncodeToString(sum[:]))
+	res, err := http.DefaultClient.Do(req)
+	if err != nil || res.StatusCode != 200 {
+		t.Fatalf("report: %v", err)
+	}
+	out := map[string]any{}
+	_ = json.NewDecoder(res.Body).Decode(&out)
+	res.Body.Close()
+	if out["matched"] != float64(1) {
+		t.Fatalf("a book is matched by its file: %v", out)
+	}
+}
+
+// A person can match a Kindle book by hand, mark junk "not a book", and the
+// choice sticks through later reports.
+func TestMatchKindleBooksByHand(t *testing.T) {
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"docs": []any{}}) // Open Library knows nothing
+	}))
+	t.Cleanup(fake.Close)
+	srv, st := setupWith(t, func(s *api.Server) {
+		s.Worker.NewEnricher = func() *enrich.Client {
+			c := enrich.New("")
+			c.OpenLibraryURL, c.GoogleBooksURL = fake.URL, fake.URL
+			return c
+		}
+	})
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	book, _ := st.UpsertBook("The Reptile Room", "Lemony Snicket", "", "")
+	_ = st.AddCopy(cal, book, "/c/reptile.epub", "epub", "1")
+
+	report := func() map[string]any {
+		body := `{"device":"Kindle","plugin_version":"1.41.0","books":[` +
+			`{"filename":"x9-file.epub","title":"x9 file","format":"epub","size":1,"md5":"aaa"},` +
+			`{"filename":"thumbnail_1.epub","title":"thumbnail 1","format":"epub","size":1,"md5":"bbb"}]}`
+		req, _ := http.NewRequest("POST", srv.URL+"/kosync/plugin/device", strings.NewReader(body))
+		req.Header.Set("x-auth-user", "admin")
+		req.Header.Set("x-auth-key", hex.EncodeToString(sum[:]))
+		res, err := http.DefaultClient.Do(req)
+		if err != nil || res.StatusCode != 200 {
+			t.Fatalf("report: %v", err)
+		}
+		out := map[string]any{}
+		_ = json.NewDecoder(res.Body).Decode(&out)
+		res.Body.Close()
+		return out
+	}
+	attention := func() []any {
+		_, out := admin.do("GET", "/api/me/kindle-books", nil, false)
+		items, _ := out["items"].([]any)
+		return items
+	}
+	if out := report(); out["matched"] != float64(0) || len(attention()) != 2 {
+		t.Fatalf("nothing should match yet: %v / %v", out, attention())
+	}
+
+	ref := func(extra map[string]any) map[string]any {
+		m := map[string]any{"kind": "device", "device": "Kindle", "filename": "x9-file.epub", "md5": "aaa"}
+		for k, v := range extra {
+			m[k] = v
+		}
+		return m
+	}
+	if res, _ := admin.do("POST", "/api/me/kindle-match", ref(map[string]any{"book_id": book}), true); res.StatusCode != 200 {
+		t.Fatalf("match: %d", res.StatusCode)
+	}
+	if res, _ := admin.do("POST", "/api/me/kindle-match", ref(map[string]any{"book_id": 99999}), true); res.StatusCode != 404 {
+		t.Fatalf("no such book: %d", res.StatusCode)
+	}
+	if items := attention(); len(items) != 1 || items[0].(map[string]any)["filename"] != "thumbnail_1.epub" {
+		t.Fatalf("after matching: %v", items)
+	}
+	// The choice survives the next report (the file is matched again by the choice).
+	if out := report(); out["matched"] != float64(1) {
+		t.Fatalf("a later report keeps the match: %v", out)
+	}
+
+	// The proper names for the plugin to tidy.
+	req, _ := http.NewRequest("GET", srv.URL+"/kosync/plugin/names?device=Kindle", nil)
+	req.Header.Set("x-auth-user", "admin")
+	req.Header.Set("x-auth-key", hex.EncodeToString(sum[:]))
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names struct {
+		Names []map[string]string `json:"names"`
+	}
+	_ = json.NewDecoder(res.Body).Decode(&names)
+	res.Body.Close()
+	if len(names.Names) != 1 || names.Names[0]["md5"] != "aaa" || names.Names[0]["title"] != "The Reptile Room" || names.Names[0]["author"] != "Lemony Snicket" {
+		t.Fatalf("names: %+v", names)
+	}
+
+	// Junk is marked "not a book": it leaves the list and the counts, and stays gone.
+	admin.do("POST", "/api/me/kindle-match", map[string]any{"kind": "device", "device": "Kindle", "filename": "thumbnail_1.epub", "md5": "bbb", "ignored": true}, true)
+	if items := attention(); len(items) != 0 {
+		t.Fatalf("junk should be gone: %v", items)
+	}
+	report()
+	if items := attention(); len(items) != 0 {
+		t.Fatalf("junk came back after a report: %v", items)
+	}
+	_, rs := admin.do("GET", "/api/me/reading-sync", nil, false)
+	if devs, _ := rs["devices"].([]any); len(devs) != 1 || devs[0].(map[string]any)["books"] != float64(1) {
+		t.Fatalf("junk is not counted: %v", rs["devices"])
+	}
+
+	// Forgetting the choice brings the book back to be matched.
+	admin.do("POST", "/api/me/kindle-match", map[string]any{"kind": "device", "device": "Kindle", "filename": "thumbnail_1.epub", "md5": "bbb"}, true)
+	if items := attention(); len(items) != 1 {
+		t.Fatalf("after forgetting: %v", items)
 	}
 }

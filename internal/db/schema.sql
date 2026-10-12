@@ -563,3 +563,19 @@ CREATE TABLE IF NOT EXISTS reading_hours (
     pages   INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, hour, title, authors, md5)
 );
+-- Which library files have been fingerprinted (KOReader's partial MD5), so a
+-- book on an e-reader is recognised by its file whatever it is called.
+CREATE TABLE IF NOT EXISTS file_fingerprints (
+    path    TEXT PRIMARY KEY,
+    md5     TEXT NOT NULL DEFAULT '',
+    book_id INTEGER NOT NULL DEFAULT 0
+);
+-- A person's own decision about a book on their e-reader: it is this library
+-- book, or it is not a book (a thumbnail, a guide). Kept by file fingerprint.
+CREATE TABLE IF NOT EXISTS kindle_overrides (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    key     TEXT NOT NULL,
+    book_id INTEGER NOT NULL DEFAULT 0,
+    ignored INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, key)
+);

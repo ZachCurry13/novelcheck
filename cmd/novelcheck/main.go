@@ -147,6 +147,9 @@ func main() {
 		Safe:        safe,
 		Web:         web.FS(),
 	}
+	if safeReason == "" {
+		go srv.IndexFingerprints(ctx) // a book on an e-reader is found by its file
+	}
 	srv.Pulls.OnError = func(model string, err error) {
 		st.Notify("warning", "ollama", "Downloading "+model+" in Ollama failed: "+err.Error(), "#/admin")
 	}

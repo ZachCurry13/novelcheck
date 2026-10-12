@@ -124,7 +124,7 @@ return function(NovelCheck, ctx)
             os.rename(s.path, s.path .. ".bak")
             os.rename(s.tmp, s.path)
         end
-        local text = _("The plugin was updated to") .. " " .. info.version .. ". " .. _("Restart KOReader to use it.")
+        local text = _("The plugin was updated to") .. " " .. info.version .. ". " .. _("Restart KOReader to use it (on a Kindle it closes: reopen it from KUAL).")
         if UIManager.askForRestart then
             UIManager:askForRestart(text)
         else

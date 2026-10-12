@@ -28,7 +28,7 @@ local util = require("util")
 local ConfirmBox = require("ui/widget/confirmbox")
 local DeviceBooks = require("devicebooks")
 
-local VERSION = "1.40.0"
+local VERSION = "1.41.0"
 -- The folder this plugin runs from (config.lua from NovelCheck's download sits there).
 local PLUGIN_DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
 
@@ -50,6 +50,14 @@ function NovelCheck:init()
         self.settings:saveSetting("offer_setup", nil)
         self.settings:flush()
         UIManager:scheduleIn(4, function() self:easySetup() end)
+    end
+    if self:isConnected() and self.settings:readSetting("reported_version") ~= VERSION then
+        -- A new plugin version: tell NovelCheck once Wi-Fi is up (it shows the version in Profile).
+        UIManager:scheduleIn(10, function()
+            if NetworkMgr:isConnected() and self:autoEnabled("auto_report", true) then
+                self:reportQuietly()
+            end
+        end)
     end
 end
 
@@ -80,6 +88,7 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("Sync reading statistics now"), callback = function() self:syncStatsNow() end },
             { text = _("On this device"), callback = function() DeviceBooks.show(self) end },
             { text = _("Delete finished books..."), callback = function() DeviceBooks.removeFinished(self) end },
+            { text = _("Tidy book names"), callback = function() self:tidyNames() end },
             { text = _("Report books on this device"), callback = function() self:reportDevice() end },
             { text = _("Automatic"), sub_item_table = {
                 { text = _("Report books when online"), keep_menu_open = true,
@@ -95,11 +104,43 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("Device name..."), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
             { text = _("Connect to NovelCheck..."), keep_menu_open = true, callback = function() self:connectDialog() end },
             { text = _("Update plugin"), callback = function() self:checkUpdate(false) end },
-            { text = _("About"), keep_menu_open = true, callback = function()
-                UIManager:show(InfoMessage:new{ text = "NovelCheck plugin " .. VERSION .. "\n" .. tostring(self.settings:readSetting("server") or _("Not connected")) })
-            end },
+            { text = _("About"), keep_menu_open = true, callback = function() self:showAbout() end },
         },
     }
+end
+
+-- About: the version, which NovelCheck this is connected to, and the project
+-- on GitHub (KOReader has no browser, so the link is shown as a QR code).
+local GITHUB_URL = "https://github.com/ZachCurry13/novelcheck/tree/main/kindle-plugin"
+
+function NovelCheck:showAbout()
+    local ButtonDialog = require("ui/widget/buttondialog")
+    local dialog
+    dialog = ButtonDialog:new{
+        title = "NovelCheck plugin " .. VERSION .. "\n" .. tostring(self.settings:readSetting("server") or _("Not connected"))
+            .. "\n\n" .. GITHUB_URL,
+        buttons = { {
+            { text = _("GitHub (QR code)"), callback = function()
+                UIManager:close(dialog)
+                local ok, QRMessage = pcall(require, "ui/widget/qrmessage")
+                if ok then
+                    local shown = pcall(function()
+                        UIManager:show(QRMessage:new{
+                            text = GITHUB_URL,
+                            width = Device.screen:getWidth() * 0.8,
+                            height = Device.screen:getHeight() * 0.8,
+                        })
+                    end)
+                    if shown then
+                        return
+                    end
+                end
+                UIManager:show(InfoMessage:new{ text = GITHUB_URL })
+            end },
+            { text = _("Close"), callback = function() UIManager:close(dialog) end },
+        } },
+    }
+    UIManager:show(dialog)
 end
 
 -- Automatic work: KOReader tells plugins when the device goes online. At most
@@ -128,7 +169,8 @@ function NovelCheck:onNetworkConnected()
         return
     end
     local now = os.time()
-    if now - (tonumber(self.settings:readSetting("last_auto")) or 0) < AUTO_INTERVAL then
+    local updated = self:autoEnabled("auto_report", true) and self.settings:readSetting("reported_version") ~= VERSION
+    if not updated and now - (tonumber(self.settings:readSetting("last_auto")) or 0) < AUTO_INTERVAL then
         return
     end
     self.settings:saveSetting("last_auto", now)
@@ -358,6 +400,7 @@ function NovelCheck:downloadAll(quiet)
 end
 
 require("setup")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
+require("tidynames")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 require("updater")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 require("devicereport")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 

@@ -29,13 +29,25 @@ return function(NovelCheck, ctx)
     -- setProgressSync points KOReader's Progress sync at NovelCheck.
     function NovelCheck:setProgressSync()
         local server = trim(self.settings:readSetting("server"))
-        local file = DataStorage:getSettingsDir() .. "/kosync.lua"
-        local obj = LuaSettings:open(file)
+        local user = trim(self.settings:readSetting("user"))
+        local key = md5(trim(self.settings:readSetting("code")))
+        local function fill(s)
+            s.custom_server = server .. "/kosync"
+            s.username = user
+            s.userkey = key
+            s.auto_sync = true
+        end
+        local live = self.ui and self.ui.kosync
+        if live and type(live.settings) == "table" then
+            -- Progress sync is loaded (a book is open): change it where it lives and let it save.
+            fill(live.settings)
+            live.updated = true
+            pcall(live.onFlushSettings, live)
+            return true
+        end
+        local obj = LuaSettings:open(DataStorage:getSettingsDir() .. "/kosync.lua")
         local s = obj:readSetting("settings", {})
-        s.custom_server = server .. "/kosync"
-        s.username = trim(self.settings:readSetting("user"))
-        s.userkey = md5(trim(self.settings:readSetting("code")))
-        s.auto_sync = true
+        fill(s)
         obj:saveSetting("settings", s)
         obj:flush()
         return true
@@ -44,9 +56,6 @@ return function(NovelCheck, ctx)
     -- setStatsSync points Reading statistics -> Cloud sync at the NovelCheck
     -- WebDAV folder. It returns true, or false and what the person should do.
     function NovelCheck:setStatsSync()
-        if not self.ui.cloudstorage then
-            return false, _("Turn on the Cloud storage plugin (Settings > More tools > Plugin management), then run this again.")
-        end
         local stats = self.ui.statistics
         local settings = stats and stats.settings
         if not settings then
@@ -68,7 +77,7 @@ return function(NovelCheck, ctx)
             os.remove(DataStorage:getSettingsDir() .. "/statistics.sqlite3.sync") -- merge afresh with the new folder
         end
         G_reader_settings:flush()
-        return true
+        return true, (not self.ui.cloudstorage) and _("KOReader's Cloud storage is not loaded in this screen; if Synchronize now does nothing, open a book and try from there.") or nil
     end
 
     -- syncStats presses "Reading statistics > Synchronize now".
@@ -87,7 +96,7 @@ return function(NovelCheck, ctx)
             text = _("Set up NovelCheck sync?") .. "\n\n"
                 .. _("Progress sync: your place in each book follows you between devices.") .. "\n"
                 .. _("Reading statistics: your reading history goes to NovelCheck.") .. "\n\n"
-                .. _("KOReader restarts afterwards."),
+                .. _("No restart should be needed."),
             ok_text = _("Set up"),
             ok_callback = function() self:runSetup() end,
         })
@@ -112,17 +121,18 @@ return function(NovelCheck, ctx)
             local ok, why = self:setStatsSync()
             if ok then
                 table.insert(lines, "[x] " .. _("Reading statistics sync"))
+                if why then
+                    table.insert(lines, why)
+                end
                 self.settings:saveSetting("auto_stats", true)
                 self.settings:flush()
             else
                 table.insert(lines, "[ ] " .. _("Reading statistics sync:") .. " " .. tostring(why))
             end
-            local text = table.concat(lines, "\n")
-            if UIManager.askForRestart then
-                UIManager:askForRestart(text .. "\n\n" .. _("Restart KOReader to finish."))
-            else
-                UIManager:show(InfoMessage:new{ text = text .. "\n\n" .. _("Restart KOReader to finish.") })
-            end
+            local text = table.concat(lines, "\n") .. "\n\n"
+                .. _("Next: NovelCheck > Sync reading statistics now.") .. "\n"
+                .. _("If progress sync does not pick this up, restart KOReader (on a Kindle, reopen it from KUAL).")
+            UIManager:show(InfoMessage:new{ text = text })
         end)
     end
 

@@ -96,5 +96,5 @@ func (s *Server) handleMyReadingSync(w http.ResponseWriter, r *http.Request) {
 	}
 	books, _ := s.Store.KOReaderBooks(u.ID, 1000)
 	writeJSON(w, http.StatusOK, map[string]any{"progress_at": at, "progress_device": device, "stats_at": statsAt, "stats_books": len(books),
-		"devices": s.Store.Devices(u.ID), "webdav": s.davAttemptsFor(u), "plugin_latest": kindleplugin.Version(), "kindle_autoadd": s.Store.KindleAutoAdd(u.ID)})
+		"devices": s.Store.Devices(u.ID), "webdav": s.davAttemptsFor(u), "plugin_latest": kindleplugin.Version(), "kindle_autoadd": s.Store.KindleAutoAdd(u.ID), "kindle_attention": len(s.Store.KindleAttention(u.ID))})
 }

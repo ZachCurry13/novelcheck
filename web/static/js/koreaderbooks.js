@@ -7,6 +7,7 @@ import { esc } from "./ui.js";
 import { coverImg } from "./covers.js";
 import { openBook } from "./bookdialog.js";
 import { openKOReaderSetup } from "./delivery.js";
+import { openKindleBooks } from "./kindlebooks.js";
 import { ago, readTime, progressBar, setBars } from "./progress.js";
 
 const SHOW = 8;
@@ -39,7 +40,8 @@ export async function renderKOReaderBooks(host, state, onChange) {
       return;
     }
     host.innerHTML = `<div class="mt-8"><h2 class="label">📱 On your KOReader</h2>
-      <p class="mb-2 text-xs text-slate-400">Every book opened on your KOReader devices${data.synced_at ? ` · synced ${ago(data.synced_at)}` : ""}</p>
+      <p class="mb-2 text-xs text-slate-400">Every book opened on your KOReader devices${data.synced_at ? ` · synced ${ago(data.synced_at)}` : ""}
+        ${books.some((b) => !b.owned) ? ` · <button type="button" data-match class="underline">Match the unmatched</button>` : ""}</p>
       <ul class="space-y-2">${(all ? books : books.slice(0, SHOW)).map(row).join("")}</ul>
       ${books.length > SHOW && !all ? `<button type="button" data-more class="btn-ghost mt-2 text-sm">Show all ${books.length}</button>` : ""}</div>`;
     setBars(host);
@@ -47,6 +49,7 @@ export async function renderKOReaderBooks(host, state, onChange) {
   paint();
   host.onclick = (e) => {
     if (e.target.closest("[data-setup]")) return openKOReaderSetup();
+    if (e.target.closest("[data-match]")) return openKindleBooks(onChange);
     if (e.target.closest("[data-more]")) {
       all = true;
       return paint();
