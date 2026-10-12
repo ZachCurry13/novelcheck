@@ -92,7 +92,7 @@ func TestDeepScanWorkflow(t *testing.T) {
 		t.Fatalf("approving twice: %d", res.StatusCode)
 	}
 
-	// Next Up Next books: only the one that has an EPUB and no scan yet.
+	// Next Nightstand books: only the one that has an EPUB and no scan yet.
 	_, next := admin.do("GET", "/api/admin/deep-scans/next?n=10", nil, false)
 	if next["books"].(float64) != 1 || next["titles"].([]any)[0] != "Second" {
 		t.Fatalf("next estimate: %v", next)

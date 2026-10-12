@@ -73,7 +73,7 @@ func (s *Server) handleKindleMatch(w http.ResponseWriter, r *http.Request) {
 	}
 	added := 0
 	if body.BookID > 0 && body.Kind == "device" {
-		added = s.autoAddFromDevice(u, body.Device) // the matched book joins Up Next like the others
+		added = s.autoAddFromDevice(u, body.Device) // the matched book joins Nightstand like the others
 	}
 	writeJSON(w, http.StatusOK, map[string]int{"added": added})
 }

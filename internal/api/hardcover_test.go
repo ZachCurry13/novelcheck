@@ -62,7 +62,7 @@ func TestHardcoverSync(t *testing.T) {
 	if _, me := admin.do("GET", "/api/me", nil, false); strings.Contains(toJSON(me), "good-token") {
 		t.Fatal("the token leaked to the browser")
 	}
-	// Dune: reading at 125 of 500 pages; Mort: finished. Both were in Up Next.
+	// Dune: reading at 125 of 500 pages; Mort: finished. Both were on your Nightstand.
 	_, items := admin.doList("GET", "/api/queue?all=1")
 	got := map[string]string{}
 	for _, it := range items {

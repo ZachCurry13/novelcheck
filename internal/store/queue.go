@@ -7,7 +7,7 @@ import (
 )
 
 // ListQueue returns a user's reading queue: currently-reading first, then the
-// "Up Next" items by position. Finished items are included when all is true.
+// "Nightstand" items by position. Finished items are included when all is true.
 func (s *Store) ListQueue(userID int64, all bool) ([]QueueItem, error) {
 	filter := "AND q.hidden = 0 AND q.status != 'finished'"
 	if all {
@@ -16,12 +16,12 @@ func (s *Store) ListQueue(userID int64, all bool) ([]QueueItem, error) {
 	return s.queueItems(userID, filter)
 }
 
-// HiddenQueue is the books someone hid from Up Next.
+// HiddenQueue is the books someone hid from your Nightstand.
 func (s *Store) HiddenQueue(userID int64) ([]QueueItem, error) {
 	return s.queueItems(userID, "AND q.hidden = 1")
 }
 
-// SetQueueHidden hides a book from Up Next (or brings it back). A hidden
+// SetQueueHidden hides a book from your Nightstand (or brings it back). A hidden
 // book is not added again by the e-reader.
 func (s *Store) SetQueueHidden(userID, itemID int64, hidden bool) error {
 	_, err := s.DB.Exec(`UPDATE queue_items SET hidden = ? WHERE user_id = ? AND id = ?`, hidden, userID, itemID)
@@ -63,7 +63,7 @@ func (s *Store) EnqueueAuto(userID, bookID int64, status string) bool {
 	return n > 0
 }
 
-// KindleAutoAdd says whether books on someone's e-reader go into Up Next.
+// KindleAutoAdd says whether books on someone's e-reader go onto your Nightstand.
 func (s *Store) KindleAutoAdd(userID int64) bool {
 	var on bool
 	_ = s.DB.Get(&on, `SELECT kindle_autoadd FROM users WHERE id = ?`, userID)

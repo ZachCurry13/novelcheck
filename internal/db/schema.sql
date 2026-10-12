@@ -281,7 +281,7 @@ CREATE TABLE IF NOT EXISTS deep_reads (
     model        TEXT NOT NULL DEFAULT '',
     notes        TEXT NOT NULL DEFAULT '',
     error        TEXT NOT NULL DEFAULT '',
-    source       TEXT NOT NULL DEFAULT 'admin', -- admin | request | batch | auto (a chosen user's Up Next)
+    source       TEXT NOT NULL DEFAULT 'admin', -- admin | request | batch | auto (a chosen user's Nightstand)
     prev_level   INTEGER,                       -- peppers before the scan (the blurb rating); NULL = unrated
     new_level    INTEGER,                       -- peppers the full text earned
     checks       INTEGER NOT NULL DEFAULT 1,    -- version of Deep Scan's checks it was made with (store.DeepChecks)
@@ -310,7 +310,7 @@ CREATE TABLE IF NOT EXISTS wishlist (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_wishlist_open ON wishlist(book_id, user_id) WHERE status IN ('wanted', 'approved');
 
 -- Private KOReader (OPDS) feed addresses: /opds/<token> lists the person's
--- Up Next with download links. KOReader can't sign in, so the token is the key.
+-- Nightstand with download links. KOReader can't sign in, so the token is the key.
 CREATE TABLE IF NOT EXISTS opds_tokens (
     user_id    INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     token      TEXT NOT NULL UNIQUE,

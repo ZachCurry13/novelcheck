@@ -29,7 +29,7 @@ const (
 
 // Rank scores pool against the reader's signals and returns the best n.
 // family counts how many other people read each book; it's what suggestions
-// fall back on while the reader has nothing in Up Next yet.
+// fall back on while the reader has nothing on your Nightstand yet.
 func Rank(pool []store.SuggestBook, signals []store.SuggestSignal, family map[int64]int, n int) []Pick {
 	docs := make([]string, 0, len(pool)+len(signals))
 	for _, b := range pool {

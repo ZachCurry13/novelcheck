@@ -30,7 +30,7 @@ type KOReaderBook struct {
 
 // SaveKOReaderBooks replaces someone's KOReader books with a new sync's,
 // matching each to the library (by the file's fingerprint, else by title
-// and author). Books already in their Up Next move along: opened since they
+// and author). Books already in their Nightstand move along: opened since they
 // were queued → Reading, and finished → Finished. It says how many were
 // matched.
 func (s *Store) SaveKOReaderBooks(userID int64, books []KOReaderBook) (int, error) {
@@ -72,7 +72,7 @@ func (s *Store) SaveKOReaderBooks(userID int64, books []KOReaderBook) (int, erro
 		if b.Percent >= FinishedAt {
 			status = "finished"
 		}
-		// Only books already in Up Next, opened after they were queued: a
+		// Only books already on your Nightstand, opened after they were queued: a
 		// statistics file holds years of reading.
 		if _, err := tx.Exec(`UPDATE queue_items SET status = ?, updated_at = CURRENT_TIMESTAMP
 			WHERE user_id = ? AND book_id = ? AND CAST(strftime('%s', updated_at) AS INTEGER) < ?

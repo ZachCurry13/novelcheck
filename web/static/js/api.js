@@ -2,9 +2,10 @@
 // Every state-changing request carries X-NovelCheck: 1 (CSRF guard).
 
 export class ApiError extends Error {
-  constructor(status, message) {
+  constructor(status, message, body) {
     super(message);
     this.status = status;
+    this.body = body; // the whole answer, for details
   }
 }
 
@@ -66,7 +67,7 @@ export async function api(path, { method = "GET", body, raw = false } = {}) {
   }
   if (raw) return res;
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, data.error || res.statusText);
+  if (!res.ok) throw new ApiError(res.status, data.error || res.statusText, data);
   return data;
 }
 

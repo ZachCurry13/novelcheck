@@ -92,7 +92,7 @@ export async function renderLibrary(view, state) {
       </div>
     </form>
     <div class="mb-3 flex items-center justify-between gap-2"><p id="result-count" class="text-sm text-slate-400"></p>
-      <button type="button" id="select-toggle" class="btn-ghost py-1 text-sm" title="Pick several books to add to Up Next, Deep Scan or delete">☑ Select</button></div>
+      <button type="button" id="select-toggle" class="btn-ghost py-1 text-sm" title="Pick several books to add to your Nightstand, Deep Scan or delete">☑ Select</button></div>
     <div id="grid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
     <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>`;
 
@@ -177,7 +177,7 @@ export async function renderLibrary(view, state) {
       e.stopPropagation();
       if (await attempt(() => post("/api/queue", { book_id: Number(q.dataset.queue) }))) {
         q.outerHTML = IN_QUEUE;
-        toast("Added to Up Next", false, { label: "View Up Next", href: "#/queue" });
+        toast("Added to your Nightstand", false, { label: "View Nightstand", href: "#/queue" });
       }
       return;
     }

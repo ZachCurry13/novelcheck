@@ -140,7 +140,7 @@ func (s *Server) handleImportDrive(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if b.Read {
-			_, _ = s.Store.SyncReading(auth.UserFrom(r).ID, id, true) // ✓ Finished in the importer's Up Next history
+			_, _ = s.Store.SyncReading(auth.UserFrom(r).ID, id, true) // ✓ Finished in the importer's Nightstand history
 		}
 		imported++
 	}

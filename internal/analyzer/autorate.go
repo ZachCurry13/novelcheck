@@ -11,7 +11,7 @@ import (
 )
 
 // Automatic rating: when the worker runs out of books it takes the next
-// waiting ones itself (Up Next and wishlist books first, then the newest).
+// waiting ones itself (Nightstand and wishlist books first, then the newest).
 // It's on by default only with a free, local AI, can be limited to set
 // hours, and still keeps to the hourly token limit and the scan delay.
 

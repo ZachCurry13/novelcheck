@@ -5,7 +5,7 @@ import { esc, fmtNum } from "./ui.js";
 import { coverImg } from "./covers.js";
 import { deepChangeLine, when, aboutText } from "./deepscan.js";
 
-const SOURCE = { admin: "started by an admin", request: "requested", batch: "Up Next batch", auto: "automatic" };
+const SOURCE = { admin: "started by an admin", request: "requested", batch: "Nightstand batch", auto: "automatic" };
 
 export const isOpen = (d) => ["requested", "queued", "reading"].includes(d.status);
 

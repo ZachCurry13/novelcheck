@@ -74,7 +74,7 @@ func (s *Server) handleKosyncAuth(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleKosyncPut keeps the reader's place and moves the book along in
-// their Up Next when NovelCheck knows which book it is.
+// their Nightstand when NovelCheck knows which book it is.
 func (s *Server) handleKosyncPut(w http.ResponseWriter, r *http.Request) {
 	u := s.kosyncUser(w, r)
 	if u == nil {
@@ -110,7 +110,7 @@ func (s *Server) handleKosyncGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // kosyncBook finds the book a fingerprint belongs to: known already, or one
-// of the files of the reader's Up Next books (worked out now, at most 40).
+// of the files of the reader's Nightstand books (worked out now, at most 40).
 func (s *Server) kosyncBook(userID int64, document string) int64 {
 	if id := s.Store.DocBook(document); id > 0 {
 		return id

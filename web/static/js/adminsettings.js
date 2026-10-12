@@ -42,7 +42,7 @@ const SECTIONS = [
     ["deep_ai_watts", "Deep Scan machine: extra watts while it works", "e.g. 350", "number", "deep_llm_enabled"],
   ]],
   ["ai", "Suggested Reads", [
-    ["suggest_mode", "How suggestions under Up Next are picked", "AI picks + books you don't own|AI picks from your library|Free matching only (no AI)", "select"],
+    ["suggest_mode", "How suggestions under Nightstand are picked", "AI picks + books you don't own|AI picks from your library|Free matching only (no AI)", "select"],
   ]],
   ["ai", "Automatic rating", []],
   ["ai", "Rate Caps & Batching", [
@@ -70,12 +70,12 @@ const SECTIONS = [
     ["discover_daily_ratings", "Discover books the AI rates per day (0 = none)", "30", "number"],
   ]],
   ["system", "Features", [
-    ["module_queue", "Up Next reading queue", "", "bool"],
+    ["module_queue", "Nightstand reading queue", "", "bool"],
     ["module_send_to_kindle", "Send-to-Kindle email delivery", "", "bool"],
     ["module_koreader", "KOReader catalog delivery", "", "bool"],
     ["module_import", "Import books (Kindle / drive scanner and lists)", "", "bool"],
     ["module_parents", "Parent tools (kids' accounts, age groups, parents' notes)", "", "bool"],
-    ["module_suggestions", "💡 Suggested Reads under Up Next", "", "bool"],
+    ["module_suggestions", "💡 Suggested Reads under Nightstand", "", "bool"],
     ["module_taste", "🎯 Taste profile: people can rate books they know to improve their suggestions (uses no AI)", "", "bool"],
     ["module_discover", "🧭 Discover tab: best sellers, classics, and the family's new and popular books", "", "bool"],
     ["notify_routine", "🔔 Also show everyday events: new books from Calibre, rating finished, someone started a book", "", "bool"],

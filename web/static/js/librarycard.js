@@ -9,8 +9,8 @@ import { seriesText } from "./titlefix.js";
 import { coverImg } from "./covers.js";
 import { blurbHTML } from "./blurb.js";
 
-// A book already in your Up Next.
-export const IN_QUEUE = `<span class="px-2 py-1 text-lg text-emerald-300" title="In your Up Next" aria-label="In your Up Next">✓</span>`;
+// A book already in your Nightstand.
+export const IN_QUEUE = `<span class="px-2 py-1 text-lg text-emerald-300" title="In your Nightstand" aria-label="In your Nightstand">✓</span>`;
 
 // Lists that aren't libraries (Discover's and the events').
 const LISTS = ["Discover", "Events"];
@@ -33,7 +33,7 @@ export function card(b, queueOn, extra = "") {
           <h3 class="font-semibold leading-tight line-clamp-2">${esc(b.title)}</h3>
           <p class="text-sm text-slate-400 truncate">${esc(b.author || "Unknown author")}${seriesText(b) ? ` · <span class="text-sky-300">${esc(seriesText(b))}</span>` : ""}</p>
         </div>
-        ${!queueOn ? "" : b.in_queue ? IN_QUEUE : `<button data-queue="${b.id}" title="Add to Up Next" aria-label="Add to Up Next" class="btn-ghost px-2 py-1 text-lg">＋</button>`}
+        ${!queueOn ? "" : b.in_queue ? IN_QUEUE : `<button data-queue="${b.id}" title="Add to your Nightstand" aria-label="Add to your Nightstand" class="btn-ghost px-2 py-1 text-lg">＋</button>`}
       </div>
       <div data-chips class="flex flex-wrap gap-1">${classChip(b)} ${reviewChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
       ${blurbHTML(b)}

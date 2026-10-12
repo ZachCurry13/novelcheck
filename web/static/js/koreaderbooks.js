@@ -1,4 +1,4 @@
-// 📱 On your KOReader (Up Next): every book opened on the reader's KOReader
+// 📱 On your KOReader (Nightstand): every book opened on the reader's KOReader
 // devices, from KOReader's reading statistics (synced to their NovelCheck
 // folder): how far, for how long, and when. Books in the library open their
 // window.

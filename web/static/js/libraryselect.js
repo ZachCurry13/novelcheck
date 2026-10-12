@@ -1,5 +1,5 @@
 // ☑ Select books in the Library, then act on all of them at once: add to
-// Up Next, Deep Scan, or delete, and on a collection or seasonal shelf
+// Nightstand, Deep Scan, or delete, and on a collection or seasonal shelf
 // (parents) take them off it. Tap cards to tick them; with a mouse you can
 // also drag across cards, or Shift-click to tick everything in between.
 import { post } from "./api.js";
@@ -31,7 +31,7 @@ export function setupSelect(view, grid, state, reload, shelf = null) {
     const admin = can(state.user, "deep"); // starts Deep Scans; anyone else asks
     bar.innerHTML = `<div class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 text-sm">
       <b>${n ? `${plural(n, "book")} selected` : "Tap books to select them"}</b>
-      ${n && on(state.user, "queue") ? `<button data-bulk="queue" class="btn-primary py-1">＋ Up Next</button>` : ""}
+      ${n && on(state.user, "queue") ? `<button data-bulk="queue" class="btn-primary py-1">＋ Nightstand</button>` : ""}
       ${n ? `<button data-bulk="deep" class="btn-secondary py-1">🧬 ${admin ? "Deep Scan" : "Ask for Deep Scan"}</button>
         <button data-bulk="delete" class="btn-ghost py-1 text-rose-300">🗑 Delete…</button>` : ""}
       ${n && unshelve ? `<button data-bulk="unshelve" class="btn-ghost py-1">✕ Not for this shelf</button>` : ""}
@@ -110,7 +110,7 @@ export function setupSelect(view, grid, state, reload, shelf = null) {
     const r = await attempt(() => post("/api/books/bulk", { ids, action, reason }));
     if (!r) return;
     const parts = [
-      r.queued && `added ${plural(r.queued, "book")} to Up Next`, r.started && `started ${plural(r.started, "Deep Scan")}`,
+      r.queued && `added ${plural(r.queued, "book")} to your Nightstand`, r.started && `started ${plural(r.started, "Deep Scan")}`,
       r.requested && (action === "delete" ? `asked the admins to delete ${plural(r.requested, "book")}` : `asked for ${plural(r.requested, "Deep Scan")}`),
       r.removed && `took ${plural(r.removed, "book")} out of your libraries`, r.already && `${r.already} already scanning or waiting`,
       r.no_epub && `${r.no_epub} without an EPUB file`, r.skipped && `${r.skipped} skipped`,

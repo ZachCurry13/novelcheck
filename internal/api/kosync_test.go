@@ -16,7 +16,7 @@ import (
 )
 
 // KOReader signs in with the NovelCheck name and sync code, sends where it
-// is in a book, and the book moves along in Up Next.
+// is in a book, and the book moves along on your Nightstand.
 func TestKOReaderSync(t *testing.T) {
 	var calDir string
 	srv, st := setupWith(t, func(s *api.Server) { calDir = s.Cfg.CalibreDir })

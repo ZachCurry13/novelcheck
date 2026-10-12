@@ -27,7 +27,7 @@ export async function renderCheck(view, state) {
       <button id="pick" class="btn-ghost w-full text-sm">🖼 Or choose a photo you already took</button>
       <dialog id="scan-dialog" class="dialog"></dialog>
       <input id="photo" type="file" accept="image/*" capture="environment" class="hidden">
-      <input id="library-photo" type="file" accept="image/*" class="hidden">
+      <input id="library-photo" type="file" accept="image/*" multiple class="hidden">
       <form id="check-form" class="flex gap-2">
         <input name="q" type="search" enterkeyhint="search" placeholder="Title, author or ISBN" class="input min-w-0 flex-1" autocomplete="off">
         <button class="btn-secondary">Check</button>
@@ -36,31 +36,48 @@ export async function renderCheck(view, state) {
       <section id="recent"></section>
     </div>`;
   await Promise.all([loadFlags(true), loadContent()]);
-  const out = $("#check-result", view);
+  const out = $("#check-result", view); // a card per check, newest first, so several photos in a row all keep their answer
   const form = $("#check-form", view);
-  let run = 0; // a newer check cancels the polling of an older one
 
-  const check = async (body, working) => {
-    const mine = ++run;
-    out.innerHTML = status(working);
+  const newSlot = (text) => {
+    const s = document.createElement("div");
+    s.dataset.slot = "";
+    s.className = "mb-3";
+    out.prepend(s);
+    if (text) s.innerHTML = status(text);
+    return s;
+  };
+
+  const failCard = (slot, e, image) => {
+    const detail = e.body?.detail ? `<details class="text-xs text-slate-400"><summary class="cursor-pointer">Why?</summary><p class="mt-1 break-words">${esc(e.body.detail)}</p></details>` : "";
+    slot.innerHTML = `<div class="card space-y-2 text-sm text-rose-300"><p>${esc(e.message)}</p>${detail}
+      <div class="flex flex-wrap gap-2">${image ? `<button type="button" data-act="retry-slot" class="btn-secondary px-3 py-1 text-sm">↻ Try again</button>` : ""}
+        <button type="button" data-act="dismiss" class="btn-ghost px-3 py-1 text-sm">✕ Dismiss</button></div></div>`;
+  };
+
+  const check = async (body, working, slot = newSlot()) => {
+    const mine = (slot._run = (slot._run || 0) + 1); // a newer check in this card cancels the polling of an older one
+    slot._body = body;
+    slot.innerHTML = status(working);
     let res;
     try {
       res = await post("/api/check", body);
     } catch (e) {
-      out.innerHTML = `<p class="card text-sm text-rose-300">${esc(e.message)}</p>`;
-      form.q.focus();
+      failCard(slot, e, Boolean(body.image));
+      if (!body.image) form.q.focus();
       return;
     }
     if (res.choices) { // not sure which book was meant: ask
-      out.innerHTML = "";
+      slot.innerHTML = "";
       const pick = await pickBook(res.choices, res.query);
-      return pick ? check({ ...body, pick }, working) : undefined;
+      if (!pick) return slot.remove();
+      return check({ ...body, pick }, working, slot);
     }
     const found = `Found <b>${esc(res.book.title)}</b>${res.book.author ? ` by ${esc(res.book.author)}` : ""}.`;
     let book = res.book;
     if (res.rating) {
-      out.innerHTML = status(`${found} Rating it now… this usually takes 10–30 seconds.`);
-      for (let i = 0; i < 90 && mine === run; i++) { // up to ~3 minutes
+      slot.innerHTML = status(`${found} Rating it now… this usually takes 10–30 seconds.`);
+      for (let i = 0; i < 90 && mine === slot._run; i++) { // up to ~3 minutes
         await new Promise((r) => setTimeout(r, 2000));
         const d = await get(`/api/books/${book.id}`).catch(() => null);
         if (d && d.book.status !== "processing") {
@@ -68,30 +85,48 @@ export async function renderCheck(view, state) {
           break;
         }
       }
-      if (mine !== run) return;
+      if (mine !== slot._run) return;
     }
-    last = res;
-    out.innerHTML = resultCard(book, res);
+    slot._last = res;
+    slot.innerHTML = resultCard(book, res);
     loadRecent(view, state);
   };
-  let last = null; // the latest result, for the wishlist buttons
 
-  $("#snap", view).addEventListener("click", () => $("#photo", view).click());
-  $("#pick", view).addEventListener("click", () => $("#library-photo", view).click());
-  const onPhoto = async (e) => {
-    const file = e.target.files[0];
-    e.target.value = "";
-    if (!file) return;
+  // Photos are read one at a time, in the order they were taken; each keeps its own card.
+  const photoQueue = [];
+  let reading = false;
+  const readPhoto = async (file, slot) => {
     const isbn = await barcodeInPhoto(file); // Android can read the barcode on the back, free and instant
-    if (isbn) return check({ query: isbn }, "Reading the barcode…");
+    if (isbn) return check({ query: isbn }, "Reading the barcode…", slot);
     const image = await shrinkPhoto(file).catch(() => "");
     if (!image) {
-      out.innerHTML = `<p class="card text-sm text-rose-300">That photo couldn't be opened (some phones save photos in a format the browser can't read).
+      slot.innerHTML = `<p class="card text-sm text-rose-300">That photo couldn't be opened (some phones save photos in a format the browser can't read).
         Try <b>Choose a photo</b>, take the picture again, or type the title below.</p>`;
       return;
     }
-    check({ image }, "📷 Reading the cover…");
+    return check({ image }, "📷 Reading the cover…", slot);
   };
+  const pump = async () => {
+    if (reading) return;
+    reading = true;
+    while (photoQueue.length) {
+      const { file, slot } = photoQueue.shift();
+      await readPhoto(file, slot);
+    }
+    reading = false;
+  };
+  const onPhoto = (e) => {
+    const files = [...e.target.files];
+    e.target.value = "";
+    for (const file of files) {
+      const slot = newSlot(photoQueue.length || reading ? "⏳ Waiting for the photos before it…" : "📷 Getting the photo ready…");
+      photoQueue.push({ file, slot });
+    }
+    pump();
+  };
+
+  $("#snap", view).addEventListener("click", () => $("#photo", view).click());
+  $("#pick", view).addEventListener("click", () => $("#library-photo", view).click());
   $("#photo", view).addEventListener("change", onPhoto);
   $("#library-photo", view).addEventListener("change", onPhoto);
   form.addEventListener("submit", (e) => {
@@ -100,20 +135,25 @@ export async function renderCheck(view, state) {
     if (q) check({ query: q }, "Looking it up…");
   });
   out.addEventListener("click", (e) => {
+    const slot = e.target.closest("[data-slot]");
     const act = e.target.closest("[data-act]")?.dataset.act;
     const id = Number(e.target.closest("[data-id]")?.dataset.id);
     if (act === "open") openBook(id, state);
     else if (act === "peppers") openPepperGuide();
-    else if (act === "queue") attempt(() => post("/api/queue", { book_id: id }), "Added to Up Next");
-    else if (act === "wish" || act === "unwish") toggleWish(act, id);
-    else if (act === "retry") check({ query: e.target.dataset.q }, "Trying again…");
+    else if (act === "queue") attempt(() => post("/api/queue", { book_id: id }), "Added to your Nightstand");
+    else if (act === "wish" || act === "unwish") toggleWish(act, id, slot);
+    else if (act === "retry") check({ query: e.target.dataset.q }, "Trying again…", slot);
+    else if (act === "retry-slot" && slot?._body) check(slot._body, "Trying again…", slot);
+    else if (act === "dismiss") slot?.remove();
     else if (act === "another") {
-      out.innerHTML = "";
+      slot?.remove();
       form.q.value = "";
       form.q.focus();
     }
   });
-  const toggleWish = async (act, id) => {
+  const toggleWish = async (act, id, slot) => {
+    const last = slot?._last;
+    if (!last) return;
     if (act === "wish") {
       const note = prompt("Add a note for the family? (optional)", "");
       if (note === null) return;
@@ -123,14 +163,14 @@ export async function renderCheck(view, state) {
       last.my_wish = null;
     }
     const d = await get(`/api/books/${id}`).catch(() => null);
-    if (d) out.innerHTML = resultCard(d.book, last);
+    if (d) slot.innerHTML = resultCard(d.book, last);
   };
 
   // Live barcode scanning, with the photo options as the fallback.
   $("#scan", view).addEventListener("click", async () => {
     const why = liveBlocker();
     if (why) {
-      out.innerHTML = `<p class="card text-sm text-amber-200">${esc(why)}</p>`;
+      newSlot().innerHTML = `<p class="card text-sm text-amber-200">${esc(why)}</p>`;
       return;
     }
     const isbn = await scanLive($("#scan-dialog", view));
@@ -173,14 +213,14 @@ function resultCard(b, res) {
   </div>`;
 }
 
-// Owned books go straight to Up Next; others can be wished for or queued
+// Owned books go straight to your Nightstand; others can be wished for or queued
 // as "to get". Nothing here ever offers deleting or removing.
 function actions(res) {
-  if (res.in_library) return `<button data-act="queue" class="btn-primary">＋ Add to Up Next</button>`;
+  if (res.in_library) return `<button data-act="queue" class="btn-primary">＋ Add to your Nightstand</button>`;
   const wish = res.my_wish
     ? `<button data-act="unwish" class="btn-secondary" title="Remove it from your wishlist">⭐ On your wishlist${res.my_wish.status === "approved" ? " (to get)" : ""}</button>`
     : `<button data-act="wish" class="btn-primary">⭐ Add to Wishlist</button>`;
-  return `${wish}<button data-act="queue" class="btn-secondary" title="Add it to Up Next until you get a copy">＋ Up Next (to get)</button>`;
+  return `${wish}<button data-act="queue" class="btn-secondary" title="Add it to your Nightstand until you get a copy">＋ Nightstand (to get)</button>`;
 }
 
 // The last few books checked that aren't in the library.

@@ -84,7 +84,7 @@ func TestKOReaderPluginDownload(t *testing.T) {
 	}
 }
 
-// Books on the e-reader go into Up Next by themselves, and a hidden one stays hidden.
+// Books on the e-reader go onto your Nightstand by themselves, and a hidden one stays hidden.
 func TestKindleBooksJoinUpNext(t *testing.T) {
 	srv, st := setup(t)
 	_ = st.SetSetting(store.KeyModuleKOReader, "true")

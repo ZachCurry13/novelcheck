@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.41.1]
+
+### 🛏️ Up Next is now Nightstand
+- **Up Next is renamed Nightstand** everywhere: the menu, the page, the buttons ("＋ Nightstand", "Add to your Nightstand", "Hidden from your Nightstand"), the Kindle plugin's menu and the docs. The page's sections are **Currently reading** and **On the pile**. Nothing about how it works changed, and old links keep working.
+- **Explained in Get started:** the How-to guide has a new **🛏️ Your Nightstand** step (what it is, how books get there, how to hide one), and the page shows a short note once, with **Got it** to dismiss it, for people who already know it as Up Next.
+- **Check a book keeps every scan.** Scanning several covers in a row used to show only the last one (each new photo replaced the one before). Now each photo gets its own card, newest on top; they are read one at a time, and **Choose a photo** accepts several at once. A cover that can't be read says why under **Why?** (which AI failed and how, for example busy or text-only) and has **↻ Try again** and **✕ Dismiss**.
+- **Photos try the cloud AI first.** A small local AI is usually text-only and would just fail on a cover, so the AI on the internet (such as Gemini) gets the first try, then the home one.
+- Plugin 1.41.1 carries the new name (update from **NovelCheck → Update plugin**).
+
 ## [1.41.0]
 
 ### 🔎 Books on your Kindle find their match, and you can fix the rest

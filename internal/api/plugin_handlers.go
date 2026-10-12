@@ -16,7 +16,7 @@ import (
 
 // The KOReader plugin (kindle-plugin/novelcheck.koplugin) talks to NovelCheck
 // in JSON with KOReader's progress-sync sign-in (x-auth-user and x-auth-key,
-// the MD5 of the sync code). It lists the reader's Up Next and downloads
+// the MD5 of the sync code). It lists the reader's Nightstand and downloads
 // books from it, with kids' rules applied as everywhere else.
 
 type pluginBook struct {

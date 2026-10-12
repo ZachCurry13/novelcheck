@@ -1,5 +1,5 @@
 --[[
-NovelCheck plugin for KOReader: connect to your NovelCheck, see your Up Next
+NovelCheck plugin for KOReader: connect to your NovelCheck, see your Nightstand
 list, tap a book to download it, and report which books are on this device.
 
 It signs in the way KOReader's progress sync does: your NovelCheck username
@@ -28,7 +28,7 @@ local util = require("util")
 local ConfirmBox = require("ui/widget/confirmbox")
 local DeviceBooks = require("devicebooks")
 
-local VERSION = "1.41.0"
+local VERSION = "1.41.1"
 -- The folder this plugin runs from (config.lua from NovelCheck's download sits there).
 local PLUGIN_DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
 
@@ -83,8 +83,8 @@ function NovelCheck:addToMainMenu(menu_items)
         sorting_hint = "tools",
         sub_item_table = {
             { text = _("Set up everything"), callback = function() self:easySetup() end },
-            { text = _("Up Next"), callback = function() self:showUpNext() end },
-            { text = _("Download all Up Next"), callback = function() self:downloadAll() end },
+            { text = _("Nightstand"), callback = function() self:showUpNext() end },
+            { text = _("Download all Nightstand"), callback = function() self:downloadAll() end },
             { text = _("Sync reading statistics now"), callback = function() self:syncStatsNow() end },
             { text = _("On this device"), callback = function() DeviceBooks.show(self) end },
             { text = _("Delete finished books..."), callback = function() DeviceBooks.removeFinished(self) end },
@@ -94,7 +94,7 @@ function NovelCheck:addToMainMenu(menu_items)
                 { text = _("Report books when online"), keep_menu_open = true,
                   checked_func = function() return self:autoEnabled("auto_report", true) end,
                   callback = function() self:toggleAuto("auto_report", true) end },
-                { text = _("Download Up Next when online"), keep_menu_open = true,
+                { text = _("Download Nightstand when online"), keep_menu_open = true,
                   checked_func = function() return self:autoEnabled("auto_download", false) end,
                   callback = function() self:toggleAuto("auto_download", false) end },
                 { text = _("Sync reading statistics when online"), keep_menu_open = true,
@@ -145,7 +145,7 @@ end
 
 -- Automatic work: KOReader tells plugins when the device goes online. At most
 -- every few hours the plugin then reports what is on the device (NovelCheck adds
--- those books to Up Next) and, if switched on, downloads new Up Next books.
+-- those books to your Nightstand) and, if switched on, downloads new Nightstand books.
 local AUTO_INTERVAL = 6 * 3600
 
 function NovelCheck:autoEnabled(key, default)
@@ -215,7 +215,7 @@ function NovelCheck:connectDialog()
                 self.settings:saveSetting("code", trim(f[3]))
                 self.settings:flush()
                 UIManager:close(dialog)
-                UIManager:show(InfoMessage:new{ text = _("Saved. Open NovelCheck > Up Next to try it.") })
+                UIManager:show(InfoMessage:new{ text = _("Saved. Open NovelCheck > Nightstand to try it.") })
             end },
         } },
     }
@@ -283,7 +283,7 @@ function NovelCheck:showUpNext()
             return
         end
         if #data.books == 0 then
-            UIManager:show(InfoMessage:new{ text = _("Nothing to download: your Up Next has no books with a file.") })
+            UIManager:show(InfoMessage:new{ text = _("Nothing to download: your Nightstand has no books with a file.") })
             return
         end
         local items = {}
@@ -299,7 +299,7 @@ function NovelCheck:showUpNext()
             })
         end
         self.menu = Menu:new{
-            title = _("NovelCheck: Up Next"),
+            title = _("NovelCheck: Nightstand"),
             item_table = items,
             is_borderless = true,
             is_popout = false,
@@ -312,7 +312,7 @@ function NovelCheck:showUpNext()
     end)
 end
 
--- bookPath is where a book from Up Next is saved on this device.
+-- bookPath is where a book from your Nightstand is saved on this device.
 function NovelCheck:bookPath(book)
     local name = book.url:match("([^/]+)$") or ("book-" .. tostring(book.id) .. "." .. tostring(book.format))
     return self:downloadDir() .. "/" .. name
@@ -346,7 +346,7 @@ function NovelCheck:download(book)
     end)
 end
 
--- downloadAll gets every book in Up Next that is not on this device yet.
+-- downloadAll gets every book on your Nightstand that is not on this device yet.
 function NovelCheck:downloadAll(quiet)
     if not self:isConnected() then
         if not quiet then
@@ -359,7 +359,7 @@ function NovelCheck:downloadAll(quiet)
         local ok, data = pcall(json.decode, body or "")
         if code ~= 200 or not ok or type(data) ~= "table" or type(data.books) ~= "table" then
             if not quiet then
-                UIManager:show(InfoMessage:new{ text = _("Could not read your Up Next list.") .. "\n" .. tostring(code) })
+                UIManager:show(InfoMessage:new{ text = _("Could not read your Nightstand list.") .. "\n" .. tostring(code) })
             end
             return
         end
@@ -371,7 +371,7 @@ function NovelCheck:downloadAll(quiet)
         end
         if #todo == 0 then
             if not quiet then
-                UIManager:show(InfoMessage:new{ text = _("Everything in Up Next is already on this device.") })
+                UIManager:show(InfoMessage:new{ text = _("Everything on your Nightstand is already on this device.") })
             end
             return
         end

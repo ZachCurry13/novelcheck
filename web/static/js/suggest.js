@@ -1,4 +1,4 @@
-// 💡 Suggested Reads at the bottom of Up Next: books from the family's
+// 💡 Suggested Reads at the bottom of your Nightstand: books from the family's
 // library picked for this reader (and, when the admin allows, a few the
 // family doesn't own), with 👍/👎 to steer what comes next.
 import { get, post, del, qs } from "./api.js";
@@ -45,7 +45,7 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
           <span>${data.refreshing ? "✨ The AI is picking new suggestions…" : SUBTITLE[data.mode]}</span></p>
       </div>
       ${cards.length ? `<ul data-strip class="flex max-w-full snap-x gap-3 overflow-x-auto px-px pt-1 pb-2">${cards.join("")}</ul>`
-        : `<p class="text-sm text-slate-500">Add a few books to Up Next (or finish some) and suggestions will show up here.${taste ? ` Or <button data-taste class="underline">🎯 mark a few books you know</button> to get started.` : ""}</p>`}
+        : `<p class="text-sm text-slate-500">Add a few books to your Nightstand (or finish some) and suggestions will show up here.${taste ? ` Or <button data-taste class="underline">🎯 mark a few books you know</button> to get started.` : ""}</p>`}
       ${data.up + data.down ? `<p class="mt-1 text-xs text-slate-500">Your feedback so far: 👍 ${data.up} · 👎 ${data.down} ·
         <button data-reset class="underline">Start over</button></p>` : ""}
     </section>`;
@@ -103,7 +103,7 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
       drop(key);
       draw();
     } else if (e.target.closest("[data-add]") && item) {
-      if (await attempt(() => post("/api/queue", { book_id: item.book.id }), "Added to Up Next")) {
+      if (await attempt(() => post("/api/queue", { book_id: item.book.id }), "Added to your Nightstand")) {
         drop(key);
         draw();
         onQueued?.();
@@ -135,7 +135,7 @@ function libraryCard({ book: b, reason, by_ai: byAI }, liked) {
     <p class="line-clamp-2 text-sm text-slate-400">${esc(b.author || "Unknown author")}${series ? ` · <span class="text-sky-300">${esc(series)}</span>` : ""}</p></div></div>
     <div class="flex flex-wrap gap-1">${classChip(b)}</div>
     <p class="text-xs text-slate-300">${byAI ? "✨ " : ""}${esc(reason)}</p>
-    ${votes(liked, `<button data-add class="btn-primary py-1 text-sm">＋ Up Next</button>`)}
+    ${votes(liked, `<button data-add class="btn-primary py-1 text-sm">＋ Nightstand</button>`)}
   </li>`;
 }
 

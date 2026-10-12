@@ -10,7 +10,7 @@ func TestReportProblemToAdmin(t *testing.T) {
 	if res, _ := kid.do("POST", "/api/problems", map[string]string{"text": "  "}, true); res.StatusCode != 400 {
 		t.Fatal("empty report")
 	}
-	if res, _ := kid.do("POST", "/api/problems", map[string]string{"text": "The Up Next page is blank", "page": "#/queue"}, true); res.StatusCode != 200 {
+	if res, _ := kid.do("POST", "/api/problems", map[string]string{"text": "The Nightstand page is blank", "page": "#/queue"}, true); res.StatusCode != 200 {
 		t.Fatalf("report: %d", res.StatusCode)
 	}
 	if res, _ := kid.do("GET", "/api/admin/problems", nil, false); res.StatusCode != 403 {

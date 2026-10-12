@@ -17,7 +17,7 @@ import (
 )
 
 // KOReader (and other e-reader apps) read an OPDS 1.2 catalog. Each person's
-// private address /opds/<token> lists their Up Next with download links; the
+// private address /opds/<token> lists their Nightstand with download links; the
 // token stands in for signing in, which KOReader can't do.
 
 type opdsLink struct {
@@ -103,7 +103,7 @@ func (s *Server) handleOPDSFeed(w http.ResponseWriter, r *http.Request) {
 		self += "/" + token
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
-	feed := opdsFeed{ID: "urn:novelcheck:up-next:" + u.Username, Title: "NovelCheck: Up Next for " + u.Username,
+	feed := opdsFeed{ID: "urn:novelcheck:up-next:" + u.Username, Title: "NovelCheck: Nightstand for " + u.Username,
 		Updated: now, Author: "NovelCheck",
 		Links: []opdsLink{{"self", self, opdsType}, {"start", self, opdsType}}}
 	items, _ := s.Store.ListQueue(u.ID, false)

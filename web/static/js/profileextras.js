@@ -16,7 +16,7 @@ const PAGES = [
   ["check", "📷 Check a book", (u) => canManage(u)],
   ["library", "📚 Library", () => true],
   ["discover", "🧭 Discover", (u) => on(u, "discover")],
-  ["queue", "▶️ Up Next", (u) => on(u, "queue")],
+  ["queue", "▶️ Nightstand", (u) => on(u, "queue")],
   ["collections", "📚 Collections", () => true],
   ["wishlist", "⭐ Wishlist", () => true],
 ];

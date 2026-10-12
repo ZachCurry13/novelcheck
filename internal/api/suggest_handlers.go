@@ -1,6 +1,6 @@
 package api
 
-// Suggested Reads under Up Next: the suggestions, 👍/👎 votes, and putting a
+// Suggested Reads under Nightstand: the suggestions, 👍/👎 votes, and putting a
 // suggested book the family doesn't own on the wishlist.
 
 import (

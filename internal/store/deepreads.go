@@ -40,14 +40,14 @@ const DeepModelPrefix = "deep: "
 // Setting keys for Deep Scan.
 const (
 	KeyDeepModel = "deep_read_model" // optional model for Deep Scans ("" = the main AI's models)
-	KeyDeepUsers = "deep_scan_users" // up to 3 user ids whose Up Next is always Deep Scanned
-	KeyDeepTopN  = "deep_scan_top_n" // how many Up Next books "Deep Scan next" takes (10, 20, 30)
+	KeyDeepUsers = "deep_scan_users" // up to 3 user ids whose Nightstand is always Deep Scanned
+	KeyDeepTopN  = "deep_scan_top_n" // how many Nightstand books "Deep Scan next" takes (10, 20, 30)
 	// KeyDeepModelOK is a small model an admin chose to keep for Deep Scans
 	// anyway: the "use a bigger model" warning stays away for it.
 	KeyDeepModelOK = "deep_model_ok"
 )
 
-// MaxDeepUsers is how many accounts can have their Up Next scanned automatically.
+// MaxDeepUsers is how many accounts can have their Nightstand scanned automatically.
 const MaxDeepUsers = 3
 
 func init() {
@@ -199,7 +199,7 @@ func (s *Store) ResumeDeepReads() {
 	_, _ = s.DB.Exec(`UPDATE deep_reads SET status = 'queued', parts_done = 0 WHERE status = 'reading'`)
 }
 
-// DeepCandidates lists books waiting in Up Next (in reading-list order,
+// DeepCandidates lists books waiting on your Nightstand (in reading-list order,
 // optionally only for some users) that never had a Deep Scan. Ones that
 // failed, were declined or cancelled aren't picked again automatically; an
 // admin can still start them by hand.

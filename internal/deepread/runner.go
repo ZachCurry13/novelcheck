@@ -43,7 +43,7 @@ func (r *Runner) Wake() {
 }
 
 // Run works through the queue until ctx ends. Every couple of minutes it
-// also adds new Up Next books of the users chosen for automatic scans.
+// also adds new Nightstand books of the users chosen for automatic scans.
 func (r *Runner) Run(ctx context.Context) {
 	r.Store.ResumeDeepReads()
 	for ctx.Err() == nil { // on shutdown a scan stops mid-way and resumes after the restart
@@ -139,7 +139,7 @@ func (r *Runner) Queue(bookIDs []int64, source, by string) (int, Estimate) {
 	return n, total
 }
 
-// NextInQueues picks up to n Up Next books that can be scanned (have an
+// NextInQueues picks up to n Nightstand books that can be scanned (have an
 // EPUB, never scanned), in reading-list order, with their total estimate.
 func (r *Runner) NextInQueues(n int) ([]int64, Estimate, error) {
 	ids, err := r.Store.DeepCandidates(nil, n*4) // some may lack an EPUB
@@ -160,7 +160,7 @@ func (r *Runner) NextInQueues(n int) ([]int64, Estimate, error) {
 	return picked, total, nil
 }
 
-// autoQueue scans new Up Next books of the users chosen in Admin.
+// autoQueue scans new Nightstand books of the users chosen in Admin.
 func (r *Runner) autoQueue() {
 	users := DeepUsers(r.Store.Setting(store.KeyDeepUsers))
 	if len(users) == 0 {

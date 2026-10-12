@@ -21,7 +21,7 @@ var ErrCantSee = errors.New("the AI couldn't read the photo")
 // Models that can't see images just fail, and the next one is tried.
 func (w *Worker) ReadCover(ctx context.Context, image []byte, mediaType string) (enrich.Found, error) {
 	var errs []string
-	for _, ai := range w.Store.AIConfigs() {
+	for _, ai := range visionOrder(w.Store.AIConfigs()) {
 		reader, ok := llm.New(ai.Provider, ai.BaseURL, ai.APIKey, ai.JSONMode).(llm.ImageReader)
 		if !ok {
 			continue
@@ -53,6 +53,24 @@ func (w *Worker) ReadCover(ctx context.Context, image []byte, mediaType string) 
 		return enrich.Found{}, fmt.Errorf("%w: no AI is set up", ErrCantSee)
 	}
 	return enrich.Found{}, fmt.Errorf("%w (%s)", ErrCantSee, strings.Join(errs, "; "))
+}
+
+// visionOrder puts AIs on the internet before AIs on the home network: a small
+// local model is usually text-only and would only fail on a photo, so the
+// cloud one that can see gets the first try. Otherwise the order is kept.
+func visionOrder(ais []store.AIConfig) []store.AIConfig {
+	out := make([]store.AIConfig, 0, len(ais))
+	for _, ai := range ais {
+		if !llm.IsLocal(ai.BaseURL) {
+			out = append(out, ai)
+		}
+	}
+	for _, ai := range ais {
+		if llm.IsLocal(ai.BaseURL) {
+			out = append(out, ai)
+		}
+	}
+	return out
 }
 
 // parseCover reads {"title": "...", "author": "...", "isbn": "..."}.

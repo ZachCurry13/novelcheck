@@ -151,7 +151,7 @@ func TestKOReaderStatisticsFolder(t *testing.T) {
 	}
 
 	// Dune was queued and opened since: Reading, 43%. Mort (finished long
-	// ago, not queued) isn't added to Up Next.
+	// ago, not queued) isn't added to your Nightstand.
 	_, items := admin.doList("GET", "/api/queue")
 	if len(items) != 1 || items[0]["status"] != "reading" {
 		t.Fatalf("up next: %v", items)

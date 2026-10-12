@@ -9,7 +9,7 @@ import (
 )
 
 // Paper books: a parent makes a physical library, scans books into it (new
-// ones are queued for rating), and a paper-only book in Up Next is marked
+// ones are queued for rating), and a paper-only book on your Nightstand is marked
 // as reading without anything to send.
 func TestPaperBooks(t *testing.T) {
 	fake := fakeBooks(t)

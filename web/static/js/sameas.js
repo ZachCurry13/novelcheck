@@ -16,7 +16,7 @@ export function openSameAs(book, onDone) {
   d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
     <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-bold">🔗 Same book as…</h2>
       <button type="button" data-close class="btn-ghost h-10 w-10 p-0 text-xl" aria-label="Close">✕</button></div>
-    <p class="text-sm text-slate-400">Find the other title of <b>${esc(book.title)}</b>. The two become one book: the better-rated one stays, and its libraries, Up Next places, notes and wishes all come together.</p>
+    <p class="text-sm text-slate-400">Find the other title of <b>${esc(book.title)}</b>. The two become one book: the better-rated one stays, and its libraries, Nightstand places, notes and wishes all come together.</p>
     <input type="search" data-q class="input" placeholder="Title or author" value="${esc(book.title)}" autocomplete="off">
     <ul data-found class="space-y-2"></ul></div>`;
   const found = d.querySelector("[data-found]");

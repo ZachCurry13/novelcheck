@@ -6,7 +6,7 @@ import (
 )
 
 // Hardcover sync (pull): what someone is reading and has read on Hardcover
-// becomes progress in NovelCheck, and moves books already in their Up Next.
+// becomes progress in NovelCheck, and moves books already in their Nightstand.
 
 // KeyHardcoverSynced is when (RFC 3339) a person's Hardcover last synced.
 func hardcoverSyncedKey(userID int64) string { return "hardcover_synced_" + itoa64(userID) }
@@ -70,9 +70,9 @@ func (s *Store) matchHardcover(b HardcoverBook) int64 {
 }
 
 // SaveHardcover replaces someone's Hardcover books with a new sync's and
-// moves their Up Next along: a book there that was started (or finished) on
+// moves their Nightstand along: a book there that was started (or finished) on
 // Hardcover since it was queued becomes Reading (or Finished). It never adds
-// books to Up Next and says how many matched the library.
+// books to your Nightstand and says how many matched the library.
 func (s *Store) SaveHardcover(userID int64, books []HardcoverBook) (int, error) {
 	ids := make([]int64, len(books))
 	for i, b := range books {
@@ -156,7 +156,7 @@ func (s *Store) SetHardcoverPush(userID int64, on bool) error {
 }
 
 // HardcoverToPush is a book whose state may need sending: reading or finished
-// in Up Next within the last 14 days, with an ISBN, and not at Hardcover in
+// on your Nightstand within the last 14 days, with an ISBN, and not at Hardcover in
 // that state already.
 type HardcoverToPush struct {
 	BookID   int64

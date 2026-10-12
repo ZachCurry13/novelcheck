@@ -4,12 +4,12 @@ package store
 // default). Turning one off hides it everywhere and refuses its API calls;
 // kids' content rules keep applying even when parent tools are hidden.
 const (
-	KeyModuleQueue    = "module_queue"          // Up Next reading queue
+	KeyModuleQueue    = "module_queue"          // Nightstand reading queue
 	KeyModuleKindle   = "module_send_to_kindle" // "Start Reading" by Send-to-Kindle email
 	KeyModuleKOReader = "module_koreader"       // "Start Reading" flags for KOReader sync
 	KeyModuleImport   = "module_import"         // Import books: Kindle/drive scanner and lists
 	KeyModuleParents  = "module_parents"        // kids' accounts, age groups, parents' notes
-	KeyModuleSuggest  = "module_suggestions"    // 💡 Suggested Reads under Up Next
+	KeyModuleSuggest  = "module_suggestions"    // 💡 Suggested Reads under Nightstand
 	KeyModuleTaste    = "module_taste"          // 🎯 taste profile: rate books to steer suggestions
 	KeyModuleDiscover = "module_discover"       // 🧭 Discover tab: best sellers, classics, new and popular books
 	KeyNotifyRoutine  = "notify_routine"        // 🔔 also lists routine events, not just problems

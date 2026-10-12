@@ -1,7 +1,7 @@
 // Admin → 🧬 Deep Scan, in four sections: Review (big raises waiting for a
 // decision), Running (requests, queued and reading scans), Results, and
-// Settings (scan the next Up Next books after a cost estimate; readers whose
-// Up Next is scanned automatically). Decisions apply in place; only the
+// Settings (scan the next Nightstand books after a cost estimate; readers whose
+// Nightstand is scanned automatically). Decisions apply in place; only the
 // Running section refreshes on its own.
 import { get, post, put } from "./api.js";
 import { $, $$, esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes, canHere } from "./ui.js";
@@ -192,7 +192,7 @@ function paintModelWarning(box, data) {
 async function renderSettings(host, data) {
   host.innerHTML = `
     <section class="card space-y-3">
-      <h2 class="text-lg font-semibold">Scan the next books in Up Next</h2>
+      <h2 class="text-lg font-semibold">Scan the next books on your Nightstand</h2>
       <p class="text-sm text-slate-400">A scan costs about as much as rating 100–200 books from their descriptions, so you see the estimate first.</p>
       <div class="flex flex-wrap items-center gap-2">
         <select id="top-n" class="input w-auto">${[10, 20, 30].map((n) => `<option value="${n}">Next ${n} books</option>`).join("")}</select>
@@ -201,8 +201,8 @@ async function renderSettings(host, data) {
       <div id="estimate-out" class="space-y-2"></div>
     </section>
     <section class="card space-y-3">
-      <h2 class="text-lg font-semibold">Always scan these readers' Up Next</h2>
-      <p class="text-sm text-slate-400">Pick up to 3 accounts (for example the kids). New books in their Up Next are Deep Scanned automatically.</p>
+      <h2 class="text-lg font-semibold">Always scan these readers' Nightstand</h2>
+      <p class="text-sm text-slate-400">Pick up to 3 accounts (for example the kids). New books in their Nightstand are Deep Scanned automatically.</p>
       <div id="deep-users" class="grid gap-1 sm:grid-cols-2"></div>
       <button id="save-users" class="btn-secondary">Save</button>
     </section>`;
@@ -219,7 +219,7 @@ async function renderSettings(host, data) {
   });
   $("#save-users", host).addEventListener("click", () => {
     const ids = $$("#deep-users input:checked", host).map((cb) => cb.value).join(",");
-    attempt(() => put("/api/admin/settings", { deep_scan_users: ids }), "Saved. Their new Up Next books will be Deep Scanned.");
+    attempt(() => put("/api/admin/settings", { deep_scan_users: ids }), "Saved. Their new Nightstand books will be Deep Scanned.");
   });
   $("#estimate", host).addEventListener("click", async () => {
     const n = $("#top-n", host).value;
@@ -227,7 +227,7 @@ async function renderSettings(host, data) {
     const out = $("#estimate-out", host);
     if (!est) return;
     if (!est.books) {
-      out.innerHTML = `<p class="text-sm text-slate-400">Nothing to scan: every book waiting in Up Next is already scanned or has no EPUB in Calibre.</p>`;
+      out.innerHTML = `<p class="text-sm text-slate-400">Nothing to scan: every book waiting on your Nightstand is already scanned or has no EPUB in Calibre.</p>`;
       return;
     }
     out.innerHTML = `<p class="rounded-lg bg-slate-800 p-3 text-sm">Deep Scanning <b>${est.books} book${est.books === 1 ? "" : "s"}</b>

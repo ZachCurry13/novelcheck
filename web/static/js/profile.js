@@ -42,7 +42,7 @@ export async function renderProfile(view, state) {
       ${familyCardHTML(u)}
       ${on(u, "queue") && on(u, "suggestions") && on(u, "taste") ? `<div class="card space-y-2 lg:col-span-2">
         <h2 class="text-lg font-semibold">🎯 Your reading taste</h2>
-        <p class="text-sm text-slate-400">Optional: mark books you know (want to read, read &amp; liked, …) so 💡 Suggested Reads under Up Next fit you better.</p>
+        <p class="text-sm text-slate-400">Optional: mark books you know (want to read, read &amp; liked, …) so 💡 Suggested Reads under Nightstand fit you better.</p>
         <button type="button" id="taste-open" class="btn-secondary">Rate some books</button></div>` : ""}
       <div id="sync-card" class="card space-y-2${on(u, "koreader") ? "" : " module-off"}"></div>
       <div id="hardcover-card" class="card space-y-2"></div>

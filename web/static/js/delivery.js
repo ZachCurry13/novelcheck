@@ -72,7 +72,7 @@ function koreaderHTML(url, username, own, simple) {
   <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
     <li>On the e-reader, open <b>KOReader</b>, tap the <b>🔍 Search</b> or <b>⚙ Settings</b> icon in the top menu (it's in one of them), then <b>OPDS catalog</b>.</li>
     <li>Tap <b>＋</b> (top left). Name: <b>NovelCheck</b>. Then either the short address with your username and sync code (the three boxes in <b>Easiest to type</b>), or the long private address with no login.</li>
-    <li>Open <b>NovelCheck</b> in the list: the Up Next books appear. Tap one and choose <b>Download</b>.</li>
+    <li>Open <b>NovelCheck</b> in the list: the Nightstand books appear. Tap one and choose <b>Download</b>.</li>
   </ol>
   <p class="text-xs text-slate-500">The e-reader must reach this address: the home Wi-Fi address works at home, the https:// remote address works anywhere.
     Keep it private: anyone with it can download these books.</p>`;
@@ -112,12 +112,12 @@ export async function openKOReaderSetup(userId) {
   d.showModal();
 }
 
-// syncHTML: KOReader's progress sync pointed at NovelCheck, so Up Next
+// syncHTML: KOReader's progress sync pointed at NovelCheck, so Nightstand
 // follows what's being read.
 function syncHTML(url, username, code) {
   return `<div class="space-y-2 border-t border-slate-800 pt-4">
     <h3 class="font-semibold">🔄 Reading sync</h3>
-    <p class="text-sm text-slate-400">KOReader tells NovelCheck how far each book is: opening one marks it ▶ Reading in Up Next, and reaching the end marks it ✓ Finished. It also keeps your place between devices. It works for books from this catalog.</p>
+    <p class="text-sm text-slate-400">KOReader tells NovelCheck how far each book is: opening one marks it ▶ Reading on your Nightstand, and reaching the end marks it ✓ Finished. It also keeps your place between devices. It works for books from this catalog.</p>
     <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
       <li>In a book, open the top menu → <b>🛠 Tools</b> → <b>Progress sync</b> → <b>Custom sync server</b>, and enter:
         <span class="mt-1 flex items-center gap-2"><code class="min-w-0 break-all rounded bg-slate-800 px-2 py-1 text-xs">${esc(url)}</code>
@@ -129,12 +129,12 @@ function syncHTML(url, username, code) {
 }
 
 // statsHTML: KOReader's reading statistics synced to a private NovelCheck
-// folder, so Up Next shows every book opened on the reader's devices.
+// folder, so Nightstand shows every book opened on the reader's devices.
 function statsHTML(url, username, code) {
   return `<div class="space-y-2 border-t border-slate-800 pt-4">
     <h3 class="font-semibold">📊 Reading statistics</h3>
     <p class="rounded bg-slate-800/60 p-2 text-sm text-slate-300">Using the NovelCheck plugin? Skip these steps: <b>NovelCheck → Set up everything</b> does them for you.</p>
-    <p class="text-sm text-slate-400">NovelCheck can also keep KOReader's reading statistics: then Up Next shows every book opened on your KOReader devices (any book, not only ones from NovelCheck), how far you are and how long you've read. With several devices, each one syncs to the same place.</p>
+    <p class="text-sm text-slate-400">NovelCheck can also keep KOReader's reading statistics: then Nightstand shows every book opened on your KOReader devices (any book, not only ones from NovelCheck), how far you are and how long you've read. With several devices, each one syncs to the same place.</p>
     <p class="text-sm font-medium">Part 1: add NovelCheck as Cloud storage (once per device)</p>
     <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
       <li>In KOReader's file browser, tap the <b>⚙ Settings</b> icon in the top menu, then <b>Cloud storage</b>, then <b>＋</b>, then <b>WebDAV</b>.</li>

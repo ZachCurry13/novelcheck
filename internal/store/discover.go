@@ -38,7 +38,7 @@ type DiscoverBook struct {
 	Link   string `db:"link" json:"link"`
 	Owned  bool   `db:"owned" json:"owned"`   // in one of the family's libraries
 	Wished bool   `db:"wished" json:"wished"` // on the viewer's wishlist
-	Queued bool   `db:"queued" json:"queued"` // in the viewer's Up Next
+	Queued bool   `db:"queued" json:"queued"` // in the viewer's Nightstand
 }
 
 // SaveDiscoverList replaces a list's books. A book the family has nowhere
@@ -131,7 +131,7 @@ func (s *Store) NewInLibraries(u *User, limit int) ([]DiscoverBook, error) {
 	return out, err
 }
 
-// FamilyFavorites returns the family's books most added to Up Next (or read)
+// FamilyFavorites returns the family's books most added to your Nightstand (or read)
 // in the last 90 days, by how many people chose them.
 func (s *Store) FamilyFavorites(u *User, limit int) ([]DiscoverBook, error) {
 	where, args := discoverWhere(u)

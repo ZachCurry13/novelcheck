@@ -10,7 +10,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// A Kindle reader's Up Next book with nothing Amazon takes (only on an
+// A Kindle reader's Nightstand book with nothing Amazon takes (only on an
 // imported list, or only AZW3 in Calibre) says so, and ▶ marks it as
 // reading instead of failing to email it.
 func TestStartReadingWithoutAFileToSend(t *testing.T) {

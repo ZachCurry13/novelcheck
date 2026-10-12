@@ -106,7 +106,7 @@ func (s *Server) handleDequeue(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
-// handleHideQueueItem hides a book from Up Next, or brings it back
+// handleHideQueueItem hides a book from your Nightstand, or brings it back
 // ({"hidden": false}). Hidden books stay in the library and are not added
 // again by the e-reader.
 func (s *Server) handleHideQueueItem(w http.ResponseWriter, r *http.Request) {
@@ -171,7 +171,7 @@ func (s *Server) deliver(u *store.User, bookID int64) (string, error) {
 		if _, kind := s.fileFor(bookID, false); kind != "send" {
 			return "Marked as reading (the library has no file of it for KOReader)", nil
 		}
-		return "Ready in your KOReader catalog (Up Next)", nil
+		return "Ready in your KOReader catalog (Nightstand)", nil
 	case "email":
 		if !s.Store.SettingBool(store.KeyModuleKindle) {
 			return "Marked as reading (Send-to-Kindle is turned off)", nil

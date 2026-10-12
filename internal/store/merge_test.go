@@ -8,7 +8,7 @@ import (
 )
 
 // Two records of one book become one: the better-rated one stays, the
-// other's copies, Up Next places and notes move over, and its title comes
+// other's copies, Nightstand places and notes move over, and its title comes
 // back to the kept book from then on.
 func TestMergeBooks(t *testing.T) {
 	d, err := db.Open(t.TempDir())

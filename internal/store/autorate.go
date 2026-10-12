@@ -17,7 +17,7 @@ func init() {
 	Defaults[KeyLocalContext] = "4096"
 }
 
-// rateOrder puts books people want first (in someone's Up Next or on a
+// rateOrder puts books people want first (in someone's Nightstand or on a
 // wishlist), then the newest additions.
 const rateOrder = `EXISTS (SELECT 1 FROM queue_items qo WHERE qo.book_id = b.id AND qo.status IN ('queued', 'reading'))
 		OR EXISTS (SELECT 1 FROM wishlist wo WHERE wo.book_id = b.id AND wo.status IN ('wanted', 'approved')) DESC,

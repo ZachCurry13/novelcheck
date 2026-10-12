@@ -17,7 +17,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// The KOReader plugin lists Up Next and downloads a book, signed in like
+// The KOReader plugin lists Nightstand and downloads a book, signed in like
 // progress sync.
 func TestKOReaderPlugin(t *testing.T) {
 	lib := t.TempDir()

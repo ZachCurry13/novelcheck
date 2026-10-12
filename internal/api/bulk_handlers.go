@@ -10,7 +10,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// handleBulkBooks adds the picked books to Up Next, Deep Scans them (admins
+// handleBulkBooks adds the picked books to your Nightstand, Deep Scans them (admins
 // start the scans, others request them), or deletes them: books in the
 // person's own libraries are taken out straight away, anything else becomes
 // a delete request for the admins. It answers with a count per outcome.

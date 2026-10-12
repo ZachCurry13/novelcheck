@@ -1,7 +1,7 @@
 package store
 
 // Suggested Reads: the books a suggestion can come from, what each person
-// likes (their Up Next, reading, finished, and 👍/👎 votes), and the AI's
+// likes (their Nightstand, reading, finished, and 👍/👎 votes), and the AI's
 // latest picks, which are made at most once a day per person.
 
 import (
@@ -59,7 +59,7 @@ const suggestCols = `b.id, b.title, b.author, b.series, b.series_index,
 	COALESCE(` + effectiveSpice + `, -1) AS spice`
 
 // SuggestPool returns the owned books u may see (in catalogID, or any
-// library when 0) that aren't in u's Up Next (in any state) and that u
+// library when 0) that aren't in u's Nightstand (in any state) and that u
 // hasn't voted on.
 func (s *Store) SuggestPool(u *User, catalogID int64) ([]SuggestBook, error) {
 	where, args := visibilityClause(u)
@@ -73,7 +73,7 @@ func (s *Store) SuggestPool(u *User, catalogID int64) ([]SuggestBook, error) {
 	return out, err
 }
 
-// SuggestSignals returns what someone has in Up Next (queued 2, reading or
+// SuggestSignals returns what someone has on your Nightstand (queued 2, reading or
 // finished 3) and their votes: 👍 4, and 👎 -1 with its reason, which package
 // suggest turns into the right lesson (a 👎 "already read it" counts as
 // reading history instead, weight 1.5).

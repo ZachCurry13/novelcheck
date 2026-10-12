@@ -8,7 +8,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// autoAddFromDevice puts the library books on a device into someone's Up Next
+// autoAddFromDevice puts the library books on a device into someone's Nightstand
 // (when they have that switched on): started ones as Reading, the rest queued
 // at the end, finished ones skipped. A book they already have there, hidden
 // or not, is left alone, and kids' rules still decide what a kid may see.
@@ -39,7 +39,7 @@ func (s *Server) autoAddFromDevice(u *store.User, device string) int {
 	return added
 }
 
-// handleKindleAutoAdd turns "add the books on my e-reader to Up Next" on or off.
+// handleKindleAutoAdd turns "add the books on my e-reader to your Nightstand" on or off.
 func (s *Server) handleKindleAutoAdd(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Enabled bool `json:"enabled"`

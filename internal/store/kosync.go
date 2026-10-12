@@ -3,7 +3,7 @@ package store
 // KOReader progress sync: each reader gets a sync code (Profile), KOReader
 // logs in with their NovelCheck name and the code, and sends where it is in
 // each book. NovelCheck keeps that for KOReader (to sync between devices)
-// and moves the book along in Up Next: opened → Reading, the end →
+// and moves the book along on your Nightstand: opened → Reading, the end →
 // Finished (never back).
 
 import (
@@ -93,7 +93,7 @@ type SyncFile struct {
 	Path   string `db:"path"`
 }
 
-// SyncFiles are the Calibre files of the books in someone's Up Next
+// SyncFiles are the Calibre files of the books in someone's Nightstand
 // (their box set's, for a split box set's book), newest first.
 func (s *Store) SyncFiles(userID int64, limit int) []SyncFile {
 	out := []SyncFile{}
@@ -106,7 +106,7 @@ func (s *Store) SyncFiles(userID int64, limit int) []SyncFile {
 	return out
 }
 
-// SyncReading moves a book along in someone's Up Next from what their
+// SyncReading moves a book along in someone's Nightstand from what their
 // e-reader says: reading, or finished. It never moves a book back, and adds
 // one that isn't there. It reports whether anything changed.
 func (s *Store) SyncReading(userID, bookID int64, finished bool) (bool, error) {

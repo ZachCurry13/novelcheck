@@ -1,6 +1,6 @@
 # NovelCheck plugin for KOReader
 
-A KOReader plugin for NovelCheck: see your **Up Next** list on the e-reader,
+A KOReader plugin for NovelCheck: see your **Nightstand** list on the e-reader,
 tap a book to download it, and report which books are on the device (NovelCheck
 1.36 or newer for that part); the plugin only needs your
 NovelCheck address, username and sync code.
@@ -21,7 +21,7 @@ NovelCheck address, username and sync code.
    - **Address**: where you open NovelCheck, like `https://novelcheck.example.com`.
    - **Username**: your NovelCheck name.
    - **Sync code**: from NovelCheck, **Profile > KOReader setup > Reading sync**.
-2. Open **NovelCheck > Up Next**. Tap a book to download it into KOReader's
+2. Open **NovelCheck > Nightstand**. Tap a book to download it into KOReader's
    download folder (or home folder).
 
 3. **NovelCheck > Report books on this device** sends NovelCheck the list of books
@@ -29,7 +29,7 @@ NovelCheck address, username and sync code.
    **Device name...** sets what NovelCheck calls this device. Profile > Reading
    sync shows the result.
 
-Only books in your Up Next that have a file NovelCheck can send are listed;
+Only books in your Nightstand that have a file NovelCheck can send are listed;
 kids' content rules apply as everywhere else.
 
 ## If something goes wrong
@@ -47,12 +47,12 @@ Open **Profile > KOReader plugin** in NovelCheck and press **Download the plugin
 
 - **NovelCheck > On this device** lists the books with progress; tap one to delete it (it asks first).
 - **Delete finished books...** lists the finished ones and deletes them after you confirm.
-- **Download all Up Next** downloads every Up Next book that is not on the device yet.
+- **Download all Nightstand** downloads every Nightstand book that is not on the device yet.
 - **About** shows the plugin version.
 
 ## Automatic and updating (NovelCheck 1.39 or newer)
 
-- **NovelCheck > Automatic:** when the e-reader gets online (at most every 6 hours) the plugin reports its books, so they appear in Up Next without any menu (switch on **Download Up Next when online** to also fetch new books). Turn either off there.
+- **NovelCheck > Automatic:** when the e-reader gets online (at most every 6 hours) the plugin reports its books, so they appear on your Nightstand without any menu (switch on **Download Nightstand when online** to also fetch new books). Turn either off there.
 - **NovelCheck > Update plugin** downloads the newest plugin files from your NovelCheck, checks them, swaps them in (old files are kept as `.bak`) and asks to restart KOReader. The plugin also mentions a new version once after connecting. If an update ever goes wrong, copy the folder from **Profile > KOReader plugin** over USB.
 
 ## One-tap setup (NovelCheck 1.40 or newer, plugin 1.40.0)

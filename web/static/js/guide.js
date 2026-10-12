@@ -8,7 +8,7 @@ const EVERYONE = [
   ["👋 Welcome to NovelCheck",
     "NovelCheck helps you pick books that fit your family. Each book gets a simple rating for romance (\"spice\") and a few content flags, so you know what's inside before you start reading."],
   ["📚 The Library",
-    "The <b>Library</b> tab shows every book with its cover. Search by title, author, series or tag, or narrow it down by <b>genre</b>, <b>fiction or nonfiction</b>, <b>author</b>, <b>series</b> and more. Tick the <b>Hide</b> boxes (like <b>Nudity</b>) to hide books that include those things. <b>☑ Select</b> lets you pick several books at once, to add them to Up Next or ask to delete them."],
+    "The <b>Library</b> tab shows every book with its cover. Search by title, author, series or tag, or narrow it down by <b>genre</b>, <b>fiction or nonfiction</b>, <b>author</b>, <b>series</b> and more. Tick the <b>Hide</b> boxes (like <b>Nudity</b>) to hide books that include those things. <b>☑ Select</b> lets you pick several books at once, to add them to your Nightstand or ask to delete them."],
   ["🧭 Discover",
     "The <b>Discover</b> tab suggests books: what's popular now, new on the best-seller lists, top teen and kids' books, classics, and what's new or popular in your family. Your content rules apply. Tap <b>⭐ Wishlist</b> to ask for a book you don't have."],
   ["🎉 Events",
@@ -23,9 +23,16 @@ const EVERYONE = [
     <p class="mt-2">Tap <b>🌶️ What do the peppers mean?</b> in the Library for the full descriptions and examples.</p>
     <p class="mt-2">Purple tags such as <span class="chip-flag">Dark Occult</span> point out other content you may want to know about. Small icons such as ⚔️ violence, 🗣️ language, 🩸 gore, 🍺 drinking or drugs and 🧩 other themes mean the book has some; open the book to see exactly what.</p>`],
   ["🔎 Book details",
-    "Tap any book to open it. You'll see what it's about, its rating and content details, and which libraries or devices it's on. Tap <b>＋</b> or <b>＋ Up Next</b> to save it for later."],
-  ["▶️ Up Next",
-    "The <b>Up Next</b> tab is your reading list. Drag the <b>⠿</b> handle to reorder books, and tap a title to open the book. When you're ready, press <b>▶ Start Reading</b> (just <b>▶</b> on a phone). If you've set up your Kindle email, the book is sent to your Kindle. Below the list, <b>💡 Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (and a quick \"Why not?\" helps it learn)."],
+    "Tap any book to open it. You'll see what it's about, its rating and content details, and which libraries or devices it's on. Tap <b>＋</b> or <b>＋ Nightstand</b> to save it for later."],
+  ["🛏️ Your Nightstand",
+    `<p class="mb-2">The <b>Nightstand</b> is your reading list: the books by your bed. (It used to be called Up Next.)</p>
+    <ul class="list-disc space-y-1 pl-5">
+      <li><b>Currently reading</b> is at the top, with how far you are. Books you start on your e-reader show up here by themselves.</li>
+      <li><b>On the pile</b> is what you plan to read next. Tap <b>＋</b> on any book to put it there, and drag the <b>⠿</b> handle to put them in order.</li>
+      <li>When you're ready, press <b>▶ Start Reading</b> (just <b>▶</b> on a phone). If you've set up your e-reader, the book is sent to it.</li>
+      <li>Finished books leave the list. <b>🙈 Hide</b> takes a book off the Nightstand without removing it from your library, and <b>Hidden</b> brings it back.</li>
+      <li>Below, <b>📱 On your KOReader</b> lists every book you've opened on your e-reader, and <b>💡 Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (a quick "Why not?" helps it learn).</li>
+    </ul>`],
   ["👤 Your profile",
     "In <b>Profile</b> you can pick a light or dark look, an easier-to-read font and less motion under <b>🎨 Appearance</b>, set how books reach your e-reader, change your password, and mark books you know under <b>🎯 Your reading taste</b> so your suggestions fit you better. Something not working, or an idea? <b>🐞 Report a problem or idea</b> at the bottom of any page tells your admin."],
   ["📱 Put it on your phone",
@@ -49,10 +56,10 @@ const ADMIN = [
   ["⚙️ Admin settings",
     "As the main admin you also have the technical settings: the AI key and model, spending limits, the email account used for Send-to-Kindle, and which Calibre library folder to use. You also decide what each other admin can reach: tick their areas on their card under <b>Admin → Users & Rules</b>. Editors can't see or change these."],
   ["📬 Start Reading delivery (optional)",
-    `<p class="mb-2">When someone presses <b>▶ Start Reading</b> in Up Next, NovelCheck can put the book on their e-reader:</p>
+    `<p class="mb-2">When someone presses <b>▶ Start Reading</b> on your Nightstand, NovelCheck can put the book on their e-reader:</p>
     <ul class="list-disc space-y-1 pl-5">
       <li><b>Kindle</b>: fill in <b>Admin → Delivery & Services → SMTP / Send-to-Kindle</b> (for Gmail, an App Password) and press <b>Send test email</b>. Each reader adds that sender to their Amazon approved list; <b>Profile</b> shows how.</li>
-      <li><b>KOReader</b>: nothing to set up here. Each reader opens <b>Profile → KOReader setup</b> for their private catalog address and QR code, and for reading sync, which marks books Reading and Finished in Up Next (parents can do it for kids from their account card).</li>
+      <li><b>KOReader</b>: nothing to set up here. Each reader opens <b>Profile → KOReader setup</b> for their private catalog address and QR code, and for reading sync, which marks books Reading and Finished on your Nightstand (parents can do it for kids from their account card).</li>
     </ul>
     <p class="mt-2">Don't use either? Switch them off under <b>Admin → System & Toggles → Features</b>.</p>`],
 ];

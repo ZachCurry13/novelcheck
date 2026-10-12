@@ -18,7 +18,7 @@ export const messageLog = [];
 let toastTimer;
 // toast shows a short message. Errors stay until closed (so they can't vanish
 // before you read them) and every message is kept in messageLog. link, if
-// given ({label, href}), adds a link such as "View Up Next".
+// given ({label, href}), adds a link such as "View Nightstand".
 export function toast(msg, isError = false, link = null) {
   const t = $("#toast");
   t.replaceChildren();

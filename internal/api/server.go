@@ -43,7 +43,7 @@ type Server struct {
 	Deep        *deepread.Runner     // Deep Scans (full-text reading)
 	Covers      covers.Cache         // shrunk book covers under /data/covers
 	Genres      *genrefill.Filler    // AI genres for books without Calibre tags
-	Suggest     *suggest.Service     // Suggested Reads under Up Next
+	Suggest     *suggest.Service     // Suggested Reads under Nightstand
 	Discover    *discover.Service    // the Discover tab's lists; nil in tests that don't need it
 	Collections *collections.Service // AI-filled collections and weekly ideas
 	AITools     *aitools.Service     // model updates and the speed test

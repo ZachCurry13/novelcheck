@@ -115,7 +115,7 @@ export async function openBook(id, state, onChange) {
         ${owned && can(state.user, "calibre") && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
       </div>
       <div class="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap gap-2 border-t border-slate-800 bg-slate-900/95 px-6 py-3 backdrop-blur">
-        ${on(state.user, "queue") ? `<button data-act="queue" class="btn-primary">${owned ? "＋ Up Next" : "＋ Up Next (to get)"}</button>` : ""}
+        ${on(state.user, "queue") ? `<button data-act="queue" class="btn-primary">${owned ? "＋ Nightstand" : "＋ Nightstand (to get)"}</button>` : ""}
         ${!owned ? (data.my_wish ? `<button data-act="unwish" class="btn-ghost" title="Remove it from your wishlist">⭐ On your wishlist · Remove</button>` : `<button data-act="wish" class="btn-secondary">⭐ Add to Wishlist</button>`) : ""}
         ${manager ? `<button data-act="edit-verdict" class="btn-secondary">Edit rating</button>` : ""}
       </div>
@@ -179,8 +179,8 @@ export async function openBook(id, state, onChange) {
       if (ok) refresh();
     } else if (act === "queue") {
       const btn = e.target.closest("[data-act]");
-      if (await attempt(() => post("/api/queue", { book_id: b.id }), "Added to Up Next")) {
-        btn.textContent = "✓ In Up Next";
+      if (await attempt(() => post("/api/queue", { book_id: b.id }), "Added to your Nightstand")) {
+        btn.textContent = "✓ On your Nightstand";
         btn.disabled = true;
       }
     } else if (act === "analyze") {

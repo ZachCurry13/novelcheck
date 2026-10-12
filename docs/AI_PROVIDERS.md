@@ -82,10 +82,10 @@ If you have a stronger computer that isn't always on, set it up under **Admin �
 
 ## Suggested Reads
 
-**💡 Suggested Reads** (under Up Next) starts with free matching done by NovelCheck itself, with no AI: next in a series, same authors, similar descriptions. What the AI adds is up to you, under **Admin → AI & Scans → Suggested Reads**:
+**💡 Suggested Reads** (under Nightstand) starts with free matching done by NovelCheck itself, with no AI: next in a series, same authors, similar descriptions. What the AI adds is up to you, under **Admin → AI & Scans → Suggested Reads**:
 
 - **Free matching only (no AI)**: costs nothing.
-- **AI picks from your library**: the AI chooses the best 10 from a shortlist of 30 and writes a reason for each. It runs at most once a day per person who opens Up Next, and never goes past your hourly token cap. That's roughly 4,000 tokens a time, well under a cent with `gpt-4o-mini`, and free with Ollama.
+- **AI picks from your library**: the AI chooses the best 10 from a shortlist of 30 and writes a reason for each. It runs at most once a day per person who opens Nightstand, and never goes past your hourly token cap. That's roughly 4,000 tokens a time, well under a cent with `gpt-4o-mini`, and free with Ollama.
 - **AI picks + books you don't own**: the same, plus up to 5 books to add to the wishlist. Kids' accounts never get these.
 
 Marking books under **🎯 Your reading taste** uses no AI.

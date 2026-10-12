@@ -156,7 +156,7 @@ func (s *Server) handleDecideDeepScan(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleDeepScanNext estimates (GET) or queues (POST) a Deep Scan of the
-// next n books waiting in Up Next lists.
+// next n books waiting on your Nightstand lists.
 func (s *Server) handleDeepScanNext(w http.ResponseWriter, r *http.Request) {
 	n := queryInt(r, "n")
 	if n <= 0 {

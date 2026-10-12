@@ -188,7 +188,7 @@ return function(NovelCheck, ctx)
                         text = text .. "\n" .. tostring(data.matched) .. " " .. _("are in your NovelCheck library.")
                     end
                     if good and type(data) == "table" and data.added and data.added > 0 then
-                        text = text .. "\n" .. tostring(data.added) .. " " .. _("added to Up Next.")
+                        text = text .. "\n" .. tostring(data.added) .. " " .. _("added to your Nightstand.")
                     end
                     if #books >= MAX_BOOKS then
                         text = text .. "\n" .. _("(Only the first 500 books are listed.)")

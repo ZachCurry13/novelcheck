@@ -61,7 +61,7 @@ func Loop(ctx context.Context, st *store.Store) {
 }
 
 // PushUser sends a person's reading state to their Hardcover (up to 15
-// books a run): reading or finished books in Up Next, matched by ISBN.
+// books a run): reading or finished books on your Nightstand, matched by ISBN.
 // Books Hardcover doesn't know are marked done so they aren't retried every hour.
 func PushUser(ctx context.Context, st *store.Store, c *Client, userID int64) (sent int, err error) {
 	for _, p := range st.HardcoverPending(userID, 15) {

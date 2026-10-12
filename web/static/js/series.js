@@ -1,6 +1,6 @@
 // 🗂 Series: every series in the family's libraries (with how far you've
 // read), and one series in order: the numbers you don't have, what you've
-// read, and Next up with ＋ Up Next.
+// read, and Next up with ＋ Nightstand.
 import { get, post } from "./api.js";
 import { $, esc, attempt, toast, classChip } from "./ui.js";
 import { coverImg } from "./covers.js";
@@ -49,7 +49,7 @@ async function renderOne(view, state, name) {
   ].sort((a, b) => (a.n || 1e9) - (b.n || 1e9));
   const read = data.books.filter((b) => b.my_status === "finished").length;
   const status = (b) => ({ finished: `<span class="chip-none">✓ Read</span>`, reading: `<span class="chip-busy">▶ Reading</span>`,
-    queued: `<span class="chip-cat">In Up Next</span>` })[b.my_status] || "";
+    queued: `<span class="chip-cat">On your Nightstand</span>` })[b.my_status] || "";
   view.innerHTML = `${shelfTabsHTML("series")}
     <a href="#/series" class="mb-2 inline-block text-sm text-slate-400 hover:text-white">← All series</a>
     <h1 class="text-2xl font-bold">🗂 ${esc(data.name)}</h1>
@@ -66,7 +66,7 @@ async function renderOne(view, state, name) {
             <button type="button" data-open class="text-left font-semibold leading-snug line-clamp-2">${esc(b.title)}</button>
             <p class="truncate text-xs text-slate-400">${esc(b.author || "")}</p>
             <div class="flex flex-wrap gap-1">${classChip(b)} ${contentIcons(b)} ${status(b)}</div>
-            ${queueOn && !b.my_status ? `<button type="button" data-queue class="btn-secondary py-1 text-sm">＋ Up Next</button>` : ""}
+            ${queueOn && !b.my_status ? `<button type="button" data-queue class="btn-secondary py-1 text-sm">＋ Nightstand</button>` : ""}
           </div></li>`).join("")}</ol>`;
   view.onclick = async (e) => {
     const li = e.target.closest("[data-book]");
@@ -75,8 +75,8 @@ async function renderOne(view, state, name) {
     if (e.target.closest("[data-open]")) return openBook(id, state, () => renderOne(view, state, name));
     const add = e.target.closest("[data-queue]");
     if (add && (await attempt(() => post("/api/queue", { book_id: id })))) {
-      add.outerHTML = `<span class="chip-cat">In Up Next</span>`;
-      toast("Added to Up Next", false, { label: "View Up Next", href: "#/queue" });
+      add.outerHTML = `<span class="chip-cat">On your Nightstand</span>`;
+      toast("Added to your Nightstand", false, { label: "View Nightstand", href: "#/queue" });
     }
   };
 }

@@ -1,4 +1,4 @@
-// Netflix-style "Up Next" reading queue with SortableJS drag-and-drop.
+// Netflix-style "Nightstand" reading queue with SortableJS drag-and-drop.
 import { get, post, put, del } from "./api.js";
 import { $, esc, attempt, toast, classChip } from "./ui.js";
 import { on } from "./modules.js";
@@ -12,16 +12,19 @@ import { renderKOReaderBooks } from "./koreaderbooks.js";
 export async function renderQueue(view, state) {
   view.innerHTML = `
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h1 class="text-2xl font-bold">Up Next</h1>
+      <h1 class="text-2xl font-bold">Nightstand</h1>
       <p class="text-sm text-slate-400">Delivery: <span id="delivery-mode"></span> · <a href="#/profile" class="underline">change</a></p>
     </div>
+    <p id="nightstand-intro" class="mb-4 hidden rounded-lg bg-slate-800/60 p-3 text-sm text-slate-300">🛏️ <b>Your Nightstand</b> (it used to be called Up Next): what you're reading now,
+      then the pile you plan to read next. Books you open on your e-reader show up here by themselves.
+      <button type="button" data-intro-ok class="ml-1 underline">Got it</button></p>
     <section class="mb-8">
       <h2 class="label">Currently Reading</h2>
       <div id="reading" class="grid gap-3 sm:grid-cols-2"></div>
       <div id="hidden" class="mt-2 text-sm"></div>
     </section>
     <section>
-      <h2 class="label">Queued — drag to reorder</h2>
+      <h2 class="label">On the pile — drag to reorder</h2>
       <ol id="queued" class="space-y-2"></ol>
     </section>
     <section id="koreader-books"></section>
@@ -35,6 +38,21 @@ export async function renderQueue(view, state) {
     $("#ko-setup", view).addEventListener("click", () => openKOReaderSetup());
   }
 
+  const intro = $("#nightstand-intro", view);
+  try {
+    if (!localStorage.getItem("nc:nightstand-intro")) intro.classList.remove("hidden");
+  } catch {
+    /* private mode: just show it */
+    intro.classList.remove("hidden");
+  }
+  intro.querySelector("[data-intro-ok]").onclick = () => {
+    intro.classList.add("hidden");
+    try {
+      localStorage.setItem("nc:nightstand-intro", "1");
+    } catch {
+      /* private mode: it comes back next time */
+    }
+  };
   const reading = $("#reading", view);
   const hiddenEl = $("#hidden", view);
   const queued = $("#queued", view);
@@ -45,9 +63,9 @@ export async function renderQueue(view, state) {
     const cur = items.filter((i) => i.status === "reading");
     const next = items.filter((i) => i.status === "queued");
     reading.innerHTML = cur.length ? cur.map(readingCard).join("")
-      : `<p class="text-sm text-slate-500">Nothing in progress. Press ▶ Start Reading on a queued book.</p>`;
+      : `<p class="text-sm text-slate-500">Nothing in progress. Press ▶ Start Reading on a book from the pile.</p>`;
     queued.innerHTML = next.length ? next.map((i, idx) => queueRow(i, idx, state.user)).join("")
-      : `<li class="text-sm text-slate-500">Your queue is empty. Add books from the Library with ＋.</li>`;
+      : `<li class="text-sm text-slate-500">Your pile is empty. Add books from the Library with ＋.</li>`;
     setBars(reading);
     const hid = (await attempt(() => get("/api/queue?hidden=1"))) || [];
     hiddenEl.innerHTML = hid.length ? `<details class="rounded-lg bg-slate-800/40 p-2"><summary class="cursor-pointer text-slate-400">🙈 Hidden (${hid.length})</summary>
@@ -83,9 +101,9 @@ export async function renderQueue(view, state) {
     } else if (act === "finish") {
       await attempt(() => post(`/api/queue/${id}/finish`), "Marked as finished");
     } else if (act === "hide") {
-      await attempt(() => post(`/api/queue/${id}/hide`, {}), "Hidden from Up Next");
+      await attempt(() => post(`/api/queue/${id}/hide`, {}), "Hidden from your Nightstand");
     } else if (act === "unhide") {
-      await attempt(() => post(`/api/queue/${id}/hide`, { hidden: false }), "Back in Up Next");
+      await attempt(() => post(`/api/queue/${id}/hide`, { hidden: false }), "Back on your Nightstand");
     } else if (act === "remove") {
       await attempt(() => del(`/api/queue/${id}`), "Removed from queue");
     }
@@ -95,7 +113,7 @@ export async function renderQueue(view, state) {
   await load();
   if (on(state.user, "koreader")) renderKOReaderBooks($("#koreader-books", view), state, load);
   if (on(state.user, "suggestions")) {
-    // A suggestion added to Up Next grows the list above; keep the suggestions
+    // A suggestion added to your Nightstand grows the list above; keep the suggestions
     // where they were on screen (iPhones don't do this by themselves).
     const host = $("#suggestions", view);
     renderSuggestions(host, state, async () => {
@@ -146,8 +164,8 @@ function queueRow(i, idx, user) {
       <span class="flex shrink-0 flex-col items-center gap-1 sm:flex-row sm:gap-2">
         ${i.owned ? `<button data-act="start" class="btn-primary h-10 w-10 p-0 sm:w-auto sm:px-4" title="Start reading" aria-label="Start reading">▶&#xFE0E;<span class="hidden sm:inline"> Start Reading</span></button>`
           : `<a href="#/wishlist" class="btn-ghost h-10 w-10 p-0 sm:w-auto sm:px-3" title="Get a copy first" aria-label="Wishlist">⭐<span class="hidden sm:inline"> Wishlist</span></a>`}
-        <button data-act="hide" class="btn-ghost h-9 w-10 p-0" title="Hide from Up Next (stays in your library)" aria-label="Hide from Up Next">🙈</button>
-        <button data-act="remove" class="btn-ghost h-9 w-10 p-0" title="Remove from Up Next" aria-label="Remove from Up Next">✕</button>
+        <button data-act="hide" class="btn-ghost h-9 w-10 p-0" title="Hide from your Nightstand (stays in your library)" aria-label="Hide from your Nightstand">🙈</button>
+        <button data-act="remove" class="btn-ghost h-9 w-10 p-0" title="Remove from your Nightstand" aria-label="Remove from your Nightstand">✕</button>
       </span>
     </li>`;
 }
@@ -170,7 +188,7 @@ function readingCard(i) {
         ${i.progress ? `<div class="space-y-1">${progressBar(i.progress)}<p class="text-xs text-slate-400">📖 ${progressText(i.progress)}</p></div>`
           : i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
         <div class="flex flex-wrap gap-2"><button data-act="finish" class="btn-secondary">Finished</button>
-          <button data-act="hide" class="btn-ghost whitespace-nowrap" title="Hide from Up Next (stays in your library)">🙈 Hide</button>
+          <button data-act="hide" class="btn-ghost whitespace-nowrap" title="Hide from your Nightstand (stays in your library)">🙈 Hide</button>
           <button data-act="remove" class="btn-ghost">Remove</button></div></div>
     </div>`;
 }

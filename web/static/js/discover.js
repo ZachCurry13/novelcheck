@@ -99,8 +99,8 @@ export async function renderDiscover(view, state) {
     btn.disabled = true;
     const ok = btn.dataset.act === "wish"
       ? await attempt(() => post(`/api/books/${id}/wish`, {}), "Added to the wishlist")
-      : await attempt(() => post("/api/queue", { book_id: Number(id) }), "Added to Up Next");
-    btn.textContent = ok ? (btn.dataset.act === "wish" ? "⭐ On wishlist" : "✓ In Up Next") : btn.textContent;
+      : await attempt(() => post("/api/queue", { book_id: Number(id) }), "Added to your Nightstand");
+    btn.textContent = ok ? (btn.dataset.act === "wish" ? "⭐ On wishlist" : "✓ On your Nightstand") : btn.textContent;
     btn.disabled = Boolean(ok);
   };
   const fresh = Promise.all([attempt(() => get("/api/discover" + (showOwned() ? "?owned=1" : ""))), get("/api/collections").catch(() => null)]);
@@ -141,7 +141,7 @@ function card(b, kid, queueOn) {
   const olLink = b.link || (b.isbn ? `https://openlibrary.org/isbn/${encodeURIComponent(b.isbn)}` : `https://openlibrary.org/search?q=${q}`);
   let action = "";
   if (b.owned && queueOn) {
-    action = b.queued ? `<span class="text-xs text-slate-400">✓ In Up Next</span>` : `<button data-act="queue" class="btn-secondary px-2 py-1 text-xs">＋ Up Next</button>`;
+    action = b.queued ? `<span class="text-xs text-slate-400">✓ On your Nightstand</span>` : `<button data-act="queue" class="btn-secondary px-2 py-1 text-xs">＋ Nightstand</button>`;
   } else if (!b.owned) {
     action = b.wished ? `<span class="text-xs text-slate-400">⭐ On wishlist</span>` : `<button data-act="wish" class="btn-secondary px-2 py-1 text-xs">⭐ Wishlist</button>`;
   }

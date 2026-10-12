@@ -58,7 +58,7 @@ func TestWishlist(t *testing.T) {
 		t.Fatalf("approve: %d", res.StatusCode)
 	}
 
-	// Pending acquisition in Up Next, then the book arrives in Calibre.
+	// Pending acquisition on your Nightstand, then the book arrives in Calibre.
 	_ = st.Enqueue(1, want)
 	if q, _ := st.ListQueue(1, false); len(q) != 1 || q[0].Owned {
 		t.Fatalf("queued book not owned yet: %+v", q)
