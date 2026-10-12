@@ -4,6 +4,19 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.38.0]
+
+### 🧩 KOReader plugin: what's on my Kindle
+- **NovelCheck → On this device** lists the books on the e-reader with how far you are in each (new, a percent, or finished) and their size. Tap one to **delete** it, after a confirmation. **Delete finished books...** clears them all at once, listing them first. NovelCheck never removes anything without asking on the device.
+- **Download all Up Next** gets every Up Next book that isn't on the device yet in one go.
+- After a delete or a bulk download, the plugin reports the device again, so Profile stays right.
+- **NovelCheck → About** shows the plugin version.
+
+### 📱 Manage the plugin in the app
+- **Profile → 📱 KOReader plugin:** **Download the plugin** gives a zip already connected to your account (server, username and sync code inside), so nothing is typed on the Kindle: unzip, copy the `novelcheck.koplugin` folder into `koreader/plugins/`, restart KOReader. The same download is in the KOReader setup window, including for kids' devices (parents).
+- The card lists each e-reader, how many books it has, and which plugin version it runs, with a note when the plugin is older than the one NovelCheck has (the plugin file in the download is the version of your NovelCheck).
+- The plugin is parser-checked only; it has not been run on a real device.
+
 ## [1.37.0]
 
 ### 📊 Reading stats

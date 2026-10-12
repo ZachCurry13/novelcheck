@@ -38,3 +38,14 @@ The messages say what failed: "did not accept the username or sync code" means a
 typo in those two boxes; "Could not reach NovelCheck" with a number or text is
 the address or the network. Tell whoever looks after NovelCheck the exact
 message.
+
+## Easiest install (NovelCheck 1.38 or newer)
+
+Open **Profile > KOReader plugin** in NovelCheck and press **Download the plugin**. The zip is already connected to your account, so there is nothing to type on the e-reader: unzip it, copy the `novelcheck.koplugin` folder into `koreader/plugins/`, and restart KOReader. The same folder works for updates (replace the old one). Do not share that zip: it holds your sync code.
+
+## On this device
+
+- **NovelCheck > On this device** lists the books with progress; tap one to delete it (it asks first).
+- **Delete finished books...** lists the finished ones and deletes them after you confirm.
+- **Download all Up Next** downloads every Up Next book that is not on the device yet.
+- **About** shows the plugin version.

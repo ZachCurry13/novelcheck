@@ -83,6 +83,7 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 	}
 	var body struct {
 		Device string             `json:"device"`
+		Plugin string             `json:"plugin_version"`
 		Books  []store.DeviceBook `json:"books"`
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 2<<20)).Decode(&body); err != nil {
@@ -102,6 +103,7 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 			b.Title = b.Title[:300]
 		}
 	}
+	s.Store.SaveDeviceInfo(u.ID, device, strings.TrimSpace(body.Plugin))
 	matched, err := s.Store.SaveDeviceBooks(u.ID, device, body.Books)
 	if err != nil {
 		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "could not save"})

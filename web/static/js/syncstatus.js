@@ -15,9 +15,6 @@ export async function renderSyncStatus(host) {
       ${row("Progress from KOReader", s.progress_at, s.progress_device, "Open a book from NovelCheck in KOReader with Progress sync on (KOReader setup has the steps).")}
       ${row("Reading statistics", s.stats_at, s.stats_books ? `${s.stats_books} book${s.stats_books === 1 ? "" : "s"}` : "", "In KOReader: Reading statistics → Synchronize now.")}
     </ul>
-    ${(s.devices || []).length ? `<div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">📱 Your e-readers</p>
-      <ul class="space-y-1">${s.devices.map((d) => `<li><b>${esc(d.name)}</b>: ${d.books} book${d.books === 1 ? "" : "s"}, ${d.in_library} in your library · reported ${esc(ago(d.reported_at))}</li>`).join("")}</ul>
-      <p class="text-xs text-slate-500">From the KOReader plugin's <b>Report books on this device</b>.</p></div>` : ""}
     ${(s.webdav || []).length ? `<div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">🗂️ Latest Cloud storage (WebDAV) requests</p>
       <ul class="space-y-1">${s.webdav.map((w) => `<li>${w.status < 300 ? "✅" : "⚠️"} ${esc(ago(w.at))}: ${esc(w.method)} <code>${esc(w.path)}</code>${w.name ? ` as <b>${esc(w.name)}</b>` : ""}: ${esc(w.note)}</li>`).join("")}</ul></div>` : `<p class="text-xs text-slate-500">🗂️ No Cloud storage (WebDAV) request has reached NovelCheck since it started. If KOReader says it can't fetch the folder, the address isn't getting here.</p>`}
     <a href="#/stats" class="btn-secondary inline-flex py-1 text-sm">📊 Reading stats</a>

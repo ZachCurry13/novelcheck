@@ -1,0 +1,42 @@
+// Profile: the KOReader plugin and your e-readers. Download the plugin already
+// connected to your account, see each device that reported, which plugin
+// version it runs, and when the plugin there is out of date.
+import { get } from "./api.js";
+import { esc } from "./ui.js";
+import { ago } from "./progress.js";
+
+// semverLess says whether version a is older than b ("1.2.0" < "1.10.0").
+export function older(a, b) {
+  const x = String(a || "0").split(".").map(Number), y = String(b || "0").split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0);
+  }
+  return false;
+}
+
+// pluginStepsHTML is the install steps with a download button for zipUrl.
+export function pluginStepsHTML(zipUrl, latest) {
+  return `<a href="${esc(zipUrl)}" download class="btn-primary inline-flex">⬇ Download the plugin${latest ? ` (${esc(latest)})` : ""}</a>
+    <p class="text-xs text-slate-500">It is already connected to this account: your server, username and sync code are inside, so there is nothing to type on the e-reader. Keep the file private.</p>
+    <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
+      <li>Unzip it, and connect the e-reader to the computer by USB.</li>
+      <li>Copy the <b>novelcheck.koplugin</b> folder into <b>koreader/plugins/</b> on the e-reader (replace the old one when updating).</li>
+      <li>Restart KOReader. <b>NovelCheck</b> appears in the top menu under <b>🛠 Tools</b>: Up Next, On this device, and more.</li>
+    </ol>`;
+}
+
+export async function renderPluginCard(host) {
+  const s = await get("/api/me/reading-sync").catch(() => null);
+  if (!s) return;
+  const devices = s.devices || [];
+  const badge = (d) => (!d.plugin_version ? `<span class="chip-pending">plugin before 1.38</span>`
+    : older(d.plugin_version, s.plugin_latest) ? `<span class="chip-wait">plugin ${esc(d.plugin_version)}: update to ${esc(s.plugin_latest)}</span>`
+      : `<span class="chip-none">plugin ${esc(d.plugin_version)}</span>`);
+  host.innerHTML = `<h2 class="text-lg font-semibold">📱 KOReader plugin</h2>
+    <p class="text-sm text-slate-400">Up Next on your e-reader, one-tap downloads, a list of what's on it with delete, and reports back to NovelCheck.</p>
+    ${pluginStepsHTML("/api/me/koplugin.zip", s.plugin_latest)}
+    <div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">Your e-readers</p>
+      ${devices.length ? `<ul class="space-y-2">${devices.map((d) => `<li><b>${esc(d.name)}</b> ${badge(d)}<br>
+        <span class="text-xs text-slate-400">${d.books} book${d.books === 1 ? "" : "s"}, ${d.in_library} in your library · reported ${esc(ago(d.reported_at))}</span></li>`).join("")}</ul>`
+      : `<p class="text-xs text-slate-500">None yet. After installing, open <b>NovelCheck → Report books on this device</b> in KOReader.</p>`}</div>`;
+}

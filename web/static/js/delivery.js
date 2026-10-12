@@ -1,6 +1,7 @@
 // "Start Reading" delivery help: the Send-to-Kindle confirmation with the
 // approved-sender steps, and KOReader setup (the private OPDS feed address,
 // a QR code and step-by-step instructions).
+import { pluginStepsHTML } from "./pluginmanage.js";
 import { get, post } from "./api.js";
 import { esc, attempt } from "./ui.js";
 import { copyText } from "./copy.js";
@@ -90,7 +91,7 @@ export async function openKOReaderSetup(userId) {
     d.innerHTML = `<div class="max-h-[85vh] space-y-4 overflow-y-auto p-5">
       <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">📖 Set up KOReader</h2>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>${koreaderHTML(url, i.username, !userId, s ? { url: location.origin + "/opds", code: s.code } : null)}
-      ${s ? syncHTML(location.origin + s.path, s.username, s.code) + statsHTML(location.origin + s.dav, s.username, s.code) : ""}</div>`;
+      ${s ? syncHTML(location.origin + s.path, s.username, s.code) + statsHTML(location.origin + s.dav, s.username, s.code) + pluginHTML(userId) : ""}</div>`;
     d.onclick = async (e) => {
       const ko = e.target.closest("[data-ko]")?.dataset.ko;
       if (e.target === d || e.target.closest("[data-close]")) d.close();
@@ -154,4 +155,10 @@ function statsHTML(url, username, code) {
     </ol>
     <p class="text-xs text-slate-500">Not working? Profile → Reading sync lists the latest requests and why a sign-in failed. <b>🧹 Remove empty folders</b> there clears leftovers.</p>
     <p class="text-xs text-slate-500">Menu names can differ a little between KOReader versions.</p></div>`;
+}
+
+// pluginHTML: the KOReader plugin, already connected to this person's account.
+function pluginHTML(userId) {
+  return `<div class="space-y-2 border-t border-slate-800 pt-4"><h3 class="font-semibold">🧩 KOReader plugin</h3>
+    ${pluginStepsHTML(userId ? `/api/admin/users/${userId}/koplugin.zip` : "/api/me/koplugin.zip")}</div>`;
 }

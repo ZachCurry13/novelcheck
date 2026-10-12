@@ -533,6 +533,14 @@ CREATE TABLE IF NOT EXISTS device_books (
     reported_at INTEGER NOT NULL DEFAULT 0,  -- Unix seconds
     PRIMARY KEY (user_id, device, filename)
 );
+-- Which plugin version each e-reader runs (so Profile can say when it is out of date).
+CREATE TABLE IF NOT EXISTS device_info (
+    user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    device         TEXT NOT NULL,
+    plugin_version TEXT NOT NULL DEFAULT '',
+    reported_at    INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, device)
+);
 CREATE TABLE IF NOT EXISTS kosync_progress (
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     document   TEXT NOT NULL,

@@ -19,6 +19,13 @@ type Device struct {
 	Books      int    `db:"books" json:"books"`
 	InLibrary  int    `db:"in_library" json:"in_library"`
 	ReportedAt int64  `db:"reported_at" json:"reported_at"`
+	Plugin     string `db:"plugin_version" json:"plugin_version"`
+}
+
+// SaveDeviceInfo notes which plugin version a device runs.
+func (s *Store) SaveDeviceInfo(userID int64, device, version string) {
+	_, _ = s.DB.Exec(`INSERT INTO device_info (user_id, device, plugin_version, reported_at) VALUES (?, ?, ?, ?)
+		ON CONFLICT(user_id, device) DO UPDATE SET plugin_version = excluded.plugin_version, reported_at = excluded.reported_at`, userID, device, version, time.Now().Unix())
 }
 
 // SaveDeviceBooks replaces a device's list with a new report, matching each
@@ -60,7 +67,8 @@ func (s *Store) SaveDeviceBooks(userID int64, device string, books []DeviceBook)
 // Devices lists someone's e-readers, most recently reported first.
 func (s *Store) Devices(userID int64) []Device {
 	out := []Device{}
-	_ = s.DB.Select(&out, `SELECT device, COUNT(*) AS books, SUM(book_id IS NOT NULL) AS in_library, MAX(reported_at) AS reported_at
-		FROM device_books WHERE user_id = ? GROUP BY device ORDER BY MAX(reported_at) DESC`, userID)
+	_ = s.DB.Select(&out, `SELECT b.device, COUNT(*) AS books, SUM(b.book_id IS NOT NULL) AS in_library, MAX(b.reported_at) AS reported_at,
+		COALESCE((SELECT i.plugin_version FROM device_info i WHERE i.user_id = b.user_id AND i.device = b.device), '') AS plugin_version
+		FROM device_books b WHERE b.user_id = ? GROUP BY b.device ORDER BY MAX(b.reported_at) DESC`, userID)
 	return out
 }

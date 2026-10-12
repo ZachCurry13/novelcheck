@@ -1,6 +1,7 @@
 package api
 
 import (
+	kindleplugin "github.com/zachcurry13/novelcheck/kindle-plugin"
 	"net/http"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
@@ -89,5 +90,5 @@ func (s *Server) handleMyReadingSync(w http.ResponseWriter, r *http.Request) {
 	}
 	books, _ := s.Store.KOReaderBooks(u.ID, 1000)
 	writeJSON(w, http.StatusOK, map[string]any{"progress_at": at, "progress_device": device, "stats_at": statsAt, "stats_books": len(books),
-		"devices": s.Store.Devices(u.ID), "webdav": s.davAttemptsFor(u)})
+		"devices": s.Store.Devices(u.ID), "webdav": s.davAttemptsFor(u), "plugin_latest": kindleplugin.Version()})
 }

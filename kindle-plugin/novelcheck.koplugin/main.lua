@@ -25,6 +25,11 @@ local http = require("socket.http")
 local https = require("ssl.https")
 local md5 = require("ffi/sha2").md5
 local util = require("util")
+local DeviceBooks = require("devicebooks")
+
+local VERSION = "1.38.0"
+-- The folder this plugin runs from (config.lua from NovelCheck's download sits there).
+local PLUGIN_DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
 
 local NovelCheck = WidgetContainer:extend{
     name = "novelcheck",
@@ -37,7 +42,23 @@ end
 
 function NovelCheck:init()
     self.settings = LuaSettings:open(DataStorage:getSettingsDir() .. "/novelcheck.lua")
+    self:importConfig()
     self.ui.menu:registerToMainMenu(self)
+end
+
+-- importConfig connects the plugin from the config.lua that NovelCheck puts in
+-- its download (server, username and sync code), so nothing is typed here.
+function NovelCheck:importConfig()
+    if self:isConnected() or not PLUGIN_DIR then
+        return
+    end
+    local ok, cfg = pcall(dofile, PLUGIN_DIR .. "/config.lua")
+    if ok and type(cfg) == "table" and cfg.server and cfg.user and cfg.code then
+        self.settings:saveSetting("server", (trim(cfg.server):gsub("/+$", "")))
+        self.settings:saveSetting("user", trim(cfg.user))
+        self.settings:saveSetting("code", trim(cfg.code))
+        self.settings:flush()
+    end
 end
 
 function NovelCheck:addToMainMenu(menu_items)
@@ -46,9 +67,15 @@ function NovelCheck:addToMainMenu(menu_items)
         sorting_hint = "tools",
         sub_item_table = {
             { text = _("Up Next"), callback = function() self:showUpNext() end },
+            { text = _("Download all Up Next"), callback = function() self:downloadAll() end },
+            { text = _("On this device"), callback = function() DeviceBooks.show(self) end },
+            { text = _("Delete finished books..."), callback = function() DeviceBooks.removeFinished(self) end },
             { text = _("Report books on this device"), callback = function() self:reportDevice() end },
             { text = _("Device name..."), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
             { text = _("Connect to NovelCheck..."), keep_menu_open = true, callback = function() self:connectDialog() end },
+            { text = _("About"), keep_menu_open = true, callback = function()
+                UIManager:show(InfoMessage:new{ text = "NovelCheck plugin " .. VERSION .. "\n" .. tostring(self.settings:readSetting("server") or _("Not connected")) })
+            end },
         },
     }
 end
@@ -207,30 +234,55 @@ local MAX_BOOKS = 500
 
 -- scanBooks lists the books under dir (without folder names): file name,
 -- format, size and KOReader's fingerprint of the file.
-function NovelCheck:scanBooks(dir, books, depth)
+function NovelCheck:scanBooks(dir, books, depth, no_md5)
     if #books >= MAX_BOOKS or depth > 4 then return end
     for entry in lfs.dir(dir) do
         if entry:sub(1, 1) ~= "." and not entry:match("%.sdr$") then
             local path = dir .. "/" .. entry
             local attr = lfs.attributes(path)
             if attr and attr.mode == "directory" then
-                self:scanBooks(path, books, depth + 1)
+                self:scanBooks(path, books, depth + 1, no_md5)
             elseif attr and attr.mode == "file" then
                 local ext = entry:match("%.([^.]+)$")
                 if ext and BOOK_EXT[ext:lower()] then
-                    local ok, sum = pcall(util.partialMD5, path)
+                    local sum = ""
+                    if not no_md5 then
+                        local ok, got = pcall(util.partialMD5, path)
+                        sum = ok and got or ""
+                    end
                     table.insert(books, {
                         filename = entry,
+                        path = path,
                         title = (entry:gsub("%.[^.]+$", ""):gsub("[-_]", " ")),
                         format = ext:lower(),
                         size = attr.size,
-                        md5 = ok and sum or "",
+                        md5 = sum,
                     })
                 end
             end
             if #books >= MAX_BOOKS then return end
         end
     end
+end
+
+-- withoutPaths drops the folder of each book: NovelCheck is told file names only.
+function NovelCheck:withoutPaths(books)
+    local out = {}
+    for _i, b in ipairs(books) do
+        table.insert(out, { filename = b.filename, title = b.title, format = b.format, size = b.size, md5 = b.md5 })
+    end
+    return out
+end
+
+-- reportQuietly tells NovelCheck what is on the device now, without messages
+-- (after books were deleted). It does nothing when not connected or offline.
+function NovelCheck:reportQuietly()
+    if not self:isConnected() then return end
+    pcall(function()
+        local books = {}
+        self:scanBooks(self:downloadDir(), books, 0)
+        self:request("/kosync/plugin/device", nil, json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) })
+    end)
 end
 
 function NovelCheck:reportDevice()
@@ -247,7 +299,7 @@ function NovelCheck:reportDevice()
                 UIManager:show(InfoMessage:new{ text = _("Could not read the books folder.") })
                 return
             end
-            local body = json.encode{ device = self:deviceName(), books = books }
+            local body = json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) }
             local code, answer = self:request("/kosync/plugin/device", nil, body)
             if code == 200 then
                 local good, data = pcall(json.decode, answer)
@@ -276,22 +328,80 @@ function NovelCheck:downloadDir()
     return DataStorage:getDataDir()
 end
 
-function NovelCheck:download(book)
+-- bookPath is where a book from Up Next is saved on this device.
+function NovelCheck:bookPath(book)
     local name = book.url:match("([^/]+)$") or ("book-" .. tostring(book.id) .. "." .. tostring(book.format))
-    local path = self:downloadDir() .. "/" .. name
+    return self:downloadDir() .. "/" .. name
+end
+
+-- fetchBook downloads one book; it returns true, or false and the HTTP code.
+function NovelCheck:fetchBook(book)
+    local path = self:bookPath(book)
+    local code = self:request(book.url, path)
+    if code == 200 then
+        return true
+    end
+    os.remove(path)
+    return false, code
+end
+
+function NovelCheck:download(book)
+    local path = self:bookPath(book)
     if lfs.attributes(path, "mode") == "file" then
         UIManager:show(InfoMessage:new{ text = _("Already on this device:") .. "\n" .. path })
         return
     end
     UIManager:show(InfoMessage:new{ text = _("Downloading..."), timeout = 1 })
     UIManager:nextTick(function()
-        local code = self:request(book.url, path)
-        if code == 200 then
+        local ok, code = self:fetchBook(book)
+        if ok then
             UIManager:show(InfoMessage:new{ text = _("Downloaded to:") .. "\n" .. path })
         else
-            os.remove(path)
             UIManager:show(InfoMessage:new{ text = _("The download failed.") .. "\n" .. tostring(code) })
         end
+    end)
+end
+
+-- downloadAll gets every book in Up Next that is not on this device yet.
+function NovelCheck:downloadAll()
+    if not self:isConnected() then
+        self:connectDialog()
+        return
+    end
+    NetworkMgr:runWhenOnline(function()
+        local code, body = self:request("/kosync/plugin/up-next")
+        local ok, data = pcall(json.decode, body or "")
+        if code ~= 200 or not ok or type(data) ~= "table" or type(data.books) ~= "table" then
+            UIManager:show(InfoMessage:new{ text = _("Could not read your Up Next list.") .. "\n" .. tostring(code) })
+            return
+        end
+        local todo = {}
+        for _i, b in ipairs(data.books) do
+            if lfs.attributes(self:bookPath(b), "mode") ~= "file" then
+                table.insert(todo, b)
+            end
+        end
+        if #todo == 0 then
+            UIManager:show(InfoMessage:new{ text = _("Everything in Up Next is already on this device.") })
+            return
+        end
+        UIManager:show(InfoMessage:new{ text = _("Downloading") .. " " .. tostring(#todo) .. " " .. _("books..."), timeout = 2 })
+        UIManager:nextTick(function()
+            local got, failed = 0, 0
+            for _i, b in ipairs(todo) do
+                if self:fetchBook(b) then
+                    got = got + 1
+                else
+                    failed = failed + 1
+                end
+            end
+            self:reportQuietly()
+            local text = tostring(got) .. " " .. _("books downloaded.")
+            if failed > 0 then
+                text = text .. "\n" .. tostring(failed) .. " " .. _("failed.")
+            end
+            UIManager:show(InfoMessage:new{ text = text })
+        end)
     end)
 end
 

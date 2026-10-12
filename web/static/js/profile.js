@@ -11,6 +11,7 @@ import { openTaste } from "./taste.js";
 import { profileExtrasHTML, bindProfileExtras } from "./profileextras.js";
 import { familyCardHTML, bindFamilyCard } from "./familysettings.js";
 import { renderSyncStatus } from "./syncstatus.js";
+import { renderPluginCard } from "./pluginmanage.js";
 import { renderHardcover } from "./hardcover.js";
 import { renderLibbyCard } from "./libby.js";
 
@@ -45,6 +46,7 @@ export async function renderProfile(view, state) {
         <button type="button" id="taste-open" class="btn-secondary">Rate some books</button></div>` : ""}
       <div id="sync-card" class="card space-y-2${on(u, "koreader") ? "" : " module-off"}"></div>
       <div id="hardcover-card" class="card space-y-2"></div>
+      <div id="plugin-card" class="card space-y-2${on(u, "koreader") ? "" : " module-off"}"></div>
       <div id="libby-card" class="card space-y-2"></div>
       <div id="push-card" class="card space-y-3 lg:col-span-2"></div>
       <div class="card lg:col-span-2">
@@ -79,7 +81,10 @@ export async function renderProfile(view, state) {
   renderPushCard($("#push-card", view), u);
   renderHardcover($("#hardcover-card", view));
   renderLibbyCard($("#libby-card", view));
-  if (on(u, "koreader")) renderSyncStatus($("#sync-card", view));
+  if (on(u, "koreader")) {
+    renderSyncStatus($("#sync-card", view));
+    renderPluginCard($("#plugin-card", view));
+  }
   $("#ko-setup", view).addEventListener("click", () => openKOReaderSetup());
   $("#taste-open", view)?.addEventListener("click", () => openTaste());
 
