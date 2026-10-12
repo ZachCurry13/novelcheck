@@ -125,3 +125,19 @@ func (s *Store) HardcoverStatus(userID int64) (synced string, books, matched int
 	_ = s.DB.Get(&matched, `SELECT COUNT(*) FROM hardcover_books WHERE user_id = ? AND book_id IS NOT NULL`, userID)
 	return
 }
+
+// LibbyLibrary is the person's library at OverDrive/Libby: its key and name ("" = none).
+func (s *Store) LibbyLibrary(userID int64) (key, name string) {
+	var row struct {
+		Key  string `db:"libby_library"`
+		Name string `db:"libby_name"`
+	}
+	_ = s.DB.Get(&row, `SELECT libby_library, libby_name FROM users WHERE id = ?`, userID)
+	return row.Key, row.Name
+}
+
+// SetLibbyLibrary saves ("" clears) the person's library.
+func (s *Store) SetLibbyLibrary(userID int64, key, name string) error {
+	_, err := s.DB.Exec(`UPDATE users SET libby_library = ?, libby_name = ? WHERE id = ?`, key, name, userID)
+	return err
+}

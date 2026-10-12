@@ -18,6 +18,7 @@ import { loadContent, contentIcons, contentSection } from "./content.js";
 import { blurbHTML } from "./blurb.js";
 import { bookCollectionsHTML, bindBookCollections } from "./bookcollections.js";
 import { progressText } from "./progress.js";
+import { renderBookLibby } from "./libby.js";
 
 // Lists that aren't the family's libraries: books only looked up (Check a
 // book) or on a Discover list.
@@ -101,6 +102,7 @@ export async function openBook(id, state, onChange) {
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : b.analysis_model.startsWith("deep: ") ? "🧬 Deep Scanned (whole book) by " + esc(b.analysis_model.slice(6)) : "Rated from the description by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
       ${b.approved ? `<p class="text-xs text-emerald-400">✓ Marked OK by ${esc(b.approved_by)}: shown to everyone, even if it matches their hide filters or content rules.</p>` : ""}
       <div id="deep-section"></div>
+      <div id="libby-section"></div>
       ${manager ? verdictFormHTML(b) : ""}
       ${parents ? ageAndNotesHTML(b, data.notes || [], manager, state.user) : ""}
       <div class="flex flex-wrap gap-2">
@@ -191,6 +193,7 @@ export async function openBook(id, state, onChange) {
   };
   dlg.showModal();
   renderDeepSection($("#deep-section", dlg), b.id, state.user, b.title);
+  renderBookLibby($("#libby-section", dlg), b.id);
   bindBookCollections(dlg, b.id, manager, data.collections || []);
 }
 

@@ -69,6 +69,8 @@ func migrate(d *sqlx.DB) error {
 		{"users", "pin_hash", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "owner", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "hardcover_token", "TEXT NOT NULL DEFAULT ''"},
+		{"users", "libby_library", "TEXT NOT NULL DEFAULT ''"},
+		{"users", "libby_name", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "admin_areas", "TEXT NOT NULL DEFAULT ''"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {

@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.34.0]
+
+### 📚 Libby: is it at your library?
+- **Profile → 📚 Libby library:** type your library's key, the first part of its OverDrive address (`lapl` for lapl.overdrive.com; you can paste the whole address). It's checked and saved.
+- **On every book** (Discover, the Library, Up Next), a **📚 Libby** line says whether your library lends the e-book: **available now**, or how many holds, copies and the estimated wait, and whether Kindle is supported. **Borrow in Libby** or **Place a hold in Libby** opens the book at your library, where Libby does the borrowing.
+- NovelCheck can't place the hold itself: that needs you signed in to Libby, and there's no way for another app to do that. It uses OverDrive's free public search, so it needs no key, and answers are kept for a few hours.
+
 ## [1.33.0]
 
 ### 📱 KOReader plugin (step 1)

@@ -18,6 +18,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/discover"
 	"github.com/zachcurry13/novelcheck/internal/genrefill"
+	"github.com/zachcurry13/novelcheck/internal/libby"
 	"github.com/zachcurry13/novelcheck/internal/ollama"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/safemode"
@@ -49,11 +50,12 @@ type Server struct {
 	Safe        *safemode.State      // safe mode: background work off until an admin leaves it
 	Web         fs.FS                // embedded static assets
 	logins      *loginLimiter
-	formats     formatJob // format cleanup's background job
-	dav         davState  // KOReader statistics folders
-	pins        pinTries  // wrong PINs on family devices
-	etags       sync.Map  // static file name → ETag
-	buildOnce   sync.Once // buildID, computed once
+	formats     formatJob    // format cleanup's background job
+	dav         davState     // KOReader statistics folders
+	pins        pinTries     // wrong PINs on family devices
+	Libby       libby.Client // library availability (kept a few hours)
+	etags       sync.Map     // static file name → ETag
+	buildOnce   sync.Once    // buildID, computed once
 	build       string
 	indexOnce   sync.Once // index.html with versioned addresses
 	index       []byte
@@ -115,6 +117,9 @@ func (s *Server) Router() http.Handler {
 			r.Post("/me/kosync", s.handleMyKosync)
 			r.Get("/me/koreader-books", s.handleMyKOReaderBooks)
 			r.Get("/me/reading-sync", s.handleMyReadingSync)
+			r.Get("/me/libby", s.handleLibbyLibrary)
+			r.Put("/me/libby", s.handleLibbySetLibrary)
+			r.Get("/books/{id}/libby", s.handleBookLibby)
 			r.Get("/me/hardcover", s.handleHardcoverStatus)
 			r.Put("/me/hardcover", s.handleHardcoverConnect)
 			r.Post("/me/hardcover/sync", s.handleHardcoverSync)
