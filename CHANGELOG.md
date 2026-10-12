@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.32.0]
+
+### 📚 Hardcover (free)
+- **Profile → 📚 Hardcover:** paste your Hardcover API token (hardcover.app → Settings → Hardcover API) and press **Connect**. NovelCheck pulls in the books you're reading and have read, hourly or with **Sync now**.
+- **Progress bars and Up Next follow.** A book you're reading on Hardcover shows its page progress in NovelCheck (labeled Hardcover; the newest source wins over KOReader). Books already in your Up Next move to **Reading** when you start them on Hardcover and **Finished** when you mark them read. Nothing is added to Up Next by itself.
+- Books are matched by ISBN first, then by title and author. Your token stays on the server, and **Disconnect** forgets it and what was synced.
+- It works with the Hardcover plugin for KOReader: it sends your progress from the Kindle to Hardcover, and NovelCheck reads it from there.
+- This first version only reads from Hardcover. Sending your NovelCheck progress back to Hardcover comes after it has been tried with a real account.
+
 ## [1.31.1]
 
 ### 🔧 Fixes

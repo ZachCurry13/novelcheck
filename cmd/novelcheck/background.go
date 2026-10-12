@@ -12,6 +12,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/discover"
 	"github.com/zachcurry13/novelcheck/internal/events"
+	"github.com/zachcurry13/novelcheck/internal/hardcover"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -44,7 +45,8 @@ func (b *background) start(ctx context.Context) {
 	go events.Loop(ctx, b.st) // events are archived when they end
 	go b.aiTools.Loop(ctx)    // daily: newer versions of the Ollama models in use
 	go b.syncer.Loop(ctx)
-	go b.deep.Run(ctx)      // Deep Scans: full-text reading of chosen books, one at a time
-	go b.discover.Loop(ctx) // outside book lists refreshed daily; their books rated a few dozen a day
+	go b.deep.Run(ctx)           // Deep Scans: full-text reading of chosen books, one at a time
+	go b.discover.Loop(ctx)      // outside book lists refreshed daily; their books rated a few dozen a day
+	go hardcover.Loop(ctx, b.st) // everyone's Hardcover shelves, hourly
 	log.Printf("background work started")
 }

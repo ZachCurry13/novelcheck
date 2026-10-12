@@ -98,7 +98,10 @@ func (s *Store) ReadingProgress(userID int64) map[int64]Progress {
 		FROM kosync_progress p JOIN kosync_docs d ON d.document = p.document WHERE p.user_id = ?
 		UNION ALL
 		SELECT k.book_id, k.percent, 'KOReader' AS device, k.last_open AS at
-		FROM koreader_books k WHERE k.user_id = ? AND k.book_id IS NOT NULL`, userID, userID)
+		FROM koreader_books k WHERE k.user_id = ? AND k.book_id IS NOT NULL
+		UNION ALL
+		SELECT h.book_id, h.percent, 'Hardcover' AS device, h.updated_at AS at
+		FROM hardcover_books h WHERE h.user_id = ? AND h.book_id IS NOT NULL AND h.percent > 0`, userID, userID, userID)
 	out := map[int64]Progress{}
 	for _, r := range rows {
 		if cur, ok := out[r.BookID]; !ok || r.At > cur.At {

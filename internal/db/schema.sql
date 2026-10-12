@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
     kosync_code      TEXT NOT NULL DEFAULT '',     -- KOReader progress sync code ('' = not set up)
     pin_hash         TEXT NOT NULL DEFAULT '',     -- bcrypt of a 4-digit PIN for family devices ('' = none)
     owner            INTEGER NOT NULL DEFAULT 0,   -- 1 = the main admin (decides other admins' areas)
+    hardcover_token  TEXT NOT NULL DEFAULT '',     -- the person's Hardcover API token (secret; never sent to the browser)
     admin_areas      TEXT NOT NULL DEFAULT '',     -- other admins: areas they may reach (ai,deep,calibre,services,system,users)
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -494,6 +495,19 @@ CREATE TABLE IF NOT EXISTS koreader_books (
     PRIMARY KEY (user_id, title, authors, md5)
 );
 CREATE INDEX IF NOT EXISTS idx_koreader_books_book ON koreader_books(book_id);
+-- A reader's books on Hardcover (reading and read), replaced on each sync.
+CREATE TABLE IF NOT EXISTS hardcover_books (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title      TEXT NOT NULL,
+    authors    TEXT NOT NULL DEFAULT '',
+    isbns      TEXT NOT NULL DEFAULT '',
+    book_id    INTEGER REFERENCES books(id) ON DELETE SET NULL,
+    status     INTEGER NOT NULL DEFAULT 0,  -- Hardcover's status_id: 2 reading, 3 read
+    percent    REAL NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL DEFAULT 0,  -- Unix seconds
+    PRIMARY KEY (user_id, title, authors)
+);
+CREATE INDEX IF NOT EXISTS idx_hardcover_books_book ON hardcover_books(book_id);
 CREATE TABLE IF NOT EXISTS kosync_progress (
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     document   TEXT NOT NULL,
