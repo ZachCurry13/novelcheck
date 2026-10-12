@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
     kosync_code      TEXT NOT NULL DEFAULT '',     -- KOReader progress sync code ('' = not set up)
     pin_hash         TEXT NOT NULL DEFAULT '',     -- bcrypt of a 4-digit PIN for family devices ('' = none)
     owner            INTEGER NOT NULL DEFAULT 0,   -- 1 = the main admin (decides other admins' areas)
+    hardcover_push   INTEGER NOT NULL DEFAULT 0,   -- 1 = also send reading progress to the person's Hardcover
     libby_library    TEXT NOT NULL DEFAULT '',     -- the person's library key at OverDrive/Libby (e.g. "lapl")
     libby_name       TEXT NOT NULL DEFAULT '',     -- its name, for display
     hardcover_token  TEXT NOT NULL DEFAULT '',     -- the person's Hardcover API token (secret; never sent to the browser)
@@ -510,6 +511,14 @@ CREATE TABLE IF NOT EXISTS hardcover_books (
     PRIMARY KEY (user_id, title, authors)
 );
 CREATE INDEX IF NOT EXISTS idx_hardcover_books_book ON hardcover_books(book_id);
+-- What was last sent to a reader's Hardcover, so nothing is sent twice.
+CREATE TABLE IF NOT EXISTS hardcover_pushed (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    status  INTEGER NOT NULL DEFAULT 0,
+    pages   INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, book_id)
+);
 CREATE TABLE IF NOT EXISTS kosync_progress (
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     document   TEXT NOT NULL,

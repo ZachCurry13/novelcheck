@@ -70,6 +70,7 @@ func migrate(d *sqlx.DB) error {
 		{"users", "owner", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "hardcover_token", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "libby_library", "TEXT NOT NULL DEFAULT ''"},
+		{"users", "hardcover_push", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "libby_name", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "admin_areas", "TEXT NOT NULL DEFAULT ''"},
 	} {

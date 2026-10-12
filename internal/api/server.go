@@ -123,6 +123,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/me/hardcover", s.handleHardcoverStatus)
 			r.Put("/me/hardcover", s.handleHardcoverConnect)
 			r.Post("/me/hardcover/sync", s.handleHardcoverSync)
+			r.Put("/me/hardcover/push", s.handleHardcoverPush)
 
 			r.Get("/books", s.handleListBooks)
 			r.Get("/books/facets", s.handleBookFacets)

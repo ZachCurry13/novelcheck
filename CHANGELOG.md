@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.35.0]
+
+### 📚 Hardcover: send your progress too
+- **Profile → 📚 Hardcover → Also send my reading progress to Hardcover** (off until you turn it on). Books you're reading or have finished in Up Next are added to your Hardcover shelves with how far you are, hourly or on **Sync now**. Finishing a book marks it read on Hardcover.
+- **Careful by design:** books are matched by ISBN only (a book with no ISBN is skipped), it never lowers progress or a status already further along, nothing is sent twice, and at most 15 books go per run. Anything on Hardcover you've paused or marked "did not finish" is left alone.
+- With KOReader's Hardcover plugin you can use either way: it sends progress straight from the Kindle, and NovelCheck sends what it knows from KOReader's sync, so the two agree.
+
 ## [1.34.0]
 
 ### 📚 Libby: is it at your library?

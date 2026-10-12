@@ -141,3 +141,70 @@ func (s *Store) SetLibbyLibrary(userID int64, key, name string) error {
 	_, err := s.DB.Exec(`UPDATE users SET libby_library = ?, libby_name = ? WHERE id = ?`, key, name, userID)
 	return err
 }
+
+// HardcoverPush reports whether the person chose to send progress to Hardcover.
+func (s *Store) HardcoverPush(userID int64) bool {
+	var on bool
+	_ = s.DB.Get(&on, `SELECT hardcover_push FROM users WHERE id = ?`, userID)
+	return on
+}
+
+// SetHardcoverPush turns sending progress on or off.
+func (s *Store) SetHardcoverPush(userID int64, on bool) error {
+	_, err := s.DB.Exec(`UPDATE users SET hardcover_push = ? WHERE id = ?`, on, userID)
+	return err
+}
+
+// HardcoverToPush is a book whose state may need sending: reading or finished
+// in Up Next within the last 14 days, with an ISBN, and not at Hardcover in
+// that state already.
+type HardcoverToPush struct {
+	BookID   int64
+	ISBN     string
+	Status   int // 2 reading, 3 read
+	Percent  float64
+	FromHere bool // the newest progress isn't from Hardcover itself
+}
+
+// HardcoverPending lists up to limit books to send, newest first.
+func (s *Store) HardcoverPending(userID int64, limit int) []HardcoverToPush {
+	var rows []struct {
+		BookID int64  `db:"book_id"`
+		ISBN   string `db:"isbn"`
+		Status string `db:"status"`
+		Sent   int    `db:"sent_status"`
+		Pages  int    `db:"sent_pages"`
+	}
+	_ = s.DB.Select(&rows, `SELECT q.book_id, b.isbn, q.status, COALESCE(p.status, 0) AS sent_status, COALESCE(p.pages, 0) AS sent_pages
+		FROM queue_items q JOIN books b ON b.id = q.book_id LEFT JOIN hardcover_pushed p ON p.user_id = q.user_id AND p.book_id = q.book_id
+		WHERE q.user_id = ? AND q.status IN ('reading', 'finished') AND b.isbn != ''
+		AND q.updated_at >= datetime('now', '-14 days') ORDER BY q.updated_at DESC LIMIT ?`, userID, limit*3)
+	progress := s.ReadingProgress(userID)
+	var out []HardcoverToPush
+	for _, r := range rows {
+		status, pct := 2, 0.0
+		pr, ok := progress[r.BookID]
+		if r.Status == "finished" {
+			status, pct = 3, 1
+		} else if ok {
+			pct = pr.Percent
+		}
+		if ok && pr.Device == "Hardcover" && status == 2 {
+			continue // Hardcover is already where the reader is
+		}
+		if r.Sent == status && (status == 3 || int(pct*100) == r.Pages) {
+			continue
+		}
+		out = append(out, HardcoverToPush{BookID: r.BookID, ISBN: r.ISBN, Status: status, Percent: pct, FromHere: true})
+		if len(out) >= limit {
+			break
+		}
+	}
+	return out
+}
+
+// MarkHardcoverPushed remembers what was sent for a book (pages holds the percent sent).
+func (s *Store) MarkHardcoverPushed(userID, bookID int64, status int, percent float64) {
+	_, _ = s.DB.Exec(`INSERT INTO hardcover_pushed (user_id, book_id, status, pages) VALUES (?, ?, ?, ?)
+		ON CONFLICT (user_id, book_id) DO UPDATE SET status = excluded.status, pages = excluded.pages`, userID, bookID, status, int(percent*100))
+}

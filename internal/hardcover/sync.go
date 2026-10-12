@@ -40,8 +40,14 @@ func Loop(ctx context.Context, st *store.Store) {
 			_ = safe.Run("hardcover sync", func() error {
 				cctx, cancel := context.WithTimeout(ctx, time.Minute)
 				defer cancel()
-				if _, _, err := SyncUser(cctx, st, &Client{Token: st.HardcoverToken(id)}, id); err != nil {
+				c := &Client{Token: st.HardcoverToken(id)}
+				if _, _, err := SyncUser(cctx, st, c, id); err != nil {
 					log.Printf("hardcover sync for user %d: %v", id, err)
+				}
+				if st.HardcoverPush(id) {
+					if _, err := PushUser(cctx, st, c, id); err != nil {
+						log.Printf("hardcover push for user %d: %v", id, err)
+					}
 				}
 				return nil
 			})
@@ -52,4 +58,37 @@ func Loop(ctx context.Context, st *store.Store) {
 			}
 		}
 	}
+}
+
+// PushUser sends a person's reading state to their Hardcover (up to 15
+// books a run): reading or finished books in Up Next, matched by ISBN.
+// Books Hardcover doesn't know are marked done so they aren't retried every hour.
+func PushUser(ctx context.Context, st *store.Store, c *Client, userID int64) (sent int, err error) {
+	for _, p := range st.HardcoverPending(userID, 15) {
+		ed, ok, err := c.FindEdition(ctx, p.ISBN)
+		if err != nil {
+			return sent, err
+		}
+		if !ok {
+			st.MarkHardcoverPushed(userID, p.BookID, p.Status, p.Percent)
+			continue
+		}
+		pages := 0
+		if p.Status == Read {
+			pages = ed.Pages
+		} else if ed.Pages > 0 {
+			pages = int(p.Percent * float64(ed.Pages))
+		}
+		if err := c.Push(ctx, ed, p.Status, pages, time.Now()); err != nil {
+			return sent, err
+		}
+		st.MarkHardcoverPushed(userID, p.BookID, p.Status, p.Percent)
+		sent++
+		select {
+		case <-ctx.Done():
+			return sent, ctx.Err()
+		case <-time.After(1200 * time.Millisecond): // far under Hardcover's limits
+		}
+	}
+	return sent, nil
 }

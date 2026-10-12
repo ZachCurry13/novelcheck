@@ -20,7 +20,8 @@ func (s *Server) hardcoverClient(userID int64) *hardcover.Client {
 
 func (s *Server) hardcoverState(userID int64) map[string]any {
 	synced, books, matched := s.Store.HardcoverStatus(userID)
-	return map[string]any{"connected": s.Store.HardcoverToken(userID) != "", "synced_at": synced, "books": books, "matched": matched}
+	return map[string]any{"connected": s.Store.HardcoverToken(userID) != "", "synced_at": synced, "books": books, "matched": matched,
+		"push": s.Store.HardcoverPush(userID)}
 }
 
 // handleHardcoverStatus: GET /api/me/hardcover.
@@ -76,8 +77,38 @@ func (s *Server) handleHardcoverSync(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
-	if _, _, err := hardcover.SyncUser(ctx, s.Store, s.hardcoverClient(u.ID), u.ID); err != nil {
+	c := s.hardcoverClient(u.ID)
+	if _, _, err := hardcover.SyncUser(ctx, s.Store, c, u.ID); err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	out := s.hardcoverState(u.ID)
+	if s.Store.HardcoverPush(u.ID) {
+		n, err := hardcover.PushUser(ctx, s.Store, c, u.ID)
+		out["pushed"] = n
+		if err != nil {
+			out["push_error"] = err.Error()
+		}
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// handleHardcoverPush: PUT /api/me/hardcover/push {"on": true}: also send
+// this person's reading progress to their Hardcover (off until they choose).
+func (s *Server) handleHardcoverPush(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		On bool `json:"on"`
+	}
+	if !readJSON(w, r, &body, 1<<10) {
+		return
+	}
+	u := auth.UserFrom(r)
+	if s.Store.HardcoverToken(u.ID) == "" {
+		writeErr(w, http.StatusBadRequest, "connect Hardcover first")
+		return
+	}
+	if err := s.Store.SetHardcoverPush(u.ID, body.On); err != nil {
+		writeStoreErr(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, s.hardcoverState(u.ID))

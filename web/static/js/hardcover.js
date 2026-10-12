@@ -11,6 +11,8 @@ export async function renderHardcover(host) {
     host.innerHTML = `<h2 class="text-lg font-semibold">📚 Hardcover</h2>
       ${s.connected ? `<p class="text-sm">${s.username ? `Connected as <b>${esc(s.username)}</b>. ` : "Connected. "}${at ? `Last synced ${esc(ago(at))}` : "Not synced yet"}:
           ${s.books} book${s.books === 1 ? "" : "s"} (reading and read), ${s.matched} in your library.</p>
+        <label class="toggle"><input type="checkbox" data-hc-push ${s.push ? "checked" : ""}> Also send my reading progress to Hardcover</label>
+        <p class="text-xs text-slate-500">Off by default, since it changes your Hardcover account. When on, books you're reading or finished in Up Next are added to your Hardcover shelves with how far you are (matched by ISBN, so a book without one is skipped), and never lowering anything already there.</p>
         <div class="flex flex-wrap gap-2"><button type="button" data-hc="sync" class="btn-secondary">Sync now</button>
           <button type="button" data-hc="off" class="btn-ghost">Disconnect</button></div>`
       : `<p class="text-sm text-slate-400">Free. Books you're reading or have read on Hardcover show up here, and books in your Up Next move to Reading or Finished by themselves. Each book is matched by ISBN, then by title and author.</p>
@@ -32,6 +34,12 @@ export async function renderHardcover(host) {
       const r = await attempt(() => put("/api/me/hardcover", { token: "" }), "Disconnected");
       if (r) draw(r);
     }
+  };
+  host.onchange = async (e) => {
+    if (!e.target.matches("[data-hc-push]")) return;
+    const r = await attempt(() => put("/api/me/hardcover/push", { on: e.target.checked }), e.target.checked ? "Progress will be sent to Hardcover" : "Not sending progress to Hardcover");
+    if (r) draw(r);
+    else e.target.checked = !e.target.checked;
   };
   host.onsubmit = async (e) => {
     e.preventDefault();
