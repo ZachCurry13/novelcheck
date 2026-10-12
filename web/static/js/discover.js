@@ -11,6 +11,7 @@ import { cardBlurb } from "./blurb.js";
 import { on } from "./modules.js";
 import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
 import { discoverTabsHTML } from "./discovertabs.js";
+import { markLibby } from "./libby.js";
 
 const GUIDE_URL = "https://github.com/ZachCurry13/novelcheck/blob/main/docs/DISCOVER.md";
 const NYT_URL = "https://www.nytimes.com/books/best-sellers/";
@@ -86,6 +87,7 @@ export async function renderDiscover(view, state) {
     </section>`).join("") : `<p class="text-slate-400">${emptyText(data, state.user)}</p>`;
     rows.querySelectorAll("[data-row]").forEach((r) => (r.scrollLeft = scrolled[r.dataset.row] || 0));
     credit(data);
+    markLibby(rows); // 📚 chips: does the person's library lend it?
   };
   rows.onclick = async (e) => {
     if (e.target.closest("a")) return; // "Get it" links open normally
@@ -149,7 +151,7 @@ function card(b, kid, queueOn) {
     <h3 class="line-clamp-2 text-sm font-semibold leading-tight">${esc(b.title)}</h3>
     <p class="truncate text-xs text-slate-400">${esc(b.author || "")}</p>
     <div class="flex flex-wrap gap-1 text-xs">${pepper} ${contentIcons(b)}
-      ${b.owned ? `<span class="chip-cat">📚 Yours</span>` : ""}${nytChip(b)}${b.weeks_on_list === 1 ? ` <span class="chip-open">New</span>` : ""}</div>
+      ${b.owned ? `<span class="chip-cat">📚 Yours</span>` : ""}<span data-libby="${b.id}"></span>${nytChip(b)}${b.weeks_on_list === 1 ? ` <span class="chip-open">New</span>` : ""}</div>
     <p class="line-clamp-4 text-xs text-slate-300">${esc(cardBlurb(b, 200))}</p>
     <div class="mt-auto space-y-1">${action}
       <p class="flex gap-3 text-xs">${kid ? "" : `<a href="https://www.amazon.com/s?k=${q}&i=digital-text" target="_blank" rel="noopener noreferrer" class="underline">Amazon</a>`}

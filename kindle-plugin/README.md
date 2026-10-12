@@ -1,8 +1,8 @@
 # NovelCheck plugin for KOReader
 
-Step 1 of a KOReader plugin for NovelCheck: see your **Up Next** list on the
-e-reader and tap a book to download it. Later steps add reporting what is on
-the device. It needs NovelCheck 1.33 or newer; the plugin only needs your
+A KOReader plugin for NovelCheck: see your **Up Next** list on the e-reader,
+tap a book to download it, and report which books are on the device (NovelCheck
+1.36 or newer for that part); the plugin only needs your
 NovelCheck address, username and sync code.
 
 ## Install
@@ -23,6 +23,11 @@ NovelCheck address, username and sync code.
    - **Sync code**: from NovelCheck, **Profile > KOReader setup > Reading sync**.
 2. Open **NovelCheck > Up Next**. Tap a book to download it into KOReader's
    download folder (or home folder).
+
+3. **NovelCheck > Report books on this device** sends NovelCheck the list of books
+   in the download folder (file names, formats and sizes, never folder names).
+   **Device name...** sets what NovelCheck calls this device. Profile > Reading
+   sync shows the result.
 
 Only books in your Up Next that have a file NovelCheck can send are listed;
 kids' content rules apply as everywhere else.

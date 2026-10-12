@@ -1,6 +1,6 @@
 --[[
-NovelCheck plugin for KOReader, step 1: connect to your NovelCheck, see your
-Up Next list, and tap a book to download it.
+NovelCheck plugin for KOReader: connect to your NovelCheck, see your Up Next
+list, tap a book to download it, and report which books are on this device.
 
 It signs in the way KOReader's progress sync does: your NovelCheck username
 and the sync code from Profile -> KOReader setup.
@@ -18,11 +18,13 @@ local WidgetContainer = require("ui/widget/container/widgetcontainer")
 local _ = require("gettext")
 local json = require("json")
 local lfs = require("libs/libkoreader-lfs")
+local ltn12 = require("ltn12")
 local socket = require("socket")
 local socketutil = require("socketutil")
 local http = require("socket.http")
 local https = require("ssl.https")
 local md5 = require("ffi/sha2").md5
+local util = require("util")
 
 local NovelCheck = WidgetContainer:extend{
     name = "novelcheck",
@@ -44,6 +46,8 @@ function NovelCheck:addToMainMenu(menu_items)
         sorting_hint = "tools",
         sub_item_table = {
             { text = _("Up Next"), callback = function() self:showUpNext() end },
+            { text = _("Report books on this device"), callback = function() self:reportDevice() end },
+            { text = _("Device name..."), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
             { text = _("Connect to NovelCheck..."), keep_menu_open = true, callback = function() self:connectDialog() end },
         },
     }
@@ -83,7 +87,7 @@ end
 
 -- request fetches path from NovelCheck. With file, the body is saved there;
 -- otherwise it is returned as text. It returns the HTTP code and the body.
-function NovelCheck:request(path, file)
+function NovelCheck:request(path, file, post_body)
     local url = self.settings:readSetting("server") .. path
     local fetch = url:match("^https") and https.request or http.request
     local chunks = {}
@@ -95,14 +99,22 @@ function NovelCheck:request(path, file)
     end
     socketutil:set_timeout(15, file and 300 or 30)
     local ok, code = pcall(function()
+        local headers = {
+            ["x-auth-user"] = trim(self.settings:readSetting("user")),
+            ["x-auth-key"] = md5(trim(self.settings:readSetting("code"))),
+            ["accept"] = "application/json",
+        }
+        local source
+        if post_body then
+            headers["content-type"] = "application/json"
+            headers["content-length"] = tostring(#post_body)
+            source = ltn12.source.string(post_body)
+        end
         return socket.skip(1, fetch{
             url = url,
-            method = "GET",
-            headers = {
-                ["x-auth-user"] = trim(self.settings:readSetting("user")),
-                ["x-auth-key"] = md5(trim(self.settings:readSetting("code"))),
-                ["accept"] = "application/json",
-            },
+            method = post_body and "POST" or "GET",
+            headers = headers,
+            source = source,
             sink = sink,
         })
     end)
@@ -159,6 +171,100 @@ function NovelCheck:showUpNext()
             close_callback = function() self.menu = nil end,
         }
         UIManager:show(self.menu)
+    end)
+end
+
+-- deviceName is what NovelCheck calls this e-reader (the model, unless set).
+function NovelCheck:deviceName()
+    local name = trim(self.settings:readSetting("device_name"))
+    if name == "" then
+        name = (Device.model or "KOReader device")
+    end
+    return name
+end
+
+function NovelCheck:deviceNameDialog()
+    local InputDialog = require("ui/widget/inputdialog")
+    local dialog
+    dialog = InputDialog:new{
+        title = _("Name of this device"),
+        input = self:deviceName(),
+        buttons = { {
+            { text = _("Cancel"), callback = function() UIManager:close(dialog) end },
+            { text = _("Save"), is_enter_default = true, callback = function()
+                self.settings:saveSetting("device_name", trim(dialog:getInputText()))
+                self.settings:flush()
+                UIManager:close(dialog)
+            end },
+        } },
+    }
+    UIManager:show(dialog)
+    dialog:onShowKeyboard()
+end
+
+local BOOK_EXT = { epub = true, pdf = true, mobi = true, azw3 = true, azw = true, fb2 = true, cbz = true, txt = true, djvu = true }
+local MAX_BOOKS = 500
+
+-- scanBooks lists the books under dir (without folder names): file name,
+-- format, size and KOReader's fingerprint of the file.
+function NovelCheck:scanBooks(dir, books, depth)
+    if #books >= MAX_BOOKS or depth > 4 then return end
+    for entry in lfs.dir(dir) do
+        if entry:sub(1, 1) ~= "." and not entry:match("%.sdr$") then
+            local path = dir .. "/" .. entry
+            local attr = lfs.attributes(path)
+            if attr and attr.mode == "directory" then
+                self:scanBooks(path, books, depth + 1)
+            elseif attr and attr.mode == "file" then
+                local ext = entry:match("%.([^.]+)$")
+                if ext and BOOK_EXT[ext:lower()] then
+                    local ok, sum = pcall(util.partialMD5, path)
+                    table.insert(books, {
+                        filename = entry,
+                        title = (entry:gsub("%.[^.]+$", ""):gsub("[-_]", " ")),
+                        format = ext:lower(),
+                        size = attr.size,
+                        md5 = ok and sum or "",
+                    })
+                end
+            end
+            if #books >= MAX_BOOKS then return end
+        end
+    end
+end
+
+function NovelCheck:reportDevice()
+    if not self:isConnected() then
+        self:connectDialog()
+        return
+    end
+    NetworkMgr:runWhenOnline(function()
+        UIManager:show(InfoMessage:new{ text = _("Listing the books on this device..."), timeout = 1 })
+        UIManager:nextTick(function()
+            local books = {}
+            local ok = pcall(self.scanBooks, self, self:downloadDir(), books, 0)
+            if not ok then
+                UIManager:show(InfoMessage:new{ text = _("Could not read the books folder.") })
+                return
+            end
+            local body = json.encode{ device = self:deviceName(), books = books }
+            local code, answer = self:request("/kosync/plugin/device", nil, body)
+            if code == 200 then
+                local good, data = pcall(json.decode, answer)
+                local text = _("Reported to NovelCheck:") .. " " .. tostring(#books) .. " " .. _("books")
+                if good and type(data) == "table" and data.matched then
+                    text = text .. "\n" .. tostring(data.matched) .. " " .. _("are in your NovelCheck library.")
+                end
+                if #books >= MAX_BOOKS then
+                    text = text .. "\n" .. _("(Only the first 500 books are listed.)")
+                end
+                UIManager:show(InfoMessage:new{ text = text })
+            elseif code == 401 then
+                UIManager:show(InfoMessage:new{ text = _("NovelCheck did not accept the username or sync code.") })
+            else
+                UIManager:show(InfoMessage:new{ text = _("Could not report to NovelCheck.") .. "\n" .. tostring(code or answer) })
+            end
+        end)
     end)
 end
 

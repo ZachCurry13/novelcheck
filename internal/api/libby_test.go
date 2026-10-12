@@ -57,6 +57,11 @@ func TestLibbyAvailability(t *testing.T) {
 		a["kindle"] != true || !strings.HasSuffix(a["url"].(string), "/media/2") || !strings.Contains(a["url"].(string), "mylib.overdrive.com") {
 		t.Fatalf("availability picks the exact title, not the look-alike: %v", out)
 	}
+	_, batch := admin.do("POST", "/api/libby/check", map[string]any{"ids": []int64{id, 999999}}, true)
+	books, _ := batch["books"].(map[string]any)
+	if batch["configured"] != true || len(books) != 1 || books[fmt.Sprint(id)].(map[string]any)["holds"].(float64) != 3 {
+		t.Fatalf("batch check (unknown books are left out): %v", batch)
+	}
 	other, _ := st.UpsertBook("A Book The Library Lacks", "Nobody", "", "")
 	_ = st.AddCopy(cal, other, "/c/o.epub", "epub", "2")
 	if _, out := admin.do("GET", fmt.Sprintf("/api/books/%d/libby", other), nil, false); out["availability"].(map[string]any)["found"] != false {

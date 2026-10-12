@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
@@ -74,4 +75,49 @@ func (s *Server) handleBookLibby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"configured": true, "library": name, "availability": a})
+}
+
+// handleLibbyCheck: POST /api/libby/check {"ids": [...]} (up to 60): the
+// library's answer for each book, for the chips on Discover. A few books are
+// looked up at a time; answers are kept for a few hours.
+func (s *Server) handleLibbyCheck(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		IDs []int64 `json:"ids"`
+	}
+	if !readJSON(w, r, &body, 8<<10) {
+		return
+	}
+	u := auth.UserFrom(r)
+	key, _ := s.Store.LibbyLibrary(u.ID)
+	if key == "" {
+		writeJSON(w, http.StatusOK, map[string]any{"configured": false})
+		return
+	}
+	if len(body.IDs) > 60 {
+		body.IDs = body.IDs[:60]
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 25*time.Second)
+	defer cancel()
+	out := map[int64]libby.Availability{}
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	gate := make(chan struct{}, 5)
+	for _, id := range body.IDs {
+		b, err := s.Store.BookByID(id, u) // kids' rules apply
+		if err != nil {
+			continue
+		}
+		wg.Add(1)
+		gate <- struct{}{}
+		go func() {
+			defer func() { <-gate; wg.Done() }()
+			if a, err := s.Libby.Check(ctx, key, b.Title, b.Author); err == nil {
+				mu.Lock()
+				out[b.ID] = a
+				mu.Unlock()
+			}
+		}()
+	}
+	wg.Wait()
+	writeJSON(w, http.StatusOK, map[string]any{"configured": true, "books": out})
 }

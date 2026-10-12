@@ -15,5 +15,8 @@ export async function renderSyncStatus(host) {
       ${row("Progress from KOReader", s.progress_at, s.progress_device, "Open a book from NovelCheck in KOReader with Progress sync on (KOReader setup has the steps).")}
       ${row("Reading statistics", s.stats_at, s.stats_books ? `${s.stats_books} book${s.stats_books === 1 ? "" : "s"}` : "", "In KOReader: Reading statistics → Synchronize now.")}
     </ul>
+    ${(s.devices || []).length ? `<div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">📱 Your e-readers</p>
+      <ul class="space-y-1">${s.devices.map((d) => `<li><b>${esc(d.name)}</b>: ${d.books} book${d.books === 1 ? "" : "s"}, ${d.in_library} in your library · reported ${esc(ago(d.reported_at))}</li>`).join("")}</ul>
+      <p class="text-xs text-slate-500">From the KOReader plugin's <b>Report books on this device</b>.</p></div>` : ""}
     <p class="text-xs text-slate-500">Progress syncs as you read (when KOReader's Auto sync is on). Statistics sync when you press Synchronize now.</p>`;
 }

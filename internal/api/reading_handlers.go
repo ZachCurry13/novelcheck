@@ -88,5 +88,6 @@ func (s *Server) handleMyReadingSync(w http.ResponseWriter, r *http.Request) {
 		statsAt = t.Unix()
 	}
 	books, _ := s.Store.KOReaderBooks(u.ID, 1000)
-	writeJSON(w, http.StatusOK, map[string]any{"progress_at": at, "progress_device": device, "stats_at": statsAt, "stats_books": len(books)})
+	writeJSON(w, http.StatusOK, map[string]any{"progress_at": at, "progress_device": device, "stats_at": statsAt, "stats_books": len(books),
+		"devices": s.Store.Devices(u.ID)})
 }

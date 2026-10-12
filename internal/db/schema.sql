@@ -519,6 +519,20 @@ CREATE TABLE IF NOT EXISTS hardcover_pushed (
     pages   INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, book_id)
 );
+-- Books on a reader's e-reader, as the KOReader plugin reports them (the
+-- device's whole list is replaced on each report).
+CREATE TABLE IF NOT EXISTS device_books (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    device      TEXT NOT NULL,
+    md5         TEXT NOT NULL DEFAULT '',
+    filename    TEXT NOT NULL,
+    title       TEXT NOT NULL DEFAULT '',
+    format      TEXT NOT NULL DEFAULT '',
+    size        INTEGER NOT NULL DEFAULT 0,
+    book_id     INTEGER REFERENCES books(id) ON DELETE SET NULL,
+    reported_at INTEGER NOT NULL DEFAULT 0,  -- Unix seconds
+    PRIMARY KEY (user_id, device, filename)
+);
 CREATE TABLE IF NOT EXISTS kosync_progress (
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     document   TEXT NOT NULL,

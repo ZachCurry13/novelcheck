@@ -1,7 +1,7 @@
 // 📚 Libby: on a book, whether the person's library lends it (e-book copies,
 // holds, wait) with a link to it at the library, where Libby's Borrow or
 // Place hold is one tap away. And in Profile, which library that is.
-import { get, put } from "./api.js";
+import { get, put, post } from "./api.js";
 import { esc, attempt } from "./ui.js";
 
 const num = (n) => Number(n || 0).toLocaleString();
@@ -27,6 +27,41 @@ export async function renderBookLibby(host, bookId) {
   host.innerHTML = `<div class="space-y-1 rounded-lg bg-slate-800/60 p-3 text-sm"><p class="label">📚 ${esc(r.library)} (Libby)</p><p>${line}</p>${link}</div>`;
 }
 
+// markLibby puts a small chip on each card in host that has a
+// [data-libby="<book id>"] placeholder: available now, or the holds. Books the
+// library doesn't lend get nothing. Answers are remembered while the page is open.
+const seen = new Map(); // book id -> availability, or null when not at the library
+let configured = null;
+
+function chip(a) {
+  if (!a) return "";
+  const text = a.available ? "📚 Available" : `📚 ${Number(a.holds).toLocaleString()} hold${a.holds === 1 ? "" : "s"}`;
+  const tip = a.available ? "Your library has a copy available now (Libby)" : `${a.wait_days ? `About ${a.wait_days} days. ` : ""}On hold at your library (Libby)`;
+  return `<a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="${a.available ? "chip-none" : "chip-wait"}" title="${esc(tip)}" data-libby-link>${text}</a>`;
+}
+
+// forget drops what was remembered (the library changed).
+function forget() {
+  seen.clear();
+  configured = null;
+}
+
+export async function markLibby(host) {
+  if (configured === false) return;
+  const paint = () => host.querySelectorAll("[data-libby]").forEach((el) => {
+    if (seen.has(el.dataset.libby)) el.innerHTML = chip(seen.get(el.dataset.libby));
+  });
+  paint();
+  const ids = [...new Set([...host.querySelectorAll("[data-libby]")].map((el) => el.dataset.libby))].filter((id) => !seen.has(id)).slice(0, 60);
+  if (!ids.length) return;
+  const r = await post("/api/libby/check", { ids: ids.map(Number) }).catch(() => null);
+  if (!r) return;
+  configured = r.configured;
+  if (!r.configured) return;
+  for (const id of ids) seen.set(id, r.books?.[id]?.found ? r.books[id] : null);
+  paint();
+}
+
 // renderLibbyCard fills Profile's library card.
 export async function renderLibbyCard(host) {
   const cur = await get("/api/me/libby").catch(() => null);
@@ -44,11 +79,17 @@ export async function renderLibbyCard(host) {
   host.onclick = async (e) => {
     if (!e.target.closest("[data-lb=off]")) return;
     const r = await attempt(() => put("/api/me/libby", { library: "" }), "Library removed");
-    if (r) draw(r);
+    if (r) {
+      forget();
+      draw(r);
+    }
   };
   host.onsubmit = async (e) => {
     e.preventDefault();
     const r = await attempt(() => put("/api/me/libby", { library: e.target.library.value }), "Library saved");
-    if (r) draw(r);
+    if (r) {
+      forget();
+      draw(r);
+    }
   };
 }

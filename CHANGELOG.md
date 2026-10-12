@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.36.0]
+
+### 📚 Libby on Discover
+- **Each Discover card shows whether your library lends it:** **📚 Available** (a copy is free now) or **📚 3 holds**; tap it to open the book at your library in Libby. Books your library doesn't lend show nothing. It needs your library set under **Profile → 📚 Libby library**, and answers are kept for a few hours.
+
+### 📱 KOReader plugin: books on the device
+- **Report books on this device** (NovelCheck menu in KOReader) sends NovelCheck the list of books on the Kindle: file names, formats and sizes, never folder names. **Profile → 🔄 Reading sync → 📱 Your e-readers** then shows each device, how many books it holds and how many are in your library. Give a device a name with **Device name...**
+- This is the second step of the plugin, with the first still untried by me on a real device. Copy the updated `kindle-plugin/novelcheck.koplugin` folder to the Kindle again to get it.
+
 ## [1.35.0]
 
 ### 📚 Hardcover: send your progress too
