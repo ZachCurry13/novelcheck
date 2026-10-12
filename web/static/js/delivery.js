@@ -133,6 +133,7 @@ function syncHTML(url, username, code) {
 function statsHTML(url, username, code) {
   return `<div class="space-y-2 border-t border-slate-800 pt-4">
     <h3 class="font-semibold">📊 Reading statistics</h3>
+    <p class="rounded bg-slate-800/60 p-2 text-sm text-slate-300">Using the NovelCheck plugin? Skip these steps: <b>NovelCheck → Set up everything</b> does them for you.</p>
     <p class="text-sm text-slate-400">NovelCheck can also keep KOReader's reading statistics: then Up Next shows every book opened on your KOReader devices (any book, not only ones from NovelCheck), how far you are and how long you've read. With several devices, each one syncs to the same place.</p>
     <p class="text-sm font-medium">Part 1: add NovelCheck as Cloud storage (once per device)</p>
     <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">

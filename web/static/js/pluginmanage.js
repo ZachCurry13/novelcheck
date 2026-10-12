@@ -21,7 +21,7 @@ export function pluginStepsHTML(zipUrl, latest) {
     <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
       <li>Unzip it, and connect the e-reader to the computer by USB.</li>
       <li>Copy the <b>novelcheck.koplugin</b> folder into <b>koreader/plugins/</b> on the e-reader (replace the old one when updating).</li>
-      <li>Restart KOReader. <b>NovelCheck</b> appears in the top menu under <b>🛠 Tools</b>: Up Next, On this device, and more.</li>
+      <li>Restart KOReader. It offers <b>Set up NovelCheck sync?</b>: tap <b>Set up</b>. That connects progress sync and reading statistics for you (no WebDAV or catalog to add by hand) and asks to restart once more. The same button is always in the top menu under <b>🛠 Tools → NovelCheck → Set up everything</b>.</li>
     </ol>`;
 }
 

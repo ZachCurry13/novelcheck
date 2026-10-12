@@ -54,3 +54,7 @@ Open **Profile > KOReader plugin** in NovelCheck and press **Download the plugin
 
 - **NovelCheck > Automatic:** when the e-reader gets online (at most every 6 hours) the plugin reports its books, so they appear in Up Next without any menu (switch on **Download Up Next when online** to also fetch new books). Turn either off there.
 - **NovelCheck > Update plugin** downloads the newest plugin files from your NovelCheck, checks them, swaps them in (old files are kept as `.bak`) and asks to restart KOReader. The plugin also mentions a new version once after connecting. If an update ever goes wrong, copy the folder from **Profile > KOReader plugin** over USB.
+
+## One-tap setup (NovelCheck 1.40 or newer, plugin 1.40.0)
+
+**NovelCheck > Set up everything** connects KOReader's Progress sync and Reading statistics sync to NovelCheck using the details already in the plugin. You do not need to add a Cloud storage (WebDAV) account or an OPDS catalog by hand. After it finishes, restart KOReader. **Sync reading statistics now** (same menu) runs the sync; **Automatic > Sync reading statistics when online** does it by itself.

@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.40.0]
+
+### ⚡ One-tap setup in the KOReader plugin
+- **NovelCheck → Set up everything** (plugin 1.40.0): checks the connection, points KOReader's **Progress sync** at NovelCheck (with auto sync on) and **Reading statistics → Cloud sync** at your NovelCheck folder, then asks to restart KOReader. No Cloud storage account, WebDAV address or folder picker by hand. A fresh install from Profile offers it the first time KOReader starts. The OPDS catalog is no longer needed (the plugin has Up Next and downloads).
+- **Sync reading statistics now** (same menu) presses KOReader's Synchronize now. **Automatic → Sync reading statistics when online** does it when the Kindle connects (switched on by Set up everything).
+- This writes the values KOReader would store itself; it is the part I could only check by reading KOReader's source, so try it first on a book you don't mind. If it can't finish it says what to do (for example turning on the Cloud storage plugin), and the manual steps still work. Update the plugin on the Kindle with **NovelCheck → Update plugin**.
+
 ## [1.39.1]
 
 ### 📊 Reading stats fills in from your existing sync

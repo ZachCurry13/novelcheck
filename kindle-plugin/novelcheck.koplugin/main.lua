@@ -28,7 +28,7 @@ local util = require("util")
 local ConfirmBox = require("ui/widget/confirmbox")
 local DeviceBooks = require("devicebooks")
 
-local VERSION = "1.39.0"
+local VERSION = "1.40.0"
 -- The folder this plugin runs from (config.lua from NovelCheck's download sits there).
 local PLUGIN_DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
 
@@ -45,6 +45,12 @@ function NovelCheck:init()
     self.settings = LuaSettings:open(DataStorage:getSettingsDir() .. "/novelcheck.lua")
     self:importConfig()
     self.ui.menu:registerToMainMenu(self)
+    if self.settings:readSetting("offer_setup") and self:isConnected() then
+        -- First start after installing the downloaded plugin: offer the one-tap setup once.
+        self.settings:saveSetting("offer_setup", nil)
+        self.settings:flush()
+        UIManager:scheduleIn(4, function() self:easySetup() end)
+    end
 end
 
 -- importConfig connects the plugin from the config.lua that NovelCheck puts in
@@ -58,6 +64,7 @@ function NovelCheck:importConfig()
         self.settings:saveSetting("server", (trim(cfg.server):gsub("/+$", "")))
         self.settings:saveSetting("user", trim(cfg.user))
         self.settings:saveSetting("code", trim(cfg.code))
+        self.settings:saveSetting("offer_setup", true)
         self.settings:flush()
     end
 end
@@ -67,8 +74,10 @@ function NovelCheck:addToMainMenu(menu_items)
         text = _("NovelCheck"),
         sorting_hint = "tools",
         sub_item_table = {
+            { text = _("Set up everything"), callback = function() self:easySetup() end },
             { text = _("Up Next"), callback = function() self:showUpNext() end },
             { text = _("Download all Up Next"), callback = function() self:downloadAll() end },
+            { text = _("Sync reading statistics now"), callback = function() self:syncStatsNow() end },
             { text = _("On this device"), callback = function() DeviceBooks.show(self) end },
             { text = _("Delete finished books..."), callback = function() DeviceBooks.removeFinished(self) end },
             { text = _("Report books on this device"), callback = function() self:reportDevice() end },
@@ -79,6 +88,9 @@ function NovelCheck:addToMainMenu(menu_items)
                 { text = _("Download Up Next when online"), keep_menu_open = true,
                   checked_func = function() return self:autoEnabled("auto_download", false) end,
                   callback = function() self:toggleAuto("auto_download", false) end },
+                { text = _("Sync reading statistics when online"), keep_menu_open = true,
+                  checked_func = function() return self:autoEnabled("auto_stats", false) end,
+                  callback = function() self:toggleAuto("auto_stats", false) end },
             } },
             { text = _("Device name..."), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
             { text = _("Connect to NovelCheck..."), keep_menu_open = true, callback = function() self:connectDialog() end },
@@ -112,7 +124,7 @@ function NovelCheck:onNetworkConnected()
     if not self:isConnected() then
         return
     end
-    if not (self:autoEnabled("auto_report", true) or self:autoEnabled("auto_download", false)) then
+    if not (self:autoEnabled("auto_report", true) or self:autoEnabled("auto_download", false) or self:autoEnabled("auto_stats", false)) then
         return
     end
     local now = os.time()
@@ -130,6 +142,9 @@ function NovelCheck:autoRun()
     end
     if self:autoEnabled("auto_report", true) then
         self:reportQuietly()
+    end
+    if self:autoEnabled("auto_stats", false) then
+        self:syncStats()
     end
     self:checkUpdate(true)
 end
@@ -342,6 +357,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
+require("setup")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 require("updater")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 require("devicereport")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 
