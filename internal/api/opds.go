@@ -120,6 +120,12 @@ func (s *Server) handleOPDSBook(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	s.serveBook(w, r, u, id)
+}
+
+// serveBook sends a book's best file to a reader (the OPDS catalog and the
+// KOReader plugin both use it); kids' rules still apply.
+func (s *Server) serveBook(w http.ResponseWriter, r *http.Request, u *store.User, id int64) {
 	b, err := s.Store.BookByID(id, u)
 	if err != nil {
 		http.NotFound(w, r)

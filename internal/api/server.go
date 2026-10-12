@@ -79,6 +79,9 @@ func (s *Server) Router() http.Handler {
 		r.Get("/users/auth", s.handleKosyncAuth)
 		r.Put("/syncs/progress", s.handleKosyncPut)
 		r.Get("/syncs/progress/{document}", s.handleKosyncGet)
+		// The KOReader plugin: the same sign-in, JSON, and downloads.
+		r.Get("/plugin/up-next", s.handlePluginUpNext)
+		r.Get("/plugin/book/{id}/{name}", s.handlePluginBook)
 	})
 	// KOReader's reading statistics (Cloud sync): a private WebDAV folder, same sign-in.
 	r.Handle("/dav", http.HandlerFunc(s.handleDAV))

@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.33.0]
+
+### 📱 KOReader plugin (step 1)
+- **See your Up Next on the e-reader and download from it.** A small KOReader plugin (the folder `kindle-plugin/novelcheck.koplugin` in the NovelCheck project, with install steps in its README) adds **NovelCheck → Up Next** to KOReader's tools menu. It signs in with your username and the sync code from **Profile → KOReader setup**; tap a book to download it. Kids' content rules apply.
+- This is the first step. It's new and untried on a real device, so tell me what messages you see. Reporting what's on the device, and later removing finished books, come after it works.
+
 ## [1.32.1]
 
 ### 📱 Libby and Goodreads imports
