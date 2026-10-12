@@ -9,7 +9,7 @@ becomes the release notes for that version and is shown in the app under
 ### 🔑 Sync codes you can type
 - **New sync codes are three plain words** (like `blueduckcheese`) instead of 12 random letters, so they're easy to read out and type on an e-reader. Existing codes keep working; press **Make a new sync code** in Profile → KOReader setup to get a word code (KOReader then signs in again with it).
 - After 20 wrong sync codes from one address in 10 minutes, KOReader, Cloud storage and the plugin refuse that address for a while, which keeps the shorter codes safe from guessing.
-- The setup steps now say Cloud storage is under the **⚙ Settings** icon in KOReader's top menu.
+- The setup steps now explain KOReader's folder picker (hold the bold "Long-press here to choose current folder" line), and say Cloud storage is under the **⚙ Settings** icon in KOReader's top menu.
 
 ## [1.36.2]
 
