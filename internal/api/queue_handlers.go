@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -13,7 +14,13 @@ import (
 
 func (s *Server) handleListQueue(w http.ResponseWriter, r *http.Request) {
 	u := auth.UserFrom(r)
-	items, err := s.Store.ListQueue(u.ID, r.URL.Query().Get("all") == "1")
+	var items []store.QueueItem
+	var err error
+	if r.URL.Query().Get("hidden") == "1" {
+		items, err = s.Store.HiddenQueue(u.ID)
+	} else {
+		items, err = s.Store.ListQueue(u.ID, r.URL.Query().Get("all") == "1")
+	}
 	if err != nil {
 		writeStoreErr(w, err)
 		return
@@ -93,6 +100,27 @@ func (s *Server) handleDequeue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.Store.RemoveFromQueue(auth.UserFrom(r).ID, id); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+// handleHideQueueItem hides a book from Up Next, or brings it back
+// ({"hidden": false}). Hidden books stay in the library and are not added
+// again by the e-reader.
+func (s *Server) handleHideQueueItem(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r, "id")
+	if !ok {
+		writeErr(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+	body := struct {
+		Hidden *bool `json:"hidden"`
+	}{}
+	_ = json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).Decode(&body)
+	hidden := body.Hidden == nil || *body.Hidden
+	if err := s.Store.SetQueueHidden(auth.UserFrom(r).ID, id, hidden); err != nil {
 		writeStoreErr(w, err)
 		return
 	}

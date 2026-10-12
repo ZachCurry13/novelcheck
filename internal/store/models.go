@@ -15,6 +15,8 @@ type Store struct {
 	// unread one), e.g. to push it to phones. It must not block.
 	OnNotify func(level, source, message, link string)
 
+	rematchedAt sync.Map // user id -> when their unmatched books were last re-checked (rematch.go)
+
 	seasonMu sync.Mutex
 	seasonAt map[string]seasonStamp // when each shelf's season_books was made
 }

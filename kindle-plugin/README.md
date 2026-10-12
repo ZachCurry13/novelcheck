@@ -49,3 +49,8 @@ Open **Profile > KOReader plugin** in NovelCheck and press **Download the plugin
 - **Delete finished books...** lists the finished ones and deletes them after you confirm.
 - **Download all Up Next** downloads every Up Next book that is not on the device yet.
 - **About** shows the plugin version.
+
+## Automatic and updating (NovelCheck 1.39 or newer)
+
+- **NovelCheck > Automatic:** when the e-reader gets online (at most every 6 hours) the plugin reports its books, so they appear in Up Next without any menu (switch on **Download Up Next when online** to also fetch new books). Turn either off there.
+- **NovelCheck > Update plugin** downloads the newest plugin files from your NovelCheck, checks them, swaps them in (old files are kept as `.bak`) and asks to restart KOReader. The plugin also mentions a new version once after connecting. If an update ever goes wrong, copy the folder from **Profile > KOReader plugin** over USB.

@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/zachcurry13/novelcheck/internal/delivery"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	kindleplugin "github.com/zachcurry13/novelcheck/kindle-plugin"
 )
 
 // The KOReader plugin (kindle-plugin/novelcheck.koplugin) talks to NovelCheck
@@ -109,5 +110,30 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "could not save"})
 		return
 	}
-	kosyncJSON(w, http.StatusOK, map[string]int{"books": len(body.Books), "matched": matched})
+	added := s.autoAddFromDevice(u, device)
+	kosyncJSON(w, http.StatusOK, map[string]int{"books": len(body.Books), "matched": matched, "added": added})
+}
+
+// handlePluginVersion tells the plugin which version this NovelCheck has and
+// which files make it up, so the plugin can offer to update itself.
+func (s *Server) handlePluginVersion(w http.ResponseWriter, r *http.Request) {
+	if s.kosyncUser(w, r) == nil {
+		return
+	}
+	kosyncJSON(w, http.StatusOK, map[string]any{"version": kindleplugin.Version(), "files": kindleplugin.UpdatableFiles()})
+}
+
+// handlePluginFile sends one of the plugin's Lua files.
+func (s *Server) handlePluginFile(w http.ResponseWriter, r *http.Request) {
+	if s.kosyncUser(w, r) == nil {
+		return
+	}
+	data, ok := kindleplugin.File(chi.URLParam(r, "name"))
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(data)
 }

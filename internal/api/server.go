@@ -50,6 +50,7 @@ type Server struct {
 	Safe        *safemode.State      // safe mode: background work off until an admin leaves it
 	Web         fs.FS                // embedded static assets
 	logins      *loginLimiter
+	resolvedAt  sync.Map      // user id -> when their unmatched KOReader books were last looked up (koresolve.go)
 	codeGuesses *loginLimiter // wrong sync codes (KOReader, WebDAV, plugin)
 	formats     formatJob     // format cleanup's background job
 	dav         davState      // KOReader statistics folders
@@ -89,6 +90,8 @@ func (s *Server) Router() http.Handler {
 		r.Get("/plugin/up-next", s.handlePluginUpNext)
 		r.Post("/plugin/device", s.handlePluginDevice)
 		r.Get("/plugin/book/{id}/{name}", s.handlePluginBook)
+		r.Get("/plugin/version", s.handlePluginVersion)
+		r.Get("/plugin/file/{name}", s.handlePluginFile)
 	})
 	// KOReader's reading statistics (Cloud sync): a private WebDAV folder, same sign-in.
 	r.Handle("/dav", http.HandlerFunc(s.handleDAV))
@@ -121,6 +124,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/me/kosync", s.handleMyKosync)
 			r.Post("/me/kosync", s.handleMyKosync)
 			r.Get("/me/koplugin.zip", s.handleMyPluginZip)
+			r.Put("/me/kindle-autoadd", s.handleKindleAutoAdd)
 			r.Get("/me/koreader-books", s.handleMyKOReaderBooks)
 			r.Get("/me/reading-sync", s.handleMyReadingSync)
 			r.Post("/me/dav/tidy", s.handleDAVTidy)
@@ -173,6 +177,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/queue", s.handleEnqueue)
 				r.Put("/queue/order", s.handleReorderQueue)
 				r.Delete("/queue/{id}", s.handleDequeue)
+				r.Post("/queue/{id}/hide", s.handleHideQueueItem)
 				r.Post("/queue/{id}/start", s.handleStartReading)
 				r.Post("/queue/{id}/finish", s.handleFinishReading)
 				r.Group(func(r chi.Router) {

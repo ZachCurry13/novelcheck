@@ -45,7 +45,7 @@ func (s *Store) MatchBook(title, author string) int64 {
 	if len(ids) == 1 {
 		return ids[0]
 	}
-	return 0
+	return s.matchLoose(title, author)
 }
 
 // ReservedCatalogName reports whether name belongs to one of NovelCheck's own

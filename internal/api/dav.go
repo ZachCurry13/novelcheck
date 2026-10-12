@@ -188,6 +188,7 @@ func (s *Server) importKOStats(userID int64) {
 	if _, err := s.Store.SaveKOReaderBooks(userID, list); err != nil {
 		log.Printf("koreader statistics for user %d: %v", userID, err)
 	}
+	s.resolveUnmatched(userID)
 	if hours, err := kosync.ReadHours(path); err != nil {
 		log.Printf("koreader reading hours for user %d: %v", userID, err)
 	} else {

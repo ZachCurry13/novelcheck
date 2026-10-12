@@ -72,3 +72,10 @@ func (s *Store) Devices(userID int64) []Device {
 		FROM device_books b WHERE b.user_id = ? GROUP BY b.device ORDER BY MAX(b.reported_at) DESC`, userID)
 	return out
 }
+
+// DeviceBookIDs is the library books on a device (the ones its report matched).
+func (s *Store) DeviceBookIDs(userID int64, device string) []int64 {
+	var ids []int64
+	_ = s.DB.Select(&ids, `SELECT DISTINCT book_id FROM device_books WHERE user_id = ? AND device = ? AND book_id IS NOT NULL ORDER BY book_id`, userID, device)
+	return ids
+}

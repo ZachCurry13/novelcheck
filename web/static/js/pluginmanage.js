@@ -1,8 +1,8 @@
 // Profile: the KOReader plugin and your e-readers. Download the plugin already
 // connected to your account, see each device that reported, which plugin
 // version it runs, and when the plugin there is out of date.
-import { get } from "./api.js";
-import { esc } from "./ui.js";
+import { get, put } from "./api.js";
+import { esc, attempt } from "./ui.js";
 import { ago } from "./progress.js";
 
 // semverLess says whether version a is older than b ("1.2.0" < "1.10.0").
@@ -35,8 +35,10 @@ export async function renderPluginCard(host) {
   host.innerHTML = `<h2 class="text-lg font-semibold">📱 KOReader plugin</h2>
     <p class="text-sm text-slate-400">Up Next on your e-reader, one-tap downloads, a list of what's on it with delete, and reports back to NovelCheck.</p>
     ${pluginStepsHTML("/api/me/koplugin.zip", s.plugin_latest)}
+    <label class="toggle min-h-[2.5rem] text-sm"><input type="checkbox" data-autoadd ${s.kindle_autoadd ? "checked" : ""}> Add the books on my e-reader to Up Next (started ones show as Currently reading)</label>
     <div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">Your e-readers</p>
       ${devices.length ? `<ul class="space-y-2">${devices.map((d) => `<li><b>${esc(d.name)}</b> ${badge(d)}<br>
         <span class="text-xs text-slate-400">${d.books} book${d.books === 1 ? "" : "s"}, ${d.in_library} in your library · reported ${esc(ago(d.reported_at))}</span></li>`).join("")}</ul>`
       : `<p class="text-xs text-slate-500">None yet. After installing, open <b>NovelCheck → Report books on this device</b> in KOReader.</p>`}</div>`;
+  host.querySelector("[data-autoadd]").onchange = (e) => attempt(() => put("/api/me/kindle-autoadd", { enabled: e.target.checked }), e.target.checked ? "Books on your e-reader will join Up Next" : "Switched off");
 }

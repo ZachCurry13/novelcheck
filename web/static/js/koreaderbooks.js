@@ -16,7 +16,7 @@ function row(b) {
     : `<span class="flex h-14 w-10 shrink-0 items-center justify-center rounded bg-slate-800 text-lg" aria-hidden="true">📄</span>`}
     <span class="min-w-0 flex-1 space-y-1">
       <span class="block font-semibold leading-snug line-clamp-2">${esc(b.title)}</span>
-      <span class="block truncate text-xs text-slate-400">${esc(b.authors || "Unknown author")}${b.book_id ? "" : " · not in your library"}</span>
+      <span class="block truncate text-xs text-slate-400">${esc(b.authors || "Unknown author")}${b.owned ? "" : " · not in your library"}</span>
       ${progressBar({ percent: b.percent })}
       <span class="block text-xs text-slate-400">${Math.round(b.percent * 100)}%${b.read_seconds ? ` · ${readTime(b.read_seconds)} read` : ""}${b.last_open ? ` · ${ago(b.last_open)}` : ""}</span>
     </span>`;

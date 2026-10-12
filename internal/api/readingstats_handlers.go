@@ -13,6 +13,7 @@ const maxStatHours = 60000 // about 7 years of every hour of the day
 // works out days, weeks and streaks in its own time zone.
 func (s *Server) handleMyReadingStats(w http.ResponseWriter, r *http.Request) {
 	u := auth.UserFrom(r)
+	s.Store.RematchUnmatched(u.ID)
 	books, _ := s.Store.KOReaderBooks(u.ID, 5000)
 	hours, _ := s.Store.ReadingHours(u.ID, maxStatHours)
 	type book struct {

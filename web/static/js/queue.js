@@ -18,6 +18,7 @@ export async function renderQueue(view, state) {
     <section class="mb-8">
       <h2 class="label">Currently Reading</h2>
       <div id="reading" class="grid gap-3 sm:grid-cols-2"></div>
+      <div id="hidden" class="mt-2 text-sm"></div>
     </section>
     <section>
       <h2 class="label">Queued — drag to reorder</h2>
@@ -35,6 +36,7 @@ export async function renderQueue(view, state) {
   }
 
   const reading = $("#reading", view);
+  const hiddenEl = $("#hidden", view);
   const queued = $("#queued", view);
   let sortable;
 
@@ -47,6 +49,10 @@ export async function renderQueue(view, state) {
     queued.innerHTML = next.length ? next.map((i, idx) => queueRow(i, idx, state.user)).join("")
       : `<li class="text-sm text-slate-500">Your queue is empty. Add books from the Library with ＋.</li>`;
     setBars(reading);
+    const hid = (await attempt(() => get("/api/queue?hidden=1"))) || [];
+    hiddenEl.innerHTML = hid.length ? `<details class="rounded-lg bg-slate-800/40 p-2"><summary class="cursor-pointer text-slate-400">🙈 Hidden (${hid.length})</summary>
+      <ul class="mt-2 space-y-1">${hid.map((i) => `<li data-item="${i.id}" data-book="${i.book_id}" class="flex items-center justify-between gap-2">
+        <span class="min-w-0 truncate">${esc(i.title)}</span><button data-act="unhide" class="btn-ghost shrink-0 py-1 text-xs">Show again</button></li>`).join("")}</ul></details>` : "";
   }
 
   async function saveOrder() {
@@ -76,6 +82,10 @@ export async function renderQueue(view, state) {
       if (r) toast(r.delivery_note);
     } else if (act === "finish") {
       await attempt(() => post(`/api/queue/${id}/finish`), "Marked as finished");
+    } else if (act === "hide") {
+      await attempt(() => post(`/api/queue/${id}/hide`, {}), "Hidden from Up Next");
+    } else if (act === "unhide") {
+      await attempt(() => post(`/api/queue/${id}/hide`, { hidden: false }), "Back in Up Next");
     } else if (act === "remove") {
       await attempt(() => del(`/api/queue/${id}`), "Removed from queue");
     }
@@ -136,6 +146,7 @@ function queueRow(i, idx, user) {
       <span class="flex shrink-0 flex-col items-center gap-1 sm:flex-row sm:gap-2">
         ${i.owned ? `<button data-act="start" class="btn-primary h-10 w-10 p-0 sm:w-auto sm:px-4" title="Start reading" aria-label="Start reading">▶&#xFE0E;<span class="hidden sm:inline"> Start Reading</span></button>`
           : `<a href="#/wishlist" class="btn-ghost h-10 w-10 p-0 sm:w-auto sm:px-3" title="Get a copy first" aria-label="Wishlist">⭐<span class="hidden sm:inline"> Wishlist</span></a>`}
+        <button data-act="hide" class="btn-ghost h-9 w-10 p-0" title="Hide from Up Next (stays in your library)" aria-label="Hide from Up Next">🙈</button>
         <button data-act="remove" class="btn-ghost h-9 w-10 p-0" title="Remove from Up Next" aria-label="Remove from Up Next">✕</button>
       </span>
     </li>`;
@@ -155,9 +166,11 @@ function readingCard(i) {
           <span class="block text-sm text-slate-400">${esc(i.author || "Unknown author")}</span>
         </button>
         ${deepBanner(i)}
+        <p class="text-xs font-semibold text-indigo-300">▶ Currently reading</p>
         ${i.progress ? `<div class="space-y-1">${progressBar(i.progress)}<p class="text-xs text-slate-400">📖 ${progressText(i.progress)}</p></div>`
           : i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
-        <div class="flex gap-2"><button data-act="finish" class="btn-secondary">Finished</button>
+        <div class="flex flex-wrap gap-2"><button data-act="finish" class="btn-secondary">Finished</button>
+          <button data-act="hide" class="btn-ghost whitespace-nowrap" title="Hide from Up Next (stays in your library)">🙈 Hide</button>
           <button data-act="remove" class="btn-ghost">Remove</button></div></div>
     </div>`;
 }

@@ -24,6 +24,7 @@ type KOReaderBook struct {
 	Percent     float64 `db:"percent" json:"percent"`
 	ReadSeconds int64   `db:"read_seconds" json:"read_seconds"`
 	LastOpen    int64   `db:"last_open" json:"last_open"`
+	Owned       bool    `db:"-" json:"owned"` // in the family's library (not just looked up)
 }
 
 // SaveKOReaderBooks replaces someone's KOReader books with a new sync's,

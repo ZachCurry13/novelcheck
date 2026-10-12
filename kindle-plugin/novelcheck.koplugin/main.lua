@@ -25,9 +25,10 @@ local http = require("socket.http")
 local https = require("ssl.https")
 local md5 = require("ffi/sha2").md5
 local util = require("util")
+local ConfirmBox = require("ui/widget/confirmbox")
 local DeviceBooks = require("devicebooks")
 
-local VERSION = "1.38.0"
+local VERSION = "1.39.0"
 -- The folder this plugin runs from (config.lua from NovelCheck's download sits there).
 local PLUGIN_DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
 
@@ -71,13 +72,66 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("On this device"), callback = function() DeviceBooks.show(self) end },
             { text = _("Delete finished books..."), callback = function() DeviceBooks.removeFinished(self) end },
             { text = _("Report books on this device"), callback = function() self:reportDevice() end },
+            { text = _("Automatic"), sub_item_table = {
+                { text = _("Report books when online"), keep_menu_open = true,
+                  checked_func = function() return self:autoEnabled("auto_report", true) end,
+                  callback = function() self:toggleAuto("auto_report", true) end },
+                { text = _("Download Up Next when online"), keep_menu_open = true,
+                  checked_func = function() return self:autoEnabled("auto_download", false) end,
+                  callback = function() self:toggleAuto("auto_download", false) end },
+            } },
             { text = _("Device name..."), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
             { text = _("Connect to NovelCheck..."), keep_menu_open = true, callback = function() self:connectDialog() end },
+            { text = _("Update plugin"), callback = function() self:checkUpdate(false) end },
             { text = _("About"), keep_menu_open = true, callback = function()
                 UIManager:show(InfoMessage:new{ text = "NovelCheck plugin " .. VERSION .. "\n" .. tostring(self.settings:readSetting("server") or _("Not connected")) })
             end },
         },
     }
+end
+
+-- Automatic work: KOReader tells plugins when the device goes online. At most
+-- every few hours the plugin then reports what is on the device (NovelCheck adds
+-- those books to Up Next) and, if switched on, downloads new Up Next books.
+local AUTO_INTERVAL = 6 * 3600
+
+function NovelCheck:autoEnabled(key, default)
+    local v = self.settings:readSetting(key)
+    if v == nil then
+        return default
+    end
+    return v and true or false
+end
+
+function NovelCheck:toggleAuto(key, default)
+    self.settings:saveSetting(key, not self:autoEnabled(key, default))
+    self.settings:flush()
+end
+
+function NovelCheck:onNetworkConnected()
+    if not self:isConnected() then
+        return
+    end
+    if not (self:autoEnabled("auto_report", true) or self:autoEnabled("auto_download", false)) then
+        return
+    end
+    local now = os.time()
+    if now - (tonumber(self.settings:readSetting("last_auto")) or 0) < AUTO_INTERVAL then
+        return
+    end
+    self.settings:saveSetting("last_auto", now)
+    self.settings:flush()
+    UIManager:scheduleIn(5, function() self:autoRun() end)
+end
+
+function NovelCheck:autoRun()
+    if self:autoEnabled("auto_download", false) then
+        self:downloadAll(true)
+    end
+    if self:autoEnabled("auto_report", true) then
+        self:reportQuietly()
+    end
+    self:checkUpdate(true)
 end
 
 function NovelCheck:isConnected()
@@ -201,133 +255,6 @@ function NovelCheck:showUpNext()
     end)
 end
 
--- deviceName is what NovelCheck calls this e-reader (the model, unless set).
-function NovelCheck:deviceName()
-    local name = trim(self.settings:readSetting("device_name"))
-    if name == "" then
-        name = (Device.model or "KOReader device")
-    end
-    return name
-end
-
-function NovelCheck:deviceNameDialog()
-    local InputDialog = require("ui/widget/inputdialog")
-    local dialog
-    dialog = InputDialog:new{
-        title = _("Name of this device"),
-        input = self:deviceName(),
-        buttons = { {
-            { text = _("Cancel"), callback = function() UIManager:close(dialog) end },
-            { text = _("Save"), is_enter_default = true, callback = function()
-                self.settings:saveSetting("device_name", trim(dialog:getInputText()))
-                self.settings:flush()
-                UIManager:close(dialog)
-            end },
-        } },
-    }
-    UIManager:show(dialog)
-    dialog:onShowKeyboard()
-end
-
-local BOOK_EXT = { epub = true, pdf = true, mobi = true, azw3 = true, azw = true, fb2 = true, cbz = true, txt = true, djvu = true }
-local MAX_BOOKS = 500
-
--- scanBooks lists the books under dir (without folder names): file name,
--- format, size and KOReader's fingerprint of the file.
-function NovelCheck:scanBooks(dir, books, depth, no_md5)
-    if #books >= MAX_BOOKS or depth > 4 then return end
-    for entry in lfs.dir(dir) do
-        if entry:sub(1, 1) ~= "." and not entry:match("%.sdr$") then
-            local path = dir .. "/" .. entry
-            local attr = lfs.attributes(path)
-            if attr and attr.mode == "directory" then
-                self:scanBooks(path, books, depth + 1, no_md5)
-            elseif attr and attr.mode == "file" then
-                local ext = entry:match("%.([^.]+)$")
-                if ext and BOOK_EXT[ext:lower()] then
-                    local sum = ""
-                    if not no_md5 then
-                        local ok, got = pcall(util.partialMD5, path)
-                        sum = ok and got or ""
-                    end
-                    table.insert(books, {
-                        filename = entry,
-                        path = path,
-                        title = (entry:gsub("%.[^.]+$", ""):gsub("[-_]", " ")),
-                        format = ext:lower(),
-                        size = attr.size,
-                        md5 = sum,
-                    })
-                end
-            end
-            if #books >= MAX_BOOKS then return end
-        end
-    end
-end
-
--- withoutPaths drops the folder of each book: NovelCheck is told file names only.
-function NovelCheck:withoutPaths(books)
-    local out = {}
-    for _i, b in ipairs(books) do
-        table.insert(out, { filename = b.filename, title = b.title, format = b.format, size = b.size, md5 = b.md5 })
-    end
-    return out
-end
-
--- reportQuietly tells NovelCheck what is on the device now, without messages
--- (after books were deleted). It does nothing when not connected or offline.
-function NovelCheck:reportQuietly()
-    if not self:isConnected() then return end
-    pcall(function()
-        local books = {}
-        self:scanBooks(self:downloadDir(), books, 0)
-        self:request("/kosync/plugin/device", nil, json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) })
-    end)
-end
-
-function NovelCheck:reportDevice()
-    if not self:isConnected() then
-        self:connectDialog()
-        return
-    end
-    NetworkMgr:runWhenOnline(function()
-        UIManager:show(InfoMessage:new{ text = _("Listing the books on this device..."), timeout = 1 })
-        UIManager:nextTick(function()
-            local books = {}
-            local ok = pcall(self.scanBooks, self, self:downloadDir(), books, 0)
-            if not ok then
-                UIManager:show(InfoMessage:new{ text = _("Could not read the books folder.") })
-                return
-            end
-            local body = json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) }
-            local code, answer = self:request("/kosync/plugin/device", nil, body)
-            if code == 200 then
-                local good, data = pcall(json.decode, answer)
-                local text = _("Reported to NovelCheck:") .. " " .. tostring(#books) .. " " .. _("books")
-                if good and type(data) == "table" and data.matched then
-                    text = text .. "\n" .. tostring(data.matched) .. " " .. _("are in your NovelCheck library.")
-                end
-                if #books >= MAX_BOOKS then
-                    text = text .. "\n" .. _("(Only the first 500 books are listed.)")
-                end
-                UIManager:show(InfoMessage:new{ text = text })
-            elseif code == 401 then
-                UIManager:show(InfoMessage:new{ text = _("NovelCheck did not accept the username or sync code.") })
-            else
-                UIManager:show(InfoMessage:new{ text = _("Could not report to NovelCheck.") .. "\n" .. tostring(code or answer) })
-            end
-        end)
-    end)
-end
-
-function NovelCheck:downloadDir()
-    local dir = G_reader_settings:readSetting("download_dir") or G_reader_settings:readSetting("home_dir")
-    if dir and lfs.attributes(dir, "mode") == "directory" then
-        return dir
-    end
-    return DataStorage:getDataDir()
-end
-
 -- bookPath is where a book from Up Next is saved on this device.
 function NovelCheck:bookPath(book)
     local name = book.url:match("([^/]+)$") or ("book-" .. tostring(book.id) .. "." .. tostring(book.format))
@@ -363,16 +290,20 @@ function NovelCheck:download(book)
 end
 
 -- downloadAll gets every book in Up Next that is not on this device yet.
-function NovelCheck:downloadAll()
+function NovelCheck:downloadAll(quiet)
     if not self:isConnected() then
-        self:connectDialog()
+        if not quiet then
+            self:connectDialog()
+        end
         return
     end
     NetworkMgr:runWhenOnline(function()
         local code, body = self:request("/kosync/plugin/up-next")
         local ok, data = pcall(json.decode, body or "")
         if code ~= 200 or not ok or type(data) ~= "table" or type(data.books) ~= "table" then
-            UIManager:show(InfoMessage:new{ text = _("Could not read your Up Next list.") .. "\n" .. tostring(code) })
+            if not quiet then
+                UIManager:show(InfoMessage:new{ text = _("Could not read your Up Next list.") .. "\n" .. tostring(code) })
+            end
             return
         end
         local todo = {}
@@ -382,10 +313,14 @@ function NovelCheck:downloadAll()
             end
         end
         if #todo == 0 then
-            UIManager:show(InfoMessage:new{ text = _("Everything in Up Next is already on this device.") })
+            if not quiet then
+                UIManager:show(InfoMessage:new{ text = _("Everything in Up Next is already on this device.") })
+            end
             return
         end
-        UIManager:show(InfoMessage:new{ text = _("Downloading") .. " " .. tostring(#todo) .. " " .. _("books..."), timeout = 2 })
+        if not quiet then
+            UIManager:show(InfoMessage:new{ text = _("Downloading") .. " " .. tostring(#todo) .. " " .. _("books..."), timeout = 2 })
+        end
         UIManager:nextTick(function()
             local got, failed = 0, 0
             for _i, b in ipairs(todo) do
@@ -400,9 +335,14 @@ function NovelCheck:downloadAll()
             if failed > 0 then
                 text = text .. "\n" .. tostring(failed) .. " " .. _("failed.")
             end
-            UIManager:show(InfoMessage:new{ text = text })
+            if not quiet or got > 0 then
+                UIManager:show(InfoMessage:new{ text = text })
+            end
         end)
     end)
 end
+
+require("updater")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
+require("devicereport")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 
 return NovelCheck

@@ -70,3 +70,27 @@ func Zip(server, user, code string) ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+// UpdatableFiles are the plugin's Lua files, which the plugin can fetch to
+// update itself (never config.lua, which is per account).
+func UpdatableFiles() []string {
+	entries, _ := files.ReadDir(folder)
+	var out []string
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".lua") {
+			out = append(out, e.Name())
+		}
+	}
+	return out
+}
+
+// File is one of the updatable files' contents.
+func File(name string) ([]byte, bool) {
+	for _, n := range UpdatableFiles() {
+		if n == name {
+			b, err := files.ReadFile(folder + "/" + n)
+			return b, err == nil
+		}
+	}
+	return nil, false
+}

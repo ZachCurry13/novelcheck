@@ -4,6 +4,23 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.39.0]
+
+### 📖 Your Kindle's books in Up Next
+- **Books on your e-reader join Up Next by themselves.** Each time the plugin reports the device, the ones NovelCheck recognises in your library are added: ones you've started as **Currently reading**, the rest queued at the end, finished ones skipped. A switch in Profile → 📱 KOReader plugin turns it off. (Books NovelCheck can't match to your library can't be added.)
+- **Currently Reading** (top of Up Next) now says **▶ Currently reading** with how far you are, which device and when.
+- **🙈 Hide** on any Up Next row or Currently Reading card takes it off the list without touching your library. **Hidden (n)** under the section brings any back. A hidden book is never re-added by the Kindle.
+
+### 🔎 Books on your Kindle find their match
+- **Smarter matching to your library:** "Hostile Hospital" now finds "The Hostile Hospital" (a leading The/A/An doesn't matter), "Snicket, Lemony" is the same author as "Lemony Snicket", and "The Lost Files: Six's Legacy" finds "Six's Legacy" (or the other way round). It only matches when exactly one book fits, so two books of the same title are left alone unless the author tells them apart. Books that didn't match before are checked again when you open Up Next, so your existing list improves without another sync.
+- **Open Library for the rest:** a KOReader book that is truly not in your library is looked up in Open Library (free, at most 15 an hour), which gives it a cover and its real title and author. It is not added to your library (it stays "not in your library", like Check a book). Files that aren't books (KOReader's own guide, thumbnails, IDs) are skipped.
+
+### 🔄 The plugin works by itself, and updates itself
+- **Automatic (NovelCheck menu → Automatic):** when the Kindle gets online, at most every 6 hours, the plugin reports its books (on by default) and can download new Up Next books (off by default). Up Next stays right without opening any menu.
+- **Update plugin (NovelCheck menu):** downloads the newest plugin files from NovelCheck, checks that they are valid, swaps them in (keeping the old files as `.bak`) and asks you to restart KOReader. When NovelCheck has a newer plugin, the plugin mentions it once after connecting. It never installs without asking.
+- Profile → 📱 KOReader plugin still shows each device's plugin version.
+- The plugin is parser-checked only; it has not been run on a real Kindle. The Lua is now split over several files (`updater.lua`, `devicereport.lua`, `devicebooks.lua`), so copy the whole folder when installing by USB.
+
 ## [1.38.0]
 
 ### 🧩 KOReader plugin: what's on my Kindle

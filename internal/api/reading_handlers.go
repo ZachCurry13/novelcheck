@@ -18,6 +18,9 @@ func (s *Server) koreaderList(userID int64, limit int) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	for i := range books {
+		books[i].Owned = books[i].BookID != nil && s.Store.Owned(*books[i].BookID)
+	}
 	var synced int64
 	if _, at := s.statsPath(userID); !at.IsZero() {
 		synced = at.Unix()
@@ -27,6 +30,8 @@ func (s *Server) koreaderList(userID int64, limit int) (map[string]any, error) {
 
 // handleMyKOReaderBooks: GET /api/me/koreader-books.
 func (s *Server) handleMyKOReaderBooks(w http.ResponseWriter, r *http.Request) {
+	s.Store.RematchUnmatched(auth.UserFrom(r).ID)
+	s.resolveUnmatched(auth.UserFrom(r).ID)
 	out, err := s.koreaderList(auth.UserFrom(r).ID, 200)
 	if err != nil {
 		writeStoreErr(w, err)
@@ -83,6 +88,7 @@ func (s *Server) handleUserReading(w http.ResponseWriter, r *http.Request) {
 // it holds.
 func (s *Server) handleMyReadingSync(w http.ResponseWriter, r *http.Request) {
 	u := auth.UserFrom(r)
+	s.Store.RematchUnmatched(u.ID)
 	at, device := s.Store.LastKosync(u.ID)
 	var statsAt int64
 	if _, t := s.statsPath(u.ID); !t.IsZero() {
@@ -90,5 +96,5 @@ func (s *Server) handleMyReadingSync(w http.ResponseWriter, r *http.Request) {
 	}
 	books, _ := s.Store.KOReaderBooks(u.ID, 1000)
 	writeJSON(w, http.StatusOK, map[string]any{"progress_at": at, "progress_device": device, "stats_at": statsAt, "stats_books": len(books),
-		"devices": s.Store.Devices(u.ID), "webdav": s.davAttemptsFor(u), "plugin_latest": kindleplugin.Version()})
+		"devices": s.Store.Devices(u.ID), "webdav": s.davAttemptsFor(u), "plugin_latest": kindleplugin.Version(), "kindle_autoadd": s.Store.KindleAutoAdd(u.ID)})
 }

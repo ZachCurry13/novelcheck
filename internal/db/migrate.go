@@ -66,6 +66,8 @@ func migrate(d *sqlx.DB) error {
 		{"users", "font", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "motion", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "kosync_code", "TEXT NOT NULL DEFAULT ''"},
+		{"users", "kindle_autoadd", "INTEGER NOT NULL DEFAULT 1"},
+		{"queue_items", "hidden", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "pin_hash", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "owner", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "hardcover_token", "TEXT NOT NULL DEFAULT ''"},

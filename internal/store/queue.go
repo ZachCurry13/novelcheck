@@ -9,10 +9,26 @@ import (
 // ListQueue returns a user's reading queue: currently-reading first, then the
 // "Up Next" items by position. Finished items are included when all is true.
 func (s *Store) ListQueue(userID int64, all bool) ([]QueueItem, error) {
-	filter := "AND q.status != 'finished'"
+	filter := "AND q.hidden = 0 AND q.status != 'finished'"
 	if all {
-		filter = ""
+		filter = "AND q.hidden = 0"
 	}
+	return s.queueItems(userID, filter)
+}
+
+// HiddenQueue is the books someone hid from Up Next.
+func (s *Store) HiddenQueue(userID int64) ([]QueueItem, error) {
+	return s.queueItems(userID, "AND q.hidden = 1")
+}
+
+// SetQueueHidden hides a book from Up Next (or brings it back). A hidden
+// book is not added again by the e-reader.
+func (s *Store) SetQueueHidden(userID, itemID int64, hidden bool) error {
+	_, err := s.DB.Exec(`UPDATE queue_items SET hidden = ? WHERE user_id = ? AND id = ?`, hidden, userID, itemID)
+	return err
+}
+
+func (s *Store) queueItems(userID int64, filter string) ([]QueueItem, error) {
 	var items []QueueItem
 	err := s.DB.Select(&items, `SELECT q.id, q.book_id, q.position, q.status, q.delivery_note,
 		q.updated_at, b.title, b.author, b.classification, b.status AS book_status, b.spice_level, `+deepChangeCol+`, `+ownedCond+` AS owned
@@ -29,7 +45,33 @@ func (s *Store) Enqueue(userID, bookID int64) error {
 		VALUES (?, ?, COALESCE((SELECT MAX(position) + 1 FROM queue_items WHERE user_id = ?), 0))
 		ON CONFLICT(user_id, book_id) DO UPDATE SET
 			status = CASE WHEN queue_items.status = 'finished' THEN 'queued' ELSE queue_items.status END,
-			updated_at = CURRENT_TIMESTAMP`, userID, bookID, userID)
+			hidden = 0, updated_at = CURRENT_TIMESTAMP`, userID, bookID, userID)
+	return err
+}
+
+// EnqueueAuto adds a book the e-reader has (status "queued", or "reading" when
+// it has been started) unless it is already in the list, hidden or not.
+// It says whether it was added.
+func (s *Store) EnqueueAuto(userID, bookID int64, status string) bool {
+	res, err := s.DB.Exec(`INSERT INTO queue_items (user_id, book_id, position, status)
+		VALUES (?, ?, COALESCE((SELECT MAX(position) + 1 FROM queue_items WHERE user_id = ?), 0), ?)
+		ON CONFLICT(user_id, book_id) DO NOTHING`, userID, bookID, userID, status)
+	if err != nil {
+		return false
+	}
+	n, _ := res.RowsAffected()
+	return n > 0
+}
+
+// KindleAutoAdd says whether books on someone's e-reader go into Up Next.
+func (s *Store) KindleAutoAdd(userID int64) bool {
+	var on bool
+	_ = s.DB.Get(&on, `SELECT kindle_autoadd FROM users WHERE id = ?`, userID)
+	return on
+}
+
+func (s *Store) SetKindleAutoAdd(userID int64, on bool) error {
+	_, err := s.DB.Exec(`UPDATE users SET kindle_autoadd = ? WHERE id = ?`, on, userID)
 	return err
 }
 
