@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
 )
@@ -14,6 +15,7 @@ const maxStatHours = 60000 // about 7 years of every hour of the day
 func (s *Server) handleMyReadingStats(w http.ResponseWriter, r *http.Request) {
 	u := auth.UserFrom(r)
 	s.Store.RematchUnmatched(u.ID)
+	s.backfillHours(u.ID)
 	books, _ := s.Store.KOReaderBooks(u.ID, 5000)
 	hours, _ := s.Store.ReadingHours(u.ID, maxStatHours)
 	type book struct {
@@ -37,5 +39,26 @@ func (s *Server) handleMyReadingStats(w http.ResponseWriter, r *http.Request) {
 			rows = append(rows, [4]int64{h.Hour, int64(i), h.Seconds, int64(h.Pages)})
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"books": outBooks, "hours": rows})
+	var synced int64
+	if _, at := s.statsPath(u.ID); !at.IsZero() {
+		synced = at.Unix()
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"books": outBooks, "hours": rows, "synced_at": synced})
+}
+
+// backfillHours reads the statistics file already in someone's folder when no
+// hours are stored yet: it was uploaded before NovelCheck kept the hours, and
+// KOReader only uploads again when something changed. It tries at most every
+// ten minutes.
+func (s *Server) backfillHours(userID int64) {
+	if s.Store.HasReadingHours(userID) {
+		return
+	}
+	if at, ok := s.hoursTried.Load(userID); ok && time.Since(at.(time.Time)) < 10*time.Minute {
+		return
+	}
+	s.hoursTried.Store(userID, time.Now())
+	if path, _ := s.statsPath(userID); path != "" {
+		s.importKOStats(userID)
+	}
 }

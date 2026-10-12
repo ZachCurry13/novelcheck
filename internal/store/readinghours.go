@@ -44,3 +44,10 @@ func (s *Store) ReadingHours(userID int64, limit int) ([]ReadingHour, error) {
 	) ORDER BY hour`, userID, limit)
 	return out, err
 }
+
+// HasReadingHours says whether any reading by the hour is stored for someone.
+func (s *Store) HasReadingHours(userID int64) bool {
+	var n int
+	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM (SELECT 1 FROM reading_hours WHERE user_id = ? LIMIT 1)`, userID)
+	return n > 0
+}

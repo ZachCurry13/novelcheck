@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.39.1]
+
+### 📊 Reading stats fills in from your existing sync
+- **Reading stats was empty for statistics that synced before 1.37.** NovelCheck kept the book totals but never read the page-by-page reading, and KOReader only uploads again when something changes. NovelCheck now reads the statistics file it already has the first time you open Reading stats (and again at most every 10 minutes while it's empty).
+- If your file has books but no page-by-page reading, the empty page now says so, with what to do (read a few pages, then press **Reading statistics → Synchronize now**).
+
 ## [1.39.0]
 
 ### 📖 Your Kindle's books in Up Next

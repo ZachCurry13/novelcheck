@@ -134,6 +134,14 @@ func TestKOReaderStatisticsFolder(t *testing.T) {
 	if sb, _ := statsOut["books"].([]any); len(sb) != 3 || len(statHours) != 2 {
 		t.Fatalf("reading stats: %v", statsOut)
 	}
+	if _, err := st.DB.Exec(`DELETE FROM reading_hours`); err != nil { // as if the file was uploaded before hours were kept
+		t.Fatal(err)
+	}
+	_, statsOut = admin.do("GET", "/api/me/reading-stats", nil, false)
+	statHours, _ = statsOut["hours"].([]any)
+	if len(statHours) != 2 {
+		t.Fatalf("hours should be read from the stored file: %v", statsOut["hours"])
+	}
 	total := 0.0
 	for _, h := range statHours {
 		total += h.([]any)[2].(float64)
