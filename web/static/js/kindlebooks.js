@@ -55,7 +55,7 @@ export async function openKindleBooks(onChange) {
     onChange?.();
   };
   d.onclick = async (e) => {
-    if (e.target === d || e.target.closest("[data-close]")) return d.close();
+    if (e.target.closest("[data-close]")) return d.close(); // clicking outside does not close it: your place is kept
     const li = e.target.closest("[data-n]");
     const btn = e.target.closest("[data-act],[data-pick]");
     if (!li || !btn) return;

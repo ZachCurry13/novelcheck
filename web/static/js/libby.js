@@ -11,7 +11,7 @@ export async function renderBookLibby(host, bookId) {
   const r = await get(`/api/books/${bookId}/libby`).catch(() => null);
   if (!r) return;
   if (!r.configured) {
-    host.innerHTML = `<p class="text-xs text-slate-500">📚 Borrow from your library? <a href="#/settings?s=accounts" data-close class="underline">Set your Libby library in Settings</a></p>`;
+    host.innerHTML = `<p class="text-xs text-slate-500">📚 Borrow from your library? <a href="#/settings?s=connections" data-close class="underline">Set your Libby library in Settings</a></p>`;
     return;
   }
   const a = r.availability;

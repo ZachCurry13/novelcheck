@@ -1,8 +1,7 @@
 // Profile: who you are. Your name and role, a few numbers from your reading,
-// your reading taste, your password and the content rules on this account.
-// Everything you can set lives under Settings.
-import { put } from "./api.js";
-import { $, esc, attempt, ageLabel } from "./ui.js";
+// your reading taste and the content rules on this account. Everything you
+// can set, your password included, lives under Settings.
+import { $, esc, ageLabel } from "./ui.js";
 import { RULES } from "./users.js";
 import { openGuide } from "./guide.js";
 import { on } from "./modules.js";
@@ -26,12 +25,6 @@ export async function renderProfile(view, state) {
         <h2 class="text-lg font-semibold">🎯 Your reading taste</h2>
         <p class="text-sm text-slate-400">Optional: mark books you know (want to read, read &amp; liked, …) so 💡 Suggested Reads on your Nightstand fit you better.</p>
         <button type="button" id="taste-open" class="btn-secondary">Rate some books</button></div>` : ""}
-      <form id="password" class="card space-y-3">
-        <h2 class="text-lg font-semibold">Change password</h2>
-        <input name="current_password" type="password" required placeholder="Current password" class="input" autocomplete="current-password">
-        <input name="new_password" type="password" required minlength="8" placeholder="New password (8+ chars)" class="input" autocomplete="new-password">
-        <button class="btn-primary">Update password</button>
-      </form>
       <div class="card">
         <h2 class="mb-2 text-lg font-semibold">Content rules on this account</h2>
         ${u.age_level ? `<p class="mb-2 text-sm text-slate-300">👪 Age group: <b>${esc(ageLabel(u.age_level))}</b>. Books a parent rated for older readers are hidden.</p>` : ""}
@@ -50,10 +43,4 @@ export async function renderProfile(view, state) {
   $("#replay-guide", view).addEventListener("click", () => openGuide(state));
   $("#taste-open", view)?.addEventListener("click", () => openTaste());
   if (on(u, "koreader")) renderReadingSummary($("#reading-summary", view));
-  $("#password", view).addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const ok = await attempt(() => put("/api/me/password", Object.fromEntries(fd)), "Password updated");
-    if (ok) e.target.reset();
-  });
 }

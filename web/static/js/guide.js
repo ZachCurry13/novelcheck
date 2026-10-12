@@ -34,7 +34,7 @@ const EVERYONE = [
       <li>Below, <b>📱 On your KOReader</b> lists every book you've opened on your e-reader, and <b>💡 Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (a quick "Why not?" helps it learn).</li>
     </ul>`],
   ["👤 Your profile",
-    "<b>Profile</b> is you: your name, a few numbers from your reading, your password and <b>🎯 Your reading taste</b> (mark books you know so your suggestions fit you better). <b>⚙ Settings</b> holds everything you can change: a light or dark look, an easier-to-read font and less motion under <b>🎨 Appearance</b>, how books reach your e-reader, your Kindle and KOReader, notifications, and your Hardcover and Libby accounts. Something not working, or an idea? <b>🐞 Report a problem or idea</b> at the bottom of any page tells your admin."],
+    "<b>Profile</b> is you: your name, a few numbers from your reading, <b>🎯 Your reading taste</b> (mark books you know so your suggestions fit you better) and the content rules on your account. <b>⚙ Settings</b> holds everything you can change: a light or dark look, an easier-to-read font and less motion under <b>🎨 Appearance</b>, how books reach your e-reader, notifications, your password and family-device PIN, your Kindle and KOReader, and your Hardcover and Libby accounts. Something not working, or an idea? <b>🐞 Report a problem or idea</b> at the bottom of any page tells your admin."],
   ["📱 Put it on your phone",
     "<b>iPhone:</b> tap <b>Share</b>, then <b>Add to Home Screen</b>.<br><b>Android:</b> tap <b>Install app</b> (or ⋮ → <b>Add to Home screen</b>). It then opens like a regular app."],
 ];

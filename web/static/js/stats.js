@@ -10,6 +10,7 @@ import { bounds } from "./statsperiods.js";
 import { reportHTML } from "./statsreport.js";
 import { bookPage, booksTab, dayPage, periodPage } from "./statsbooks.js";
 import { calendarTab } from "./statscalendar.js";
+import { tabStrip } from "./tabs.js";
 
 const TABS = { report: "Report", books: "Books", calendar: "Calendar" };
 const PERIODS = { week: "Week", month: "Month", year: "Year", all: "All time" };
@@ -56,8 +57,7 @@ export async function renderStats(view, state) {
 
   const draw = (top = false) => {
     view.innerHTML = `<h1 class="mb-3 text-2xl font-bold">📊 Reading stats</h1>
-      ${s.page ? `<button type="button" data-back class="btn-ghost mb-3 px-3 py-1">‹ Back</button>` : `<div class="mb-4 flex flex-wrap gap-1">${Object.entries(TABS).map(([k, v]) =>
-        `<button type="button" data-tab="${k}" class="${k === s.tab ? "btn-primary" : "btn-secondary"} px-3 py-1.5 text-sm">${v}</button>`).join("")}</div>`}
+      ${s.page ? `<button type="button" data-back class="btn-ghost mb-3 px-3 py-1">‹ Back</button>` : tabStrip({ id: "stats-tabs", label: "Reading stats", active: s.tab, tabs: Object.entries(TABS) })}
       ${body()}
       <p class="mt-6 text-xs text-slate-500">Days and hours use this device's time zone. Time is time with a page open (long pauses are cut short); pages are different pages seen. Books and details come from your library where NovelCheck knows the book.</p>`;
     setBars(view);

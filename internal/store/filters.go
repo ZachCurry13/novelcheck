@@ -140,10 +140,17 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	if f.NotOwned {
 		where = append(where, "NOT "+ownedCond)
 	}
-	if q := strings.TrimSpace(f.Query); q != "" {
-		where = append(where, "(b.title LIKE ? OR b.author LIKE ? OR b.series LIKE ? OR b.tags LIKE ?)")
-		like := "%" + q + "%"
-		args = append(args, like, like, like, like)
+	// Search: every word must be somewhere in the title, author, series or tags
+	// (so "reptile snicket" finds "The Reptile Room" by Lemony Snicket), and an
+	// apostrophe doesn't matter ("nines legacy" finds "Nine's Legacy").
+	for _, word := range strings.Fields(f.Query) {
+		word = strings.Trim(word, ",.;:!?\"()[]")
+		if word == "" {
+			continue
+		}
+		plain := strings.NewReplacer("'", "", "\u2019", "").Replace(word)
+		where = append(where, "(b.title LIKE ? OR REPLACE(REPLACE(b.title, '''', ''), '\u2019', '') LIKE ? OR b.author LIKE ? OR b.series LIKE ? OR b.tags LIKE ?)")
+		args = append(args, "%"+word+"%", "%"+plain+"%", "%"+word+"%", "%"+word+"%", "%"+word+"%")
 	}
 	if f.CatalogID > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM catalog_books x WHERE x.book_id = b.id AND x.catalog_id = ?)")

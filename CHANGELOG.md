@@ -4,6 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.44.0]
+
+### 🔎 Finding a book, and matching books on your Kindle
+- **Search finds books by any words, in any order.** The library search used to need your whole phrase to appear in one place, so "reptile snicket" or "nines legacy" found nothing. Now every word just has to be somewhere in the title, author, series or tags, apostrophes and punctuation don't matter, and case doesn't matter. This is what the Library search box and **Match…** use.
+- **The Match window stays open when you click outside it** (only ✕ closes it), so a stray tap no longer throws away your place.
+
+### 🧭 One look for tabs, and a clearer home for your password
+- **Every tabbed page uses the same tab strip:** Admin, Settings, Reading stats, and Discover / Wishlist / Events. It's one underlined row that scrolls sideways on a phone and keeps the open tab in view (Admin's phone sheet and the other styles are gone).
+- **Your password moved to Settings → Account**, next to family device and PIN. Settings now has four sections: General, Account, Kindle & KOReader and **Connections** (Hardcover and Libby, previously "Accounts"). Profile is just you.
+
 ## [1.43.0]
 
 ### 📊 Reading stats, rebuilt to read like a report
