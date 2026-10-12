@@ -180,8 +180,12 @@ func (s *Server) importKOStats(userID int64) {
 // has, or a sync code that doesn't match.
 func (s *Server) noteDAVRefusal(r *http.Request, name string, sent bool) {
 	a := DavAttempt{Method: r.Method, Path: r.URL.Path, Status: http.StatusUnauthorized, Name: name}
-	if !sent || name == "" {
-		return // the first, unsigned request of every WebDAV client: not worth a line
+	if !sent || name == "" { // only KOReader's own unsigned requests are worth a line (not the internet's)
+		if ua := strings.ToLower(r.UserAgent()); strings.Contains(ua, "luasocket") || strings.Contains(ua, "koreader") {
+			a.Note = "KOReader's request came without a username or sync code (open the WebDAV account in KOReader and fill both in)"
+			s.dav.note(0, a)
+		}
+		return
 	}
 	owner := int64(0)
 	if u, err := s.Store.UserByName(strings.TrimSpace(name)); err == nil {

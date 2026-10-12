@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.36.2]
+
+### 🗂️ WebDAV: see requests that come without a login
+- The WebDAV list in Profile → Reading sync now also shows KOReader requests that arrive with no username or sync code (the main admin sees these), so a Kindle that doesn't send its login is no longer invisible.
+
 ## [1.36.1]
 
 ### 🗂️ Why KOReader's Cloud storage fails

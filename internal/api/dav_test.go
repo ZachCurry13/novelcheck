@@ -79,20 +79,29 @@ func TestKOReaderStatisticsFolder(t *testing.T) {
 	if res := dav("PROPFIND", "/dav/", "wrong", nil); res.StatusCode != 401 || res.Header.Get("WWW-Authenticate") == "" {
 		t.Fatalf("wrong code: %d", res.StatusCode)
 	}
+	unsigned, _ := http.NewRequest("PROPFIND", srv.URL+"/dav/", nil) // KOReader without its login
+	unsigned.Header.Set("User-Agent", "LuaSocket 3.0-rc1")
+	if res, err := http.DefaultClient.Do(unsigned); err != nil || res.StatusCode != 401 {
+		t.Fatalf("unsigned: %v", err)
+	}
 	if res := dav("PROPFIND", "/dav/", code["code"].(string), nil); res.StatusCode != 207 {
 		t.Fatalf("browse the folder: %d", res.StatusCode)
 	}
 	// Profile says why a sign-in failed, and that the good one worked.
 	_, rs := admin.do("GET", "/api/me/reading-sync", nil, false)
 	log, _ := rs["webdav"].([]any)
-	if len(log) != 2 {
+	if len(log) != 3 {
 		t.Fatalf("webdav log: %v", rs["webdav"])
 	}
-	if first := log[0].(map[string]any); first["status"].(float64) != 207 || first["note"] != "worked" {
-		t.Fatalf("latest attempt: %v", first)
+	notes := ""
+	for _, l := range log {
+		m := l.(map[string]any)
+		notes += fmt.Sprintf("%v %s|", m["status"], m["note"])
 	}
-	if bad := log[1].(map[string]any); bad["status"].(float64) != 401 || !strings.Contains(bad["note"].(string), "sync code") {
-		t.Fatalf("refused attempt: %v", bad)
+	for _, want := range []string{"207 worked", "sync code", "without a username"} {
+		if !strings.Contains(notes, want) {
+			t.Fatalf("webdav log lacks %q: %s", want, notes)
+		}
 	}
 	// Whatever "start folder" KOReader is given exists once it asks (and can't climb out).
 	for _, folder := range []string{"/dav/NovelCheck/", "/dav/a/b/", "/dav/../../etc/"} {
