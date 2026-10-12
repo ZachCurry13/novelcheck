@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.36.4]
+
+### 🔗 A short catalog address
+- **KOReader's OPDS catalog now works at your plain address plus `/opds`** (like `https://novelcheck.example.com/opds`), with your NovelCheck username and your three-word sync code in KOReader's Username and Password boxes. No long private address and no URL shortener. It's the first thing shown in Profile → KOReader setup; the long private address still works, with no login, for those who prefer it.
+- The OPDS menu hint now says the catalog is under the 🔍 Search or ⚙ Settings icon.
+
 ## [1.36.3]
 
 ### 🔑 Sync codes you can type

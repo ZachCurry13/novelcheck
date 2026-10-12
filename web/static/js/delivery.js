@@ -50,11 +50,17 @@ export function confirmKindleSend(user, title) {
   });
 }
 
-function koreaderHTML(url, username, own) {
+function koreaderHTML(url, username, own, simple) {
   const qr = qrcode(0, "M");
   qr.addData(url);
   qr.make();
-  return `<div class="grid gap-4 sm:grid-cols-[auto,1fr]">
+  const easy = simple ? `<div class="space-y-2 rounded-lg bg-slate-800/60 p-3 text-sm">
+    <p class="font-semibold">✨ Easiest to type</p>
+    <p>Address: <code class="rounded bg-slate-900 px-2 py-0.5">${esc(simple.url)}</code> <button type="button" data-ko="copy-short" class="btn-ghost py-0.5 text-xs">📋 Copy</button></p>
+    <p>Username: <code class="rounded bg-slate-900 px-2 py-0.5">${esc(username)}</code> · Password: <code class="rounded bg-slate-900 px-2 py-0.5">${esc(simple.code)}</code> (the sync code below)</p>
+    <p class="text-xs text-slate-400">Fill all three boxes when you add the catalog. No long address to type.</p></div>
+    <p class="text-sm text-slate-400">Or use the private address below, which needs no login (scan the QR code on a phone or tablet):</p>` : "";
+  return `${easy}<div class="grid gap-4 sm:grid-cols-[auto,1fr]">
     <img src="${qr.createDataURL(5, 2)}" alt="QR code of the KOReader address" class="h-40 w-40 rounded bg-white">
     <div class="min-w-0 space-y-2">
       <p class="text-sm">KOReader address for <b>${esc(username)}</b>:</p>
@@ -63,8 +69,8 @@ function koreaderHTML(url, username, own) {
         ${own ? `<button data-ko="reset" class="btn-ghost py-1 text-sm" title="The old address stops working">New address</button>` : ""}</div>
     </div></div>
   <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
-    <li>On the e-reader, open <b>KOReader</b>, tap the <b>🔍 search</b> icon in the top menu, then <b>OPDS catalog</b>.</li>
-    <li>Tap <b>＋</b> (top left). Name: <b>NovelCheck</b>. URL: the address above (type it, or scan the QR code on a phone or tablet).</li>
+    <li>On the e-reader, open <b>KOReader</b>, tap the <b>🔍 Search</b> or <b>⚙ Settings</b> icon in the top menu (it's in one of them), then <b>OPDS catalog</b>.</li>
+    <li>Tap <b>＋</b> (top left). Name: <b>NovelCheck</b>. Then either the short address with your username and sync code (the three boxes in <b>Easiest to type</b>), or the long private address with no login.</li>
     <li>Open <b>NovelCheck</b> in the list: the Up Next books appear. Tap one and choose <b>Download</b>.</li>
   </ol>
   <p class="text-xs text-slate-500">The e-reader must reach this address: the home Wi-Fi address works at home, the https:// remote address works anywhere.
@@ -83,12 +89,13 @@ export async function openKOReaderSetup(userId) {
     const url = location.origin + i.path;
     d.innerHTML = `<div class="max-h-[85vh] space-y-4 overflow-y-auto p-5">
       <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">📖 Set up KOReader</h2>
-        <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>${koreaderHTML(url, i.username, !userId)}
+        <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>${koreaderHTML(url, i.username, !userId, s ? { url: location.origin + "/opds", code: s.code } : null)}
       ${s ? syncHTML(location.origin + s.path, s.username, s.code) + statsHTML(location.origin + s.dav, s.username, s.code) : ""}</div>`;
     d.onclick = async (e) => {
       const ko = e.target.closest("[data-ko]")?.dataset.ko;
       if (e.target === d || e.target.closest("[data-close]")) d.close();
       else if (ko === "copy") copyText(url);
+      else if (ko === "copy-short") copyText(location.origin + "/opds");
       else if (ko === "copy-sync") copyText(location.origin + s.path);
       else if (ko === "copy-dav") copyText(location.origin + s.dav);
       else if (ko === "reset" && confirm("Make a new address? KOReader will need the new one.")) {

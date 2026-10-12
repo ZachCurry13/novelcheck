@@ -1,6 +1,8 @@
 package api
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"net/http"
@@ -48,11 +50,35 @@ const opdsType = "application/atom+xml;profile=opds-catalog;kind=acquisition"
 var bookTypes = map[string]string{"epub": "application/epub+zip", "pdf": "application/pdf",
 	"mobi": "application/x-mobipocket-ebook", "azw3": "application/vnd.amazon.ebook", "azw": "application/vnd.amazon.ebook"}
 
-// opdsUser checks the token and that KOReader delivery is switched on.
+// opdsUser checks who is asking and that KOReader delivery is switched on:
+// the private token in the address, or, at the short address /opds, the
+// NovelCheck name and sync code as KOReader's Username and Password.
 func (s *Server) opdsUser(w http.ResponseWriter, r *http.Request) (*store.User, bool) {
-	u, err := s.Store.UserByOPDSToken(chi.URLParam(r, "token"))
-	if err != nil || !s.Store.SettingBool(store.KeyModuleKOReader) {
+	if !s.Store.SettingBool(store.KeyModuleKOReader) {
 		http.NotFound(w, r)
+		return nil, false
+	}
+	if token := chi.URLParam(r, "token"); token != "" {
+		u, err := s.Store.UserByOPDSToken(token)
+		if err != nil {
+			http.NotFound(w, r)
+			return nil, false
+		}
+		return u, true
+	}
+	if s.codeGuesses.blocked(remoteHost(r)) {
+		http.Error(w, "Too many wrong sync codes; try again in a few minutes", http.StatusTooManyRequests)
+		return nil, false
+	}
+	name, pass, ok := r.BasicAuth()
+	sum := md5.Sum([]byte(pass))
+	u, good := s.Store.KosyncUser(name, hex.EncodeToString(sum[:]))
+	if !ok || !good {
+		if ok && name != "" {
+			s.codeGuesses.fail(remoteHost(r))
+		}
+		w.Header().Set("WWW-Authenticate", `Basic realm="NovelCheck"`)
+		http.Error(w, "Use your NovelCheck username and the sync code from Profile → KOReader setup", http.StatusUnauthorized)
 		return nil, false
 	}
 	return u, true
@@ -72,7 +98,10 @@ func (s *Server) handleOPDSFeed(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	self := s.baseURL(r) + "/opds/" + chi.URLParam(r, "token")
+	self := s.baseURL(r) + "/opds"
+	if token := chi.URLParam(r, "token"); token != "" {
+		self += "/" + token
+	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	feed := opdsFeed{ID: "urn:novelcheck:up-next:" + u.Username, Title: "NovelCheck: Up Next for " + u.Username,
 		Updated: now, Author: "NovelCheck",

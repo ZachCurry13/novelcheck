@@ -74,6 +74,8 @@ func (s *Server) Router() http.Handler {
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })
 
 	// KOReader's OPDS catalog: the private token in the address stands in for signing in.
+	r.Get("/opds", s.handleOPDSFeed) // short address: Basic login with name + sync code
+	r.Get("/opds/book/{id}/{name}", s.handleOPDSBook)
 	r.Get("/opds/{token}", s.handleOPDSFeed)
 	r.Get("/opds/{token}/book/{id}/{name}", s.handleOPDSBook)
 	// KOReader progress sync: signed in with the NovelCheck name and a sync code.

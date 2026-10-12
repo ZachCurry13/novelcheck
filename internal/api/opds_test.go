@@ -116,3 +116,54 @@ func TestKOReaderFeed(t *testing.T) {
 		t.Fatalf("KOReader switched off: %d", code)
 	}
 }
+
+func TestShortOPDSAddress(t *testing.T) {
+	calibreDir := t.TempDir()
+	srv, st := setupWith(t, func(s *api.Server) {
+		s.Cfg.CalibreDir = calibreDir
+		s.Deep = deepread.New(s.Store, calibreDir)
+	})
+	admin := login(t, srv, "admin", "adminpass1")
+	cat, _ := st.EnsureCatalog("Calibre Main", "calibre")
+	file := filepath.Join(calibreDir, "A", "Short.epub")
+	_ = os.MkdirAll(filepath.Dir(file), 0o755)
+	_ = os.WriteFile(file, []byte("short epub"), 0o644)
+	id, _ := st.UpsertBook("Short", "A", "", "")
+	_ = st.AddCopy(cat, id, file, "epub", "1")
+	_ = st.Enqueue(1, id)
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	code := ks["code"].(string)
+
+	get := func(path, user, pass string) *http.Response {
+		req, _ := http.NewRequest("GET", srv.URL+path, nil)
+		if user != "" {
+			req.SetBasicAuth(user, pass)
+		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+	if res := get("/opds", "", ""); res.StatusCode != 401 || res.Header.Get("WWW-Authenticate") == "" {
+		t.Fatalf("no login: %d", res.StatusCode)
+	}
+	if res := get("/opds", "admin", "wrong"); res.StatusCode != 401 {
+		t.Fatalf("wrong code: %d", res.StatusCode)
+	}
+	res := get("/opds", "admin", code)
+	raw, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != 200 || !strings.Contains(string(raw), "/opds/book/"+itoa(id)+"/Short.epub") {
+		t.Fatalf("feed: %d %s", res.StatusCode, raw)
+	}
+	dl := get("/opds/book/"+itoa(id)+"/Short.epub", "admin", code)
+	body, _ := io.ReadAll(dl.Body)
+	dl.Body.Close()
+	if dl.StatusCode != 200 || string(body) != "short epub" {
+		t.Fatalf("download: %d %q", dl.StatusCode, body)
+	}
+	if res := get("/opds/book/"+itoa(id)+"/Short.epub", "", ""); res.StatusCode != 401 {
+		t.Fatalf("download without login: %d", res.StatusCode)
+	}
+}
