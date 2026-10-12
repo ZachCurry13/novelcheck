@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.32.1]
+
+### 📱 Libby and Goodreads imports
+- **Libby:** in Libby open **Shelf → Timeline → Actions → Export Timeline → Spreadsheet**, then choose that file under **Import books → Choose a list file**. Each book you've borrowed comes in once, however many times it was borrowed, returned or held. The import page has the steps under **📱 Libby**.
+- **Goodreads** already imports from its export file (**Import books**), with your **read** shelf counted as finished; nothing changes there.
+- Libby lends books, so these titles aren't files NovelCheck can send to a Kindle: they're for knowing what you've read and checking a book's rating.
+
 ## [1.32.0]
 
 ### 📚 Hardcover (free)

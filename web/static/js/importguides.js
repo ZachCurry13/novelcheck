@@ -31,6 +31,12 @@ export const IMPORT_GUIDES = `
       "Click <b>Export Library</b> at the top. After a minute, a link <b>Your export from …</b> appears (refresh the page if it doesn't). Click it to download.",
       "Here, click <b>Choose a list file</b> and pick the downloaded file (goodreads_library_export.csv). You can then choose which shelves to import, like <b>read</b> or <b>to-read</b>.",
     ])}
+    ${guide("📱 Libby (library loans)", [
+      "In the <b>Libby</b> app (or at <b>libbyapp.com</b>), open <b>Shelf</b>, then tap <b>Timeline</b>.",
+      "Tap <b>Actions</b>, then <b>Export Timeline</b>, and choose <b>Spreadsheet</b> (the Table choice only shows a web page).",
+      "Save the file (a .csv; the app may offer to share it, so save it to Files or email it to yourself), then here click <b>Choose a list file</b> and pick it.",
+      "Everything you've borrowed shows up as a list: untick what you don't want. Books you own or that are in your library are matched by title and author, and the rest become a list you can look through.",
+    ], "Libby lends books, so a title here isn't a file NovelCheck can send to your Kindle. It's for knowing what you've read and checking a book's rating before you borrow it again.")}
     ${guide("📊 The StoryGraph", [
       "On <b>app.thestorygraph.com</b>, click your profile picture, then <b>Manage Account</b>.",
       "Scroll to <b>Manage Your Data</b> and click <b>Export StoryGraph Library</b>. When it's ready, download the .csv file.",

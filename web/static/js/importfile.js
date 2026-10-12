@@ -48,11 +48,13 @@ export function detect(headers) {
     isbn: pick(headers, ["isbn13", "isbn 13", "isbn", "isbn/uid", "isbn10", "isbn 10", "isbns"]),
     asin: pick(headers, ["asin"]),
     shelf: pick(headers, ["exclusive shelf", "read status", "status", "shelf", "collections"]),
+    // Libby's timeline lists each loan, hold and return: the same title many times, so rows are merged.
   };
   const source = h.includes("exclusive shelf") && h.includes("book id") ? "Goodreads"
     : h.includes("isbn/uid") || (h.includes("read status") && h.includes("star rating")) ? "StoryGraph"
     : h.includes("productname") || (h.includes("asin") && !h.includes("title")) ? "Amazon"
     : h.includes("hardcover book id") || h.some((x) => x.includes("hardcover")) ? "Hardcover"
+    : h.some((x) => x === "activity" || x === "action") && h.some((x) => x === "library" || x === "format" || x === "activity date") ? "Libby"
     : h.includes("author last first") || h.includes("book id") && h.includes("collections") ? "LibraryThing"
     : "a spreadsheet";
   return { cols, source };
