@@ -81,10 +81,17 @@ func (s *Server) handleDAV(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "KOReader is turned off in NovelCheck", http.StatusForbidden)
 		return
 	}
+	if s.codeGuesses.blocked(remoteHost(r)) {
+		http.Error(w, "Too many wrong sync codes; try again in a few minutes", http.StatusTooManyRequests)
+		return
+	}
 	name, pass, ok := r.BasicAuth()
 	sum := md5.Sum([]byte(pass))
 	u, good := s.Store.KosyncUser(name, hex.EncodeToString(sum[:]))
 	if !ok || !good {
+		if ok && name != "" {
+			s.codeGuesses.fail(remoteHost(r))
+		}
 		s.noteDAVRefusal(r, name, ok)
 		w.Header().Set("WWW-Authenticate", `Basic realm="NovelCheck"`)
 		http.Error(w, "Use your NovelCheck name and the sync code from Profile → KOReader setup", http.StatusUnauthorized)

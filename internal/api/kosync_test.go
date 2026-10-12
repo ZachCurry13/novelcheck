@@ -32,7 +32,7 @@ func TestKOReaderSync(t *testing.T) {
 
 	_, me := admin.do("GET", "/api/me/kosync", nil, false)
 	code, _ := me["code"].(string)
-	if len(code) != 12 || me["path"] != "/kosync" {
+	if len(code) < 9 || me["path"] != "/kosync" {
 		t.Fatalf("code: %v", me)
 	}
 	sum := md5.Sum([]byte(code))

@@ -50,12 +50,13 @@ type Server struct {
 	Safe        *safemode.State      // safe mode: background work off until an admin leaves it
 	Web         fs.FS                // embedded static assets
 	logins      *loginLimiter
-	formats     formatJob    // format cleanup's background job
-	dav         davState     // KOReader statistics folders
-	pins        pinTries     // wrong PINs on family devices
-	Libby       libby.Client // library availability (kept a few hours)
-	etags       sync.Map     // static file name → ETag
-	buildOnce   sync.Once    // buildID, computed once
+	codeGuesses *loginLimiter // wrong sync codes (KOReader, WebDAV, plugin)
+	formats     formatJob     // format cleanup's background job
+	dav         davState      // KOReader statistics folders
+	pins        pinTries      // wrong PINs on family devices
+	Libby       libby.Client  // library availability (kept a few hours)
+	etags       sync.Map      // static file name → ETag
+	buildOnce   sync.Once     // buildID, computed once
 	build       string
 	indexOnce   sync.Once // index.html with versioned addresses
 	index       []byte
@@ -63,6 +64,7 @@ type Server struct {
 
 func (s *Server) Router() http.Handler {
 	s.logins = newLoginLimiter()
+	s.codeGuesses = newGuessLimiter()
 	r := chi.NewRouter()
 	r.Use(realIP(s.Cfg.TrustProxy))
 	r.Use(middleware.Recoverer)

@@ -123,6 +123,33 @@ func newLoginLimiter() *loginLimiter {
 	return &loginLimiter{attempts: map[string][]time.Time{}, max: 10, window: 5 * time.Minute}
 }
 
+func newGuessLimiter() *loginLimiter {
+	return &loginLimiter{attempts: map[string][]time.Time{}, max: 20, window: 10 * time.Minute}
+}
+
+// blocked says whether ip has used up its tries; fail counts one more. Used
+// for sync-code guesses, where only wrong answers count.
+func (l *loginLimiter) blocked(ip string) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	n := 0
+	for _, t := range l.attempts[ip] {
+		if time.Since(t) < l.window {
+			n++
+		}
+	}
+	return n >= l.max
+}
+
+func (l *loginLimiter) fail(ip string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if len(l.attempts) > 10000 {
+		l.attempts = map[string][]time.Time{}
+	}
+	l.attempts[ip] = append(l.attempts[ip], time.Now())
+}
+
 func (l *loginLimiter) allow(ip string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()

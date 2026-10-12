@@ -8,10 +8,8 @@ package store
 
 import (
 	"crypto/md5"
-	"crypto/rand"
 	"crypto/subtle"
 	"encoding/hex"
-	"math/big"
 	"strings"
 )
 
@@ -29,13 +27,7 @@ func (s *Store) KosyncCode(userID int64, renew bool) (string, error) {
 	if code != "" && !renew {
 		return code, nil
 	}
-	const chars = "abcdefghjkmnpqrstuvwxyz23456789"
-	b := make([]byte, 12)
-	for i := range b {
-		n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
-		b[i] = chars[n.Int64()]
-	}
-	code = string(b)
+	code = newSyncCode()
 	_, err := s.DB.Exec(`UPDATE users SET kosync_code = ? WHERE id = ?`, code, userID)
 	return code, err
 }

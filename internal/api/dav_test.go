@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -139,5 +140,34 @@ func TestKOReaderStatisticsFolder(t *testing.T) {
 	_, reading := admin.do("GET", "/api/admin/users/1/reading", nil, false)
 	if r, _ := reading["reading"].([]any); len(r) != 1 || reading["synced_at"].(float64) == 0 {
 		t.Fatalf("a reader's reading, for parents: %v", reading)
+	}
+}
+
+func TestSyncCodeGuessesAreLimited(t *testing.T) {
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = t.TempDir() })
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, code := admin.do("GET", "/api/me/kosync", nil, false)
+	good, _ := code["code"].(string)
+	if !regexp.MustCompile(`^[a-z]{9,24}$`).MatchString(good) {
+		t.Fatalf("a new code is plain words, got %q", good)
+	}
+	try := func(pass string) int {
+		req, _ := http.NewRequest("PROPFIND", srv.URL+"/dav/", nil)
+		req.SetBasicAuth("admin", pass)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		return res.StatusCode
+	}
+	for i := 0; i < 20; i++ {
+		if got := try("wrongcode"); got != 401 {
+			t.Fatalf("wrong guess %d: %d", i, got)
+		}
+	}
+	if got := try(good); got != 429 {
+		t.Fatalf("after 20 wrong guesses even the right code waits: %d", got)
 	}
 }

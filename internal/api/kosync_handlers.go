@@ -31,8 +31,13 @@ func (s *Server) kosyncUser(w http.ResponseWriter, r *http.Request) *store.User 
 		kosyncJSON(w, http.StatusUnauthorized, map[string]string{"message": "KOReader is turned off in NovelCheck (Admin → System & Toggles → Features)"})
 		return nil
 	}
+	if s.codeGuesses.blocked(remoteHost(r)) {
+		kosyncJSON(w, http.StatusTooManyRequests, map[string]string{"message": "Too many wrong sync codes; try again in a few minutes"})
+		return nil
+	}
 	u, ok := s.Store.KosyncUser(r.Header.Get("x-auth-user"), r.Header.Get("x-auth-key"))
 	if !ok {
+		s.codeGuesses.fail(remoteHost(r))
 		kosyncJSON(w, http.StatusUnauthorized, map[string]string{"message": "Unauthorized: use your NovelCheck name and the sync code from Profile"})
 		return nil
 	}
@@ -50,7 +55,12 @@ func (s *Server) handleKosyncCreate(w http.ResponseWriter, r *http.Request) {
 		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "bad request"})
 		return
 	}
+	if s.codeGuesses.blocked(remoteHost(r)) {
+		kosyncJSON(w, http.StatusTooManyRequests, map[string]string{"message": "Too many wrong sync codes; try again in a few minutes"})
+		return
+	}
 	if _, ok := s.Store.KosyncUser(body.Username, body.Password); !ok {
+		s.codeGuesses.fail(remoteHost(r))
 		kosyncJSON(w, http.StatusPaymentRequired, map[string]string{"message": "Use your NovelCheck name and the sync code from Profile → KOReader"})
 		return
 	}

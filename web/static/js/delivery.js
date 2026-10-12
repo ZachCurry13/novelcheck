@@ -127,7 +127,7 @@ function statsHTML(url, username, code) {
     <h3 class="font-semibold">📊 Reading statistics</h3>
     <p class="text-sm text-slate-400">NovelCheck can also keep KOReader's reading statistics: then Up Next shows every book opened on your KOReader devices (any book, not only ones from NovelCheck), how far you are and how long you've read. With several devices, each one syncs to the same place.</p>
     <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
-      <li>In KOReader's file browser, tap the <b>🔍 search</b> icon in the top menu, then <b>Cloud storage</b> (next to OPDS catalog). Tap <b>＋</b>, choose <b>WebDAV</b> and enter:
+      <li>In KOReader's file browser, tap the <b>⚙ Settings</b> icon in the top menu, then <b>Cloud storage</b>. Tap <b>＋</b>, choose <b>WebDAV</b> and enter:
         <span class="mt-1 flex items-center gap-2"><code class="min-w-0 break-all rounded bg-slate-800 px-2 py-1 text-xs">${esc(url)}</code>
         <button type="button" data-ko="copy-dav" class="btn-ghost shrink-0 py-1 text-xs">📋 Copy</button></span>
         Username <b>${esc(username)}</b>, password <code class="rounded bg-slate-800 px-2 py-0.5">${esc(code)}</code> (the same sync code). Name it <b>NovelCheck</b>. When it asks for a <b>start folder</b>, type <b>/</b> (a single slash), not the name or the username.</li>
