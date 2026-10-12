@@ -70,6 +70,8 @@ func migrate(d *sqlx.DB) error {
 		{"device_books", "author", "TEXT NOT NULL DEFAULT ''"},
 		{"device_books", "ignored", "INTEGER NOT NULL DEFAULT 0"},
 		{"koreader_books", "ignored", "INTEGER NOT NULL DEFAULT 0"},
+		{"koreader_books", "highlights", "INTEGER NOT NULL DEFAULT 0"},
+		{"koreader_books", "notes", "INTEGER NOT NULL DEFAULT 0"},
 		{"queue_items", "hidden", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "pin_hash", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "owner", "INTEGER NOT NULL DEFAULT 0"},

@@ -1,57 +1,102 @@
-// 📊 Reading stats: your KOReader reading as a timeline, calendar, totals and
-// habits, all in this device's own time zone.
+// 📊 Reading stats: a report on your reading, in plain sentences. Pick a week,
+// month, year or all time; see what you read, how much, when and what kind;
+// then dig into any book, week, month or day. Everything is worked out on this
+// device in its own time zone.
 import { get } from "./api.js";
-import { $, esc } from "./ui.js";
+import { esc } from "./ui.js";
 import { ago, setBars } from "./progress.js";
 import { dayKey, keyDate, prepare } from "./statscalc.js";
-import { calendarView, habitsView, nowView, timelineView, totalsView } from "./statsviews.js";
+import { bounds } from "./statsperiods.js";
+import { reportHTML } from "./statsreport.js";
+import { bookPage, booksTab, dayPage, periodPage } from "./statsbooks.js";
+import { calendarTab } from "./statscalendar.js";
 
-const TABS = { now: "Now", timeline: "Timeline", calendar: "Calendar", totals: "Totals", habits: "Habits" };
+const TABS = { report: "Report", books: "Books", calendar: "Calendar" };
+const PERIODS = { week: "Week", month: "Month", year: "Year", all: "All time" };
 
-export async function renderStats(view) {
-  view.innerHTML = `<h1 class="mb-1 text-2xl font-bold">📊 Reading stats</h1><p class="text-slate-400">Loading…</p>`;
+export async function renderStats(view, state) {
+  view.innerHTML = `<h1 class="mb-2 text-2xl font-bold">📊 Reading stats</h1><p class="text-slate-400">Loading…</p>`;
   const data = await get("/api/me/reading-stats").catch(() => null);
   if (!data) {
-    view.innerHTML = `<h1 class="mb-1 text-2xl font-bold">📊 Reading stats</h1><p class="text-slate-400">Couldn't load your stats just now.</p>`;
+    view.innerHTML = `<h1 class="mb-2 text-2xl font-bold">📊 Reading stats</h1><p class="text-slate-400">Couldn't load your stats just now.</p>`;
     return;
   }
   const m = prepare(data);
   if (!m.rows.length) {
     const have = data.synced_at && m.books.length
-      ? `<p>NovelCheck has your statistics file (${m.books.length} book${m.books.length === 1 ? "" : "s"}, synced ${esc(ago(data.synced_at))}) but it holds no page-by-page reading yet. Open a book in KOReader, read a few pages, then press <b>Reading statistics → Synchronize now</b> again.</p>` : "";
+      ? `<p>NovelCheck has your statistics file (${m.books.length} book${m.books.length === 1 ? "" : "s"}, synced ${esc(ago(data.synced_at))}) but it holds no page-by-page reading yet. Read a few pages in KOReader, then press <b>Reading statistics → Synchronize now</b> again.</p>` : "";
     view.innerHTML = `<h1 class="mb-2 text-2xl font-bold">📊 Reading stats</h1>
       <div class="card space-y-2 text-sm text-slate-300"><p>No reading recorded yet.</p>${have}
-      <p>In KOReader, set up <b>Cloud storage</b> and <b>Reading statistics → Cloud sync</b> (Settings → KOReader setup has the steps), then press <b>Reading statistics → Synchronize now</b>. Your days and hours appear here after the next sync.</p>
-      <a href="#/profile" class="btn-secondary inline-flex">Back to Profile</a></div>`;
+      <p>In KOReader, run <b>NovelCheck → Set up everything</b>, then <b>NovelCheck → Sync reading statistics now</b>. (Settings → Kindle &amp; KOReader has the steps.)</p>
+      <a href="#/settings?s=kindle" class="btn-secondary inline-flex">Open Kindle settings</a></div>`;
     return;
   }
-  const s = { tab: "now", day: dayKey(Date.now()), month: new Date(), range: "month" };
-  s.month.setDate(1);
-  const draw = () => {
-    const body = { now: () => nowView(m), timeline: () => timelineView(m, s.day), calendar: () => calendarView(m, s.month),
-      totals: () => totalsView(m, s.range), habits: () => habitsView(m) }[s.tab]();
-    view.innerHTML = `<h1 class="mb-2 text-2xl font-bold">📊 Reading stats</h1>
-      <div class="mb-3 flex flex-wrap gap-1">${Object.entries(TABS).map(([k, v]) =>
-        `<button type="button" data-tab="${k}" class="${k === s.tab ? "btn-primary" : "btn-secondary"} px-3 py-1 text-sm">${esc(v)}</button>`).join("")}</div>
-      <div class="space-y-3">${body}</div>
-      <p class="mt-4 text-xs text-slate-500">Days and hours use this device's time zone. Pages are different pages seen; time is time with a page open (long pauses are cut short).</p>`;
-    setBars(view);
+  const now = new Date();
+  const s = { tab: "report", period: "month", offset: 0, kind: "week", month: new Date(now.getFullYear(), now.getMonth(), 1), page: null, stack: [], day: dayKey(Date.now()) };
+
+  const title = () => {
+    const b = bounds(s.period, s.offset);
+    const who = `${state.user.username}'s`;
+    return s.period === "all" ? `${who} reading, all time` : s.period === "week" && s.offset === 0 ? `${who} week in books` : `${who} ${b.title} in books`;
   };
+  const picker = () => `<div class="mb-4 space-y-2"><div class="flex flex-wrap gap-1">${Object.entries(PERIODS).map(([k, v]) =>
+      `<button type="button" data-period="${k}" class="${k === s.period ? "btn-primary" : "btn-secondary"} whitespace-nowrap px-2.5 py-1 text-sm">${v}</button>`).join("")}</div>
+    ${s.period === "all" ? "" : `<div class="flex items-center gap-2"><button type="button" data-offset="-1" class="btn-ghost px-3 py-1" aria-label="Earlier">‹</button>
+      <span class="min-w-0 flex-1 text-center text-sm text-slate-400">${esc(bounds(s.period, s.offset).title)}</span>
+      <button type="button" data-offset="1" class="btn-ghost px-3 py-1" aria-label="Later" ${s.offset >= 0 ? "disabled" : ""}>›</button></div>`}</div>`;
+
+  const body = () => {
+    if (s.page?.type === "book") return bookPage(m, s.page.idx);
+    if (s.page?.type === "period") return periodPage(m, s.page.kind, s.page.start);
+    if (s.page?.type === "day") return dayPage(m, s.page.key);
+    if (s.tab === "books") return booksTab(m, s);
+    if (s.tab === "calendar") return calendarTab(m, s.month);
+    return `<h2 class="mb-3 text-2xl font-bold">${esc(title())}</h2>${picker()}<div class="space-y-4">${reportHTML(m, s)}</div>`;
+  };
+
+  const draw = (top = false) => {
+    view.innerHTML = `<h1 class="mb-3 text-2xl font-bold">📊 Reading stats</h1>
+      ${s.page ? `<button type="button" data-back class="btn-ghost mb-3 px-3 py-1">‹ Back</button>` : `<div class="mb-4 flex flex-wrap gap-1">${Object.entries(TABS).map(([k, v]) =>
+        `<button type="button" data-tab="${k}" class="${k === s.tab ? "btn-primary" : "btn-secondary"} px-3 py-1.5 text-sm">${v}</button>`).join("")}</div>`}
+      ${body()}
+      <p class="mt-6 text-xs text-slate-500">Days and hours use this device's time zone. Time is time with a page open (long pauses are cut short); pages are different pages seen. Books and details come from your library where NovelCheck knows the book.</p>`;
+    setBars(view);
+    if (top) window.scrollTo(0, 0);
+  };
+  const open = (page) => {
+    s.stack.push(s.page);
+    s.page = page;
+    draw(true);
+  };
+
   view.onclick = (e) => {
-    const t = e.target.closest("[data-tab],[data-day],[data-month],[data-open-day],[data-range]");
+    const t = e.target.closest("[data-tab],[data-period],[data-offset],[data-kind],[data-period-open],[data-book],[data-day],[data-day-key],[data-shift],[data-month],[data-back],[data-open-lib]");
     if (!t) return;
-    if (t.dataset.tab) s.tab = t.dataset.tab;
-    else if (t.dataset.day) {
-      const d = keyDate(s.day);
-      d.setDate(d.getDate() + Number(t.dataset.day));
-      s.day = dayKey(d.getTime());
-    } else if (t.dataset.month) s.month = new Date(s.month.getFullYear(), s.month.getMonth() + Number(t.dataset.month), 1);
-    else if (t.dataset.openDay) {
-      s.day = t.dataset.openDay;
-      s.tab = "timeline";
-    } else if (t.dataset.range) s.range = t.dataset.range;
+    const d = t.dataset;
+    if (d.back !== undefined) {
+      s.page = s.stack.pop() || null;
+      return draw(true);
+    }
+    if (d.openLib) return void (location.hash = "#/library");
+    if (d.book !== undefined) return open({ type: "book", idx: Number(d.book) });
+    if (d.periodOpen) {
+      const [kind, start] = d.periodOpen.split(":");
+      return open({ type: "period", kind, start: Number(start) });
+    }
+    if (d.dayKey) return open({ type: "day", key: d.dayKey });
+    if (d.day) return open({ type: "day", key: dayKey(Number(d.day)) });
+    if (d.shift && s.page?.type === "day") {
+      const x = keyDate(s.page.key);
+      x.setDate(x.getDate() + Number(d.shift));
+      s.page = { type: "day", key: dayKey(x.getTime()) };
+      return draw();
+    }
+    if (d.tab) s.tab = d.tab;
+    else if (d.period) [s.period, s.offset] = [d.period, 0];
+    else if (d.offset) s.offset = Math.min(0, s.offset + Number(d.offset));
+    else if (d.kind) s.kind = d.kind;
+    else if (d.month) s.month = new Date(s.month.getFullYear(), s.month.getMonth() + Number(d.month), 1);
     draw();
   };
   draw();
-  $("h1", view)?.focus?.();
 }

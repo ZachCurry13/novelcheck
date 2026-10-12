@@ -72,7 +72,7 @@ export function within(m, from, to = Infinity) {
   }
   const books = [...perBook.values()].sort((a, b) => b.sec - a.sec);
   const finished = books.filter((b) => (m.books[b.book]?.percent || 0) >= 0.97).length;
-  return { sec, pages, books, finished, days: byDay(rows).size };
+  return { sec, pages, books, finished, days: byDay(rows).size, rows };
 }
 
 export function byHourOfDay(rows) {
@@ -100,6 +100,7 @@ export function timeline(m, key) {
 }
 
 export function fmtDur(sec) {
+  if (sec > 0 && sec < 60) return `${Math.round(sec)} sec`;
   const m = Math.round(sec / 60);
   if (m < 60) return `${m} min`;
   const h = Math.floor(m / 60);

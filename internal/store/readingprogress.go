@@ -24,6 +24,8 @@ type KOReaderBook struct {
 	Percent     float64 `db:"percent" json:"percent"`
 	ReadSeconds int64   `db:"read_seconds" json:"read_seconds"`
 	LastOpen    int64   `db:"last_open" json:"last_open"`
+	Highlights  int     `db:"highlights" json:"highlights"`
+	Notes       int     `db:"notes" json:"notes"`
 	Ignored     bool    `db:"ignored" json:"-"` // the person marked it "not a book"
 	Owned       bool    `db:"-" json:"owned"`   // in the family's library (not just looked up)
 }
@@ -60,8 +62,8 @@ func (s *Store) SaveKOReaderBooks(userID int64, books []KOReaderBook) (int, erro
 	}
 	matched := 0
 	for _, b := range books {
-		if _, err := tx.Exec(`INSERT OR REPLACE INTO koreader_books (user_id, title, authors, md5, book_id, pages, percent, read_seconds, last_open, ignored)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, userID, b.Title, b.Authors, b.MD5, b.BookID, b.Pages, b.Percent, b.ReadSeconds, b.LastOpen, b.Ignored); err != nil {
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO koreader_books (user_id, title, authors, md5, book_id, pages, percent, read_seconds, last_open, ignored, highlights, notes)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, userID, b.Title, b.Authors, b.MD5, b.BookID, b.Pages, b.Percent, b.ReadSeconds, b.LastOpen, b.Ignored, b.Highlights, b.Notes); err != nil {
 			return 0, err
 		}
 		if b.BookID == nil {
@@ -86,7 +88,7 @@ func (s *Store) SaveKOReaderBooks(userID int64, books []KOReaderBook) (int, erro
 // KOReaderBooks lists someone's KOReader books, last opened first.
 func (s *Store) KOReaderBooks(userID int64, limit int) ([]KOReaderBook, error) {
 	out := []KOReaderBook{}
-	err := s.DB.Select(&out, `SELECT title, authors, md5, book_id, pages, percent, read_seconds, last_open
+	err := s.DB.Select(&out, `SELECT title, authors, md5, book_id, pages, percent, read_seconds, last_open, highlights, notes
 		FROM koreader_books WHERE user_id = ? AND ignored = 0 ORDER BY last_open DESC, title LIMIT ?`, userID, limit)
 	return out, err
 }

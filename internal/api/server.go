@@ -50,6 +50,7 @@ type Server struct {
 	Safe        *safemode.State      // safe mode: background work off until an admin leaves it
 	Web         fs.FS                // embedded static assets
 	logins      *loginLimiter
+	hoursSeen   sync.Map      // user id -> the stored statistics file was read once this run
 	hoursTried  sync.Map      // user id -> when the stored statistics file was last read for hours (readingstats_handlers.go)
 	resolvedAt  sync.Map      // user id -> when their unmatched KOReader books were last looked up (koresolve.go)
 	codeGuesses *loginLimiter // wrong sync codes (KOReader, WebDAV, plugin)

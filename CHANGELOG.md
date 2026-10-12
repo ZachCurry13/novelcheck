@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.43.0]
+
+### 📊 Reading stats, rebuilt to read like a report
+- **A report, not a dashboard.** Each card asks a question and answers it in a plain sentence: "You read 8 books", "You turned 2,309 pages", "You mostly read fiction", "Adventure is your top genre", "You read most in the evening, around 9 pm". Pick **Week, Month, Year or All time** and step back and forward through them (‹ ›). There is a **📊 Stats** entry in the menu now.
+- **What's in the Report tab:** big numbers (books, pages, reading time, authors, days, finished); a row of the covers you read (tap one for its page); pages over time; reading time by day or month; your pace (and, for this year, how many books you're on track for); fiction vs non-fiction; top genres; what peppers you read; book length; your most read authors with their covers; series progress ("2 of 7 books"); when you read; and your top books by time. Cards for things NovelCheck doesn't know about a book (genre, series) simply leave those books out.
+- **Books tab, like KOReader's lists:** your reading **by week** or **by month** with time and pages; tap one to see the books read then, and tap a book for **its own page**: time spent, days reading, average per day, start and last read dates, last page of the total, pages turned, average time per page, **highlights and notes**.
+- **Calendar tab:** a month you can move through and the last year at a glance; tap a day for its hours and books.
+- Highlights and notes now come across from KOReader's statistics too. The first time you open Reading stats after updating, NovelCheck re-reads your stored statistics file to pick them up.
+
 ## [1.42.0]
 
 ### ⚙ Profile and Settings, split

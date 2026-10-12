@@ -183,7 +183,7 @@ func (s *Server) importKOStats(userID int64) {
 	list := make([]store.KOReaderBook, 0, len(books))
 	for _, b := range books {
 		list = append(list, store.KOReaderBook{Title: b.Title, Authors: b.Authors, MD5: b.MD5, Pages: b.Pages,
-			Percent: b.Percent, ReadSeconds: b.ReadSeconds, LastOpen: b.LastOpen.Unix()})
+			Percent: b.Percent, ReadSeconds: b.ReadSeconds, LastOpen: b.LastOpen.Unix(), Highlights: b.Highlights, Notes: b.Notes})
 	}
 	if _, err := s.Store.SaveKOReaderBooks(userID, list); err != nil {
 		log.Printf("koreader statistics for user %d: %v", userID, err)

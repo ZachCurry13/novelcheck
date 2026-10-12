@@ -25,6 +25,8 @@ type StatBook struct {
 	Percent     float64 // 0..1, from the newest page turn
 	ReadSeconds int64
 	LastOpen    time.Time
+	Highlights  int
+	Notes       int
 }
 
 // ReadStats reads a statistics.sqlite3 file.
@@ -35,7 +37,7 @@ func ReadStats(path string) ([]StatBook, error) {
 	}
 	defer db.Close()
 	rows, err := db.Query(`SELECT COALESCE(b.title, ''), COALESCE(b.authors, ''), COALESCE(b.md5, ''), COALESCE(b.pages, 0),
-		COALESCE(b.total_read_time, 0), COALESCE(b.last_open, 0),
+		COALESCE(b.total_read_time, 0), COALESCE(b.last_open, 0), COALESCE(b.highlights, 0), COALESCE(b.notes, 0),
 		COALESCE((SELECT p.page FROM page_stat_data p WHERE p.id_book = b.id ORDER BY p.start_time DESC LIMIT 1), 0),
 		COALESCE((SELECT p.total_pages FROM page_stat_data p WHERE p.id_book = b.id ORDER BY p.start_time DESC LIMIT 1), 0)
 		FROM book b`)
@@ -48,7 +50,7 @@ func ReadStats(path string) ([]StatBook, error) {
 		var b StatBook
 		var lastOpen int64
 		var total int
-		if err := rows.Scan(&b.Title, &b.Authors, &b.MD5, &b.Pages, &b.ReadSeconds, &lastOpen, &b.LastPage, &total); err != nil {
+		if err := rows.Scan(&b.Title, &b.Authors, &b.MD5, &b.Pages, &b.ReadSeconds, &lastOpen, &b.Highlights, &b.Notes, &b.LastPage, &total); err != nil {
 			return nil, err
 		}
 		b.Title = strings.TrimSpace(b.Title)

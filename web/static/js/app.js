@@ -61,7 +61,7 @@ const managerRoutes = new Set(["check", "import", "shelf", "admin", "duplicates"
 const ROUTE_AREA = { system: "system", usage: "system", deletions: "calibre", deepscan: "deep" };
 const moduleRoutes = { queue: "queue", import: "import", shelf: "import" }; // pages an admin can turn off
 // Pages without a menu item of their own light up the one they belong to.
-const NAV_OF = { stats: "profile", series: "collections", wishlist: "discover", events: "discover", import: "settings", shelf: "settings", deepscan: "admin", usage: "admin", system: "admin",
+const NAV_OF = { series: "collections", wishlist: "discover", events: "discover", import: "settings", shelf: "settings", deepscan: "admin", usage: "admin", system: "admin",
   duplicates: "admin", deletions: "admin" };
 
 function showOnly(id) {
