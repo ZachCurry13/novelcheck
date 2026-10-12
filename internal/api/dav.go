@@ -109,6 +109,13 @@ func (s *Server) handleDAV(w http.ResponseWriter, r *http.Request) {
 		}
 		r.Body = http.MaxBytesReader(w, r.Body, davMaxBytes)
 	}
+	// Someone typing "dav" as the start folder means their own folder, not one inside it.
+	if rest := strings.TrimPrefix(r.URL.Path, "/dav"); strings.HasPrefix(rest, "/dav/") || rest == "/dav" {
+		for strings.HasPrefix(rest, "/dav/") || rest == "/dav" {
+			rest = strings.TrimPrefix(rest, "/dav")
+		}
+		r.URL.Path, r.URL.RawPath = "/dav"+rest, ""
+	}
 	if r.Method == "PROPFIND" { // KOReader asks for its "start folder": make it, whatever it's called
 		if rel := strings.Trim(path.Clean("/"+strings.TrimPrefix(r.URL.Path, "/dav")), "/"); rel != "" && len(rel) < 200 {
 			_ = os.MkdirAll(filepath.Join(dir, filepath.FromSlash(rel)), 0o700)

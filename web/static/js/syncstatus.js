@@ -1,8 +1,8 @@
 // Profile: is reading sync really working? When KOReader last reported its
 // place (progress sync) and when its statistics last arrived, with a nudge
 // when nothing has.
-import { get } from "./api.js";
-import { esc } from "./ui.js";
+import { get, post } from "./api.js";
+import { esc, attempt, toast } from "./ui.js";
 import { ago } from "./progress.js";
 
 export async function renderSyncStatus(host) {
@@ -20,5 +20,10 @@ export async function renderSyncStatus(host) {
       <p class="text-xs text-slate-500">From the KOReader plugin's <b>Report books on this device</b>.</p></div>` : ""}
     ${(s.webdav || []).length ? `<div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">🗂️ Latest Cloud storage (WebDAV) requests</p>
       <ul class="space-y-1">${s.webdav.map((w) => `<li>${w.status < 300 ? "✅" : "⚠️"} ${esc(ago(w.at))}: ${esc(w.method)} <code>${esc(w.path)}</code>${w.name ? ` as <b>${esc(w.name)}</b>` : ""}: ${esc(w.note)}</li>`).join("")}</ul></div>` : `<p class="text-xs text-slate-500">🗂️ No Cloud storage (WebDAV) request has reached NovelCheck since it started. If KOReader says it can't fetch the folder, the address isn't getting here.</p>`}
+    <button type="button" data-tidy class="btn-ghost py-1 text-xs" title="Removes empty folders KOReader's Cloud storage left in your NovelCheck folder. Files are never touched.">🧹 Remove empty folders</button>
     <p class="text-xs text-slate-500">Progress syncs as you read (when KOReader's Auto sync is on). Statistics sync when you press Synchronize now.</p>`;
+  host.querySelector("[data-tidy]").onclick = async () => {
+    const r = await attempt(() => post("/api/me/dav/tidy", {}));
+    if (r) toast(r.removed ? `Removed ${r.removed} empty folder${r.removed === 1 ? "" : "s"}` : "Nothing to tidy");
+  };
 }

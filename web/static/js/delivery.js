@@ -126,13 +126,25 @@ function statsHTML(url, username, code) {
   return `<div class="space-y-2 border-t border-slate-800 pt-4">
     <h3 class="font-semibold">📊 Reading statistics</h3>
     <p class="text-sm text-slate-400">NovelCheck can also keep KOReader's reading statistics: then Up Next shows every book opened on your KOReader devices (any book, not only ones from NovelCheck), how far you are and how long you've read. With several devices, each one syncs to the same place.</p>
+    <p class="text-sm font-medium">Part 1: add NovelCheck as Cloud storage (once per device)</p>
     <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
-      <li>In KOReader's file browser, tap the <b>⚙ Settings</b> icon in the top menu, then <b>Cloud storage</b>. Tap <b>＋</b>, choose <b>WebDAV</b> and enter:
-        <span class="mt-1 flex items-center gap-2"><code class="min-w-0 break-all rounded bg-slate-800 px-2 py-1 text-xs">${esc(url)}</code>
-        <button type="button" data-ko="copy-dav" class="btn-ghost shrink-0 py-1 text-xs">📋 Copy</button></span>
-        Username <b>${esc(username)}</b>, password <code class="rounded bg-slate-800 px-2 py-0.5">${esc(code)}</code> (the same sync code). Name it <b>NovelCheck</b>. When it asks for a <b>start folder</b>, type <b>/</b> (a single slash), not the name or the username.</li>
-      <li>In a book, open the top menu → <b>🛠 Tools</b> → <b>Reading statistics</b> → <b>Settings</b> → <b>Cloud sync</b>, pick <b>NovelCheck</b>. In the folder list, press and <b>hold for a couple of seconds</b> on the bold line <b>Long-press here to choose current folder</b> until a <b>Choose this folder?</b> box appears, then tap <b>Choose</b>. Don't open any folder named <b>dav/</b> in the list.</li>
-      <li>Then <b>Reading statistics</b> → <b>Synchronize now</b>. Do that again whenever you want NovelCheck to catch up.</li>
+      <li>In KOReader's file browser, tap the <b>⚙ Settings</b> icon in the top menu, then <b>Cloud storage</b>, then <b>＋</b>, then <b>WebDAV</b>.</li>
+      <li>Fill the five boxes in this order:
+        <ul class="mt-1 list-disc space-y-1 pl-5">
+          <li><b>Name:</b> NovelCheck</li>
+          <li><b>Address:</b> <code class="break-all rounded bg-slate-800 px-2 py-0.5 text-xs">${esc(url)}</code> <button type="button" data-ko="copy-dav" class="btn-ghost py-0.5 text-xs">📋 Copy</button></li>
+          <li><b>Username:</b> <code class="rounded bg-slate-800 px-2 py-0.5">${esc(username)}</code></li>
+          <li><b>Password:</b> <code class="rounded bg-slate-800 px-2 py-0.5">${esc(code)}</code> (your sync code)</li>
+          <li><b>Folder:</b> just <code class="rounded bg-slate-800 px-2 py-0.5">/</code> (one slash, nothing else)</li>
+        </ul></li>
+      <li>Tap <b>Save</b>, then tap <b>NovelCheck</b> in the list. An empty list is normal.</li>
     </ol>
+    <p class="pt-1 text-sm font-medium">Part 2: tell Reading statistics to use it</p>
+    <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300" start="4">
+      <li>Open any book, then the top menu → <b>🛠 Tools</b> → <b>Reading statistics</b> → <b>Settings</b> → <b>Cloud sync</b>, and pick <b>NovelCheck</b>.</li>
+      <li>In the folder list, <b>press and hold for 2 seconds</b> on the bold line <b>Long-press here to choose current folder</b>. A box <b>Choose this folder?</b> appears: tap <b>Choose</b>. Don't open folders named <b>dav</b>.</li>
+      <li>Then <b>Reading statistics</b> → <b>Synchronize now</b>. Repeat it whenever you want NovelCheck to catch up.</li>
+    </ol>
+    <p class="text-xs text-slate-500">Not working? Profile → Reading sync lists the latest requests and why a sign-in failed. <b>🧹 Remove empty folders</b> there clears leftovers.</p>
     <p class="text-xs text-slate-500">Menu names can differ a little between KOReader versions.</p></div>`;
 }

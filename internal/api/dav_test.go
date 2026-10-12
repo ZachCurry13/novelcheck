@@ -171,3 +171,52 @@ func TestSyncCodeGuessesAreLimited(t *testing.T) {
 		t.Fatalf("after 20 wrong guesses even the right code waits: %d", got)
 	}
 }
+
+func TestDAVStartFoldersStayTidy(t *testing.T) {
+	dataDir := t.TempDir()
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = dataDir })
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, code := admin.do("GET", "/api/me/kosync", nil, false)
+	list := func(path string) int {
+		req, _ := http.NewRequest("PROPFIND", srv.URL+path, nil)
+		req.SetBasicAuth("admin", code["code"].(string))
+		req.Header.Set("Depth", "1")
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		return res.StatusCode
+	}
+	folders := func() int {
+		n := 0
+		_ = filepath.WalkDir(filepath.Join(dataDir, "koreader"), func(_ string, d os.DirEntry, _ error) error {
+			if d != nil && d.IsDir() {
+				n++
+			}
+			return nil
+		})
+		return n
+	}
+	list("/dav/") // makes the person's own folder
+	base := folders()
+	for _, p := range []string{"/dav/dav/", "/dav/dav/dav/"} { // "dav" typed as the start folder
+		if got := list(p); got != 207 {
+			t.Fatalf("%s: %d", p, got)
+		}
+	}
+	if got := folders(); got != base {
+		t.Fatalf("typing dav as the start folder made folders: %d -> %d", base, got)
+	}
+	list("/dav/Leftover/") // a real, other name still works, and leaves an empty folder
+	if got := folders(); got != base+1 {
+		t.Fatalf("start folder not made: %d", got)
+	}
+	if _, out := admin.do("POST", "/api/me/dav/tidy", map[string]int{}, true); out["removed"] != float64(1) {
+		t.Fatalf("tidy: %v", out)
+	}
+	if got := folders(); got != base {
+		t.Fatalf("empty folder left: %d", got)
+	}
+}

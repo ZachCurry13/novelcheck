@@ -9,6 +9,8 @@ becomes the release notes for that version and is shown in the app under
 ### 🔑 Sync codes you can type
 - **New sync codes are three plain words** (like `blueduckcheese`) instead of 12 random letters, so they're easy to read out and type on an e-reader. Existing codes keep working; press **Make a new sync code** in Profile → KOReader setup to get a word code (KOReader then signs in again with it).
 - After 20 wrong sync codes from one address in 10 minutes, KOReader, Cloud storage and the plugin refuse that address for a while, which keeps the shorter codes safe from guessing.
+- **Cloud storage stays clean:** typing `dav` as KOReader's start folder now means your own folder instead of making a `dav` folder inside it. **Profile → 🔄 Reading sync → 🧹 Remove empty folders** clears leftovers from earlier attempts (empty folders only; files are never touched).
+- **Clearer steps** (Profile → KOReader setup): the five Cloud storage boxes are listed in order, split into "add it once" and "tell Reading statistics to use it".
 - The setup steps now explain KOReader's folder picker (hold the bold "Long-press here to choose current folder" line), and say Cloud storage is under the **⚙ Settings** icon in KOReader's top menu.
 
 ## [1.36.2]
