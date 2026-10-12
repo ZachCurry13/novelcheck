@@ -543,3 +543,15 @@ CREATE TABLE IF NOT EXISTS kosync_progress (
     updated_at INTEGER NOT NULL DEFAULT 0,  -- Unix seconds, as KOReader expects
     PRIMARY KEY (user_id, document)
 );
+-- A reader's reading by the hour (UTC), from the page turns in KOReader's
+-- statistics; replaced on each sync. The browser draws it in local time.
+CREATE TABLE IF NOT EXISTS reading_hours (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    hour    INTEGER NOT NULL,             -- Unix seconds, start of the hour (UTC)
+    title   TEXT NOT NULL,
+    authors TEXT NOT NULL DEFAULT '',
+    md5     TEXT NOT NULL DEFAULT '',
+    seconds INTEGER NOT NULL DEFAULT 0,
+    pages   INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, hour, title, authors, md5)
+);

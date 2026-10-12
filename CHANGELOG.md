@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.37.0]
+
+### 📊 Reading stats
+- **A new Reading stats page** (Profile → Reading sync → **📊 Reading stats**) built from KOReader's reading statistics. **Now:** the book you're reading, today, your last 7 days and your streak. **Timeline:** any day by the hour, with the books you read. **Calendar:** a month and the last year as a heatmap; tap a day for its timeline. **Totals:** 7 days, 30 days, a year or all time, with time, pages, books read, finished, and your most-read books. **Habits:** the hours and days you read most, your longest streak and best day.
+- **Your own time zone:** days and hours are worked out on your device, so a late-night read lands on the right day. NovelCheck stores only the reading by the hour (UTC).
+- It fills in after KOReader's **Reading statistics → Synchronize now** (it needs the Cloud storage setup). Reading time is time with a page open; long pauses are cut short (10 minutes a page at most).
+- Next: stats for people without KOReader (from Hardcover and Goodreads imports), then sharing a profile with the family and shareable cards.
+
 ## [1.36.4]
 
 ### 🔗 A short catalog address

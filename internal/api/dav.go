@@ -188,6 +188,17 @@ func (s *Server) importKOStats(userID int64) {
 	if _, err := s.Store.SaveKOReaderBooks(userID, list); err != nil {
 		log.Printf("koreader statistics for user %d: %v", userID, err)
 	}
+	if hours, err := kosync.ReadHours(path); err != nil {
+		log.Printf("koreader reading hours for user %d: %v", userID, err)
+	} else {
+		rows := make([]store.ReadingHour, 0, len(hours))
+		for _, h := range hours {
+			rows = append(rows, store.ReadingHour{Title: h.Title, Authors: h.Authors, MD5: h.MD5, Hour: h.Hour, Seconds: h.Seconds, Pages: h.Pages})
+		}
+		if err := s.Store.SaveReadingHours(userID, rows); err != nil {
+			log.Printf("koreader reading hours for user %d: %v", userID, err)
+		}
+	}
 }
 
 // noteDAVRefusal records why a sign-in failed: no name sent, a name nobody

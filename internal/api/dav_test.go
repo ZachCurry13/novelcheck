@@ -128,6 +128,20 @@ func TestKOReaderStatisticsFolder(t *testing.T) {
 		t.Fatalf("koreader books: %v", books)
 	}
 
+	// The page turns arrive by the hour for the Reading stats page.
+	_, statsOut := admin.do("GET", "/api/me/reading-stats", nil, false)
+	statHours, _ := statsOut["hours"].([]any)
+	if sb, _ := statsOut["books"].([]any); len(sb) != 3 || len(statHours) != 2 {
+		t.Fatalf("reading stats: %v", statsOut)
+	}
+	total := 0.0
+	for _, h := range statHours {
+		total += h.([]any)[2].(float64)
+	}
+	if total != 50 {
+		t.Fatalf("seconds read: %v", statHours)
+	}
+
 	// Dune was queued and opened since: Reading, 43%. Mort (finished long
 	// ago, not queued) isn't added to Up Next.
 	_, items := admin.doList("GET", "/api/queue")

@@ -48,3 +48,26 @@ func TestReadStats(t *testing.T) {
 		t.Fatal("a missing file")
 	}
 }
+
+func TestReadHours(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "statistics.sqlite3")
+	MakeStats(t, path)
+	hours, err := ReadHours(path)
+	if err != nil || len(hours) != 2 {
+		t.Fatalf("%+v %v", hours, err)
+	}
+	var dune, mort StatHour
+	for _, h := range hours {
+		if h.Title == "Dune" {
+			dune = h
+		} else {
+			mort = h
+		}
+	}
+	if dune.Seconds != 90 || dune.Pages != 3 || dune.MD5 != "abc123" || dune.Hour != 0 {
+		t.Fatalf("dune: %+v", dune)
+	}
+	if mort.Seconds != 20 || mort.Authors != "Terry Pratchett" {
+		t.Fatalf("mort: %+v", mort)
+	}
+}

@@ -20,6 +20,7 @@ export async function renderSyncStatus(host) {
       <p class="text-xs text-slate-500">From the KOReader plugin's <b>Report books on this device</b>.</p></div>` : ""}
     ${(s.webdav || []).length ? `<div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">🗂️ Latest Cloud storage (WebDAV) requests</p>
       <ul class="space-y-1">${s.webdav.map((w) => `<li>${w.status < 300 ? "✅" : "⚠️"} ${esc(ago(w.at))}: ${esc(w.method)} <code>${esc(w.path)}</code>${w.name ? ` as <b>${esc(w.name)}</b>` : ""}: ${esc(w.note)}</li>`).join("")}</ul></div>` : `<p class="text-xs text-slate-500">🗂️ No Cloud storage (WebDAV) request has reached NovelCheck since it started. If KOReader says it can't fetch the folder, the address isn't getting here.</p>`}
+    <a href="#/stats" class="btn-secondary inline-flex py-1 text-sm">📊 Reading stats</a>
     <button type="button" data-tidy class="btn-ghost py-1 text-xs" title="Removes empty folders KOReader's Cloud storage left in your NovelCheck folder. Files are never touched.">🧹 Remove empty folders</button>
     <p class="text-xs text-slate-500">Progress syncs as you read (when KOReader's Auto sync is on). Statistics sync when you press Synchronize now.</p>`;
   host.querySelector("[data-tidy]").onclick = async () => {
