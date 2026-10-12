@@ -1,55 +1,38 @@
-// Profile: delivery preference, password change, and read-only content rules.
+// Profile: who you are. Your name and role, a few numbers from your reading,
+// your reading taste, your password and the content rules on this account.
+// Everything you can set lives under Settings.
 import { put } from "./api.js";
 import { $, esc, attempt, ageLabel } from "./ui.js";
 import { RULES } from "./users.js";
-import { refreshUser } from "./app.js";
 import { openGuide } from "./guide.js";
-import { on, deliveryOptions } from "./modules.js";
-import { renderPushCard } from "./push.js";
-import { amazonStepsHTML, openKOReaderSetup } from "./delivery.js";
+import { on } from "./modules.js";
 import { openTaste } from "./taste.js";
-import { profileExtrasHTML, bindProfileExtras } from "./profileextras.js";
-import { familyCardHTML, bindFamilyCard } from "./familysettings.js";
-import { renderSyncStatus } from "./syncstatus.js";
-import { renderPluginCard } from "./pluginmanage.js";
-import { renderHardcover } from "./hardcover.js";
-import { renderLibbyCard } from "./libby.js";
+import { renderReadingSummary } from "./profilesummary.js";
+
+const ROLES = { admin: "Admin", editor: "Editor", restricted: "Kid account", viewer: "Reader" };
 
 export async function renderProfile(view, state) {
   const u = state.user;
   const active = RULES.filter(([k]) => u[k]).map(([, l]) => `<li>${esc(l)}</li>`).join("");
+  const role = ROLES[u.role] || u.role;
   view.innerHTML = `
-    <h1 class="mb-4 text-2xl font-bold">Profile — ${esc(u.username)}</h1>
+    <div class="mb-4 flex flex-wrap items-center gap-3"><span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-indigo-700 text-2xl font-bold text-white" aria-hidden="true">${esc((u.username || "?").slice(0, 1).toUpperCase())}</span>
+      <div class="min-w-0"><h1 class="break-words text-2xl font-bold">${esc(u.username)}</h1>
+        <p class="text-sm text-slate-400">${esc(role)}${u.age_level ? ` · 👪 ${esc(ageLabel(u.age_level))}` : ""}</p></div>
+      <a href="#/settings" class="btn-secondary ml-auto">⚙ Settings</a></div>
     <div class="grid gap-4 lg:grid-cols-2">
-      ${profileExtrasHTML(u)}
-      <form id="delivery" class="card space-y-3${on(u, "queue") ? "" : " module-off"}">
-        <h2 class="text-lg font-semibold">"Start Reading" delivery</h2>
-        <select name="delivery_method" class="input">${deliveryOptions(u, u.delivery_method)}</select>
-        <div><label class="label" for="kindle-email">Send-to-Kindle address</label>
-          <input id="kindle-email" name="kindle_email" class="input" placeholder="name@kindle.com"></div>
-        <details class="text-xs text-slate-400${on(u, "send_to_kindle") ? "" : " module-off"}"><summary class="cursor-pointer">Books are emailed from
-          <b>${esc(u.delivery_from || "the admin's sender address")}</b>. How to approve it on Amazon</summary>
-          <div class="mt-2">${amazonStepsHTML(u.delivery_from)}</div></details>
-        <button type="button" id="ko-setup" class="btn-ghost w-full text-sm${on(u, "koreader") ? "" : " module-off"}">📖 KOReader setup: catalog address, QR code and reading sync</button>
-        <button class="btn-primary">Save delivery settings</button>
-      </form>
+      <div id="reading-summary" class="card space-y-2${on(u, "koreader") ? "" : " module-off"} lg:col-span-2"></div>
+      ${on(u, "queue") && on(u, "suggestions") && on(u, "taste") ? `<div class="card space-y-2">
+        <h2 class="text-lg font-semibold">🎯 Your reading taste</h2>
+        <p class="text-sm text-slate-400">Optional: mark books you know (want to read, read &amp; liked, …) so 💡 Suggested Reads on your Nightstand fit you better.</p>
+        <button type="button" id="taste-open" class="btn-secondary">Rate some books</button></div>` : ""}
       <form id="password" class="card space-y-3">
         <h2 class="text-lg font-semibold">Change password</h2>
         <input name="current_password" type="password" required placeholder="Current password" class="input" autocomplete="current-password">
         <input name="new_password" type="password" required minlength="8" placeholder="New password (8+ chars)" class="input" autocomplete="new-password">
         <button class="btn-primary">Update password</button>
       </form>
-      ${familyCardHTML(u)}
-      ${on(u, "queue") && on(u, "suggestions") && on(u, "taste") ? `<div class="card space-y-2 lg:col-span-2">
-        <h2 class="text-lg font-semibold">🎯 Your reading taste</h2>
-        <p class="text-sm text-slate-400">Optional: mark books you know (want to read, read &amp; liked, …) so 💡 Suggested Reads under Nightstand fit you better.</p>
-        <button type="button" id="taste-open" class="btn-secondary">Rate some books</button></div>` : ""}
-      <div id="sync-card" class="card space-y-2${on(u, "koreader") ? "" : " module-off"}"></div>
-      <div id="hardcover-card" class="card space-y-2"></div>
-      <div id="plugin-card" class="card space-y-2${on(u, "koreader") ? "" : " module-off"}"></div>
-      <div id="libby-card" class="card space-y-2"></div>
-      <div id="push-card" class="card space-y-3 lg:col-span-2"></div>
-      <div class="card lg:col-span-2">
+      <div class="card">
         <h2 class="mb-2 text-lg font-semibold">Content rules on this account</h2>
         ${u.age_level ? `<p class="mb-2 text-sm text-slate-300">👪 Age group: <b>${esc(ageLabel(u.age_level))}</b>. Books a parent rated for older readers are hidden.</p>` : ""}
         ${active ? `<ul class="list-disc pl-5 text-sm text-slate-300">${active}</ul>`
@@ -64,30 +47,9 @@ export async function renderProfile(view, state) {
       </div>
     </div>`;
 
-  const dform = $("#delivery", view);
-  dform.kindle_email.value = u.kindle_email;
-  dform.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const ok = await attempt(() => put("/api/me/delivery", {
-      delivery_method: dform.delivery_method.value,
-      kindle_email: dform.kindle_email.value.trim(),
-    }), "Delivery settings saved");
-    if (ok) await refreshUser();
-  });
-
   $("#replay-guide", view).addEventListener("click", () => openGuide(state));
-  bindProfileExtras(view);
-  bindFamilyCard(view, () => renderProfile(view, state));
-  renderPushCard($("#push-card", view), u);
-  renderHardcover($("#hardcover-card", view));
-  renderLibbyCard($("#libby-card", view));
-  if (on(u, "koreader")) {
-    renderSyncStatus($("#sync-card", view));
-    renderPluginCard($("#plugin-card", view));
-  }
-  $("#ko-setup", view).addEventListener("click", () => openKOReaderSetup());
   $("#taste-open", view)?.addEventListener("click", () => openTaste());
-
+  if (on(u, "koreader")) renderReadingSummary($("#reading-summary", view));
   $("#password", view).addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);

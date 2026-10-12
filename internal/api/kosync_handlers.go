@@ -38,7 +38,7 @@ func (s *Server) kosyncUser(w http.ResponseWriter, r *http.Request) *store.User 
 	u, ok := s.Store.KosyncUser(r.Header.Get("x-auth-user"), r.Header.Get("x-auth-key"))
 	if !ok {
 		s.codeGuesses.fail(remoteHost(r))
-		kosyncJSON(w, http.StatusUnauthorized, map[string]string{"message": "Unauthorized: use your NovelCheck name and the sync code from Profile"})
+		kosyncJSON(w, http.StatusUnauthorized, map[string]string{"message": "Unauthorized: use your NovelCheck name and the sync code from Settings → KOReader setup"})
 		return nil
 	}
 	return u
@@ -61,7 +61,7 @@ func (s *Server) handleKosyncCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, ok := s.Store.KosyncUser(body.Username, body.Password); !ok {
 		s.codeGuesses.fail(remoteHost(r))
-		kosyncJSON(w, http.StatusPaymentRequired, map[string]string{"message": "Use your NovelCheck name and the sync code from Profile → KOReader"})
+		kosyncJSON(w, http.StatusPaymentRequired, map[string]string{"message": "Use your NovelCheck name and the sync code from Settings → KOReader"})
 		return
 	}
 	kosyncJSON(w, http.StatusCreated, map[string]string{"username": body.Username})

@@ -9,7 +9,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/hardcover"
 )
 
-// Hardcover (Profile → Hardcover): each person pastes their own token; it's
+// Hardcover (Settings → Hardcover): each person pastes their own token; it's
 // tested, kept secret, and their reading and read shelves are pulled in
 // hourly or on "Sync now". hardcoverURL points tests at a fake server.
 var hardcoverURL = ""

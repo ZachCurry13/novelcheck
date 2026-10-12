@@ -78,7 +78,7 @@ func (s *Server) opdsUser(w http.ResponseWriter, r *http.Request) (*store.User, 
 			s.codeGuesses.fail(remoteHost(r))
 		}
 		w.Header().Set("WWW-Authenticate", `Basic realm="NovelCheck"`)
-		http.Error(w, "Use your NovelCheck username and the sync code from Profile → KOReader setup", http.StatusUnauthorized)
+		http.Error(w, "Use your NovelCheck username and the sync code from Settings → KOReader setup", http.StatusUnauthorized)
 		return nil, false
 	}
 	return u, true

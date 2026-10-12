@@ -3,7 +3,7 @@
 // top menu's links, so it shows exactly what this account may open.
 
 const MAIN = [["check", "📷", "Check"], ["library", "📚", "Library"], ["discover", "🧭", "Discover"], ["queue", "🛏️", "Nightstand"], ["collections", "📚", "Collections"], ["wishlist", "⭐", "Wishlist"], ["profile", "👤", "Profile"]];
-const ICON = { discover: "🧭", queue: "▶️", import: "💾", shelf: "📕", collections: "📚", admin: "🛠️", deepscan: "🧬", usage: "📈", system: "🩺", profile: "👤", wishlist: "⭐" };
+const ICON = { settings: "⚙️", discover: "🧭", queue: "▶️", import: "💾", shelf: "📕", collections: "📚", admin: "🛠️", deepscan: "🧬", usage: "📈", system: "🩺", profile: "👤", wishlist: "⭐" };
 
 let moreRoutes = [];
 

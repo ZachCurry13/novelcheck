@@ -154,7 +154,7 @@ function statsHTML(url, username, code) {
       <li>In the folder list, <b>press and hold for 2 seconds</b> on the bold line <b>Long-press here to choose current folder</b>. A box <b>Choose this folder?</b> appears: tap <b>Choose</b>. Don't open folders named <b>dav</b>.</li>
       <li>Then <b>Reading statistics</b> → <b>Synchronize now</b>. Repeat it whenever you want NovelCheck to catch up.</li>
     </ol>
-    <p class="text-xs text-slate-500">Not working? Profile → Reading sync lists the latest requests and why a sign-in failed. <b>🧹 Remove empty folders</b> there clears leftovers.</p>
+    <p class="text-xs text-slate-500">Not working? Settings → Reading sync lists the latest requests and why a sign-in failed. <b>🧹 Remove empty folders</b> there clears leftovers.</p>
     <p class="text-xs text-slate-500">Menu names can differ a little between KOReader versions.</p></div>`;
 }
 

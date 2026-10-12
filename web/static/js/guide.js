@@ -34,7 +34,7 @@ const EVERYONE = [
       <li>Below, <b>📱 On your KOReader</b> lists every book you've opened on your e-reader, and <b>💡 Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (a quick "Why not?" helps it learn).</li>
     </ul>`],
   ["👤 Your profile",
-    "In <b>Profile</b> you can pick a light or dark look, an easier-to-read font and less motion under <b>🎨 Appearance</b>, set how books reach your e-reader, change your password, and mark books you know under <b>🎯 Your reading taste</b> so your suggestions fit you better. Something not working, or an idea? <b>🐞 Report a problem or idea</b> at the bottom of any page tells your admin."],
+    "<b>Profile</b> is you: your name, a few numbers from your reading, your password and <b>🎯 Your reading taste</b> (mark books you know so your suggestions fit you better). <b>⚙ Settings</b> holds everything you can change: a light or dark look, an easier-to-read font and less motion under <b>🎨 Appearance</b>, how books reach your e-reader, your Kindle and KOReader, notifications, and your Hardcover and Libby accounts. Something not working, or an idea? <b>🐞 Report a problem or idea</b> at the bottom of any page tells your admin."],
   ["📱 Put it on your phone",
     "<b>iPhone:</b> tap <b>Share</b>, then <b>Add to Home Screen</b>.<br><b>Android:</b> tap <b>Install app</b> (or ⋮ → <b>Add to Home screen</b>). It then opens like a regular app."],
 ];
@@ -47,9 +47,9 @@ const MANAGER = [
   ["👧 Kids' accounts",
     "Under <b>Admin</b> (<b>Manage</b> on editor accounts) <b>→ Users &amp; Rules</b> you can add kid accounts by age group (they only see books rated for their age or younger), reset their passwords, and tick what each child should <b>not</b> see: Open Door or Dark Occult, say, and under <b>Hide content</b> whole groups (🗣️ Language, ⚔️ Violence, 🩸 Gore, 🍺 Substance Use, 🧩 Other) or single items like the F-word or self-harm. Hidden books never show up for them, not even in search."],
   ["💾 Importing a Kindle",
-    "Plug a Kindle into your computer, open <b>Profile → Import books</b>, and pick its <b>documents</b> folder (or bring in a list from Goodreads, Amazon and others). NovelCheck adds the books to a library you name, like \"Kids' Kindle\". It's yours: tick <b>🔒 Private</b> so only you and the admins see it, and manage it under <b>📚 Your libraries</b>."],
+    "Plug a Kindle into your computer, open <b>Settings → Import books</b>, and pick its <b>documents</b> folder (or bring in a list from Goodreads, Amazon and others). NovelCheck adds the books to a library you name, like \"Kids' Kindle\". It's yours: tick <b>🔒 Private</b> so only you and the admins see it, and manage it under <b>📚 Your libraries</b>."],
   ["📕 Paper books",
-    "Printed books count too. Open <b>Profile → 📕 Paper books</b>, pick or create a library such as \"Living room shelf\", and press <b>▦ Scan barcodes</b>: hold up one book after another and each is added and rated. You can also type a title or ISBN, or take a photo of the cover."],
+    "Printed books count too. Open <b>Settings → 📕 Paper books</b>, pick or create a library such as \"Living room shelf\", and press <b>▦ Scan barcodes</b>: hold up one book after another and each is added and rated. You can also type a title or ISBN, or take a photo of the cover."],
 ];
 
 const ADMIN = [
@@ -59,7 +59,7 @@ const ADMIN = [
     `<p class="mb-2">When someone presses <b>▶ Start Reading</b> on your Nightstand, NovelCheck can put the book on their e-reader:</p>
     <ul class="list-disc space-y-1 pl-5">
       <li><b>Kindle</b>: fill in <b>Admin → Delivery & Services → SMTP / Send-to-Kindle</b> (for Gmail, an App Password) and press <b>Send test email</b>. Each reader adds that sender to their Amazon approved list; <b>Profile</b> shows how.</li>
-      <li><b>KOReader</b>: nothing to set up here. Each reader opens <b>Profile → KOReader setup</b> for their private catalog address and QR code, and for reading sync, which marks books Reading and Finished on your Nightstand (parents can do it for kids from their account card).</li>
+      <li><b>KOReader</b>: nothing to set up here. Each reader opens <b>Settings → KOReader setup</b> for their private catalog address and QR code, and for reading sync, which marks books Reading and Finished on your Nightstand (parents can do it for kids from their account card).</li>
     </ul>
     <p class="mt-2">Don't use either? Switch them off under <b>Admin → System & Toggles → Features</b>.</p>`],
 ];

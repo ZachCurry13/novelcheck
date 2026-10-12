@@ -94,7 +94,7 @@ func (s *Server) handleDAV(w http.ResponseWriter, r *http.Request) {
 		}
 		s.noteDAVRefusal(r, name, ok)
 		w.Header().Set("WWW-Authenticate", `Basic realm="NovelCheck"`)
-		http.Error(w, "Use your NovelCheck name and the sync code from Profile → KOReader setup", http.StatusUnauthorized)
+		http.Error(w, "Use your NovelCheck name and the sync code from Settings → KOReader setup", http.StatusUnauthorized)
 		return
 	}
 	dir := s.davDir(u.ID)
@@ -216,7 +216,7 @@ func (s *Server) noteDAVRefusal(r *http.Request, name string, sent bool) {
 	owner := int64(0)
 	if u, err := s.Store.UserByName(strings.TrimSpace(name)); err == nil {
 		owner = u.ID
-		a.Note = "the sync code didn't match (it must be the current one from Profile → KOReader setup, not your password)"
+		a.Note = "the sync code didn't match (it must be the current one from Settings → KOReader setup, not your password)"
 	} else {
 		a.Note = "no NovelCheck user has this exact name (use your NovelCheck username)"
 	}

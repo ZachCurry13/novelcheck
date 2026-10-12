@@ -10,7 +10,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/libby"
 )
 
-// Libby (Profile → Libby library, and a line on each book): is the book at
+// Libby (Settings → Libby library, and a line on each book): is the book at
 // the person's library, how many holds, and a link to it there. Holds
 // themselves are placed in Libby: NovelCheck can't sign in for anyone.
 

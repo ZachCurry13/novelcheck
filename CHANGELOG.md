@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.42.0]
+
+### ⚙ Profile and Settings, split
+- **Profile is now who you are:** your name and role, **📊 My reading** (last 7 days, this month, your streak and books finished this year, with a button into Reading stats), your reading taste, your password, and the content rules on your account.
+- **⚙ Settings is new, and holds everything you can change**, in three sections instead of one long page: **General** (appearance, start page, Start Reading delivery, family device and PIN, phone notifications, and adding books), **Kindle & KOReader** (KOReader setup, the plugin and your e-readers, reading sync) and **Accounts** (Hardcover and Libby). Each section has its own address, like `#/settings?s=kindle`, so it can be opened or shared directly.
+- **Admin now comes after Settings** in the menu: Profile, Settings, Admin (on phones too, in the More sheet).
+- Everything moved, nothing was removed, and the wording follows: "Profile → KOReader setup" is now "Settings → KOReader setup" in the app, the guide, the plugin and the docs. The Get started guide describes Profile and Settings.
+
 ## [1.41.1]
 
 ### 🛏️ Up Next is now Nightstand

@@ -63,7 +63,7 @@ export async function renderAdmin(view, state) {
       <div class="card space-y-1 text-sm${on(state.user, "koreader") ? "" : " module-off"}" data-module="koreader">
         <p class="font-semibold">📖 KOReader</p>
         <p class="text-slate-400">Nothing to set up here: each reader finds their private catalog address and QR code under
-          <b>Profile → KOReader setup</b>. For kids' e-readers, use the <b>📖 KOReader</b> button on their card in <b>Users &amp; Rules</b>.</p></div>
+          <b>Settings → KOReader setup</b>. For kids' e-readers, use the <b>📖 KOReader</b> button on their card in <b>Users &amp; Rules</b>.</p></div>
       ${inArea("system", `<div id="remote-access"></div>`)}
     </section>` : ""}
     ${inArea("system", `<section data-panel="system" class="space-y-4">

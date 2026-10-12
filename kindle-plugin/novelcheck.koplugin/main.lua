@@ -3,7 +3,7 @@ NovelCheck plugin for KOReader: connect to your NovelCheck, see your Nightstand
 list, tap a book to download it, and report which books are on this device.
 
 It signs in the way KOReader's progress sync does: your NovelCheck username
-and the sync code from Profile -> KOReader setup.
+and the sync code from Settings -> KOReader setup.
 ]]
 
 local DataStorage = require("datastorage")
@@ -204,7 +204,7 @@ function NovelCheck:connectDialog()
         fields = {
             { text = self.settings:readSetting("server") or "", hint = _("Address, like https://novelcheck.example.com") },
             { text = self.settings:readSetting("user") or "", hint = _("Your NovelCheck username") },
-            { text = self.settings:readSetting("code") or "", hint = _("Sync code (Profile > KOReader setup)") },
+            { text = self.settings:readSetting("code") or "", hint = _("Sync code (Settings > KOReader setup)") },
         },
         buttons = { {
             { text = _("Cancel"), callback = function() UIManager:close(dialog) end },

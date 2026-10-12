@@ -124,7 +124,7 @@ func (s *Server) handlePushTest(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
-	sent, err := s.Push.SendTo(ctx, devices, push.Message{Title: "NovelCheck", Body: "✓ Notifications work on this device.", URL: "/#/profile", Tag: "test"})
+	sent, err := s.Push.SendTo(ctx, devices, push.Message{Title: "NovelCheck", Body: "✓ Notifications work on this device.", URL: "/#/settings", Tag: "test"})
 	out := map[string]any{"sent": sent, "devices": len(devices)}
 	if err != nil {
 		out["error"] = err.Error()

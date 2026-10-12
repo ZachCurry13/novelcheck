@@ -1,4 +1,4 @@
-// How NovelCheck looks for each person (Profile → Appearance): the theme
+// How NovelCheck looks for each person (Settings → Appearance): the theme
 // (match the device, dark or light), the OpenDyslexic font, and reduced
 // motion. Saved with the account, and on the device too, so the sign-in page
 // and the first paint already look right.

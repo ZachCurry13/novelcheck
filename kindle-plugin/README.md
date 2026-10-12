@@ -20,13 +20,13 @@ NovelCheck address, username and sync code.
    Connect to NovelCheck...** and fill in:
    - **Address**: where you open NovelCheck, like `https://novelcheck.example.com`.
    - **Username**: your NovelCheck name.
-   - **Sync code**: from NovelCheck, **Profile > KOReader setup > Reading sync**.
+   - **Sync code**: from NovelCheck, **Settings > KOReader setup > Reading sync**.
 2. Open **NovelCheck > Nightstand**. Tap a book to download it into KOReader's
    download folder (or home folder).
 
 3. **NovelCheck > Report books on this device** sends NovelCheck the list of books
    in the download folder (file names, formats and sizes, never folder names).
-   **Device name...** sets what NovelCheck calls this device. Profile > Reading
+   **Device name...** sets what NovelCheck calls this device. Settings > Reading
    sync shows the result.
 
 Only books in your Nightstand that have a file NovelCheck can send are listed;
@@ -41,7 +41,7 @@ message.
 
 ## Easiest install (NovelCheck 1.38 or newer)
 
-Open **Profile > KOReader plugin** in NovelCheck and press **Download the plugin**. The zip is already connected to your account, so there is nothing to type on the e-reader: unzip it, copy the `novelcheck.koplugin` folder into `koreader/plugins/`, and restart KOReader. The same folder works for updates (replace the old one). Do not share that zip: it holds your sync code.
+Open **Settings > KOReader plugin** in NovelCheck and press **Download the plugin**. The zip is already connected to your account, so there is nothing to type on the e-reader: unzip it, copy the `novelcheck.koplugin` folder into `koreader/plugins/`, and restart KOReader. The same folder works for updates (replace the old one). Do not share that zip: it holds your sync code.
 
 ## On this device
 
@@ -53,7 +53,7 @@ Open **Profile > KOReader plugin** in NovelCheck and press **Download the plugin
 ## Automatic and updating (NovelCheck 1.39 or newer)
 
 - **NovelCheck > Automatic:** when the e-reader gets online (at most every 6 hours) the plugin reports its books, so they appear on your Nightstand without any menu (switch on **Download Nightstand when online** to also fetch new books). Turn either off there.
-- **NovelCheck > Update plugin** downloads the newest plugin files from your NovelCheck, checks them, swaps them in (old files are kept as `.bak`) and asks to restart KOReader. The plugin also mentions a new version once after connecting. If an update ever goes wrong, copy the folder from **Profile > KOReader plugin** over USB.
+- **NovelCheck > Update plugin** downloads the newest plugin files from your NovelCheck, checks them, swaps them in (old files are kept as `.bak`) and asks to restart KOReader. The plugin also mentions a new version once after connecting. If an update ever goes wrong, copy the folder from **Settings > KOReader plugin** over USB.
 
 ## One-tap setup (NovelCheck 1.40 or newer, plugin 1.40.0)
 
@@ -61,6 +61,6 @@ Open **Profile > KOReader plugin** in NovelCheck and press **Download the plugin
 
 ## Matching and tidy names (NovelCheck 1.41 or newer, plugin 1.41.0)
 
-The plugin now sends each book's real title and author, so NovelCheck matches your Kindle's books to your library far more often. In NovelCheck, **Profile > KOReader plugin > Match books on my e-readers** fixes the rest by hand. **NovelCheck > Tidy book names** (in KOReader) then shows your library's titles and authors for the matched books (display only; the files are not touched).
+The plugin now sends each book's real title and author, so NovelCheck matches your Kindle's books to your library far more often. In NovelCheck, **Settings > KOReader plugin > Match books on my e-readers** fixes the rest by hand. **NovelCheck > Tidy book names** (in KOReader) then shows your library's titles and authors for the matched books (display only; the files are not touched).
 
 On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reopen it from KUAL. **NovelCheck > Set up everything** usually needs no restart.

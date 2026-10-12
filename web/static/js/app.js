@@ -7,6 +7,7 @@ import { renderQueue } from "./queue.js";
 import { renderImport } from "./scanner.js";
 import { renderAdmin } from "./admin.js";
 import { renderProfile } from "./profile.js";
+import { renderSettings } from "./settings.js";
 import { renderWhatsNew } from "./whatsnew.js";
 import { openGuide } from "./guide.js";
 import { checkForUpdates } from "./updatebanner.js";
@@ -40,6 +41,7 @@ const routes = {
   import: renderImport,
   admin: renderAdmin,
   profile: renderProfile,
+  settings: renderSettings,
   whatsnew: renderWhatsNew,
   system: renderSystem,
   usage: renderUsage,
@@ -59,7 +61,7 @@ const managerRoutes = new Set(["check", "import", "shelf", "admin", "duplicates"
 const ROUTE_AREA = { system: "system", usage: "system", deletions: "calibre", deepscan: "deep" };
 const moduleRoutes = { queue: "queue", import: "import", shelf: "import" }; // pages an admin can turn off
 // Pages without a menu item of their own light up the one they belong to.
-const NAV_OF = { stats: "profile", series: "collections", wishlist: "discover", events: "discover", import: "profile", shelf: "profile", deepscan: "admin", usage: "admin", system: "admin",
+const NAV_OF = { stats: "profile", series: "collections", wishlist: "discover", events: "discover", import: "settings", shelf: "settings", deepscan: "admin", usage: "admin", system: "admin",
   duplicates: "admin", deletions: "admin" };
 
 function showOnly(id) {

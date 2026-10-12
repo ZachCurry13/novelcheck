@@ -1,4 +1,4 @@
-// Profile → 📚 Hardcover: paste your Hardcover token and NovelCheck pulls in
+// Settings → 📚 Hardcover: paste your Hardcover token and NovelCheck pulls in
 // what you're reading and have read (hourly, or Sync now), so Nightstand and the
 // progress bars follow. The token stays on the server.
 import { get, put, post } from "./api.js";

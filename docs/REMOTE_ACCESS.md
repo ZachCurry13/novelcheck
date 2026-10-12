@@ -46,7 +46,7 @@ Open the new `https://` address on each phone, sign in, and add it to the home s
 
 The home-screen app from the new address is separate from any you made with the old `http://…:30080` address, so each person signs in once more.
 
-Phone notifications need this `https://` address too. In the home-screen app, go to **Profile → Phone notifications** and tap **Turn on for this device**, then **Send a test**.
+Phone notifications need this `https://` address too. In the home-screen app, go to **Settings → Phone notifications** and tap **Turn on for this device**, then **Send a test**.
 
 ## Optional: an extra lock with Cloudflare Access
 

@@ -1,4 +1,4 @@
-// 👥 Who's reading? On a family device (a parent set it up in Profile), the
+// 👥 Who's reading? On a family device (a parent set it up in Settings), the
 // app opens on everyone's profiles: kids tap their name, and anyone with a
 // PIN types it on a big keypad; parents without a PIN use their password.
 import { get, post } from "./api.js";
@@ -38,7 +38,7 @@ function passwordForm(p) {
     <p data-err class="hidden text-sm text-rose-400"></p>
     <button class="btn-primary w-full">Continue</button>
     <button type="button" data-back class="btn-ghost w-full">‹ Back</button>
-    <p class="text-center text-xs text-slate-500">Set a PIN in Profile to use a PIN here instead.</p></form>`;
+    <p class="text-center text-xs text-slate-500">Set a PIN in Settings to use a PIN here instead.</p></form>`;
 }
 
 // showFamily shows the picker if this is a family device (false if not).
