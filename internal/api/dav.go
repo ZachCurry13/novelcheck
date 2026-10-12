@@ -41,9 +41,10 @@ func init() {
 
 // davState keeps each reader's WebDAV locks and serializes their imports.
 type davState struct {
-	mu      sync.Mutex
-	locks   map[int64]webdav.LockSystem
-	running map[int64]*sync.Mutex
+	mu       sync.Mutex
+	locks    map[int64]webdav.LockSystem
+	running  map[int64]*sync.Mutex
+	attempts map[int64][]DavAttempt
 }
 
 func (d *davState) forUser(id int64) (webdav.LockSystem, *sync.Mutex) {
@@ -76,6 +77,7 @@ func (r *statusRecorder) WriteHeader(code int) {
 func (s *Server) handleDAV(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	if !s.Store.SettingBool(store.KeyModuleKOReader) {
+		s.dav.note(0, DavAttempt{Method: r.Method, Path: r.URL.Path, Status: http.StatusForbidden, Note: "the KOReader module is turned off"})
 		http.Error(w, "KOReader is turned off in NovelCheck", http.StatusForbidden)
 		return
 	}
@@ -83,6 +85,7 @@ func (s *Server) handleDAV(w http.ResponseWriter, r *http.Request) {
 	sum := md5.Sum([]byte(pass))
 	u, good := s.Store.KosyncUser(name, hex.EncodeToString(sum[:]))
 	if !ok || !good {
+		s.noteDAVRefusal(r, name, ok)
 		w.Header().Set("WWW-Authenticate", `Basic realm="NovelCheck"`)
 		http.Error(w, "Use your NovelCheck name and the sync code from Profile → KOReader setup", http.StatusUnauthorized)
 		return
@@ -107,6 +110,9 @@ func (s *Server) handleDAV(w http.ResponseWriter, r *http.Request) {
 	locks, running := s.dav.forUser(u.ID)
 	rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 	(&webdav.Handler{Prefix: "/dav", FileSystem: webdav.Dir(dir), LockSystem: locks}).ServeHTTP(rec, r)
+	if r.Method != "OPTIONS" {
+		s.dav.note(u.ID, DavAttempt{Method: r.Method, Path: r.URL.Path, Status: rec.status, Name: name, Note: map[bool]string{true: "worked", false: "NovelCheck answered but not with success"}[rec.status < 300]})
+	}
 	switch r.Method {
 	case http.MethodPut, "MOVE", "COPY":
 		if rec.status < 300 {
@@ -168,4 +174,21 @@ func (s *Server) importKOStats(userID int64) {
 	if _, err := s.Store.SaveKOReaderBooks(userID, list); err != nil {
 		log.Printf("koreader statistics for user %d: %v", userID, err)
 	}
+}
+
+// noteDAVRefusal records why a sign-in failed: no name sent, a name nobody
+// has, or a sync code that doesn't match.
+func (s *Server) noteDAVRefusal(r *http.Request, name string, sent bool) {
+	a := DavAttempt{Method: r.Method, Path: r.URL.Path, Status: http.StatusUnauthorized, Name: name}
+	if !sent || name == "" {
+		return // the first, unsigned request of every WebDAV client: not worth a line
+	}
+	owner := int64(0)
+	if u, err := s.Store.UserByName(strings.TrimSpace(name)); err == nil {
+		owner = u.ID
+		a.Note = "the sync code didn't match (it must be the current one from Profile → KOReader setup, not your password)"
+	} else {
+		a.Note = "no NovelCheck user has this exact name (use your NovelCheck username)"
+	}
+	s.dav.note(owner, a)
 }

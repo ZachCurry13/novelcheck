@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -80,6 +81,18 @@ func TestKOReaderStatisticsFolder(t *testing.T) {
 	}
 	if res := dav("PROPFIND", "/dav/", code["code"].(string), nil); res.StatusCode != 207 {
 		t.Fatalf("browse the folder: %d", res.StatusCode)
+	}
+	// Profile says why a sign-in failed, and that the good one worked.
+	_, rs := admin.do("GET", "/api/me/reading-sync", nil, false)
+	log, _ := rs["webdav"].([]any)
+	if len(log) != 2 {
+		t.Fatalf("webdav log: %v", rs["webdav"])
+	}
+	if first := log[0].(map[string]any); first["status"].(float64) != 207 || first["note"] != "worked" {
+		t.Fatalf("latest attempt: %v", first)
+	}
+	if bad := log[1].(map[string]any); bad["status"].(float64) != 401 || !strings.Contains(bad["note"].(string), "sync code") {
+		t.Fatalf("refused attempt: %v", bad)
 	}
 	// Whatever "start folder" KOReader is given exists once it asks (and can't climb out).
 	for _, folder := range []string{"/dav/NovelCheck/", "/dav/a/b/", "/dav/../../etc/"} {

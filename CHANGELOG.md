@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.36.1]
+
+### 🗂️ Why KOReader's Cloud storage fails
+- **Profile → 🔄 Reading sync** now lists the latest Cloud storage (WebDAV) requests: whether the sign-in worked, or why not (no user with that exact name, or the sync code doesn't match). With none listed, nothing has reached NovelCheck, so the address is the problem. KOReader itself only says "Cannot fetch list of folder contents".
+
 ## [1.36.0]
 
 ### 📚 Libby on Discover
