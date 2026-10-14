@@ -64,3 +64,9 @@ Open **Settings > KOReader plugin** in NovelCheck and press **Download the plugi
 The plugin now sends each book's real title and author, so NovelCheck matches your Kindle's books to your library far more often. In NovelCheck, **Settings > KOReader plugin > Match books on my e-readers** fixes the rest by hand. **NovelCheck > Tidy book names** (in KOReader) then shows your library's titles and authors for the matched books (display only; the files are not touched).
 
 On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reopen it from KUAL. **NovelCheck > Set up everything** usually needs no restart.
+
+## Search and add books (NovelCheck 1.45 or newer, plugin 1.45.0)
+
+- **NovelCheck > Search library:** type any words of a title or author; tap a book to read what it is about (with its content rating), then **Download to this device** or **Add to Nightstand**.
+- **NovelCheck > New in library:** the newest books, the same way.
+- **Connect to NovelCheck...** has a fourth box for a **backup address**, tried when the main one can't be reached.

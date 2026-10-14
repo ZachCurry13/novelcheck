@@ -4,6 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.45.0]
+
+### 🔍 Search and add books from the Kindle
+- **NovelCheck → Search library** (plugin 1.45.0): type any words of a title or author (in any order) on KOReader's keyboard and get your NovelCheck library's matches. Each row shows the content level (L2) and whether the book is **on device** or already on your **Nightstand**.
+- **Tap a book** for its page: title, author, series, **content rating with the reason**, the verdict and a summary, and the format and size, with two buttons: **Download to this device** and **Add to Nightstand**. A downloaded book is reported straight away, so it joins your Nightstand and Profile counts like any other.
+- **NovelCheck → New in library** lists the newest books the same way.
+- Only books with a file NovelCheck can send are offered, and kids' content rules apply exactly as everywhere else.
+- **A backup address** (NovelCheck → Connect, fourth box): when the main address can't be reached (away from home, say), the plugin tries it. Type your home address there if the main one is the remote address, or the other way round.
+- Update the plugin with **NovelCheck → Update plugin**.
+
 ## [1.44.0]
 
 ### 🔎 Finding a book, and matching books on your Kindle

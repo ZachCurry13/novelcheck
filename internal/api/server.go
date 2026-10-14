@@ -94,6 +94,10 @@ func (s *Server) Router() http.Handler {
 		r.Get("/plugin/book/{id}/{name}", s.handlePluginBook)
 		r.Get("/plugin/version", s.handlePluginVersion)
 		r.Get("/plugin/names", s.handlePluginNames)
+		r.Get("/plugin/search", s.handlePluginSearch)
+		r.Get("/plugin/new", s.handlePluginNew)
+		r.Get("/plugin/info/{id}", s.handlePluginInfo)
+		r.Post("/plugin/nightstand", s.handlePluginNightstand)
 		r.Get("/plugin/file/{name}", s.handlePluginFile)
 	})
 	// KOReader's reading statistics (Cloud sync): a private WebDAV folder, same sign-in.

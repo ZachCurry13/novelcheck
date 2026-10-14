@@ -3,13 +3,10 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/zachcurry13/novelcheck/internal/delivery"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	kindleplugin "github.com/zachcurry13/novelcheck/kindle-plugin"
 )
@@ -43,18 +40,12 @@ func (s *Server) handlePluginUpNext(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
-		copies, _ := s.Store.BookCopies(b.ID)
-		best, ok := delivery.BestFile(copies, false)
-		if !ok || !s.insideCalibre(best.Path) {
+		pb, ok := s.pluginBookFor(b)
+		if !ok {
 			continue // nothing to download
 		}
-		format := strings.ToLower(best.Format)
-		var size int64
-		if st, err := os.Stat(best.Path); err == nil {
-			size = st.Size()
-		}
-		books = append(books, pluginBook{ID: b.ID, Title: b.Title, Author: b.Author, Format: format, Size: size, Level: b.SpiceLevel,
-			Status: it.Status, URL: "/kosync/plugin/book/" + strconv.FormatInt(b.ID, 10) + "/" + fileName(b.Title, format)})
+		pb.Status = it.Status
+		books = append(books, pb)
 	}
 	kosyncJSON(w, http.StatusOK, map[string]any{"user": u.Username, "books": books})
 }

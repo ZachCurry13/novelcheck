@@ -28,7 +28,7 @@ local util = require("util")
 local ConfirmBox = require("ui/widget/confirmbox")
 local DeviceBooks = require("devicebooks")
 
-local VERSION = "1.41.1"
+local VERSION = "1.45.0"
 -- The folder this plugin runs from (config.lua from NovelCheck's download sits there).
 local PLUGIN_DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
 
@@ -83,6 +83,8 @@ function NovelCheck:addToMainMenu(menu_items)
         sorting_hint = "tools",
         sub_item_table = {
             { text = _("Set up everything"), callback = function() self:easySetup() end },
+            { text = _("Search library"), callback = function() self:searchLibrary() end },
+            { text = _("New in library"), callback = function() self:newInLibrary() end },
             { text = _("Nightstand"), callback = function() self:showUpNext() end },
             { text = _("Download all Nightstand"), callback = function() self:downloadAll() end },
             { text = _("Sync reading statistics now"), callback = function() self:syncStatsNow() end },
@@ -205,6 +207,7 @@ function NovelCheck:connectDialog()
             { text = self.settings:readSetting("server") or "", hint = _("Address, like https://novelcheck.example.com") },
             { text = self.settings:readSetting("user") or "", hint = _("Your NovelCheck username") },
             { text = self.settings:readSetting("code") or "", hint = _("Sync code (Settings > KOReader setup)") },
+            { text = self.settings:readSetting("server_alt") or "", hint = _("Backup address (optional): tried when the first can't be reached") },
         },
         buttons = { {
             { text = _("Cancel"), callback = function() UIManager:close(dialog) end },
@@ -213,6 +216,7 @@ function NovelCheck:connectDialog()
                 self.settings:saveSetting("server", (trim(f[1]):gsub("/+$", "")))
                 self.settings:saveSetting("user", trim(f[2]))
                 self.settings:saveSetting("code", trim(f[3]))
+                self.settings:saveSetting("server_alt", (trim(f[4]):gsub("/+$", "")))
                 self.settings:flush()
                 UIManager:close(dialog)
                 UIManager:show(InfoMessage:new{ text = _("Saved. Open NovelCheck > Nightstand to try it.") })
@@ -226,7 +230,20 @@ end
 -- request fetches path from NovelCheck. With file, the body is saved there;
 -- otherwise it is returned as text. It returns the HTTP code and the body.
 function NovelCheck:request(path, file, post_body)
-    local url = self.settings:readSetting("server") .. path
+    local code, body = self:requestAt(self.settings:readSetting("server"), path, file, post_body)
+    local alt = trim(self.settings:readSetting("server_alt"))
+    if type(code) ~= "number" and alt ~= "" then
+        -- The main address could not be reached (away from home, say): try the backup address.
+        local code2, body2 = self:requestAt(alt, path, file, post_body)
+        if type(code2) == "number" then
+            return code2, body2
+        end
+    end
+    return code, body
+end
+
+function NovelCheck:requestAt(base, path, file, post_body)
+    local url = base .. path
     local fetch = url:match("^https") and https.request or http.request
     local chunks = {}
     local sink
@@ -401,6 +418,7 @@ end
 
 require("setup")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 require("tidynames")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
+require("search")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 require("updater")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 require("devicereport")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
 

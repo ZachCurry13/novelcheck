@@ -57,7 +57,7 @@ func TestKOReaderPluginDownload(t *testing.T) {
 	if !strings.Contains(cfg, `user = "admin"`) || !strings.Contains(cfg, `code = "`+code+`"`) || !strings.Contains(cfg, "server = ") {
 		t.Fatalf("config.lua: %q", cfg)
 	}
-	for _, name := range []string{"_meta.lua", "main.lua", "devicebooks.lua", "updater.lua", "devicereport.lua", "setup.lua", "tidynames.lua"} {
+	for _, name := range []string{"_meta.lua", "main.lua", "devicebooks.lua", "updater.lua", "devicereport.lua", "setup.lua", "tidynames.lua", "search.lua"} {
 		if files["novelcheck.koplugin/"+name] == "" {
 			t.Fatalf("%s missing from the zip", name)
 		}
@@ -358,5 +358,103 @@ func TestMatchKindleBooksByHand(t *testing.T) {
 	admin.do("POST", "/api/me/kindle-match", map[string]any{"kind": "device", "device": "Kindle", "filename": "thumbnail_1.epub", "md5": "bbb"}, true)
 	if items := attention(); len(items) != 1 {
 		t.Fatalf("after forgetting: %v", items)
+	}
+}
+
+// The plugin can search the library by any words, see a book's details, and
+// put a book on the Nightstand.
+func TestPluginSearchAndNightstand(t *testing.T) {
+	lib := t.TempDir()
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.CalibreDir = lib })
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+	key := hex.EncodeToString(sum[:])
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	mk := func(title, author string, withFile bool) int64 {
+		id, _ := st.UpsertBook(title, author, "", "")
+		if withFile {
+			p := filepath.Join(lib, title+".epub")
+			_ = os.WriteFile(p, []byte("epub bytes"), 0o644)
+			_ = st.AddCopy(cal, id, p, "epub", "1")
+		} else {
+			_ = st.AddCopy(cal, id, "/nowhere/"+title+".azw3", "azw3", "1")
+		}
+		return id
+	}
+	reptile := mk("The Reptile Room", "Lemony Snicket", true)
+	mk("Nine's Legacy", "Pittacus Lore", true)
+	mk("Paper Only", "Some Author", false)
+
+	get := func(path string) (int, map[string]any) {
+		req, _ := http.NewRequest("GET", srv.URL+path, nil)
+		req.Header.Set("x-auth-user", "admin")
+		req.Header.Set("x-auth-key", key)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		out := map[string]any{}
+		_ = json.NewDecoder(res.Body).Decode(&out)
+		return res.StatusCode, out
+	}
+	post := func(path, body string) int {
+		req, _ := http.NewRequest("POST", srv.URL+path, strings.NewReader(body))
+		req.Header.Set("x-auth-user", "admin")
+		req.Header.Set("x-auth-key", key)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		return res.StatusCode
+	}
+	if code, _ := get("/kosync/plugin/search?q=reptile"); code != 200 {
+		t.Fatalf("signed in: %d", code)
+	}
+	// any words, any order, and only books with a file to download
+	code, out := get("/kosync/plugin/search?q=snicket+reptile&device=Kindle")
+	books, _ := out["books"].([]any)
+	if code != 200 || len(books) != 1 {
+		t.Fatalf("search: %d %v", code, out)
+	}
+	hit := books[0].(map[string]any)
+	if hit["title"] != "The Reptile Room" || hit["format"] != "epub" || hit["on_device"] != false ||
+		!strings.HasPrefix(hit["url"].(string), "/kosync/plugin/book/"+itoa(reptile)+"/") {
+		t.Fatalf("hit: %v", hit)
+	}
+	if _, out := get("/kosync/plugin/search?q=paper+only"); len(out["books"].([]any)) != 0 {
+		t.Fatalf("a book with nothing to download is not offered: %v", out)
+	}
+	if _, out := get("/kosync/plugin/search?q=x"); len(out["books"].([]any)) != 0 {
+		t.Fatalf("a one-letter search: %v", out)
+	}
+
+	// the "new in library" list, and what is already on the device
+	if _, out := get("/kosync/plugin/new"); len(out["books"].([]any)) != 2 {
+		t.Fatalf("new: %v", out)
+	}
+	_, _ = st.SaveDeviceBooks(1, "Kindle", []store.DeviceBook{{Filename: "r.epub", Title: "The Reptile Room", Author: "Lemony Snicket", Format: "epub", MD5: "abc"}})
+	if _, out := get("/kosync/plugin/search?q=reptile&device=Kindle"); out["books"].([]any)[0].(map[string]any)["on_device"] != true {
+		t.Fatalf("on device: %v", out)
+	}
+
+	// details, then onto the Nightstand
+	if code, info := get("/kosync/plugin/info/" + itoa(reptile)); code != 200 || info["title"] != "The Reptile Room" || info["url"] == nil {
+		t.Fatalf("info: %d %v", code, info)
+	}
+	if code := post("/kosync/plugin/nightstand", `{"book_id":`+itoa(reptile)+`}`); code != 200 {
+		t.Fatalf("add: %d", code)
+	}
+	if code := post("/kosync/plugin/nightstand", `{"book_id":99999}`); code != 404 {
+		t.Fatalf("no such book: %d", code)
+	}
+	if _, out := get("/kosync/plugin/search?q=reptile"); out["books"].([]any)[0].(map[string]any)["queue"] != "queued" {
+		t.Fatalf("on the nightstand: %v", out)
+	}
+	if _, out := get("/kosync/plugin/up-next"); len(out["books"].([]any)) != 1 {
+		t.Fatalf("up next: %v", out)
 	}
 }
