@@ -18,4 +18,6 @@ Run it when asked (or on a schedule the owner has set up). It never releases by 
 5. **Verify, and roll back.** After any update run `go build ./...`, `go vet ./...` and `go test ./...`. If something new fails, undo only what this run changed (`git restore` the specific files such as `go.mod` and `go.sum`; never discard other work), and report why.
 6. **Headless runs.** `claude -p "..."` or a scheduled GitHub Actions workflow can run this protocol weekly and open a draft PR. That needs an Anthropic API key stored as a repository secret and write access for the workflow, so it is set up only when the owner asks. A key-free alternative: a weekly workflow that runs `govulncheck` and `go list -m -u all` and reports.
 
+A project-neutral copy of this protocol, with the weekly audit workflow embedded, is `docs/MAINTENANCE_PROTOCOL.md` (copy it into other projects). The workflow itself is `.github/workflows/audit.yml`.
+
 Results of each run go to `docs/STATUS.md` (3 to 5 lines: what changed, what is next) and, for anything needing a decision, to the owner in plain words.

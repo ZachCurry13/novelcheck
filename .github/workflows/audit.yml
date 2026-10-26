@@ -1,0 +1,105 @@
+# Weekly audit (no API key needed): known vulnerabilities in the code and its
+# dependencies, newer versions of direct dependencies, and the pinned
+# cloudflared image. Findings go into ONE open issue titled "Weekly audit",
+# updated each run and closed when everything is clear. Nothing is changed or
+# released by this workflow; it only reports.
+#   Runs Mondays 06:17 UTC, or Actions > Weekly audit > Run workflow
+#   (untick "Open or update the issue" for a dry run that only prints a summary).
+name: Weekly audit
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      report:
+        description: "Open or update the issue (untick for a dry run)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true # the newest patch, like the container build
+
+      - name: Vulnerability scan (govulncheck)
+        id: vuln
+        run: |
+          set +e
+          go run golang.org/x/vuln/cmd/govulncheck@latest ./... > vuln.txt 2>&1
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          tail -n 40 vuln.txt
+
+      - name: Newer versions of direct dependencies
+        run: |
+          go list -m -u -f '{{if and (not .Indirect) .Update}}{{.Path}} {{.Version}} -> {{.Update.Version}}{{end}}' all > updates.txt
+          cat updates.txt
+
+      - name: Pinned container image (cloudflared)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pinned=$(grep -oP 'cloudflare/cloudflared:\K[^ ]+' Dockerfile | head -n1)
+          latest=$(gh api repos/cloudflare/cloudflared/releases/latest -q .tag_name || true)
+          : > images.txt
+          if [ -n "$latest" ] && [ "$pinned" != "$latest" ]; then
+            echo "cloudflared $pinned -> $latest" > images.txt
+          fi
+          cat images.txt
+
+      - name: Report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VULN_CODE: ${{ steps.vuln.outputs.code }}
+          REPORT: ${{ github.event_name == 'schedule' || inputs.report }}
+        run: |
+          {
+            echo "## Weekly audit $(date -u +%F)"
+            echo
+            if [ "$VULN_CODE" != "0" ]; then
+              echo "### Known vulnerabilities (govulncheck)"
+              echo '```'
+              grep -E '^(Vulnerability|    Found in|    Fixed in|Your code|This scan)' vuln.txt | head -n 60
+              echo '```'
+              echo "Run \`govulncheck ./...\` locally for the call paths. A finding in the standard library goes away by building with a newer Go patch."
+              echo
+            fi
+            if [ -s updates.txt ]; then
+              echo "### Newer versions of direct dependencies"
+              echo '```'; cat updates.txt; echo '```'
+              echo "Patch and minor releases that fix a vulnerability are safe to take; feature updates need a look."
+              echo
+            fi
+            if [ -s images.txt ]; then
+              echo "### Pinned image"
+              echo '```'; cat images.txt; echo '```'
+              echo
+            fi
+          } > body.md
+          cat body.md >> "$GITHUB_STEP_SUMMARY"
+
+          clear=true
+          if [ "$VULN_CODE" != "0" ] || [ -s updates.txt ] || [ -s images.txt ]; then clear=false; fi
+          [ "$REPORT" = "true" ] || { echo "Dry run: no issue changed."; exit 0; }
+
+          gh label create audit --color 5319e7 --description "Weekly audit report" 2>/dev/null || true
+          number=$(gh issue list --state open --label audit --json number --jq '.[0].number // empty')
+          if [ "$clear" = "true" ]; then
+            if [ -n "$number" ]; then
+              gh issue comment "$number" --body "All clear on $(date -u +%F): no known vulnerabilities, no newer direct dependencies, image up to date."
+              gh issue close "$number"
+            fi
+          elif [ -n "$number" ]; then
+            gh issue edit "$number" --body-file body.md
+          else
+            gh issue create --title "Weekly audit" --label audit --body-file body.md
+          fi
