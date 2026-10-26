@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.45.1]
+
+### 🔒 Security update
+- **Updated `golang.org/x/net` to v0.60.0**, which fixes five known vulnerabilities in the HTTP/2 code NovelCheck's web server and outgoing requests use (found by `govulncheck`). Nothing else about how NovelCheck works changed.
+- The automated tests now use the newest patch of the Go version, like the container build.
+
 ## [1.45.0]
 
 ### 🔍 Search and add books from the Kindle
