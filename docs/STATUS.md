@@ -1,5 +1,5 @@
 # Status
 
-- **2026-10-26 maintenance pass** (branch `maintenance/2026-10-26`, not released): stored the maintenance protocol in `CLAUDE.md`. `govulncheck` found `golang.org/x/net` v0.59.0 affected by five known issues (fixed in v0.60.0); updated it, build and tests unchanged (only the six known Windows test failures). CI now uses the newest patch of the pinned Go line.
-- **Needs a decision:** bundled `cloudflared` 2026.9.3 has 2026.10.4 available (not applied: can't verify the image build locally); `anthropic-sdk-go` 1.75.0 to 1.84.0 and `chi` 5.3.2 to 5.5.0 are feature updates, not security fixes. No open GitHub issues or pull requests.
-- **Next:** release the x/net fix when the owner agrees; decide about a weekly scheduled audit (needs an API key secret, or a key-free `govulncheck` workflow).
+- **2026-10-26:** stored the maintenance protocol in `CLAUDE.md` (a project-neutral copy is `docs/MAINTENANCE_PROTOCOL.md`); 1.45.1 updated `golang.org/x/net` to v0.60.0. Added `.github/workflows/audit.yml`: a key-free weekly audit (Mondays 06:17 UTC, or run it by hand; untick "Open or update the issue" for a dry run) that reports vulnerabilities, newer direct dependencies and the cloudflared pin in one issue titled "Weekly audit".
+- **Correction:** CI had been using exactly Go 1.26.0 (so the scan showed 30 stdlib findings). Both workflows now ask for the `1.26` line (newest patch, 1.26.10 today); the audit then reports 0 vulnerabilities. The 1.45.1 note about CI was premature; it is true from this change on.
+- **Needs a decision:** `cloudflared` 2026.9.3 has 2026.10.4 (not applied); newer direct dependencies: `anthropic-sdk-go` 1.84, `chi` 5.5, `x/crypto` 0.58, `x/net` 0.61, `modernc.org/sqlite` 1.61 (none fix a known vulnerability).
