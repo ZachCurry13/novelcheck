@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.45.2]
+
+### 🔌 Remote access connector updated
+- **The bundled Cloudflare connector (`cloudflared`) is updated to 2026.10.4** (from 2026.9.3), the one behind **Admin → Remote access**. Nothing about how remote access is set up changes. If you use it, check **Admin → Remote access** still shows connected after you update; if it doesn't, tell me.
+
 ## [1.45.1]
 
 ### 🔒 Security update

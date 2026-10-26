@@ -16,7 +16,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath \
     -o /out/novelcheck ./cmd/novelcheck
 
 # ---- Cloudflare Tunnel connector (official image, multi-arch) ----
-FROM cloudflare/cloudflared:2026.9.3 AS cloudflared
+FROM cloudflare/cloudflared:2026.10.4 AS cloudflared
 
 # ---- runtime ----
 FROM alpine:3.22
