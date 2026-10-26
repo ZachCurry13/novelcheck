@@ -41,7 +41,7 @@ Keep a short log in `docs/STATUS.md` (3 to 5 lines per run: what changed, what n
 ---
 
 ## Appendix: weekly audit workflow (GitHub Actions, Go version)
-Save as `.github/workflows/audit.yml`. For another stack, replace the scan and update steps with the commands from the table (keeping the scan's exit status in `steps.vuln.outputs.code` and the update list in `updates.txt`), and adjust the pinned-image step or delete it. Scheduled workflows run only on the default branch, and GitHub pauses them after about 60 days without repository activity.
+Save as `.github/workflows/audit.yml`. For another stack, replace the scan and update steps with the commands from the table (keeping the scan's exit status in `steps.vuln.outputs.code` and the update list in `updates.txt`), and adjust the pinned-image step or delete it. Setting the Go version from `go.mod`'s line (for example `1.26`) with `check-latest` gets the newest patch; an exact `go 1.26.0` would stay at 1.26.0, which is how a scan ends up reporting fixed vulnerabilities. Scheduled workflows run only on the default branch, and GitHub pauses them after about 60 days without repository activity.
 
 ```yaml
 # Weekly audit (no API key needed): known vulnerabilities in the code and its
@@ -72,10 +72,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - id: gover
+        run: echo "line=$(grep -m1 '^go ' go.mod | awk '{print $2}' | cut -d. -f1,2)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
-          check-latest: true # the newest patch, like the container build
+          go-version: ${{ steps.gover.outputs.line }} # "1.26": the newest patch of that line, like the container build
+          check-latest: true
 
       - name: Vulnerability scan (govulncheck)
         id: vuln

@@ -30,10 +30,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - id: gover
+        run: echo "line=$(grep -m1 '^go ' go.mod | awk '{print $2}' | cut -d. -f1,2)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
-          check-latest: true # the newest patch of that Go line, like the container build
+          go-version: ${{ steps.gover.outputs.line }} # "1.26": the newest patch of that line, like the container build
+          check-latest: true
       - run: go vet ./...
       - run: go test ./...
 
