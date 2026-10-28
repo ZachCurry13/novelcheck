@@ -34,7 +34,7 @@ export function periodPage(m, kind, start) {
 const dl = (rows) => `<dl class="card divide-y divide-slate-800 !py-1">${rows.filter(Boolean).map(([k, v]) =>
   `<div class="flex items-start justify-between gap-3 py-2.5"><dt class="text-slate-300">${esc(k)}</dt><dd class="text-right font-medium tabular-nums">${v}</dd></div>`).join("")}</dl>`;
 
-export function bookPage(m, i) {
+export function bookPage(m, i, readonly = false) {
   const d = bookDetail(m, i);
   const b = d.book;
   const pct = Math.round((b.percent || 0) * 100);
@@ -50,7 +50,7 @@ export function bookPage(m, i) {
       d.last ? ["Last read date", `${esc(longDate(d.last))}<br><span class="text-sm font-normal text-slate-400">${esc(agoText(d.last))}</span>`] : null,
       ["Last read page / total pages", lastPage], ["Pages turned", n(d.pages)],
       d.pages ? ["Average time per page", `${Math.round(d.secPerPage)} sec`] : null,
-      ["Highlights", n(b.highlights || 0)], ["Notes", n(b.notes || 0)]])}
+      ...(readonly ? [] : [["Highlights", n(b.highlights || 0)], ["Notes", n(b.notes || 0)]])])}
     ${d.perDay.length ? `<h3 class="mb-1 mt-5 text-lg font-semibold">Days you read it</h3>${list(d.perDay.slice(0, 20).map((p) =>
       row(keyDate(p.key).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric", year: "numeric" }), "", `${fmtDur(p.sec)}<br><span class="text-slate-400">${plural(p.pages, "page")}</span>`, `data-day-key="${p.key}"`)))}` : ""}`;
 }

@@ -8,6 +8,7 @@ import { renderImport } from "./scanner.js";
 import { renderAdmin } from "./admin.js";
 import { renderProfile } from "./profile.js";
 import { renderSettings } from "./settings.js";
+import { renderReaders } from "./readers.js";
 import { renderWhatsNew } from "./whatsnew.js";
 import { openGuide } from "./guide.js";
 import { checkForUpdates } from "./updatebanner.js";
@@ -42,6 +43,7 @@ const routes = {
   admin: renderAdmin,
   profile: renderProfile,
   settings: renderSettings,
+  readers: renderReaders,
   whatsnew: renderWhatsNew,
   system: renderSystem,
   usage: renderUsage,

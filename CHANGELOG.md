@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.46.0]
+
+### 👥 Share your reading with the family
+- **A new Readers page** (👥 in the menu) lists the family members who share their reading profile, each with last 7 days, this month and books finished this year, and (if they choose) what they're reading right now. Tap someone for their full reading report: the same Report, Books and Calendar as your own stats, in the same clean sentences.
+- **Private until you switch it on.** Settings → Account → **Sharing** has two switches: *Share my reading profile with the family*, and separately *Also show what I'm reading right now*. Nothing is shared by default, and someone whose profile isn't shared simply isn't there for others.
+- **People only see what they're allowed to see.** A kid viewing a parent's profile only gets books their own content rules allow, never pepper levels, and "reading now" is hidden if the book isn't allowed. **Highlights, notes and files that aren't in your library are never shown** to anyone else.
+- **Kids: a parent decides.** A kid can't turn sharing on. Parents get a **Kids' profiles** list in the same Sharing card to share each kid's profile (and show what they're reading now). Parents can always see their own kids' reading, shared or not, marked "not shared" on the Readers page.
+- A new step in the How-to guide explains it.
+
 ## [1.45.2]
 
 ### 🔌 Remote access connector updated

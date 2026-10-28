@@ -16,6 +16,7 @@ import { renderPluginCard } from "./pluginmanage.js";
 import { renderHardcover } from "./hardcover.js";
 import { renderLibbyCard } from "./libby.js";
 import { tabStrip } from "./tabs.js";
+import { renderSharingCard } from "./sharing.js";
 
 const SECTIONS = { general: "General", account: "Account", kindle: "Kindle & KOReader", connections: "Connections" };
 
@@ -46,6 +47,7 @@ const accountHTML = (u) => `<form id="password" class="card space-y-3">
     <input name="new_password" type="password" required minlength="8" placeholder="New password (8+ chars)" class="input" autocomplete="new-password">
     <button class="btn-primary">Update password</button>
   </form>
+  <div id="sharing-card" class="card space-y-3 lg:col-span-2"></div>
   ${familyCardHTML(u)}`;
 
 function kindleHTML(u) {
@@ -84,6 +86,7 @@ export async function renderSettings(view, state) {
       bindProfileExtras(view);
       renderPushCard($("#push-card", view), u);
     } else if (section === "account") {
+      renderSharingCard($("#sharing-card", view), u);
       bindFamilyCard(view, draw);
       $("#password", view).addEventListener("submit", async (e) => {
         e.preventDefault();

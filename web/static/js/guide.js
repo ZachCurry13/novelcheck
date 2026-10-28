@@ -33,6 +33,8 @@ const EVERYONE = [
       <li>Finished books leave the list. <b>🙈 Hide</b> takes a book off the Nightstand without removing it from your library, and <b>Hidden</b> brings it back.</li>
       <li>Below, <b>📱 On your KOReader</b> lists every book you've opened on your e-reader, and <b>💡 Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (a quick "Why not?" helps it learn).</li>
     </ul>`],
+  ["👥 Readers and sharing",
+    "Your reading stats are private. In <b>Settings → Account → Sharing</b> you can share your reading profile with the family, and then the <b>Readers</b> page shows each person who shares with their reading time, streak-style numbers and, if they choose, what they're reading right now. Tap someone to see their reading report. You only see books you're allowed to see; highlights, notes and files that aren't in the library are never shown. Parents choose for their kids and can always see their own kids' reading."],
   ["👤 Your profile",
     "<b>Profile</b> is you: your name, a few numbers from your reading, <b>🎯 Your reading taste</b> (mark books you know so your suggestions fit you better) and the content rules on your account. <b>⚙ Settings</b> holds everything you can change: a light or dark look, an easier-to-read font and less motion under <b>🎨 Appearance</b>, how books reach your e-reader, notifications, your password and family-device PIN, your Kindle and KOReader, and your Hardcover and Libby accounts. Something not working, or an idea? <b>🐞 Report a problem or idea</b> at the bottom of any page tells your admin."],
   ["📱 Put it on your phone",

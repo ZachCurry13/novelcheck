@@ -15,14 +15,24 @@ import { tabStrip } from "./tabs.js";
 const TABS = { report: "Report", books: "Books", calendar: "Calendar" };
 const PERIODS = { week: "Week", month: "Month", year: "Year", all: "All time" };
 
-export async function renderStats(view, state) {
-  view.innerHTML = `<h1 class="mb-2 text-2xl font-bold">📊 Reading stats</h1><p class="text-slate-400">Loading…</p>`;
-  const data = await get("/api/me/reading-stats").catch(() => null);
+// renderStats shows your own reading, or (source.url) another reader's who
+// shares theirs: the same report, limited to what you may see.
+export async function renderStats(view, state, source = {}) {
+  const other = Boolean(source.url);
+  const back = () => (source.back ? `<a href="${esc(source.back)}" class="btn-ghost mb-2 inline-flex px-3 py-1">‹ Readers</a>` : "");
+  const heading = () => `<h1 class="mb-2 text-2xl font-bold">📊 Reading stats</h1>`;
+  view.innerHTML = `${heading()}<p class="text-slate-400">Loading…</p>`;
+  const data = await get(source.url || "/api/me/reading-stats").catch(() => null);
   if (!data) {
-    view.innerHTML = `<h1 class="mb-2 text-2xl font-bold">📊 Reading stats</h1><p class="text-slate-400">Couldn't load your stats just now.</p>`;
+    view.innerHTML = `${back()}${heading()}<p class="text-slate-400">${other ? "That reading profile isn't shared with you." : "Couldn't load your stats just now."}</p>`;
     return;
   }
+  const name = other ? data.name || "Reader" : state.user.username;
   const m = prepare(data);
+  if (!m.rows.length && other) {
+    view.innerHTML = `${back()}<h1 class="mb-2 text-2xl font-bold">📊 ${esc(name)}'s reading</h1><div class="card text-sm text-slate-300">Nothing to show yet.</div>`;
+    return;
+  }
   if (!m.rows.length) {
     const have = data.synced_at && m.books.length
       ? `<p>NovelCheck has your statistics file (${m.books.length} book${m.books.length === 1 ? "" : "s"}, synced ${esc(ago(data.synced_at))}) but it holds no page-by-page reading yet. Read a few pages in KOReader, then press <b>Reading statistics → Synchronize now</b> again.</p>` : "";
@@ -37,7 +47,7 @@ export async function renderStats(view, state) {
 
   const title = () => {
     const b = bounds(s.period, s.offset);
-    const who = `${state.user.username}'s`;
+    const who = `${name}'s`;
     return s.period === "all" ? `${who} reading, all time` : s.period === "week" && s.offset === 0 ? `${who} week in books` : `${who} ${b.title} in books`;
   };
   const picker = () => `<div class="mb-4 space-y-2"><div class="flex flex-wrap gap-1">${Object.entries(PERIODS).map(([k, v]) =>
@@ -47,7 +57,7 @@ export async function renderStats(view, state) {
       <button type="button" data-offset="1" class="btn-ghost px-3 py-1" aria-label="Later" ${s.offset >= 0 ? "disabled" : ""}>›</button></div>`}</div>`;
 
   const body = () => {
-    if (s.page?.type === "book") return bookPage(m, s.page.idx);
+    if (s.page?.type === "book") return bookPage(m, s.page.idx, other);
     if (s.page?.type === "period") return periodPage(m, s.page.kind, s.page.start);
     if (s.page?.type === "day") return dayPage(m, s.page.key);
     if (s.tab === "books") return booksTab(m, s);
@@ -56,7 +66,7 @@ export async function renderStats(view, state) {
   };
 
   const draw = (top = false) => {
-    view.innerHTML = `<h1 class="mb-3 text-2xl font-bold">📊 Reading stats</h1>
+    view.innerHTML = `${s.page ? "" : back()}<h1 class="mb-3 text-2xl font-bold">${other ? `📊 ${esc(name)}'s reading` : "📊 Reading stats"}</h1>
       ${s.page ? `<button type="button" data-back class="btn-ghost mb-3 px-3 py-1">‹ Back</button>` : tabStrip({ id: "stats-tabs", label: "Reading stats", active: s.tab, tabs: Object.entries(TABS) })}
       ${body()}
       <p class="mt-6 text-xs text-slate-500">Days and hours use this device's time zone. Time is time with a page open (long pauses are cut short); pages are different pages seen. Books and details come from your library where NovelCheck knows the book.</p>`;

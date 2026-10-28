@@ -67,6 +67,8 @@ func migrate(d *sqlx.DB) error {
 		{"users", "motion", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "kosync_code", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "kindle_autoadd", "INTEGER NOT NULL DEFAULT 1"},
+		{"users", "share_profile", "INTEGER NOT NULL DEFAULT 0"},
+		{"users", "share_current", "INTEGER NOT NULL DEFAULT 0"},
 		{"device_books", "author", "TEXT NOT NULL DEFAULT ''"},
 		{"device_books", "ignored", "INTEGER NOT NULL DEFAULT 0"},
 		{"koreader_books", "ignored", "INTEGER NOT NULL DEFAULT 0"},
