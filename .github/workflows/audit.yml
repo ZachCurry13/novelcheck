@@ -23,18 +23,20 @@ permissions:
 
 jobs:
   audit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # pinned: move to a newer image on purpose, not when GitHub moves ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: gover
         run: echo "line=$(grep -m1 '^go ' go.mod | awk '{print $2}' | cut -d. -f1,2)" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: ${{ steps.gover.outputs.line }} # "1.26": the newest patch of that line, like the container build
           check-latest: true
 
       - name: Vulnerability scan (govulncheck)
         id: vuln
+        env:
+          GOTOOLCHAIN: auto # setup-go sets "local"; govulncheck@latest may need a newer Go than go.mod's line
         run: |
           set +e
           go run golang.org/x/vuln/cmd/govulncheck@latest ./... > vuln.txt 2>&1
