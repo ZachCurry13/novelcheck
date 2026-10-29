@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.47.0]
+
+### 📤 Share your reading as a picture
+- **A Share button on 📊 Stats** (next to the title) makes an image of the period you're looking at, like a year-in-review: your name and the period, **books, pages and reading time** in big numbers, your top genre and most read author, your streak, and a row of the **covers** you read.
+- **Pick the look:** **Story** (1080 × 1920, for phone stories) or **Square** (1080 × 1080), three colour themes (Midnight, Sunrise, Forest), and a switch for the covers. The preview redraws as you choose.
+- **Save image** downloads the PNG; **Share…** opens your phone's share sheet (on a browser that can't share files it saves the image instead).
+- **It's drawn on your own device** from your stats and goes nowhere until you save or share it, so you decide what leaves. It's for your own stats only (not other people's profiles).
+
 ## [1.46.0]
 
 ### 👥 Share your reading with the family

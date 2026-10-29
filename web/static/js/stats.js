@@ -11,6 +11,7 @@ import { reportHTML } from "./statsreport.js";
 import { bookPage, booksTab, dayPage, periodPage } from "./statsbooks.js";
 import { calendarTab } from "./statscalendar.js";
 import { tabStrip } from "./tabs.js";
+import { openShareCard } from "./statscard.js";
 
 const TABS = { report: "Report", books: "Books", calendar: "Calendar" };
 const PERIODS = { week: "Week", month: "Month", year: "Year", all: "All time" };
@@ -62,7 +63,7 @@ export async function renderStats(view, state, source = {}) {
     if (s.page?.type === "day") return dayPage(m, s.page.key);
     if (s.tab === "books") return booksTab(m, s);
     if (s.tab === "calendar") return calendarTab(m, s.month);
-    return `<h2 class="mb-3 text-2xl font-bold">${esc(title())}</h2>${picker()}<div class="space-y-4">${reportHTML(m, s)}</div>`;
+    return `<div class="mb-3 flex items-start justify-between gap-2"><h2 class="min-w-0 break-words text-2xl font-bold">${esc(title())}</h2>${other ? "" : `<button type="button" data-share class="btn-secondary shrink-0 px-3 py-1 text-sm">📤 Share</button>`}</div>${picker()}<div class="space-y-4">${reportHTML(m, s)}</div>`;
   };
 
   const draw = (top = false) => {
@@ -80,13 +81,14 @@ export async function renderStats(view, state, source = {}) {
   };
 
   view.onclick = (e) => {
-    const t = e.target.closest("[data-tab],[data-period],[data-offset],[data-kind],[data-period-open],[data-book],[data-day],[data-day-key],[data-shift],[data-month],[data-back],[data-open-lib]");
+    const t = e.target.closest("[data-tab],[data-period],[data-offset],[data-kind],[data-period-open],[data-book],[data-day],[data-day-key],[data-shift],[data-month],[data-back],[data-open-lib],[data-share]");
     if (!t) return;
     const d = t.dataset;
     if (d.back !== undefined) {
       s.page = s.stack.pop() || null;
       return draw(true);
     }
+    if (d.share !== undefined) return void openShareCard(m, s, title(), name);
     if (d.openLib) return void (location.hash = "#/library");
     if (d.book !== undefined) return open({ type: "book", idx: Number(d.book) });
     if (d.periodOpen) {
