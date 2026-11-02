@@ -30,7 +30,7 @@ export async function renderWishlist(view, state) {
       if (mine && w.status === "wanted") acts.push(`<button data-act="remove" class="btn-ghost py-1 text-sm">Remove</button>`);
       return `<li class="card space-y-2" data-wish="${w.id}" data-book="${w.book_id}">
         <div class="flex flex-wrap items-start justify-between gap-2">
-          <button data-act="open" class="flex min-w-0 gap-3 text-left">${coverImg(w.book_id, "h-20 w-14")}<span class="min-w-0"><span class="block font-semibold">${esc(w.title)}</span>
+          <button data-act="open" class="flex min-w-0 gap-3 text-left">${coverImg(w.book_id, "h-20 w-14")}<span class="min-w-0"><span class="block font-semibold">${esc(w.title)}${w.format ? ` <span class="chip-fmt align-middle">${w.format === "audio" ? "🎧 Audiobook" : "📖 E-book"}</span>` : ""}</span>
             <span class="block text-sm text-slate-400">${esc(w.author || "")}</span></span></button>
           <span class="flex flex-wrap gap-1">${w.spice_level === null ? "" : pepperChip(w.spice_level)}<span class="${cls}">${label}</span></span>
         </div>

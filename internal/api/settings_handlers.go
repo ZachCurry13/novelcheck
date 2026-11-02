@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
+	"github.com/zachcurry13/novelcheck/internal/audiobookshelf"
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -141,6 +142,18 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		if k == store.KeyLLMBaseURL || k == store.KeyBackupBaseURL {
 			v = llm.NormalizeBaseURL(v)
+		}
+		if k == store.KeyABSURL && v != "" {
+			if v = audiobookshelf.CleanBase(v); v == "" {
+				writeErr(w, http.StatusBadRequest, "Audiobookshelf address must look like http://192.168.1.10:13378")
+				return
+			}
+		}
+		if k == store.KeyABSPollHours {
+			if n, err := strconv.Atoi(v); err != nil || n < 0 || n > 720 {
+				writeErr(w, http.StatusBadRequest, "check Audiobookshelf every 0 to 720 hours")
+				return
+			}
 		}
 		if k == store.KeyCalibreWebURL && v != "" {
 			var ok bool

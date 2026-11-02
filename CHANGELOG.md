@@ -4,6 +4,18 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.48.0]
+
+### 🎧 Audiobooks: Audiobookshelf, download, listen, Libby
+- **Connect Audiobookshelf** (Admin → Delivery & Services): its address and an API token, once. NovelCheck reads your audiobook libraries (title, author, **narrator**, series, **length**, cover, genres) every few hours, or press **Read the library now**. A title you already have as an e-book becomes **one book with two formats**.
+- **Peppers on audiobooks:** they're rated like every other book, so Prologue's missing spice ratings are here. Kids' content rules apply to audiobooks too.
+- **Sort and filter by length:** Library has **Longest / Shortest audiobooks**, a **length** filter (under 5 hours … over 20), a **narrator** filter and an **Audiobooks** format. Cards show 🎧 length and 🎙 narrator.
+- **Download from the browser:** **Download audiobook** (one file as it is, several as a zip) next to the e-book's Download.
+- **Listen in the browser:** a player with speed, sleep timer (even "end of this chapter"), chapters, bookmarks and lock-screen controls. It keeps your place in Audiobookshelf, and **Continue listening** shows on Nightstand. The audio goes through NovelCheck, so your server's address and token never reach a browser.
+- **Your own place:** Settings → Connections lets each person link their own Audiobookshelf account (the password isn't kept). Until then everyone shares the family account.
+- **Ask for the other format:** on a book you have as an e-book only (or audiobook only, or on paper) press **Request the audiobook / e-book**. It goes on the wishlist with its format, and is marked got when it arrives.
+- **Libby audiobooks:** a book's Libby box and the Discover chips also check the audiobook, with a link to borrow or hold it.
+
 ## [1.47.0]
 
 ### 📤 Share your reading as a picture

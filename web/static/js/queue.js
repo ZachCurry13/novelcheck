@@ -8,6 +8,7 @@ import { coverImg } from "./covers.js";
 import { openBook } from "./bookdialog.js";
 import { progressBar, progressText, pct, ago, setBars } from "./progress.js";
 import { renderKOReaderBooks } from "./koreaderbooks.js";
+import { renderListening } from "./listening.js";
 
 export async function renderQueue(view, state) {
   view.innerHTML = `
@@ -18,6 +19,7 @@ export async function renderQueue(view, state) {
     <p id="nightstand-intro" class="mb-4 hidden rounded-lg bg-slate-800/60 p-3 text-sm text-slate-300">🛏️ <b>Your Nightstand</b> (it used to be called Up Next): what you're reading now,
       then the pile you plan to read next. Books you open on your e-reader show up here by themselves.
       <button type="button" data-intro-ok class="ml-1 underline">Got it</button></p>
+    <div id="listening"></div>
     <section class="mb-8">
       <h2 class="label">Currently Reading</h2>
       <div id="reading" class="grid gap-3 sm:grid-cols-2"></div>
@@ -53,6 +55,7 @@ export async function renderQueue(view, state) {
       /* private mode: it comes back next time */
     }
   };
+  renderListening($("#listening", view));
   const reading = $("#reading", view);
   const hiddenEl = $("#hidden", view);
   const queued = $("#queued", view);

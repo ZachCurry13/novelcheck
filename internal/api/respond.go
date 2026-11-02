@@ -55,3 +55,8 @@ func queryID(r *http.Request, name string) int64 {
 	n, _ := strconv.ParseInt(r.URL.Query().Get(name), 10, 64)
 	return n
 }
+
+func queryFloat(r *http.Request, name string) float64 {
+	f, _ := strconv.ParseFloat(r.URL.Query().Get(name), 64)
+	return f
+}

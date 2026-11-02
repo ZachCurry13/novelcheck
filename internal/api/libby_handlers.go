@@ -74,7 +74,11 @@ func (s *Server) handleBookLibby(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"configured": true, "library": name, "error": err.Error()})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"configured": true, "library": name, "availability": a})
+	out := map[string]any{"configured": true, "library": name, "availability": a}
+	if au, err := s.Libby.CheckMedia(ctx, key, b.Title, b.Author, "audiobook"); err == nil { // the audiobook, too
+		out["audio"] = au
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 // handleLibbyCheck: POST /api/libby/check {"ids": [...]} (up to 60): the
@@ -98,7 +102,7 @@ func (s *Server) handleLibbyCheck(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 25*time.Second)
 	defer cancel()
-	out := map[int64]libby.Availability{}
+	out, audio := map[int64]libby.Availability{}, map[int64]libby.Availability{}
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	gate := make(chan struct{}, 5)
@@ -116,8 +120,13 @@ func (s *Server) handleLibbyCheck(w http.ResponseWriter, r *http.Request) {
 				out[b.ID] = a
 				mu.Unlock()
 			}
+			if a, err := s.Libby.CheckMedia(ctx, key, b.Title, b.Author, "audiobook"); err == nil && a.Found {
+				mu.Lock()
+				audio[b.ID] = a
+				mu.Unlock()
+			}
 		}()
 	}
 	wg.Wait()
-	writeJSON(w, http.StatusOK, map[string]any{"configured": true, "books": out})
+	writeJSON(w, http.StatusOK, map[string]any{"configured": true, "books": out, "audio": audio})
 }

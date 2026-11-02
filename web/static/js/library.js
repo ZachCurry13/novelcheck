@@ -15,13 +15,14 @@ import { liveCards } from "./livestatus.js";
 import { refreshActivity } from "./activity.js";
 import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
 import { shelfBanner } from "./collections.js";
+import { audioFilterHTML, audioSortHTML, audioParams } from "./libaudio.js";
 
 const PAGE = 60;
 
 export async function renderLibrary(view, state) {
   const manager = canManage(state.user);
   const [catalogs, , facets, , shelves] = await Promise.all([attempt(() => get("/api/catalogs")).then((c) => c || []), loadFlags(true),
-    attempt(() => get("/api/books/facets")).then((f) => f || { genres: [], kinds: [], authors: [], series: [] }), loadContent(),
+    attempt(() => get("/api/books/facets")).then((f) => f || { genres: [], kinds: [], authors: [], series: [], narrators: [] }), loadContent(),
     get("/api/collections").catch(() => ({ collections: [], seasons: [] }))]);
   // A collection, seasonal shelf or event chosen elsewhere (#/library?collection=3, ?season=advent, ?event=5).
   const shelf = new URLSearchParams(location.hash.split("?")[1] || "");
@@ -42,6 +43,7 @@ export async function renderLibrary(view, state) {
       <select name="kind" class="input filter-more"><option value="">Fiction &amp; nonfiction</option>${(facets.kinds || []).filter((k) => k.count).map((k) => opt(k.key, k.label, k.count)).join("")}</select>
       <input name="author" list="author-list" placeholder="Author" class="input filter-more" autocomplete="off">
       <input name="series" list="series-list" placeholder="Series" class="input filter-more" autocomplete="off">
+      ${audioFilterHTML(facets)}
       <datalist id="author-list">${(facets.authors || []).map((a) => `<option value="${esc(a)}"></option>`).join("")}</datalist>
       <datalist id="series-list">${(facets.series || []).map((s) => `<option value="${esc(s)}"></option>`).join("")}</datalist>
       <select name="catalog" class="input filter-more"><option value="">All libraries</option>${catOpts}</select>
@@ -62,6 +64,7 @@ export async function renderLibrary(view, state) {
         <option value="">Any format</option>
         ${["epub", "azw3", "mobi", "kfx", "pdf"].map((f) => `<option value="${f}">${f.toUpperCase()}</option>`).join("")}
         <option value="paper">📕 Paper books</option>
+        ${(facets.narrators || []).length ? `<option value="audio">🎧 Audiobooks</option>` : ""}
         <option value="multi">2+ formats</option>
         <option value="dupes">Duplicates</option>
         <option value="none">No file</option>
@@ -70,6 +73,7 @@ export async function renderLibrary(view, state) {
         ${event ? `<option value="list">Sort: The event's order</option>` : ""}
         <option value="title">Sort: Title</option><option value="author">Sort: Author (last name)</option>
         <option value="recent">Sort: Recently added</option><option value="mild">Sort: Fewest peppers</option>
+        ${audioSortHTML(facets)}
       </select>
       <div class="filter-more col-span-full"><span class="label" title="Books with these are hidden (unless a parent marked them OK)">Hide content</span>
         ${hidePicker()}</div>
@@ -121,6 +125,7 @@ export async function renderLibrary(view, state) {
       kind: fd.get("kind"),
       author: fd.get("author"),
       series: fd.get("series"),
+      ...audioParams(fd),
       sort: fd.get("sort"),
       multi: fd.get("multi") === "on",
       deep: fd.get("deep") === "on",
@@ -209,7 +214,7 @@ export async function renderLibrary(view, state) {
   }
   // Links such as #/library?author=… (from a book's window) open with that filter set.
   const preset = new URLSearchParams(location.hash.split("?")[1] || "");
-  for (const k of ["q", "author", "series", "genre", "kind", "catalog", "spice"]) {
+  for (const k of ["q", "author", "series", "genre", "kind", "catalog", "spice", "narrator", "format", "sort"]) {
     if (preset.get(k) && form.elements[k]) form.elements[k].value = preset.get(k);
   }
   if ([...preset.keys()].some((k) => !["q", "collection", "season", "event"].includes(k))) form.classList.add("filters-open");

@@ -20,6 +20,18 @@ func browseConds(f BookFilter, where []string, args []any) ([]string, []any) {
 		where = append(where, "b.series LIKE ?")
 		args = append(args, "%"+s+"%")
 	}
+	if n := strings.TrimSpace(f.Narrator); n != "" {
+		where = append(where, "b.narrator LIKE ?")
+		args = append(args, "%"+n+"%")
+	}
+	if f.MinHours > 0 {
+		where = append(where, "b.duration_sec >= ?")
+		args = append(args, int(f.MinHours*3600))
+	}
+	if f.MaxHours > 0 {
+		where = append(where, "b.duration_sec > 0 AND b.duration_sec <= ?")
+		args = append(args, int(f.MaxHours*3600))
+	}
 	if genres.Valid(f.Genre) {
 		where = append(where, "b.genres LIKE ?")
 		args = append(args, "%,"+f.Genre+",%")
@@ -44,25 +56,27 @@ type Facet struct {
 // Facets are the author, series, genre and fiction/nonfiction choices for
 // the books viewer may see, most books first (genres in their usual order).
 type Facets struct {
-	Genres  []Facet  `json:"genres"`
-	Kinds   []Facet  `json:"kinds"`
-	Authors []string `json:"authors"`
-	Series  []string `json:"series"`
+	Genres    []Facet  `json:"genres"`
+	Kinds     []Facet  `json:"kinds"`
+	Authors   []string `json:"authors"`
+	Series    []string `json:"series"`
+	Narrators []string `json:"narrators"`
 }
 
 func (s *Store) Facets(viewer *User) (Facets, error) {
 	where, args := visibilityClause(viewer)
 	var rows []struct {
-		Author string `db:"author"`
-		Series string `db:"series"`
-		Genres string `db:"genres"`
-		Kind   string `db:"kind"`
+		Author   string `db:"author"`
+		Series   string `db:"series"`
+		Genres   string `db:"genres"`
+		Kind     string `db:"kind"`
+		Narrator string `db:"narrator"`
 	}
-	if err := s.DB.Select(&rows, `SELECT b.author, b.series, b.genres, b.kind FROM books b
+	if err := s.DB.Select(&rows, `SELECT b.author, b.series, b.genres, b.kind, b.narrator FROM books b
 		WHERE `+ownedCond+where, args...); err != nil {
 		return Facets{}, err
 	}
-	genreN, kindN, authorN, seriesN := map[string]int{}, map[string]int{}, map[string]int{}, map[string]int{}
+	genreN, kindN, authorN, seriesN, narrN := map[string]int{}, map[string]int{}, map[string]int{}, map[string]int{}, map[string]int{}
 	for _, r := range rows {
 		for _, g := range genres.Split(r.Genres) {
 			genreN[g]++
@@ -76,6 +90,11 @@ func (s *Store) Facets(viewer *User) (Facets, error) {
 		if r.Series != "" {
 			seriesN[r.Series]++
 		}
+		for _, n := range strings.Split(r.Narrator, ",") {
+			if n = strings.TrimSpace(n); n != "" {
+				narrN[n]++
+			}
+		}
 	}
 	var f Facets
 	for _, g := range genres.All {
@@ -84,7 +103,7 @@ func (s *Store) Facets(viewer *User) (Facets, error) {
 		}
 	}
 	f.Kinds = []Facet{{"fiction", "Fiction", kindN["fiction"]}, {"nonfiction", "Nonfiction", kindN["nonfiction"]}, {"unknown", "Not sorted yet", kindN[""]}}
-	f.Authors, f.Series = byCount(authorN, 3000), byCount(seriesN, 3000)
+	f.Authors, f.Series, f.Narrators = byCount(authorN, 3000), byCount(seriesN, 3000), byCount(narrN, 1500)
 	return f, nil
 }
 

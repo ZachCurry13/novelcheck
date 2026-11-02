@@ -19,6 +19,7 @@ import { blurbHTML } from "./blurb.js";
 import { bookCollectionsHTML, bindBookCollections } from "./bookcollections.js";
 import { progressText } from "./progress.js";
 import { renderBookLibby } from "./libby.js";
+import { renderAudioSection } from "./bookaudio.js";
 
 // Lists that aren't the family's libraries: books only looked up (Check a
 // book) or on a Discover list.
@@ -102,11 +103,12 @@ export async function openBook(id, state, onChange) {
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : b.analysis_model.startsWith("deep: ") ? "🧬 Deep Scanned (whole book) by " + esc(b.analysis_model.slice(6)) : "Rated from the description by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
       ${b.approved ? `<p class="text-xs text-emerald-400">✓ Marked OK by ${esc(b.approved_by)}: shown to everyone, even if it matches their hide filters or content rules.</p>` : ""}
       <div id="deep-section"></div>
+      <div id="audio-section"></div>
       <div id="libby-section"></div>
       ${manager ? verdictFormHTML(b) : ""}
       ${parents ? ageAndNotesHTML(b, data.notes || [], manager, state.user) : ""}
       <div class="flex flex-wrap gap-2">
-        ${data.downloadable ? `<a href="/api/books/${b.id}/download" class="btn-secondary">Download</a>` : ""}
+        ${data.downloadable ? `<a href="/api/books/${b.id}/download" class="btn-secondary">${data.has_audio ? "Download e-book" : "Download"}</a>` : ""}
         ${manager ? `<button data-act="analyze" class="btn-secondary">${b.classification ? "Re-analyze" : "Analyze now"}</button>
           <button data-act="approve" class="btn-secondary" title="Show this book even when it matches someone's hide filters or content rules">${b.approved ? "Remove OK mark" : "✓ Mark as OK"}</button>` : ""}
         ${!owned ? "" : data.my_delete_request
@@ -193,6 +195,7 @@ export async function openBook(id, state, onChange) {
   };
   dlg.showModal();
   renderDeepSection($("#deep-section", dlg), b.id, state.user, b.title);
+  renderAudioSection($("#audio-section", dlg), data, b, state);
   renderBookLibby($("#libby-section", dlg), b.id);
   bindBookCollections(dlg, b.id, manager, data.collections || []);
 }

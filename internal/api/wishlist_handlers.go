@@ -21,17 +21,22 @@ func (s *Server) handleAddWish(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	if s.Store.Owned(id) {
-		writeErr(w, http.StatusBadRequest, "this book is already in your library")
-		return
-	}
 	var body struct {
-		Note string `json:"note"`
+		Note   string `json:"note"`
+		Format string `json:"format"` // "", "audio" or "ebook": the same title in another format
 	}
 	if r.ContentLength > 0 && !readJSON(w, r, &body, 4<<10) {
 		return
 	}
-	if err := s.Store.AddWish(id, u, body.Note); err != nil {
+	if body.Format == "" && s.Store.Owned(id) {
+		writeErr(w, http.StatusBadRequest, "this book is already in your library")
+		return
+	}
+	if body.Format != "" && s.Store.HasFormat(id, body.Format) {
+		writeErr(w, http.StatusBadRequest, "the family already has it in that format")
+		return
+	}
+	if err := s.Store.AddWishFormat(id, u, body.Note, body.Format); err != nil {
 		if errors.Is(err, store.ErrAlreadyWished) {
 			writeErr(w, http.StatusConflict, err.Error())
 			return
@@ -40,7 +45,7 @@ func (s *Server) handleAddWish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.Store.Notify("info", "wishlist", "New books are on the family wishlist.", "#/wishlist")
-	writeJSON(w, http.StatusOK, map[string]any{"wish": s.Store.MyWish(id, u.ID)})
+	writeJSON(w, http.StatusOK, map[string]any{"wish": s.Store.MyWishFormat(id, u.ID, body.Format)})
 }
 
 func (s *Server) handleRemoveWish(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +54,7 @@ func (s *Server) handleRemoveWish(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	if err := s.Store.RemoveWish(id, auth.UserFrom(r).ID); err != nil {
+	if err := s.Store.RemoveWishFormat(id, auth.UserFrom(r).ID, r.URL.Query().Get("format")); err != nil {
 		writeStoreErr(w, err)
 		return
 	}

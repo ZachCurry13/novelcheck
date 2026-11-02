@@ -14,6 +14,7 @@ type Wish struct {
 	SpiceLevel *int   `db:"spice_level" json:"spice_level"`
 	Username   string `db:"username" json:"username"`
 	Note       string `db:"note" json:"note"`
+	Format     string `db:"format" json:"format"` // "" = the book itself; "audio" or "ebook" = that format of it
 	Status     string `db:"status" json:"status"` // wanted | approved | acquired | declined
 	DecidedBy  string `db:"decided_by" json:"decided_by"`
 	CreatedAt  string `db:"created_at" json:"created_at"`
@@ -29,13 +30,28 @@ var ErrAlreadyWished = errors.New("this book is already on your wishlist")
 const ownedCond = `EXISTS (SELECT 1 FROM catalog_books oc JOIN catalogs ocat ON ocat.id = oc.catalog_id
 	WHERE (oc.book_id = b.id OR oc.book_id IN (SELECT obm.box_id FROM box_members obm WHERE obm.book_id = b.id)) AND ocat.name NOT IN ('` + LookedUpCatalog + `', '` + DiscoverCatalog + `', '` + EventsCatalog + `'))`
 
-const wishCols = `w.id, w.book_id, b.title, b.author, b.spice_level, w.username, w.note, w.status, w.decided_by,
+const wishCols = `w.id, w.book_id, b.title, b.author, b.spice_level, w.username, w.note, w.format, w.status, w.decided_by,
 	w.created_at, w.updated_at`
+
+// formatCond is true for a copy (alias cb) in the wished-for format.
+var formatCond = map[string]string{
+	"audio": "cb.format = 'audio'",
+	"ebook": "cb.format NOT IN ('', 'list', 'paper', 'audio')",
+}
 
 // AddWish puts a book on the person's wishlist.
 func (s *Store) AddWish(bookID int64, u *User, note string) error {
-	_, err := s.DB.Exec(`INSERT INTO wishlist (book_id, user_id, username, note) VALUES (?, ?, ?, ?)`,
-		bookID, u.ID, u.Username, strings.TrimSpace(note))
+	return s.AddWishFormat(bookID, u, note, "")
+}
+
+// AddWishFormat wishes for a book the family has in one format but not the
+// other: "audio" (the audiobook) or "ebook". "" is the book itself.
+func (s *Store) AddWishFormat(bookID int64, u *User, note, format string) error {
+	if _, ok := formatCond[format]; !ok && format != "" {
+		return errors.New("format must be audio or ebook")
+	}
+	_, err := s.DB.Exec(`INSERT INTO wishlist (book_id, user_id, username, note, format) VALUES (?, ?, ?, ?, ?)`,
+		bookID, u.ID, u.Username, strings.TrimSpace(note), format)
 	if err != nil && strings.Contains(err.Error(), "UNIQUE") {
 		return ErrAlreadyWished
 	}
@@ -43,16 +59,22 @@ func (s *Store) AddWish(bookID int64, u *User, note string) error {
 }
 
 // RemoveWish takes a book off the person's wishlist (while it's still open).
-func (s *Store) RemoveWish(bookID, userID int64) error {
-	_, err := s.DB.Exec(`DELETE FROM wishlist WHERE book_id = ? AND user_id = ? AND status IN ('wanted', 'approved')`, bookID, userID)
+func (s *Store) RemoveWish(bookID, userID int64) error { return s.RemoveWishFormat(bookID, userID, "") }
+
+// RemoveWishFormat takes the wish for the book in that format off the list.
+func (s *Store) RemoveWishFormat(bookID, userID int64, format string) error {
+	_, err := s.DB.Exec(`DELETE FROM wishlist WHERE book_id = ? AND user_id = ? AND format = ? AND status IN ('wanted', 'approved')`, bookID, userID, format)
 	return err
 }
 
 // MyWish is the person's open wish for a book, or nil.
-func (s *Store) MyWish(bookID, userID int64) *Wish {
+func (s *Store) MyWish(bookID, userID int64) *Wish { return s.MyWishFormat(bookID, userID, "") }
+
+// MyWishFormat is the person's open wish for the book in that format, or nil.
+func (s *Store) MyWishFormat(bookID, userID int64, format string) *Wish {
 	var w Wish
 	if err := s.DB.Get(&w, `SELECT `+wishCols+` FROM wishlist w JOIN books b ON b.id = w.book_id
-		WHERE w.book_id = ? AND w.user_id = ? AND w.status IN ('wanted', 'approved')`, bookID, userID); err != nil {
+		WHERE w.book_id = ? AND w.user_id = ? AND w.format = ? AND w.status IN ('wanted', 'approved')`, bookID, userID, format); err != nil {
 		return nil
 	}
 	return &w
@@ -62,7 +84,12 @@ func (s *Store) MyWish(bookID, userID int64) *Wish {
 // person's. Books that have since arrived in a library are marked acquired.
 func (s *Store) Wishes(userID int64, everyone bool) ([]Wish, error) {
 	_, _ = s.DB.Exec(`UPDATE wishlist SET status = 'acquired', decided_by = 'in the library now', updated_at = CURRENT_TIMESTAMP
-		WHERE status IN ('wanted', 'approved') AND book_id IN (SELECT b.id FROM books b WHERE ` + ownedCond + `)`)
+		WHERE status IN ('wanted', 'approved') AND format = '' AND book_id IN (SELECT b.id FROM books b WHERE ` + ownedCond + `)`)
+	for f, cond := range formatCond {
+		_, _ = s.DB.Exec(`UPDATE wishlist SET status = 'acquired', decided_by = 'in the library now', updated_at = CURRENT_TIMESTAMP
+			WHERE status IN ('wanted', 'approved') AND format = ? AND book_id IN (SELECT cb.book_id FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
+				WHERE c.name NOT IN ('`+LookedUpCatalog+`', '`+DiscoverCatalog+`', '`+EventsCatalog+`') AND `+cond+`)`, f)
+	}
 	q := `SELECT ` + wishCols + ` FROM wishlist w JOIN books b ON b.id = w.book_id`
 	args := []any{}
 	if !everyone {

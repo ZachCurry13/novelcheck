@@ -8,6 +8,7 @@ import { deepChip } from "./deepscan.js";
 import { seriesText } from "./titlefix.js";
 import { coverImg } from "./covers.js";
 import { blurbHTML } from "./blurb.js";
+import { audioChip } from "./audioui.js";
 
 // A book already in your Nightstand.
 export const IN_QUEUE = `<span class="px-2 py-1 text-lg text-emerald-300" title="In your Nightstand" aria-label="In your Nightstand">✓</span>`;
@@ -32,6 +33,7 @@ export function card(b, queueOn, extra = "") {
         <div class="min-w-0 flex-1">
           <h3 class="font-semibold leading-tight line-clamp-2">${esc(b.title)}</h3>
           <p class="text-sm text-slate-400 truncate">${esc(b.author || "Unknown author")}${seriesText(b) ? ` · <span class="text-sky-300">${esc(seriesText(b))}</span>` : ""}</p>
+          ${b.narrator ? `<p class="truncate text-xs text-slate-500">🎙 ${esc(b.narrator)}</p>` : ""}
         </div>
         ${!queueOn ? "" : b.in_queue ? IN_QUEUE : `<button data-queue="${b.id}" title="Add to your Nightstand" aria-label="Add to your Nightstand" class="btn-ghost px-2 py-1 text-lg">＋</button>`}
       </div>
@@ -44,9 +46,9 @@ export function card(b, queueOn, extra = "") {
 
 // File formats (EPUB, AZW3…) and a warning when Calibre has the book twice.
 export function formatChips(b) {
-  const fmts = b.formats ? b.formats.split(",").map((f) => `<span class="chip-fmt">${f === "PAPER" ? "📕 Paper" : esc(f)}</span>`).join(" ") : "";
+  const fmts = b.formats ? b.formats.split(",").filter((f) => f !== "AUDIO").map((f) => `<span class="chip-fmt">${f === "PAPER" ? "📕 Paper" : esc(f)}</span>`).join(" ") : "";
   const del = b.delete_requests ? `<span class="chip-dup" title="Someone asked to delete this book">🗑 Delete requested</span>` : "";
   const dup = b.calibre_copies > 1
     ? `<span class="chip-dup" title="This book is in Calibre ${b.calibre_copies} times">⚠ ${b.calibre_copies}× in Calibre</span>` : "";
-  return `${fmts} ${dup} ${del}`;
+  return `${audioChip(b)} ${fmts} ${dup} ${del}`;
 }

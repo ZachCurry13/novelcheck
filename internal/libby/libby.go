@@ -117,9 +117,17 @@ type item struct {
 	} `json:"formats"`
 }
 
-// Check looks a book up at a library (e-books only) by title and author.
+// Check looks a book up at a library (e-books) by title and author.
 func (c *Client) Check(ctx context.Context, key, title, author string) (Availability, error) {
-	ck := key + "|" + store.NormKey(title, author)
+	return c.CheckMedia(ctx, key, title, author, "ebook")
+}
+
+// CheckMedia is Check for one kind of media: "ebook" or "audiobook".
+func (c *Client) CheckMedia(ctx context.Context, key, title, author, media string) (Availability, error) {
+	if media != "audiobook" {
+		media = "ebook"
+	}
+	ck := media + "|" + key + "|" + store.NormKey(title, author)
 	c.mu.Lock()
 	if v, ok := c.cache[ck]; ok && time.Since(v.at) < 3*time.Hour {
 		c.mu.Unlock()
@@ -129,7 +137,7 @@ func (c *Client) Check(ctx context.Context, key, title, author string) (Availabi
 	var res struct {
 		Items []item `json:"items"`
 	}
-	q := url.Values{"query": {strings.TrimSpace(title + " " + author)}, "maxItems": {"12"}, "mediaTypes": {"ebook"}}
+	q := url.Values{"query": {strings.TrimSpace(title + " " + author)}, "maxItems": {"12"}, "mediaTypes": {media}}
 	if err := c.get(ctx, "/libraries/"+url.PathEscape(key)+"/media?"+q.Encode(), &res); err != nil {
 		return Availability{}, err
 	}

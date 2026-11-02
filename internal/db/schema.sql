@@ -307,7 +307,7 @@ CREATE TABLE IF NOT EXISTS wishlist (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_wishlist_open ON wishlist(book_id, user_id) WHERE status IN ('wanted', 'approved');
+-- (the open-wish index is made in migrate.go: it includes the format column)
 
 -- Private KOReader (OPDS) feed addresses: /opds/<token> lists the person's
 -- Nightstand with download links. KOReader can't sign in, so the token is the key.

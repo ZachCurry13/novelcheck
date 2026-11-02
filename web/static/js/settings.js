@@ -15,6 +15,7 @@ import { renderSyncStatus } from "./syncstatus.js";
 import { renderPluginCard } from "./pluginmanage.js";
 import { renderHardcover } from "./hardcover.js";
 import { renderLibbyCard } from "./libby.js";
+import { renderABSCard } from "./absaccount.js";
 import { tabStrip } from "./tabs.js";
 import { renderSharingCard } from "./sharing.js";
 
@@ -60,7 +61,7 @@ function kindleHTML(u) {
     <div id="sync-card" class="card space-y-2${off}"></div>`;
 }
 
-const connectionsHTML = () => `<div id="hardcover-card" class="card space-y-2"></div><div id="libby-card" class="card space-y-2"></div>`;
+const connectionsHTML = () => `<div id="hardcover-card" class="card space-y-2"></div><div id="libby-card" class="card space-y-2"></div><div id="abs-card" class="card space-y-2" hidden></div>`;
 
 export async function renderSettings(view, state) {
   const u = state.user;
@@ -102,6 +103,7 @@ export async function renderSettings(view, state) {
     } else {
       renderHardcover($("#hardcover-card", view));
       renderLibbyCard($("#libby-card", view));
+      renderABSCard($("#abs-card", view));
     }
   };
   view.onclick = (e) => {

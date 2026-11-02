@@ -83,6 +83,9 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/discover", s.handleDiscoverStatus)
 		r.Post("/admin/discover/refresh", s.handleDiscoverRefresh)
 		r.Post("/admin/discover/test", s.handleDiscoverTest)
+		r.Get("/admin/audiobookshelf", s.handleABSStatus)
+		r.Post("/admin/audiobookshelf/test", s.handleABSTest)
+		r.Post("/admin/audiobookshelf/sync", s.handleABSSync)
 	})
 
 	r.Group(func(r chi.Router) { // 🖥️ System

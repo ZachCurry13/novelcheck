@@ -19,18 +19,21 @@ type BookFilter struct {
 	ExcludeFlags   []string // hide books with ANY of these flags (parent-approved books stay)
 	AnyFlags       []string // books with ANY of these flags (used for the Calibre removal list)
 	Status         string
-	Age            string // "" any | "unset" | "1".."5" = suitable up to that age group
-	Spice          string // "" any | "0".."5" exact peppers | "old" = rated before the pepper scale | "review" = the AI was unsure
-	Format         string // "" any | "epub" etc. | "multi" (2+ formats) | "none" (no file) | "dupes" (2+ Calibre entries)
-	Author         string // part of an author's name
-	Series         string // part of a series name
-	Genre          string // a category key (package genres)
-	Kind           string // "fiction", "nonfiction" or "unknown"
-	Collection     int64  // only books in this collection
-	Event          int64  // only books an event lists (kids: rated ones)
-	NotOwned       bool   // hide books the family has
-	Season         string // a seasonal shelf's key (package seasons), matched by its words
-	Sort           string // "title" (default) | "author" | "recent" | "mild" (fewest peppers) | "list" (the event's order)
+	Age            string  // "" any | "unset" | "1".."5" = suitable up to that age group
+	Spice          string  // "" any | "0".."5" exact peppers | "old" = rated before the pepper scale | "review" = the AI was unsure
+	Format         string  // "" any | "epub" etc. | "multi" (2+ formats) | "none" (no file) | "dupes" (2+ Calibre entries)
+	Author         string  // part of an author's name
+	Series         string  // part of a series name
+	Genre          string  // a category key (package genres)
+	Narrator       string  // part of a narrator's name (audiobooks)
+	MinHours       float64 // audiobooks at least this long (0 = any)
+	MaxHours       float64 // ...and at most this long (0 = any)
+	Kind           string  // "fiction", "nonfiction" or "unknown"
+	Collection     int64   // only books in this collection
+	Event          int64   // only books an event lists (kids: rated ones)
+	NotOwned       bool    // hide books the family has
+	Season         string  // a seasonal shelf's key (package seasons), matched by its words
+	Sort           string  // "title" (default) | "author" | "recent" | "mild" (fewest peppers) | "long" / "short" (audiobook length) | "list" (the event's order)
 	Limit, Offset  int
 }
 
@@ -47,7 +50,7 @@ var flagColumns = map[string]string{
 
 // fileFormats are the formats the Format filter offers: e-book files, and
 // "paper" for books on a shelf.
-var fileFormats = map[string]bool{"epub": true, "azw3": true, "azw": true, "mobi": true, "kfx": true, "pdf": true, "paper": true}
+var fileFormats = map[string]bool{"epub": true, "azw3": true, "azw": true, "mobi": true, "kfx": true, "pdf": true, "paper": true, "audio": true}
 
 var formatConds = map[string]string{
 	"multi": "(SELECT COUNT(DISTINCT LOWER(fm.format)) FROM catalog_books fm WHERE fm.book_id = b.id AND fm.format NOT IN ('', 'list', 'paper')) > 1",
@@ -259,6 +262,10 @@ func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
 		order = "b.created_at DESC, b.id DESC"
 	case "mild":
 		order = "COALESCE(b.spice_level, 9), sort_title(b.title)"
+	case "long":
+		order = "b.duration_sec DESC, sort_title(b.title)"
+	case "short":
+		order = "(b.duration_sec = 0), b.duration_sec, sort_title(b.title)"
 	case "list":
 		if f.Event > 0 {
 			order = "(SELECT MIN(lo.position) FROM event_books lo WHERE lo.book_id = b.id AND lo.event_id = " + strconv.FormatInt(f.Event, 10) + "), b.id"

@@ -65,6 +65,11 @@ const SECTIONS = [
     ["calibre_poll_hours", "Sync every N hours (0 = manual only)", "6", "number"],
     ["calibre_web_url", "Calibre-Web address (optional)", "http://192.168.1.10:8083 · adds \"Open in Calibre-Web\" to each book"],
   ]],
+  ["delivery", "Audiobookshelf", [
+    ["abs_url", "Audiobookshelf address", "http://192.168.1.10:13378"],
+    ["abs_api_token", "API token", "Paste the token from Audiobookshelf", "password"],
+    ["abs_poll_hours", "Read the library every N hours (0 = only when you press the button)", "12", "number"],
+  ]],
   ["delivery", "Discover", [
     ["nyt_api_key", "New York Times Books API key (optional, free)", "Paste the key from developer.nytimes.com", "password"],
     ["discover_daily_ratings", "Discover books the AI rates per day (0 = none)", "30", "number"],
@@ -94,7 +99,7 @@ const SECTION_MODULE = { "SMTP / Send-to-Kindle": "send_to_kindle", Discover: "d
 const SECTION_AREA = {
   "LLM Analysis Engine": "ai", "Backup AI (optional)": "ai", "AI machines": "ai", "Suggested Reads": "ai",
   "Automatic rating": "ai", "Rate Caps & Batching": "ai", "SMTP / Send-to-Kindle": "services",
-  "Calibre Library": "calibre", Discover: "services", Features: "system", "Sign-in & Updates": "system",
+  "Calibre Library": "calibre", Audiobookshelf: "services", Discover: "services", Features: "system", "Sign-in & Updates": "system",
 };
 
 const EXTRA = {
@@ -104,6 +109,7 @@ const EXTRA = {
   "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,
   "Calibre Library": `<div id="calibre-picker"></div><div id="calibre-server"></div>`,
   Discover: `<div id="discover-admin" class="space-y-2"></div>`,
+  Audiobookshelf: `<div id="abs-admin" class="space-y-2"></div>`,
   "Automatic rating": `<div id="auto-rate-host" class="space-y-3"></div>`,
   Features: `<p class="text-xs text-slate-400">Turn off what your family doesn't use. It disappears for everyone; kids' content rules always keep applying.</p>`,
 };
@@ -130,6 +136,8 @@ export function renderSettingsTab(host, tab, settings, user) {
   }
   const autoHost = $("#auto-rate-host", form);
   if (autoHost) import("./autorateadmin.js").then((m) => m.renderAutoRate(autoHost, settings));
+  const absHost = $("#abs-admin", form);
+  if (absHost) import("./absadmin.js").then((m) => m.renderABSAdmin(absHost, form));
   const discoverHost = $("#discover-admin", form);
   if (discoverHost) import("./discoveradmin.js").then((m) => m.renderDiscoverAdmin(discoverHost, form));
   const backupHost = $("#backup-preset-host", form);

@@ -43,6 +43,9 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		Author:         q.Get("author"),
 		Series:         q.Get("series"),
 		Genre:          q.Get("genre"),
+		Narrator:       q.Get("narrator"),
+		MinHours:       queryFloat(r, "min_hours"),
+		MaxHours:       queryFloat(r, "max_hours"),
 		Kind:           q.Get("kind"),
 		Sort:           q.Get("sort"),
 		Limit:          queryInt(r, "limit"),
@@ -93,6 +96,8 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 	}
 	out := map[string]any{"book": b, "copies": copies, "downloadable": downloadable, "notes": notes,
 		"my_delete_request": s.Store.MyDeleteRequest(id, u.ID), "my_wish": s.Store.MyWish(id, u.ID), "owned": s.Store.Owned(id),
+		"has_audio": s.Store.HasFormat(id, "audio"), "has_ebook": s.Store.HasFormat(id, "ebook"),
+		"my_audio_wish": s.Store.MyWishFormat(id, u.ID, "audio"), "my_ebook_wish": s.Store.MyWishFormat(id, u.ID, "ebook"),
 		"my_cover_report": s.Store.MyCoverReport(id, u.ID), "editable_catalogs": s.editableCatalogs(copies, u),
 		"collections": s.Store.BookCollections(id, u)}
 	if p, ok := s.Store.ReadingProgress(u.ID)[id]; ok {
@@ -117,6 +122,10 @@ func (s *Server) handleDownload(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, err := s.Store.BookByID(id, auth.UserFrom(r)); err != nil {
 		writeStoreErr(w, err)
+		return
+	}
+	if r.URL.Query().Get("format") == "audio" {
+		s.serveAudioDownload(w, r)
 		return
 	}
 	copies, err := s.Store.BookCopies(id)

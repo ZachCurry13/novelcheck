@@ -6,6 +6,15 @@ import { esc, attempt } from "./ui.js";
 
 const num = (n) => Number(n || 0).toLocaleString();
 
+// audioLine is the audiobook at the library, when it lends one.
+function audioLine(r) {
+  const a = r.audio;
+  if (!a?.found) return "";
+  const text = a.available ? `<b class="text-emerald-300">Available now</b> (${num(a.free)} of ${num(a.copies)} copies)`
+    : `<b class="text-amber-300">${num(a.holds)} hold${a.holds === 1 ? "" : "s"}</b> on ${num(a.copies)} cop${a.copies === 1 ? "y" : "ies"}${a.wait_days ? `, about ${num(a.wait_days)} day${a.wait_days === 1 ? "" : "s"}` : ""}`;
+  return `<p class="mt-2">🎧 Audiobook: ${text}</p><a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="btn-secondary mt-1 inline-flex py-1 text-sm">${a.available ? "Borrow the audiobook ↗" : a.holdable ? "Hold the audiobook ↗" : "Open the audiobook ↗"}</a>`;
+}
+
 // renderBookLibby fills host in a book's window.
 export async function renderBookLibby(host, bookId) {
   const r = await get(`/api/books/${bookId}/libby`).catch(() => null);
@@ -24,18 +33,19 @@ export async function renderBookLibby(host, bookId) {
       : `<b class="text-amber-300">${num(a.holds)} hold${a.holds === 1 ? "" : "s"}</b> on ${num(a.copies)} cop${a.copies === 1 ? "y" : "ies"}${a.wait_days ? `, about ${num(a.wait_days)} day${a.wait_days === 1 ? "" : "s"}` : ""}`;
     if (a.kindle) line += " · Kindle supported";
   }
-  host.innerHTML = `<div class="space-y-1 rounded-lg bg-slate-800/60 p-3 text-sm"><p class="label">📚 ${esc(r.library)} (Libby)</p><p>${line}</p>${link}</div>`;
+  host.innerHTML = `<div class="space-y-1 rounded-lg bg-slate-800/60 p-3 text-sm"><p class="label">📚 ${esc(r.library)} (Libby)</p><p>${line}</p>${link}${audioLine(r)}</div>`;
 }
 
 // markLibby puts a small chip on each card in host that has a
 // [data-libby="<book id>"] placeholder: available now, or the holds. Books the
 // library doesn't lend get nothing. Answers are remembered while the page is open.
 const seen = new Map(); // book id -> availability, or null when not at the library
+const seenAudio = new Map(); // book id -> the audiobook's availability, when the library lends it
 let configured = null;
 
-function chip(a) {
+function chip(a, icon = "📚") {
   if (!a) return "";
-  const text = a.available ? "📚 Available" : `📚 ${Number(a.holds).toLocaleString()} hold${a.holds === 1 ? "" : "s"}`;
+  const text = a.available ? `${icon} Available` : `${icon} ${Number(a.holds).toLocaleString()} hold${a.holds === 1 ? "" : "s"}`;
   const tip = a.available ? "Your library has a copy available now (Libby)" : `${a.wait_days ? `About ${a.wait_days} days. ` : ""}On hold at your library (Libby)`;
   return `<a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" class="${a.available ? "chip-none" : "chip-wait"}" title="${esc(tip)}" data-libby-link>${text}</a>`;
 }
@@ -43,13 +53,14 @@ function chip(a) {
 // forget drops what was remembered (the library changed).
 function forget() {
   seen.clear();
+  seenAudio.clear();
   configured = null;
 }
 
 export async function markLibby(host) {
   if (configured === false) return;
   const paint = () => host.querySelectorAll("[data-libby]").forEach((el) => {
-    if (seen.has(el.dataset.libby)) el.innerHTML = chip(seen.get(el.dataset.libby));
+    if (seen.has(el.dataset.libby)) el.innerHTML = chip(seen.get(el.dataset.libby)) + chip(seenAudio.get(el.dataset.libby), "🎧");
   });
   paint();
   const ids = [...new Set([...host.querySelectorAll("[data-libby]")].map((el) => el.dataset.libby))].filter((id) => !seen.has(id)).slice(0, 60);
@@ -58,7 +69,10 @@ export async function markLibby(host) {
   if (!r) return;
   configured = r.configured;
   if (!r.configured) return;
-  for (const id of ids) seen.set(id, r.books?.[id]?.found ? r.books[id] : null);
+  for (const id of ids) {
+    seen.set(id, r.books?.[id]?.found ? r.books[id] : null);
+    seenAudio.set(id, r.audio?.[id] || null);
+  }
   paint();
 }
 

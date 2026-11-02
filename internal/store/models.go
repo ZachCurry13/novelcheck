@@ -115,6 +115,8 @@ type Book struct {
 	AgeSetBy        string  `db:"age_set_by" json:"age_set_by"`
 	AnalysisModel   string  `db:"analysis_model" json:"analysis_model"`
 	AnalysisError   string  `db:"analysis_error" json:"analysis_error"`
+	Narrator        string  `db:"narrator" json:"narrator"`         // audiobooks: who reads it
+	DurationSec     int     `db:"duration_sec" json:"duration_sec"` // audiobooks: length in seconds; 0 = not an audiobook
 	Series          string  `db:"series" json:"series"`             // series name, when known
 	SeriesIndex     float64 `db:"series_index" json:"series_index"` // number in the series; 0 = none
 	TitleFix        string  `db:"title_fix" json:"title_fix"`       // Calibre's untidy title ("01 - Dune"); "" = tidy

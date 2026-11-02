@@ -1,5 +1,7 @@
 # Status
 
+- **2026-11-02:** v1.48 audiobooks built on `feature/v1.48` (Audiobookshelf import, length sort/filter, browser download and player, other-format requests, Libby audiobooks); tests added in `abs_test.go`. Next: owner's OK, then release 1.47.0 and 1.48.0 (1.48 branches from 1.47). The real server isn't tried yet: only a fake Audiobookshelf.
+
 - **2026-10-26:** stored the maintenance protocol in `CLAUDE.md` (a project-neutral copy is `docs/MAINTENANCE_PROTOCOL.md`); 1.45.1 updated `golang.org/x/net` to v0.60.0. Added `.github/workflows/audit.yml`: a key-free weekly audit (Mondays 06:17 UTC, or run it by hand; untick "Open or update the issue" for a dry run) that reports vulnerabilities, newer direct dependencies and the cloudflared pin in one issue titled "Weekly audit".
 - **Correction:** CI had been using exactly Go 1.26.0 (so the scan showed 30 stdlib findings). Both workflows now ask for the `1.26` line (newest patch, 1.26.10 today); the audit then reports 0 vulnerabilities. The 1.45.1 note about CI was premature; it is true from this change on.
 - **2026-10-26 (later):** applied `cloudflared` 2026.10.4 (Dockerfile pin; verified by the image build before release). Newer direct dependencies left for later (no known vulnerability): `anthropic-sdk-go` 1.84, `chi` 5.5, `x/crypto` 0.58, `x/net` 0.61, `modernc.org/sqlite` 1.61.

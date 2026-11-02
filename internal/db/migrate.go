@@ -82,10 +82,18 @@ func migrate(d *sqlx.DB) error {
 		{"users", "hardcover_push", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "libby_name", "TEXT NOT NULL DEFAULT ''"},
 		{"users", "admin_areas", "TEXT NOT NULL DEFAULT ''"},
+		{"books", "narrator", "TEXT NOT NULL DEFAULT ''"},
+		{"books", "duration_sec", "INTEGER NOT NULL DEFAULT 0"},
+		{"wishlist", "format", "TEXT NOT NULL DEFAULT ''"},
+		{"users", "abs_token", "TEXT NOT NULL DEFAULT ''"},
+		{"users", "abs_user", "TEXT NOT NULL DEFAULT ''"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {
 			return err
 		}
+	}
+	if err := wishlistFormats(d); err != nil {
+		return err
 	}
 	if err := firstOwner(d); err != nil {
 		return err
@@ -188,4 +196,14 @@ func addEditorRole(d *sqlx.DB) error {
 		}
 	}
 	return tx.Commit()
+}
+
+// wishlistFormats lets one person wish for the same title in two formats
+// (the e-book and the audiobook): the open-wish index now includes the format.
+func wishlistFormats(d *sqlx.DB) error {
+	if _, err := d.Exec(`DROP INDEX IF EXISTS idx_wishlist_open`); err != nil {
+		return err
+	}
+	_, err := d.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_wishlist_open_fmt ON wishlist(book_id, user_id, format) WHERE status IN ('wanted', 'approved')`)
+	return err
 }
