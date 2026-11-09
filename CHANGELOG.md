@@ -4,6 +4,23 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.55.0]
+
+### 🔍 Library cleanup: review first, convert first
+- **Every cleanup step shows a review before it changes anything.** A list of exactly what will change (the titles, the books to convert, the extra copies, the formats), each with a tick box to leave it out. Nothing happens until you confirm, and you can stop at any step.
+- **Converting comes before removing copies.** The steps now run: tidy titles, convert to EPUB, remove extra Calibre copies (each book keeps its best one), remove other formats, re-read Calibre. A book is never judged on a file that is about to get a better one.
+- **"0 tidied" now says why.** When a title can't be saved, the window names it and the reason. One reason it found for you: the Content server already shows the tidy title while the library NovelCheck reads still has the old one, which means they are two different copies of the library.
+- **The bug report explains conversions and tidying.** It lists the last format job with the reason each conversion failed, and the titles waiting to be tidied with what the Content server has for each.
+
+### 👯 Joining books: you choose which one stays
+- **Join, keeping either one.** Each pair has a "Join, keep this one" button on both books; the joined book shows that one's title and details (for example a newer edition), and everything moves onto it. The rating always stays with the better rated of the two.
+- **A suggestion and the facts to decide.** Covers, when each was added to the library (Calibre's date), when its file last changed in Calibre, file size, how many Nightstands it is on, and a suggested one to keep and why (in a library; newer in Calibre; more used). **Click a title to open the book** and look at it.
+- **Fewer wrong pairs.** "Both #1" of two different series (a novel and a Lost Files novella), a much shorter file, or one calling itself a novella or short story now count against a pair and put it under "check carefully".
+
+### 📦 Box sets
+- **A box set's inside titles join books you already have.** "Sea of Monsters" for "The Sea of Monsters" used to make a second copy; it now joins the book you have. The window shows, for each title, "already in your library as …" or "new book", checks as you type, and asks before splitting. The box set's title opens its book window, with its formats and when it was added.
+- Titles with HTML entities ("The Queen &amp; The Assassin") now show correctly.
+
 ## [1.54.0]
 
 ### ⬅️ The Back button takes you back to where you were

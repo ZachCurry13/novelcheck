@@ -268,6 +268,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/books/{id}/analyze", s.handleAnalyzeBook)
 				r.Post("/books/{id}/same-as", s.handleSameAs)
 				r.Get("/box-sets", s.handleBoxSets)
+				r.Get("/box-sets/{id}/match", s.handleBoxMatch)
 				r.Post("/box-sets/{id}/ask", s.handleAskBoxSet)
 				r.Post("/box-sets/{id}/split", s.handleSplitBoxSet)
 				r.Post("/box-sets/{id}/not", func(w http.ResponseWriter, r *http.Request) { s.handleBoxSetDecision(w, r, "not") })

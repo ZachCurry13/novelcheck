@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -132,5 +133,85 @@ func TestSameBooksNotSpinoffs(t *testing.T) {
 		if p.(map[string]any)["a"].(map[string]any)["id"] == float64(shadow) {
 			t.Fatalf("different descriptions rule it out: %v", p)
 		}
+	}
+}
+
+// "I Am Number Four" (Lorien Legacies #1, a novel) and "Six's Legacy" (The Lost Files #1, a novella)
+// both say #1, but of different series, and one calls itself a novella: never "probably the same".
+func TestSameBooksNovelAndNovella(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	look, _ := st.EnsureCatalog(store.LookedUpCatalog, "custom")
+	novel, _ := st.UpsertBook("I Am Number Four", "Pittacus Lore", "", "")
+	novella, _ := st.UpsertBook("I Am Number Four: The Lost Files: Six's Legacy", "Pittacus Lore", "", "")
+	for _, id := range []int64{novel, novella} {
+		_ = st.AddCopy(look, id, "lookup:"+itoa(id), "list", "")
+	}
+	st.DB.MustExec(`UPDATE books SET series = 'Lorien Legacies', series_index = 1, description = 'A teenager hides on Earth from the Mogadorians who destroyed his home planet Lorien.' WHERE id = ?`, novel)
+	st.DB.MustExec(`UPDATE books SET series = 'Lorien Legacies: The Lost Files', series_index = 1, description = 'This novella tells how Six escaped Lorien before the Mogadorians destroyed the planet, and was trained by her Cepan.' WHERE id = ?`, novella)
+	_, out := admin.do("GET", "/api/admin/same-books", nil, false)
+	pairs, _ := out["pairs"].([]any)
+	if len(pairs) != 1 {
+		t.Fatalf("one pair is offered: %v", out)
+	}
+	p := pairs[0].(map[string]any)
+	if p["confidence"] != "check" {
+		t.Fatalf("a novel and its novella need a careful look: %v", p["confidence"])
+	}
+	var texts []string
+	for _, r := range p["reasons"].([]any) {
+		texts = append(texts, r.(map[string]any)["text"].(string))
+	}
+	all := strings.Join(texts, " | ")
+	if !strings.Contains(all, "different series") || !strings.Contains(all, "novella") || strings.Contains(all, "Same place in the series") {
+		t.Fatalf("the evidence names the difference: %s", all)
+	}
+}
+
+// Joining keeping a chosen entry: the joined book shows that entry's title and details, nothing
+// on the Nightstand is lost, and the pair says which it would keep and why.
+func TestSameBooksKeepChoice(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	look, _ := st.EnsureCatalog(store.LookedUpCatalog, "custom")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	listed, _ := st.UpsertBook("Cinder", "", "", "") // wished for before the e-book
+	_ = st.AddCopy(look, listed, "lookup:cinder", "list", "")
+	admin.do("POST", "/api/queue", map[string]int64{"book_id": listed}, true)
+	real, _ := st.UpsertBook("Cinder (The Lunar Chronicles #1)", "Meyer, Marissa", "9781250007209", "A cyborg mechanic.")
+	_ = st.AddCopy(cal, real, "/c/cinder.epub", "epub", "7")
+
+	_, out := admin.do("GET", "/api/admin/same-books", nil, false)
+	pairs, _ := out["pairs"].([]any)
+	if len(pairs) != 1 {
+		t.Fatalf("one pair: %v", out)
+	}
+	p := pairs[0].(map[string]any)
+	if p["suggest"] == "" || !strings.Contains(p["suggest_why"].(string), "library") {
+		t.Fatalf("it suggests the one in the library: %v", p)
+	}
+	// Keep the entry that has no author: the joined book shows its title.
+	if res, _ := admin.do("POST", "/api/admin/same-books/merge", map[string]int64{"a": listed, "b": real, "keep": listed}, true); res.StatusCode != 200 {
+		t.Fatalf("merge: %d", res.StatusCode)
+	}
+	left, _ := st.SamePairs()
+	if len(left) != 0 {
+		t.Fatalf("joined: %v", left)
+	}
+	var title, isbn string
+	var n int
+	st.DB.Get(&title, `SELECT title FROM books WHERE title LIKE 'Cinder%'`)
+	st.DB.Get(&isbn, `SELECT isbn FROM books WHERE title LIKE 'Cinder%'`)
+	st.DB.Get(&n, `SELECT COUNT(*) FROM books WHERE title LIKE 'Cinder%'`)
+	if n != 1 || title != "Cinder" || isbn != "9781250007209" {
+		t.Fatalf("one book, named as chosen, keeping the other's details: %d %q %q", n, title, isbn)
+	}
+	if _, items := admin.doList("GET", "/api/queue"); len(items) != 1 {
+		t.Fatalf("the Nightstand entry followed: %v", items)
+	}
+	var copies int
+	st.DB.Get(&copies, `SELECT COUNT(*) FROM catalog_books WHERE path = '/c/cinder.epub'`)
+	if copies != 1 {
+		t.Fatal("the Calibre copy stays with the joined book")
 	}
 }

@@ -47,9 +47,17 @@ func ratingRank(b *Book) int {
 
 // MergeBooks makes a and b one book and returns the one kept: the better
 // rated, then the one in more libraries, then a.
-func (s *Store) MergeBooks(a, b int64) (int64, error) {
+func (s *Store) MergeBooks(a, b int64) (int64, error) { return s.MergeKeeping(a, b, 0) }
+
+// MergeKeeping is MergeBooks where the title, author and details of prefer (a or b) are what the
+// joined book shows. The rating always stays with the better rated of the two: the book
+// that survives takes prefer's name and details, so nothing rated is lost by choosing the other.
+func (s *Store) MergeKeeping(a, b, prefer int64) (int64, error) {
 	if a == b {
 		return 0, errors.New("that's the same book")
+	}
+	if prefer != 0 && prefer != a && prefer != b {
+		return 0, errors.New("keep one of the two books")
 	}
 	ba, err := s.BookByID(a, nil)
 	if err != nil {
@@ -68,10 +76,14 @@ func (s *Store) MergeBooks(a, b int64) (int64, error) {
 	if r1, r2 := ratingRank(ba), ratingRank(bb); r2 > r1 || (r2 == r1 && copies(b) > copies(a)) {
 		keep, other = bb, ba
 	}
-	var otherKey string
+	var otherKey, keepKey string
 	if err := s.DB.Get(&otherKey, `SELECT norm_key FROM books WHERE id = ?`, other.ID); err != nil {
 		return 0, err
 	}
+	if err := s.DB.Get(&keepKey, `SELECT norm_key FROM books WHERE id = ?`, keep.ID); err != nil {
+		return 0, err
+	}
+	adopt := prefer != 0 && prefer == other.ID // the entry that goes away is the one to be kept as the face of the book
 	tx, err := s.DB.Beginx()
 	if err != nil {
 		return 0, err
@@ -89,14 +101,27 @@ func (s *Store) MergeBooks(a, b int64) (int64, error) {
 		series = CASE WHEN series = '' THEN (SELECT series FROM books WHERE id = ?) ELSE series END,
 		series_index = CASE WHEN series_index = 0 THEN (SELECT series_index FROM books WHERE id = ?) ELSE series_index END,
 		narrator = CASE WHEN narrator = '' THEN (SELECT narrator FROM books WHERE id = ?) ELSE narrator END,
-		duration_sec = CASE WHEN duration_sec = 0 THEN (SELECT duration_sec FROM books WHERE id = ?) ELSE duration_sec END
-		WHERE id = ?`, other.ID, other.ID, other.ID, other.ID, other.ID, other.ID, keep.ID); err != nil {
+		duration_sec = CASE WHEN duration_sec = 0 THEN (SELECT duration_sec FROM books WHERE id = ?) ELSE duration_sec END,
+		calibre_added = CASE WHEN (SELECT calibre_added FROM books WHERE id = ?) != '' AND (calibre_added = '' OR (SELECT calibre_added FROM books WHERE id = ?) < calibre_added)
+			THEN (SELECT calibre_added FROM books WHERE id = ?) ELSE calibre_added END
+		WHERE id = ?`, other.ID, other.ID, other.ID, other.ID, other.ID, other.ID, other.ID, other.ID, other.ID, keep.ID); err != nil {
 		return 0, err
 	}
 	if _, err := tx.Exec(`DELETE FROM books WHERE id = ?`, other.ID); err != nil {
 		return 0, err
 	}
-	if _, err := tx.Exec(`INSERT OR REPLACE INTO book_aliases (norm_key, book_id) VALUES (?, ?)`, otherKey, keep.ID); err != nil {
+	oldKey := otherKey // the name that no longer belongs to a book, remembered as an alias
+	if adopt {
+		if _, err := tx.Exec(`UPDATE books SET norm_key = ?, title = ?, author = ?,
+			isbn = CASE WHEN ? != '' THEN ? ELSE isbn END, description = CASE WHEN ? != '' THEN ? ELSE description END,
+			series = CASE WHEN ? != '' THEN ? ELSE series END, series_index = CASE WHEN ? > 0 THEN ? ELSE series_index END
+			WHERE id = ?`, otherKey, other.Title, other.Author, other.ISBN, other.ISBN, other.Description, other.Description,
+			other.Series, other.Series, other.SeriesIndex, other.SeriesIndex, keep.ID); err != nil {
+			return 0, err
+		}
+		oldKey = keepKey
+	}
+	if _, err := tx.Exec(`INSERT OR REPLACE INTO book_aliases (norm_key, book_id) VALUES (?, ?)`, oldKey, keep.ID); err != nil {
 		return 0, err
 	}
 	return keep.ID, tx.Commit()

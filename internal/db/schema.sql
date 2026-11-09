@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS books (
     genres           TEXT NOT NULL DEFAULT '',     -- categories (package genres) as ",fantasy,romance,"
     kind             TEXT NOT NULL DEFAULT '',     -- fiction, nonfiction or '' (unknown)
     genre_source     TEXT NOT NULL DEFAULT '',     -- calibre (from tags) or ai; '' = none yet
+    calibre_added    TEXT NOT NULL DEFAULT '',     -- when Calibre says the book was added to its library (the earliest entry); '' = unknown
     age_set_by       TEXT NOT NULL DEFAULT '',
     analysis_model   TEXT NOT NULL DEFAULT '',
     analysis_error   TEXT NOT NULL DEFAULT '',

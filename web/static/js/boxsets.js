@@ -4,9 +4,10 @@
 // isn't a box set. Split books use the box set's files and count as owned.
 import { get, post } from "./api.js";
 import { esc, attempt, toast } from "./ui.js";
+import { openBook } from "./bookdialog.js";
 
 // openBoxSets shows the box sets waiting (only focus's, when given).
-export async function openBoxSets(onChange, focus = 0) {
+export async function openBoxSets(onChange, focus = 0, state) {
   let d = document.getElementById("boxsets-dialog");
   if (!d) {
     d = document.createElement("dialog");
@@ -16,17 +17,20 @@ export async function openBoxSets(onChange, focus = 0) {
   }
   let list = (await attempt(() => get("/api/box-sets"))) || [];
   if (focus) list = list.filter((b) => b.book_id === focus);
-  const row = (e = { title: "", number: 0 }) => `<li class="flex items-center gap-2" data-entry>
+  // What a title would become: a book the family already has (it joins it), or a new one.
+  const badge = (e) => (!e.title ? "" : e.match_id ? `<span class="text-emerald-300">✓ already in your library as <button type="button" data-open="${e.match_id}" class="underline decoration-dotted">${esc(e.match_title)}</button>${e.match_owned ? "" : " (only on a list)"}: it joins that book</span>` : `<span class="text-sky-300">＋ new book, made from this box set</span>`);
+  const row = (e = { title: "", number: 0 }) => `<li class="space-y-0.5" data-entry><div class="flex items-center gap-2">
     <input type="checkbox" data-on class="h-5 w-5 shrink-0" checked aria-label="Split this one out">
     <input data-n type="number" min="0" step="0.5" value="${e.number || ""}" class="input w-16 shrink-0 px-2 py-1 text-sm" placeholder="#" aria-label="Number in the series">
-    <input data-t value="${esc(e.title)}" class="input min-w-0 flex-1 py-1 text-sm" placeholder="Title" aria-label="Title"></li>`;
+    <input data-t value="${esc(e.title)}" class="input min-w-0 flex-1 py-1 text-sm" placeholder="Title" aria-label="Title"></div>
+    <p data-badge class="pl-7 text-xs">${badge(e)}</p></li>`;
   const card = (b) => b.state === "split"
     ? `<li class="card space-y-2" data-box="${b.book_id}"><p class="font-semibold">📦 ${esc(b.title)}</p>
         <p class="text-xs text-slate-400">Split into: ${b.members.map((m) => esc(m.title)).join(" · ")}</p>
         <button type="button" data-act="undo" class="btn-ghost py-1 text-sm">Undo the split</button></li>`
     : `<li class="card space-y-2" data-box="${b.book_id}">
-        <p class="font-semibold leading-snug">📦 ${esc(b.title)}</p>
-        <p class="text-xs text-slate-400">${esc(b.author || "")}${b.series ? ` · ${esc(b.series)}` : ""}</p>
+        <p class="font-semibold leading-snug">📦 <button type="button" data-open="${b.book_id}" class="text-left underline decoration-dotted" title="Open this book to look at it">${esc(b.title)}</button></p>
+        <p class="text-xs text-slate-400">${esc(b.author || "")}${b.series ? ` · ${esc(b.series)}` : ""}${b.formats ? ` · ${esc(b.formats)}` : ""}${b.added ? ` · added to the library ${esc(new Date(b.added.length > 10 ? b.added : b.added + "T00:00:00").toLocaleDateString())}` : ""}</p>
         <p class="text-xs text-slate-400">${b.proposal.length ? "Untick what isn't inside, fix titles, or add one:" : "What's inside? Ask the AI, or type the titles:"}</p>
         <ul data-entries class="space-y-1">${(b.proposal.length ? b.proposal : [{ title: "", number: 0 }]).map(row).join("")}</ul>
         <div class="flex flex-wrap gap-2">
@@ -43,7 +47,22 @@ export async function openBoxSets(onChange, focus = 0) {
       <ul class="space-y-3">${list.map(card).join("") || `<li class="text-sm text-slate-400">No box sets to check.</li>`}</ul></div>`;
   };
   paint();
+  // Typing a title shows at once whether it is a book the family already has.
+  let typing;
+  d.oninput = (e) => {
+    const t = e.target.closest("[data-t]");
+    const li = e.target.closest("[data-box]");
+    if (!t || !li) return;
+    clearTimeout(typing);
+    typing = setTimeout(async () => {
+      const m = await get(`/api/box-sets/${li.dataset.box}/match?title=${encodeURIComponent(t.value.trim())}`).catch(() => null);
+      const p = t.closest("[data-entry]")?.querySelector("[data-badge]");
+      if (m && p) p.innerHTML = badge({ ...m, title: t.value.trim() });
+    }, 400);
+  };
   d.onclick = async (e) => {
+    const open = e.target.closest("[data-open]");
+    if (open) return openBook(Number(open.dataset.open), state, onChange);
     if (e.target === d || e.target.closest("[data-close]")) return d.close();
     const act = e.target.closest("[data-act]")?.dataset.act;
     const li = e.target.closest("[data-box]");
@@ -69,6 +88,13 @@ export async function openBoxSets(onChange, focus = 0) {
       if (!books.length) {
         btn.disabled = false;
         return toast("Tick at least one book with a title", true);
+      }
+      const joins = [...li.querySelectorAll("[data-entry]")].filter((x) => x.querySelector("[data-on]").checked && x.querySelector("[data-t]").value.trim() && x.querySelector("[data-open]")).length;
+      if (!confirm(`Split “${box.title}” into ${books.length} book${books.length === 1 ? "" : "s"}?
+
+${joins} already in your library will be joined to the box set's file; ${books.length - joins} new book${books.length - joins === 1 ? "" : "s"} will be made. You can undo the split afterwards.`)) {
+        btn.disabled = false;
+        return;
       }
       const r = await attempt(() => post(`/api/box-sets/${id}/split`, { books }), `Split into ${books.length} book${books.length === 1 ? "" : "s"}`);
       if (!r) return (btn.disabled = false);

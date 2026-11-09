@@ -72,7 +72,7 @@ export async function renderQueue(view, state) {
     queued.innerHTML = next.length ? next.map((i, idx) => queueRow(i, idx, state.user)).join("")
       : `<li class="text-sm text-slate-500">Your pile is empty. Add books from the Library with ＋.</li>`;
     setBars(reading);
-    renderTwins($("#twins", view), items, state.user, load);
+    renderTwins($("#twins", view), items, state, load);
     const hid = (await attempt(() => get("/api/queue?hidden=1"))) || [];
     hiddenEl.innerHTML = hid.length ? `<details class="rounded-lg bg-slate-800/40 p-2"><summary class="cursor-pointer text-slate-400">🙈 Hidden (${hid.length})</summary>
       <ul class="mt-2 space-y-1">${hid.map((i) => `<li data-item="${i.id}" data-book="${i.book_id}" class="flex items-center justify-between gap-2">

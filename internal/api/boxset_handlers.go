@@ -26,6 +26,16 @@ func (s *Server) handleBoxSets(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, list)
 }
 
+// handleBoxMatch: GET /api/box-sets/{id}/match?title= says which book NovelCheck already has under a title.
+func (s *Server) handleBoxMatch(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r, "id")
+	if !ok {
+		writeErr(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+	writeJSON(w, http.StatusOK, s.Store.BoxMatch(id, r.URL.Query().Get("title")))
+}
+
 // handleAskBoxSet asks the AI what's inside a box set and keeps the answer
 // as the suggestion.
 func (s *Server) handleAskBoxSet(w http.ResponseWriter, r *http.Request) {

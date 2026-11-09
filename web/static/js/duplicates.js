@@ -39,7 +39,7 @@ export async function renderDuplicates(view, state) {
     <section class="mb-6"><h2 class="mb-2 text-xl font-semibold">Listed twice</h2><div id="same-books"></div></section>
     <div id="dup-result"></div>
     <div id="dup-body"><p class="text-slate-400">Looking for duplicates…</p></div>`;
-  renderSameBooks($("#same-books", view));
+  renderSameBooks($("#same-books", view), undefined, state);
   const body = $("#dup-body", view);
   const result = $("#dup-result", view);
   const when = (iso) => (iso ? new Date(iso).toLocaleString() : "never");

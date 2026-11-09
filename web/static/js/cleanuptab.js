@@ -13,7 +13,7 @@ const row = (icon, title, note, count, action) => `<li class="flex flex-wrap ite
 const btn = (act, label) => `<button type="button" data-act="${act}" class="btn-secondary py-1 text-sm">${label}</button>`;
 const link = (href, label) => `<a href="${href}" class="btn-secondary py-1 text-sm">${label}</a>`;
 
-export async function renderCleanupTab(host) {
+export async function renderCleanupTab(host, state) {
   host.innerHTML = `<div class="space-y-4"><div id="cu-guided" class="card"></div>
     <div class="card space-y-2"><h2 class="text-lg font-semibold">🧰 Each tool on its own</h2><ul id="cu-tools" class="space-y-2"></ul></div>
     <div class="card space-y-2"><details id="cu-twice"><summary class="cursor-pointer font-semibold">👯 Books listed twice in NovelCheck (with the evidence)</summary>
@@ -45,7 +45,7 @@ export async function renderCleanupTab(host) {
   host.querySelector("#cu-twice").addEventListener("toggle", (e) => {
     if (e.target.open && !host.querySelector("#cu-twice-body").dataset.done) {
       host.querySelector("#cu-twice-body").dataset.done = "1";
-      renderSameBooks(host.querySelector("#cu-twice-body"));
+      renderSameBooks(host.querySelector("#cu-twice-body"), undefined, state);
     }
   });
 }

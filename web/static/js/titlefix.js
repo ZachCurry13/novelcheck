@@ -73,6 +73,7 @@ export async function openTitleEdit(b, calibreIds, cw, onSaved) {
 // openTitleFixes lists every numbered title, to tidy them in Calibre at once.
 export async function openTitleFixes(onDone) {
   const d = dialog("title-fixes-dialog");
+  let note = ""; // what the last save did not change, and why
   const load = async () => {
     const data = await attempt(() => get("/api/admin/title-fixes"));
     if (!data) return false;
@@ -82,6 +83,7 @@ export async function openTitleFixes(onDone) {
         <button type="button" data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
       <p class="text-sm text-slate-400">${fixes.length ? `These titles carry track or series numbers in Calibre. NovelCheck already shows them tidied${server ? "; tick the ones to change in Calibre too." : "."}` : "Every title in Calibre is tidy. 🎉"}</p>
       ${!server && fixes.length ? noServer(cw) : ""}
+      ${note ? `<div class="rounded-lg bg-amber-950/40 p-3 text-sm text-amber-200">${note}</div>` : ""}
       ${server && fixes.length > 1 ? `<label class="flex items-center gap-2 text-sm"><input type="checkbox" data-all checked> All ${fixes.length}</label>` : ""}
       <ul class="space-y-2">${fixes.map((f) => `<li><label class="flex items-start gap-2 rounded-lg bg-slate-800/60 p-2 text-sm">
         ${server ? `<input type="checkbox" name="id" value="${f.id}" checked class="mt-1">` : ""}
@@ -105,7 +107,9 @@ export async function openTitleFixes(onDone) {
       const r = await attempt(() => post("/api/admin/title-fixes", { ids }));
       btn.disabled = false;
       if (r) {
-        toast(`Tidied ${r.fixed} title${r.fixed === 1 ? "" : "s"} in Calibre`);
+        const skipped = r.skipped || [];
+        note = skipped.length ? `<b>${r.fixed} tidied, ${skipped.length} not changed:</b><ul class="list-disc pl-5">${skipped.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>` : "";
+        toast(`Tidied ${r.fixed} title${r.fixed === 1 ? "" : "s"} in Calibre${skipped.length ? `, ${skipped.length} not changed (see why)` : ""}`);
         onDone?.();
         load();
       }

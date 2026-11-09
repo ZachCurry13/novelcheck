@@ -14,16 +14,24 @@ import (
 // handleCleanup is the summary: what each step would do now.
 func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
 	pairs, _ := s.Store.SamePairs()
-	calDups, _ := s.Store.CalibreDuplicates()
 	fixes, err := s.Store.TitleFixes()
 	if err != nil {
 		writeStoreErr(w, err)
 		return
 	}
-	dups, err := s.Store.ExtraEntries()
+	dupGroups, err := s.Store.CalibreDuplicates()
 	if err != nil {
 		writeStoreErr(w, err)
 		return
+	}
+	var dupIDs []string // the extra entries NovelCheck would remove: all but the best copy of each book
+	for _, g := range dupGroups {
+		keep := store.SuggestKeep(g.Entries)
+		for _, e := range g.Entries {
+			if e.CalibreID != keep {
+				dupIDs = append(dupIDs, e.CalibreID)
+			}
+		}
 	}
 	convert, err := s.Store.ToConvert()
 	if err != nil {
@@ -40,19 +48,14 @@ func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
 	for _, f := range fixes {
 		ids = append(ids, f.ID)
 	}
-	dupIDs := make([]string, 0, len(dups))
-	for _, d := range dups {
-		dupIDs = append(dupIDs, d.CalibreID)
-	}
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"configured":   s.Store.Setting(store.KeyCalibreSrvURL) != "",
 		"pairs":        len(pairs),
-		"calibre_dups": len(calDups),
+		"calibre_dups": len(dupGroups),
 		"titles":       len(fixes),
 		"title_ids":    ids,
-		"dup_count":    len(dups),
-		"dup_ids":      dupIDs,
-		"dups":         dups[:min(len(dups), 200)],
+		"dup_count":    len(dupIDs),
 		"convert":      len(convert),
 		"remove_files": files,
 		"remove_bytes": bytes,

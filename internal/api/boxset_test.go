@@ -64,3 +64,43 @@ func TestBoxSetSplit(t *testing.T) {
 		t.Fatalf("dismissed box set came back: %v", list)
 	}
 }
+
+// A box set's inside title that is only worded a little differently from a book the family has
+// ("Sea of Monsters" for "The Sea of Monsters") joins that book instead of making a duplicate, and the
+// review window can ask which book a title would be.
+func TestBoxSplitJoinsExistingBooks(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	box, _ := st.UpsertBook("Percy Jackson and the Olympians 3 Books Collection Set", "Rick Riordan", "", "")
+	_ = st.AddCopy(cal, box, "/c/pj-box.epub", "epub", "20")
+	sea, _ := st.UpsertBook("The Sea of Monsters", "Rick Riordan", "", "")
+	_ = st.AddCopy(cal, sea, "/c/sea.epub", "epub", "21")
+
+	admin.doList("GET", "/api/box-sets") // finds the box set, as opening the window does
+	_, m := admin.do("GET", fmt.Sprintf("/api/box-sets/%d/match?title=%s", box, "Sea%20of%20Monsters"), nil, false)
+	if int64(m["match_id"].(float64)) != sea || m["match_title"] != "The Sea of Monsters" || m["match_owned"] != true {
+		t.Fatalf("the review window learns it is the book already owned: %v", m)
+	}
+	if _, m = admin.do("GET", fmt.Sprintf("/api/box-sets/%d/match?title=%s", box, "The%20Chalice%20of%20the%20Gods"), nil, false); m["match_id"] != nil {
+		t.Fatalf("a title nothing matches is a new book: %v", m)
+	}
+	books := []store.BoxEntry{{Title: "Sea of Monsters", Number: 2}, {Title: "The Chalice of the Gods", Number: 6}}
+	if res, _ := admin.do("POST", fmt.Sprintf("/api/box-sets/%d/split", box), map[string]any{"books": books}, true); res.StatusCode != 200 {
+		t.Fatalf("split: %d", res.StatusCode)
+	}
+	var n int
+	st.DB.Get(&n, `SELECT COUNT(*) FROM books WHERE title LIKE '%Sea of Monsters%'`)
+	if n != 1 {
+		t.Fatalf("no duplicate of the book the family already had: %d", n)
+	}
+	// Undoing keeps the one that was there, drops only the one the split made.
+	admin.do("POST", fmt.Sprintf("/api/box-sets/%d/undo", box), nil, true)
+	if _, err := st.BookByID(sea, nil); err != nil {
+		t.Fatal("undo removed a book the family had")
+	}
+	st.DB.Get(&n, `SELECT COUNT(*) FROM books WHERE title LIKE '%Chalice%'`)
+	if n != 0 {
+		t.Fatalf("the book the split made went: %d", n)
+	}
+}

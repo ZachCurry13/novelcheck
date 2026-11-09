@@ -59,3 +59,9 @@ func TestFormatIndex(t *testing.T) {
 		t.Fatal(FormatIndex(2), FormatIndex(2.5))
 	}
 }
+
+func TestCleanDecodesHTMLEntities(t *testing.T) {
+	if got := Clean("The Queen &amp; The Assassin: A Fantasy Romance Boxed Set"); got != "The Queen & The Assassin: A Fantasy Romance Boxed Set" {
+		t.Fatalf("%q", got)
+	}
+}

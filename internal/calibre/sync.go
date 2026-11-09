@@ -33,7 +33,8 @@ type calibreBook struct {
 	LastModified string  `db:"last_modified"` // e.g. "2024-03-01 18:23:45.123456+00:00"
 	Series       string  `db:"series"`
 	SeriesIndex  float64 `db:"series_index"`
-	Tags         string  `db:"tags"` // joined with the unit separator, char(31)
+	Tags         string  `db:"tags"`      // joined with the unit separator, char(31)
+	Timestamp    string  `db:"timestamp"` // when Calibre says it was added to the library
 }
 
 type calibreFile struct {
@@ -64,6 +65,10 @@ func Sync(st *store.Store, dir string) (Result, error) {
 	if hasColumn(cdb, "books", "last_modified") {
 		lastMod = "COALESCE(b.last_modified, '')"
 	}
+	added := "''"
+	if hasColumn(cdb, "books", "timestamp") {
+		added = "COALESCE(b.timestamp, '')"
+	}
 	series := "'' AS series, 0 AS series_index"
 	if hasColumn(cdb, "books", "series_index") && hasColumn(cdb, "books_series_link", "series") {
 		series = `COALESCE((SELECT s.name FROM books_series_link sl JOIN series s ON s.id = sl.series
@@ -81,7 +86,7 @@ func Sync(st *store.Store, dir string) (Result, error) {
 		COALESCE((SELECT val FROM identifiers i WHERE i.book = b.id
 			AND i.type = 'isbn' LIMIT 1), '') AS isbn,
 		COALESCE((SELECT text FROM comments c WHERE c.book = b.id), '') AS description,
-		`+lastMod+` AS last_modified, `+series+`, `+tags+`
+		`+lastMod+` AS last_modified, `+added+` AS timestamp, `+series+`, `+tags+`
 		FROM books b ORDER BY b.id`)
 	if err != nil {
 		return res, fmt.Errorf("read calibre books: %w", err)
@@ -109,7 +114,7 @@ func Sync(st *store.Store, dir string) (Result, error) {
 	for _, b := range books {
 		ext := strconv.FormatInt(b.ID, 10)
 		id, err := st.UpsertCalibreBook(catID, store.CalibreEntry{ExtID: ext, Title: b.Title, Authors: b.Authors,
-			ISBN: b.ISBN, Description: StripHTML(b.Description), Series: b.Series, SeriesIndex: b.SeriesIndex, Tags: splitTags(b.Tags)})
+			ISBN: b.ISBN, Description: StripHTML(b.Description), Added: b.Timestamp, Series: b.Series, SeriesIndex: b.SeriesIndex, Tags: splitTags(b.Tags)})
 		if err != nil {
 			res.Skipped++
 			continue // skip malformed rows (e.g. empty title) without aborting the sync

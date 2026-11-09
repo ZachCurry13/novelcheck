@@ -84,7 +84,7 @@ export async function renderAdmin(view, state) {
     history[push ? "pushState" : "replaceState"](null, "", `#/admin?tab=${tab}`); // a tab you chose is a step Back returns to
     if (tab === "cleanup" && !cleanupLoaded) {
       cleanupLoaded = true; // opened once; the tools inside refresh themselves
-      import("./cleanuptab.js").then((m) => m.renderCleanupTab($("#cleanup-tab", view)));
+      import("./cleanuptab.js").then((m) => m.renderCleanupTab($("#cleanup-tab", view), state));
     }
   };
   show(current);
@@ -105,7 +105,7 @@ export async function renderAdmin(view, state) {
       if (act === "genres-fill" && !confirm("Ask the AI for the genres of the books Calibre has no tags for? It runs in the background, within your hourly token cap, and you can stop it any time.")) return;
       await attempt(() => post(`/api/admin/genres/${act === "genres-fill" ? "fill" : "stop"}`), act === "genres-fill" ? "Filling in genres…" : "Stopping after the current batch");
     } else if (act === "box-sets") {
-      import("./boxsets.js").then((m) => m.openBoxSets());
+      import("./boxsets.js").then((m) => m.openBoxSets(undefined, 0, state));
     } else if (act === "cover-reports") {
       import("./covers.js").then((m) => m.openCoverReports());
     } else if (act === "tidy-titles") {

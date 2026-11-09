@@ -18,8 +18,9 @@ func (s *Server) handleSamePairs(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleSameAction(merge bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
-			A int64 `json:"a"`
-			B int64 `json:"b"`
+			A    int64 `json:"a"`
+			B    int64 `json:"b"`
+			Keep int64 `json:"keep"` // a or b: the one whose title and details the joined book shows (optional)
 		}
 		if !readJSON(w, r, &body, 1<<10) {
 			return
@@ -30,7 +31,7 @@ func (s *Server) handleSameAction(merge bool) http.HandlerFunc {
 		}
 		var err error
 		if merge {
-			_, err = s.Store.MergeBooks(body.A, body.B)
+			_, err = s.Store.MergeKeeping(body.A, body.B, body.Keep)
 		} else {
 			err = s.Store.IgnoreSame(body.A, body.B)
 		}

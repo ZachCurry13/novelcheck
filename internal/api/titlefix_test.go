@@ -83,6 +83,32 @@ func TestTidyTitlesInCalibre(t *testing.T) {
 		t.Fatalf("wrong library: %d %v", res.StatusCode, out)
 	}
 
+	// A book the Content server does not have is reported by name, never "Saved" or "0 tidied" in silence.
+	eric, _ := st.UpsertCalibreBook(cat, store.CalibreEntry{ExtID: "9", Title: "03 - Eric", Authors: "Terry Pratchett"})
+	_ = st.AddCalibreCopy(cat, eric, "/calibre/9.epub", "epub", "9", "")
+	res, out = admin.do("POST", "/api/admin/title-fixes", map[string]any{"ids": []int64{eric}}, true)
+	skipped, _ := out["skipped"].([]any)
+	if res.StatusCode != 200 || out["fixed"].(float64) != 0 || len(skipped) != 1 || !strings.Contains(skipped[0].(string), "Eric") || !strings.Contains(skipped[0].(string), "#9") {
+		t.Fatalf("a book Calibre lacks is named: %d %v", res.StatusCode, out)
+	}
+	res, out = admin.do("POST", fmt.Sprintf("/api/books/%d/calibre-title", eric), map[string]any{"title": "Eric"}, true)
+	if res.StatusCode != 409 || !strings.Contains(out["error"].(string), "nothing was saved") {
+		t.Fatalf("a single save that saved nothing says so: %d %v", res.StatusCode, out)
+	}
+
+	// The Content server already has the tidy title while the library NovelCheck reads has the old one:
+	// two different copies of the library. Say so, rather than "saved" over and over.
+	mu.Lock()
+	calibre["10"] = "Sourcery"
+	mu.Unlock()
+	src, _ := st.UpsertCalibreBook(cat, store.CalibreEntry{ExtID: "10", Title: "04 - Sourcery", Authors: "Terry Pratchett"})
+	_ = st.AddCalibreCopy(cat, src, "/calibre/10.epub", "epub", "10", "")
+	res, out = admin.do("POST", "/api/admin/title-fixes", map[string]any{"ids": []int64{src}}, true)
+	skipped, _ = out["skipped"].([]any)
+	if res.StatusCode != 200 || out["fixed"].(float64) != 0 || len(skipped) != 1 || !strings.Contains(skipped[0].(string), "already shows the tidy title") || !strings.Contains(skipped[0].(string), "same library") {
+		t.Fatalf("a Content server that is ahead of NovelCheck's copy is explained: %d %v", res.StatusCode, out)
+	}
+
 	// Admins only; titles are required.
 	if res, _ := admin.do("POST", fmt.Sprintf("/api/books/%d/calibre-title", ids["8"]), map[string]any{"title": " "}, true); res.StatusCode != 400 {
 		t.Fatal("empty title")

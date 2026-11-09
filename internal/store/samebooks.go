@@ -29,6 +29,11 @@ type SameBook struct {
 	ISBN        string  `db:"isbn" json:"isbn"`
 	Description string  `db:"description" json:"-"`
 	Snippet     string  `db:"-" json:"snippet"`
+	Modified    string  `db:"modified" json:"modified"`       // when its newest file was last changed in Calibre
+	Added       string  `db:"added" json:"added"`             // when it was added to the library (Calibre's date when known, else when NovelCheck first saw it)
+	AddedExact  bool    `db:"added_exact" json:"added_exact"` // Added is Calibre's own date
+	Size        int64   `db:"-" json:"size"`                  // its biggest file, in bytes (set when judged)
+	Readers     int     `db:"readers" json:"readers"`         // people with it on a Nightstand (any shelf)
 }
 
 // Reason is one piece of evidence for or against a pair being one book.
@@ -44,6 +49,8 @@ type SamePair struct {
 	B          SameBook `json:"b"`
 	Confidence string   `json:"confidence"`
 	Reasons    []Reason `json:"reasons"`
+	Suggest    string   `json:"suggest"`     // "a" or "b": the one to keep, when one stands out
+	SuggestWhy string   `json:"suggest_why"` // why
 }
 
 type sameRow struct {
@@ -66,7 +73,11 @@ func (s *Store) sameRows() ([]*sameRow, error) {
 			WHERE fc.book_id = b.id AND fc.format NOT IN ('', 'list') ORDER BY f)), '') AS formats,
 		(SELECT COUNT(*) FROM wishlist w WHERE w.book_id = b.id AND w.status IN ('wanted', 'approved'))
 			+ (SELECT COUNT(*) FROM queue_items q WHERE q.book_id = b.id) AS wanted,
-		b.series, b.series_index, b.isbn, b.description
+		b.series, b.series_index, b.isbn, b.description,
+		COALESCE((SELECT MAX(cb.modified) FROM catalog_books cb WHERE cb.book_id = b.id AND cb.modified != ''), '') AS modified,
+		COALESCE(NULLIF(b.calibre_added, ''), (SELECT CAST(MIN(cb.added_at) AS TEXT) FROM catalog_books cb WHERE cb.book_id = b.id AND cb.format NOT IN ('', 'list')), '') AS added,
+		(b.calibre_added != '') AS added_exact,
+		(SELECT COUNT(DISTINCT q.user_id) FROM queue_items q WHERE q.book_id = b.id) AS readers
 		FROM books b WHERE NOT `+discoverOnlyCond+` ORDER BY b.id`); err != nil {
 		return nil, err
 	}
@@ -154,7 +165,7 @@ func (s *Store) likelyPairs() ([]*judged, error) {
 			return
 		}
 		seen[k] = true
-		if j := judge(x, y, kind); j != nil {
+		if j := s.judge(x, y, kind); j != nil {
 			out = append(out, j)
 		}
 	}
@@ -190,7 +201,8 @@ func (s *Store) SamePairs() ([]SamePair, error) {
 	}
 	out := []SamePair{}
 	for _, p := range ps {
-		out = append(out, SamePair{A: p.a.SameBook, B: p.b.SameBook, Confidence: p.conf, Reasons: p.reasons})
+		who, why := suggestKeep(p.a, p.b)
+		out = append(out, SamePair{A: p.a.SameBook, B: p.b.SameBook, Confidence: p.conf, Reasons: p.reasons, Suggest: who, SuggestWhy: why})
 	}
 	return out, nil
 }

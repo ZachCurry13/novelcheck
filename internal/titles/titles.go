@@ -8,6 +8,7 @@
 package titles
 
 import (
+	"html"
 	"regexp"
 	"strconv"
 	"strings"
@@ -57,7 +58,8 @@ var (
 // Parse takes the series numbering out of a title. When nothing applies,
 // Title is the original (trimmed) and Index is 0.
 func Parse(raw string) Parsed {
-	title := strings.TrimSpace(spaces.ReplaceAllString(raw, " "))
+	// Titles copied from web pages and feeds can carry HTML entities ("The Queen &amp; The Assassin").
+	title := strings.TrimSpace(spaces.ReplaceAllString(html.UnescapeString(raw), " "))
 	// "**" is bold marking left over from lists copied out of AI chats.
 	if t := novelTail.ReplaceAllString(strings.ReplaceAll(title, "**", ""), ""); hasLetter(t) {
 		title = strings.TrimSpace(t)

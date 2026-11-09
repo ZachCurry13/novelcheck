@@ -17,3 +17,4 @@
 - 2026-11-09: v1.52 also: Kindle finished books leave the Nightstand (plugin 1.51.0), genres auto-fill. Next: owner OK to release 1.52.0; then design the Wrapped / achievements page.
 - 2026-11-09: v1.53.0 (feature/v1.53): Admin → Library cleanup tab. Next: owner OK to release; then Wrapped/achievements.
 - 2026-11-09: v1.54.0 (feature/v1.54, on top of unreleased v1.53): Back button fixes. Next: owner OK to release 1.53.0 + 1.54.0 together; then Wrapped.
+- 2026-11-09: v1.55.0 (feature/v1.55): review-first cleanup, keep choice for joins, stricter pair evidence, box sets join existing books, tidy reasons. Open: ask owner whether NovelCheck and the Content server read the same Calibre library (Clean Library vs config); read Last format job in the next report.

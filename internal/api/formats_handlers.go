@@ -77,7 +77,7 @@ func (s *Server) handleFormats(w http.ResponseWriter, r *http.Request) {
 		"group_count":   len(groups),
 		"file_count":    files,
 		"bytes":         bytes,
-		"convert":       convert[:min(len(convert), 300)],
+		"convert":       convert[:min(len(convert), 3000)],
 		"convert_count": len(convert),
 		"batches":       batches,
 		"undo_days":     store.UndoDays,

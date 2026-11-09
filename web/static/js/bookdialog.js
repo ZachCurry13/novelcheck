@@ -140,7 +140,7 @@ export async function openBook(id, state, onChange) {
     if (act === "rerate-big") {
       if (await attempt(() => post(`/api/books/${b.id}/rerate-big`), "Re-rating on the Deep Scan machine; the new rating shows when it's done")) e.target.closest("[data-act]").remove();
     } else if (act === "box-split") {
-      import("./boxsets.js").then((m) => m.openBoxSets(refresh, b.id));
+      import("./boxsets.js").then((m) => m.openBoxSets(refresh, b.id, state));
     } else if (act === "same-as") {
       import("./sameas.js").then((m) => m.openSameAs(b, (kept) => {
         dlg.close();

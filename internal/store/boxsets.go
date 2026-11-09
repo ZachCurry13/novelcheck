@@ -18,6 +18,10 @@ import (
 type BoxEntry struct {
 	Title  string  `db:"title" json:"title"`
 	Number float64 `db:"number" json:"number"`
+	// The book NovelCheck already has under this title (filled in for the review window).
+	MatchID    int64  `db:"-" json:"match_id,omitempty"`
+	MatchTitle string `db:"-" json:"match_title,omitempty"`
+	MatchOwned bool   `db:"-" json:"match_owned,omitempty"`
 }
 
 // BoxSet is a box set waiting for a parent, or split.
@@ -29,7 +33,9 @@ type BoxSet struct {
 	State    string     `db:"state" json:"state"`
 	Raw      string     `db:"proposal" json:"-"`
 	Proposal []BoxEntry `json:"proposal"`
-	Members  []BoxEntry `json:"members"` // once split
+	Members  []BoxEntry `json:"members"`              // once split
+	Formats  string     `db:"formats" json:"formats"` // the box set's own files
+	Added    string     `db:"added" json:"added"`     // when it was added to the library
 }
 
 var boxTitle = regexp.MustCompile(`(?i)\b(box(?:ed)?[\s-]*set|boxset|omnibus|trilogy|quartet|quintet|complete\s+(?:series|saga|collection|trilogy)|books?\s+\d+\s*(?:[-–—&]|to|through)\s*\d+|\d+[\s-]*books?\s+(?:set|bundle|collection|in\s+1)|\d+\s*in\s*1|bundle)\b`)
@@ -86,7 +92,10 @@ func (s *Store) rangeProposal(bookID int64, title string) string {
 // BoxSets lists the box sets waiting for a parent, then the split ones.
 func (s *Store) BoxSets() ([]BoxSet, error) {
 	out := []BoxSet{}
-	if err := s.DB.Select(&out, `SELECT x.book_id, b.title, b.author, b.series, x.state, x.proposal
+	if err := s.DB.Select(&out, `SELECT x.book_id, b.title, b.author, b.series, x.state, x.proposal,
+		COALESCE((SELECT GROUP_CONCAT(f, ', ') FROM (SELECT DISTINCT UPPER(fc.format) AS f FROM catalog_books fc
+			WHERE fc.book_id = b.id AND fc.format NOT IN ('', 'list') ORDER BY f)), '') AS formats,
+		COALESCE(NULLIF(b.calibre_added, ''), (SELECT CAST(MIN(cb.added_at) AS TEXT) FROM catalog_books cb WHERE cb.book_id = b.id), '') AS added
 		FROM box_sets x JOIN books b ON b.id = x.book_id WHERE x.state IN ('found', 'split')
 		ORDER BY x.state = 'split', sort_title(b.title)`); err != nil {
 		return nil, err
@@ -97,8 +106,38 @@ func (s *Store) BoxSets() ([]BoxSet, error) {
 			out[i].Proposal = []BoxEntry{}
 		}
 		out[i].Members = s.boxMembers(out[i].BookID)
+		for j := range out[i].Proposal {
+			s.fillBoxMatch(&out[i].Proposal[j], out[i].Author, out[i].BookID)
+		}
 	}
 	return out, nil
+}
+
+// fillBoxMatch says which book NovelCheck already has under an inside title (other than the box set),
+// so the review window can show "already in your library" instead of "a new book".
+func (s *Store) fillBoxMatch(e *BoxEntry, author string, boxID int64) {
+	id := s.MatchBook(e.Title, author)
+	if id == 0 || id == boxID {
+		return
+	}
+	var m struct {
+		Title string `db:"title"`
+		Owned bool   `db:"owned"`
+	}
+	if s.DB.Get(&m, `SELECT b.title, `+ownedCond+` AS owned FROM books b WHERE b.id = ?`, id) == nil {
+		e.MatchID, e.MatchTitle, e.MatchOwned = id, m.Title, m.Owned
+	}
+}
+
+// BoxMatch looks up one inside title for a box set, as it is typed in the review window.
+func (s *Store) BoxMatch(boxID int64, title string) BoxEntry {
+	e := BoxEntry{Title: strings.TrimSpace(title)}
+	var author string
+	_ = s.DB.Get(&author, `SELECT author FROM books WHERE id = ?`, boxID)
+	if e.Title != "" {
+		s.fillBoxMatch(&e, author, boxID)
+	}
+	return e
 }
 
 func (s *Store) boxMembers(boxID int64) []BoxEntry {
@@ -144,11 +183,17 @@ func (s *Store) SplitBox(boxID int64, entries []BoxEntry, by string) ([]int64, e
 		if title == "" || len([]rune(title)) > 300 {
 			continue
 		}
-		var existed int
-		_ = s.DB.Get(&existed, `SELECT COUNT(*) FROM books WHERE norm_key = ?`, s.aliasKey(NormKey(title, box.Author)))
-		id, err := s.UpsertBook(title, box.Author, "", "")
-		if err != nil || id == boxID {
-			continue
+		// A title that matches a book NovelCheck already has ("Sea of Monsters" for "The Sea of Monsters")
+		// joins that book; only a title nothing matches becomes a new one.
+		existed := 0
+		id := s.MatchBook(title, box.Author)
+		if id != 0 && id != boxID {
+			existed = 1
+		} else {
+			var err error
+			if id, err = s.UpsertBook(title, box.Author, "", ""); err != nil || id == boxID {
+				continue
+			}
 		}
 		pos++
 		if box.Series != "" && e.Number > 0 {
