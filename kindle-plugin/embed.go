@@ -29,7 +29,7 @@ func Version() string {
 
 // luaString quotes s as a Lua string literal.
 func luaString(s string) string {
-	r := strings.NewReplacer(`\`, `\`, `"`, `\"`, "\n", `\n`, "\r", `\r`, "\x00", "")
+	r := strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`, "\r", `\r`, "\x00", "")
 	return `"` + r.Replace(s) + `"`
 }
 
