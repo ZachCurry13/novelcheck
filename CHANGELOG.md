@@ -6,6 +6,13 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.52.0]
 
+### 🛡️ Joining books: evidence first, fewer wrong joins
+- **A book and its spin-off are no longer treated as the same book.** "I Am Number Four" next to "I Am Number Four: The Lost Files: Six's Legacy", or two spin-offs of the same book, used to be offered as pairs.
+- **Every pair shows its evidence.** Both books side by side with series and number, ISBN and a piece of the description, a badge (✅ very likely, 🟡 probably, 🔴 check carefully) and the reasons: same author, same ISBN, same place in a series, descriptions that say the same thing, one title with an extra subtitle. Doubtful pairs sit in a folded section at the bottom and ask "Join anyway?" before joining.
+- **Clear contradictions take a pair off the list:** a different number in the same series, or descriptions about different things.
+- **Automatic joining is stricter.** After a sync it only joins a looked-up or wished-for entry with its library copy when they have the same ISBN or the same title once tidied (by the same or an unknown author), and the notice now names the books it joined.
+- The Nightstand banner shows the same evidence.
+
 ### 🏷️ Saving a title in Calibre no longer hangs
 - **It answers in a couple of seconds.** Saving a title (or tidying many) used to wait for a full re-read of the Calibre library, about 15 seconds each. The re-read now happens in the background, and several saves close together share one.
 - **One save at a time, and the button says so.** The button turns into "Saving in Calibre…" and stays off until it's done; pressing it again used to queue more re-reads (five presses took over a minute).

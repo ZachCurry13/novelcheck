@@ -4,8 +4,9 @@ package store
 // same book arriving later from Calibre or Audiobookshelf can end up as two
 // entries when the title or author is written a little differently ("Cinder"
 // and "Cinder (The Lunar Chronicles #1)" by "Marissa Meyer" and "Meyer,
-// Marissa"). This finds such pairs. A pair where one is in a library and the
-// other isn't is merged by itself; the rest are shown for a person to decide.
+// Marissa"). This finds such pairs and weighs the evidence (samesignals.go):
+// only the clearest are merged by themselves, the rest are shown with their
+// reasons for a person to decide.
 
 import (
 	"fmt"
@@ -17,26 +18,46 @@ import (
 
 // SameBook is one side of a possible pair.
 type SameBook struct {
-	ID      int64  `db:"id" json:"id"`
-	Title   string `db:"title" json:"title"`
-	Author  string `db:"author" json:"author"`
-	Owned   bool   `db:"owned" json:"owned"`
-	Formats string `db:"formats" json:"formats"`
-	Wanted  int    `db:"wanted" json:"wanted"` // people with it on a wishlist or Nightstand
+	ID          int64   `db:"id" json:"id"`
+	Title       string  `db:"title" json:"title"`
+	Author      string  `db:"author" json:"author"`
+	Owned       bool    `db:"owned" json:"owned"`
+	Formats     string  `db:"formats" json:"formats"`
+	Wanted      int     `db:"wanted" json:"wanted"` // people with it on a wishlist or Nightstand
+	Series      string  `db:"series" json:"series"`
+	SeriesIndex float64 `db:"series_index" json:"series_index"`
+	ISBN        string  `db:"isbn" json:"isbn"`
+	Description string  `db:"description" json:"-"`
+	Snippet     string  `db:"-" json:"snippet"`
 }
 
-// SamePair is two entries that look like one book.
+// Reason is one piece of evidence for or against a pair being one book.
+type Reason struct {
+	Text string `json:"text"`
+	Good bool   `json:"good"`
+}
+
+// SamePair is two entries that may be one book, with how sure that is
+// (sure, likely or check) and why.
 type SamePair struct {
-	A SameBook `json:"a"`
-	B SameBook `json:"b"`
+	A          SameBook `json:"a"`
+	B          SameBook `json:"b"`
+	Confidence string   `json:"confidence"`
+	Reasons    []Reason `json:"reasons"`
 }
 
 type sameRow struct {
 	SameBook
 	last       string
 	haveAuthor bool
-	bases      []string
+	full       string   // the whole title, boiled down
+	generic    []string // the title, and without an alternate or generic subtitle ("Or, ..." / "A Novel")
+	prefixes   []string // the part before any subtitle
 }
+
+var subtitleSeps = []string{": ", " - ", " – ", " — "}
+
+func boil(v string) string { return squash(dropArticle(strings.TrimSpace(v))) }
 
 func (s *Store) sameRows() ([]*sameRow, error) {
 	var rows []SameBook
@@ -44,17 +65,31 @@ func (s *Store) sameRows() ([]*sameRow, error) {
 		COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTINCT UPPER(fc.format) AS f FROM catalog_books fc
 			WHERE fc.book_id = b.id AND fc.format NOT IN ('', 'list') ORDER BY f)), '') AS formats,
 		(SELECT COUNT(*) FROM wishlist w WHERE w.book_id = b.id AND w.status IN ('wanted', 'approved'))
-			+ (SELECT COUNT(*) FROM queue_items q WHERE q.book_id = b.id) AS wanted
+			+ (SELECT COUNT(*) FROM queue_items q WHERE q.book_id = b.id) AS wanted,
+		b.series, b.series_index, b.isbn, b.description
 		FROM books b WHERE NOT `+discoverOnlyCond+` ORDER BY b.id`); err != nil {
 		return nil, err
 	}
 	out := make([]*sameRow, 0, len(rows))
 	for _, r := range rows {
+		r.Snippet = r.Description
+		if len(r.Snippet) > 180 {
+			r.Snippet = r.Snippet[:180] + "…"
+		}
 		sr := &sameRow{SameBook: r, last: squash(lastName(r.Author))}
 		sr.haveAuthor = !junkAuthors[strings.ToLower(strings.TrimSpace(r.Author))] && sr.last != ""
-		for _, v := range titleVariants(titles.Clean(r.Title), sr.haveAuthor) {
-			if base := squash(dropArticle(strings.TrimSpace(v))); len(base) >= 4 {
-				sr.bases = append(sr.bases, base)
+		clean := titles.Clean(r.Title)
+		sr.full = boil(clean)
+		for _, v := range sameVariants(clean) {
+			if b := boil(v); len(b) >= 4 {
+				sr.generic = append(sr.generic, b)
+			}
+		}
+		for _, sep := range subtitleSeps {
+			if a, _, ok := strings.Cut(clean, sep); ok {
+				if b := boil(a); len(b) >= 4 {
+					sr.prefixes = append(sr.prefixes, b)
+				}
 			}
 		}
 		out = append(out, sr)
@@ -62,8 +97,32 @@ func (s *Store) sameRows() ([]*sameRow, error) {
 	return out, nil
 }
 
-// likelyPairs finds the pairs, not counting ones a person said are different.
-func (s *Store) likelyPairs() ([]*[2]*sameRow, error) {
+// genericSubtitles are subtitles that only decorate a title ("A Novel"); with an alternate
+// title ("Or, Disappearance!") they still name the same book. Any other subtitle may name a
+// different book ("I Am Number Four: The Lost Files: Six's Legacy" is not "I Am Number Four"),
+// so those pairs are only offered, with evidence, never merged by themselves.
+var genericSubtitles = map[string]bool{"novel": true, "a novel": true, "a memoir": true, "a thriller": true, "a mystery": true,
+	"a story": true, "stories": true, "a love story": true, "a tale": true, "an autobiography": true}
+
+func genericSubtitle(sub string) bool {
+	l := strings.ToLower(strings.TrimSpace(sub))
+	return strings.HasPrefix(l, "or,") || strings.HasPrefix(l, "or ") || genericSubtitles[strings.Trim(l, " .!")]
+}
+
+// sameVariants are the titles an entry could be called when deciding two entries are one
+// book: the whole title, and the part before a generic or alternate subtitle.
+func sameVariants(clean string) []string {
+	out := []string{clean}
+	for _, sep := range subtitleSeps {
+		if a, b, ok := strings.Cut(clean, sep); ok && genericSubtitle(b) {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+// likelyPairs finds the pairs worth a look, judged, not counting ones a person said are different.
+func (s *Store) likelyPairs() ([]*judged, error) {
 	rows, err := s.sameRows()
 	if err != nil {
 		return nil, err
@@ -77,34 +136,53 @@ func (s *Store) likelyPairs() ([]*[2]*sameRow, error) {
 	for _, i := range ig {
 		ignored[[2]int64{i.A, i.B}] = true
 	}
-	byBase := map[string][]*sameRow{}
+	byGeneric, byFull := map[string][]*sameRow{}, map[string][]*sameRow{}
 	for _, r := range rows {
-		for _, b := range r.bases {
-			byBase[b] = append(byBase[b], r)
+		for _, g := range r.generic {
+			byGeneric[g] = append(byGeneric[g], r)
 		}
+		byFull[r.full] = append(byFull[r.full], r)
 	}
 	seen := map[[2]int64]bool{}
-	var out []*[2]*sameRow
+	var out []*judged
+	add := func(x, y *sameRow, kind string) {
+		if x.ID > y.ID {
+			x, y = y, x
+		}
+		k := [2]int64{x.ID, y.ID}
+		if x.ID == y.ID || seen[k] || ignored[k] || (x.haveAuthor && y.haveAuthor && x.last != y.last) {
+			return
+		}
+		seen[k] = true
+		if j := judge(x, y, kind); j != nil {
+			out = append(out, j)
+		}
+	}
 	for _, r := range rows {
-		for _, base := range r.bases {
-			for _, o := range byBase[base] {
-				if o.ID <= r.ID || (r.haveAuthor && o.haveAuthor && r.last != o.last) {
-					continue
-				}
-				k := [2]int64{r.ID, o.ID}
-				if seen[k] || ignored[k] {
-					continue
-				}
-				seen[k] = true
-				out = append(out, &[2]*sameRow{r, o})
+		for _, g := range r.generic {
+			for _, o := range byGeneric[g] {
+				add(r, o, "exact")
 			}
 		}
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i][0].ID < out[j][0].ID })
+	for _, r := range rows { // "Title" next to "Title: Something": maybe one book, maybe a spin-off
+		for _, p := range r.prefixes {
+			for _, o := range byFull[p] {
+				add(r, o, "subtitle")
+			}
+		}
+	}
+	rank := map[string]int{"sure": 0, "likely": 1, "check": 2}
+	sort.SliceStable(out, func(i, j int) bool {
+		if rank[out[i].conf] != rank[out[j].conf] {
+			return rank[out[i].conf] < rank[out[j].conf]
+		}
+		return out[i].a.ID < out[j].a.ID
+	})
 	return out, nil
 }
 
-// SamePairs lists the pairs for a person to look at, looking like the same book.
+// SamePairs lists the pairs for a person to look at, the surest first, each with its evidence.
 func (s *Store) SamePairs() ([]SamePair, error) {
 	ps, err := s.likelyPairs()
 	if err != nil {
@@ -112,7 +190,7 @@ func (s *Store) SamePairs() ([]SamePair, error) {
 	}
 	out := []SamePair{}
 	for _, p := range ps {
-		out = append(out, SamePair{A: p[0].SameBook, B: p[1].SameBook})
+		out = append(out, SamePair{A: p.a.SameBook, B: p.b.SameBook, Confidence: p.conf, Reasons: p.reasons})
 	}
 	return out, nil
 }
@@ -126,40 +204,47 @@ func (s *Store) IgnoreSame(a, b int64) error {
 	return err
 }
 
-// AutoMergeSame merges the clear cases: an entry that is in no library (only
-// looked up, wished for or on a list) with the one library book it matches,
-// when that match is the only one. It returns how many were merged.
-func (s *Store) AutoMergeSame() int {
+// AutoMergeSame merges only the pairs judged "sure" (the same ISBN, or the same title once tidied
+// by the same or an unknown author): an entry that is in no library (only looked up, wished for
+// or on a list) with the one library book it matches, when that match is the only one. It
+// returns what it joined, as "title → title".
+func (s *Store) AutoMergeSame() []string {
 	ps, err := s.likelyPairs()
 	if err != nil {
-		return 0
+		return nil
 	}
-	owned := map[int64][]int64{} // an unowned entry -> the owned books it matches
+	owned := map[int64][]*sameRow{} // an unowned entry -> the owned books it surely matches
+	loose := map[int64]*sameRow{}
 	for _, p := range ps {
-		a, b := p[0], p[1]
-		if a.Owned != b.Owned {
+		a, b := p.a, p.b
+		if p.conf == "sure" && a.Owned != b.Owned {
 			if a.Owned {
 				a, b = b, a
 			}
-			owned[a.ID] = append(owned[a.ID], b.ID)
+			owned[a.ID] = append(owned[a.ID], b)
+			loose[a.ID] = a
 		}
 	}
-	merged := 0
-	for loose, matches := range owned {
+	var merged []string
+	for id, matches := range owned {
 		if len(matches) != 1 {
 			continue
 		}
-		if _, err := s.MergeBooks(matches[0], loose); err == nil {
-			merged++
+		if _, err := s.MergeBooks(matches[0].ID, id); err == nil {
+			merged = append(merged, "“"+loose[id].Title+"” → “"+matches[0].Title+"”")
 		}
 	}
+	sort.Strings(merged)
 	return merged
 }
 
-// TidySame merges the clear duplicates after a sync and tells the parents.
+// TidySame merges the clear duplicates after a sync and tells the parents which books.
 func (s *Store) TidySame() {
-	if n := s.AutoMergeSame(); n > 0 {
-		s.NotifyRoutine("same-merged", fmt.Sprintf("NovelCheck joined %d book%s that were listed twice (for example one added to a reading list before it was in the library).",
-			n, map[bool]string{true: "", false: "s"}[n == 1]), "#/duplicates")
+	if m := s.AutoMergeSame(); len(m) > 0 {
+		list := strings.Join(m[:min(len(m), 5)], "; ")
+		if len(m) > 5 {
+			list += fmt.Sprintf("; and %d more", len(m)-5)
+		}
+		s.NotifyRoutine("same-merged", fmt.Sprintf("NovelCheck joined %d book%s that were listed twice: %s.", len(m), map[bool]string{true: "", false: "s"}[len(m) == 1], list), "#/duplicates")
 	}
 }
