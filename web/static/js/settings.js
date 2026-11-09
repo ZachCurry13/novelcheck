@@ -113,7 +113,7 @@ export async function renderSettings(view, state) {
     const k = e.target.closest("[data-section]")?.dataset.section;
     if (!k || k === section) return;
     section = k;
-    history.replaceState(null, "", `#/settings?s=${k}`); // shareable, without reloading the page
+    history.pushState(null, "", `#/settings?s=${k}`); // shareable, without reloading the page; Back returns to the last section
     draw();
   };
   draw();

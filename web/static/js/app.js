@@ -19,6 +19,8 @@ import { renderSystem } from "./system.js";
 import { renderUsage } from "./usage.js";
 import { renderDuplicates } from "./duplicates.js";
 import { renderDeletions } from "./deletions.js";
+import "./dialogback.js"; // Back closes an open window instead of leaving the page
+import { startViewState, beginRoute, restoreScroll } from "./viewstate.js";
 import { renderDeepScanAdmin } from "./deepscanadmin.js";
 import { renderWishlist } from "./wishlist.js";
 import { renderDiscover } from "./discover.js";
@@ -124,6 +126,7 @@ function showApp() {
 let currentCleanup = null;
 async function route() {
   if (!state.user) return;
+  beginRoute(); // was this Back or Forward? (decided before the page takes time to draw)
   // Everyone lands on their chosen start page; by default parents on Check a
   // book (the main feature), kids on the Library.
   let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || state.user.start_page || (canManage(state.user) ? "check" : "library");
@@ -138,6 +141,7 @@ async function route() {
   const view = document.createElement("div");
   $("#view").replaceChildren(view);
   currentCleanup = await routes[name](view, state);
+  restoreScroll(); // after Back, where the page was left; otherwise the top
 }
 
 async function boot() {
@@ -167,6 +171,7 @@ async function boot() {
     showSignIn();
   });
   startRecording();
+  startViewState();
   window.addEventListener("hashchange", route);
   for (const id of ["#help-btn", "#help-link"]) {
     $(id).addEventListener("click", (e) => {

@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.54.0]
+
+### ⬅️ The Back button takes you back to where you were
+- **Tabs are steps you can go back to.** Switching tabs in Admin, Settings or Deep Scan used to replace the page in the browser's history, so Back skipped the tab you had just left. Each tab you choose is now a step.
+- **Back closes an open window.** A book's window (or any other window) no longer makes Back leave the page behind it; Back, or a phone's back swipe, closes the window first. Closing it with its own button leaves no extra step behind.
+- **Back returns to the same place.** The page opens where you had scrolled to, and the Library keeps your search and filters when you come back from a book's series, an author's page and so on. Opening a page by a link still starts at the top.
+
 ## [1.53.0]
 
 ### 🧹 Admin → Library cleanup

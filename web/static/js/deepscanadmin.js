@@ -76,7 +76,7 @@ export async function renderDeepScanAdmin(view, state) {
     const done = data.scans.filter((d) => !isOpen(d) && !d.held);
     $("[data-list]", panel("results")).innerHTML = done.map(resultRow).join("") || `<li class="text-sm text-slate-500">No Deep Scans yet.</li>`;
   };
-  const show = (k) => {
+  const show = (k, push) => {
     TABS.forEach(([t]) => {
       panel(t).classList.toggle("hidden", t !== k);
       const b = $(`[data-tab="${t}"]`, view);
@@ -84,7 +84,7 @@ export async function renderDeepScanAdmin(view, state) {
       b.classList.toggle("text-white", t === k);
       b.setAttribute("aria-selected", String(t === k));
     });
-    history.replaceState(null, "", `#/deepscan?${k}`);
+    history[push ? "pushState" : "replaceState"](null, "", `#/deepscan?${k}`);
   };
 
   paintModelWarning($("#model-warning", view), data);
@@ -99,7 +99,7 @@ export async function renderDeepScanAdmin(view, state) {
 
   view.onclick = async (e) => {
     const tab = e.target.closest("[data-tab]")?.dataset.tab;
-    if (tab) return show(tab);
+    if (tab) return show(tab, true);
     const item = e.target.closest("[data-scan]");
     if (e.target.closest("[data-open]") && item) return openBook(Number(item.dataset.book), state);
     const read = e.target.closest("[data-read]");

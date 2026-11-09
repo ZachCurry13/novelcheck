@@ -76,12 +76,12 @@ export async function renderAdmin(view, state) {
     </section>`)}`;
 
   let cleanupLoaded = false;
-  const show = (tab) => {
+  const show = (tab, push) => {
     current = tab;
     $$("[data-panel]", view).forEach((p) => p.classList.toggle("hidden", p.dataset.panel !== tab));
     $$("[data-tab]", view).forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
     markAdminSection(view, tab);
-    history.replaceState(null, "", `#/admin?tab=${tab}`);
+    history[push ? "pushState" : "replaceState"](null, "", `#/admin?tab=${tab}`); // a tab you chose is a step Back returns to
     if (tab === "cleanup" && !cleanupLoaded) {
       cleanupLoaded = true; // opened once; the tools inside refresh themselves
       import("./cleanuptab.js").then((m) => m.renderCleanupTab($("#cleanup-tab", view)));
@@ -92,7 +92,7 @@ export async function renderAdmin(view, state) {
     const t = e.target.closest("[data-tab]")?.dataset.tab;
     if (t) {
       e.preventDefault(); // a section of this page: switch in place
-      show(t);
+      if (t !== current) show(t, true);
     }
   });
 

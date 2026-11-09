@@ -16,6 +16,7 @@ import { refreshActivity } from "./activity.js";
 import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
 import { shelfBanner } from "./collections.js";
 import { audioFilterHTML, audioSortHTML, audioParams } from "./libaudio.js";
+import { isBack, saveForm, restoreForm } from "./viewstate.js";
 
 const PAGE = 60;
 
@@ -218,6 +219,10 @@ export async function renderLibrary(view, state) {
     if (preset.get(k) && form.elements[k]) form.elements[k].value = preset.get(k);
   }
   if ([...preset.keys()].some((k) => !["q", "collection", "season", "event"].includes(k))) form.classList.add("filters-open");
+  // Back from a book's series, an author's page and so on: the search and filters are as you left them.
+  if (isBack() && [...preset.keys()].length === 0 && restoreForm("library", form)) form.classList.add("filters-open");
+  form.addEventListener("input", () => saveForm("library", form));
+  form.addEventListener("change", () => saveForm("library", form));
   countFilters();
   await load(true);
   // Parents see ratings arrive on the cards as the AI works.
