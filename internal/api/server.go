@@ -55,6 +55,7 @@ type Server struct {
 	resolvedAt  sync.Map      // user id -> when their unmatched KOReader books were last looked up (koresolve.go)
 	codeGuesses *loginLimiter // wrong sync codes (KOReader, WebDAV, plugin)
 	formats     formatJob     // format cleanup's background job
+	rcache      respCache     // short-lived copies of the heavy list pages (respcache.go)
 	dav         davState      // KOReader statistics folders
 	pins        pinTries      // wrong PINs on family devices
 	Libby       libby.Client  // library availability (kept a few hours)
@@ -142,7 +143,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/me/koreader-books", s.handleMyKOReaderBooks)
 			r.Get("/me/reading-sync", s.handleMyReadingSync)
 			r.Post("/me/dav/tidy", s.handleDAVTidy)
-			r.Get("/me/reading-stats", s.handleMyReadingStats)
+			r.With(s.cached).Get("/me/reading-stats", s.handleMyReadingStats)
 			r.Get("/me/sharing", s.handleMySharing)
 			r.Put("/me/sharing", s.handleMySharing)
 			r.Get("/readers", s.handleReaders)
@@ -156,10 +157,10 @@ func (s *Server) Router() http.Handler {
 			r.Post("/me/hardcover/sync", s.handleHardcoverSync)
 			r.Put("/me/hardcover/push", s.handleHardcoverPush)
 
-			r.Get("/books", s.handleListBooks)
-			r.Get("/books/facets", s.handleBookFacets)
+			r.With(s.cached).Get("/books", s.handleListBooks)
+			r.With(s.cached).Get("/books/facets", s.handleBookFacets)
 			r.Get("/books/states", s.handleBookStates)
-			r.Get("/collections", s.handleListCollections)
+			r.With(s.cached).Get("/collections", s.handleListCollections)
 			r.Get("/series", s.handleSeriesList)
 			r.Get("/series/one", s.handleSeries)
 			r.Get("/collections/{id}", s.handleGetCollection)
@@ -186,7 +187,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/updates", s.handleUpdates)
 			r.Get("/flags", s.handleListFlags)
 			r.Get("/content", s.handleContentCatalog)
-			r.With(s.requireModule(store.KeyModuleDiscover, "Discover")).Get("/discover", s.handleDiscover)
+			r.With(s.requireModule(store.KeyModuleDiscover, "Discover"), s.cached).Get("/discover", s.handleDiscover)
 			r.Post("/books/{id}/wish", s.handleAddWish)
 			r.Delete("/books/{id}/wish", s.handleRemoveWish)
 			r.Get("/wishlist", s.handleWishlist)

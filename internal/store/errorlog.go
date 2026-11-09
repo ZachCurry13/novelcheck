@@ -14,9 +14,9 @@ type ServerError struct {
 	Detail   string `db:"detail" json:"detail"`
 }
 
-const keepErrors = 300
+const keepErrors = 600 // errors and slow requests share the list
 
-// LogError keeps a failed request (the newest 300 are kept).
+// LogError keeps a failed request (the newest few hundred are kept).
 func (s *Store) LogError(e ServerError) {
 	clip := func(v string, n int) string {
 		if len(v) > n {
@@ -34,7 +34,14 @@ func (s *Store) LogError(e ServerError) {
 // RecentErrors lists the newest failed requests.
 func (s *Store) RecentErrors(n int) []ServerError {
 	out := []ServerError{}
-	_ = s.DB.Select(&out, `SELECT code, at, method, path, status, username, detail FROM error_log ORDER BY id DESC LIMIT ?`, n)
+	_ = s.DB.Select(&out, `SELECT code, at, method, path, status, username, detail FROM error_log WHERE code != 'SLOW' ORDER BY id DESC LIMIT ?`, n)
+	return out
+}
+
+// RecentSlow lists the newest slow requests (code SLOW; the detail is "1234 ms").
+func (s *Store) RecentSlow(n int) []ServerError {
+	out := []ServerError{}
+	_ = s.DB.Select(&out, `SELECT code, at, method, path, status, username, detail FROM error_log WHERE code = 'SLOW' ORDER BY id DESC LIMIT ?`, n)
 	return out
 }
 

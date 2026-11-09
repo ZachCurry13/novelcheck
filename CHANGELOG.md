@@ -4,6 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.51.0]
+
+### 🧹 Library cleanup, one flow
+- **Admin → Delivery & Services → Calibre Library → 🧹 Library cleanup…** shows what is left to tidy and runs the steps in order: tidy titles in Calibre, remove extra Calibre copies that have no EPUB (only where another entry of the same book has one), convert the rest to EPUB, remove the other formats where an EPUB now exists, then re-read the library. Duplicates in NovelCheck itself (joining books) stay a step you do by hand first. Before anything is deleted you see what and how much; the copies and files go to Calibre's recycle bin, formats can be undone for 7 days under **Formats…**, and a book that can't be converted keeps its original file. It ends with the Kindle steps (Update plugin, Report books, Tidy book names, Download all Nightstand).
+- **Nightstand: "👯 look like the same book".** When two books on your Nightstand look like one (a title written two ways), a banner offers **Join them** or **Not the same**. Admins and editors see it.
+
+### ⚡ Faster tabs
+- **The heavy lists are kept in memory** for 45 seconds: Library, its filters, Collections, Discover and reading stats. Anything you change in the app clears them at once, so a page never shows old data after your own change.
+- **A "Slow requests" section in the bug report** lists the pages that took over 0.8 seconds (how often, average and worst time), so a slow tab can be traced to its cause.
+
 ## [1.50.0]
 
 ### 🐞 Bug reports you can trust

@@ -4,7 +4,9 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -61,6 +63,35 @@ func (e *errRecorder) Unwrap() http.ResponseWriter { return e.ResponseWriter }
 
 func (e *errRecorder) SetDetail(d string) { e.detail = d }
 
+// A request that takes this long is kept in the report's slow-request list, so a slow
+// tab can be pinned to the page that causes it.
+const slowAfter = 800 * time.Millisecond
+
+// changesData says whether a request may change what the list pages show. Reading-progress
+// pings and report uploads happen all the time and never do.
+func changesData(method, path string) bool {
+	if method == http.MethodGet || method == http.MethodHead || method == http.MethodOptions {
+		return false
+	}
+	for _, p := range []string{"/kosync/syncs/", "/bug-report", "/plugin/debug", "/bugs/", "/api/auth/"} {
+		if strings.Contains(path, p) {
+			return false
+		}
+	}
+	return true
+}
+
+// slowExempt is for requests that are slow by nature: file downloads, audio, covers
+// being fetched, AI calls, backups and long jobs.
+func slowExempt(path string) bool {
+	for _, p := range []string{"/download", "/audio/", "/cover", "/file/", "/kosync/plugin/book", "/opds/", "/backup", "/api/check", "/diagnose", "/analyze", "/deep-scan", "/listen", "/formats/", "/calibre-sync", "/libby"} {
+		if strings.Contains(path, p) {
+			return true
+		}
+	}
+	return false
+}
+
 func recordable(status int) bool {
 	return status >= 400 && status != http.StatusUnauthorized && status != http.StatusNotFound
 }
@@ -83,9 +114,17 @@ func errorID(w http.ResponseWriter) string {
 func (s *Server) errorRecorder(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rec := &errRecorder{ResponseWriter: w}
+		began := time.Now()
 		next.ServeHTTP(rec, r)
+		if changesData(r.Method, r.URL.Path) && rec.status > 0 && rec.status < 400 {
+			s.rcache.bump() // something changed: the kept list pages are out of date
+		}
 		if recordable(rec.status) {
 			s.noteError(rec, r, rec.status)
+		}
+		if took := time.Since(began); took >= slowAfter && !slowExempt(r.URL.Path) {
+			s.Store.LogError(store.ServerError{Code: "SLOW", Method: r.Method, Path: r.URL.Path, Status: max(rec.status, 200),
+				Username: r.Header.Get("x-auth-user"), Detail: strconv.FormatInt(took.Milliseconds(), 10) + " ms"})
 		}
 	})
 }

@@ -9,6 +9,7 @@ import { openBook } from "./bookdialog.js";
 import { progressBar, progressText, pct, ago, setBars } from "./progress.js";
 import { renderKOReaderBooks } from "./koreaderbooks.js";
 import { renderListening } from "./listening.js";
+import { renderTwins } from "./queuetwins.js";
 
 export async function renderQueue(view, state) {
   view.innerHTML = `
@@ -20,6 +21,7 @@ export async function renderQueue(view, state) {
       then the pile you plan to read next. Books you open on your e-reader show up here by themselves.
       <button type="button" data-intro-ok class="ml-1 underline">Got it</button></p>
     <div id="listening"></div>
+    <div id="twins"></div>
     <section class="mb-8">
       <h2 class="label">Currently Reading</h2>
       <div id="reading" class="grid gap-3 sm:grid-cols-2"></div>
@@ -70,6 +72,7 @@ export async function renderQueue(view, state) {
     queued.innerHTML = next.length ? next.map((i, idx) => queueRow(i, idx, state.user)).join("")
       : `<li class="text-sm text-slate-500">Your pile is empty. Add books from the Library with ＋.</li>`;
     setBars(reading);
+    renderTwins($("#twins", view), items, state.user, load);
     const hid = (await attempt(() => get("/api/queue?hidden=1"))) || [];
     hiddenEl.innerHTML = hid.length ? `<details class="rounded-lg bg-slate-800/40 p-2"><summary class="cursor-pointer text-slate-400">🙈 Hidden (${hid.length})</summary>
       <ul class="mt-2 space-y-1">${hid.map((i) => `<li data-item="${i.id}" data-book="${i.book_id}" class="flex items-center justify-between gap-2">

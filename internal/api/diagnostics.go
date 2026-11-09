@@ -86,6 +86,8 @@ func (s *Server) diagnosticsText() string {
 		line("%s %s UTC %s %s -> %d%s: %s", e.Code, e.At, e.Method, e.Path, e.Status, user, e.Detail)
 	}
 
+	s.slowSection(line)
+
 	if s.Tunnel != nil {
 		st := s.Tunnel.Status()
 		line("\n== Remote access (cloudflared) ==")
