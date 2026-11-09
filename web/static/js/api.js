@@ -70,8 +70,10 @@ export async function api(path, { method = "GET", body, raw = false } = {}) {
   if (raw) return res;
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    note("net", `${method} ${path} -> ${res.status} ${data.error || res.statusText}`);
-    throw new ApiError(res.status, data.error || res.statusText, data);
+    const code = res.headers.get("X-Error-Id") || "";
+    note("net", `${method} ${path} -> ${res.status} ${data.error || res.statusText} ${code}`);
+    // A server error shows its code (E-xxxx): it points at one line in the bug report.
+    throw new ApiError(res.status, (data.error || res.statusText) + (code && res.status >= 500 ? ` (${code})` : ""), data);
   }
   return data;
 }

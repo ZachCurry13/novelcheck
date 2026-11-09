@@ -23,7 +23,7 @@ return function(NovelCheck, ctx)
     local LOG = DataStorage:getSettingsDir() .. "/novelcheck-debug.log"
 
     local function stamp()
-        return os.date("%Y-%m-%d %H:%M:%S")
+        return os.date("!%Y-%m-%d %H:%M:%S") -- UTC, like the server's report
     end
 
     -- dlog adds one line to the log. It never raises: logging must not break the plugin.
@@ -35,6 +35,9 @@ return function(NovelCheck, ctx)
             end
             f:write(stamp(), " [", tostring(kind), "] ", (tostring(msg):gsub("[\r\n]+", " | ")), "\n")
             f:close()
+            if kind == "error" and self.autoSend then
+                pcall(self.autoSend, self, tostring(msg)) -- an error sends the log by itself (debugsend.lua)
+            end
             local size = lfs.attributes(LOG, "size") or 0
             if size > MAX_BYTES then
                 local r = io.open(LOG, "rb")
@@ -112,6 +115,14 @@ return function(NovelCheck, ctx)
         end
         put("self-test, plugin " .. VERSION .. ", KOReader " .. tostring((pcall(require, "version") and require("version"):getCurrentRevision()) or "?")
             .. ", device " .. tostring(Device.model))
+        put("time now (UTC) " .. os.date("!%Y-%m-%d %H:%M:%S") .. ", all times in this log are UTC")
+        local lib = self.libraryDir and self:libraryDir() or "?"
+        put("folders: home " .. tostring(G_reader_settings:readSetting("home_dir")) .. ", download " .. tostring(G_reader_settings:readSetting("download_dir"))
+            .. ", library " .. tostring(lib) .. ", NovelCheck books go to " .. tostring(lib) .. "/NovelCheck")
+        local okd, du = pcall(function() return require("util").diskUsage(lib) end)
+        if okd and type(du) == "table" then
+            put("disk: available " .. tostring(du.available) .. ", total " .. tostring(du.total))
+        end
         put("plugin folder " .. tostring(PLUGIN_DIR) .. ": " .. listFiles(PLUGIN_DIR))
         if self.load_errors and #self.load_errors > 0 then
             put("LOAD ERRORS: " .. table.concat(self.load_errors, " ; "))
@@ -138,9 +149,12 @@ return function(NovelCheck, ctx)
 
     -- uploadLog runs the self-test and sends the log to NovelCheck (Settings > Developer >
     -- Bug reports). It returns true when NovelCheck took it.
-    function NovelCheck:uploadLog()
+    function NovelCheck:uploadLog(note)
         self:selfTest()
         local text = self:readLog()
+        if note and note ~= "" then
+            text = "NOTE: " .. note .. "\n\n" .. text
+        end
         if #text > 100 * 1024 then
             text = text:sub(-100 * 1024)
         end
@@ -184,6 +198,13 @@ return function(NovelCheck, ctx)
             end },
             { text = _("View log"), callback = function() self:showLog() end },
             { text = _("Send log to NovelCheck"), callback = function() self:sendDebugLog() end },
+            { text = _("Send log with a note..."), callback = function() self:sendWithNote() end },
+            { text = _("Send errors automatically"), keep_menu_open = true,
+              checked_func = function() return self:autoSendOn() end,
+              callback = function()
+                  self.settings:saveSetting("auto_send", not self:autoSendOn())
+                  self.settings:flush()
+              end },
             { text = _("Log more detail"), keep_menu_open = true,
               checked_func = function() return self:verbose() end,
               callback = function()

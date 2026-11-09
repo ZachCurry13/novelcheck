@@ -59,3 +59,24 @@ func (s *Server) handleDeviceLog(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_, _ = w.Write([]byte(text))
 }
+
+// handleDeleteAllLogs: DELETE /api/admin/device-logs empties the Bug reports list.
+func (s *Server) handleDeleteAllLogs(w http.ResponseWriter, r *http.Request) {
+	n, err := s.Store.DeleteLogs(nil, true)
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]int64{"deleted": n})
+}
+
+// handleServerErrors: GET lists the recent failed requests, DELETE empties the list.
+func (s *Server) handleServerErrors(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodDelete {
+		if err := s.Store.ClearErrors(); err != nil {
+			writeStoreErr(w, err)
+			return
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"errors": s.Store.RecentErrors(100)})
+}

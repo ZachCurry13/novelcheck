@@ -87,6 +87,8 @@ var Defaults = map[string]string{
 	KeyABSToken:           "",
 	KeyABSPollHours:       "12",
 	KeyBugLink:            "",
+	KeyBugLinkExpires:     "",
+	KeyBugLinkSeen:        "",
 }
 
 // SecretKeys are never returned to the browser in clear text.

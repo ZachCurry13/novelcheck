@@ -73,6 +73,19 @@ func (s *Server) diagnosticsText() string {
 		line("[%s] %s %s: %s (x%d)", n.UpdatedAt, n.Level, n.Source, n.Message, n.Count)
 	}
 
+	errs := s.Store.RecentErrors(40)
+	line("\n== Recent server errors (newest first; the code is what the app showed as E-xxxx) ==")
+	if len(errs) == 0 {
+		line("(none)")
+	}
+	for _, e := range errs {
+		user := ""
+		if e.Username != "" {
+			user = " user=" + e.Username
+		}
+		line("%s %s UTC %s %s -> %d%s: %s", e.Code, e.At, e.Method, e.Path, e.Status, user, e.Detail)
+	}
+
 	if s.Tunnel != nil {
 		st := s.Tunnel.Status()
 		line("\n== Remote access (cloudflared) ==")

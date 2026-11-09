@@ -100,6 +100,7 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 	matched, err := s.Store.SaveDeviceBooks(u.ID, device, body.Books)
 	if err != nil {
 		log.Printf("plugin device report for user %d: %v", u.ID, err)
+		setDetail(w, err)
 		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "could not save"})
 		return
 	}

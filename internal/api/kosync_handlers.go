@@ -19,6 +19,11 @@ import (
 // the code is the key, like the KOReader catalog's address.
 
 func kosyncJSON(w http.ResponseWriter, status int, v any) {
+	if m, ok := v.(map[string]string); ok && recordable(status) {
+		if id := errorID(w); id != "" {
+			m["error_id"] = id // the plugin logs it, so a Kindle error can be found in the bug report
+		}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(status)

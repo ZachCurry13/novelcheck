@@ -4,6 +4,17 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.50.0]
+
+### 🐞 Bug reports you can trust
+- **Server errors with a code.** Every failed request is kept with its real cause (Admin → Settings → Developer → ⚠️ Server errors, and in the report). When the app shows an error with a code like `E-3f2a`, that line is in the list. Before, a failure only said "could not save" and the cause was lost.
+- **Reports send themselves.** An error in the web app, a server error, or an error in the Kindle plugin sends a report by itself (at most once every few minutes, never what you type; a switch in Settings → Developer and in the plugin's Developer tools turns it off).
+- **Say what you were doing.** A note box beside **Send report**, and **Developer tools → Send log with a note…** on the Kindle.
+- **Clearer reports.** Everything is in UTC, and the self-test adds the folders the plugin uses, the free space and the time.
+- **Delete reports once they're dealt with.** **Delete all** in the Bug reports list, and the secret link can delete reports by number (`…/resolve?ids=3,4&errors=1`). Reports also expire after 30 days.
+- **The link switches itself off after 7 days.** It shows when it was last opened and can be extended or replaced.
+- **Plugin 1.50.0.**
+
 ## [1.49.0]
 
 ### ➕ Add books from your e-reader to NovelCheck

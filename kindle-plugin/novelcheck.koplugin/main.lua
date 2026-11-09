@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.49.0"
+local VERSION = "1.50.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -307,7 +307,8 @@ function NovelCheck:requestAt(base, path, file, post_body)
         return nil, tostring(code)
     end
     local text = table.concat(chunks)
-    self:dlog("net", (post_body and "POST " or "GET ") .. path .. " -> " .. tostring(code) .. (self.verbose and self:verbose() and code ~= 200 and (" " .. text:sub(1, 200)) or ""))
+    self:dlog("net", (post_body and "POST " or "GET ") .. path .. " -> " .. tostring(code)
+        .. (((type(code) == "number" and code >= 400) or (self.verbose and self:verbose() and code ~= 200)) and (" " .. text:sub(1, 200)) or ""))
     return code, text
 end
 
@@ -447,7 +448,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "setup", "tidynames", "search", "updater", "devicereport" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "tidynames", "search", "updater", "devicereport" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

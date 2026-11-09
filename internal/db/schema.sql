@@ -597,3 +597,15 @@ CREATE TABLE IF NOT EXISTS device_logs (
     body       TEXT NOT NULL DEFAULT '',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- What went wrong on the server (failed requests with the real cause), shown in the bug-report link.
+CREATE TABLE IF NOT EXISTS error_log (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    code     TEXT NOT NULL,
+    at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    method   TEXT NOT NULL DEFAULT '',
+    path     TEXT NOT NULL DEFAULT '',
+    status   INTEGER NOT NULL DEFAULT 0,
+    username TEXT NOT NULL DEFAULT '',
+    detail   TEXT NOT NULL DEFAULT ''
+);

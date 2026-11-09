@@ -10,3 +10,4 @@
 
 - 2026-11-09: v1.49 on branch feature/v1.49 (not released): "Add to NovelCheck" for unmatched Kindle books, plugin 1.49.0 shows the download folder. Next: owner OK to release; real-Kindle check of the add button.
 - 2026-11-09: v1.49.0 adds the bug-report link, browser Send report, self-test auto-send, Add to NovelCheck, NovelCheck download folder, device-report 500 fix and path-loaded plugin files. Next: owner to update the Kindle plugin and re-test report books, Tidy names and New in library.
+- 2026-11-09: v1.50.0 (feature/v1.50): server error log with E-codes, auto-send of reports, notes, UTC logs, delete/expire for bug reports and the link. Next: owner updates plugin to 1.50.0 and tests Send log with a note.

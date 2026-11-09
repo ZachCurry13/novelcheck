@@ -70,11 +70,13 @@ func (s *Server) Router() http.Handler {
 	s.codeGuesses = newGuessLimiter()
 	r := chi.NewRouter()
 	r.Use(realIP(s.Cfg.TrustProxy))
+	r.Use(s.errorRecorder)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Logger)
 	r.Use(securityHeaders)
 
 	r.Get("/bugs/{token}", s.handleBugLink)
+	r.Post("/bugs/{token}/resolve", s.handleBugLinkResolve)
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })
 
 	// KOReader's OPDS catalog: the private token in the address stands in for signing in.

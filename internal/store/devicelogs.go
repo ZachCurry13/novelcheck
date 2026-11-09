@@ -32,6 +32,7 @@ func (s *Store) SaveDeviceLog(u *User, device, version, body string) error {
 		u.ID, u.Username, device, version, body); err != nil {
 		return err
 	}
+	_, _ = s.DB.Exec(`DELETE FROM device_logs WHERE created_at < datetime('now', '-30 days')`) // old reports are not kept
 	_, err := s.DB.Exec(`DELETE FROM device_logs WHERE user_id = ? AND device = ? AND id NOT IN
 		(SELECT id FROM device_logs WHERE user_id = ? AND device = ? ORDER BY id DESC LIMIT ?)`,
 		u.ID, device, u.ID, device, keepLogsPerDevice)

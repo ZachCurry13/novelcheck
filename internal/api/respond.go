@@ -28,6 +28,7 @@ func writeStoreErr(w http.ResponseWriter, err error) {
 		return
 	}
 	log.Printf("internal error: %v", err)
+	setDetail(w, err)
 	writeErr(w, http.StatusInternalServerError, "internal error")
 }
 

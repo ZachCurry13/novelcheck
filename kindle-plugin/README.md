@@ -71,6 +71,6 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 - **NovelCheck > New in library:** the newest books, the same way.
 - **Connect to NovelCheck...** has a fourth box for a **backup address**, tried when the main one can't be reached.
 
-## Developer tools (NovelCheck 1.48 or newer, plugin 1.48.0)
+## Developer tools (NovelCheck 1.50 or newer, plugin 1.50.0)
 
-**NovelCheck > Developer tools** helps when something doesn't work: **Run self-test** checks the connection, sign-in and the plugin's files; **View log** shows every menu tap, request and error; **Send log to NovelCheck** sends the log to Admin > Settings > Developer (your sync code is removed). If the plugin doesn't appear in KOReader at all, look for `LOAD_ERROR.txt` in the plugin's folder, or send KOReader's `crash.log`.
+**NovelCheck > Developer tools** helps when something doesn't work: **Run self-test** checks the connection, sign-in and the plugin's files; **View log** shows every menu tap, request and error; **Send log to NovelCheck** sends the log to Settings > Developer > Bug reports (your sync code is removed), **Send log with a note...** adds what you were doing, and **Send errors automatically** (on by default) sends the log by itself, at most every ten minutes, after an error. **Run self-test** sends its result too. Times in the log are UTC. If the plugin doesn't appear in KOReader at all, look for `LOAD_ERROR.txt` in the plugin's folder, or send KOReader's `crash.log`.

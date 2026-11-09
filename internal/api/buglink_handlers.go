@@ -3,11 +3,13 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/zachcurry13/novelcheck/internal/auth"
+	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/version"
 )
 
@@ -26,6 +28,7 @@ func (s *Server) handleBugLink(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	s.Store.NoteBugLinkSeen()
 	var b strings.Builder
 	b.WriteString(s.diagnosticsText())
 	logs, _ := s.Store.RecentLogs(bugLinkLogs)
@@ -38,15 +41,47 @@ func (s *Server) handleBugLink(w http.ResponseWriter, r *http.Request) {
 		}
 		b.WriteString(entry)
 	}
+	fmt.Fprintf(&b, "\n== Handled? ==\nDelete reports once they are dealt with: POST <this link's address>/resolve?ids=<report numbers, comma separated>&errors=1 (errors=1 also empties the server error list; all=1 deletes every report).\n")
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_, _ = w.Write([]byte(b.String()))
 }
 
+// handleBugLinkResolve: POST /bugs/{token}/resolve?ids=1,2&errors=1&all=1 deletes handled reports.
+func (s *Server) handleBugLinkResolve(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
+	if !s.Store.BugLinkOK(chi.URLParam(r, "token")) {
+		http.NotFound(w, r)
+		return
+	}
+	q := r.URL.Query()
+	var ids []int64
+	for _, p := range strings.Split(q.Get("ids"), ",") {
+		if n, err := strconv.ParseInt(strings.TrimSpace(p), 10, 64); err == nil && n > 0 {
+			ids = append(ids, n)
+		}
+	}
+	deleted, err := s.Store.DeleteLogs(ids, q.Get("all") == "1")
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	cleared := false
+	if q.Get("errors") == "1" {
+		cleared = s.Store.ClearErrors() == nil
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"deleted": deleted, "errors_cleared": cleared})
+}
+
 func (s *Server) bugLinkJSON(r *http.Request) map[string]any {
 	tok := s.Store.BugLinkToken()
-	out := map[string]any{"enabled": tok != ""}
+	if tok != "" {
+		s.Store.BugLinkOK(tok) // dates a link that has none yet
+	}
+	out := map[string]any{"enabled": tok != "" && !s.Store.BugLinkExpired(), "expired": tok != "" && s.Store.BugLinkExpired()}
 	if tok != "" {
 		out["url"] = s.baseURL(r) + "/bugs/" + tok
+		out["expires"] = s.Store.Setting(store.KeyBugLinkExpires)
+		out["seen"] = s.Store.Setting(store.KeyBugLinkSeen)
 	}
 	return out
 }
@@ -56,7 +91,11 @@ func (s *Server) handleAdminBugLink(w http.ResponseWriter, r *http.Request) {
 	var err error
 	switch r.Method {
 	case http.MethodPost:
-		_, err = s.Store.NewBugLinkToken()
+		if r.URL.Query().Get("extend") == "1" && s.Store.BugLinkToken() != "" {
+			err = s.Store.ExtendBugLink()
+		} else {
+			_, err = s.Store.NewBugLinkToken()
+		}
 	case http.MethodDelete:
 		err = s.Store.ClearBugLink()
 	}
