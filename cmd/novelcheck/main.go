@@ -151,6 +151,7 @@ func main() {
 	if safeReason == "" {
 		go srv.IndexFingerprints(ctx) // a book on an e-reader is found by its file
 		go srv.CoverLoop(ctx)         // a real cover for books Calibre has none for, once a day
+		go srv.LibbyScanLoop(ctx)     // do the libraries lend the audiobook of books without one
 	}
 	srv.Pulls.OnError = func(model string, err error) {
 		st.Notify("warning", "ollama", "Downloading "+model+" in Ollama failed: "+err.Error(), "#/admin")

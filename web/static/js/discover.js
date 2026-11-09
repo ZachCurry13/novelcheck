@@ -11,7 +11,7 @@ import { cardBlurb } from "./blurb.js";
 import { on } from "./modules.js";
 import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
 import { discoverTabsHTML } from "./discovertabs.js";
-import { markLibby } from "./libby.js";
+import { markLibby, checkAll, filterCards, hasLibraries } from "./libby.js";
 
 const GUIDE_URL = "https://github.com/ZachCurry13/novelcheck/blob/main/docs/DISCOVER.md";
 const NYT_URL = "https://www.nytimes.com/books/best-sellers/";
@@ -59,6 +59,13 @@ export async function renderDiscover(view, state) {
     <p class="mb-2 text-sm text-slate-400">Popular and classic books with their peppers and content. Tap a book for details.</p>
     <div id="discover-seasons"></div>
     <label class="toggle mb-4 min-h-[2.5rem]"><input type="checkbox" id="show-owned" ${showOwned() ? "checked" : ""}> Also show books we already have <span id="owned-count" class="text-slate-500"></span></label>
+    <div id="libby-filters" class="mb-4 hidden flex-wrap items-center gap-2" role="group" aria-label="Filter by what your library lends">
+      <span class="text-sm text-slate-400">At my library:</span>
+      <button type="button" data-lf="" class="btn-primary py-1 text-sm">All books</button>
+      <button type="button" data-lf="here" class="btn-secondary py-1 text-sm">📚 Lends it</button>
+      <button type="button" data-lf="audio" class="btn-secondary py-1 text-sm">🎧 Audiobook</button>
+      <button type="button" data-lf="now" class="btn-secondary py-1 text-sm">✓ Available now</button>
+      <span id="lf-status" class="text-xs text-slate-500"></span></div>
     <div id="rows" class="space-y-6"><p class="text-slate-400">Loading…</p></div>
     <div id="credit" class="mt-8 space-y-1 text-xs text-slate-500"></div>`;
   $("#show-owned", view).addEventListener("change", (e) => {
@@ -73,6 +80,27 @@ export async function renderDiscover(view, state) {
   const queueOn = on(state.user, "queue");
   const rows = $("#rows", view);
   let shown = "";
+  let mode = ""; // the library filter: "", here, audio or now
+  const lf = $("#libby-filters", view);
+  hasLibraries().then((ok) => {
+    if (ok) lf.classList.remove("hidden"), lf.classList.add("flex");
+  });
+  const applyMode = async () => {
+    const status = $("#lf-status", view);
+    if (mode) await checkAll(rows, (done, total) => (status.textContent = done < total ? `Checking your libraries… ${done} of ${total}` : ""));
+    filterCards(rows, mode);
+    status.textContent = mode ? `${rows.querySelectorAll("[data-book]:not(.hidden)").length} books` : "";
+  };
+  lf.onclick = (e) => {
+    const b = e.target.closest("[data-lf]");
+    if (!b) return;
+    mode = b.dataset.lf;
+    lf.querySelectorAll("[data-lf]").forEach((x) => {
+      x.classList.toggle("btn-primary", x === b);
+      x.classList.toggle("btn-secondary", x !== b);
+    });
+    applyMode();
+  };
   const paint = (data) => {
     const json = JSON.stringify(data);
     if (json === shown) return; // unchanged: keep where each row was scrolled to
@@ -87,7 +115,7 @@ export async function renderDiscover(view, state) {
     </section>`).join("") : `<p class="text-slate-400">${emptyText(data, state.user)}</p>`;
     rows.querySelectorAll("[data-row]").forEach((r) => (r.scrollLeft = scrolled[r.dataset.row] || 0));
     credit(data);
-    markLibby(rows); // 📚 chips: does the person's library lend it?
+    markLibby(rows).then(() => mode && applyMode()); // 📚 chips: does the person's library lend it?
   };
   rows.onclick = async (e) => {
     if (e.target.closest("a")) return; // "Get it" links open normally

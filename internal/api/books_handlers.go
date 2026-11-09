@@ -53,6 +53,7 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		Collection:     int64(queryInt(r, "collection")),
 		Event:          int64(queryInt(r, "event")),
 		NotOwned:       q.Get("not_owned") == "1",
+		LibbyAudio:     q.Get("libby_audio"),
 	}
 	s.seasonFilter(&f, q.Get("season"))
 	books, total, err := s.Store.ListBooks(f, auth.UserFrom(r))

@@ -25,6 +25,7 @@ import { renderDeepScanAdmin } from "./deepscanadmin.js";
 import { renderWishlist } from "./wishlist.js";
 import { renderDiscover } from "./discover.js";
 import { renderStats } from "./stats.js";
+import { renderWrapped } from "./wrapped.js";
 import { renderShelf } from "./shelf.js";
 import { renderCollections } from "./collections.js";
 import { renderSeries } from "./series.js";
@@ -56,6 +57,7 @@ const routes = {
   wishlist: renderWishlist,
   discover: renderDiscover,
   stats: renderStats,
+  wrapped: renderWrapped,
   shelf: renderShelf,
   collections: renderCollections,
   series: renderSeries,
@@ -66,7 +68,7 @@ const managerRoutes = new Set(["check", "import", "shelf", "admin", "duplicates"
 const ROUTE_AREA = { system: "system", usage: "system", deletions: "calibre", deepscan: "deep" };
 const moduleRoutes = { queue: "queue", import: "import", shelf: "import" }; // pages an admin can turn off
 // Pages without a menu item of their own light up the one they belong to.
-const NAV_OF = { series: "collections", wishlist: "discover", events: "discover", import: "settings", shelf: "settings", deepscan: "admin", usage: "admin", system: "admin",
+const NAV_OF = { wrapped: "stats", series: "collections", wishlist: "discover", events: "discover", import: "settings", shelf: "settings", deepscan: "admin", usage: "admin", system: "admin",
   duplicates: "admin", deletions: "admin" };
 
 function showOnly(id) {

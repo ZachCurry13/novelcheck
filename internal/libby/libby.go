@@ -48,6 +48,7 @@ type Availability struct {
 	WaitDays  int    `json:"wait_days"`
 	URL       string `json:"url"`
 	Kindle    bool   `json:"kindle"`
+	Library   string `json:"library,omitempty"` // the library that has it (set when a person has several)
 }
 
 // Client asks OverDrive; answers are kept for a few hours.

@@ -49,6 +49,7 @@ export function filtersHTML({ facets, catOpts, event, state }) {
           ${(facets.narrators || []).length ? `<option value="audio">🎧 Audiobooks</option>` : ""}
           <option value="multi">2+ formats</option><option value="dupes">Duplicates</option><option value="none">No file</option></select>`)}
         ${audioFilterHTML(facets)}
+        ${field("At my Libby library", `<select name="libby_audio" class="input" title="Books you don't have as an audiobook, checked against your libraries in the background"><option value="">Any</option><option value="1">🎧 The audiobook is there</option><option value="now">🎧 The audiobook is available now</option></select>`)}
       </div>
       <div class="fgroup"><h3>Content</h3>
         ${field("Peppers", `<select name="spice" class="input" title="Peppers: how much romance and sexual content">
@@ -79,7 +80,7 @@ export function filtersHTML({ facets, catOpts, event, state }) {
 }
 
 const LABELS = { genre: "Genre", kind: "Type", author: "Author", series: "Series", catalog: "Library", overlap_with: "Also in", spice: "Peppers", age: "Age",
-  format: "Format", narrator: "Narrator", min_hours: "At least (hours)", max_hours: "At most (hours)" };
+  format: "Format", libby_audio: "Libby", narrator: "Narrator", min_hours: "At least (hours)", max_hours: "At most (hours)" };
 
 // bindChips keeps a chip for each filter that is on, under the search bar; × clears it.
 export function bindChips(form, onChange) {

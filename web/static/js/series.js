@@ -8,6 +8,7 @@ import { openBook } from "./bookdialog.js";
 import { on } from "./modules.js";
 import { loadContent, contentIcons } from "./content.js";
 import { shelfTabsHTML } from "./shelftabs.js";
+import { markLibby } from "./libby.js";
 
 const q = () => new URLSearchParams(location.hash.split("?")[1] || "");
 // FormatIndex writes a series number: 3, or 2.5 for a novella between books.
@@ -55,6 +56,8 @@ async function renderOne(view, state, name) {
     <h1 class="text-2xl font-bold">🗂 ${esc(data.name)}</h1>
     <p class="mb-4 text-sm text-slate-400">${data.books.length} book${data.books.length === 1 ? "" : "s"} in your libraries${read ? ` · you've read ${read}` : ""}
       · <a href="#/library?series=${encodeURIComponent(data.name)}" class="underline">show them in the Library</a></p>
+    <div class="mb-4"><button type="button" data-fill class="btn-secondary py-1 text-sm" title="Looks the series up at Hardcover and adds the books you don't have, so you can request them or find them at your library">🔎 Find the missing books</button>
+      <span id="fill-note" class="ml-2 text-xs text-slate-400"></span></div>
     <ol id="books" class="space-y-2">${rows.map(({ n, b, gap }) => gap
       ? `<li class="flex items-center gap-3 rounded-xl border border-dashed border-slate-700 p-3 text-sm text-slate-500">
           <span class="w-8 shrink-0 text-center font-bold">#${n}</span><span>Not in your libraries</span></li>`
@@ -65,14 +68,36 @@ async function renderOne(view, state, name) {
             ${b.id === data.next ? `<p class="text-xs font-semibold uppercase tracking-wide text-indigo-300">Next up</p>` : ""}
             <button type="button" data-open class="text-left font-semibold leading-snug line-clamp-2">${esc(b.title)}</button>
             <p class="truncate text-xs text-slate-400">${esc(b.author || "")}</p>
-            <div class="flex flex-wrap gap-1">${classChip(b)} ${contentIcons(b)} ${status(b)}</div>
-            ${queueOn && !b.my_status ? `<button type="button" data-queue class="btn-secondary py-1 text-sm">＋ Nightstand</button>` : ""}
+            <div class="flex flex-wrap gap-1">${classChip(b)} ${contentIcons(b)} ${status(b)} ${b.owned === false ? `<span class="chip-pending">Not in a library</span>` : ""}</div>
+            ${b.owned === false ? `<div class="flex flex-wrap items-center gap-2"><button type="button" data-wish class="btn-secondary py-1 text-sm">⭐ Request it</button><span data-libby="${b.id}" class="flex flex-wrap gap-1"></span></div>`
+              : queueOn && !b.my_status ? `<button type="button" data-queue class="btn-secondary py-1 text-sm">＋ Nightstand</button>` : ""}
           </div></li>`).join("")}</ol>`;
+  markLibby(view); // 📚 🎧 is it at your library? (the books you don't have)
   view.onclick = async (e) => {
+    if (e.target.closest("[data-fill]")) {
+      const btn = e.target.closest("[data-fill]");
+      btn.disabled = true;
+      $("#fill-note", view).textContent = "Looking it up…";
+      const r = await attempt(() => post(`/api/series/fill?name=${encodeURIComponent(name)}`));
+      if (r) {
+        toast(r.added ? `Added ${r.added} book${r.added === 1 ? "" : "s"} to the series` : "Nothing missing: the series is complete as far as Hardcover knows");
+        return renderOne(view, state, name);
+      }
+      btn.disabled = false;
+      $("#fill-note", view).textContent = "";
+      return;
+    }
     const li = e.target.closest("[data-book]");
     if (!li) return;
     const id = Number(li.dataset.book);
     if (e.target.closest("[data-open]")) return openBook(id, state, () => renderOne(view, state, name));
+    const wish = e.target.closest("[data-wish]");
+    if (wish) {
+      wish.disabled = true;
+      if (await attempt(() => post(`/api/books/${id}/wish`, {}), "Added to the wishlist")) wish.textContent = "⭐ On the wishlist";
+      else wish.disabled = false;
+      return;
+    }
     const add = e.target.closest("[data-queue]");
     if (add && (await attempt(() => post("/api/queue", { book_id: id })))) {
       add.outerHTML = `<span class="chip-cat">On your Nightstand</span>`;

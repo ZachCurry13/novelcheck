@@ -6,20 +6,30 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/libby"
+	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// Libby (Settings → Libby library, and a line on each book): is the book at
-// the person's library, how many holds, and a link to it there. Holds
-// themselves are placed in Libby: NovelCheck can't sign in for anyone.
+// Libby (Settings → Libby libraries, and a line on each book): is the book at one of the person's libraries
+// (more than one is common), how many holds, and a link to it there. Holds themselves are placed in Libby:
+// NovelCheck can't sign in for anyone.
 
-func (s *Server) handleLibbyLibrary(w http.ResponseWriter, r *http.Request) {
-	key, name := s.Store.LibbyLibrary(auth.UserFrom(r).ID)
-	writeJSON(w, http.StatusOK, map[string]string{"library": key, "name": name})
+func libbyJSON(libs []store.LibbyLib) map[string]any {
+	out := map[string]any{"libraries": libs, "library": "", "name": ""}
+	if len(libs) > 0 { // the first, for older code that knew only one
+		out["library"], out["name"] = libs[0].Key, libs[0].Name
+	}
+	return out
 }
 
-// handleLibbySetLibrary: PUT /api/me/libby {"library": "lapl" or "lapl.overdrive.com"}; "" clears it.
+func (s *Server) handleLibbyLibrary(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, libbyJSON(s.Store.LibbyLibraries(auth.UserFrom(r).ID)))
+}
+
+// handleLibbySetLibrary: PUT /api/me/libby {"library": "lapl" or "lapl.overdrive.com"} adds a library;
+// "" removes them all.
 func (s *Server) handleLibbySetLibrary(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Library string `json:"library"`
@@ -29,8 +39,8 @@ func (s *Server) handleLibbySetLibrary(w http.ResponseWriter, r *http.Request) {
 	}
 	u := auth.UserFrom(r)
 	if body.Library == "" {
-		_ = s.Store.SetLibbyLibrary(u.ID, "", "")
-		writeJSON(w, http.StatusOK, map[string]string{"library": "", "name": ""})
+		_ = s.Store.ClearLibbyLibraries(u.ID)
+		writeJSON(w, http.StatusOK, libbyJSON(nil))
 		return
 	}
 	key := libby.CleanKey(body.Library)
@@ -45,8 +55,64 @@ func (s *Server) handleLibbySetLibrary(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
-	_ = s.Store.SetLibbyLibrary(u.ID, key, name)
-	writeJSON(w, http.StatusOK, map[string]string{"library": key, "name": name})
+	if err := s.Store.AddLibbyLibrary(u.ID, key, name); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, libbyJSON(s.Store.LibbyLibraries(u.ID)))
+}
+
+// handleLibbyRemove: DELETE /api/me/libby/{key} removes one library.
+func (s *Server) handleLibbyRemove(w http.ResponseWriter, r *http.Request) {
+	u := auth.UserFrom(r)
+	if err := s.Store.RemoveLibbyLibrary(u.ID, libby.CleanKey(chi.URLParam(r, "key"))); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, libbyJSON(s.Store.LibbyLibraries(u.ID)))
+}
+
+// better says whether a is a better answer than b: available now, then the shorter wait.
+func better(a, b libby.Availability) bool {
+	if !b.Found {
+		return a.Found
+	}
+	if !a.Found {
+		return false
+	}
+	if a.Available != b.Available {
+		return a.Available
+	}
+	if a.WaitDays != b.WaitDays {
+		return a.WaitDays < b.WaitDays
+	}
+	return a.Holds < b.Holds
+}
+
+// checkLibraries asks each of the person's libraries about one book (e-book and audiobook).
+func (s *Server) checkLibraries(ctx context.Context, libs []store.LibbyLib, title, author string) (perLib []map[string]any, bestEbook, bestAudio libby.Availability) {
+	for _, l := range libs {
+		entry := map[string]any{"key": l.Key, "name": l.Name}
+		a, err := s.Libby.Check(ctx, l.Key, title, author)
+		if err != nil {
+			entry["error"] = err.Error()
+		} else {
+			a.Library = l.Name
+			entry["availability"] = a
+			if better(a, bestEbook) {
+				bestEbook = a
+			}
+		}
+		if au, err := s.Libby.CheckMedia(ctx, l.Key, title, author, "audiobook"); err == nil && au.Found {
+			au.Library = l.Name
+			entry["audio"] = au
+			if better(au, bestAudio) {
+				bestAudio = au
+			}
+		}
+		perLib = append(perLib, entry)
+	}
+	return
 }
 
 // handleBookLibby: GET /api/books/{id}/libby.
@@ -57,8 +123,8 @@ func (s *Server) handleBookLibby(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	key, name := s.Store.LibbyLibrary(u.ID)
-	if key == "" {
+	libs := s.Store.LibbyLibraries(u.ID)
+	if len(libs) == 0 {
 		writeJSON(w, http.StatusOK, map[string]any{"configured": false})
 		return
 	}
@@ -67,23 +133,35 @@ func (s *Server) handleBookLibby(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 25*time.Second)
 	defer cancel()
-	a, err := s.Libby.Check(ctx, key, b.Title, b.Author)
-	if err != nil {
-		writeJSON(w, http.StatusOK, map[string]any{"configured": true, "library": name, "error": err.Error()})
-		return
+	per, ebook, audio := s.checkLibraries(ctx, libs, b.Title, b.Author)
+	out := map[string]any{"configured": true, "libraries": per, "library": libs[0].Name, "availability": ebook}
+	if ebook.Found {
+		out["library"] = ebook.Library
 	}
-	out := map[string]any{"configured": true, "library": name, "availability": a}
-	if au, err := s.Libby.CheckMedia(ctx, key, b.Title, b.Author, "audiobook"); err == nil { // the audiobook, too
-		out["audio"] = au
+	failed := 0
+	var firstErr any
+	for _, e := range per {
+		if e["error"] != nil {
+			failed++
+			if firstErr == nil {
+				firstErr = e["error"]
+			}
+		}
+	}
+	if failed == len(per) { // not one library could be asked
+		delete(out, "availability")
+		out["error"] = firstErr
+	}
+	if audio.Found {
+		out["audio"] = audio
 	}
 	writeJSON(w, http.StatusOK, out)
 }
 
-// handleLibbyCheck: POST /api/libby/check {"ids": [...]} (up to 60): the
-// library's answer for each book, for the chips on Discover. A few books are
-// looked up at a time; answers are kept for a few hours.
+// handleLibbyCheck: POST /api/libby/check {"ids": [...]} (up to 60): the libraries' best answer for each book,
+// for the chips on Discover. A few books are looked up at a time; answers are kept for a few hours.
 func (s *Server) handleLibbyCheck(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		IDs []int64 `json:"ids"`
@@ -92,15 +170,15 @@ func (s *Server) handleLibbyCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u := auth.UserFrom(r)
-	key, _ := s.Store.LibbyLibrary(u.ID)
-	if key == "" {
+	libs := s.Store.LibbyLibraries(u.ID)
+	if len(libs) == 0 {
 		writeJSON(w, http.StatusOK, map[string]any{"configured": false})
 		return
 	}
 	if len(body.IDs) > 60 {
 		body.IDs = body.IDs[:60]
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), 25*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 40*time.Second)
 	defer cancel()
 	out, audio := map[int64]libby.Availability{}, map[int64]libby.Availability{}
 	var mu sync.Mutex
@@ -115,18 +193,32 @@ func (s *Server) handleLibbyCheck(w http.ResponseWriter, r *http.Request) {
 		gate <- struct{}{}
 		go func() {
 			defer func() { <-gate; wg.Done() }()
-			if a, err := s.Libby.Check(ctx, key, b.Title, b.Author); err == nil {
-				mu.Lock()
-				out[b.ID] = a
-				mu.Unlock()
+			_, ebook, au := s.checkLibraries(ctx, libs, b.Title, b.Author)
+			mu.Lock()
+			defer mu.Unlock()
+			if ebook.Found {
+				out[b.ID] = ebook
 			}
-			if a, err := s.Libby.CheckMedia(ctx, key, b.Title, b.Author, "audiobook"); err == nil && a.Found {
-				mu.Lock()
-				audio[b.ID] = a
-				mu.Unlock()
+			if au.Found {
+				audio[b.ID] = au
 			}
 		}()
 	}
 	wg.Wait()
 	writeJSON(w, http.StatusOK, map[string]any{"configured": true, "books": out, "audio": audio})
+}
+
+// handleLibbyAudioKept: POST /api/libby/audio {"ids": [...]}: what the background check already found about
+// the audiobooks of these books at the person's libraries (no waiting on the library service).
+func (s *Server) handleLibbyAudioKept(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		IDs []int64 `json:"ids"`
+	}
+	if !readJSON(w, r, &body, 16<<10) {
+		return
+	}
+	if len(body.IDs) > 200 {
+		body.IDs = body.IDs[:200]
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"audio": s.Store.LibbyAudioFor(auth.UserFrom(r).ID, body.IDs)})
 }

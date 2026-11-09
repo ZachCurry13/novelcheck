@@ -56,9 +56,11 @@ func (s *Store) SeriesList(u *User) ([]SeriesSummary, error) {
 	return out, err
 }
 
-// SeriesBooks returns a series' books in order, with the viewer's status.
+// SeriesBooks returns a series' books in order, with the viewer's status: the books the family has, and the
+// ones filled in from a series lookup (looked-up books, not in a library, that can be requested or borrowed).
 func (s *Store) SeriesBooks(name string, u *User) ([]SeriesBook, error) {
 	where, args := seriesWhere(u)
+	where = strings.Replace(where, " AND "+ownedCond, " AND ("+ownedCond+" OR EXISTS (SELECT 1 FROM catalog_books lk JOIN catalogs lc ON lc.id = lk.catalog_id WHERE lk.book_id = b.id AND lc.name = '"+LookedUpCatalog+"'))", 1)
 	out := []SeriesBook{}
 	err := s.DB.Select(&out, `SELECT `+bookCols+derivedCols+`, '' AS catalogs,
 		COALESCE((SELECT q.status FROM queue_items q WHERE q.book_id = b.id AND q.user_id = ?), '') AS my_status

@@ -50,5 +50,5 @@ export function formatChips(b) {
   const del = b.delete_requests ? `<span class="chip-dup" title="Someone asked to delete this book">🗑 Delete requested</span>` : "";
   const dup = b.calibre_copies > 1
     ? `<span class="chip-dup" title="This book is in Calibre ${b.calibre_copies} times">⚠ ${b.calibre_copies}× in Calibre</span>` : "";
-  return `${audioChip(b)} ${fmts} ${dup} ${del}`;
+  return `${audioChip(b)} ${fmts} ${dup} ${del} ${b.formats && /AUDIO/.test(b.formats) ? "" : `<span data-libaudio="${b.id}"></span>`}`;
 }

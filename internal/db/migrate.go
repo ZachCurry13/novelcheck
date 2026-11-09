@@ -43,6 +43,7 @@ func migrate(d *sqlx.DB) error {
 		{"books", "kind", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "genre_source", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "calibre_added", "TEXT NOT NULL DEFAULT ''"},
+		{"books", "cover_url", "TEXT NOT NULL DEFAULT ''"},
 		{"suggestion_votes", "reason", "TEXT NOT NULL DEFAULT ''"},
 		{"catalogs", "owner_id", "INTEGER REFERENCES users(id) ON DELETE SET NULL"},
 		{"catalogs", "private", "INTEGER NOT NULL DEFAULT 0"},

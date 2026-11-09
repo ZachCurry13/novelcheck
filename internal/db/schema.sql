@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS books (
     genres           TEXT NOT NULL DEFAULT '',     -- categories (package genres) as ",fantasy,romance,"
     kind             TEXT NOT NULL DEFAULT '',     -- fiction, nonfiction or '' (unknown)
     genre_source     TEXT NOT NULL DEFAULT '',     -- calibre (from tags) or ai; '' = none yet
+    cover_url        TEXT NOT NULL DEFAULT '',     -- a cover address kept with a book that has no file (from a series lookup)
     calibre_added    TEXT NOT NULL DEFAULT '',     -- when Calibre says the book was added to its library (the earliest entry); '' = unknown
     age_set_by       TEXT NOT NULL DEFAULT '',
     analysis_model   TEXT NOT NULL DEFAULT '',
@@ -610,3 +611,29 @@ CREATE TABLE IF NOT EXISTS error_log (
     username TEXT NOT NULL DEFAULT '',
     detail   TEXT NOT NULL DEFAULT ''
 );
+
+-- The libraries a person borrows from through Libby (OverDrive): more than one is common (a city and a county library).
+CREATE TABLE IF NOT EXISTS user_libby (
+    user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    key      TEXT NOT NULL,
+    name     TEXT NOT NULL DEFAULT '',
+    position INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, key)
+);
+
+-- What each person's libraries say about the audiobook of a book they do not have as audio (checked in the
+-- background and kept, so the Library can filter by "audiobook at my library" without asking every time).
+CREATE TABLE IF NOT EXISTS libby_audio (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    found      INTEGER NOT NULL DEFAULT 0,
+    available  INTEGER NOT NULL DEFAULT 0,
+    holds      INTEGER NOT NULL DEFAULT 0,
+    copies     INTEGER NOT NULL DEFAULT 0,
+    wait_days  INTEGER NOT NULL DEFAULT 0,
+    url        TEXT NOT NULL DEFAULT '',
+    library    TEXT NOT NULL DEFAULT '',
+    checked_at INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, book_id)
+);
+CREATE INDEX IF NOT EXISTS idx_libby_audio_found ON libby_audio (user_id, found);

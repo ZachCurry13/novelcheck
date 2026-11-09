@@ -32,6 +32,7 @@ type BookFilter struct {
 	Collection     int64   // only books in this collection
 	Event          int64   // only books an event lists (kids: rated ones)
 	NotOwned       bool    // hide books the family has
+	LibbyAudio     string  // "1": the audiobook is at one of the viewer's Libby libraries; "now": and available now
 	Season         string  // a seasonal shelf's key (package seasons), matched by its words
 	Sort           string  // "title" (default) | "author" | "recent" | "mild" (fewest peppers) | "long" / "short" (audiobook length) | "list" (the event's order)
 	Limit, Offset  int
@@ -142,6 +143,14 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	}
 	if f.NotOwned {
 		where = append(where, "NOT "+ownedCond)
+	}
+	if f.LibbyAudio != "" && viewer != nil {
+		cond := "EXISTS (SELECT 1 FROM libby_audio la WHERE la.book_id = b.id AND la.user_id = ? AND la.found = 1"
+		if f.LibbyAudio == "now" {
+			cond += " AND la.available = 1"
+		}
+		where = append(where, cond+")")
+		args = append(args, viewer.ID)
 	}
 	// Search: every word must be somewhere in the title, author, series or tags
 	// (so "reptile snicket" finds "The Reptile Room" by Lemony Snicket), and an

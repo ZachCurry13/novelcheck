@@ -21,7 +21,7 @@ const PERIODS = { week: "Week", month: "Month", year: "Year", all: "All time" };
 export async function renderStats(view, state, source = {}) {
   const other = Boolean(source.url);
   const back = () => (source.back ? `<a href="${esc(source.back)}" class="btn-ghost mb-2 inline-flex px-3 py-1">‹ Readers</a>` : "");
-  const heading = () => `<h1 class="mb-2 text-2xl font-bold">📊 Reading stats</h1>`;
+  const heading = () => `<div class="mb-2 flex flex-wrap items-center justify-between gap-2"><h1 class="text-2xl font-bold">📊 Reading stats</h1>${other ? "" : `<a href="#/wrapped" class="btn-secondary py-1 text-sm">🎁 Wrapped &amp; 🏆 trophies</a>`}</div>`;
   view.innerHTML = `${heading()}<p class="text-slate-400">Loading…</p>`;
   const data = await get(source.url || "/api/me/reading-stats").catch(() => null);
   if (!data) {

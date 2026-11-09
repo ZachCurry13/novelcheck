@@ -68,3 +68,70 @@ func TestLibbyAvailability(t *testing.T) {
 		t.Fatalf("not at the library: %v", out)
 	}
 }
+
+// Two libraries: each book is looked up at both and the best answer wins; the audiobooks of books without
+// one are checked in the background and kept, and the kept answers are served without asking again.
+func TestLibbyTwoLibrariesAndAudioScan(t *testing.T) {
+	od := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/libraries/mylib":
+			fmt.Fprint(w, `{"name": "My Public Library"}`)
+		case r.URL.Path == "/libraries/citylib":
+			fmt.Fprint(w, `{"name": "City Library"}`)
+		case r.URL.Path == "/libraries/mylib/media" && r.URL.Query().Get("mediaTypes") == "ebook":
+			fmt.Fprint(w, `{"items": [{"id": "2", "title": "Dune", "firstCreatorName": "Frank Herbert", "isAvailable": false, "isHoldable": true, "ownedCopies": 10, "holdsCount": 3, "estimatedWaitDays": 14}]}`)
+		case r.URL.Path == "/libraries/citylib/media" && r.URL.Query().Get("mediaTypes") == "audiobook":
+			fmt.Fprint(w, `{"items": [{"id": "9", "title": "Dune", "firstCreatorName": "Frank Herbert", "isAvailable": true, "isHoldable": true, "ownedCopies": 4, "availableCopies": 1}]}`)
+		case strings.HasPrefix(r.URL.Path, "/libraries/") && strings.HasSuffix(r.URL.Path, "/media"):
+			fmt.Fprint(w, `{"items": []}`)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer od.Close()
+	srv, st := setupWith(t, func(s *api.Server) { s.Libby.Base = od.URL })
+	admin := login(t, srv, "admin", "adminpass1")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	dune, _ := st.UpsertBook("Dune", "Frank Herbert", "", "")
+	_ = st.AddCopy(cal, dune, "/c/d.epub", "epub", "1")
+	other, _ := st.UpsertBook("A Book Nobody Lends", "Nobody", "", "")
+	_ = st.AddCopy(cal, other, "/c/o.epub", "epub", "2")
+	for _, k := range []string{"mylib", "citylib"} {
+		if res, _ := admin.do("PUT", "/api/me/libby", map[string]string{"library": k}, true); res.StatusCode != 200 {
+			t.Fatalf("add %s: %d", k, res.StatusCode)
+		}
+	}
+	_, libs := admin.do("GET", "/api/me/libby", nil, false)
+	if l, _ := libs["libraries"].([]any); len(l) != 2 || libs["library"] != "mylib" {
+		t.Fatalf("both libraries, the first for older code: %v", libs)
+	}
+	_, out := admin.do("GET", fmt.Sprintf("/api/books/%d/libby", dune), nil, false)
+	au, _ := out["audio"].(map[string]any)
+	a, _ := out["availability"].(map[string]any)
+	if per, _ := out["libraries"].([]any); len(per) != 2 || a["library"] != "My Public Library" || au["library"] != "City Library" || au["available"] != true {
+		t.Fatalf("the e-book from one library, the audiobook from the other: %v", out)
+	}
+	// The background check: found ones are kept, ones nobody lends are remembered as not found.
+	if res, sc := admin.do("POST", "/api/me/libby/scan?wait=1", map[string]string{}, true); res.StatusCode != 200 || sc["checked"].(float64) != 2 {
+		t.Fatalf("scan: %d %v", res.StatusCode, sc)
+	}
+	_, kept := admin.do("POST", "/api/libby/audio", map[string]any{"ids": []int64{dune, other}}, true)
+	m, _ := kept["audio"].(map[string]any)
+	row, _ := m[fmt.Sprint(dune)].(map[string]any)
+	if len(m) != 1 || row["available"] != true || row["library"] != "City Library" || !strings.Contains(row["url"].(string), "citylib.overdrive.com") {
+		t.Fatalf("only the audiobook a library lends is served: %v", kept)
+	}
+	if due := st.LibbyAudioDue(1, 10); len(due) != 0 {
+		t.Fatalf("nothing is due again so soon: %v", due)
+	}
+	if _, lst := admin.do("GET", "/api/books?libby_audio=1", nil, false); lst["total"] != float64(1) {
+		t.Fatalf("the Library can filter to books whose audiobook a library lends: %v", lst["total"])
+	}
+	if _, lst := admin.do("GET", "/api/books?libby_audio=now", nil, false); lst["total"] != float64(1) {
+		t.Fatalf("...and available now: %v", lst["total"])
+	}
+	// Removing one library keeps the other; removing the last clears what was kept.
+	if res, l := admin.do("DELETE", "/api/me/libby/citylib", nil, true); res.StatusCode != 200 || len(l["libraries"].([]any)) != 1 {
+		t.Fatalf("remove one: %d %v", res.StatusCode, l)
+	}
+}

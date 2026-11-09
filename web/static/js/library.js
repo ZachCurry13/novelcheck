@@ -19,6 +19,7 @@ import { audioParams } from "./libaudio.js";
 import { filtersHTML, bindChips } from "./libfilters.js";
 import { combo } from "./combo.js";
 import { isBack, saveForm, restoreForm } from "./viewstate.js";
+import { markKeptAudio } from "./libby.js";
 
 const PAGE = 60;
 
@@ -78,6 +79,7 @@ export async function renderLibrary(view, state) {
       multi: fd.get("multi") === "on",
       deep: fd.get("deep") === "on",
       not_owned: fd.get("not_owned") === "on",
+      libby_audio: fd.get("libby_audio") || "",
       event,
       exclude: fd.getAll("hide").join(","),
       collection,
@@ -98,6 +100,7 @@ export async function renderLibrary(view, state) {
     $("#more-btn", view).classList.toggle("hidden", offset >= data.total);
     if (!data.total) grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>`;
     sel.repaint();
+    markKeptAudio(grid); // 🎧 at your library, from what the background check kept
   }
 
   // Phones show just the search box; "Filters (n)" opens the rest and counts

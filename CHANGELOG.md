@@ -6,6 +6,32 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.55.0]
 
+### 🎁 Wrapped, trophies and records
+- **Wrapped, by month and by year** (Stats → 🎁 Wrapped & 🏆 trophies): your reading as a short story you tap through: hours and pages, books finished, your most-read book, your top author and genre, when you read, your longest day, and the awards you earned (Night Owl, Early Bird, Marathon Reader, Series Binger, Genre Explorer, Page Turner, Steady Reader, Weekend Warrior, Finisher). The last slide makes a picture to save or share.
+- **Trophies with levels** (bronze to diamond): books finished (1 to 250), pages, hours, streaks, marathon days, night owl and early bird days, genres tried, whole series finished, books by one author, the longest book, highlights, and a trophy per genre (Young Adult, Romance, Science Fiction, Fantasy, Mystery… 10, 25, 50, 100).
+- **Records:** your longest reading day, most pages in a day, longest streak, the book you read the most pages of, the longest book you finished.
+- Worked out in your browser from your KOReader statistics, in your own time zone; nothing is shared unless you share the picture.
+
+### 📚 Libby: more than one library, and audiobooks for every book
+- **Add several libraries** (Settings → Connections). Each book is checked at all of them and the one with a copy available soonest is shown; the book window lists the libraries that have it.
+- **Every book you don't have as an audiobook is checked at your libraries in the background** (every few days, slowly) and the answer is kept: the Library shows 🎧 on the card, and the filter **At my Libby library** shows only books whose audiobook is there, or there and available now. **Check my books now** starts it at once.
+- **Discover filters:** 📚 Lends it, 🎧 Audiobook, ✓ Available now.
+
+### 🗂 The Series page fills in what's missing
+- **🔎 Find the missing books** looks the series up at Hardcover and adds the books you don't have in their place (including ones beyond your highest number): each shows its cover, **⭐ Request it**, and whether your library has it (📚 and 🎧). "Not in your libraries" gaps become real books.
+
+### 🖼️ More covers, and a cleaner Library
+- **Cover finder:** books Calibre has no cover for get a real one from Open Library or Google Books (once a day in the background, or **Find covers now** in Admin → Library cleanup), only when the title and author really match.
+- **The Library's filters are a clean bar:** one search box and Sort, a **Filters** button that opens a labelled panel, a chip for each filter that is on (tap × to remove it), a styled picker for authors and series in place of the browser's white list, and a **⋯** menu for the rare actions.
+- **The Admin tab bar no longer jumps** between pages.
+- **Discover is kept for 15 minutes** instead of 45 seconds, so it opens faster.
+
+### 🔄 In step with the new KOReader
+- **KOReader 2026.07's "Send document metadata":** NovelCheck uses the title and author it sends with progress to find books it never sent to the reader, and the plugin (1.52.0) turns it on. The self-test now also reports your progress-sync, statistics-sync and Cloud storage set-up.
+- **Conversions run in the background.** An admin banner shows progress on every Admin page and you get a notice when they finish; the guided cleanup stops after starting them and you review the next steps when they are done.
+- **Currently reading, twice:** "Series: Title" next to "Title" (like the Last Days of Lorien) is now found as a pair.
+- **"X% shared wording"** now says what it means, and each pair has the full description to read.
+
 ### 🔍 Library cleanup: review first, convert first
 - **Every cleanup step shows a review before it changes anything.** A list of exactly what will change (the titles, the books to convert, the extra copies, the formats), each with a tick box to leave it out. Nothing happens until you confirm, and you can stop at any step.
 - **Converting comes before removing copies.** The steps now run: tidy titles, convert to EPUB, remove extra Calibre copies (each book keeps its best one), remove other formats, re-read Calibre. A book is never judged on a file that is about to get a better one.
