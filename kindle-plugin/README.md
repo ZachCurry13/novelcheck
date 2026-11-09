@@ -21,11 +21,11 @@ NovelCheck address, username and sync code.
    - **Address**: where you open NovelCheck, like `https://novelcheck.example.com`.
    - **Username**: your NovelCheck name.
    - **Sync code**: from NovelCheck, **Settings > KOReader setup > Reading sync**.
-2. Open **NovelCheck > Nightstand**. Tap a book to download it into KOReader's
-   download folder (or home folder).
+2. Open **NovelCheck > Nightstand**. Tap a book to download it into a
+   **NovelCheck** folder inside KOReader's home folder, next to your other books.
 
 3. **NovelCheck > Report books on this device** sends NovelCheck the list of books
-   in the download folder (file names, formats and sizes, never folder names).
+   in the home folder (including the NovelCheck folder) (file names, formats and sizes, never folder names).
    **Device name...** sets what NovelCheck calls this device. Settings > Reading
    sync shows the result.
 

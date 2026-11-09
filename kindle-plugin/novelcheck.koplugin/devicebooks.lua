@@ -44,7 +44,7 @@ end
 -- list reads the books under the download folder and their progress.
 function DeviceBooks.list(plugin)
     local books = {}
-    plugin:scanBooks(plugin:downloadDir(), books, 0, true)
+    plugin:scanBooks(plugin:libraryDir(), books, 0, true)
     for _i, b in ipairs(books) do
         b.pct, b.done = progress(b.path)
         b.finished = isFinished(b.pct, b.done)

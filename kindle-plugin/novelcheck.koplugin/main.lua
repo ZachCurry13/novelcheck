@@ -35,7 +35,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.48.0"
+local VERSION = "1.49.0"
 -- The folder this plugin runs from (config.lua from NovelCheck's download sits there).
 local PLUGIN_DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
 
@@ -424,7 +424,7 @@ function NovelCheck:downloadAll(quiet)
                 end
             end
             self:reportQuietly()
-            local text = tostring(got) .. " " .. _("books downloaded.")
+            local text = tostring(got) .. " " .. _("books downloaded.") .. "\n" .. _("Saved in:") .. " " .. self:downloadDir()
             if failed > 0 then
                 text = text .. "\n" .. tostring(failed) .. " " .. _("failed.")
             end

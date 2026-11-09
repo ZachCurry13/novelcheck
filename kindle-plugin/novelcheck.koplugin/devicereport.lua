@@ -149,7 +149,7 @@ return function(NovelCheck, ctx)
         if not self:isConnected() then return end
         pcall(function()
             local books = {}
-            self:scanBooks(self:downloadDir(), books, 0)
+            self:scanBooks(self:libraryDir(), books, 0)
             local code = self:request("/kosync/plugin/device", nil, json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) })
             self:noteReported(code)
         end)
@@ -173,7 +173,7 @@ return function(NovelCheck, ctx)
             UIManager:show(InfoMessage:new{ text = _("Listing the books on this device..."), timeout = 1 })
             UIManager:nextTick(function()
                 local books = {}
-                local ok = pcall(self.scanBooks, self, self:downloadDir(), books, 0)
+                local ok = pcall(self.scanBooks, self, self:libraryDir(), books, 0)
                 if not ok then
                     UIManager:show(InfoMessage:new{ text = _("Could not read the books folder.") })
                     return
@@ -203,11 +203,31 @@ return function(NovelCheck, ctx)
         end)
     end
 
-    function NovelCheck:downloadDir()
-        local dir = G_reader_settings:readSetting("download_dir") or G_reader_settings:readSetting("home_dir")
-        if dir and lfs.attributes(dir, "mode") == "directory" then
-            return dir
+    -- libraryDir is where your books live on this device: KOReader's home folder.
+    function NovelCheck:libraryDir()
+        local candidates = {
+            G_reader_settings:readSetting("home_dir"),
+            Device.home_dir,
+            G_reader_settings:readSetting("download_dir"),
+        }
+        for _i, dir in ipairs(candidates) do
+            if type(dir) == "string" and dir ~= "" and lfs.attributes(dir, "mode") == "directory" then
+                return (dir:gsub("/+$", ""))
+            end
         end
         return DataStorage:getDataDir()
+    end
+
+    -- downloadDir is where NovelCheck's books are saved: a NovelCheck folder inside
+    -- the library folder, so they sit with your other books (and are found by scans).
+    function NovelCheck:downloadDir()
+        local dir = self:libraryDir() .. "/NovelCheck"
+        if lfs.attributes(dir, "mode") ~= "directory" then
+            lfs.mkdir(dir)
+        end
+        if lfs.attributes(dir, "mode") == "directory" then
+            return dir
+        end
+        return self:libraryDir()
     end
 end

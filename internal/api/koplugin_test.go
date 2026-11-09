@@ -359,6 +359,23 @@ func TestMatchKindleBooksByHand(t *testing.T) {
 	if items := attention(); len(items) != 1 {
 		t.Fatalf("after forgetting: %v", items)
 	}
+
+	// "Add to NovelCheck" makes a book of an entry that is in no library, with an
+	// "N/A" author dropped, and the entry leaves the list for good.
+	add := map[string]any{"kind": "device", "device": "Kindle", "filename": "thumbnail_1.epub", "md5": "bbb", "title": "Allegiant", "authors": "N/A", "add": true}
+	if res, _ := admin.do("POST", "/api/me/kindle-match", add, true); res.StatusCode != 200 {
+		t.Fatalf("add: %d", res.StatusCode)
+	}
+	if items := attention(); len(items) != 0 {
+		t.Fatalf("an added book is settled: %v", items)
+	}
+	report()
+	if items := attention(); len(items) != 0 {
+		t.Fatalf("an added book stays settled after a report: %v", items)
+	}
+	if _, found := admin.do("GET", "/api/books?q=Allegiant", nil, false); found["books"] == nil || len(found["books"].([]any)) == 0 {
+		t.Fatalf("the added book should be findable: %v", found)
+	}
 }
 
 // The plugin can search the library by any words, see a book's details, and

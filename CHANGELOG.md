@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.49.0]
+
+### ➕ Add books from your e-reader to NovelCheck
+- **Match books on my e-readers** now has **➕ Add to NovelCheck**. A book on your Kindle that isn't in any library (a sideloaded series, something KOReader's statistics saw) becomes a book in NovelCheck under its tidy title and author, so it can be rated, counted in your stats and found again. An author of "N/A" or "Unknown" is left blank, and a book NovelCheck already knows is reused instead of doubled. Added books leave the list for good. **Match…** and **Not a book** work as before.
+- **KOReader plugin 1.49.0:** books from your Nightstand are saved in a **NovelCheck** folder inside KOReader's home folder (where your other books are), and the message after **Download all Nightstand** names the folder. Scans for "On this device" and Tidy book names cover the whole home folder.
+
 ## [1.48.0]
 
 ### 🎧 Audiobooks: Audiobookshelf, download, listen, Libby

@@ -113,10 +113,18 @@ func (s *Store) KindleAttention(userID int64) []Attention {
 			}
 		}
 	}
-	if ko == nil {
-		ko = []Attention{}
+	out := []Attention{}
+	for _, a := range ko { // a book the person chose or added is settled, even if it isn't in a library
+		key := deviceKey(a.MD5, a.Filename)
+		if a.Kind == "koreader" {
+			key = koKey(a.MD5, a.Title, a.Authors)
+		}
+		if o, ok := s.override(userID, key); ok && o.BookID > 0 {
+			continue
+		}
+		out = append(out, a)
 	}
-	return ko
+	return out
 }
 
 // UnmatchedDev is a file on a device with no library book yet.

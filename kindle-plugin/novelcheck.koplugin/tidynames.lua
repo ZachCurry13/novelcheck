@@ -63,7 +63,7 @@ return function(NovelCheck, ctx)
                 end
             end
             local books = {}
-            self:scanBooks(self:downloadDir(), books, 0, false)
+            self:scanBooks(self:libraryDir(), books, 0, false)
             local todo = {}
             for _i, b in ipairs(books) do
                 local want = byMd5[b.md5]

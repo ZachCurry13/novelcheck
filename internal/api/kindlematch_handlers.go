@@ -47,6 +47,7 @@ func (s *Server) handleKindleMatch(w http.ResponseWriter, r *http.Request) {
 		store.MatchRef
 		BookID  int64 `json:"book_id"`
 		Ignored bool  `json:"ignored"`
+		Add     bool  `json:"add"` // "Add to NovelCheck": make a book from this entry
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<10)).Decode(&body); err != nil {
 		writeErr(w, http.StatusBadRequest, "bad request")
@@ -59,6 +60,14 @@ func (s *Server) handleKindleMatch(w http.ResponseWriter, r *http.Request) {
 	if body.Kind == "device" && strings.TrimSpace(body.Filename) == "" || body.Kind == "koreader" && strings.TrimSpace(body.Title) == "" {
 		writeErr(w, http.StatusBadRequest, "which book?")
 		return
+	}
+	if body.Add && body.BookID == 0 && !body.Ignored {
+		id, err := s.Store.AddDeviceBook(body.MatchRef)
+		if err != nil {
+			writeErr(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		body.BookID = id
 	}
 	if body.BookID > 0 {
 		if _, err := s.Store.BookByID(body.BookID, u); err != nil { // kids' rules still apply
