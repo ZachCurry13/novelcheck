@@ -6,6 +6,10 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.52.0]
 
+### 📚 Finished books leave the Nightstand, and genres fill in by themselves
+- **A book you finish on the Kindle moves to finished.** The KOReader plugin (1.51.0) now reports KOReader's own "finished" mark, so a book that ends with excerpts and back matter (the last page is often under 97%) no longer stays in "Currently reading". It only moves books already on your Nightstand, and not one you put back to read again.
+- **Genres fill in by themselves.** New books Calibre has no tags for get their genres automatically (every ten minutes when needed, same switch and hours as automatic rating, within the token cap). The Fill in with AI button is still there for a push. They were always saved; they just only ran when you pressed the button.
+
 ### 🛡️ Joining books: evidence first, fewer wrong joins
 - **A book and its spin-off are no longer treated as the same book.** "I Am Number Four" next to "I Am Number Four: The Lost Files: Six's Legacy", or two spin-offs of the same book, used to be offered as pairs.
 - **Every pair shows its evidence.** Both books side by side with series and number, ISBN and a piece of the description, a badge (✅ very likely, 🟡 probably, 🔴 check carefully) and the reasons: same author, same ISBN, same place in a series, descriptions that say the same thing, one title with an extra subtitle. Doubtful pairs sit in a folded section at the bottom and ask "Join anyway?" before joining.

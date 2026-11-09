@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/aitools"
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
@@ -13,6 +14,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/discover"
 	"github.com/zachcurry13/novelcheck/internal/events"
+	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/hardcover"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -27,6 +29,7 @@ type background struct {
 	syncer      *calibre.Syncer
 	deep        *deepread.Runner
 	discover    *discover.Service
+	genres      *genrefill.Filler
 }
 
 func (b *background) start(ctx context.Context) {
@@ -46,9 +49,12 @@ func (b *background) start(ctx context.Context) {
 	go events.Loop(ctx, b.st) // events are archived when they end
 	go b.aiTools.Loop(ctx)    // daily: newer versions of the Ollama models in use
 	go b.syncer.Loop(ctx)
-	go b.deep.Run(ctx)                // Deep Scans: full-text reading of chosen books, one at a time
-	go b.discover.Loop(ctx)           // outside book lists refreshed daily; their books rated a few dozen a day
-	go audiobookshelf.Loop(ctx, b.st) // the audiobook library, every few hours
-	go hardcover.Loop(ctx, b.st)      // everyone's Hardcover shelves, hourly
+	go b.deep.Run(ctx)                  // Deep Scans: full-text reading of chosen books, one at a time
+	go b.discover.Loop(ctx)             // outside book lists refreshed daily; their books rated a few dozen a day
+	go audiobookshelf.Loop(ctx, b.st)   // the audiobook library, every few hours
+	go hardcover.Loop(ctx, b.st)        // everyone's Hardcover shelves, hourly
+	go b.genres.Loop(ctx, func() bool { // genres for new books, on the same switch and hours as automatic rating
+		return analyzer.AutoRateOn(b.st) && analyzer.RateHoursOpen(b.st, time.Now())
+	})
 	log.Printf("background work started")
 }

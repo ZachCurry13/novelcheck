@@ -12,6 +12,9 @@ type DeviceBook struct {
 	Format   string `json:"format"`
 	Size     int64  `json:"size"`
 	Author   string `json:"author"` // from the book's own metadata, when the plugin could read it
+	// KOReader's own "finished" mark for the book, and the day it was made ("2026-11-09").
+	Finished   bool   `json:"finished"`
+	FinishedOn string `json:"finished_on"`
 }
 
 // Device is an e-reader that has reported.
@@ -58,7 +61,17 @@ func (s *Store) SaveDeviceBooks(userID int64, device string, books []DeviceBook)
 			return 0, err
 		}
 	}
-	return matched, tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+	done := map[int64]string{} // library books KOReader says are finished
+	for i, b := range books {
+		if ids[i] > 0 && !ignored[i] && b.Finished {
+			done[ids[i]] = b.FinishedOn
+		}
+	}
+	s.FinishOnDevice(userID, done)
+	return matched, nil
 }
 
 // Devices lists someone's e-readers, most recently reported first.

@@ -92,6 +92,24 @@ return function(NovelCheck, ctx)
         return nil
     end
 
+    -- finishedOnDevice says whether KOReader marked the book finished ("complete" in its sidecar), and
+    -- on which day. Many books end with excerpts and back matter, so the last page is often short of
+    -- 100%, and NovelCheck's own "97% counts as finished" is not enough.
+    function NovelCheck:finishedOnDevice(path)
+        local ok, done, day = pcall(function()
+            local DocSettings = require("docsettings")
+            if not DocSettings:hasSidecarFile(path) then
+                return false
+            end
+            local summary = DocSettings:open(path):readSetting("summary")
+            if type(summary) == "table" and summary.status == "complete" then
+                return true, type(summary.modified) == "string" and summary.modified or nil
+            end
+            return false
+        end)
+        return ok and done == true, ok and done == true and day or nil
+    end
+
     function NovelCheck:scanBooks(dir, books, depth, no_md5)
         if #books >= MAX_BOOKS or depth > 4 then return end
         if depth == 0 then
@@ -115,7 +133,10 @@ return function(NovelCheck, ctx)
                         if not no_md5 then
                             ptitle, pauthor = self:bookProps(path, sum)
                         end
+                        local finished, finished_on = self:finishedOnDevice(path)
                         table.insert(books, {
+                            finished = finished or nil,
+                            finished_on = finished_on,
                             filename = entry,
                             path = path,
                             title = ptitle or (entry:gsub("%.[^.]+$", ""):gsub("[-_]", " ")),
@@ -135,7 +156,8 @@ return function(NovelCheck, ctx)
     function NovelCheck:withoutPaths(books)
         local out = {}
         for _i, b in ipairs(books) do
-            table.insert(out, { filename = b.filename, title = b.title, author = b.author, format = b.format, size = b.size, md5 = b.md5 })
+            table.insert(out, { filename = b.filename, title = b.title, author = b.author, format = b.format, size = b.size, md5 = b.md5,
+                finished = b.finished, finished_on = b.finished_on })
         end
         if self.props_cache then
             self.props_cache:flush()

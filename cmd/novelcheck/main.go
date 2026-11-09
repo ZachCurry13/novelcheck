@@ -103,10 +103,11 @@ func main() {
 
 	deep := deepread.New(st, cfg.CalibreDir)
 	discoverSvc := discover.New(st, func(ids ...int64) { worker.Enqueue(false, ids...) })
+	genres := &genrefill.Filler{Store: st} // AI genres for books Calibre has no tags for (Admin button, and by itself for new books)
 
 	// Background work, unless safe mode is on (then an admin starts it by
 	// leaving safe mode).
-	bg := &background{st: st, worker: worker, collections: collectionsSvc, aiTools: aiTools, syncer: syncer, deep: deep, discover: discoverSvc}
+	bg := &background{st: st, worker: worker, collections: collectionsSvc, aiTools: aiTools, syncer: syncer, deep: deep, discover: discoverSvc, genres: genres}
 	safe := safemode.NewState(cfg.DataDir, safeReason, sync.OnceFunc(func() { bg.start(ctx) }))
 	if safeReason == "" {
 		bg.start(ctx)
@@ -140,7 +141,7 @@ func main() {
 		Deep:        deep,
 		Suggest:     suggest.New(st),
 		Covers:      covers.Cache{Dir: filepath.Join(cfg.DataDir, "covers")},
-		Genres:      &genrefill.Filler{Store: st},
+		Genres:      genres,
 		Discover:    discoverSvc,
 		Collections: collectionsSvc,
 		AITools:     aiTools,

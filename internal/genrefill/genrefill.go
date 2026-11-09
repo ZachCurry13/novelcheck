@@ -28,7 +28,30 @@ type Filler struct {
 	done    int
 	total   int
 	lastErr string
+	ended   time.Time // when the last run ended
 	cancel  context.CancelFunc
+}
+
+// Loop fills in genres for new books by itself, checking every ten minutes. allowed says
+// whether background AI work is wanted now (the same switch and hours as automatic rating).
+// After a run that stopped on an error it waits an hour before trying again.
+func (f *Filler) Loop(ctx context.Context, allowed func() bool) {
+	t := time.NewTicker(10 * time.Minute)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+		}
+		f.mu.Lock()
+		backoff := f.lastErr != "" && time.Since(f.ended) < time.Hour
+		f.mu.Unlock()
+		if backoff || !allowed() || len(f.Store.AIConfigs()) == 0 || f.Store.CountMissingGenres() == 0 {
+			continue
+		}
+		_ = f.Start()
+	}
 }
 
 // Status is what the Admin page shows.
@@ -79,7 +102,7 @@ func (f *Filler) Stop() {
 func (f *Filler) run(ctx context.Context) {
 	defer func() {
 		f.mu.Lock()
-		f.running, f.cancel = false, nil
+		f.running, f.cancel, f.ended = false, nil, time.Now()
 		done, errMsg := f.done, f.lastErr
 		f.mu.Unlock()
 		switch {

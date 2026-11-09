@@ -14,3 +14,4 @@
 - 2026-11-09: v1.51.0 (feature/v1.51, on top of unreleased v1.50): Library cleanup flow, Nightstand same-book banner, 45 s list cache, slow-request report. Next: owner OK to release 1.50.0 + 1.51.0 together; then read the Slow requests section after a day of use.
 - 2026-11-09: v1.52.0 (feature/v1.52): title saves answer at once (background Calibre re-read, one at a time, button shows progress). Next: owner OK to release; confirm Scarlet saves fast.
 - 2026-11-09: v1.52 (feature/v1.52): same-book pairs carry evidence and a confidence; spin-offs no longer paired; auto-join only when sure. Next: owner OK to release 1.52.0; check the Listed twice list again.
+- 2026-11-09: v1.52 also: Kindle finished books leave the Nightstand (plugin 1.51.0), genres auto-fill. Next: owner OK to release 1.52.0; then design the Wrapped / achievements page.
