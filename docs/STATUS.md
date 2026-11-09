@@ -9,3 +9,4 @@
 - **2026-10-26 (later):** applied `cloudflared` 2026.10.4 (Dockerfile pin; verified by the image build before release). Newer direct dependencies left for later (no known vulnerability): `anthropic-sdk-go` 1.84, `chi` 5.5, `x/crypto` 0.58, `x/net` 0.61, `modernc.org/sqlite` 1.61.
 
 - 2026-11-09: v1.49 on branch feature/v1.49 (not released): "Add to NovelCheck" for unmatched Kindle books, plugin 1.49.0 shows the download folder. Next: owner OK to release; real-Kindle check of the add button.
+- 2026-11-09: v1.49.0 adds the bug-report link, browser Send report, self-test auto-send, Add to NovelCheck, NovelCheck download folder, device-report 500 fix and path-loaded plugin files. Next: owner to update the Kindle plugin and re-test report books, Tidy names and New in library.

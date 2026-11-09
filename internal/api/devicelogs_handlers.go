@@ -5,7 +5,7 @@ import (
 )
 
 // Logs from the KOReader plugin's Developer tools (Send log to NovelCheck),
-// read in Admin → System & Toggles → Device logs.
+// read in Settings → Developer → Bug reports.
 
 // handlePluginDebug: POST /kosync/plugin/debug {"device", "version", "text"}.
 func (s *Server) handlePluginDebug(w http.ResponseWriter, r *http.Request) {

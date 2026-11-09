@@ -74,6 +74,7 @@ func (s *Server) Router() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(securityHeaders)
 
+	r.Get("/bugs/{token}", s.handleBugLink)
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })
 
 	// KOReader's OPDS catalog: the private token in the address stands in for signing in.
@@ -129,6 +130,7 @@ func (s *Server) Router() http.Handler {
 			r.Delete("/me/searches", s.handleClearSearches)
 			r.Get("/me/opds", s.handleMyOPDS)
 			r.Post("/me/opds/reset", s.handleResetMyOPDS)
+			r.Post("/me/bug-report", s.handleBrowserReport)
 			r.Get("/me/kosync", s.handleMyKosync)
 			r.Post("/me/kosync", s.handleMyKosync)
 			r.Get("/me/koplugin.zip", s.handleMyPluginZip)

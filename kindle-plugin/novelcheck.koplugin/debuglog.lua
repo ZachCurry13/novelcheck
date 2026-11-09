@@ -1,7 +1,7 @@
 --[[
 NovelCheck plugin: developer tools. Keeps a small log of what the plugin does (menu taps, requests to
 NovelCheck, errors), can run a self-test, show the log on the device, and send it to NovelCheck
-(Admin > Device logs) so a problem can be looked at. The log never holds your sync code.
+(Settings > Developer > Bug reports) so a problem can be looked at. The log never holds your sync code.
 It adds its functions to the NovelCheck plugin class (see main.lua).
 ]]
 
@@ -136,24 +136,34 @@ return function(NovelCheck, ctx)
         UIManager:show(TextViewer:new{ title = _("NovelCheck log (newest last)"), text = text })
     end
 
+    -- uploadLog runs the self-test and sends the log to NovelCheck (Settings > Developer >
+    -- Bug reports). It returns true when NovelCheck took it.
+    function NovelCheck:uploadLog()
+        self:selfTest()
+        local text = self:readLog()
+        if #text > 100 * 1024 then
+            text = text:sub(-100 * 1024)
+        end
+        local body = json.encode{ device = self.settings:readSetting("device_name") or Device.model or "device", version = VERSION, text = text }
+        local code, resp = self:request("/kosync/plugin/debug", nil, body)
+        if code == 200 then
+            return true
+        end
+        self:dlog("error", "sending the log failed: " .. tostring(code) .. " " .. tostring(resp))
+        return false, code or resp
+    end
+
     function NovelCheck:sendDebugLog()
         if not self:isConnected() then
             self:connectDialog()
             return
         end
         NetworkMgr:runWhenOnline(function()
-            self:selfTest()
-            local text = self:readLog()
-            if #text > 100 * 1024 then
-                text = text:sub(-100 * 1024)
-            end
-            local body = json.encode{ device = self.settings:readSetting("device_name") or Device.model or "device", version = VERSION, text = text }
-            local code, resp = self:request("/kosync/plugin/debug", nil, body)
-            if code == 200 then
-                UIManager:show(InfoMessage:new{ text = _("Sent. It is under Admin > Device logs in NovelCheck.") })
+            local ok, err = self:uploadLog()
+            if ok then
+                UIManager:show(InfoMessage:new{ text = _("Sent. It is in NovelCheck under Settings > Developer > Bug reports.") })
             else
-                self:dlog("error", "sending the log failed: " .. tostring(code) .. " " .. tostring(resp))
-                UIManager:show(InfoMessage:new{ text = _("Could not send the log.") .. "\n" .. tostring(code or resp) })
+                UIManager:show(InfoMessage:new{ text = _("Could not send the log.") .. "\n" .. tostring(err) })
             end
         end)
     end
@@ -163,7 +173,12 @@ return function(NovelCheck, ctx)
         return { text = _("Developer tools"), sub_item_table = {
             { text = _("Run self-test"), callback = function()
                 NetworkMgr:runWhenOnline(function()
-                    self:selfTest()
+                    -- The result is sent to NovelCheck by itself, then shown here.
+                    local sent = self:isConnected() and self:uploadLog()
+                    if not self:isConnected() then
+                        self:selfTest()
+                    end
+                    self:dlog("test", sent and "result sent to NovelCheck" or "result not sent")
                     self:showLog()
                 end)
             end },

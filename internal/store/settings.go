@@ -86,10 +86,11 @@ var Defaults = map[string]string{
 	KeyABSURL:             "",
 	KeyABSToken:           "",
 	KeyABSPollHours:       "12",
+	KeyBugLink:            "",
 }
 
 // SecretKeys are never returned to the browser in clear text.
-var SecretKeys = map[string]bool{KeyLLMAPIKey: true, KeyBackupAPIKey: true, KeySMTPPassword: true, KeyGoogleBooksAPIKey: true, KeyTunnelToken: true, KeyCalibreSrvPassword: true, KeyABSToken: true}
+var SecretKeys = map[string]bool{KeyLLMAPIKey: true, KeyBackupAPIKey: true, KeySMTPPassword: true, KeyGoogleBooksAPIKey: true, KeyTunnelToken: true, KeyCalibreSrvPassword: true, KeyABSToken: true, KeyBugLink: true}
 
 // AllSettings returns stored values merged over defaults.
 func (s *Store) AllSettings() (map[string]string, error) {
