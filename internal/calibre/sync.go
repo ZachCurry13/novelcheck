@@ -20,6 +20,7 @@ type Result struct {
 	Books   int `json:"books"`
 	Copies  int `json:"copies"`
 	Removed int `json:"removed"`
+	Skipped int `json:"skipped"` // entries that couldn't be read (an empty title, say)
 }
 
 type calibreBook struct {
@@ -110,6 +111,7 @@ func Sync(st *store.Store, dir string) (Result, error) {
 		id, err := st.UpsertCalibreBook(catID, store.CalibreEntry{ExtID: ext, Title: b.Title, Authors: b.Authors,
 			ISBN: b.ISBN, Description: StripHTML(b.Description), Series: b.Series, SeriesIndex: b.SeriesIndex, Tags: splitTags(b.Tags)})
 		if err != nil {
+			res.Skipped++
 			continue // skip malformed rows (e.g. empty title) without aborting the sync
 		}
 		keep[ext] = true

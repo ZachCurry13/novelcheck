@@ -16,6 +16,12 @@ becomes the release notes for that version and is shown in the app under
 - **Ask for the other format:** on a book you have as an e-book only (or audiobook only, or on paper) press **Request the audiobook / e-book**. It goes on the wishlist with its format, and is marked got when it arrives.
 - **Libby audiobooks:** a book's Libby box and the Discover chips also check the audiobook, with a link to borrow or hold it.
 
+### 🛠 Developer tools, and fewer duplicate books
+- **KOReader plugin 1.48.0 → NovelCheck → Developer tools:** *Run self-test* (connection, sign-in, the plugin's files and versions), *View log* (every menu tap, request and error), *Send log to NovelCheck*, a detail switch and *Clear log*. Each part of the plugin now loads on its own, so one broken file can no longer make the whole plugin vanish; the reason is kept in `LOAD_ERROR.txt` in the plugin folder.
+- **Admin → Settings → Developer:** the logs a Kindle sent (copy or delete them), a copy-able **server report**, and for everyone a record of **this browser** (pages, button names, failed requests, errors; never what you type) to copy and send when something doesn't work.
+- **"Listed twice"** (Library → Find duplicates): books that look like the same book under different spellings or a missing author, with **Join them** or **Not the same**. A book that was only looked up or wished for (for example on a reading list before the e-book arrived) now **joins its library copy by itself** after each sync, bringing the Nightstand and wishlist entries with it.
+- **Calibre-Web uploads show up sooner:** with a sync schedule on, NovelCheck notices when Calibre's database changes and syncs about half a minute later instead of waiting for the next scheduled one. The sync also counts entries it couldn't read.
+
 ## [1.47.0]
 
 ### 📤 Share your reading as a picture

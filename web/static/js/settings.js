@@ -16,10 +16,11 @@ import { renderPluginCard } from "./pluginmanage.js";
 import { renderHardcover } from "./hardcover.js";
 import { renderLibbyCard } from "./libby.js";
 import { renderABSCard } from "./absaccount.js";
+import { renderDevTab } from "./devsettings.js";
 import { tabStrip } from "./tabs.js";
 import { renderSharingCard } from "./sharing.js";
 
-const SECTIONS = { general: "General", account: "Account", kindle: "Kindle & KOReader", connections: "Connections" };
+const SECTIONS = { general: "General", account: "Account", kindle: "Kindle & KOReader", connections: "Connections", developer: "🛠 Developer" };
 
 // sectionFromHash reads #/settings?s=kindle.
 const sectionFromHash = () => {
@@ -69,7 +70,7 @@ export async function renderSettings(view, state) {
   const draw = () => {
     view.innerHTML = `<h1 class="mb-3 text-2xl font-bold">⚙ Settings</h1>
       ${tabStrip({ id: "settings-tabs", attr: "data-section", label: "Settings", active: section, tabs: Object.entries(SECTIONS) })}
-      <div class="grid gap-4 lg:grid-cols-2">${{ general: () => generalHTML(u), account: () => accountHTML(u), kindle: () => kindleHTML(u), connections: connectionsHTML }[section]()}</div>`;
+      <div class="grid gap-4 lg:grid-cols-2">${{ general: () => generalHTML(u), account: () => accountHTML(u), kindle: () => kindleHTML(u), connections: connectionsHTML, developer: () => `<div id="dev-tab" class="contents"></div>` }[section]()}</div>`;
     bind();
   };
   const bind = () => {
@@ -94,6 +95,8 @@ export async function renderSettings(view, state) {
         const ok = await attempt(() => put("/api/me/password", Object.fromEntries(new FormData(e.target))), "Password updated");
         if (ok) e.target.reset();
       });
+    } else if (section === "developer") {
+      renderDevTab($("#dev-tab", view), u);
     } else if (section === "kindle") {
       $("#ko-setup", view).addEventListener("click", () => openKOReaderSetup());
       if (on(u, "koreader")) {

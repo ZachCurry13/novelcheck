@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -33,6 +35,9 @@ func (s *Syncer) Run() (Result, error) {
 	defer s.mu.Unlock()
 	start := time.Now()
 	res, err := Sync(s.Store, s.LibraryDir())
+	if err == nil {
+		s.Store.TidySame() // a book added to a list before it was in the library joins its new copy
+	}
 	summary := map[string]any{"at": time.Now().UTC().Format(time.RFC3339), "result": res}
 	if err != nil {
 		summary["error"] = err.Error()
@@ -49,7 +54,7 @@ func (s *Syncer) Run() (Result, error) {
 		}
 	}
 	b, _ := json.Marshal(summary)
-	_ = s.Store.SetSetting(store.KeyCalibreLastSync, time.Now().UTC().Format(time.RFC3339))
+	_ = s.Store.SetSetting(store.KeyCalibreLastSync, start.UTC().Format(time.RFC3339)) // when it began: a change made during the sync still counts as new
 	_ = s.Store.SetSetting(store.KeyCalibreLastResult, string(b))
 	return res, err
 }
@@ -68,12 +73,33 @@ func (s *Syncer) Due(now time.Time) bool {
 	return now.Sub(last) >= time.Duration(hours)*time.Hour
 }
 
+// Changed reports whether Calibre's database was written (a book added in Calibre-Web, say)
+// since the last sync and has been quiet for a little while. With a schedule on, that starts a
+// sync at once instead of waiting for the next one.
+func (s *Syncer) Changed(now time.Time) bool {
+	if s.Store.SettingInt(store.KeyCalibrePollHours) <= 0 {
+		return false // manual only
+	}
+	last, err := time.Parse(time.RFC3339, s.Store.Setting(store.KeyCalibreLastSync))
+	if err != nil {
+		return false
+	}
+	dir := s.LibraryDir()
+	var newest time.Time
+	for _, f := range []string{"metadata.db", "metadata.db-wal"} {
+		if info, err := os.Stat(filepath.Join(dir, f)); err == nil && info.ModTime().After(newest) {
+			newest = info.ModTime()
+		}
+	}
+	return newest.After(last) && now.Sub(newest) >= 20*time.Second
+}
+
 // Loop checks once a minute whether a scheduled sync is due.
 func (s *Syncer) Loop(ctx context.Context) {
 	t := time.NewTicker(time.Minute)
 	defer t.Stop()
 	for {
-		if s.Available() && s.Due(time.Now()) {
+		if s.Available() && (s.Due(time.Now()) || s.Changed(time.Now())) {
 			var res Result
 			// A panic in one sync is logged; the schedule (and the app) keep going.
 			if err := safe.Run("calibre sync", func() (err error) { res, err = s.Run(); return err }); err != nil {

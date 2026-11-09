@@ -85,8 +85,10 @@ func (s *Store) MergeBooks(a, b int64) (int64, error) {
 		isbn = CASE WHEN isbn = '' THEN (SELECT isbn FROM books WHERE id = ?) ELSE isbn END,
 		description = CASE WHEN description = '' THEN (SELECT description FROM books WHERE id = ?) ELSE description END,
 		series = CASE WHEN series = '' THEN (SELECT series FROM books WHERE id = ?) ELSE series END,
-		series_index = CASE WHEN series_index = 0 THEN (SELECT series_index FROM books WHERE id = ?) ELSE series_index END
-		WHERE id = ?`, other.ID, other.ID, other.ID, other.ID, keep.ID); err != nil {
+		series_index = CASE WHEN series_index = 0 THEN (SELECT series_index FROM books WHERE id = ?) ELSE series_index END,
+		narrator = CASE WHEN narrator = '' THEN (SELECT narrator FROM books WHERE id = ?) ELSE narrator END,
+		duration_sec = CASE WHEN duration_sec = 0 THEN (SELECT duration_sec FROM books WHERE id = ?) ELSE duration_sec END
+		WHERE id = ?`, other.ID, other.ID, other.ID, other.ID, other.ID, other.ID, keep.ID); err != nil {
 		return 0, err
 	}
 	if _, err := tx.Exec(`DELETE FROM books WHERE id = ?`, other.ID); err != nil {

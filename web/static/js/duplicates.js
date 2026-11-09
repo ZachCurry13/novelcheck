@@ -3,6 +3,7 @@
 // Calibre's recycle bin in one click (through the Content server).
 import { get, post } from "./api.js";
 import { $, $$, esc, attempt, toast, can } from "./ui.js";
+import { renderSameBooks } from "./samebooks.js";
 
 const MB = 1 << 20;
 const fmtSize = (b) => (!b ? "" : b >= MB ? `${(b / MB).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
@@ -35,8 +36,10 @@ export async function renderDuplicates(view, state) {
       <button id="dup-recheck" class="btn-secondary py-1">🔄 Check again</button>
       <span id="dup-synced" class="text-slate-400"></span>
     </div>
+    <section class="mb-6"><h2 class="mb-2 text-xl font-semibold">Listed twice</h2><div id="same-books"></div></section>
     <div id="dup-result"></div>
     <div id="dup-body"><p class="text-slate-400">Looking for duplicates…</p></div>`;
+  renderSameBooks($("#same-books", view));
   const body = $("#dup-body", view);
   const result = $("#dup-result", view);
   const when = (iso) => (iso ? new Date(iso).toLocaleString() : "never");

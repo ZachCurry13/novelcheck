@@ -579,3 +579,21 @@ CREATE TABLE IF NOT EXISTS kindle_overrides (
     ignored INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, key)
 );
+
+-- Pairs of entries a person said are different books (not offered as duplicates again).
+CREATE TABLE IF NOT EXISTS dup_ignores (
+    a_id INTEGER NOT NULL,
+    b_id INTEGER NOT NULL,
+    PRIMARY KEY (a_id, b_id)
+);
+
+-- Logs the KOReader plugin sent from a device ("Send log to NovelCheck"), for troubleshooting.
+CREATE TABLE IF NOT EXISTS device_logs (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    username   TEXT NOT NULL DEFAULT '',
+    device     TEXT NOT NULL DEFAULT '',
+    version    TEXT NOT NULL DEFAULT '',
+    body       TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

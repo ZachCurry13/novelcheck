@@ -26,16 +26,29 @@ local https = require("ssl.https")
 local md5 = require("ffi/sha2").md5
 local util = require("util")
 local ConfirmBox = require("ui/widget/confirmbox")
-local DeviceBooks = require("devicebooks")
+-- A module that fails to load must not take the whole plugin with it: the error is kept
+-- (shown by Developer tools, and written to LOAD_ERROR.txt in the plugin folder).
+local load_errors = {}
+local okDB, DeviceBooks = pcall(require, "devicebooks")
+if not okDB then
+    table.insert(load_errors, "devicebooks: " .. tostring(DeviceBooks))
+    DeviceBooks = { show = function() end, removeFinished = function() end }
+end
 
-local VERSION = "1.45.0"
+local VERSION = "1.48.0"
 -- The folder this plugin runs from (config.lua from NovelCheck's download sits there).
 local PLUGIN_DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
 
 local NovelCheck = WidgetContainer:extend{
     name = "novelcheck",
     is_doc_only = false,
+    load_errors = load_errors,
 }
+
+-- Until the developer tools load (debuglog.lua), logging does nothing.
+function NovelCheck:dlog() end
+function NovelCheck:trackMenu() end
+function NovelCheck:developerMenu() return { text = _("Developer tools"), callback = function() end } end
 
 local function trim(s)
     return ((s or ""):gsub("^%s+", ""):gsub("%s+$", ""))
@@ -78,7 +91,7 @@ function NovelCheck:importConfig()
 end
 
 function NovelCheck:addToMainMenu(menu_items)
-    menu_items.novelcheck = {
+    local entry = {
         text = _("NovelCheck"),
         sorting_hint = "tools",
         sub_item_table = {
@@ -106,9 +119,12 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("Device name..."), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
             { text = _("Connect to NovelCheck..."), keep_menu_open = true, callback = function() self:connectDialog() end },
             { text = _("Update plugin"), callback = function() self:checkUpdate(false) end },
+            self:developerMenu(),
             { text = _("About"), keep_menu_open = true, callback = function() self:showAbout() end },
         },
     }
+    self:trackMenu(entry.sub_item_table)
+    menu_items.novelcheck = entry
 end
 
 -- About: the version, which NovelCheck this is connected to, and the project
@@ -275,9 +291,12 @@ function NovelCheck:requestAt(base, path, file, post_body)
     end)
     socketutil:reset_timeout()
     if not ok then
+        self:dlog("net", (post_body and "POST " or "GET ") .. path .. " failed: " .. tostring(code))
         return nil, tostring(code)
     end
-    return code, table.concat(chunks)
+    local text = table.concat(chunks)
+    self:dlog("net", (post_body and "POST " or "GET ") .. path .. " -> " .. tostring(code) .. (self.verbose and self:verbose() and code ~= 200 and (" " .. text:sub(1, 200)) or ""))
+    return code, text
 end
 
 function NovelCheck:showUpNext()
@@ -416,10 +435,24 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-require("setup")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
-require("tidynames")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
-require("search")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
-require("updater")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
-require("devicereport")(NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
+for _i, name in ipairs{ "debuglog", "setup", "tidynames", "search", "updater", "devicereport" } do
+    local ok, mod = pcall(require, name)
+    if ok and type(mod) == "function" then
+        ok, mod = pcall(mod, NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
+    end
+    if not ok then
+        table.insert(load_errors, name .. ": " .. tostring(mod))
+    end
+end
+if #load_errors > 0 then
+    pcall(function()
+        local f = io.open((PLUGIN_DIR or ".") .. "/LOAD_ERROR.txt", "w")
+        if f then
+            f:write(table.concat(load_errors, "\n"), "\n")
+            f:close()
+        end
+    end)
+    NovelCheck:dlog("error", "load errors: " .. table.concat(load_errors, " ; "))
+end
 
 return NovelCheck

@@ -91,6 +91,7 @@ func (s *Server) Router() http.Handler {
 		// The KOReader plugin: the same sign-in, JSON, and downloads.
 		r.Get("/plugin/up-next", s.handlePluginUpNext)
 		r.Post("/plugin/device", s.handlePluginDevice)
+		r.Post("/plugin/debug", s.handlePluginDebug)
 		r.Get("/plugin/book/{id}/{name}", s.handlePluginBook)
 		r.Get("/plugin/version", s.handlePluginVersion)
 		r.Get("/plugin/names", s.handlePluginNames)
@@ -274,6 +275,9 @@ func (s *Server) Router() http.Handler {
 
 				r.Get("/admin/status", s.handleAdminStatus)
 				r.Get("/admin/calibre/duplicates", s.handleDuplicates)
+				r.Get("/admin/same-books", s.handleSamePairs)
+				r.Post("/admin/same-books/merge", s.handleSameAction(true))
+				r.Post("/admin/same-books/not", s.handleSameAction(false))
 				r.Post("/admin/rerate", s.handleRerate)
 				r.Get("/notifications", s.handleNotifications)
 				r.Post("/notifications/read", s.handleNotificationsRead)

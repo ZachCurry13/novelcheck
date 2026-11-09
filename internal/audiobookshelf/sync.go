@@ -67,6 +67,9 @@ func Sync(ctx context.Context, st *store.Store, c *Client) (Result, error) {
 		}
 	}
 	res.Removed, err = st.PruneCatalog(cat, keep)
+	if err == nil {
+		st.TidySame()
+	}
 	return res, err
 }
 

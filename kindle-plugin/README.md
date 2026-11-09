@@ -70,3 +70,7 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 - **NovelCheck > Search library:** type any words of a title or author; tap a book to read what it is about (with its content rating), then **Download to this device** or **Add to Nightstand**.
 - **NovelCheck > New in library:** the newest books, the same way.
 - **Connect to NovelCheck...** has a fourth box for a **backup address**, tried when the main one can't be reached.
+
+## Developer tools (NovelCheck 1.48 or newer, plugin 1.48.0)
+
+**NovelCheck > Developer tools** helps when something doesn't work: **Run self-test** checks the connection, sign-in and the plugin's files; **View log** shows every menu tap, request and error; **Send log to NovelCheck** sends the log to Admin > Settings > Developer (your sync code is removed). If the plugin doesn't appear in KOReader at all, look for `LOAD_ERROR.txt` in the plugin's folder, or send KOReader's `crash.log`.

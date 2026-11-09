@@ -1,4 +1,5 @@
 // Thin fetch wrapper for the NovelCheck JSON API.
+import { note } from "./debugrec.js";
 // Every state-changing request carries X-NovelCheck: 1 (CSRF guard).
 
 export class ApiError extends Error {
@@ -46,6 +47,7 @@ async function send(path, opts) {
       return res;
     } catch {
       if (opts.method !== "GET" || attempt >= RETRIES) {
+        note("net", `${opts.method} ${path} could not connect`);
         throw new ApiError(0, "Can't reach NovelCheck right now. Check your connection and try again.");
       }
       await backOnline(700 * 2 ** attempt);
@@ -67,7 +69,10 @@ export async function api(path, { method = "GET", body, raw = false } = {}) {
   }
   if (raw) return res;
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, data.error || res.statusText, data);
+  if (!res.ok) {
+    note("net", `${method} ${path} -> ${res.status} ${data.error || res.statusText}`);
+    throw new ApiError(res.status, data.error || res.statusText, data);
+  }
   return data;
 }
 
