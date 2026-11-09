@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.52.0]
+
+### 🏷️ Saving a title in Calibre no longer hangs
+- **It answers in a couple of seconds.** Saving a title (or tidying many) used to wait for a full re-read of the Calibre library, about 15 seconds each. The re-read now happens in the background, and several saves close together share one.
+- **One save at a time, and the button says so.** The button turns into "Saving in Calibre…" and stays off until it's done; pressing it again used to queue more re-reads (five presses took over a minute).
+
 ## [1.51.0]
 
 ### 🧹 Library cleanup, one flow

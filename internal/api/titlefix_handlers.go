@@ -105,6 +105,11 @@ func (s *Server) handleSaveCalibreTitle(w http.ResponseWriter, r *http.Request) 
 // the wrong library is never changed), saves the titles, then re-reads the
 // library. On failure it writes the error and returns ok=false.
 func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []titlePush) (fixed int, ok bool) {
+	if !s.titleMu.TryLock() { // saves go one at a time; pressing again only piled up more work
+		writeErr(w, http.StatusConflict, "a title is already being saved in Calibre; wait for it to finish")
+		return 0, false
+	}
+	defer s.titleMu.Unlock()
 	if s.Store.Setting(store.KeyCalibreSrvURL) == "" {
 		writeErr(w, http.StatusBadRequest, "set up the calibre Content server connection first (Admin → Delivery & Services → Calibre Library)")
 		return 0, false
@@ -170,13 +175,8 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 		}
 	}
 	log.Printf("calibre: tidied %d titles via Content server (requested by admin)", fixed)
-	// Calibre moved the renamed books' files: re-read the library so downloads keep working.
-	if s.Syncer.Available() {
-		if _, err := s.Syncer.Run(); err != nil {
-			log.Printf("calibre sync after tidying titles failed: %v", err)
-		} else if err := s.Store.AcceptModified(accept); err != nil {
-			log.Printf("keeping ratings after tidying titles: %v", err)
-		}
-	}
+	// Calibre moved the renamed books' files: re-read the library (in the background, so the
+	// save answers at once) so downloads keep working.
+	s.syncSoon(accept)
 	return fixed, true
 }

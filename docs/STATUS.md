@@ -12,3 +12,4 @@
 - 2026-11-09: v1.49.0 adds the bug-report link, browser Send report, self-test auto-send, Add to NovelCheck, NovelCheck download folder, device-report 500 fix and path-loaded plugin files. Next: owner to update the Kindle plugin and re-test report books, Tidy names and New in library.
 - 2026-11-09: v1.50.0 (feature/v1.50): server error log with E-codes, auto-send of reports, notes, UTC logs, delete/expire for bug reports and the link. Next: owner updates plugin to 1.50.0 and tests Send log with a note.
 - 2026-11-09: v1.51.0 (feature/v1.51, on top of unreleased v1.50): Library cleanup flow, Nightstand same-book banner, 45 s list cache, slow-request report. Next: owner OK to release 1.50.0 + 1.51.0 together; then read the Slow requests section after a day of use.
+- 2026-11-09: v1.52.0 (feature/v1.52): title saves answer at once (background Calibre re-read, one at a time, button shows progress). Next: owner OK to release; confirm Scarlet saves fast.

@@ -55,9 +55,16 @@ export async function openTitleEdit(b, calibreIds, cw, onSaved) {
     e.preventDefault();
     const f = new FormData(form);
     const body = { title: f.get("title"), series: f.get("series"), series_index: Number(f.get("series_index")) || 0 };
+    const btn = form.querySelector("button.btn-primary");
+    const label = btn.textContent;
+    btn.disabled = true; // one save at a time: pressing again only queues another
+    btn.textContent = "Saving in Calibre…";
     if (await attempt(() => post(`/api/books/${b.id}/calibre-title`, body), "Saved in Calibre")) {
       d.close();
       onSaved?.();
+    } else {
+      btn.disabled = false;
+      btn.textContent = label;
     }
   };
   d.showModal();
@@ -92,7 +99,11 @@ export async function openTitleFixes(onDone) {
       const ids = [...form.querySelectorAll("[name=id]:checked")].map((c) => Number(c.value));
       if (!ids.length) return toast("Tick at least one title", true);
       if (!confirm(`Change ${ids.length} title${ids.length === 1 ? "" : "s"} in Calibre? Calibre renames their folders to match.`)) return;
+      const btn = form.querySelector("button.btn-primary");
+      btn.disabled = true; // saving many titles takes a while: wait, don't press again
+      btn.textContent = `Saving ${ids.length} title${ids.length === 1 ? "" : "s"} in Calibre…`;
       const r = await attempt(() => post("/api/admin/title-fixes", { ids }));
+      btn.disabled = false;
       if (r) {
         toast(`Tidied ${r.fixed} title${r.fixed === 1 ? "" : "s"} in Calibre`);
         onDone?.();
