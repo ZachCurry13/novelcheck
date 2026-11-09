@@ -29,15 +29,27 @@ local ConfirmBox = require("ui/widget/confirmbox")
 -- A module that fails to load must not take the whole plugin with it: the error is kept
 -- (shown by Developer tools, and written to LOAD_ERROR.txt in the plugin folder).
 local load_errors = {}
-local okDB, DeviceBooks = pcall(require, "devicebooks")
+-- The plugin's own files are loaded by path: KOReader has modules of its own with plain names
+-- like "search" or "setup", and require() could hand back one of those instead.
+local PLUGIN_DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
+local function loadOwn(name)
+    if PLUGIN_DIR then
+        local chunk, err = loadfile(PLUGIN_DIR .. "/" .. name .. ".lua")
+        if not chunk then
+            return false, err
+        end
+        return pcall(chunk)
+    end
+    return pcall(require, name)
+end
+local okDB, DeviceBooks = loadOwn("devicebooks")
 if not okDB then
     table.insert(load_errors, "devicebooks: " .. tostring(DeviceBooks))
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
 local VERSION = "1.49.0"
--- The folder this plugin runs from (config.lua from NovelCheck's download sits there).
-local PLUGIN_DIR = (debug.getinfo(1, "S").source or ""):match("^@(.*)/[^/]*$")
+-- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
     name = "novelcheck",
@@ -436,8 +448,11 @@ function NovelCheck:downloadAll(quiet)
 end
 
 for _i, name in ipairs{ "debuglog", "setup", "tidynames", "search", "updater", "devicereport" } do
-    local ok, mod = pcall(require, name)
-    if ok and type(mod) == "function" then
+    local ok, mod = loadOwn(name)
+    if ok and type(mod) ~= "function" then
+        ok, mod = false, "returned " .. type(mod) .. " instead of a function"
+    end
+    if ok then
         ok, mod = pcall(mod, NovelCheck, { VERSION = VERSION, PLUGIN_DIR = PLUGIN_DIR })
     end
     if not ok then

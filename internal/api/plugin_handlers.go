@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -98,6 +99,7 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 	s.Store.SaveDeviceInfo(u.ID, device, strings.TrimSpace(body.Plugin))
 	matched, err := s.Store.SaveDeviceBooks(u.ID, device, body.Books)
 	if err != nil {
+		log.Printf("plugin device report for user %d: %v", u.ID, err)
 		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "could not save"})
 		return
 	}

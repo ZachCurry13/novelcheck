@@ -43,10 +43,12 @@ func koKey(md5, title, authors string) string {
 // then guesses from the file name.
 func (s *Store) findForDevice(userID int64, b DeviceBook) (int64, bool) {
 	if o, ok := s.override(userID, deviceKey(b.MD5, b.Filename)); ok {
-		return o.BookID, o.Ignored
+		if o.Ignored || o.BookID == 0 || s.bookExists(o.BookID) { // a choice about a book since merged away or deleted is no choice
+			return o.BookID, o.Ignored
+		}
 	}
 	if b.MD5 != "" {
-		if id := s.DocBook(b.MD5); id > 0 {
+		if id := s.DocBook(b.MD5); id > 0 && s.bookExists(id) {
 			return id, false
 		}
 	}
@@ -130,4 +132,9 @@ func (s *Store) ApplyMatch(userID int64, ref MatchRef, bookID int64, ignored boo
 		s.SetDocBook(ref.MD5, bookID) // progress sync finds the book by its file too
 	}
 	return nil
+}
+
+func (s *Store) bookExists(id int64) bool {
+	var n int
+	return s.DB.Get(&n, `SELECT COUNT(*) FROM books WHERE id = ?`, id) == nil && n > 0
 }

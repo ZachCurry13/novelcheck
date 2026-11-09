@@ -9,6 +9,8 @@ becomes the release notes for that version and is shown in the app under
 ### ➕ Add books from your e-reader to NovelCheck
 - **Match books on my e-readers** now has **➕ Add to NovelCheck**. A book on your Kindle that isn't in any library (a sideloaded series, something KOReader's statistics saw) becomes a book in NovelCheck under its tidy title and author, so it can be rated, counted in your stats and found again. An author of "N/A" or "Unknown" is left blank, and a book NovelCheck already knows is reused instead of doubled. Added books leave the list for good. **Match…** and **Not a book** work as before.
 - **KOReader plugin 1.49.0:** books from your Nightstand are saved in a **NovelCheck** folder inside KOReader's home folder (where your other books are), and the message after **Download all Nightstand** names the folder. Scans for "On this device" and Tidy book names cover the whole home folder.
+- **Fixed: "Report books on this device" could fail with a server error (500).** A Kindle book you had matched or added to a book that was later merged into another (for example by the new automatic duplicate joining) left a stale link, and saving the report broke on it. Merging now carries those choices over, and a stale one is ignored.
+- **Fixed (plugin): "New in library" and search could be missing** with "attempt to call method 'newInLibrary' (a nil value)". The plugin now loads its own files by path, so a KOReader module with the same plain name can't take their place, and a file that returns the wrong thing is recorded in `LOAD_ERROR.txt`.
 
 ## [1.48.0]
 
