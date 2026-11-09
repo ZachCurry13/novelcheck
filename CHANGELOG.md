@@ -24,7 +24,7 @@ becomes the release notes for that version and is shown in the app under
 - **Cover finder:** books Calibre has no cover for get a real one from Open Library or Google Books (once a day in the background, or **Find covers now** in Admin → Library cleanup), only when the title and author really match.
 - **The Library's filters are a clean bar:** one search box and Sort, a **Filters** button that opens a labelled panel, a chip for each filter that is on (tap × to remove it), a styled picker for authors and series in place of the browser's white list, and a **⋯** menu for the rare actions.
 - **The Admin tab bar no longer jumps** between pages.
-- **Discover is kept for 15 minutes** instead of 45 seconds, so it opens faster.
+- **Faster pages:** Discover is kept for 15 minutes, Suggested Reads on the Nightstand (about 4 seconds to work out) and the Admin page's AI check (about 3 seconds) for a short while too. A change you make in the app clears them at once.
 
 ### 🔄 In step with the new KOReader
 - **KOReader 2026.07's "Send document metadata":** NovelCheck uses the title and author it sends with progress to find books it never sent to the reader, and the plugin (1.52.0) turns it on. The self-test now also reports your progress-sync, statistics-sync and Cloud storage set-up.

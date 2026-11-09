@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"net/http"
 	"strconv"
 	"strings"
@@ -89,8 +90,13 @@ func (c *capture) Unwrap() http.ResponseWriter { return c.ResponseWriter }
 
 // ttlFor is how long a page's answer is kept: Discover's lists change daily, the others change as people use the app.
 func ttlFor(path string) time.Duration {
-	if strings.HasPrefix(path, "/api/discover") {
+	switch {
+	case strings.HasPrefix(path, "/api/discover"):
 		return discoverTTL
+	case path == "/api/admin/status":
+		return 8 * time.Second // the rating worker's progress is on it: only a short while
+	case path == "/api/admin/aitools":
+		return 2 * time.Minute // asks the AI server, which is slow and rarely changes
 	}
 	return cacheTTL
 }
@@ -117,7 +123,8 @@ func (s *Server) cached(next http.Handler) http.Handler {
 		cap := &capture{ResponseWriter: w}
 		w.Header().Set("X-Cache", "miss")
 		next.ServeHTTP(cap, r)
-		if cap.status == http.StatusOK && len(cap.body) <= 8<<20 {
+		// An answer that says it is still being worked on (the AI picking suggestions) changes by itself: not kept.
+		if cap.status == http.StatusOK && len(cap.body) <= 8<<20 && !bytes.Contains(cap.body, []byte(`"refreshing":true`)) {
 			h := http.Header{}
 			for _, k := range []string{"Content-Type", "Cache-Control", "Etag"} {
 				if v := w.Header().Values(k); len(v) > 0 {

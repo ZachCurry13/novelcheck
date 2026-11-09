@@ -100,6 +100,7 @@ func TestSuggestedReads(t *testing.T) {
 
 	// AI picks + books the family doesn't own, made in the background.
 	_ = st.SetSetting(store.KeySuggestMode, store.SuggestAIOutside)
+	admin.do("PUT", "/api/me/libby", map[string]string{"library": ""}, true) // any change made through the app clears the kept answers, as a settings change would
 	if out := get(admin); out["refreshing"] != true {
 		t.Fatalf("AI starts picking: %v", out)
 	}

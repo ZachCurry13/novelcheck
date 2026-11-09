@@ -217,7 +217,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/queue/{id}/finish", s.handleFinishReading)
 				r.Group(func(r chi.Router) {
 					r.Use(s.requireModule(store.KeyModuleSuggest, "Suggested Reads"))
-					r.Get("/suggestions", s.handleSuggestions)
+					r.With(s.cached).Get("/suggestions", s.handleSuggestions) // ~4 s to work out, kept for a short while
 					r.Post("/suggestions/vote", s.handleSuggestionVote)
 					r.Delete("/suggestions/votes", s.handleClearSuggestionVotes)
 					r.Post("/suggestions/wish", s.handleWishSuggestion)
@@ -286,7 +286,7 @@ func (s *Server) Router() http.Handler {
 				r.Put("/notes/{id}", s.handleUpdateNote)
 				r.Delete("/notes/{id}", s.handleDeleteNote)
 
-				r.Get("/admin/status", s.handleAdminStatus)
+				r.With(s.cached).Get("/admin/status", s.handleAdminStatus)
 				r.Get("/admin/calibre/duplicates", s.handleDuplicates)
 				r.Get("/admin/same-books", s.handleSamePairs)
 				r.Post("/admin/same-books/merge", s.handleSameAction(true))

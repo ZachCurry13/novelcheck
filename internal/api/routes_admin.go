@@ -21,7 +21,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 	r.Group(func(r chi.Router) { // 🤖 AI settings
 		r.Use(area(store.AreaAI))
 		r.Get("/admin/provider-guide", s.handleProviderGuide)
-		r.Get("/admin/aitools", s.handleAIToolsStatus)
+		r.With(s.cached).Get("/admin/aitools", s.handleAIToolsStatus) // asks the AI server, 3 s
 		r.Post("/admin/aitools/check-updates", s.handleCheckModelUpdates)
 		r.Post("/admin/aitools/updated", s.handleModelUpdated)
 		r.Post("/admin/aitools/bench", s.handleStartBench)
