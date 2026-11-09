@@ -10,6 +10,7 @@ import { tabStrip } from "./tabs.js";
 const TABS = [
   ["ai", "🤖", "AI & Scans"],
   ["users", "👪", "Users & Rules"],
+  ["cleanup", "🧹", "Library cleanup", () => canHere("calibre")],
   ["delivery", "📬", "Delivery & Services", () => canHere("calibre") || canHere("services") || canHere("system")],
   ["system", "⚙️", "System & Toggles", () => canHere("system")],
   ["@deepscan", "🧬", "Deep Scan", () => canHere("deep")],

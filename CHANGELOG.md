@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.53.0]
+
+### 🧹 Admin → Library cleanup
+- **A tab of its own in Admin** with everything that keeps the library tidy: the guided cleanup (tidy titles, remove extra copies without an EPUB, convert to EPUB, remove other formats, re-read Calibre) and, below it, each tool on its own with how much is waiting: books listed twice (with the evidence), duplicates in Calibre, tidy titles, formats, genres, box sets, covers reported wrong, delete requests, reading the Calibre library, and your Kindle matching.
+
 ## [1.52.0]
 
 ### 📚 Finished books leave the Nightstand, and genres fill in by themselves

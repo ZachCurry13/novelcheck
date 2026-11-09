@@ -29,6 +29,9 @@ func TestCleanupSummary(t *testing.T) {
 	if c["dup_count"] != float64(1) || len(c["dup_ids"].([]any)) != 1 || c["dup_ids"].([]any)[0] != "11" {
 		t.Fatalf("only the MOBI-only extra entry is offered: %v", c)
 	}
+	if c["calibre_dups"] != float64(2) { // Divergent (entries 11 and 12) and Both Epub (30 and 31)
+		t.Fatalf("books with more than one Calibre entry: %v", c["calibre_dups"])
+	}
 	if c["convert"] != float64(2) { // entry 11 (mobi, no epub) and entry 20
 		t.Fatalf("books with no EPUB: %v", c["convert"])
 	}

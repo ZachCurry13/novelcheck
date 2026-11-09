@@ -28,12 +28,18 @@ const rows = (c) => [
   { id: "formats", n: c.remove_files, title: "Remove other formats where an EPUB exists", note: `${c.remove_files} file${c.remove_files === 1 ? "" : "s"} (${gb(c.remove_bytes)}). Undo for 7 days under Formats….`, btn: "Remove…" },
 ];
 
+// openCleanup shows the cleanup in a dialog (from the Calibre Library card).
 export async function openCleanup() {
   const d = dialog();
-  d.innerHTML = `<div class="p-5"><p class="text-slate-400">Looking at your library…</p></div>`;
   d.showModal();
+  await mountCleanup(d, () => d.close());
+}
+
+// mountCleanup fills host with the cleanup steps; close is given when host is a dialog.
+export async function mountCleanup(host, close) {
+  host.innerHTML = `<div class="p-5"><p class="text-slate-400">Looking at your library…</p></div>`;
   let c = await attempt(() => get("/api/admin/cleanup"));
-  if (!c) return d.close();
+  if (!c) return close?.();
   let busy = false;
   let status = {};
   let log = [];
@@ -44,9 +50,9 @@ export async function openCleanup() {
   const paint = () => {
     const list = rows(c);
     const todo = list.filter((r) => r.id !== "pairs" && r.n > 0).length;
-    d.innerHTML = `<div class="max-h-[88vh] space-y-3 overflow-y-auto p-5">
-      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">🧹 Library cleanup</h2>
-        <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
+    host.innerHTML = `<div class="${close ? "max-h-[88vh] overflow-y-auto p-5" : ""} space-y-3">
+      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">🧹 ${close ? "Library cleanup" : "The guided cleanup"}</h2>
+        ${close ? `<button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>` : ""}</div>
       ${c.configured ? "" : `<p class="rounded-lg bg-amber-950/40 p-3 text-sm text-amber-200">Connect the Calibre Content server first (Admin → Delivery &amp; Services → Calibre Library). Changes to Calibre go through it.</p>`}
       <ul class="space-y-2">${list.map((r) => `<li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-800/60 p-3">
         <div class="min-w-0 flex-1"><p class="font-semibold">${status[r.id] || (r.n ? "⬜" : "✅")} ${esc(r.title)}</p><p class="text-xs text-slate-400">${r.n ? esc(r.note) : "Nothing to do."}</p></div>
@@ -73,7 +79,7 @@ export async function openCleanup() {
   };
   const steps = {
     pairs: async () => {
-      d.close();
+      close?.();
       location.hash = "#/duplicates";
       return true;
     },
@@ -106,8 +112,8 @@ export async function openCleanup() {
     await reload();
     return ok;
   };
-  d.onclick = async (e) => {
-    if (e.target.closest("[data-close]")) return d.close();
+  host.onclick = async (e) => {
+    if (e.target.closest("[data-close]")) return close?.();
     const step = e.target.closest("[data-step]")?.dataset.step;
     if (step) {
       const sure = { dups: `Remove ${c.dup_count} extra Calibre entries? They move to Calibre's recycle bin.`, formats: `Remove ${c.remove_files} files (${gb(c.remove_bytes)}) of other formats? You can undo for 7 days under Formats….` }[step];

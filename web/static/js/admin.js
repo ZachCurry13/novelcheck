@@ -16,7 +16,7 @@ import { renderStats, perBookCost } from "./adminstats.js";
 import { adminNavHTML, markAdminSection, tabsFor } from "./adminnav.js";
 import { AREA_NAMES } from "./adminaccess.js";
 
-const TABS = [["ai", "🤖 AI & Scans"], ["users", "👪 Users & Rules"], ["delivery", "📬 Delivery & Services"], ["system", "⚙️ System & Toggles"]];
+const TABS = [["ai", "🤖 AI & Scans"], ["users", "👪 Users & Rules"], ["cleanup", "🧹 Library cleanup"], ["delivery", "📬 Delivery & Services"], ["system", "⚙️ System & Toggles"]];
 
 // The open tab lives in the address (#/admin?tab=users) so a reload keeps it.
 const tabFromHash = () => new URLSearchParams(location.hash.split("?")[1] || "").get("tab");
@@ -58,6 +58,7 @@ export async function renderAdmin(view, state) {
       ${inArea("ai", `<div id="custom-flags"></div><div id="settings-ai"></div>`)}
     </section>
     <section data-panel="users"><div id="users"></div></section>
+    ${hasTab("cleanup") ? `<section data-panel="cleanup"><div id="cleanup-tab"></div></section>` : ""}
     ${hasTab("delivery") ? `<section data-panel="delivery" class="space-y-4">
       <div id="settings-delivery"></div>
       <div class="card space-y-1 text-sm${on(state.user, "koreader") ? "" : " module-off"}" data-module="koreader">
@@ -74,12 +75,17 @@ export async function renderAdmin(view, state) {
       </div>
     </section>`)}`;
 
+  let cleanupLoaded = false;
   const show = (tab) => {
     current = tab;
     $$("[data-panel]", view).forEach((p) => p.classList.toggle("hidden", p.dataset.panel !== tab));
     $$("[data-tab]", view).forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
     markAdminSection(view, tab);
     history.replaceState(null, "", `#/admin?tab=${tab}`);
+    if (tab === "cleanup" && !cleanupLoaded) {
+      cleanupLoaded = true; // opened once; the tools inside refresh themselves
+      import("./cleanuptab.js").then((m) => m.renderCleanupTab($("#cleanup-tab", view)));
+    }
   };
   show(current);
   $("#admin-tabs", view).addEventListener("click", (e) => {

@@ -14,6 +14,7 @@ import (
 // handleCleanup is the summary: what each step would do now.
 func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
 	pairs, _ := s.Store.SamePairs()
+	calDups, _ := s.Store.CalibreDuplicates()
 	fixes, err := s.Store.TitleFixes()
 	if err != nil {
 		writeStoreErr(w, err)
@@ -46,6 +47,7 @@ func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"configured":   s.Store.Setting(store.KeyCalibreSrvURL) != "",
 		"pairs":        len(pairs),
+		"calibre_dups": len(calDups),
 		"titles":       len(fixes),
 		"title_ids":    ids,
 		"dup_count":    len(dups),
