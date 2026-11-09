@@ -31,7 +31,8 @@ export async function renderAdmin(view, state) {
     The main admin can change it.</p>` : "";
   let current = tabs.some(([k]) => k === tabFromHash()) ? tabFromHash() : "ai";
   view.innerHTML = `
-    <h1 class="mb-3 text-2xl font-bold">${isAdmin ? "Admin Control Panel" : "Manage NovelCheck"}</h1>
+    <h1 class="sr-only">${isAdmin ? "Admin Control Panel" : "Manage NovelCheck"}</h1>
+    ${adminNavHTML(current)}
     ${access}
     <div id="job-banner" class="mb-2 hidden rounded-lg bg-sky-950/50 p-3 text-sm"></div>
     <div id="del-banner" class="mb-2 hidden rounded-lg bg-rose-950/50 p-3 text-sm"></div>
@@ -40,7 +41,6 @@ export async function renderAdmin(view, state) {
     <div id="covers-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="box-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="problems-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
-    ${adminNavHTML(current)}
     <section data-panel="ai" class="space-y-6">
       <div id="stats" class="grid grid-cols-2 gap-3 lg:grid-cols-4"></div>
       <div id="errors"></div>

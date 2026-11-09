@@ -1,12 +1,12 @@
 // Unified dashboard: browse and filter books across every catalog.
 import { get, post, qs } from "./api.js";
-import { $, esc, attempt, toast, HIDE_LABELS, FILTER_IDEA_URL, AGE_GROUPS, canManage, can } from "./ui.js";
+import { $, esc, attempt, toast, canManage, can } from "./ui.js";
 import { openCalibreRemoval } from "./calibreremove.js";
 import { openBook } from "./bookdialog.js";
-import { pepperOptions, openPepperGuide } from "./peppers.js";
+import { openPepperGuide } from "./peppers.js";
 import { on } from "./modules.js";
-import { loadFlags, hideBoxes } from "./customflags.js";
-import { loadContent, hidePicker, bindHidePicker } from "./content.js";
+import { loadFlags } from "./customflags.js";
+import { loadContent, bindHidePicker } from "./content.js";
 import { setupSelect } from "./libraryselect.js";
 import { card, IN_QUEUE } from "./librarycard.js";
 import { eventShelf } from "./eventshelf.js";
@@ -15,7 +15,9 @@ import { liveCards } from "./livestatus.js";
 import { refreshActivity } from "./activity.js";
 import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
 import { shelfBanner } from "./collections.js";
-import { audioFilterHTML, audioSortHTML, audioParams } from "./libaudio.js";
+import { audioParams } from "./libaudio.js";
+import { filtersHTML, bindChips } from "./libfilters.js";
+import { combo } from "./combo.js";
 import { isBack, saveForm, restoreForm } from "./viewstate.js";
 
 const PAGE = 60;
@@ -31,77 +33,22 @@ export async function renderLibrary(view, state) {
   const collection = event ? "" : shelf.get("collection") || "";
   const season = collection || event ? "" : shelf.get("season") || "";
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
-  const opt = (v, label, n) => `<option value="${esc(v)}">${esc(label)}${n === undefined ? "" : ` (${n.toLocaleString()})`}</option>`;
   view.innerHTML = `
     ${event ? "" : seasonChipsHTML(shelves.seasons || [], season)}
     <div id="shelf-banner"></div>
-    <form id="filters" class="card mb-4 grid gap-3 md:grid-cols-4 xl:grid-cols-8">
-      <div class="flex gap-2 md:col-span-2">
-        <input name="q" type="search" placeholder="Search title, author, series or tag" class="input min-w-0 flex-1">
-        <button type="button" id="filters-toggle" class="btn-secondary filters-toggle" aria-expanded="false">Filters</button>
-      </div>
-      <select name="genre" class="input filter-more"><option value="">Any genre</option>${(facets.genres || []).map((g) => opt(g.key, g.label, g.count)).join("")}</select>
-      <select name="kind" class="input filter-more"><option value="">Fiction &amp; nonfiction</option>${(facets.kinds || []).filter((k) => k.count).map((k) => opt(k.key, k.label, k.count)).join("")}</select>
-      <input name="author" list="author-list" placeholder="Author" class="input filter-more" autocomplete="off">
-      <input name="series" list="series-list" placeholder="Series" class="input filter-more" autocomplete="off">
-      ${audioFilterHTML(facets)}
-      <datalist id="author-list">${(facets.authors || []).map((a) => `<option value="${esc(a)}"></option>`).join("")}</datalist>
-      <datalist id="series-list">${(facets.series || []).map((s) => `<option value="${esc(s)}"></option>`).join("")}</datalist>
-      <select name="catalog" class="input filter-more"><option value="">All libraries</option>${catOpts}</select>
-      <select name="overlap_with" class="input filter-more" title="Only books also in this library">
-        <option value="">…also in (overlap)</option>${catOpts}</select>
-      <select name="spice" class="input filter-more" title="Peppers: how much romance and sexual content">
-        <option value="">Any peppers</option>${pepperOptions(null)}
-        <option value="review">⚠ Needs review (the AI wasn't sure)</option>
-        <option value="old">Older rating (not on pepper scale)</option><option value="Pending">Not rated yet</option>
-        <option value="failed">Rating failed</option>
-      </select>
-      <select name="age" class="input filter-more${on(state.user, "parents") ? "" : " module-off"}" title="Books a parent rated for this age group or younger">
-        <option value="">Any age group</option>
-        ${AGE_GROUPS.map(([l, n, r]) => `<option value="${l}">Suitable for ${n} (${r})</option>`).join("")}
-        <option value="unset">Age group not set yet</option>
-      </select>
-      <select name="format" class="input filter-more" title="File format">
-        <option value="">Any format</option>
-        ${["epub", "azw3", "mobi", "kfx", "pdf"].map((f) => `<option value="${f}">${f.toUpperCase()}</option>`).join("")}
-        <option value="paper">📕 Paper books</option>
-        ${(facets.narrators || []).length ? `<option value="audio">🎧 Audiobooks</option>` : ""}
-        <option value="multi">2+ formats</option>
-        <option value="dupes">Duplicates</option>
-        <option value="none">No file</option>
-      </select>
-      <select name="sort" class="input filter-more">
-        ${event ? `<option value="list">Sort: The event's order</option>` : ""}
-        <option value="title">Sort: Title</option><option value="author">Sort: Author (last name)</option>
-        <option value="recent">Sort: Recently added</option><option value="mild">Sort: Fewest peppers</option>
-        ${audioSortHTML(facets)}
-      </select>
-      <div class="filter-more col-span-full"><span class="label" title="Books with these are hidden (unless a parent marked them OK)">Hide content</span>
-        ${hidePicker()}</div>
-      <div class="filter-more col-span-full flex flex-wrap items-center gap-x-5 gap-y-2">
-        <span class="label mb-0" title="Books with these are hidden (unless a parent marked them OK)">Hide:</span>
-        ${Object.entries(HIDE_LABELS).map(([k, v]) =>
-          `<label class="toggle"><input type="checkbox" name="hide" value="${k}"> ${esc(v)}</label>`).join("")}
-        ${hideBoxes()}
-        ${event ? `<label class="toggle"><input type="checkbox" name="not_owned"> Hide books we have</label>` : ""}
-        <label class="toggle"><input type="checkbox" name="multi"> Only books in 2+ libraries</label>
-        <label class="toggle" title="Books whose whole text was read by the AI"><input type="checkbox" name="deep"> 🧬 Deep Scanned only</label>
-        <button type="button" id="pepper-help" class="text-xs text-slate-400 underline">🌶️ What do the peppers mean?</button>
-        <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-500 underline">Missing a filter? Suggest one</a>
-        <span class="ml-auto flex flex-wrap gap-2">
-          ${can(state.user, "calibre") ? `<button type="button" id="remove-btn" class="btn-ghost text-xs">Remove hidden books from Calibre…</button>` : ""}
-          ${manager ? `<a href="#/duplicates" class="btn-ghost text-xs">Find duplicates</a>` : ""}
-          ${can(state.user, "calibre") ? `<a href="#/deletions" class="btn-ghost text-xs">Delete requests</a>` : ""}
-          ${manager ? `<button type="button" id="batch-btn" class="btn-secondary">Analyze next batch</button>` : ""}
-        </span>
-      </div>
-    </form>
+    ${filtersHTML({ facets, catOpts, event, state })}
     <div class="mb-3 flex items-center justify-between gap-2"><p id="result-count" class="text-sm text-slate-400"></p>
       <button type="button" id="select-toggle" class="btn-ghost py-1 text-sm" title="Pick several books to add to your Nightstand, Deep Scan or delete">☑ Select</button></div>
     <div id="grid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
     <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>`;
 
   const form = $("#filters", view);
+  combo(form.author, () => facets.authors);
+  combo(form.series, () => facets.series);
+  const redrawChips = bindChips(form);
+  form.addEventListener("click", (e) => {
+    if (e.target.closest(".fmenu-list")) e.target.closest("details").open = false; // pick an action, the menu closes
+  });
   const recent = recentSearches(form.q, () => load(true));
   if (!event) bindSeasonChips(view.querySelector("[data-season-chips]"));
   if (collection || season) shelfBanner($("#shelf-banner", view), { collection, season, seasons: shelves.seasons }, state, () => load(true));
@@ -224,6 +171,7 @@ export async function renderLibrary(view, state) {
   form.addEventListener("input", () => saveForm("library", form));
   form.addEventListener("change", () => saveForm("library", form));
   countFilters();
+  redrawChips();
   await load(true);
   // Parents see ratings arrive on the cards as the AI works.
   const stopLive = manager ? liveCards(grid, cardFor, () => sel.repaint()) : null;
