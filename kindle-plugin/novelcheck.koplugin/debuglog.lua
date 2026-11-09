@@ -130,6 +130,9 @@ return function(NovelCheck, ctx)
         put("connected settings: " .. tostring(self:isConnected()) .. ", server " .. tostring(self.settings:readSetting("server"))
             .. ", user " .. tostring(self.settings:readSetting("user")) .. ", backup " .. tostring(self.settings:readSetting("server_alt")))
         put("wifi: " .. tostring(NetworkMgr:isConnected()))
+        if self.syncCheck then
+            self:syncCheck(put)
+        end
         for _i, p in ipairs{ "/kosync/plugin/version", "/kosync/plugin/up-next", "/kosync/plugin/names" } do
             local code, body = self:request(p)
             put(p .. " -> " .. tostring(code) .. " " .. tostring(code == 200 and #body .. " bytes" or body))

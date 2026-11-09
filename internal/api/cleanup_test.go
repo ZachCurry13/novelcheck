@@ -47,3 +47,24 @@ func TestCleanupSummary(t *testing.T) {
 		t.Fatalf("admins only: %d", res.StatusCode)
 	}
 }
+
+// Books with no cover are counted, and the cover finder can be started by an admin.
+func TestMissingCovers(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	b, _ := st.UpsertBook("Coverless", "Nobody", "", "")
+	_ = st.AddCopy(cal, b, "/c/none/coverless.epub", "epub", "1")
+	_, out := admin.do("GET", "/api/admin/covers/missing", nil, false)
+	if out["count"] != float64(1) {
+		t.Fatalf("one book with no cover: %v", out)
+	}
+	if res, _ := admin.do("POST", "/api/admin/covers/find", map[string]string{}, true); res.StatusCode != 202 {
+		t.Fatalf("start: %d", res.StatusCode)
+	}
+	admin.do("POST", "/api/admin/users", map[string]any{"username": "kid", "password": "kidpass12"}, true)
+	kid := login(t, srv, "kid", "kidpass12")
+	if res, _ := kid.do("POST", "/api/admin/covers/find", map[string]string{}, true); res.StatusCode != 403 {
+		t.Fatalf("admins only: %d", res.StatusCode)
+	}
+}

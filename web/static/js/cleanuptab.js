@@ -1,7 +1,7 @@
 // Admin → Library cleanup: everything for keeping the library tidy in one place. The guided
 // cleanup (cleanup.js) runs the Calibre steps in order; below it each tool on its own, with
 // how much is waiting. The buttons marked data-act are handled by the Admin page.
-import { get } from "./api.js";
+import { get, post } from "./api.js";
 import { esc, attempt, fmtNum } from "./ui.js";
 import { mountCleanup } from "./cleanup.js";
 import { renderSameBooks } from "./samebooks.js";
@@ -19,7 +19,8 @@ export async function renderCleanupTab(host, state) {
     <div class="card space-y-2"><details id="cu-twice"><summary class="cursor-pointer font-semibold">👯 Books listed twice in NovelCheck (with the evidence)</summary>
       <div id="cu-twice-body" class="mt-2"></div></details></div></div>`;
   mountCleanup(host.querySelector("#cu-guided"));
-  const [s, c] = await Promise.all([attempt(() => get("/api/admin/status")), attempt(() => get("/api/admin/cleanup"))]);
+  const [s, c, cv] = await Promise.all([attempt(() => get("/api/admin/status")), attempt(() => get("/api/admin/cleanup")), attempt(() => get("/api/admin/covers/missing"))]);
+  const job = cv?.job || {};
   const g = s?.genres || {};
   host.querySelector("#cu-tools").innerHTML = [
     row("👯", "Books listed twice in NovelCheck", "The same book entered twice (for example on a list before the e-book arrived). Joining moves everything onto one entry.", c?.pairs, `<button type="button" data-cu="twice" class="btn-secondary py-1 text-sm">Review below</button>`),
@@ -28,6 +29,7 @@ export async function renderCleanupTab(host, state) {
     row("🗂️", "Formats", "Keep only the formats you choose (say EPUB), convert books with no EPUB, undo for 7 days.", c?.remove_files, `<button type="button" data-cu="formats" class="btn-secondary py-1 text-sm">Formats…</button>`),
     row("🔖", "Genres", "Library books Calibre has no tags for. They are filled in by the AI by themselves; this runs it now.", g.missing, g.running ? btn("genres-stop", "Stop") : btn("genres-fill", "Fill in now")),
     row("📦", "Box sets", "Several books in one file: check them and split them into their books.", s?.box_sets, btn("box-sets", "Check and split")),
+    row("🖼️", "Books with no cover", job.running ? `Looking now: ${job.checked} of ${job.total} checked, ${job.found} found${job.current ? ` · ${esc(job.current)}` : ""}.` : "Books Calibre has no cover for show a drawn one. This looks for the real cover in Open Library and Google Books in the background (it also runs once a day), and only uses one whose title matches.", cv?.count ?? null, job.running ? `<button type="button" data-cu="covers-stop" class="btn-secondary py-1 text-sm">Stop</button>` : `<button type="button" data-cu="covers-find" class="btn-secondary py-1 text-sm">Find covers now</button>`),
     row("🖼️", "Covers reported as wrong", "Covers your family flagged.", s?.cover_reports, btn("cover-reports", "Review")),
     row("🗑️", "Delete requests", "Books your family asked to remove.", s?.pending_deletes, link("#/deletions", "Review")),
     row("🔄", "Read the Calibre library now", "Re-reads Calibre so NovelCheck matches what is there (it also happens by itself).", null, btn("sync", "Read now")),
@@ -36,6 +38,9 @@ export async function renderCleanupTab(host, state) {
   host.onclick = async (e) => {
     const k = e.target.closest("[data-cu]")?.dataset.cu;
     if (k === "formats") import("./formats.js").then((m) => m.openFormats());
+    else if (k === "covers-find" || k === "covers-stop") {
+      if (await attempt(() => post(`/api/admin/covers/${k === "covers-find" ? "find" : "stop"}`), k === "covers-find" ? "Looking for covers in the background" : "Stopping")) renderCleanupTab(host, state);
+    }
     else if (k === "twice") {
       const d = host.querySelector("#cu-twice");
       d.open = true;

@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -18,6 +19,7 @@ import (
 
 const (
 	cacheTTL      = 45 * time.Second
+	discoverTTL   = 15 * time.Minute // Discover's lists change once a day
 	maxCacheBytes = 256 << 20
 )
 
@@ -85,6 +87,14 @@ func (c *capture) Write(p []byte) (int, error) {
 
 func (c *capture) Unwrap() http.ResponseWriter { return c.ResponseWriter }
 
+// ttlFor is how long a page's answer is kept: Discover's lists change daily, the others change as people use the app.
+func ttlFor(path string) time.Duration {
+	if strings.HasPrefix(path, "/api/discover") {
+		return discoverTTL
+	}
+	return cacheTTL
+}
+
 // cached keeps a GET page's answer in memory for a short while (see above).
 func (s *Server) cached(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +104,7 @@ func (s *Server) cached(next http.Handler) http.Handler {
 			return
 		}
 		key := strconv.FormatInt(u.ID, 10) + "|" + r.URL.RequestURI()
-		if e, ok := s.rcache.get(key, cacheTTL); ok {
+		if e, ok := s.rcache.get(key, ttlFor(r.URL.Path)); ok {
 			for k, v := range e.header {
 				w.Header()[k] = v
 			}

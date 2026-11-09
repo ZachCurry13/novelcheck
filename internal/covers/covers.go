@@ -27,6 +27,8 @@ const (
 type Cache struct {
 	Dir            string
 	OpenLibraryURL string // "" = covers.openlibrary.org (tests use a fake)
+	SearchURL      string // "" = openlibrary.org (its search)
+	GoogleURL      string // "" = www.googleapis.com (Google Books)
 }
 
 // Find returns the cover.jpg next to any of the book's Calibre files that

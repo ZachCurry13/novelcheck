@@ -27,7 +27,7 @@ type SameBook struct {
 	Series      string  `db:"series" json:"series"`
 	SeriesIndex float64 `db:"series_index" json:"series_index"`
 	ISBN        string  `db:"isbn" json:"isbn"`
-	Description string  `db:"description" json:"-"`
+	Description string  `db:"description" json:"description"`
 	Snippet     string  `db:"-" json:"snippet"`
 	Modified    string  `db:"modified" json:"modified"`       // when its newest file was last changed in Calibre
 	Added       string  `db:"added" json:"added"`             // when it was added to the library (Calibre's date when known, else when NovelCheck first saw it)
@@ -60,6 +60,7 @@ type sameRow struct {
 	full       string   // the whole title, boiled down
 	generic    []string // the title, and without an alternate or generic subtitle ("Or, ..." / "A Novel")
 	prefixes   []string // the part before any subtitle
+	suffixes   []string // what is left after a series name in front ("I Am Number Four: The Lost Files: The Last Days of Lorien" → "The Last Days of Lorien")
 }
 
 var subtitleSeps = []string{": ", " - ", " – ", " — "}
@@ -83,6 +84,9 @@ func (s *Store) sameRows() ([]*sameRow, error) {
 	}
 	out := make([]*sameRow, 0, len(rows))
 	for _, r := range rows {
+		if len(r.Description) > 1500 {
+			r.Description = strings.ToValidUTF8(r.Description[:1500], "") + "…"
+		}
 		r.Snippet = r.Description
 		if len(r.Snippet) > 180 {
 			r.Snippet = r.Snippet[:180] + "…"
@@ -101,6 +105,19 @@ func (s *Store) sameRows() ([]*sameRow, error) {
 				if b := boil(a); len(b) >= 4 {
 					sr.prefixes = append(sr.prefixes, b)
 				}
+			}
+		}
+		for _, sep := range subtitleSeps { // every position: "A: B: C" ends in "B: C" and in "C"
+			for from := 0; ; {
+				i := strings.Index(clean[from:], sep)
+				if i < 0 {
+					break
+				}
+				at := from + i + len(sep)
+				if b := boil(clean[at:]); len(b) >= 8 {
+					sr.suffixes = append(sr.suffixes, b)
+				}
+				from = at
 			}
 		}
 		out = append(out, sr)
@@ -180,6 +197,13 @@ func (s *Store) likelyPairs() ([]*judged, error) {
 		for _, p := range r.prefixes {
 			for _, o := range byFull[p] {
 				add(r, o, "subtitle")
+			}
+		}
+	}
+	for _, r := range rows { // "Series: Title" next to "Title": a series name put in front
+		for _, p := range r.suffixes {
+			for _, o := range byFull[p] {
+				add(r, o, "prefix")
 			}
 		}
 	}

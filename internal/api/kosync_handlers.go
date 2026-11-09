@@ -96,7 +96,16 @@ func (s *Server) handleKosyncPut(w http.ResponseWriter, r *http.Request) {
 		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "could not save"})
 		return
 	}
-	if book := s.kosyncBook(u.ID, p.Document); book > 0 && p.Percentage > 0 {
+	book := s.kosyncBook(u.ID, p.Document)
+	if book == 0 && p.Metadata != nil && strings.TrimSpace(p.Metadata.Title) != "" {
+		// A book NovelCheck never sent to this reader (so no fingerprint is known): the title and author
+		// KOReader sends say which library book it is. Remember the fingerprint so the next sync finds it at once.
+		if id := s.Store.MatchBook(p.Metadata.Title, p.Metadata.Authors); id > 0 && s.Store.Owned(id) {
+			book = id
+			s.Store.SetDocBook(p.Document, id)
+		}
+	}
+	if book > 0 && p.Percentage > 0 {
 		_, _ = s.Store.SyncReading(u.ID, book, p.Percentage >= store.FinishedAt)
 	}
 	kosyncJSON(w, http.StatusOK, map[string]any{"document": p.Document, "timestamp": p.Timestamp})

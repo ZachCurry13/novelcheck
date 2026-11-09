@@ -64,6 +64,17 @@ func (s *Server) afterFormatJob() {
 			log.Printf("calibre sync after format job failed: %v", err)
 		}
 	}
+	// The job ran in the background: say how it ended, so nobody has to watch the page.
+	st := s.formats.state()
+	if st.Kind == "" {
+		return
+	}
+	msg := fmt.Sprintf("%s finished: %s", strings.ToUpper(st.Kind[:1])+st.Kind[1:], st.Note)
+	if st.Failed > 0 {
+		s.Store.Notify("warning", "format-job", fmt.Sprintf("%s %d did not work; the reasons are in the bug report (Settings → Developer).", msg, st.Failed), "#/admin?tab=cleanup")
+		return
+	}
+	s.Store.NotifyRoutine("format-job", msg+" Next: Admin → Library cleanup.", "#/admin?tab=cleanup")
 }
 
 func mb(n int64) string { return strconv.FormatFloat(float64(n)/(1<<20), 'f', 1, 64) + " MB" }

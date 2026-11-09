@@ -140,8 +140,8 @@ export async function mountCleanup(host, close) {
     },
     convert: async (ids) => {
       if (!(await attempt(() => post("/api/admin/formats/convert", { book_ids: ids.map(Number) })))) return false;
-      failures(await job());
-      return true;
+      say(`Converting ${plural(ids.length, "book")} in the background. You can leave this page; NovelCheck sends a notice when it is done. Come back to review the next steps.`);
+      return "background";
     },
     dups: async (ids) => {
       const r = await attempt(() => post("/api/admin/calibre/duplicates/remove", { remove: ids }));
@@ -175,8 +175,8 @@ export async function mountCleanup(host, close) {
     status[id] = "⏳";
     paint();
     const ok = await steps[id](ids);
-    status[id] = ok ? "✅" : "⚠️";
-    if (id !== "pairs") await refresh();
+    status[id] = ok === "background" ? "⚙️" : ok ? "✅" : "⚠️";
+    if (id !== "pairs" && ok !== "background") await refresh();
     busy = false;
     await reload();
     return ok;
@@ -192,6 +192,11 @@ export async function mountCleanup(host, close) {
         if (!rows(c).find((r) => r.id === k).n) continue; // an earlier step already took care of it
         say(`Step: ${rows(c).find((r) => r.id === k).title}`);
         const ok = await run(k);
+        if (ok === "background") {
+          busy = false;
+          say("Stopped here on purpose: the next steps (extra copies, other formats) depend on the conversions, so review them once the notice says it is done.");
+          return;
+        }
         if (ok === "cancelled") {
           say("Stopped: you left this step out. Nothing after it was run.");
           return;

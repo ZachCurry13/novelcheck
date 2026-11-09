@@ -33,6 +33,7 @@ export async function renderAdmin(view, state) {
   view.innerHTML = `
     <h1 class="mb-3 text-2xl font-bold">${isAdmin ? "Admin Control Panel" : "Manage NovelCheck"}</h1>
     ${access}
+    <div id="job-banner" class="mb-2 hidden rounded-lg bg-sky-950/50 p-3 text-sm"></div>
     <div id="del-banner" class="mb-2 hidden rounded-lg bg-rose-950/50 p-3 text-sm"></div>
     <div id="deep-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
     <div id="titles-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
@@ -75,6 +76,7 @@ export async function renderAdmin(view, state) {
       </div>
     </section>`)}`;
 
+  if (can(u, "calibre")) import("./jobbanner.js").then((m) => m.watchJob($("#job-banner", view)));
   let cleanupLoaded = false;
   const show = (tab, push) => {
     current = tab;

@@ -48,6 +48,12 @@ func (s *Server) handleCover(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	// A cover the cover finder found (Open Library or Google Books), kept.
+	if src, srcInfo, ok := s.Covers.Stored(s.coverName(id)); ok {
+		if p, err := s.Covers.Thumb(src, srcInfo, width); err == nil && serve(p, srcInfo) {
+			return
+		}
+	}
 	// An audiobook: the cover Audiobookshelf has, kept after the first time.
 	if item := s.Store.AudioItemID(id); item != "" {
 		if src, srcInfo, found := s.audioCover(r.Context(), item); found {

@@ -57,6 +57,7 @@ type Server struct {
 	formats     formatJob     // format cleanup's background job
 	rcache      respCache     // short-lived copies of the heavy list pages (respcache.go)
 	later       laterSync     // Calibre re-reads after a save, in the background (synclater.go)
+	covers      coverJob      // the cover finder (coverfinder.go)
 	titleMu     sync.Mutex    // one title save at a time
 	dav         davState      // KOReader statistics folders
 	pins        pinTries      // wrong PINs on family devices

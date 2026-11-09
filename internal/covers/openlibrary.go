@@ -66,3 +66,13 @@ func (c Cache) fetch(ctx context.Context, url, out, miss string) (string, os.Fil
 	info, err := os.Stat(out)
 	return out, info, err == nil
 }
+
+// HasOpenLibrary says whether the Open Library cover for isbn is already kept here (no network).
+func (c Cache) HasOpenLibrary(isbn string) bool {
+	isbn = strings.ToUpper(strings.NewReplacer("-", "", " ", "").Replace(isbn))
+	if c.Dir == "" || !isbnRE.MatchString(isbn) {
+		return false
+	}
+	_, err := os.Stat(filepath.Join(c.Dir, "ol-"+isbn+".jpg"))
+	return err == nil
+}

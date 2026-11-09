@@ -1,9 +1,14 @@
 package covers
 
 import (
+	"bytes"
+	"context"
+	"fmt"
 	"image"
 	"image/color"
 	"image/jpeg"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,5 +64,36 @@ func TestPlaceholder(t *testing.T) {
 	svg := string(Placeholder("The Very Long Title of a Book <with> Brackets & Ampersands", "Someone"))
 	if !strings.HasPrefix(svg, "<svg") || !strings.Contains(svg, "&lt;with&gt;") || strings.Contains(svg, "<with>") {
 		t.Fatalf("escaped svg: %s", svg)
+	}
+}
+
+// The cover finder searches by title and author, and only keeps a result whose title is the book's.
+func TestSearchFindsMatchingCover(t *testing.T) {
+	img := bytes.Repeat([]byte{0xff}, 400)
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/search.json":
+			fmt.Fprint(w, `{"docs":[{"title":"Dune Messiah","author_name":["Frank Herbert"],"cover_i":111},{"title":"Dune","author_name":["Frank Herbert"],"cover_i":222}]}`)
+		case strings.HasPrefix(r.URL.Path, "/b/id/222-M.jpg"):
+			w.Header().Set("Content-Type", "image/jpeg")
+			w.Write(img)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer fake.Close()
+	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, GoogleURL: fake.URL}
+	p, _, ok := c.Search(context.Background(), "book-5", "Dune", "Frank Herbert")
+	if !ok || !strings.HasSuffix(p, "book-5.jpg") {
+		t.Fatalf("the Dune cover, not Dune Messiah's: %q %v", p, ok)
+	}
+	if _, _, ok := c.Search(context.Background(), "book-6", "Dune", "Someone Else"); ok {
+		t.Fatal("a different author's book is not used")
+	}
+	if _, _, ok := c.Search(context.Background(), "book-7", "A Book Nobody Wrote", "Frank Herbert"); ok {
+		t.Fatal("no matching title, no cover")
+	}
+	if _, err := os.Stat(filepath.Join(c.Dir, "book-7.jpg.none")); err != nil {
+		t.Fatal("a miss is remembered")
 	}
 }

@@ -215,3 +215,27 @@ func TestSameBooksKeepChoice(t *testing.T) {
 		t.Fatal("the Calibre copy stays with the joined book")
 	}
 }
+
+// A series name put in front of a title ("I Am Number Four: The Lost Files: The Last Days of Lorien" and
+// "The Last Days of Lorien", one from Hardcover and one from KOReader) is found, and called likely.
+func TestSameBooksSeriesNameInFront(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	look, _ := st.EnsureCatalog(store.LookedUpCatalog, "custom")
+	for _, b := range [][2]string{
+		{"I Am Number Four: The Lost Files: The Last Days of Lorien", "Pittacus Lore"},
+		{"The Last Days of Lorien", "Pittacus Lore"},
+		{"I Am Number Four : The Lost Files Six's Legacy", "Pittacus Lore"},
+	} {
+		id, _ := st.UpsertBook(b[0], b[1], "", "")
+		_ = st.AddCopy(look, id, "lookup:"+b[0], "list", "")
+	}
+	_, out := admin.do("GET", "/api/admin/same-books", nil, false)
+	pairs, _ := out["pairs"].([]any)
+	if len(pairs) != 1 {
+		t.Fatalf("only the two Last Days entries are the same book: %v", out)
+	}
+	if c := pairs[0].(map[string]any)["confidence"]; c != "likely" {
+		t.Fatalf("the whole shorter title at the end of the longer, same author: %v", c)
+	}
+}

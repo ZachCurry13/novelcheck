@@ -33,7 +33,7 @@ const side = (b, which, p) => `<div class="flex min-w-0 flex-1 gap-3 rounded-lg 
     <div class="w-14 shrink-0">${coverImg(b.id, "h-20 w-14")}</div><div class="min-w-0 flex-1 space-y-1">
     <p class="break-words"><button type="button" data-open="${b.id}" class="text-left font-semibold underline decoration-dotted" title="Open this book to look at it">${esc(b.title)}</button></p><p class="text-slate-400">${esc(b.author || "No author")}</p>${series(b)}
     ${b.isbn ? `<p class="text-xs text-slate-500">ISBN ${esc(b.isbn)}</p>` : ""}
-    ${b.snippet ? `<p class="text-xs italic text-slate-400">${esc(b.snippet)}</p>` : `<p class="text-xs text-slate-600">No description</p>`}
+    ${b.description ? `<details class="text-xs text-slate-400"><summary class="cursor-pointer italic">${esc(b.snippet)} <span class="not-italic underline">Read it all</span></summary><p class="mt-1 whitespace-pre-line">${esc(b.description.slice(0, 1500))}</p></details>` : `<p class="text-xs text-slate-600">No description</p>`}
     <p class="flex flex-wrap gap-1 text-xs">${b.owned ? `<span class="chip-none">In a library</span>` : `<span class="chip-pending">Not in a library</span>`}
       ${b.formats ? b.formats.split(",").map((f) => `<span class="chip-fmt">${esc(f)}</span>`).join(" ") : ""}</p>
     <p class="text-xs text-slate-400">${b.added ? `${b.added_exact ? "Added to the library" : "First seen by NovelCheck"} ${esc(day(b.added))}` : "Not added to a library"}${b.modified ? ` · file changed in Calibre ${esc(day(b.modified))}` : ""}${b.size ? ` · file ${size(b.size)}` : ""}${b.readers ? ` · on ${b.readers} Nightstand${b.readers === 1 ? "" : "s"}` : ""}${b.wanted ? ` · ${b.wanted} wanting it` : ""}</p>

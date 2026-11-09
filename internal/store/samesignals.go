@@ -136,11 +136,11 @@ func (s *Store) judge(a, b *sameRow, kind string) *judged {
 		switch {
 		case sim >= 0.5:
 			descSame = true
-			good(fmt.Sprintf("The descriptions say the same thing (%d%% shared wording)", int(sim*100)))
+			good(fmt.Sprintf("The descriptions say much the same thing (%d%% of the shorter one's words are in the other too)", int(sim*100)))
 		case sim < 0.1 && !isbn:
 			return nil // two blurbs about different things
 		default:
-			warn(fmt.Sprintf("The descriptions are only partly alike (%d%% shared wording)", int(sim*100)))
+			warn(fmt.Sprintf("The descriptions overlap only partly (%d%% of the shorter one's words are in the other too; 50%% or more usually means the same book, under 10%% rules it out, so this tells you little: read both)", int(sim*100)))
 		}
 	case da || db:
 		warn("Only one of them has a description to compare")
@@ -151,9 +151,12 @@ func (s *Store) judge(a, b *sameRow, kind string) *judged {
 	if len(b.Title) > len(a.Title) {
 		longer = b
 	}
-	if kind == "exact" {
+	switch kind {
+	case "exact":
 		good("Same title once tidied")
-	} else {
+	case "prefix":
+		warn("One title has a series name in front of the other: “" + longer.Title + "”")
+	default:
 		warn("One title has an extra part: “" + longer.Title + "”")
 	}
 	conf := "check"
@@ -162,6 +165,8 @@ func (s *Store) judge(a, b *sameRow, kind string) *judged {
 		conf = "sure"
 	case different:
 		conf = "check" // something says they are two books: a person looks
+	case kind == "prefix" && a.haveAuthor && b.haveAuthor && min(len(a.full), len(b.full)) >= 12:
+		conf = "likely" // the same author, and the whole shorter title sits at the end of the longer
 	case kind == "exact":
 		conf = "sure"
 	case descSame || seriesSame:

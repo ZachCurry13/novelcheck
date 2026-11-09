@@ -56,6 +56,15 @@ type KosyncProgress struct {
 	Device     string  `db:"device" json:"device"`
 	DeviceID   string  `db:"device_id" json:"device_id"`
 	Timestamp  int64   `db:"updated_at" json:"timestamp"`
+	// What KOReader (2026.07 and later) can send with progress when "Send document metadata" is on.
+	Metadata *KosyncMeta `db:"-" json:"metadata,omitempty"`
+}
+
+// KosyncMeta is the book's own title and author, sent beside the fingerprint.
+type KosyncMeta struct {
+	Filename string `json:"filename"`
+	Title    string `json:"title"`
+	Authors  string `json:"authors"`
 }
 
 // SaveKosync keeps a reader's place in a document.

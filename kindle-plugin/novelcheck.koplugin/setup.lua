@@ -36,6 +36,7 @@ return function(NovelCheck, ctx)
             s.username = user
             s.userkey = key
             s.auto_sync = true
+            s.send_metadata = true -- KOReader 2026.07+: send the book's title and author, so NovelCheck knows books it never sent
         end
         local live = self.ui and self.ui.kosync
         if live and type(live.settings) == "table" then
