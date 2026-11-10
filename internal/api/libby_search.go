@@ -10,12 +10,17 @@ import (
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/libby"
+	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
 // handleLibbySearch: GET /api/libby/search?q=… looks the words up at each of the person's libraries (e-books and
 // audiobooks) whether or not NovelCheck has the book, and merges the answers: one row per book, the best
 // answer for each kind. Adding one to the Nightstand is POST /api/libby/add, then POST /api/queue.
 func (s *Server) handleLibbySearch(w http.ResponseWriter, r *http.Request) {
+	if auth.UserFrom(r).Role == store.RoleRestricted { // kids' accounts see only rated books a parent allows
+		writeErr(w, http.StatusForbidden, "not available on this account")
+		return
+	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	libs := s.Store.LibbyLibraries(auth.UserFrom(r).ID)
 	if len(libs) == 0 {
@@ -97,6 +102,10 @@ func (s *Server) handleLibbySearch(w http.ResponseWriter, r *http.Request) {
 // handleLibbyAdd: POST /api/libby/add {"title","author","cover"} makes a book of a search result and returns
 // its id (the page then puts it on the Nightstand with POST /api/queue).
 func (s *Server) handleLibbyAdd(w http.ResponseWriter, r *http.Request) {
+	if auth.UserFrom(r).Role == store.RoleRestricted {
+		writeErr(w, http.StatusForbidden, "not available on this account")
+		return
+	}
 	var body struct {
 		Title  string `json:"title"`
 		Author string `json:"author"`

@@ -95,7 +95,7 @@ func (s *Server) checkABS(ctx context.Context, o *checkOut) {
 		o.line("not set up")
 		return
 	}
-	if resp, err := http.Get(c.Base + "/status"); err == nil {
+	if resp, err := (&http.Client{Timeout: 10 * time.Second}).Get(c.Base + "/status"); err == nil {
 		resp.Body.Close()
 		o.line("reachable at %s (status %d)", c.Base, resp.StatusCode)
 	} else {
@@ -146,7 +146,7 @@ func (s *Server) checkCalibreWeb(ctx context.Context, o *checkOut) {
 		return
 	}
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, base+"/login", nil)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := (&http.Client{Timeout: 10 * time.Second}).Do(req)
 	if err != nil {
 		o.line("can't reach %s: %v", base, err)
 		return

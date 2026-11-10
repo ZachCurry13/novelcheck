@@ -73,7 +73,10 @@ func (s *Server) handleLibbyCover(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req, _ := http.NewRequestWithContext(r.Context(), http.MethodGet, u.String(), nil)
-	resp, err := (&http.Client{Timeout: 10 * time.Second}).Do(req)
+	hc := &http.Client{Timeout: 10 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse // a redirect could point anywhere, also inside the home network: not followed
+	}}
+	resp, err := hc.Do(req)
 	if err != nil {
 		http.Error(w, "cover unavailable", http.StatusBadGateway)
 		return

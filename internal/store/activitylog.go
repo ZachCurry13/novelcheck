@@ -71,7 +71,7 @@ type activityRow struct {
 // and written in one go every second, so recording cannot slow a request down (NovelCheck has one database
 // connection, and every request waits its turn for it).
 func (s *Store) AddActivity(t time.Time, user, source, kind, detail string) {
-	if t.IsZero() || t.After(time.Now().Add(time.Minute)) {
+	if t.IsZero() || t.Year() < 2020 || t.After(time.Now().Add(time.Minute)) {
 		t = time.Now()
 	}
 	detail = strings.TrimSpace(detail)

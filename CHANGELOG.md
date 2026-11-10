@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.62.1]
+
+### 🔒 Security and upkeep
+- **Updated `golang.org/x/net` to 0.62.0** (fixes two known vulnerabilities) and `x/crypto` to 0.58.0.
+- **Debug recording never keeps secrets from an address:** the token in an OPDS address and values named token, code, key or password are replaced before a line is stored (the recording is part of the bug-report link).
+- **Kids' accounts can't search the libraries or add books through Libby search** (the buttons were already hidden; the server now refuses too).
+- **The Libby cover pass-through doesn't follow redirects**, so it can only ever fetch from OverDrive's own picture addresses.
+- **Check my servers can't hang** on a server that doesn't answer (10 second limit), and a recorded line with no usable time is stamped now rather than 1970.
+
 ## [1.62.0]
 
 ### ⚡ Speed

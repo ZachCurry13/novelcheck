@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -71,11 +72,7 @@ func (s *Server) noteActivity(r *http.Request, status int, took time.Duration) {
 	if !(strings.HasPrefix(p, "/api/") || strings.HasPrefix(p, "/opds") || strings.HasPrefix(p, "/dav") || strings.HasPrefix(p, "/kosync")) {
 		return
 	}
-	q := ""
-	if r.URL.RawQuery != "" {
-		q = "?" + r.URL.RawQuery
-	}
-	s.Store.AddActivity(time.Time{}, r.Header.Get("x-auth-user"), "server", "net", fmt.Sprintf("%s %s%s -> %d (%d ms)", r.Method, p, q, status, took.Milliseconds()))
+	s.Store.AddActivity(time.Time{}, r.Header.Get("x-auth-user"), "server", "net", fmt.Sprintf("%s %s -> %d (%d ms)", r.Method, safeAddress(r.URL), status, took.Milliseconds()))
 }
 
 // handleActivityStart: PUT /api/admin/activity {"minutes": 5|15|60|0}: on for that long, or off.
@@ -147,4 +144,27 @@ func (s *Server) activitySection(line func(string, ...any)) {
 		return
 	}
 	line("%s", txt)
+}
+
+// safeAddress is a request's path and query with anything secret taken out: the token in an OPDS address
+// (/opds/<token>/…) and query values whose name says token, code, key, password, secret or signature.
+func safeAddress(u *url.URL) string {
+	p := u.Path
+	if parts := strings.Split(p, "/"); len(parts) > 2 && parts[1] == "opds" && parts[2] != "book" && parts[2] != "" {
+		parts[2] = "(token)"
+		p = strings.Join(parts, "/")
+	}
+	if u.RawQuery == "" {
+		return p
+	}
+	q := u.Query()
+	for name := range q {
+		l := strings.ToLower(name)
+		for _, bad := range []string{"token", "code", "key", "pass", "secret", "sig", "auth"} {
+			if strings.Contains(l, bad) {
+				q.Set(name, "(hidden)")
+			}
+		}
+	}
+	return p + "?" + q.Encode()
 }
