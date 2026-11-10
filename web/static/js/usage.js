@@ -1,5 +1,6 @@
 // Admin → Usage: NovelCheck's CPU, memory, network and disk, recent history
 // charts, AI token use, library progress, and what Ollama has loaded.
+import { once } from "./inflight.js";
 import { adminNavHTML } from "./adminnav.js";
 import { get } from "./api.js";
 import { $, esc } from "./ui.js";
@@ -129,6 +130,6 @@ export async function renderUsage(view) {
 
   await refresh();
   renderErrors($("#errors", view), true);
-  const timer = setInterval(refresh, 5000);
+  const timer = setInterval(once(refresh), 5000);
   return () => clearInterval(timer);
 }

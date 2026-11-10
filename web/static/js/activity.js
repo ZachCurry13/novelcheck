@@ -4,19 +4,20 @@
 // and an "nc:activity" event that pages with live status listen to.
 import { get } from "./api.js";
 import { canManage } from "./ui.js";
+import { once } from "./inflight.js";
 
 const EVERY = 10000;
 let timer = null;
 let listening = false;
 let allowed = false;
 
-async function tick() {
+const tick = once(async () => {
   if (!allowed || document.visibilityState !== "visible" || document.getElementById("app-view")?.classList.contains("hidden")) return; // signed out
   const a = await get("/api/activity").catch(() => null);
   if (!a) return;
   paint(document.getElementById("activity-pill"), a);
   window.dispatchEvent(new CustomEvent("nc:activity", { detail: a }));
-}
+});
 
 export function initActivity(state) {
   clearInterval(timer);

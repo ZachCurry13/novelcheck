@@ -50,7 +50,7 @@ func (s *Server) handleActivityEvents(w http.ResponseWriter, r *http.Request) {
 		}
 		kind := e.Kind
 		switch kind {
-		case "page", "tap", "input", "net", "error":
+		case "page", "tap", "input", "net", "error", "shown", "shown-error":
 		default:
 			kind = "note"
 		}

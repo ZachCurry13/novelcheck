@@ -62,7 +62,14 @@ func (s *Store) StartActivity(minutes int) (int64, error) {
 	return until, s.SetSetting(keyActivityUntil, strconv.FormatInt(until, 10))
 }
 
-// AddActivity keeps one line (when t is zero, now).
+type activityRow struct {
+	at                         time.Time
+	user, source, kind, detail string
+}
+
+// AddActivity notes one line (when t is zero, now). It never waits for the database: lines are kept in memory
+// and written in one go every second, so recording cannot slow a request down (NovelCheck has one database
+// connection, and every request waits its turn for it).
 func (s *Store) AddActivity(t time.Time, user, source, kind, detail string) {
 	if t.IsZero() || t.After(time.Now().Add(time.Minute)) {
 		t = time.Now()
@@ -71,9 +78,42 @@ func (s *Store) AddActivity(t time.Time, user, source, kind, detail string) {
 	if len(detail) > 600 {
 		detail = detail[:600] + "…"
 	}
-	_, _ = s.DB.Exec(`INSERT INTO activity_log (at, username, source, kind, detail) VALUES (?, ?, ?, ?, ?)`,
-		t.UTC().Format("2006-01-02 15:04:05.000"), user, source, kind, detail)
-	if activityAdds.Add(1)%200 == 0 { // now and then: a week, and the newest 20,000
+	s.actOnce.Do(func() {
+		go func() {
+			for range time.Tick(time.Second) {
+				s.flushActivity()
+			}
+		}()
+	})
+	s.actMu.Lock()
+	if len(s.actPending) >= 5000 { // the database is far behind: drop the oldest rather than grow
+		s.actPending = s.actPending[1:]
+	}
+	s.actPending = append(s.actPending, activityRow{t, user, source, kind, detail})
+	s.actMu.Unlock()
+}
+
+// flushActivity writes the waiting lines in one transaction.
+func (s *Store) flushActivity() {
+	s.actMu.Lock()
+	rows := s.actPending
+	s.actPending = nil
+	s.actMu.Unlock()
+	if len(rows) == 0 {
+		return
+	}
+	tx, err := s.DB.Beginx()
+	if err != nil {
+		return
+	}
+	for _, r := range rows {
+		_, _ = tx.Exec(`INSERT INTO activity_log (at, username, source, kind, detail) VALUES (?, ?, ?, ?, ?)`,
+			r.at.UTC().Format("2006-01-02 15:04:05.000"), r.user, r.source, r.kind, r.detail)
+	}
+	if tx.Commit() != nil {
+		return
+	}
+	if activityAdds.Add(int64(len(rows)))%200 < int64(len(rows)) { // now and then: a week, and the newest 20,000
 		_, _ = s.DB.Exec(`DELETE FROM activity_log WHERE at < ? OR id <= (SELECT MAX(id) - ? FROM activity_log)`,
 			time.Now().Add(-7*24*time.Hour).UTC().Format("2006-01-02 15:04:05.000"), maxActivityRows)
 	}
@@ -81,6 +121,7 @@ func (s *Store) AddActivity(t time.Time, user, source, kind, detail string) {
 
 // ActivityLog returns the newest n lines, oldest first.
 func (s *Store) ActivityLog(n int) []ActivityEvent {
+	s.flushActivity()
 	out := []ActivityEvent{}
 	_ = s.DB.Select(&out, `SELECT id, at, username, source, kind, detail FROM (SELECT * FROM activity_log ORDER BY at DESC, id DESC LIMIT ?) ORDER BY at, id`, n)
 	return out
@@ -88,6 +129,9 @@ func (s *Store) ActivityLog(n int) []ActivityEvent {
 
 // ClearActivity deletes every recorded line.
 func (s *Store) ClearActivity() error {
+	s.actMu.Lock()
+	s.actPending = nil
+	s.actMu.Unlock()
 	_, err := s.DB.Exec(`DELETE FROM activity_log`)
 	return err
 }

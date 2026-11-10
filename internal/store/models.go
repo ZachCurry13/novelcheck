@@ -17,6 +17,10 @@ type Store struct {
 
 	rematchedAt sync.Map // user id -> when their unmatched books were last re-checked (rematch.go)
 
+	actMu      sync.Mutex // debug recording: lines waiting to be written (activitylog.go)
+	actPending []activityRow
+	actOnce    sync.Once
+
 	seasonMu sync.Mutex
 	seasonAt map[string]seasonStamp // when each shelf's season_books was made
 }

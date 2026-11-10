@@ -1,4 +1,5 @@
 // Admin → Delivery & Services → Remote access: built-in Cloudflare Tunnel settings and status.
+import { once } from "./inflight.js";
 import { copyBar, bindCopy, setLogText } from "./copy.js";
 import { get, put } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";
@@ -79,9 +80,9 @@ export async function renderRemoteAccess(host) {
     show(st, data.hostname);
   });
 
-  const timer = setInterval(async () => {
+  const timer = setInterval(once(async () => {
     const d = await get("/api/admin/tunnel").catch(() => null);
     if (d) show(d.status, d.hostname);
-  }, 4000);
+  }), 4000);
   return () => clearInterval(timer);
 }

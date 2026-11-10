@@ -18,6 +18,10 @@ becomes the release notes for that version and is shown in the app under
 ### 🛏️ Nightstand
 - **⏸ Back to Nightstand** on a book you are reading: puts it at the top of your want-to-read list without removing it. Your place in the book is kept, so starting it again carries on. (Remove still takes it off the Nightstand altogether.)
 
+### ⚡ Speed
+- **Fixed the slowdown while Debug recording was on, and a source of slowness without it.** NovelCheck answers one database request at a time, and two things stacked up behind each other: recording wrote to the database inside every request (it now keeps lines in memory and writes them together once a second), and pages that check for news every few seconds (the AI activity pill, the Admin and Usage pages, Remote access) asked again before the last answer had come back (they now wait for it).
+- **Debug recording also keeps what the app showed you** (messages such as "3 tidied" or an error), so a timeline says how an action ended.
+
 ## [1.57.0]
 
 ### ⏺ Debug recording (Settings → Developer, admins)

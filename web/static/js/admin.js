@@ -2,6 +2,7 @@
 // Services, System & Toggles. Editors see the first two, without technical
 // settings, secrets, backups or the destructive queue wipe. Admins other than
 // the main admin see what their areas cover (the main admin gives areas).
+import { once } from "./inflight.js";
 import { get, post, qs } from "./api.js";
 import { $, $$, esc, attempt, toast, fmtNum, fmtMoney, can } from "./ui.js";
 import { renderUsers } from "./users.js";
@@ -168,7 +169,8 @@ export async function renderAdmin(view, state) {
     if (here("#calibre-server")) renderCalibreServer(here("#calibre-server"));
     if (here("#remote-access")) stopRemote = await renderRemoteAccess(here("#remote-access"));
   }
-  const timer = setInterval(refresh, 5000);
+  const poll = once(refresh); // a slow answer must not stack more behind it
+  const timer = setInterval(poll, 5000);
   await renderUsers($("#users", view), state.user);
   return () => {
     clearInterval(timer);

@@ -2,6 +2,7 @@
 import { pepperChip } from "./peppers.js";
 import { copyText } from "./copy.js";
 import { diagnoseLater } from "./diagnose.js";
+import { note } from "./debugrec.js";
 
 export function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, (c) => ({
@@ -20,6 +21,7 @@ let toastTimer;
 // before you read them) and every message is kept in messageLog. link, if
 // given ({label, href}), adds a link such as "View Nightstand".
 export function toast(msg, isError = false, link = null) {
+  note(isError ? "shown-error" : "shown", msg); // what the app told the person (kept by Debug recording)
   const t = $("#toast");
   t.replaceChildren();
   const text = document.createElement("span");
