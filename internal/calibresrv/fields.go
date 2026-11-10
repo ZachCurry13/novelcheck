@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -104,4 +106,29 @@ func (c *Client) SetFields(ctx context.Context, id int, fields [][]any) (found b
 		return false, err
 	}
 	return len(raw) > 0 && string(raw) != "null", nil
+}
+
+// AddBook uploads a book file to calibre (like Add books in calibre): duplicates are refused, not added twice.
+// It returns the new book's number. UNVERIFIED against a real calibre: see Admin → Check my servers.
+func (c *Client) AddBook(ctx context.Context, filename string, data []byte) (int, error) {
+	lib := c.Library
+	if lib == "" {
+		_, def, err := c.Libraries(ctx)
+		if err != nil {
+			return 0, err
+		}
+		lib = def
+	}
+	path := "/cdb/add-book/0/n/" + url.PathEscape(filename) + "/" + url.PathEscape(lib)
+	raw, err := c.doType(ctx, http.MethodPost, path, data, "application/octet-stream")
+	if err != nil {
+		return 0, err
+	}
+	var out struct {
+		BookID int `json:"book_id"`
+	}
+	if json.Unmarshal(raw, &out) != nil || out.BookID == 0 {
+		return 0, errors.New("calibre didn't say which book it made (it may have refused a duplicate)")
+	}
+	return out.BookID, nil
 }

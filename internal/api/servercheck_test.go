@@ -22,7 +22,7 @@ func TestServerChecks(t *testing.T) {
 
 	_, out := admin.do("POST", "/api/admin/server-checks", nil, true)
 	text, _ := out["text"].(string)
-	for _, want := range []string{"libraries it serves: books = “books”", "reading a book's details: works", "route for adding a book (upload): not available", "== Audiobookshelf ==\nnot set up"} {
+	for _, want := range []string{"libraries it serves: books = “books”", "reading a book's details: works", "route for setting a cover: not available", "== Audiobookshelf ==\nnot set up"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("missing %q in:\n%s", want, text)
 		}

@@ -6,6 +6,7 @@ import { esc, attempt, fmtNum } from "./ui.js";
 import { mountCleanup } from "./cleanup.js";
 import { renderSameBooks } from "./samebooks.js";
 import { renderHCClean } from "./hcclean.js";
+import { renderUpload } from "./uploadbooks.js";
 
 const row = (icon, title, note, count, action) => `<li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-800/60 p-3">
   <div class="min-w-0 flex-1"><p class="font-semibold">${icon} ${esc(title)}${count === null ? "" : count ? ` <span class="rounded-full bg-amber-900/60 px-2 text-xs text-amber-200">${fmtNum(count)}</span>` : ` <span class="text-xs text-emerald-400">✓ nothing waiting</span>`}</p>
@@ -20,7 +21,9 @@ export async function renderCleanupTab(host, state) {
     <div class="card space-y-2"><details id="cu-twice"><summary class="cursor-pointer font-semibold">👯 Books listed twice in NovelCheck (with the evidence)</summary>
       <div id="cu-twice-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-hc"><summary class="cursor-pointer font-semibold">📚 Fix Calibre details from Hardcover (series, titles, authors, ISBN, descriptions, genres)</summary>
-      <div id="cu-hc-body" class="mt-2"></div></details></div></div>`;
+      <div id="cu-hc-body" class="mt-2"></div></details></div>
+    <div class="card space-y-2"><details id="cu-up"><summary class="cursor-pointer font-semibold">⬆️ Upload e-books to Calibre and audiobooks to Audiobookshelf (experimental)</summary>
+      <div id="cu-up-body" class="mt-2"></div></details></div></div>`;
   mountCleanup(host.querySelector("#cu-guided"));
   const [s, c, cv] = await Promise.all([attempt(() => get("/api/admin/status")), attempt(() => get("/api/admin/cleanup")), attempt(() => get("/api/admin/covers/missing"))]);
   const job = cv?.job || {};
@@ -50,6 +53,13 @@ export async function renderCleanupTab(host, state) {
       d.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
+  host.querySelector("#cu-up").addEventListener("toggle", (e) => {
+    const body = host.querySelector("#cu-up-body");
+    if (e.target.open && !body.dataset.done) {
+      body.dataset.done = "1";
+      renderUpload(body);
+    }
+  });
   host.querySelector("#cu-hc").addEventListener("toggle", (e) => {
     const body = host.querySelector("#cu-hc-body");
     if (e.target.open && !body.dataset.done) {

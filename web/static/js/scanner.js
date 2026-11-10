@@ -12,7 +12,7 @@ const supportsPicker = typeof window.showDirectoryPicker === "function";
 
 export async function renderImport(view, state) {
   // Libraries this person may add to: their own (and, for editors, the family's).
-  const catalogs = ((await attempt(() => get("/api/catalogs"))) || []).filter((c) => canEditLibrary(c, state.user));
+  const catalogs = ((await attempt(() => get("/api/catalogs"))) || []).filter((c) => canEditLibrary(c, state.user) && !c.physical && c.source !== "calibre"); // paper shelves and Calibre take no imports
   view.innerHTML = `
     <h1 class="mb-1 text-2xl font-bold">Import books</h1>
     <p class="mb-6 text-sm text-slate-400">Plug in a Kindle or e-reader and pick its <code>documents</code> folder, or,

@@ -4,6 +4,21 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.62.0]
+
+### ⚡ Speed
+- **A few database connections instead of one.** NovelCheck answered one database request at a time, so one slow request held up every page (the minute-long waits in your bug report). Reads now go on while a write happens, and writes still queue (up to 30 s) rather than fail. If it ever misbehaves, set `NOVELCHECK_DB_CONNS=1` to go back to one.
+
+### 📷 Check a book
+- **Photos no longer time out.** A photo that takes the AI longer than the remote address allows (100 s, the "524" error) is now read in the background: the page asks for the answer every couple of seconds and shows it when it is ready.
+
+### 🔌 Check my servers, and uploads
+- **Settings → Developer → Check my servers** (admins): harmless read-only questions to Calibre, Audiobookshelf and Calibre-Web: library names, whether NovelCheck's books are in the library Calibre serves, which features each has, what the Audiobookshelf token may do. The answer is part of the server report, so a bug report link carries it.
+- **Upload (experimental), Admin → Library cleanup:** e-books (epub, pdf, mobi, azw3…) go into Calibre through its Content server and are read back to check they arrived; an audiobook (its files, a title, author, library and folder) is streamed to Audiobookshelf. Nothing is sent until you confirm the list. Run Check my servers first. The remote address refuses more than 100 MB a time, so send big audiobooks from the home network.
+
+### 🔧 Smaller
+- **Importing a list** no longer offers paper-book shelves or Calibre as the place to put it (that was what the "paper-book library" error was about).
+
 ## [1.61.0]
 
 ### 📚 Fix the Calibre library from Hardcover (Admin → Library cleanup)

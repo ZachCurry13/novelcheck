@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -16,9 +17,10 @@ import (
 
 // A Calibre with one untidy book, answering the way the Content server does for `list` and `set_metadata`.
 type fakeCalibreDetails struct {
-	mu   sync.Mutex
-	book map[string]any // field -> value
-	sets [][]any
+	mu      sync.Mutex
+	book    map[string]any // field -> value
+	sets    [][]any
+	uploads []string // add-book requests: path and size
 }
 
 func (f *fakeCalibreDetails) serve(t *testing.T) *httptest.Server {
@@ -26,6 +28,11 @@ func (f *fakeCalibreDetails) serve(t *testing.T) *httptest.Server {
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		raw, _ := io.ReadAll(r.Body)
+		if strings.HasPrefix(r.URL.Path, "/cdb/add-book/") {
+			f.uploads = append(f.uploads, r.URL.Path+" "+r.Header.Get("Content-Type")+" "+strconv.Itoa(len(raw)))
+			io.WriteString(w, `{"book_id": 5, "title": "Cinder"}`)
+			return
+		}
 		switch r.URL.Path {
 		case "/ajax/library-info":
 			io.WriteString(w, `{"library_map":{"books":"books"},"default_library":"books"}`)
