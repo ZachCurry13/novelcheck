@@ -28,12 +28,12 @@ function dialog() {
 const rows = (c) => [
   { id: "pairs", n: c.pairs, title: "Join duplicates in NovelCheck", note: `${plural(c.pairs, "possible pair")}. Do this first, by hand: you pick what is the same book.`, btn: "Review…" },
   { id: "titles", n: c.titles, title: "Tidy titles in Calibre", note: `${plural(c.titles, "title")} with track or series numbers.`, btn: "Review…" },
-  { id: "convert", n: c.convert, title: "Convert to EPUB", note: `${plural(c.convert, "book")} with no EPUB. Calibre converts them one at a time; the originals stay until the last step.`, btn: "Review…" },
+  { id: "convert", n: c.convert, title: "Convert to EPUB", note: `${plural(c.convert, "book")} with no EPUB. Calibre converts them one at a time; the originals stay until the last step.${c.convert_failed ? ` ${plural(c.convert_failed, "book")} did not convert before: see why, or leave them as they are, under Each tool → Formats….` : ""}`, btn: "Review…" },
   { id: "dups", n: c.dup_count, title: "Remove extra Calibre copies of a book", note: `${plural(c.dup_count, "extra entry", "extra entries")}: the same book in Calibre more than once. Each book keeps its best copy (EPUB first); the rest go to Calibre's recycle bin.`, btn: "Review…" },
   { id: "formats", n: c.remove_files, title: "Remove other formats where an EPUB exists", note: `${plural(c.remove_files, "file")} (${gb(c.remove_bytes)}). Undo for 7 days under Formats….`, btn: "Review…" },
 ];
 
-const fmts = (e) => (e?.files || []).map((f) => f.format.toUpperCase()).join(", ") || "no files";
+const fmts = (e) => (e?.files || []).map((f) => `${f.format.toUpperCase()}${f.size ? ` ${gb(f.size)}` : ""}`).join(", ") || "no files";
 
 // What each step shows in its review window, and what it does with what stays ticked.
 const reviews = {
@@ -57,16 +57,16 @@ const reviews = {
     for (const g of r.groups || []) {
       const keep = g.entries.find((e) => e.calibre_id === g.keep);
       for (const e of g.entries) {
-        if (e.calibre_id !== g.keep) items.push({ id: e.calibre_id, label: g.title, detail: `${g.author || ""} · removes Calibre #${e.calibre_id} (${fmts(e)}) · keeps #${g.keep} (${fmts(keep)})` });
+        if (e.calibre_id !== g.keep) items.push({ id: e.calibre_id, label: g.title, detail: `${g.author || ""} · removes Calibre #${e.calibre_id} (${fmts(e)}) · keeps #${g.keep} (${fmts(keep)})`, warn: e.doubt || "" });
       }
     }
-    return { title: "Remove extra Calibre copies", intro: "The same book is in Calibre more than once. For each, the best copy stays (EPUB first, then more files, then the larger) and the entry listed here goes to Calibre's recycle bin (in Calibre: Remove books → Restore recently deleted). Untick any you want to keep, for example a different edition.", confirm: "Remove the ticked copies", items };
+    return { title: "Remove extra Calibre copies", intro: "These have the same title and author as another Calibre entry. NovelCheck can't open the books to compare them, so check the list: an entry whose files look different from the copy that stays (much bigger or smaller, or with a PDF or audiobook of its own) is marked and left unticked. For each ticked entry the best copy stays (EPUB first, then more files, then the larger) and the entry listed here goes to Calibre's recycle bin (in Calibre: Remove books → Restore recently deleted).", confirm: "Remove the ticked copies", items };
   },
   formats: async () => {
     const r = await attempt(() => get("/api/admin/formats"));
     if (!r) return null;
-    return { title: "Remove other formats", fixed: true, intro: "Each book here has an EPUB. Its other files are removed (into Calibre's recycle bin; you can undo for 7 days under Formats…). All or nothing: to keep a file, tick fewer formats under Formats….", confirm: `Remove ${plural(r.file_count, "file")}`,
-      items: (r.groups || []).map((g) => ({ id: g.book_id, label: g.title, detail: `keeps ${g.keep.join(", ")} · removes ${g.remove.map((f) => `${f.format.toUpperCase()}${f.size ? ` ${gb(f.size)}` : ""}`).join(", ")}` })),
+    return { title: "Remove other formats", fixed: true, intro: "Each book here has an EPUB, and only its other e-book files (MOBI, AZW3 and the like) are removed, into Calibre's recycle bin; you can undo for 7 days under Formats…. PDFs, comics and audiobooks always stay. A book with no EPUB is never touched, and a book whose EPUB is missing or empty is skipped. All or nothing: to keep a file, tick more formats under Formats….", confirm: `Remove ${plural(r.file_count, "file")}`,
+      items: (r.groups || []).map((g) => ({ id: g.book_id, label: g.title, detail: `keeps ${g.keep.concat(g.stays || []).join(", ")} · removes ${g.remove.map((f) => `${f.format.toUpperCase()}${f.size ? ` ${gb(f.size)}` : ""}`).join(", ")}` })),
       more: r.group_count > (r.groups || []).length ? `…and ${r.group_count - r.groups.length} more books, not listed here.` : "" };
   },
 };
@@ -119,7 +119,8 @@ export async function mountCleanup(host, close) {
   };
   const refresh = async () => {
     say("Reading the Calibre library…");
-    await attempt(() => post("/api/admin/cleanup/refresh"));
+    const r = await attempt(() => post("/api/admin/cleanup/refresh"));
+    if (r?.running) say("Still reading (a big library takes a few minutes). It carries on by itself; the numbers here update when you come back.");
   };
   const failures = (j) => {
     if (j.failed) say(`${plural(j.failed, "book")} failed. Open Settings → Developer → "Last format job" in the bug report for the reasons (or the Formats… window).`);
@@ -211,4 +212,13 @@ export async function mountCleanup(host, close) {
     }
   };
   paint();
+  // A job started earlier (maybe from another page, or before you left this one) is still running on the
+  // server: show it, and follow it to the end.
+  if (c.job?.running) {
+    busy = true;
+    say("A job is still running on the server (it does not stop when you leave this page):");
+    failures(await job().catch(() => ({})));
+    busy = false;
+    await reload();
+  }
 }

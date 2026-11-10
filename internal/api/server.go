@@ -55,6 +55,7 @@ type Server struct {
 	resolvedAt  sync.Map      // user id -> when their unmatched KOReader books were last looked up (koresolve.go)
 	codeGuesses *loginLimiter // wrong sync codes (KOReader, WebDAV, plugin)
 	formats     formatJob     // format cleanup's background job
+	refreshMu   sync.Mutex    // one Calibre re-read from Library cleanup at a time
 	hcjob       hcJob         // Hardcover cleanup: the scan or apply running in the background
 	rcache      respCache     // short-lived copies of the heavy list pages (respcache.go)
 	later       laterSync     // Calibre re-reads after a save, in the background (synclater.go)

@@ -28,11 +28,20 @@ type FormatGroup struct {
 	CalibreID string        `json:"calibre_id"`
 	Keep      []string      `json:"keep"`
 	Remove    []CalibreFile `json:"remove"`
+	Stays     []string      `json:"stays,omitempty"` // formats never removed here (PDF, comics, audio…)
+	KeepFiles []CalibreFile `json:"-"`               // the kept formats' files, checked before anything goes
 }
 
 // Convertible formats: the ones Calibre turns into a good EPUB.
 var Convertible = map[string]bool{"azw3": true, "mobi": true, "azw": true, "fb2": true, "docx": true, "rtf": true,
 	"txt": true, "lit": true, "pdb": true, "htmlz": true, "odt": true}
+
+// Replaceable formats: other e-book files of the same text, which an EPUB stands in for. Only these are ever
+// removed by format cleanup. A PDF, a comic, an audiobook or an archive next to an EPUB is something else
+// (a scan, pictures, a recording), so it always stays.
+var Replaceable = map[string]bool{"azw3": true, "azw": true, "azw4": true, "mobi": true, "prc": true, "kfx": true, "kepub": true,
+	"lit": true, "pdb": true, "fb2": true, "fbz": true, "txt": true, "txtz": true, "rtf": true, "docx": true, "odt": true,
+	"htmlz": true, "lrf": true, "rb": true, "snb": true, "tcr": true, "pml": true, "pmlz": true, "epub": true}
 
 // calibreFiles lists every file of the Calibre library, by book.
 func (s *Store) calibreFiles() ([]CalibreFile, error) {
@@ -74,10 +83,14 @@ func (s *Store) FormatCleanup(keep []string) ([]FormatGroup, error) {
 	for _, entry := range groupByEntry(fs) {
 		g := FormatGroup{BookID: entry[0].BookID, Title: entry[0].Title, Author: entry[0].Author, CalibreID: entry[0].CalibreID}
 		for _, f := range entry {
-			if want[f.Format] {
+			switch {
+			case want[f.Format]:
 				g.Keep = append(g.Keep, strings.ToUpper(f.Format))
-			} else {
+				g.KeepFiles = append(g.KeepFiles, f)
+			case Replaceable[f.Format]:
 				g.Remove = append(g.Remove, f)
+			default:
+				g.Stays = append(g.Stays, strings.ToUpper(f.Format))
 			}
 		}
 		if len(g.Keep) > 0 && len(g.Remove) > 0 {
@@ -94,6 +107,7 @@ func (s *Store) ToConvert() ([]CalibreFile, error) {
 	if err != nil {
 		return nil, err
 	}
+	asIs := s.leftAsIs()
 	rank := map[string]int{"azw3": 0, "mobi": 1, "azw": 2, "docx": 3, "fb2": 4, "odt": 5, "htmlz": 6, "rtf": 7, "lit": 8, "pdb": 9, "txt": 10}
 	out := []CalibreFile{}
 	for _, entry := range groupByEntry(fs) {
@@ -105,7 +119,7 @@ func (s *Store) ToConvert() ([]CalibreFile, error) {
 				best = &entry[i]
 			}
 		}
-		if !hasEPUB && best != nil {
+		if !hasEPUB && best != nil && !asIs[best.CalibreID] {
 			out = append(out, *best)
 		}
 	}

@@ -15,7 +15,8 @@ func TestCleanupSummary(t *testing.T) {
 	b, _ := st.UpsertBook("Divergent", "Veronica Roth", "", "")
 	_ = st.AddCopy(cal, b, "/c/11/divergent.mobi", "mobi", "11") // an extra entry with no EPUB
 	_ = st.AddCopy(cal, b, "/c/12/divergent.epub", "epub", "12") // the entry that stays
-	_ = st.AddCopy(cal, b, "/c/12/divergent.pdf", "pdf", "12")   // an extra format on it
+	_ = st.AddCopy(cal, b, "/c/12/divergent.azw3", "azw3", "12") // an extra e-book format on it
+	_ = st.AddCopy(cal, b, "/c/12/divergent.pdf", "pdf", "12")   // a PDF always stays
 	lone, _ := st.UpsertBook("Only Mobi", "Someone Else", "", "")
 	_ = st.AddCopy(cal, lone, "/c/20/only.mobi", "mobi", "20") // nothing else: to convert, never removed
 	two, _ := st.UpsertBook("Both Epub", "Another Person", "", "")
@@ -35,7 +36,7 @@ func TestCleanupSummary(t *testing.T) {
 	if c["convert"] != float64(2) { // entry 11 (mobi, no epub) and entry 20
 		t.Fatalf("books with no EPUB: %v", c["convert"])
 	}
-	if c["remove_files"] != float64(1) { // the PDF on entry 12
+	if c["remove_files"] != float64(1) { // the AZW3 on entry 12; its PDF stays
 		t.Fatalf("other formats beside an EPUB: %v", c["remove_files"])
 	}
 	if res, _ := admin.do("POST", "/api/admin/cleanup/refresh", map[string]string{}, true); res.StatusCode != 200 {

@@ -119,7 +119,7 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 		writeErr(w, http.StatusBadRequest, "set up the calibre Content server connection first (Admin → Delivery & Services → Calibre Library)")
 		return 0, nil, false
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 10*time.Minute) // not stopped by leaving the page
 	defer cancel()
 	c := s.calibreClient()
 	entries := map[int64][]int{}

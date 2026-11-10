@@ -39,7 +39,9 @@ func (s *Server) handleDuplicates(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		extra += len(g.Entries) - 1
-		out = append(out, group{g, store.SuggestKeep(g.Entries)})
+		keep := store.SuggestKeep(g.Entries)
+		markDoubts(g.Entries, keep)
+		out = append(out, group{g, keep})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"groups":     out,

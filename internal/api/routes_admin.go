@@ -83,6 +83,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Post("/admin/formats/remove", s.handleRemoveFormats)
 		r.Post("/admin/formats/undo", s.handleUndoFormats)
 		r.Post("/admin/formats/convert", s.handleConvertFormats)
+		r.Post("/admin/formats/convert/as-is", s.handleConvertAsIs)
 		r.Get("/admin/formats/job", s.handleFormatJob)
 		r.Post("/admin/formats/job/stop", s.handleStopFormatJob)
 		r.Get("/admin/title-fixes", s.handleTitleFixes)

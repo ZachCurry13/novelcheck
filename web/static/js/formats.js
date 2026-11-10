@@ -48,7 +48,7 @@ function keepHTML(data, busy) {
       ${g.remove.map((f) => `${esc(f.format.toUpperCase())}${f.size ? ` (${fmtSize(f.size)})` : ""}`).join(", ")}</span></li>`).join("");
   return `<section class="space-y-3">
     <h3 class="font-semibold">Keep only these formats</h3>
-    <p class="text-sm text-slate-400">Each book that has a format you keep loses its other formats, into Calibre's recycle bin. Books without one are left alone.</p>
+    <p class="text-sm text-slate-400">Each book that has a format you keep loses its other e-book formats (MOBI, AZW3 and the like), into Calibre's recycle bin. Books without one are left alone. PDFs, comics and audiobooks are never removed here, and a book whose kept file is missing or empty is skipped.</p>
     <div class="flex flex-wrap gap-2">${fmts.map(([f, n]) => `<label class="flex items-center gap-2 ${row} py-1">
       <input type="checkbox" name="keep" value="${esc(f)}" ${data.keep.includes(f) ? "checked" : ""}> ${esc(f)}
       <span class="text-xs text-slate-500">${fmtNum(n)}</span></label>`).join("")}</div>
@@ -70,7 +70,18 @@ function convertHTML(data, busy) {
       <details><summary class="cursor-pointer text-sm text-sky-300">See the books${n > data.convert.length ? ` (the first ${fmtNum(data.convert.length)})` : ""}</summary>
         <ul class="mt-2 space-y-1">${books}</ul></details>
       <button type="button" data-f="convert-all" class="btn-secondary" ${busy}>Convert ${n === 1 ? "it" : `all ${fmtNum(n)}`}</button>`
-    : `<p class="text-sm text-slate-400">Every book Calibre could convert has an EPUB. 🎉</p>`}</section>`;
+    : `<p class="text-sm text-slate-400">Every book Calibre could convert has an EPUB. 🎉</p>`}${failedHTML(data, busy)}</section>`;
+}
+
+// Books that did not convert: why, and the choice to leave one as it is (it is then not offered again).
+function failedHTML(data, busy) {
+  const list = data.failed || [];
+  if (!list.length) return "";
+  return `<details ${list.some((f) => !f.as_is) ? "open" : ""}><summary class="cursor-pointer text-sm text-amber-300">${count(list.length, "book")} did not convert</summary>
+    <p class="mt-2 text-xs text-slate-400">These keep all their files: nothing is ever removed from a book without an EPUB. “Leave as is” takes a book off the convert list for good; “Offer again” puts it back.</p>
+    <ul class="mt-2 space-y-1">${list.map((f) => `<li class="${row}"><div class="flex flex-wrap items-center justify-between gap-2"><b class="min-w-0 break-words">${esc(f.title)} <span class="text-xs font-normal text-slate-400">${esc(String(f.format).toUpperCase())}${f.as_is ? " · left as is" : ""}</span></b>
+        <button type="button" data-asis="${esc(f.calibre_id)}" data-on="${f.as_is ? "0" : "1"}" class="btn-ghost shrink-0 py-1 text-xs" ${busy}>${f.as_is ? "Offer again" : "Leave as is"}</button></div>
+      <span class="block break-words text-xs text-slate-400">${esc(f.reason)}</span></li>`).join("")}</ul></details>`;
 }
 
 function undoHTML(data, busy) {
@@ -146,7 +157,7 @@ export async function openFormats() {
     load();
   };
   d.onclick = async (e) => {
-    const t = e.target.closest("[data-f],[data-convert],[data-undo],[data-undo-batch]");
+    const t = e.target.closest("[data-f],[data-convert],[data-undo],[data-undo-batch],[data-asis]");
     const f = t?.dataset.f;
     if (e.target === d || e.target.closest("[data-close]")) return d.close();
     if (!t || t.disabled) return;
@@ -158,6 +169,8 @@ export async function openFormats() {
       }
     } else if (f === "convert-all") {
       if (confirm(`Convert ${count(data.convert_count, "book")} to EPUB? Calibre does one at a time, so a long list takes a while.`)) start("/api/admin/formats/convert", { book_ids: [] });
+    } else if (t.dataset.asis) {
+      if (await attempt(() => post("/api/admin/formats/convert/as-is", { calibre_id: t.dataset.asis, as_is: t.dataset.on === "1" }), t.dataset.on === "1" ? "Left as it is" : "On the convert list again")) load();
     } else if (t.dataset.convert) {
       start("/api/admin/formats/convert", { book_ids: [Number(t.dataset.convert)] });
     } else if (t.dataset.undoBatch) {

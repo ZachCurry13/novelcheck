@@ -681,3 +681,14 @@ CREATE TABLE IF NOT EXISTS hc_suggestions (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_hc_sugg_status ON hc_suggestions (status, calibre_id);
+
+-- Books Calibre could not convert to EPUB (Library cleanup): the reason, and whether the owner said to
+-- leave the book as it is (as_is = 1: it is not offered for converting again).
+CREATE TABLE IF NOT EXISTS convert_failures (
+    calibre_id TEXT PRIMARY KEY,
+    title      TEXT NOT NULL DEFAULT '',
+    format     TEXT NOT NULL DEFAULT '',
+    reason     TEXT NOT NULL DEFAULT '',
+    as_is      INTEGER NOT NULL DEFAULT 0,
+    at         TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

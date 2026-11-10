@@ -122,7 +122,7 @@ func TestFormatCleanup(t *testing.T) {
 		for _, f := range files[cid] {
 			p := filepath.Join(lib, title, title+"."+strings.ToLower(f))
 			_ = os.MkdirAll(filepath.Dir(p), 0o755)
-			_ = os.WriteFile(p, bytes.Repeat([]byte("x"), 1000), 0o644)
+			_ = os.WriteFile(p, append([]byte("PK"), bytes.Repeat([]byte("x"), 3000)...), 0o644) // big enough, and an EPUB starts with PK
 			_ = st.AddCopy(cal, id, p, strings.ToLower(f), cid)
 		}
 	}
@@ -131,7 +131,7 @@ func TestFormatCleanup(t *testing.T) {
 
 	// Keeping EPUB: only Alpha has one, so only its MOBI and AZW3 would go.
 	_, prev := admin.do("GET", "/api/admin/formats?keep=EPUB", nil, false)
-	if prev["group_count"].(float64) != 1 || prev["file_count"].(float64) != 2 || prev["bytes"].(float64) != 2000 || prev["convert_count"].(float64) != 2 {
+	if prev["group_count"].(float64) != 1 || prev["file_count"].(float64) != 2 || prev["bytes"].(float64) != 6004 || prev["convert_count"].(float64) != 2 {
 		t.Fatalf("preview: %v", prev)
 	}
 	remove := map[string]any{"keep": []string{"EPUB"}, "expected_files": 2}

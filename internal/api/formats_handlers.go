@@ -82,7 +82,25 @@ func (s *Server) handleFormats(w http.ResponseWriter, r *http.Request) {
 		"batches":       batches,
 		"undo_days":     store.UndoDays,
 		"job":           s.formats.state(),
+		"failed":        s.Store.ConvertFailures(),
 	})
+}
+
+// handleConvertAsIs: POST {"calibre_id", "as_is"}: leave a book that would not convert as it is (it is not
+// offered for converting again), or offer it again.
+func (s *Server) handleConvertAsIs(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		CalibreID string `json:"calibre_id"`
+		AsIs      bool   `json:"as_is"`
+	}
+	if !readJSON(w, r, &body, 1<<10) {
+		return
+	}
+	if err := s.Store.SetConvertAsIs(body.CalibreID, body.AsIs); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 // formatJobReady refuses when the Content server isn't set up or a job runs.

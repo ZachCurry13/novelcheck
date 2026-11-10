@@ -37,8 +37,10 @@ func (s *Server) runConvert(files []store.CalibreFile) {
 		}
 		if why := s.convertOne(c, id, f.Format); why != "" {
 			j.fail(f.Title, why)
+			_ = s.Store.NoteConvertFailure(f.CalibreID, f.Title, f.Format, why)
 			continue
 		}
+		_ = s.Store.ForgetConvertFailure(f.CalibreID)
 		j.update(func(st *formatJobState) { st.Done++ })
 	}
 	st := j.state()

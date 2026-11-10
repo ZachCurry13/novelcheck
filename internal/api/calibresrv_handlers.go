@@ -132,7 +132,8 @@ func (s *Server) handleCalibreRemove(w http.ResponseWriter, r *http.Request) {
 // library can never be touched), moves the books to calibre's recycle bin,
 // and re-syncs. On failure it writes the error and returns ok=false.
 func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids []int, want map[int]string) (removed, skipped int, ok bool) {
-	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Minute)
+	// Not tied to the browser: closing the page or switching tabs must not stop a removal half way.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 10*time.Minute)
 	defer cancel()
 	c := s.calibreClient()
 	have, err := c.Titles(ctx, ids)

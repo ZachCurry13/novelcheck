@@ -3,6 +3,7 @@ package api
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -50,16 +51,17 @@ func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"configured":   s.Store.Setting(store.KeyCalibreSrvURL) != "",
-		"pairs":        len(pairs),
-		"calibre_dups": len(dupGroups),
-		"titles":       len(fixes),
-		"title_ids":    ids,
-		"dup_count":    len(dupIDs),
-		"convert":      len(convert),
-		"remove_files": files,
-		"remove_bytes": bytes,
-		"job":          s.formats.state(),
+		"configured":     s.Store.Setting(store.KeyCalibreSrvURL) != "",
+		"pairs":          len(pairs),
+		"calibre_dups":   len(dupGroups),
+		"titles":         len(fixes),
+		"title_ids":      ids,
+		"dup_count":      len(dupIDs),
+		"convert":        len(convert),
+		"remove_files":   files,
+		"remove_bytes":   bytes,
+		"job":            s.formats.state(),
+		"convert_failed": len(s.Store.ConvertFailures()),
 	})
 }
 
@@ -72,8 +74,20 @@ func (s *Server) refreshCalibre() {
 	}
 }
 
-// handleCleanupRefresh: POST re-reads the Calibre library and answers when it is done.
+// handleCleanupRefresh: POST re-reads the Calibre library. It answers when that is done, or after a minute
+// with "running" (a big library takes longer than a tunnel waits); the reading carries on either way.
 func (s *Server) handleCleanupRefresh(w http.ResponseWriter, r *http.Request) {
-	s.refreshCalibre()
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		s.refreshMu.Lock() // one at a time: a second press waits for the first
+		defer s.refreshMu.Unlock()
+		s.refreshCalibre()
+	}()
+	select {
+	case <-done:
+		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	case <-time.After(time.Minute):
+		writeJSON(w, http.StatusOK, map[string]bool{"ok": true, "running": true})
+	}
 }

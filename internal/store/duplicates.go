@@ -9,6 +9,7 @@ import (
 type DupEntry struct {
 	CalibreID string    `json:"calibre_id"`
 	Files     []DupFile `json:"files"`
+	Doubt     string    `json:"doubt,omitempty"` // why this may not be the same book as the copy that stays
 }
 
 // DupFile is one format of a Calibre entry.

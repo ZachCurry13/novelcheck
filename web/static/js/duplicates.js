@@ -15,11 +15,12 @@ function entryHTML(g, e, isAdmin) {
     ? e.files.map((f) => `<span class="chip-fmt" title="${esc(fmtSize(f.size))}">${esc(f.format.toUpperCase())}</span>`).join(" ")
     : `<span class="text-xs text-slate-500">no file</span>`;
   return `<li class="flex flex-wrap items-start gap-3 rounded-lg bg-slate-800/50 p-3">
-    <label class="toggle shrink-0"><input type="checkbox" data-remove="${esc(e.calibre_id)}" data-book="${g.book_id}" ${keep ? "" : "checked"}> Remove</label>
+    <label class="toggle shrink-0"><input type="checkbox" data-remove="${esc(e.calibre_id)}" data-book="${g.book_id}" ${keep || e.doubt ? "" : "checked"}> Remove</label>
     <div class="min-w-0 flex-1 space-y-1">
       <p class="flex flex-wrap items-center gap-2 text-sm"><b>Calibre #${esc(e.calibre_id)}</b> ${files}
         ${total ? `<span class="text-xs text-slate-400">${fmtSize(total)}</span>` : ""}
         ${keep ? `<span class="chip-none">✓ Suggested keep</span>` : ""}</p>
+      ${e.doubt ? `<p class="text-xs text-amber-300">⚠️ Not ticked: ${esc(e.doubt)}. Check it is the same book before removing it.</p>` : ""}
       ${isAdmin ? e.files.map((f) => `<p class="break-all text-xs text-slate-500">${esc(f.path)}</p>`).join("") : ""}
     </div></li>`;
 }

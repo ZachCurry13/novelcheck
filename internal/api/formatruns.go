@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -124,6 +125,10 @@ func (s *Server) runRemoval(groups []store.FormatGroup, keep []string, by string
 			j.update(func(st *formatJobState) { st.Skipped += len(g.Remove) })
 			continue
 		}
+		if why := s.keptLooksWrong(g); why != "" { // never remove the original when the copy that stays is no good
+			j.fail(g.Title, why+" Its other files were kept.")
+			continue
+		}
 		for _, f := range g.Remove {
 			if !b.Has(f.Format) {
 				j.update(func(st *formatJobState) { st.Skipped++ })
@@ -159,6 +164,34 @@ func (s *Server) runRemoval(groups []store.FormatGroup, keep []string, by string
 	st := j.state()
 	j.end(fmt.Sprintf("Removed %s (%s). Undo is under Removed formats for %d days.", count(st.Done, "file"), mb(freed), store.UndoDays))
 	log.Printf("format cleanup: removed %d files via Content server (%s)", st.Done, by)
+}
+
+// keptLooksWrong checks the file that would be the book's only copy afterwards: it must be there, be more
+// than a stub, and (an EPUB) be a real EPUB file. "" means it is fine.
+func (s *Server) keptLooksWrong(g store.FormatGroup) string {
+	for _, f := range g.KeepFiles {
+		if !s.insideCalibre(f.Path) {
+			continue
+		}
+		st, err := os.Stat(f.Path)
+		if err != nil || st.Size() < 2048 {
+			continue
+		}
+		if f.Format == "epub" {
+			head := make([]byte, 4)
+			fh, err := os.Open(f.Path)
+			if err != nil {
+				continue
+			}
+			_, err = io.ReadFull(fh, head)
+			fh.Close()
+			if err != nil || string(head[:2]) != "PK" {
+				continue
+			}
+		}
+		return ""
+	}
+	return "the " + strings.Join(g.Keep, "/") + " that would stay is missing, empty or not a real file, so nothing was removed from this book."
 }
 
 // waitForTrash gives a network share a moment to show calibre's new file.

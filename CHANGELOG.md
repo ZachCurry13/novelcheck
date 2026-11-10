@@ -19,6 +19,13 @@ becomes the release notes for that version and is shown in the app under
 - **Sideways and upside-down photos.** The photo is turned the way the phone was held before it is sent, and when the AI can see the photo but reads no title, it tries the photo turned each way.
 - **"No image available" is not a cover.** Catalogues sometimes pass along a shop's placeholder picture as the cover. It is now recognized and dropped (ones already kept too), so the book gets a real or drawn cover.
 
+### 🛡️ Library cleanup: safer about what it removes
+- **Extra Calibre copies are checked before they are offered for removal.** Calibre duplicates are found by title and author, which can't tell a second copy from another edition or an omnibus. Each extra entry's files are now compared with the copy that stays. One that differs a lot in size, has a PDF or audiobook of its own, or can't be compared is marked with the reason and **left unticked**; "Tick all" skips those too. File sizes are shown for both copies.
+- **"Remove other formats" only removes other e-book files** (MOBI, AZW3, KFX and the like). PDFs, comics, audiobooks and archives beside an EPUB always stay.
+- **The EPUB that stays is checked first.** If it is missing, tiny or not a real EPUB file, that book is skipped and keeps all its files. A book with no EPUB is never touched, as before.
+- **Books that would not convert are remembered, with the reason** (Formats… → "did not convert"). **Leave as is** takes a book off the convert list for good; **Offer again** puts it back. They keep all their files either way.
+- **Leaving the page no longer stops the work.** Removing copies and tidying titles carry on when you switch tabs or close the app, and coming back to Library cleanup shows a job that is still running and follows it. Reading the Calibre library answers within a minute and carries on by itself, instead of failing after a long wait.
+
 ### 🧹 Library cleanup
 - **Removing extra copies and formats no longer stops on a subtitle.** The safety check that keeps NovelCheck out of the wrong Calibre library stopped everything when Calibre's title carried a subtitle ("A Kiss of Shadows: A Merry Gentry Novel" against "A Kiss of Shadows"). Titles are now compared with that in mind, in Remove copies, Formats and Tidy.
 - **The format job leaves a mismatched book alone and carries on** (it is listed with the reason). It only stops when more than one book in five doesn't match, which really is the wrong library. While it checks the books with Calibre at the start, it says so.
