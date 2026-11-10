@@ -1,14 +1,15 @@
 // Cover photos from the phone camera (Check a book, Paper books).
 
-// shrinkPhoto turns a phone photo into a ~1280 px JPEG data: URL (small and quick to send).
+// shrinkPhoto turns a phone photo into a ~1024 px JPEG data: URL: small and quick to send, and quick for a
+// small AI model to read (a title is still easy to read at this size).
 export async function shrinkPhoto(file) {
   const bmp = await createImageBitmap(file);
-  const scale = Math.min(1, 1280 / Math.max(bmp.width, bmp.height));
+  const scale = Math.min(1, 1024 / Math.max(bmp.width, bmp.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bmp.width * scale);
   canvas.height = Math.round(bmp.height * scale);
   canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.85);
+  return canvas.toDataURL("image/jpeg", 0.8);
 }
 
 // barcodeInPhoto reads an ISBN barcode where the browser can (Chrome on Android).

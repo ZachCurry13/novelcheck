@@ -7,6 +7,7 @@ const (
 	KeyAutoRate      = "auto_rate"            // "" = on with a local AI, off with a paid one; "on"; "off"
 	KeyAutoRateHours = "auto_rate_hours"      // "" = any time, or "23-7": only from 23:00 until 07:00
 	KeyAutoRateTZ    = "auto_rate_tz"         // time zone for those hours (the admin's browser's)
+	KeyVisionModel   = "vision_model"         // a model on the main local AI that can read photos (Check a book)
 	KeyLocalContext  = "local_context_tokens" // a local AI's context window, for Deep Scan's part size
 )
 
@@ -15,6 +16,7 @@ func init() {
 	Defaults[KeyAutoRateHours] = ""
 	Defaults[KeyAutoRateTZ] = ""
 	Defaults[KeyLocalContext] = "4096"
+	Defaults[KeyVisionModel] = ""
 }
 
 // rateOrder puts books people want first (in someone's Nightstand or on a

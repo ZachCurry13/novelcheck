@@ -49,6 +49,7 @@ const SECTIONS = [
     ["batch_size", "Books per batch (0 = all waiting books)", "20", "number"],
     ["tokens_per_hour_cap", "Max tokens per hour (0 = unlimited)", "25000", "number"],
     ["scan_delay_seconds", "Delay between scans (seconds)", "2", "number"],
+    ["vision_model", "Photo-reading model on your local AI (Check a book)", "e.g. gemma3:4b · on the AI machine run: ollama pull gemma3:4b", "text"],
     ["llm_timeout_seconds", "AI time limit per book (seconds)", "0 = automatic: 10 minutes for Ollama, 2 for cloud", "number"],
     ["local_context_tokens", "Context size of your local AI (tokens)", "4096", "number"],
     ["price_input_per_million", "Input price per 1M tokens (USD)", "0.15", "number"],

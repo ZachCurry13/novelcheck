@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.64.0]
+
+### 📷 Reading a cover photo, faster and more dependable
+- **A photo-reading model for your own AI** (Admin → AI → Rate Caps & Batching → "Photo-reading model on your local AI"). Your local models (llama3.2, qwen2.5:3b) can't read pictures at all, so every photo waited on the cloud AI and failed when it was busy. Put a model that can see on the AI machine (for example `ollama pull gemma3:4b`, about 3 GB) and type its name there: photos go to it first, with no waiting on a busy cloud service.
+- **Models that can't read photos are asked once, then skipped** (until the server restarts), instead of being tried on every photo.
+- **A photo attempt gives up after 75 seconds per model** (it used to be able to take ten minutes), and the photo is sent a little smaller (1024 px), which small models read faster.
+- **The error says what to do** when no model can see: set the photo-reading model.
+
 ## [1.63.0]
 
 ### 🎁 Wrapped
