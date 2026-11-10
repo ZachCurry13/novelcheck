@@ -665,3 +665,19 @@ CREATE TABLE IF NOT EXISTS hardcover_rated (
     stars   REAL NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, book_id)
 );
+
+-- Corrections suggested for the Calibre library from Hardcover (Admin, Library cleanup): reviewed, then applied.
+CREATE TABLE IF NOT EXISTS hc_suggestions (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    calibre_id INTEGER NOT NULL,
+    title      TEXT NOT NULL DEFAULT '',
+    field      TEXT NOT NULL,
+    current    TEXT NOT NULL DEFAULT '',
+    shown      TEXT NOT NULL DEFAULT '',
+    payload    TEXT NOT NULL DEFAULT '',
+    confidence TEXT NOT NULL DEFAULT '',
+    status     TEXT NOT NULL DEFAULT 'new',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_hc_sugg_status ON hc_suggestions (status, calibre_id);

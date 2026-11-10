@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.61.0]
+
+### 📚 Fix the Calibre library from Hardcover (Admin → Library cleanup)
+- **A background scan compares every Calibre book with Hardcover** (your own Hardcover, by ISBN, else by exact title and author) and lists what differs: a **missing series and its number** (or a wrong number), a **tidy title and author** ("Cinder (The Lunar Chronicles Book 1)" becomes "Cinder", "Meyer, Marissa" becomes "Marissa Meyer"), a **missing ISBN**, an **empty description**, and **genres Calibre doesn't have yet** (added to the ones it has).
+- **Nothing changes until you tick it.** Apply writes the ticked changes to Calibre in the background (one book at a time; Calibre renames files, so it is slow) and **reads each book back** to check Calibre kept them; anything it didn't keep is listed. "Not these" remembers your choice, and a new scan doesn't suggest the same thing again.
+- It only fills gaps and tidies how something is written; it never replaces one book's details with another's. Covers are not part of this yet.
+
 ## [1.60.0]
 
 ### 🔗 Hardcover, both ways

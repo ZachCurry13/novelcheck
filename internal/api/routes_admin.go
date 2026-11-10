@@ -57,6 +57,11 @@ func (s *Server) adminRoutes(r chi.Router) {
 
 	r.Group(func(r chi.Router) { // 📚 Calibre & cleanup
 		r.Use(area(store.AreaCalibre))
+		r.Get("/admin/hc-clean", s.handleHCCleanState)
+		r.Post("/admin/hc-clean/scan", s.handleHCCleanScan)
+		r.Post("/admin/hc-clean/apply", s.handleHCCleanApply)
+		r.Post("/admin/hc-clean/skip", s.handleHCCleanSkip)
+		r.Post("/admin/hc-clean/stop", s.handleHCCleanStop)
 		r.Get("/admin/calibre/browse", s.handleCalibreBrowse)
 		r.Get("/admin/calibre/find", s.handleCalibreFind)
 		r.Get("/admin/calibre/removal", s.handleCalibreRemoval)
