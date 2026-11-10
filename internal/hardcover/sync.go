@@ -19,7 +19,7 @@ func SyncUser(ctx context.Context, st *store.Store, c *Client, userID int64) (bo
 	in := make([]store.HardcoverBook, 0, len(shelves))
 	for _, b := range shelves {
 		in = append(in, store.HardcoverBook{Title: b.Title, Authors: b.Authors, ISBNs: b.ISBNs, Status: b.Status,
-			Percent: b.Percent, UpdatedAt: b.UpdatedAt.Unix()})
+			Percent: b.Percent, Rating: b.Rating, UpdatedAt: b.UpdatedAt.Unix()})
 	}
 	matched, err = st.SaveHardcover(userID, in)
 	return len(in), matched, err
@@ -90,5 +90,35 @@ func PushUser(ctx context.Context, st *store.Store, c *Client, userID int64) (se
 		case <-time.After(1200 * time.Millisecond): // far under Hardcover's limits
 		}
 	}
-	return sent, nil
+	return sent, pushRatings(ctx, st, c, userID)
+}
+
+// pushRatings sends the person's star ratings for books already on their Hardcover shelves (up to 10 a run).
+// A book Hardcover doesn't know, or that isn't on their shelves, is marked so it isn't asked about every hour;
+// rating it again here sends it once more.
+func pushRatings(ctx context.Context, st *store.Store, c *Client, userID int64) error {
+	for _, r := range st.RatingsToPush(userID, 10) {
+		ed, ok, err := c.FindEdition(ctx, r.ISBN)
+		if err != nil {
+			return err
+		}
+		if ok {
+			ub, err := c.FindUserBook(ctx, ed.BookID)
+			if err != nil {
+				return err
+			}
+			if ub.ID != 0 {
+				if err := c.SetRating(ctx, ub.ID, r.Stars); err != nil {
+					return err
+				}
+			}
+		}
+		st.MarkRatingPushed(userID, r.BookID, r.Stars)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(1200 * time.Millisecond):
+		}
+	}
+	return nil
 }

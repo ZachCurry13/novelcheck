@@ -54,6 +54,7 @@ type HardcoverBook struct {
 	ISBNs          []string
 	Status         int
 	Percent        float64
+	Rating         float64 // their stars on Hardcover (0 = none)
 	UpdatedAt      int64
 }
 
@@ -87,6 +88,11 @@ func (s *Store) SaveHardcover(userID int64, books []HardcoverBook) (int, error) 
 		return 0, err
 	}
 	matched := 0
+	type hcRating struct {
+		book  int64
+		stars float64
+	}
+	var rated []hcRating // written after the commit: there is one database connection
 	for i, b := range books {
 		var bookID any
 		if ids[i] > 0 {
@@ -100,6 +106,9 @@ func (s *Store) SaveHardcover(userID int64, books []HardcoverBook) (int, error) 
 		if ids[i] == 0 {
 			continue
 		}
+		if b.Rating > 0 && b.Status == 3 { // a rating given at Hardcover fills a gap here; yours here is never replaced
+			rated = append(rated, hcRating{ids[i], b.Rating})
+		}
 		status := "reading"
 		if b.Status == 3 {
 			status = "finished"
@@ -112,6 +121,9 @@ func (s *Store) SaveHardcover(userID int64, books []HardcoverBook) (int, error) 
 	}
 	if err := tx.Commit(); err != nil {
 		return 0, err
+	}
+	for _, r := range rated {
+		s.KeepHardcoverRating(userID, r.book, r.stars)
 	}
 	_ = s.SetSetting(hardcoverSyncedKey(userID), time.Now().UTC().Format(time.RFC3339))
 	return matched, nil

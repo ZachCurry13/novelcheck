@@ -130,19 +130,21 @@ type Book struct {
 	Pages     int     // the edition's pages (0 = unknown)
 	Progress  int     // pages read (0 = unknown)
 	Percent   float64 // 0..1 when known
+	Rating    float64 // their stars on Hardcover (0 = none)
 	UpdatedAt time.Time
 }
 
 const shelvesQuery = `query { me { user_books(where: {status_id: {_in: [2, 3]}}, order_by: {updated_at: desc}, limit: 300) {
-  status_id updated_at
+  status_id updated_at rating
   book { title pages contributions(limit: 1) { author { name } } }
   edition { pages isbn_10 isbn_13 }
   user_book_reads(order_by: {started_at: desc}, limit: 1) { progress_pages finished_at }
 } } }`
 
 type userBook struct {
-	StatusID  int    `json:"status_id"`
-	UpdatedAt string `json:"updated_at"`
+	StatusID  int      `json:"status_id"`
+	UpdatedAt string   `json:"updated_at"`
+	Rating    *float64 `json:"rating"`
 	Book      struct {
 		Title         string `json:"title"`
 		Pages         int    `json:"pages"`
@@ -203,6 +205,9 @@ func (c *Client) Shelves(ctx context.Context) ([]Book, error) {
 			b.Percent = 1
 		case b.Pages > 0 && b.Progress > 0:
 			b.Percent = min(1, float64(b.Progress)/float64(b.Pages))
+		}
+		if ub.Rating != nil {
+			b.Rating = *ub.Rating
 		}
 		b.UpdatedAt, _ = time.Parse(time.RFC3339, ub.UpdatedAt)
 		out = append(out, b)

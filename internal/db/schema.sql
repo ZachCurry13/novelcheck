@@ -657,3 +657,11 @@ CREATE TABLE IF NOT EXISTS user_ratings (
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, book_id)
 );
+
+-- The star ratings last sent to a reader's Hardcover, so nothing is sent twice.
+CREATE TABLE IF NOT EXISTS hardcover_rated (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    stars   REAL NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, book_id)
+);

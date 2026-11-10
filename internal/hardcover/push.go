@@ -91,6 +91,12 @@ func (c *Client) FindUserBook(ctx context.Context, bookID int) (UserBook, error)
 	return ub, nil
 }
 
+// SetRating puts the person's stars on their Hardcover entry (Hardcover rates in half stars).
+func (c *Client) SetRating(ctx context.Context, userBookID int, stars float64) error {
+	stars = float64(int(stars*2+0.5)) / 2
+	return c.mutate(ctx, fmt.Sprintf(`mutation { update_user_book(id: %d, object: {rating: %g}) { __typename } }`, userBookID, stars))
+}
+
 func (c *Client) mutate(ctx context.Context, q string) error {
 	var out json.RawMessage
 	return c.do(ctx, q, &out)

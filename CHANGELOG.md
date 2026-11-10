@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.59.0]
+
+### ⭐ Ratings and Hardcover
+- **Your star ratings sync with Hardcover** (when Hardcover is connected and "send my reading to Hardcover" is on). A rating you give at Hardcover for a book you have read fills in here if you haven't rated it in NovelCheck; a rating you give here is sent to Hardcover for books already on your Hardcover shelves (as the nearest half star, which is what Hardcover uses). Yours in NovelCheck is never replaced by a sync.
+
 ## [1.58.0]
 
 ### ⭐ Your ratings
