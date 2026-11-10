@@ -30,6 +30,7 @@ type ModelInfo struct {
 var Catalog = []ModelInfo{
 	{"qwen2.5:3b", "Qwen 2.5 3B", 1.9, "small and quick"},
 	{"llama3.2", "Llama 3.2 3B", 2.0, "fastest; fine without a GPU"},
+	{"gemma3:4b", "Gemma 3 4B", 3.3, "also reads cover photos (Check a book)"},
 	{"qwen2.5:7b", "Qwen 2.5 7B", 4.7, "great balance of speed and accuracy"},
 	{"llama3.1:8b", "Llama 3.1 8B", 4.9, "good alternative"},
 	{"gemma3:12b", "Gemma 3 12B", 8.1, "strong, a bit slower"},

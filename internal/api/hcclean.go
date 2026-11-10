@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -181,8 +184,22 @@ func (s *Server) runHCApply(list []store.HCSuggestion) {
 			continue
 		}
 		fields, err := fieldsOf(g)
-		if err == nil {
+		if err == nil && len(fields) > 0 {
 			_, err = cal.SetFields(ctx, id, fields)
+		}
+		for _, x := range g {
+			if x.Field != "cover" || err != nil {
+				continue
+			}
+			var src string
+			_ = json.Unmarshal([]byte(x.Payload), &src)
+			img, gerr := fetchCover(ctx, src)
+			if gerr == nil {
+				gerr = cal.SetCover(ctx, id, img)
+			}
+			if gerr != nil {
+				s.hcjob.fail("“" + title + "”: cover: " + gerr.Error())
+			}
 		}
 		if err != nil {
 			s.hcjob.fail("“" + title + "”: " + err.Error())
@@ -214,6 +231,8 @@ func hcApplied(d calibresrv.Details, x store.HCSuggestion) bool {
 	var v any
 	_ = json.Unmarshal([]byte(x.Payload), &v)
 	switch x.Field {
+	case "cover":
+		return d.Cover != ""
 	case "title":
 		return d.Title == v
 	case "series":
@@ -234,4 +253,32 @@ func hcApplied(d calibresrv.Details, x store.HCSuggestion) bool {
 		return len(d.Tags) >= len(l)
 	}
 	return false
+}
+
+// fetchCover downloads a cover picture: https only, a real image, at most 10 MB, no redirects to elsewhere.
+func fetchCover(ctx context.Context, src string) ([]byte, error) {
+	u, err := url.Parse(src)
+	if err != nil || u.Scheme != "https" {
+		return nil, fmt.Errorf("not a secure picture address")
+	}
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	hc := &http.Client{Timeout: 30 * time.Second, CheckRedirect: func(r *http.Request, via []*http.Request) error {
+		if r.URL.Scheme != "https" || len(via) > 3 {
+			return http.ErrUseLastResponse
+		}
+		return nil
+	}}
+	resp, err := hc.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK || !strings.HasPrefix(resp.Header.Get("Content-Type"), "image/") {
+		return nil, fmt.Errorf("no picture there (%s)", resp.Status)
+	}
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20+1))
+	if err != nil || len(data) > 10<<20 || len(data) < 1000 {
+		return nil, fmt.Errorf("the picture is too large or empty")
+	}
+	return data, nil
 }

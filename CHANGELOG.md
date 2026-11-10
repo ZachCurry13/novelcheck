@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.65.0]
+
+### 🤖 AI
+- **Gemma 3 4B is in the model list** (Admin → AI → your Ollama): about 3.3 GB, and it can read cover photos. If a model that can see (Gemma 3, LLaVA and similar) is among your local models, Check a book sends photos to it first, even without filling in the photo-reading model.
+
+### 📚 Calibre
+- **Covers from Hardcover** in "Fix Calibre details from Hardcover": a Calibre book with no cover gets Hardcover's cover offered as a change to tick. Books that already have a cover are left alone.
+- **Tidy's "the Content server has no book" message now says the likely cause:** books added with Calibre-Web aren't noticed by the Calibre Content server until the Calibre app is restarted.
+
 ## [1.64.0]
 
 ### 📷 Reading a cover photo, faster and more dependable

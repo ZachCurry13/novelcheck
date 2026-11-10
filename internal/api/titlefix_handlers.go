@@ -199,7 +199,7 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 					"”. The Content server and NovelCheck are not looking at the same library (the Content server serves “" + s.Store.Setting(store.KeyCalibreSrvLibrary) + "”): point both at the same one under Admin → Calibre Library"
 			}
 			if len(gone) > 0 {
-				why = "the Content server has no book " + strings.Join(gone, ", ") + " (is it serving the same library NovelCheck reads? If the library changed, read it again first)." + serverNote
+				why = "the Content server has no book " + strings.Join(gone, ", ") + " (is it serving the same library NovelCheck reads? If the library changed, read it again first). If these books were added with Calibre-Web, the Content server hasn't noticed them yet: restart the Calibre app (it reads the library when it starts), then try again." + serverNote
 			}
 			skipped = append(skipped, "“"+p.Title+"”: "+why)
 			continue

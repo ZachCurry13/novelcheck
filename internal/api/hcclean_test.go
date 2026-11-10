@@ -113,7 +113,7 @@ func TestHardcoverCleanup(t *testing.T) {
 	t.Cleanup(func() { api.SetHardcoverURL("") })
 	cal := &fakeCalibreDetails{book: map[string]any{
 		"title": "Cinder (The Lunar Chronicles Book 1)", "authors": "Meyer, Marissa", "series": "", "series_index": 1.0,
-		"tags": []string{"Young Adult"}, "comments": "", "identifiers": map[string]string{},
+		"tags": []string{"Young Adult"}, "comments": "", "identifiers": map[string]string{}, "cover": "/c/cover.jpg",
 	}}
 	cs := cal.serve(t)
 	srv, st := setup(t)

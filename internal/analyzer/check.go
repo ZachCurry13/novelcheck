@@ -51,7 +51,33 @@ func (w *Worker) coverAttempts() []store.AIConfig {
 			}
 		}
 	}
+	// No photo model chosen: a local model whose name says it can see (Gemma 3, LLaVA, …) still goes first.
+	if len(out) == 0 {
+		for _, ai := range ais {
+			if !llm.IsLocal(ai.BaseURL) {
+				continue
+			}
+			for _, m := range ai.Models {
+				if looksVisual(m) {
+					first := ai
+					first.Models = []string{m}
+					out = append(out, first)
+				}
+			}
+		}
+	}
 	return append(out, visionOrder(ais)...)
+}
+
+// looksVisual says whether a local model's name is one of the families that take pictures.
+func looksVisual(model string) bool {
+	m := strings.ToLower(model)
+	for _, fam := range []string{"gemma3", "llava", "vision", "moondream", "minicpm-v", "qwen2.5vl", "qwen2-vl", "bakllava", "pixtral"} {
+		if strings.Contains(m, fam) {
+			return true
+		}
+	}
+	return false
 }
 
 // ReadCover asks the AIs which book a photo shows (see coverAttempts). Models that can't see images fail at

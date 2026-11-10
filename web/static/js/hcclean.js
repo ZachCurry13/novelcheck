@@ -6,7 +6,7 @@ import { get, post } from "./api.js";
 import { esc, attempt, toast } from "./ui.js";
 import { once } from "./inflight.js";
 
-const LABEL = { title: "Title", authors: "Author", series: "Series", series_index: "Number in series", identifiers: "ISBN", comments: "Description", tags: "Genres" };
+const LABEL = { title: "Title", authors: "Author", series: "Series", series_index: "Number in series", identifiers: "ISBN", comments: "Description", tags: "Genres", cover: "Cover" };
 const SHOW = 400;
 
 export async function renderHCClean(host) {

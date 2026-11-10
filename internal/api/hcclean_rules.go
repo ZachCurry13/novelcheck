@@ -73,6 +73,9 @@ func hcChanges(cal calibresrv.Details, hc hardcover.BookInfo) []hcChange {
 	if cal.Comments == "" && hc.Description != "" {
 		add("comments", "(empty)", firstChars(hc.Description, 160), hc.Description)
 	}
+	if cal.Cover == "" && strings.HasPrefix(hc.Image, "https://") {
+		add("cover", "(no cover)", "the cover from Hardcover", hc.Image)
+	}
 	have := map[string]bool{}
 	for _, t := range cal.Tags {
 		have[strings.ToLower(t)] = true
@@ -102,6 +105,9 @@ func fieldsOf(list []store.HCSuggestion) ([][]any, error) {
 	sort.SliceStable(list, func(i, j int) bool { return order[list[i].Field] < order[list[j].Field] })
 	var out [][]any
 	for _, x := range list {
+		if x.Field == "cover" { // set on its own (a picture, not a field): see runHCApply
+			continue
+		}
 		if _, ok := order[x.Field]; !ok {
 			return nil, fmt.Errorf("unknown field %q", x.Field)
 		}

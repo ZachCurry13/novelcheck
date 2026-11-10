@@ -19,6 +19,7 @@ type Details struct {
 	Tags        []string
 	Comments    string
 	Identifiers map[string]string
+	Cover       string // the cover file's path as calibre reports it ("" = the book has no cover)
 }
 
 // text reads a calibre value that may be a string, a number or null.
@@ -63,7 +64,7 @@ func (c *Client) Details(ctx context.Context, ids []int) (map[int]Details, error
 	for i, id := range ids {
 		parts[i] = "id:" + strconv.Itoa(id)
 	}
-	fields := []string{"title", "authors", "series", "series_index", "tags", "comments", "identifiers"}
+	fields := []string{"title", "authors", "series", "series_index", "tags", "comments", "identifiers", "cover"}
 	raw, err := c.cmd(ctx, "list", []any{fields, "id", true, strings.Join(parts, " or "), -1})
 	if err != nil {
 		return nil, err
@@ -81,7 +82,7 @@ func (c *Client) Details(ctx context.Context, ids []int) (map[int]Details, error
 			continue
 		}
 		d := Details{Title: text(v), Authors: list(res.Data["authors"][k], "&"), Series: text(res.Data["series"][k]),
-			Tags: list(res.Data["tags"][k], ","), Comments: text(res.Data["comments"][k]), Identifiers: map[string]string{}}
+			Tags: list(res.Data["tags"][k], ","), Comments: text(res.Data["comments"][k]), Cover: text(res.Data["cover"][k]), Identifiers: map[string]string{}}
 		d.SeriesIndex, _ = strconv.ParseFloat(text(res.Data["series_index"][k]), 64)
 		var idm map[string]string
 		if json.Unmarshal(res.Data["identifiers"][k], &idm) == nil {
@@ -131,4 +132,18 @@ func (c *Client) AddBook(ctx context.Context, filename string, data []byte) (int
 		return 0, errors.New("calibre didn't say which book it made (it may have refused a duplicate)")
 	}
 	return out.BookID, nil
+}
+
+// SetCover gives a book a cover image (JPEG or PNG bytes), like dropping a picture on the book in calibre.
+func (c *Client) SetCover(ctx context.Context, id int, image []byte) error {
+	lib := c.Library
+	if lib == "" {
+		_, def, err := c.Libraries(ctx)
+		if err != nil {
+			return err
+		}
+		lib = def
+	}
+	_, err := c.doType(ctx, http.MethodPost, "/cdb/set-cover/"+strconv.Itoa(id)+"/"+url.PathEscape(lib), image, "application/octet-stream")
+	return err
 }
