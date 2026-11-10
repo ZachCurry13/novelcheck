@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.56.2]
+
+### 🧹 Tidy in Calibre
+- **Tidy finds the right Content-server library by itself.** When the book numbers NovelCheck knows aren't in the library the Content server is serving (the "has no book #1690" message, and "0 tidied"), Tidy now asks every library the server offers, picks the one whose titles match, remembers it, and tidies there. If none match, the message lists each library it checked and how many books matched.
+
 ## [1.56.1]
 
 ### 🔄 Update bar

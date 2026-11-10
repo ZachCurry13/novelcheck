@@ -124,7 +124,8 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 	c := s.calibreClient()
 	entries := map[int64][]int{}
 	want := map[int]string{}
-	seen := map[int64]string{} // book -> the (untidy) title NovelCheck read from its Calibre library
+	known := map[int][]string{} // each number -> the titles NovelCheck knows it by (tidy, and as read from Calibre)
+	seen := map[int64]string{}  // book -> the (untidy) title NovelCheck read from its Calibre library
 	var all []int
 	for _, p := range pushes {
 		b, err := s.Store.BookByID(p.Book, nil)
@@ -135,6 +136,7 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 		for _, cid := range s.Store.CalibreIDs(p.Book) {
 			entries[p.Book] = append(entries[p.Book], cid)
 			want[cid] = b.Title
+			known[cid] = []string{b.Title, b.TitleFix}
 			all = append(all, cid)
 		}
 	}
@@ -142,10 +144,24 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 		writeErr(w, http.StatusBadRequest, "those books aren't in Calibre")
 		return 0, nil, false
 	}
+	serverNote := ""
 	have, err := c.Titles(ctx, all)
 	if err != nil {
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return 0, nil, false
+	}
+	if len(have) == 0 || len(have)*2 < len(all) { // few or none of the books exist there: wrong library?
+		if lib, report := s.matchServerLibrary(ctx, known); lib != "" && lib != c.Library {
+			log.Printf("calibre: the Content server's library was %q; switching to %q, where the book numbers match", c.Library, lib)
+			s.useServerLibrary(lib)
+			c = s.calibreClient()
+			if have, err = c.Titles(ctx, all); err != nil {
+				writeErr(w, http.StatusBadGateway, err.Error())
+				return 0, nil, false
+			}
+		} else if len(report) > 0 {
+			serverNote = " What the Content server serves: " + joinLines(report) + "."
+		}
 	}
 	for _, cid := range all {
 		// Compared like NovelCheck matches books: ignoring case, punctuation and numbering.
@@ -183,7 +199,7 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 					"”. The Content server and NovelCheck are not looking at the same library (the Content server serves “" + s.Store.Setting(store.KeyCalibreSrvLibrary) + "”): point both at the same one under Admin → Calibre Library"
 			}
 			if len(gone) > 0 {
-				why = "the Content server has no book " + strings.Join(gone, ", ") + " (is it serving the same library NovelCheck reads? If the library changed, read it again first)"
+				why = "the Content server has no book " + strings.Join(gone, ", ") + " (is it serving the same library NovelCheck reads? If the library changed, read it again first)." + serverNote
 			}
 			skipped = append(skipped, "“"+p.Title+"”: "+why)
 			continue

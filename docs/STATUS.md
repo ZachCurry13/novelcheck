@@ -24,3 +24,4 @@
 
 - 2026-11-09: v1.56.1 on feature/v1.56.1 (not released): "new version ready" Reload bar (`appupdate.js`). Next: owner OK to release; owner reloads the phone to pick up 1.56.0 (the Settings fix).
 - 2026-11-09: v1.56.1 also has series gap "Find it" (Libby search + Add to Nightstand) and novella labels (`seriesgap.js`); the next bug report already shows both Calibre library names. Owner chose: finished at 97%, re-reads once, whole series, pages turned (already how trophies count). Waiting on a bug report for conversion failures.
+- 2026-11-09: v1.56.2 on feature/v1.56.2 (not released): Tidy switches the Content server to the library whose book numbers match (`calibrematch.go`). From the owner's screenshots the server serves a different library than NovelCheck reads (no book #1690/#1700/#1701). A bug report said NovelCheck 1.54.0: ask if that is the server version (the NAS may need updating to 1.56.1).
