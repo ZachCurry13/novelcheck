@@ -648,3 +648,12 @@ CREATE TABLE IF NOT EXISTS activity_log (
     kind     TEXT NOT NULL DEFAULT '',
     detail   TEXT NOT NULL DEFAULT ''
 );
+
+-- A person's own star rating of a book (1 to 5 in quarter steps), for Wrapped and trophies.
+CREATE TABLE IF NOT EXISTS user_ratings (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    stars      REAL NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, book_id)
+);

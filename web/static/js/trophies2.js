@@ -43,6 +43,11 @@ export function moreTrophies(m, f, add) {
   add("Book shape", "long", "🧱", "Doorstop", "Books of 800+ pages finished", fin.filter((x) => (x.b.pages || 0) >= 800).length, [1, 3, 5, 10]);
   add("Book shape", "short", "🍬", "Quick read", "Books under 100 pages finished", fin.filter((x) => x.b.pages && x.b.pages < 100).length, [1, 5, 10]);
 
+  // Ratings
+  const ratedBooks = Object.values(m.books).filter((b) => b && b.rating > 0);
+  add("Ratings", "rater", "⭐", "Critic", "Books you rated", ratedBooks.length, [1, 10, 25, 50, 100]);
+  add("Ratings", "fivestar", "🌟", "Five-star fan", "Five-star books", ratedBooks.filter((b) => b.rating >= 5).length, [1, 5, 10, 25]);
+
   // Series and year
   const series = new Map();
   for (const x of fin) if (x.b.series) series.set(x.b.series, (series.get(x.b.series) || 0) + 1);

@@ -21,6 +21,7 @@ type statBook struct {
 	Spice       *int     `json:"spice,omitempty"` // pepper level (not for kids' accounts)
 	Series      string   `json:"series,omitempty"`
 	SeriesTotal int      `json:"series_total,omitempty"` // books in that series in the library
+	Rating      float64  `json:"rating,omitempty"`       // the owner's own stars (their own page only)
 }
 
 // readingStatsFor is owner's reading for the Reading stats page, as viewer may
@@ -50,6 +51,10 @@ func (s *Server) readingStatsFor(owner, viewer *store.User) map[string]any {
 		}
 	}
 	briefs := s.Store.BookBriefs(ids)
+	var ratings map[int64]float64
+	if own {
+		ratings = s.Store.RatingsFor(owner.ID, ids)
+	}
 	var seriesNames []string
 	seenSeries := map[string]bool{}
 	for _, br := range briefs {
@@ -72,6 +77,7 @@ func (s *Server) readingStatsFor(owner, viewer *store.User) map[string]any {
 			x.Highlights, x.Notes = b.Highlights, b.Notes
 		}
 		if b.BookID != nil {
+			x.Rating = ratings[*b.BookID]
 			if br, ok := briefs[*b.BookID]; ok {
 				x.Kind, x.Genres, x.Series, x.SeriesTotal = br.Kind, br.GenreList(), br.Series, seriesTotals[br.Series]
 				if viewer.Role != store.RoleRestricted {

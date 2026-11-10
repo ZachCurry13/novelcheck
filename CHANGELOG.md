@@ -4,6 +4,21 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.58.0]
+
+### ⭐ Your ratings
+- **Rate a book with stars** in its window (tap a star; tap it again to clear; ¼ buttons fine-tune to 4.25 and so on). Wrapped shows your average and a breakdown, and new trophies count books rated and five-star books. Ratings are kept in NovelCheck and are only yours.
+
+### 🎁 Wrapped, more
+- **Top authors** (top four), **book extremes** (longest and shortest you finished), **currently reading**, and a big-numbers row on the last slide (books, pages, average rating).
+
+### 🏆 More trophies
+- **Habit:** one sitting (finished the day you started), lunch-break reader, streaks of 7, 14, 30, 60 and 100 days. **Book shape:** hot streak (books in a month), doorstops (800+ pages), quick reads (under 100). **Series and year:** series marathon, beat last year, and a yearly readathon (12, 24, 52, 100 books).
+
+### 🔧 Smaller
+- **A same-books join that fails** says the pair is out of date (a book was joined or removed meanwhile) and refreshes the list, instead of "That didn't work".
+- "A evening reader" is now "An evening reader".
+
 ## [1.57.1]
 
 ### 🔄 Conversion, Discover and Libby search

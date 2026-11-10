@@ -62,6 +62,8 @@ export function slides(m, s, name) {
   const doneBooks = whole.filter((x) => (x.percent || 0) >= FINISHED && x.pages);
   const longest = doneBooks.slice().sort((a, c) => c.pages - a.pages)[0];
   const shortest = doneBooks.slice().sort((a, c) => a.pages - c.pages)[0];
+  const rated = whole.filter((x) => x.rating > 0);
+  const avgRating = rated.length ? rated.reduce((t, x) => t + x.rating, 0) / rated.length : 0;
   const lastRead = new Map();
   for (const r of sum.rows) lastRead.set(String(r.book), Math.max(lastRead.get(String(r.book)) || 0, r.ms));
   const current = sum.books.map((x) => ({ ...m.books[x.book], last: lastRead.get(String(x.book)) || 0 })).filter((x) => x.title && (x.percent || 0) > 0 && (x.percent || 0) < FINISHED).sort((a, c) => c.last - a.last)[0];
@@ -73,6 +75,12 @@ export function slides(m, s, name) {
   ];
   if (top) out.push(slide("Your most-read book", esc(top.title), `${fmtDur(top.sec)}${top.author ? ` · ${esc(top.author)}` : ""}`, top.book_id ? `<div>${coverImg(top.book_id, "h-44 w-28", true)}</div>` : "", "s-title"));
   if (authors[0]?.label) out.push(slide("Your top author", esc(authors[0].label), `${n(authors[0].n)} book${authors[0].n === 1 ? "" : "s"}${genres[0] ? `. Favourite genre: ${esc(genres[0].label)}` : ""}${authors[1]?.label ? `. Runner-up: ${esc(authors[1].label)}` : ""}.`, "", "s-title"));
+  if (rated.length) {
+    const star = (lo, hi) => rated.filter((x) => x.rating >= lo && x.rating < hi).length;
+    const rows = [["⭐ 5 stars", star(5, 6)], ["4¼ to 4¾", star(4.25, 5)], ["4 stars", star(4, 4.25)], ["3 to 3¾", star(3, 4)], ["Under 3", star(0, 3)]].filter((r) => r[1]);
+    out.push(`<p class="s-kicker">Your ratings</p><p class="s-big">${avgRating.toFixed(2)}</p><p class="s-small">average over ${n(rated.length)} rated book${rated.length === 1 ? "" : "s"}</p>
+      <ul class="s-list">${rows.map((r) => `<li><span class="em">⭐</span><span><b>${n(r[1])}</b> · ${r[0]}</span></li>`).join("")}</ul>`);
+  }
   if (authors.filter((a) => a.label).length > 1) {
     out.push(`<p class="s-kicker">Top authors</p><ul class="s-list">${authors.filter((a) => a.label).slice(0, 4).map((a, i) => `<li><span class="em">${["🥇", "🥈", "🥉", "4️⃣"][i]}</span><span><b>${esc(a.label)}</b><br>${n(a.n)} book${a.n === 1 ? "" : "s"}</span></li>`).join("")}</ul>`);
   }
@@ -88,7 +96,7 @@ export function slides(m, s, name) {
   out.push(earned.length
     ? `<p class="s-kicker">Achievements</p><div class="s-grid">${earned.map(([e, t]) => `<div class="s-tile"><b>${e}</b>${esc(t)}</div>`).join("")}</div><ul class="s-list">${earned.slice(0, 3).map(([e, t, d]) => `<li><span class="em">${e}</span><span><b>${esc(t)}</b><br>${esc(d)}</span></li>`).join("")}</ul>`
     : slide("Achievements", "Keep reading", "Awards are for reading a lot, late, early, long or wide. You will earn some.", "", "s-title"));
-  out.push(`<p class="s-kicker">${esc(when)}</p><div class="s-grid"><div class="s-tile"><b>${n(fin.length)}</b>Books read</div><div class="s-tile"><b>${n(sum.pages)}</b>Pages</div><div class="s-tile"><b>${fmtDur(sum.sec)}</b>Reading time</div></div>
+  out.push(`<p class="s-kicker">${esc(when)}</p><div class="s-grid"><div class="s-tile"><b>${n(fin.length)}</b>Books read</div><div class="s-tile"><b>${n(sum.pages)}</b>Pages</div><div class="s-tile"><b>${avgRating ? avgRating.toFixed(2) : fmtDur(sum.sec)}</b>${avgRating ? "Avg. rating" : "Reading time"}</div></div>
     ${authors[0]?.label ? `<p class="s-small">Top author: ${esc(authors[0].label)} (${n(authors[0].n)})${longest ? ` · Longest: ${esc(longest.title)} (${n(longest.pages)} pages)` : ""}</p>` : ""}
     <div class="s-actions"><button type="button" data-share>Share picture</button><button type="button" class="alt" data-sdone>Done</button></div>`);
   return out;
