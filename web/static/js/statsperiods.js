@@ -145,8 +145,8 @@ export function bookDetail(m, i) {
 // count: tally labels, biggest first.
 export function count(items, labelOf) {
   const t = new Map();
-  for (const it of items) for (const l of [].concat(labelOf(it) || [])) t.set(l, (t.get(l) || 0) + 1);
-  return [...t].map(([label, n]) => ({ label, n })).sort((a, b) => b.n - a.n || a.label.localeCompare(b.label));
+  for (const it of items) for (const l of [].concat(labelOf(it) || [])) t.set(String(l), (t.get(String(l)) || 0) + 1);
+  return [...t].map(([label, n]) => ({ label, n })).sort((a, b) => b.n - a.n || String(a.label).localeCompare(String(b.label)));
 }
 
 const BUCKETS = [[1, 100], [101, 200], [201, 300], [301, 400], [401, 500], [501, 600], [601, 1000], [1001, Infinity]];

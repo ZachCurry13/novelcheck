@@ -11,6 +11,10 @@ becomes the release notes for that version and is shown in the app under
 - **Libby search results match what you typed.** A search for "Cinder" no longer fills the list with other popular books: results must contain the words you typed (title, author or series), best matches first; if nothing does, it says so.
 - **Libby search covers show.** The page only shows pictures from NovelCheck itself, so covers now come through it (only OverDrive's own picture addresses are fetched).
 
+### 🐞 Fixes from the bug report
+- **Nightstand** no longer throws a "Sortable" error when its list is empty (the page's reorder code needs a list on screen).
+- **Stats page** no longer fails with "localeCompare is not a function" when switching periods (a number used as a label).
+
 ## [1.57.0]
 
 ### ⏺ Debug recording (Settings → Developer, admins)

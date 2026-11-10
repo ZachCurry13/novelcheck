@@ -129,7 +129,7 @@ export async function renderQueue(view, state) {
       if (moved) window.scrollBy(0, moved);
     });
   }
-  if (window.Sortable) {
+  if (window.Sortable && queued) { // no list on screen (an empty Nightstand): nothing to reorder
     sortable = window.Sortable.create(queued, {
       handle: ".drag-handle",
       animation: 150,
