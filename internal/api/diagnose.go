@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/version"
@@ -37,6 +38,7 @@ type diagnosis struct {
 	SuspectedCause string   `json:"suspected_cause"`
 	IsBug          bool     `json:"is_bug"`
 	AIError        string   `json:"ai_error,omitempty"`
+	Saved          bool     `json:"saved"`
 	Model          string   `json:"model,omitempty"`
 	Report         string   `json:"report"` // markdown for the GitHub issue
 }
@@ -96,6 +98,20 @@ func (s *Server) handleDiagnose(w http.ResponseWriter, r *http.Request) {
 	if host := s.Store.Setting(store.KeyTunnelHostname); strings.TrimSpace(host) != "" {
 		d.Report = strings.ReplaceAll(d.Report, strings.TrimSpace(host), "your-address.example.com")
 	}
+	// Kept with the bug reports, so it can be read later (and through the bug link) and deleted when handled.
+	var kept strings.Builder
+	fmt.Fprintf(&kept, "%s\nAI DIAGNOSIS: %s\nWhat was described: %s\n\n%s\n", time.Now().UTC().Format(time.RFC3339), d.Title, orNone(problem), strings.TrimSpace(d.Diagnosis))
+	if d.SuspectedCause != "" {
+		fmt.Fprintf(&kept, "\nSuspected cause: %s\n", d.SuspectedCause)
+	}
+	for i, step := range d.FixSteps {
+		fmt.Fprintf(&kept, "%d. %s\n", i+1, step)
+	}
+	fmt.Fprintf(&kept, "\nLooks like a bug: %v · model: %s", d.IsBug, orNone(d.Model))
+	if d.AIError != "" {
+		fmt.Fprintf(&kept, " · the AI could not answer: %s", d.AIError)
+	}
+	d.Saved = s.Store.SaveDeviceLog(auth.UserFrom(r), "AI diagnosis", version.Version, kept.String()) == nil
 	writeJSON(w, http.StatusOK, d)
 }
 

@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.66.2]
+
+### 🐞 The link to recent bug reports shows more, and can tidy up after itself
+- **Problems and ideas your family sent** (🐞 Report a problem or idea) are now listed in the link, each with its number.
+- **"Diagnose with AI" results are kept with the bug reports**, so they show in the link and under Settings → Developer. The "Open GitHub issue" button, which did not work, is gone.
+- **Handled things can be deleted through the link, one by one:** single server errors by their code, family reports (marked done), the debug recording, and reports and diagnoses by number. Before, the link could only empty the whole error list.
+
 ## [1.66.1]
 
 ### 🧹 Library cleanup

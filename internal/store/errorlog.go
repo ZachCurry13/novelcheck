@@ -45,6 +45,21 @@ func (s *Store) RecentSlow(n int) []ServerError {
 	return out
 }
 
+// DeleteErrors removes the errors with these codes (E-xxxx) and says how many went.
+func (s *Store) DeleteErrors(codes []string) int64 {
+	var n int64
+	for _, c := range codes {
+		if c = strings.TrimSpace(c); c == "" || c == "SLOW" {
+			continue
+		}
+		if res, err := s.DB.Exec(`DELETE FROM error_log WHERE code = ?`, c); err == nil {
+			k, _ := res.RowsAffected()
+			n += k
+		}
+	}
+	return n
+}
+
 // ClearErrors empties the list.
 func (s *Store) ClearErrors() error {
 	_, err := s.DB.Exec(`DELETE FROM error_log`)

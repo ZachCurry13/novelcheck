@@ -1,11 +1,9 @@
 // System → 🩺 Diagnose with AI: the connected AI reads the diagnostics report
-// (no passwords or keys), explains the problem, and drafts a GitHub bug report.
+// (no passwords or keys), explains the problem, and keeps the result with the bug reports.
 import { post } from "./api.js";
 import { $, esc, attempt } from "./ui.js";
 import { copyBar, bindCopy, copyText } from "./copy.js";
 
-const ISSUE_URL = "https://github.com/ZachCurry13/novelcheck/issues/new?template=bug_report.yml";
-const URL_LIMIT = 7000; // GitHub rejects very long links; the full report is copied too
 const PENDING_KEY = "nc:diagnose";
 
 // diagnoseLater opens the System page with a problem already filled in.
@@ -31,7 +29,7 @@ export function renderDiagnose(host) {
     <section class="card mb-6 space-y-3">
       <h2 class="text-lg font-semibold">🩺 Diagnose with AI</h2>
       <p class="text-sm text-slate-400">Your AI reads NovelCheck's diagnostics (settings, recent problems and logs, never passwords or keys),
-        explains what's wrong, and writes a bug report you can send to the developer on GitHub.</p>
+        explains what's wrong, and keeps what it found with your bug reports (Settings → Developer, and the link to recent bug reports).</p>
       <textarea id="dx-problem" rows="3" class="input" placeholder="What went wrong? (optional) e.g. 'Send test email fails' or paste an error">${esc(pending)}</textarea>
       <div class="flex flex-wrap items-center gap-2">
         <button id="dx-run" class="btn-primary">🩺 Diagnose</button>
@@ -43,7 +41,6 @@ export function renderDiagnose(host) {
     </section>`;
   const out = $("#dx-out", host);
   let report = "";
-  let title = "";
   bindCopy(host, { "bug-report": () => report });
 
   $("#dx-raw-copy", host).addEventListener("click", async () => {
@@ -59,7 +56,6 @@ export function renderDiagnose(host) {
     e.target.textContent = "🩺 Diagnose";
     if (!d) return;
     report = d.report;
-    title = d.title;
     const verdict = d.ai_error ? "" : d.is_bug
       ? `<span class="chip-open">Looks like a bug: please send the report</span>`
       : `<span class="chip-none">Looks like something you can fix</span>`;
@@ -71,19 +67,12 @@ export function renderDiagnose(host) {
         ${d.fix_steps?.length ? `<ol class="ml-5 list-decimal space-y-1 text-sm">${d.fix_steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>` : ""}
         <p class="text-xs text-slate-500">Diagnosed by ${esc(d.model)}. AI can be wrong; check before changing settings.</p>`}
         <div class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-700 pt-3">
-          <span class="label mb-0">Bug report for GitHub</span>
-          <span class="flex flex-wrap gap-2">${copyBar("bug-report", "novelcheck-bug-report.md")}
-            <button id="dx-issue" class="btn-secondary py-1 text-xs">Open GitHub issue ↗</button></span>
+          <span class="label mb-0">Bug report</span>
+          <span class="flex flex-wrap gap-2">${copyBar("bug-report", "novelcheck-bug-report.md")}</span>
         </div>
         <pre id="bug-report" class="max-h-72 select-text overflow-auto whitespace-pre-wrap break-all rounded bg-slate-950 p-2 font-mono text-xs"></pre>
-        <p class="text-xs text-slate-500">Your web address is replaced with a placeholder. Read it over before posting; GitHub issues are public.</p>
+        <p class="text-xs text-slate-500">${d.saved ? "✓ Saved with your bug reports: whoever has the link to recent bug reports can read it there." : "Not saved; copy it if you want to keep it."} Your web address is replaced with a placeholder.</p>
       </div>`;
     $("#bug-report", out).textContent = report;
-    $("#dx-issue", out).addEventListener("click", async () => {
-      await copyText(report);
-      let body = report;
-      if (body.length > URL_LIMIT) body = body.slice(0, URL_LIMIT) + "\n\n…(cut off: select everything in this box and paste; the full report is on your clipboard)";
-      window.open(`${ISSUE_URL}&title=${encodeURIComponent(title)}&report=${encodeURIComponent(body)}`, "_blank", "noopener");
-    });
   });
 }

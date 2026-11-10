@@ -13,8 +13,9 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/version"
 )
 
-// A secret link to the recent bug reports (the server report, logs sent from
-// e-readers and browsers), so they can be read without signing in. An admin
+// A secret link to the recent bug reports (the server report with its errors and the debug recording, logs
+// sent from e-readers and browsers, AI diagnoses, and the problems and ideas the family reported), so they can
+// be read, and deleted once handled, without signing in. An admin
 // turns it on, copies it, and turns it off again; the secret is in the
 // address, like the OPDS feed's.
 
@@ -41,7 +42,19 @@ func (s *Server) handleBugLink(w http.ResponseWriter, r *http.Request) {
 		}
 		b.WriteString(entry)
 	}
-	fmt.Fprintf(&b, "\n== Handled? ==\nDelete reports once they are dealt with: POST <this link's address>/resolve?ids=<report numbers, comma separated>&errors=1 (errors=1 also empties the server error list; all=1 deletes every report).\n")
+	problems, _ := s.Store.ProblemReports()
+	fmt.Fprintf(&b, "\n== Problems and ideas reported by the family (open, newest first, %d) ==\n", len(problems))
+	for _, p := range problems {
+		fmt.Fprintf(&b, "\n--- P%d · %s · version %s · page %s · %s UTC ---\n%s\n(device: %s)\n", p.ID, p.Username, p.Version, orNone(p.Page), p.CreatedAt, p.Text, orNone(p.Device))
+	}
+	b.WriteString(`
+== Handled? ==
+Delete what is dealt with: POST <this link's address>/resolve?ids=<numbers> with any of these, joined by &:
+  ids=24,25              reports and AI diagnoses by number (all=1: every one)
+  errors=E-4d39,E-2de9   those server errors (errors=1: the whole list, slow requests too)
+  problems=3,4           family problems and ideas, marked done (problems=all: every open one)
+  recording=1            the debug recording
+`)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_, _ = w.Write([]byte(b.String()))
 }
@@ -65,11 +78,36 @@ func (s *Server) handleBugLinkResolve(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	cleared := false
-	if q.Get("errors") == "1" {
-		cleared = s.Store.ClearErrors() == nil
+	out := map[string]any{"deleted": deleted}
+	switch e := strings.TrimSpace(q.Get("errors")); {
+	case e == "1":
+		out["errors_cleared"] = s.Store.ClearErrors() == nil
+	case e != "":
+		out["errors_deleted"] = s.Store.DeleteErrors(strings.Split(e, ","))
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"deleted": deleted, "errors_cleared": cleared})
+	if p := strings.TrimSpace(q.Get("problems")); p != "" {
+		done := 0
+		if p == "all" {
+			open, _ := s.Store.ProblemReports()
+			for _, pr := range open {
+				if ok, _ := s.Store.CloseProblemReport(pr.ID); ok {
+					done++
+				}
+			}
+		}
+		for _, part := range strings.Split(p, ",") {
+			if n, err := strconv.ParseInt(strings.TrimPrefix(strings.TrimSpace(part), "P"), 10, 64); err == nil && n > 0 {
+				if ok, _ := s.Store.CloseProblemReport(n); ok {
+					done++
+				}
+			}
+		}
+		out["problems_done"] = done
+	}
+	if q.Get("recording") == "1" {
+		out["recording_cleared"] = s.Store.ClearActivity() == nil
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 func (s *Server) bugLinkJSON(r *http.Request) map[string]any {
