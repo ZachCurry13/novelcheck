@@ -220,6 +220,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/queue/{id}/hide", s.handleHideQueueItem)
 				r.Post("/queue/{id}/start", s.handleStartReading)
 				r.Post("/queue/{id}/finish", s.handleFinishReading)
+				r.Post("/queue/{id}/pause", s.handlePauseReading)
 				r.Group(func(r chi.Router) {
 					r.Use(s.requireModule(store.KeyModuleSuggest, "Suggested Reads"))
 					r.With(s.cached).Get("/suggestions", s.handleSuggestions) // ~4 s to work out, kept for a short while

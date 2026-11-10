@@ -106,6 +106,8 @@ export async function renderQueue(view, state) {
       if (r) toast(r.delivery_note);
     } else if (act === "finish") {
       await attempt(() => post(`/api/queue/${id}/finish`), "Marked as finished");
+    } else if (act === "pause") {
+      await attempt(() => post(`/api/queue/${id}/pause`, {}), "Back at the top of your Nightstand");
     } else if (act === "hide") {
       await attempt(() => post(`/api/queue/${id}/hide`, {}), "Hidden from your Nightstand");
     } else if (act === "unhide") {
@@ -194,6 +196,7 @@ function readingCard(i) {
         ${i.progress ? `<div class="space-y-1">${progressBar(i.progress)}<p class="text-xs text-slate-400">📖 ${progressText(i.progress)}</p></div>`
           : i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
         <div class="flex flex-wrap gap-2"><button data-act="finish" class="btn-secondary">Finished</button>
+          <button data-act="pause" class="btn-ghost whitespace-nowrap" title="Put it back at the top of your Nightstand; your place in the book is kept">⏸ Back to Nightstand</button>
           <button data-act="hide" class="btn-ghost whitespace-nowrap" title="Hide from your Nightstand (stays in your library)">🙈 Hide</button>
           <button data-act="remove" class="btn-ghost">Remove</button></div></div>
     </div>`;

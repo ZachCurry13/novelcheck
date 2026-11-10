@@ -221,3 +221,22 @@ func (s *Server) handleFinishReading(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "finished"})
 }
+
+// handlePauseReading: POST /api/queue/{id}/pause puts a book being read back at the top of the Nightstand.
+func (s *Server) handlePauseReading(w http.ResponseWriter, r *http.Request) {
+	u := auth.UserFrom(r)
+	id, ok := pathID(r, "id")
+	if !ok {
+		writeErr(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+	if _, err := s.Store.QueueItem(u.ID, id); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	if err := s.Store.PauseQueueItem(u.ID, id); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "queued"})
+}

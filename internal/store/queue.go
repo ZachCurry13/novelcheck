@@ -122,3 +122,12 @@ func (s *Store) SetQueueStatus(userID, itemID int64, status, note string) error 
 		updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND id = ?`, status, note, userID, itemID)
 	return err
 }
+
+// PauseQueueItem puts a book being read back on the Nightstand, at the top of the want-to-read list. Its
+// reading progress (from the e-reader) is kept, so starting it again carries on.
+func (s *Store) PauseQueueItem(userID, itemID int64) error {
+	_, err := s.DB.Exec(`UPDATE queue_items SET status = 'queued', delivery_note = 'Paused: back on your Nightstand',
+		position = COALESCE((SELECT MIN(position) - 1 FROM queue_items WHERE user_id = ?), 0), updated_at = CURRENT_TIMESTAMP
+		WHERE user_id = ? AND id = ?`, userID, userID, itemID)
+	return err
+}
