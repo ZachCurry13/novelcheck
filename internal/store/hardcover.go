@@ -55,6 +55,8 @@ type HardcoverBook struct {
 	Status         int
 	Percent        float64
 	Rating         float64 // their stars on Hardcover (0 = none)
+	FinishedAt     string  // the day they finished it ("" = unknown)
+	Pages          int
 	UpdatedAt      int64
 }
 
@@ -116,8 +118,8 @@ func (s *Store) SaveHardcover(userID int64, books []HardcoverBook) (int, error) 
 			bookID = ids[i]
 			matched++
 		}
-		if _, err := tx.Exec(`INSERT OR REPLACE INTO hardcover_books (user_id, title, authors, isbns, book_id, status, percent, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, userID, b.Title, b.Authors, strings.Join(b.ISBNs, ","), bookID, b.Status, b.Percent, b.UpdatedAt); err != nil {
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO hardcover_books (user_id, title, authors, isbns, book_id, status, percent, updated_at, finished_at, pages, rating)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, userID, b.Title, b.Authors, strings.Join(b.ISBNs, ","), bookID, b.Status, b.Percent, b.UpdatedAt, b.FinishedAt, b.Pages, b.Rating); err != nil {
 			return 0, err
 		}
 		if ids[i] == 0 {
@@ -278,3 +280,21 @@ func (s *Store) SetHardcoverGoals(userID int64, jsonText string) error {
 
 // HardcoverGoals returns the kept reading goals (JSON; "" when there are none).
 func (s *Store) HardcoverGoals(userID int64) string { return s.Setting(hardcoverGoalsKey(userID)) }
+
+// HardcoverRead is a book the person finished according to Hardcover, with the day.
+type HardcoverRead struct {
+	Title    string  `db:"title" json:"title"`
+	Author   string  `db:"authors" json:"author"`
+	BookID   *int64  `db:"book_id" json:"book_id"`
+	Finished string  `db:"finished_at" json:"finished"`
+	Pages    int     `db:"pages" json:"pages"`
+	Rating   float64 `db:"rating" json:"rating,omitempty"`
+}
+
+// HardcoverFinished lists the books Hardcover says the person finished, on a known day.
+func (s *Store) HardcoverFinished(userID int64) []HardcoverRead {
+	out := []HardcoverRead{}
+	_ = s.DB.Select(&out, `SELECT title, authors, book_id, finished_at, pages, rating FROM hardcover_books
+		WHERE user_id = ? AND status = 3 AND finished_at != '' ORDER BY finished_at DESC`, userID)
+	return out
+}

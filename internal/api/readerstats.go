@@ -101,6 +101,9 @@ func (s *Server) readingStatsFor(owner, viewer *store.User) map[string]any {
 	}
 	out := map[string]any{"books": outBooks, "hours": rows, "synced_at": synced}
 	if own {
+		if hr := s.Store.HardcoverFinished(owner.ID); len(hr) > 0 {
+			out["hardcover_read"] = hr // finished elsewhere (paper, audio): Wrapped counts them too
+		}
 		if g := s.Store.HardcoverGoals(owner.ID); g != "" {
 			out["hardcover_goals"] = json.RawMessage(g)
 		}

@@ -21,7 +21,8 @@ export async function renderWrapped(view, state) {
     return;
   }
   const m = prepare(data);
-  m.goals = data.hardcover_goals || []; // reading challenge from Hardcover, when connected
+  m.goals = data.hardcover_goals || [];
+  m.hcRead = data.hardcover_read || []; // books finished according to Hardcover, with the day // reading challenge from Hardcover, when connected
   const s = { tab: new URLSearchParams(location.hash.split("?")[1] || "").get("tab") === "trophies" ? "trophies" : "wrapped", period: "month", offset: -1 };
   if (!m.rows.length && !m.books.length) {
     view.innerHTML = `${TITLE}<div class="card space-y-2 text-sm text-slate-300"><p>Nothing to look back on yet. Wrapped and trophies come from KOReader's reading statistics.</p>

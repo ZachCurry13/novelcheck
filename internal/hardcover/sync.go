@@ -20,7 +20,7 @@ func SyncUser(ctx context.Context, st *store.Store, c *Client, userID int64) (bo
 	in := make([]store.HardcoverBook, 0, len(shelves))
 	for _, b := range shelves {
 		in = append(in, store.HardcoverBook{Title: b.Title, Authors: b.Authors, ISBNs: b.ISBNs, Status: b.Status,
-			Percent: b.Percent, Rating: b.Rating, UpdatedAt: b.UpdatedAt.Unix()})
+			Percent: b.Percent, Rating: b.Rating, FinishedAt: b.FinishedAt, Pages: b.Pages, UpdatedAt: b.UpdatedAt.Unix()})
 	}
 	matched, err = st.SaveHardcover(userID, in)
 	if goals, gerr := c.Goals(ctx); gerr == nil { // the reading challenge, for Wrapped (best effort)

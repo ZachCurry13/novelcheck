@@ -168,15 +168,16 @@ func (c *Client) Username(ctx context.Context) (string, error) {
 
 // Book is one book on a person's shelves.
 type Book struct {
-	Title     string
-	Authors   string // the first author
-	ISBNs     []string
-	Status    int
-	Pages     int     // the edition's pages (0 = unknown)
-	Progress  int     // pages read (0 = unknown)
-	Percent   float64 // 0..1 when known
-	Rating    float64 // their stars on Hardcover (0 = none)
-	UpdatedAt time.Time
+	Title      string
+	Authors    string // the first author
+	ISBNs      []string
+	Status     int
+	Pages      int     // the edition's pages (0 = unknown)
+	Progress   int     // pages read (0 = unknown)
+	Percent    float64 // 0..1 when known
+	Rating     float64 // their stars on Hardcover (0 = none)
+	FinishedAt string  // "2026-03-09" when they finished it ("" = unknown)
+	UpdatedAt  time.Time
 }
 
 const shelvesQuery = `query { me { user_books(where: {status_id: {_in: [1, 2, 3, 4]}}, order_by: {updated_at: desc}, limit: 300) {
@@ -205,7 +206,8 @@ type userBook struct {
 		ISBN13 string `json:"isbn_13"`
 	} `json:"edition"`
 	Reads []struct {
-		ProgressPages int `json:"progress_pages"`
+		ProgressPages int     `json:"progress_pages"`
+		FinishedAt    *string `json:"finished_at"`
 	} `json:"user_book_reads"`
 }
 
@@ -244,6 +246,9 @@ func (c *Client) Shelves(ctx context.Context) ([]Book, error) {
 		}
 		if len(ub.Reads) > 0 {
 			b.Progress = ub.Reads[0].ProgressPages
+			if f := ub.Reads[0].FinishedAt; f != nil && len(*f) >= 10 {
+				b.FinishedAt = (*f)[:10] // the day, as Hardcover has it
+			}
 		}
 		switch {
 		case b.Status == Read:

@@ -26,7 +26,7 @@ func ratedHardcover(t *testing.T, mutations *[]string) *httptest.Server {
 		case strings.Contains(q.Query, "_in: [1, 2, 3, 4]"):
 			io.WriteString(w, `{"data": {"me": [{"user_books": [{"status_id": 3, "updated_at": "2026-01-01T00:00:00Z", "rating": 4.5,
 				"book": {"title": "Dune", "pages": 500, "contributions": [{"author": {"name": "Frank Herbert"}}]},
-				"edition": {"pages": 500, "isbn_13": "9780441172719"}, "user_book_reads": []}]}]}}`)
+				"edition": {"pages": 500, "isbn_13": "9780441172719"}, "user_book_reads": [{"progress_pages": 500, "finished_at": "2026-03-09"}]}]}]}}`)
 		case strings.Contains(q.Query, "book_id: {_eq: 9}"):
 			io.WriteString(w, `{"data": {"me": [{"user_books": [{"id": 3, "status_id": 3, "user_book_reads": []}]}]}}`)
 		default:
@@ -57,6 +57,11 @@ func TestHardcoverRatings(t *testing.T) {
 	}
 	if len(muts) != 0 {
 		t.Fatalf("a rating that came from Hardcover is not sent back: %v", muts)
+	}
+	_, stats := admin.do("GET", "/api/me/reading-stats", nil, false)
+	read, _ := stats["hardcover_read"].([]any)
+	if len(read) != 1 || read[0].(map[string]any)["finished"] != "2026-03-09" || read[0].(map[string]any)["pages"] != float64(500) {
+		t.Fatalf("the finish day comes back for Wrapped: %v", stats["hardcover_read"])
 	}
 	admin.do("PUT", "/api/books/"+itoa(dune)+"/rating", map[string]float64{"stars": 5}, true)
 	admin.do("POST", "/api/me/hardcover/sync", nil, true)
