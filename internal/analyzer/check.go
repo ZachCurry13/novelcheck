@@ -112,6 +112,25 @@ func (w *Worker) ReadCover(ctx context.Context, image []byte, mediaType string) 
 				if f, ok := parseCover(out); ok {
 					return f, nil
 				}
+				// It can see, but read no title: the book may be sideways or upside down in the photo.
+				for _, q := range []int{1, 3, 2} {
+					alt, ok := turned(image, q)
+					if !ok || ctx.Err() != nil {
+						break
+					}
+					tctx, tcancel := context.WithTimeout(ctx, limit)
+					out, usage, terr := reader.ReadImage(tctx, model, llm.CoverPrompt, alt, "image/jpeg")
+					tcancel()
+					if usage.Total() > 0 {
+						_ = w.Store.RecordUsageCost(0, model, usage.PromptTokens, usage.CompletionTokens, ai, 0)
+					}
+					if terr != nil {
+						break
+					}
+					if f, ok := parseCover(out); ok {
+						return f, nil
+					}
+				}
 				err = errors.New("no book title in the answer")
 			} else if cantSee(err) {
 				blind.Store(key, true)
@@ -130,7 +149,7 @@ func (w *Worker) ReadCover(ctx context.Context, image []byte, mediaType string) 
 	}
 	hint := ""
 	if strings.TrimSpace(w.Store.Setting(store.KeyVisionModel)) == "" {
-		hint = " Tip: give your local AI a model that can read photos (Admin → AI → Photo-reading model, for example gemma3:4b)."
+		hint = " Tip: give your local AI a model that can read photos (Admin → AI & Scans → Your AI → Photo-reading model, for example gemma3:4b)."
 	}
 	return enrich.Found{}, fmt.Errorf("%w (%s)%s", ErrCantSee, strings.Join(errs, "; "), hint)
 }

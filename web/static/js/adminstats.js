@@ -6,6 +6,7 @@ import { $, esc, fmtNum, fmtMoney, canHere } from "./ui.js";
 export const perBookCost = (s) => (s.cost_spent && s.usage.total_calls ? s.cost_spent / s.usage.total_calls : 0);
 
 function banner(el, show, html) {
+  if (!el) return; // a notice that lives on another tab (or isn't this person's)
   el.classList.toggle("hidden", !show);
   if (show) el.innerHTML = html;
 }
@@ -26,22 +27,19 @@ export function renderStats(view, s) {
     s.deep_review && `🧬 <b>${fmtNum(s.deep_review)}</b> Deep Scan result${s.deep_review === 1 ? "" : "s"} would raise a rating a lot and ${s.deep_review === 1 ? "waits" : "wait"} for you to check.`,
     s.pending_deep && `🧬 <b>${fmtNum(s.pending_deep)}</b> Deep Scan request${s.pending_deep === 1 ? " is" : "s are"} waiting for your approval.`,
   ].filter(Boolean).join(" ") + ` <a href="#/deepscan?review" class="ml-2 underline">Review</a>`);
-  banner($("#del-banner", view), s.pending_deletes && canHere("calibre"),
-    `🗑 <b>${fmtNum(s.pending_deletes)}</b> book${s.pending_deletes === 1 ? " is" : "s are"} waiting for your delete review. <a href="#/deletions" class="ml-2 underline">Review</a>`);
   banner($("#problems-banner", view), s.problem_reports && canHere("system"),
     `🐞 <b>${fmtNum(s.problem_reports)}</b> problem${s.problem_reports === 1 ? " or idea" : "s or ideas"} from your family. <button data-act="problem-reports" class="ml-2 underline">Review</button>`);
   banner($("#box-banner", view), s.box_sets,
     `📦 <b>${fmtNum(s.box_sets)}</b> book${s.box_sets === 1 ? " looks" : "s look"} like a box set (several books in one). <button data-act="box-sets" class="ml-2 underline">Check and split</button>`);
-  banner($("#covers-banner", view), s.cover_reports && canHere("calibre"),
-    `🖼️ <b>${fmtNum(s.cover_reports)}</b> book cover${s.cover_reports === 1 ? " was" : "s were"} reported as wrong. <button data-act="cover-reports" class="ml-2 underline">Review</button>`);
-  banner($("#titles-banner", view), s.title_fixes && canHere("calibre"),
-    `🏷️ <b>${fmtNum(s.title_fixes)}</b> title${s.title_fixes === 1 ? "" : "s"} in Calibre carr${s.title_fixes === 1 ? "ies" : "y"} track or series numbers (like “01 - …”). NovelCheck already shows ${s.title_fixes === 1 ? "it" : "them"} tidied. <button data-act="tidy-titles" class="ml-2 underline">Tidy in Calibre</button>`);
+  // What waits on the other tabs shows as a count on their tab.
+  tabCount(view, "cleanup", canHere("calibre") ? (s.pending_deletes || 0) + (s.cover_reports || 0) + (s.title_fixes || 0) + (s.box_sets || 0) : 0);
+  tabCount(view, "system", canHere("system") ? s.problem_reports || 0 : 0);
 
   let rerate = "";
   if (s.non_english) {
     rerate = `🌐 <b>${fmtNum(s.non_english)}</b> book summar${s.non_english === 1 ? "y isn't" : "ies aren't"} in English.
       <button data-act="rerate-language" class="btn-secondary ml-2 py-1">Re-rate them in English</button>
-      <span class="block text-xs text-slate-400">The AI rewrites them in the language chosen under LLM Analysis Engine. They stay in the library meanwhile.</span>`;
+      <span class="block text-xs text-slate-400">The AI rewrites them in the language chosen under Extras. They stay in the library meanwhile.</span>`;
   }
   if (s.rerate_candidates) {
     const est = perBookCost(s) * s.rerate_candidates;
@@ -55,12 +53,27 @@ export function renderStats(view, s) {
     ? `🏷️ Filling in genres with AI… <b>${fmtNum(g.done)}</b> of ${fmtNum(g.total)} books. <button data-act="genres-stop" class="ml-2 underline">Stop</button>`
     : `🏷️ <b>${fmtNum(g.missing)}</b> library book${g.missing === 1 ? " has" : "s have"} no genre (no tags in Calibre).
       <button data-act="genres-fill" class="btn-secondary ml-2 py-1">Fill in with AI${g.est_cost ? ` (≈ ${fmtMoney(g.est_cost)})` : ""}</button>
-      <span class="block text-xs text-slate-400">New books are filled in by themselves (same switch and hours as automatic rating), about 25 books per AI call, within your hourly token cap. Tags you add in Calibre always win.${g.error ? ` <span class="text-rose-400">Last run stopped: ${esc(g.error)}</span>` : ""}</span>`);
+      <span class="block text-xs text-slate-400">New books are filled in by themselves (same switch and hours as automatic rating), a batch of books per AI call, within your hourly token cap. Tags you add in Calibre always win.${g.error ? ` <span class="text-rose-400">Last run stopped: ${esc(g.error)}</span>` : ""}</span>`);
 
   const w = s.worker;
   const sync = s.calibre_last_sync;
-  $("#worker", view).innerHTML = `Worker: <b>${esc(w.state)}</b>${w.current_title ? ` — ${esc(w.current_title)}` : ""}
-    · ${fmtNum(w.queue_length)} waiting${w.last_error ? ` · <span class="text-rose-400">last error: ${esc(w.last_error)}</span>` : ""}
-    <br>Calibre: ${s.calibre_available ? "library found" : "<span class='text-amber-400'>no library selected (Delivery &amp; Services → Calibre Library)</span>"}${sync
-      ? ` · last sync ${esc(new Date(sync.at).toLocaleString())} (${fmtNum(sync.result?.books)} books${sync.error ? `, <span class="text-rose-400">${esc(sync.error)}</span>` : ""})` : ""}`;
+  const doing = { idle: "💤 The AI is idle", analyzing: "⚙️ Rating now", enriching: "🔎 Looking up", delaying: "⏳ Pausing between books", rate_limited: "⏳ Waiting for the hourly limit" }[w.state] || esc(w.state);
+  $("#worker", view).innerHTML = `<b>${doing}</b>${w.current_title ? `: ${esc(w.current_title)}` : ""}
+    · ${fmtNum(w.queue_length)} in the queue${w.last_error ? ` · <span class="text-rose-400">last error: ${esc(w.last_error)}</span>` : ""}
+    <span class="block text-xs text-slate-400">Calibre: ${s.calibre_available ? "library found" : "<span class='text-amber-400'>no library selected (Delivery &amp; Services → Calibre Library)</span>"}${sync
+      ? ` · last read ${esc(new Date(sync.at).toLocaleString())} (${fmtNum(sync.result?.books)} books${sync.error ? `, <span class="text-rose-400">${esc(sync.error)}</span>` : ""})` : ""}</span>`;
+}
+
+// tabCount shows how many things wait on another Admin tab, on that tab's button.
+function tabCount(view, tab, n) {
+  const btn = view.querySelector(`#admin-tabs [data-tab="${tab}"]`);
+  if (!btn) return;
+  let dot = btn.querySelector(".tab-count");
+  if (!n) return dot?.remove();
+  if (!dot) {
+    dot = document.createElement("span");
+    dot.className = "tab-count";
+    btn.append(dot);
+  }
+  dot.textContent = n > 99 ? "99+" : String(n);
 }

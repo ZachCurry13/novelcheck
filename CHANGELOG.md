@@ -4,6 +4,26 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.66.0]
+
+### 🤖 Admin → AI & Scans, tidied up
+- **Six plain cards instead of a wall of settings:** **Your AI**, **Backup AI**, **Deep Scans**, **When it runs**, **Extras** and **Machines & costs**. Every setting is still there, in the card it belongs to. A closed card shows what it is set to (for example the model in use).
+- **Rarely used settings sit under "Advanced"** in each card (fallback models, JSON mode, time limit, context size, token prices).
+- **A Save bar appears as soon as you change something** and goes away once saved, on every Admin settings tab. No more hunting for the button at the bottom.
+- **Notices show on the tab they belong to.** AI & Scans only shows AI notices. What waits in Library cleanup (delete requests, wrong covers, titles to tidy, box sets) and in System (problem reports) shows as a count on that tab.
+- **Two main buttons**, "Rate waiting books now" and "Check Calibre for new books". Re-rating the whole library and emptying the queue moved under "More actions", each with a line saying what it does. The status reads in plain words ("The AI is idle", "Rating now: …").
+- Your own AI filters are now in **Extras**; the photo-reading model is in **Your AI**.
+
+### 📷 Check a book
+- **The right book when two share a title.** A photo of *Part of Your World* by Liz Braswell showed the book of the same name by Abby Jimenez, because a lone title match ignored the author. A book by a clearly different author is no longer used.
+- **Sideways and upside-down photos.** The photo is turned the way the phone was held before it is sent, and when the AI can see the photo but reads no title, it tries the photo turned each way.
+- **"No image available" is not a cover.** Catalogues sometimes pass along a shop's placeholder picture as the cover. It is now recognized and dropped (ones already kept too), so the book gets a real or drawn cover.
+
+### 🧹 Library cleanup
+- **Removing extra copies and formats no longer stops on a subtitle.** The safety check that keeps NovelCheck out of the wrong Calibre library stopped everything when Calibre's title carried a subtitle ("A Kiss of Shadows: A Merry Gentry Novel" against "A Kiss of Shadows"). Titles are now compared with that in mind, in Remove copies, Formats and Tidy.
+- **The format job leaves a mismatched book alone and carries on** (it is listed with the reason). It only stops when more than one book in five doesn't match, which really is the wrong library. While it checks the books with Calibre at the start, it says so.
+- **Filling in genres with a small local AI works.** Lists of 25 books were too long for small models and their answers were cut off ("invalid JSON"). A local AI now gets 8 books at a time, and a cut-off answer makes NovelCheck ask about fewer books instead of stopping.
+
 ## [1.65.0]
 
 ### 🤖 AI

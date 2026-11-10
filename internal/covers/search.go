@@ -23,7 +23,7 @@ func (c Cache) Search(ctx context.Context, name, title, author string) (string, 
 		return "", nil, false
 	}
 	out := filepath.Join(c.Dir, name+".jpg")
-	if info, err := os.Stat(out); err == nil {
+	if info, ok := c.have(out); ok {
 		return out, info, true
 	}
 	miss := out + ".none"

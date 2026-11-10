@@ -85,7 +85,7 @@ func (s *Server) handleRerateBig(w http.ResponseWriter, r *http.Request) {
 	}
 	ai, configured := s.Store.DeepAI()
 	if !configured {
-		writeErr(w, http.StatusBadRequest, "set up a Deep Scan machine first (Admin → AI & Scans → AI machines)")
+		writeErr(w, http.StatusBadRequest, "set up a Deep Scan machine first (Admin → AI & Scans → Deep Scans)")
 		return
 	}
 	if s.Deep != nil && s.Deep.MachineAway() {

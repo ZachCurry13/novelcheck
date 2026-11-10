@@ -25,7 +25,7 @@ func (c Cache) OpenLibrary(ctx context.Context, isbn string) (string, os.FileInf
 		return "", nil, false
 	}
 	out := filepath.Join(c.Dir, "ol-"+isbn+".jpg")
-	if info, err := os.Stat(out); err == nil {
+	if info, ok := c.have(out); ok {
 		return out, info, true
 	}
 	miss := out + ".none"
@@ -58,6 +58,11 @@ func (c Cache) fetch(ctx context.Context, url, out, miss string) (string, os.Fil
 			_ = os.MkdirAll(c.Dir, 0o755)
 			_ = os.WriteFile(miss, nil, 0o644)
 		}
+		return "", nil, false
+	}
+	if NoImage(body) { // a "No image available" picture is not a cover
+		_ = os.MkdirAll(c.Dir, 0o755)
+		_ = os.WriteFile(miss, nil, 0o644)
 		return "", nil, false
 	}
 	if os.MkdirAll(c.Dir, 0o755) != nil || os.WriteFile(out, body, 0o644) != nil {

@@ -80,3 +80,11 @@ body.story-open { overflow: hidden; }
 /* Search gets the whole first row; Sort, Filters and more sit under it (a phone squeezed it to a square). */
 @media (max-width: 640px) { #filters .fbar input[name="q"] { flex: 1 1 100%; min-height: 2.75rem; } }
 @media (max-width: 640px) { #filters .fbar .fsort { flex: 1 1 0; min-width: 8rem; } }
+/* Admin: a count on a tab, what a settings card is set to, and the Save bar (v1.66) */
+.tab-count { margin-left: 0.35rem; border-radius: 9999px; background: rgb(120 53 15 / 0.7); padding: 0 0.4rem; font-size: 0.7rem; font-weight: 600; color: rgb(253 230 138); }
+.set-state { margin-left: 0.4rem; font-size: 0.85rem; font-weight: 400; color: rgb(var(--indigo-400)); }
+.set-note { display: block; font-size: 0.8rem; font-weight: 400; color: rgb(148 163 184); }
+.set-adv { border-top: 1px solid rgb(51 65 85 / 0.7); padding-top: 0.6rem; }
+.save-bar { position: sticky; bottom: calc(4.75rem + env(safe-area-inset-bottom)); z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; border: 1px solid rgb(var(--indigo-400)); border-radius: 0.8rem; background: rgb(var(--slate-900)); padding: 0.6rem 0.8rem; font-size: 0.9rem; box-shadow: 0 12px 30px rgb(0 0 0 / 0.5); }
+.save-bar.hidden { display: none; }
+@media (min-width: 768px) { .save-bar { bottom: 1rem; } }

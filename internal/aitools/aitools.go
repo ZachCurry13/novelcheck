@@ -101,7 +101,7 @@ func (s *Service) announce(ups []ollama.Update) {
 			continue
 		}
 		seen[key] = u.Digest
-		s.Store.Notify("info", "model-update", fmt.Sprintf("💡 A newer version of %s is out. Update it under Admin → AI & Scans → AI machines.", u.Model),
+		s.Store.Notify("info", "model-update", fmt.Sprintf("💡 A newer version of %s is out. Update it under Admin → AI & Scans → Machines & costs.", u.Model),
 			"#/admin?tab=ai")
 	}
 	if data, err := json.Marshal(seen); err == nil {

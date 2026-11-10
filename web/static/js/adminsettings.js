@@ -1,169 +1,88 @@
-// Admin settings, grouped by Admin tab into collapsible cards. Fields tied to
-// a switch (for example the backup AI's details) stay hidden until it's on.
+// Admin settings, grouped by Admin tab into collapsible cards (the cards and their fields are listed in
+// adminfields.js). Fields tied to a switch (for example the backup AI's details) stay hidden until it's on,
+// rarely used ones sit under each card's "Advanced" line, and a Save bar appears once something changed.
 import { put } from "./api.js";
 import { $, $$, esc, attempt, can } from "./ui.js";
 import { initProviderPicker } from "./llmpresets.js";
 import { on } from "./modules.js";
 import { refreshUser } from "./app.js";
+import { SECTIONS, SECTION_MODULE, SECTION_AREA, NOTE, TOP, EXTRA, HELP } from "./adminfields.js";
 
-// [tab, title, fields]; a field is [key, label, placeholder/choices, type, shown only while this switch is on].
-const SECTIONS = [
-  ["ai", "LLM Analysis Engine", [
-    ["llm_provider", "", "", "hidden"],
-    ["llm_base_url", "API base URL", "https://api.openai.com/v1 · http://ollama:11434/v1"],
-    ["llm_api_key", "API key", "Leave blank for local Ollama", "password"],
-    ["llm_model", "Primary (small) model", "gpt-4o-mini · claude-haiku-4-5 · gemini-3.5-flash-lite · sonar · llama3.2"],
-    ["llm_fallback_model", "Fallback model(s)", "Only used when the main model fails. Several? Separate with commas, in order"],
-    ["llm_json_mode", "JSON response mode", "true / false", "bool"],
-    ["deep_read_model", "Deep Scan model (optional)", "Blank = the models above · e.g. a cheaper model with a big context window"],
-    ["google_books_api_key", "Google Books API key (optional)", "", "password"],
-    ["language", "Language for book summaries", "English (US)|English (UK)|Spanish|French|German|Portuguese|Italian|Dutch", "select"],
-  ]],
-  ["ai", "Backup AI (optional)", [
-    ["backup_llm_enabled", "Use a backup AI when the main one fails (a second Ollama, or a cloud AI)", "", "bool"],
-    ["backup_llm_provider", "", "", "hidden"],
-    ["backup_llm_base_url", "API base URL", "http://192.168.1.60:11434/v1 · https://api.openai.com/v1", "text", "backup_llm_enabled"],
-    ["backup_llm_api_key", "API key", "Leave blank for Ollama", "password", "backup_llm_enabled"],
-    ["backup_llm_model", "Model(s), in order", "e.g. llama3.2, or gpt-4o-mini; several? separate with commas", "text", "backup_llm_enabled"],
-    ["backup_llm_json_mode", "JSON response mode", "", "bool", "backup_llm_enabled"],
-    ["backup_price_input_per_million", "Input price per 1M tokens (USD)", "0 for Ollama", "number", "backup_llm_enabled"],
-    ["backup_price_output_per_million", "Output price per 1M tokens (USD)", "0 for Ollama", "number", "backup_llm_enabled"],
-  ]],
-  ["ai", "AI machines", [
-    ["deep_llm_enabled", "Run Deep Scans on a separate, bigger machine (they wait while it's switched off)", "", "bool"],
-    ["deep_llm_provider", "", "", "hidden"],
-    ["deep_llm_base_url", "API base URL", "http://<the machine's address>:11434/v1", "text", "deep_llm_enabled"],
-    ["deep_llm_api_key", "API key", "Leave blank for Ollama", "password", "deep_llm_enabled"],
-    ["deep_llm_model", "Model(s), in order", "e.g. qwen2.5:14b; several? separate with commas", "text", "deep_llm_enabled"],
-    ["deep_llm_json_mode", "JSON response mode", "", "bool", "deep_llm_enabled"],
-    ["power_price_kwh", "Electricity price per kWh (USD)", "0 = don't count electricity", "number"],
-    ["main_ai_watts", "Main AI machine: extra watts while it works", "e.g. 150 · 0 for a cloud AI", "number"],
-    ["backup_ai_watts", "Backup AI machine: extra watts while it works", "0 for a cloud AI", "number", "backup_llm_enabled"],
-    ["deep_ai_watts", "Deep Scan machine: extra watts while it works", "e.g. 350", "number", "deep_llm_enabled"],
-  ]],
-  ["ai", "Suggested Reads", [
-    ["suggest_mode", "How suggestions under Nightstand are picked", "AI picks + books you don't own|AI picks from your library|Free matching only (no AI)", "select"],
-  ]],
-  ["ai", "Automatic rating", []],
-  ["ai", "Rate Caps & Batching", [
-    ["batch_size", "Books per batch (0 = all waiting books)", "20", "number"],
-    ["tokens_per_hour_cap", "Max tokens per hour (0 = unlimited)", "25000", "number"],
-    ["scan_delay_seconds", "Delay between scans (seconds)", "2", "number"],
-    ["vision_model", "Photo-reading model on your local AI (Check a book)", "e.g. gemma3:4b · on the AI machine run: ollama pull gemma3:4b", "text"],
-    ["llm_timeout_seconds", "AI time limit per book (seconds)", "0 = automatic: 10 minutes for Ollama, 2 for cloud", "number"],
-    ["local_context_tokens", "Context size of your local AI (tokens)", "4096", "number"],
-    ["price_input_per_million", "Input price per 1M tokens (USD)", "0.15", "number"],
-    ["price_output_per_million", "Output price per 1M tokens (USD)", "0.60", "number"],
-  ]],
-  ["delivery", "SMTP / Send-to-Kindle", [
-    ["smtp_host", "SMTP host", "smtp.gmail.com"],
-    ["smtp_port", "SMTP port", "587 (STARTTLS) or 465 (TLS)", "number"],
-    ["smtp_username", "SMTP username", "your full email address, e.g. you@gmail.com"],
-    ["smtp_password", "SMTP password / app password", "", "password"],
-    ["smtp_from", "Approved sender email", "must be on your Amazon approved list"],
-  ]],
-  ["delivery", "Calibre Library", [
-    ["calibre_poll_hours", "Sync every N hours (0 = manual only)", "6", "number"],
-    ["calibre_web_url", "Calibre-Web address (optional)", "http://192.168.1.10:8083 · adds \"Open in Calibre-Web\" to each book"],
-  ]],
-  ["delivery", "Audiobookshelf", [
-    ["abs_url", "Audiobookshelf address", "http://192.168.1.10:13378"],
-    ["abs_api_token", "API token", "Paste the token from Audiobookshelf", "password"],
-    ["abs_poll_hours", "Read the library every N hours (0 = only when you press the button)", "12", "number"],
-  ]],
-  ["delivery", "Discover", [
-    ["nyt_api_key", "New York Times Books API key (optional, free)", "Paste the key from developer.nytimes.com", "password"],
-    ["discover_daily_ratings", "Discover books the AI rates per day (0 = none)", "30", "number"],
-  ]],
-  ["system", "Features", [
-    ["module_queue", "Nightstand reading queue", "", "bool"],
-    ["module_send_to_kindle", "Send-to-Kindle email delivery", "", "bool"],
-    ["module_koreader", "KOReader catalog delivery", "", "bool"],
-    ["module_import", "Import books (Kindle / drive scanner and lists)", "", "bool"],
-    ["module_parents", "Parent tools (kids' accounts, age groups, parents' notes)", "", "bool"],
-    ["module_suggestions", "💡 Suggested Reads under Nightstand", "", "bool"],
-    ["module_taste", "🎯 Taste profile: people can rate books they know to improve their suggestions (uses no AI)", "", "bool"],
-    ["module_discover", "🧭 Discover tab: best sellers, classics, and the family's new and popular books", "", "bool"],
-    ["notify_routine", "🔔 Also show everyday events: new books from Calibre, rating finished, someone started a book", "", "bool"],
-  ]],
-  ["system", "Sign-in & Updates", [
-    ["session_days", "Keep people signed in for (days, renewed while they use the app)", "30", "number"],
-    ["check_updates", "Check GitHub for new NovelCheck versions (shows a banner to admins and editors)", "", "bool"],
-  ]],
-];
-
-// Cards that only matter while a feature is on.
-const SECTION_MODULE = { "SMTP / Send-to-Kindle": "send_to_kindle", Discover: "discover" };
-
-// The area each card belongs to; an admin sees the cards of the areas the
-// main admin gave them (the server sorts each setting the same way: settingArea).
-const SECTION_AREA = {
-  "LLM Analysis Engine": "ai", "Backup AI (optional)": "ai", "AI machines": "ai", "Suggested Reads": "ai",
-  "Automatic rating": "ai", "Rate Caps & Batching": "ai", "SMTP / Send-to-Kindle": "services",
-  "Calibre Library": "calibre", Audiobookshelf: "services", Discover: "services", Features: "system", "Sign-in & Updates": "system",
-};
-
-const EXTRA = {
-  "LLM Analysis Engine": `<div id="llm-preset-host"></div>`,
-  "Backup AI (optional)": `<p class="text-xs text-slate-400" data-when="backup_llm_enabled">Tried only when the main AI fails on a book. If the main server is switched off, NovelCheck goes straight to the backup. You'll get a 🔔 notice when the backup is used.</p><div id="backup-preset-host" data-when="backup_llm_enabled"></div>`,
-  "AI machines": `<p class="text-xs text-slate-400" data-when="deep_llm_enabled">Deep Scans read whole books, so a bigger model on a stronger machine rates them better. Ratings stay on the main AI. While this machine is off or asleep, Deep Scans wait (🧬⏸) and carry on when it answers.</p><div id="deep-preset-host" data-when="deep_llm_enabled"></div><div id="aitools-host" class="space-y-3"></div>`,
-  "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,
-  "Calibre Library": `<div id="calibre-picker"></div><div id="calibre-server"></div>`,
-  Discover: `<div id="discover-admin" class="space-y-2"></div>`,
-  Audiobookshelf: `<div id="abs-admin" class="space-y-2"></div>`,
-  "Automatic rating": `<div id="auto-rate-host" class="space-y-3"></div>`,
-  Features: `<p class="text-xs text-slate-400">Turn off what your family doesn't use. It disappears for everyone; kids' content rules always keep applying.</p>`,
+// What each AI card is set to right now, shown beside its title while it is closed.
+const STATE = {
+  "🤖 Your AI": (v) => v.llm_model || "not set up yet",
+  "🛟 Backup AI": (v) => (v.backup_llm_enabled === "true" ? v.backup_llm_model || "on" : "off"),
+  "🧬 Deep Scans": (v) => (v.deep_llm_enabled === "true" ? "on a separate machine" : "on your AI"),
 };
 
 // renderSettingsTab puts one tab's settings (as collapsible cards) into host.
 export function renderSettingsTab(host, tab, settings, user) {
   const sections = SECTIONS.filter(([t, title]) => t === tab && can(user, SECTION_AREA[title]));
   if (!sections.length) return;
-  const form = document.createElement("form");
+  // Not a <form>: cards hold small forms of their own (custom filters), and forms can't be nested.
+  const form = document.createElement("div");
   form.className = "space-y-3";
-  form.innerHTML = sections.map(([, title, fields], i) => `
-    <details class="card min-w-0${on(user, SECTION_MODULE[title]) ? "" : " module-off"}" ${SECTION_MODULE[title] ? `data-module="${SECTION_MODULE[title]}"` : ""} ${i === 0 ? "open" : ""}>
-      <summary class="cursor-pointer text-lg font-semibold">${esc(title)}</summary>
-      <div class="mt-3 space-y-3">${title === "Features" ? EXTRA[title] : ""}
-        ${fields.map(([k, label, ph, type, when]) => field(k, label, ph, type, settings[k], when)).join("")}
-        ${title !== "Features" ? EXTRA[title] || "" : ""}</div>
-    </details>`).join("") + `<button class="btn-primary">Save settings</button>`;
+  const open = (title, i) => (tab === "ai" ? title === "🤖 Your AI" && !settings.llm_model : i === 0);
+  form.innerHTML = sections.map(([, title, fields], i) => {
+    const plain = fields.filter((f) => f[5] !== "adv");
+    const adv = fields.filter((f) => f[5] === "adv");
+    const draw = (list) => list.map(([k, label, ph, type, when]) => field(k, label, ph, type, settings[k], when)).join("");
+    return `
+    <details class="card min-w-0${on(user, SECTION_MODULE[title]) ? "" : " module-off"}" ${SECTION_MODULE[title] ? `data-module="${SECTION_MODULE[title]}"` : ""} ${open(title, i) ? "open" : ""}>
+      <summary class="cursor-pointer text-lg font-semibold">${esc(title)}${STATE[title] ? ` <span data-state="${esc(title)}" class="set-state"></span>` : ""}
+        ${NOTE[title] ? `<span class="set-note">${esc(NOTE[title])}</span>` : ""}</summary>
+      <div class="mt-3 space-y-3">${TOP[title] || ""}${draw(plain)}${EXTRA[title] || ""}
+        ${adv.length ? `<details class="set-adv"><summary class="cursor-pointer text-sm text-slate-400">Advanced</summary><div class="mt-3 space-y-3">${draw(adv)}</div></details>` : ""}</div>
+    </details>`;
+  }).join("") + `<div class="save-bar hidden" role="status"><span>You have unsaved changes.</span><button type="button" data-save class="btn-primary">Save</button></div>`;
   host.append(form);
 
   const llmHost = $("#llm-preset-host", form);
-  if (llmHost) {
-    llmHost.parentElement.prepend(llmHost); // provider menu first
-    initProviderPicker(llmHost, form, settings);
-  }
+  if (llmHost) initProviderPicker(llmHost, form, settings);
   const autoHost = $("#auto-rate-host", form);
-  if (autoHost) import("./autorateadmin.js").then((m) => m.renderAutoRate(autoHost, settings));
+  if (autoHost) import("./autorateadmin.js").then((m) => m.renderAutoRate(autoHost, settings, $("#ideas-host", form))).then(() => (saved = read()));
   const absHost = $("#abs-admin", form);
   if (absHost) import("./absadmin.js").then((m) => m.renderABSAdmin(absHost, form));
   const discoverHost = $("#discover-admin", form);
   if (discoverHost) import("./discoveradmin.js").then((m) => m.renderDiscoverAdmin(discoverHost, form));
-  const backupHost = $("#backup-preset-host", form);
-  if (backupHost) {
+  for (const [id, prefix, key] of [["#backup-preset-host", "backup_", "backup_llm_enabled"], ["#deep-preset-host", "deep_", "deep_llm_enabled"]]) {
+    const h = $(id, form);
+    if (!h) continue;
     // Under the on/off switch: the note, then the provider menu.
-    $('[data-key="backup_llm_enabled"]', form).closest("label").after(backupHost.previousElementSibling, backupHost);
-    initProviderPicker(backupHost, form, settings, "backup_");
-  }
-  const deepHost = $("#deep-preset-host", form);
-  if (deepHost) {
-    $('[data-key="deep_llm_enabled"]', form).closest("label").after(deepHost.previousElementSibling, deepHost);
-    initProviderPicker(deepHost, form, settings, "deep_");
+    $(`[data-key="${key}"]`, form).closest("label").after(h.previousElementSibling, h);
+    initProviderPicker(h, form, settings, prefix);
   }
   const toolsHost = $("#aitools-host", form);
-  if (toolsHost) import("./aitoolsadmin.js").then((m) => m.renderAITools(toolsHost));
-  const disclose = () => $$("[data-when]", form).forEach((el) => {
-    el.classList.toggle("hidden", !$(`[data-key="${el.dataset.when}"]`, form)?.checked);
-  });
-  form.addEventListener("change", disclose);
-  disclose();
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  if (toolsHost) import("./aitoolsadmin.js").then((m) => m.renderAITools(toolsHost, $("#deep-status-host", form)));
+
+  const read = () => {
     const body = {};
     $$("[data-key]", form).forEach((el) => (body[el.dataset.key] = el.type === "checkbox" ? String(el.checked) : el.value));
-    if (await attempt(() => put("/api/admin/settings", body), "Settings saved")) await refreshUser(); // shows/hides features right away
+    return body;
+  };
+  const bar = $(".save-bar", form);
+  const paint = (now) => {
+    $$("[data-when]", form).forEach((el) => el.classList.toggle("hidden", !$(`[data-key="${el.dataset.when}"]`, form)?.checked));
+    $$("[data-state]", form).forEach((el) => (el.textContent = STATE[el.dataset.state](now)));
+  };
+  let saved = read();
+  paint(saved);
+  const changed = () => {
+    const now = read();
+    paint(now);
+    bar.classList.toggle("hidden", !Object.keys(now).some((k) => now[k] !== (saved[k] ?? "")));
+  };
+  form.addEventListener("input", changed);
+  form.addEventListener("change", changed);
+  form.addEventListener("click", (e) => { // menus that fill fields in (a model picked from the Ollama list)
+    if (!e.target.closest("[data-save]")) setTimeout(changed, 0);
+  });
+  $("[data-save]", bar).addEventListener("click", async () => {
+    const body = read();
+    if (!(await attempt(() => put("/api/admin/settings", body), "Settings saved"))) return;
+    saved = body;
+    bar.classList.add("hidden");
+    await refreshUser(); // shows/hides features right away
   });
 }
 
@@ -184,14 +103,3 @@ function field(key, label, placeholder, type, value, when) {
       value="${esc(value ?? "")}" placeholder="${esc(placeholder)}" class="input"
       autocomplete="${t === "password" ? "new-password" : "off"}" data-1p-ignore data-lpignore="true">${HELP[key] || ""}</div>`);
 }
-
-// Extra help under a few fields.
-const HELP = {
-  local_context_tokens: `<p class="mt-1 text-xs text-slate-400">How much text your local AI takes at once. Ollama's default is 4096; Deep Scan cuts books into parts that fit it. If you raised it on the server (e.g. OLLAMA_CONTEXT_LENGTH=8192), enter the new size so parts can be bigger and scans faster.</p>`,
-  power_price_kwh: `<p class="mt-1 text-xs text-slate-400">With the watts below, System → Usage counts what your own AI machines cost in electricity, and Deep Scan estimates show it. A plug-in power meter tells you a machine's watts while the AI works; count only the extra over idle.</p>`,
-  deep_read_model: `<p class="mt-1 text-xs text-slate-400">Deep Scan reads whole books, so it needs a model that can tell romance from a tense or violent scene: 7B or bigger is recommended (e.g. qwen2.5:7b or llama3.1:8b on Ollama, or a cloud model). Small 1–3B models often over-rate books. Not used when a Deep Scan machine is set up under AI machines.</p>`,
-  suggest_mode: `<p class="mt-1 text-xs text-slate-400">Free matching looks for the next book in a series, the same authors and similar descriptions. With AI, your AI then picks the best 10 with a reason, at most once a day per person and within the hourly token cap. Kids' accounts (and anyone hiding unrated books) never get books you don't own.</p>`,
-  smtp_password: `<p class="mt-1 text-xs text-slate-400">Gmail: your normal Google password won't work. Turn on 2-Step Verification,
-    then create an <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" class="underline">App Password</a>
-    and paste its 16 letters here (spaces are fine). Use your full Gmail address as the username.</p>`,
-};

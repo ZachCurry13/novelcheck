@@ -6,6 +6,7 @@ package genrefill
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 
 const (
 	batch       = 25
+	localBatch  = 8
 	tokensIn    = 90  // per book: title, author and a short description
 	tokensOut   = 20  // per book in the answer
 	tokensFixed = 450 // the instructions, per call
@@ -113,8 +115,9 @@ func (f *Filler) run(ctx context.Context) {
 		}
 	}()
 	system := llm.GenreSystem()
+	size := f.firstBatch()
 	for ctx.Err() == nil {
-		books, err := f.Store.MissingGenres(batch)
+		books, err := f.Store.MissingGenres(size)
 		if err != nil || len(books) == 0 {
 			f.fail(err)
 			return
@@ -134,6 +137,11 @@ func (f *Filler) run(ctx context.Context) {
 			return err
 		})
 		if err != nil {
+			// A cut-off answer (the list was too long for the model): ask about fewer books at a time.
+			if ctx.Err() == nil && size > 1 && strings.Contains(err.Error(), "JSON") {
+				size = max(1, size/2)
+				continue
+			}
 			if ctx.Err() == nil {
 				f.fail(err)
 			}
@@ -151,6 +159,15 @@ func (f *Filler) run(ctx context.Context) {
 		f.done += len(books)
 		f.mu.Unlock()
 	}
+}
+
+// firstBatch is how many books go in one call: 25 for an AI on the internet, 8 for one at home (a small local
+// model has little room, and a longer answer gets cut off).
+func (f *Filler) firstBatch() int {
+	if ais := f.Store.AIConfigs(); len(ais) > 0 && llm.IsLocal(ais[0].BaseURL) {
+		return localBatch
+	}
+	return batch
 }
 
 func (f *Filler) fail(err error) {

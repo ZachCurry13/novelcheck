@@ -251,7 +251,7 @@ func (s *Server) deepModelWarning(ctx context.Context) (warning, suggest, model 
 	}
 	where := ""
 	if machine { // the one-tap switch sets the main AI's Deep Scan model, which this machine doesn't use
-		suggest, where = "", " on the Deep Scan machine (change it under Admin → AI & Scans → AI machines)"
+		suggest, where = "", " on the Deep Scan machine (change it under Admin → AI & Scans → Deep Scans)"
 	}
 	return fmt.Sprintf("Deep Scan uses %s (%s parameters)%s. Models this small often mistake tense or violent scenes for romance. "+
 		"A 7B or bigger model is much more reliable, e.g. qwen2.5:7b or llama3.1:8b (about 5 GB), if your GPU fits it.", model, current.Params, where), suggest, model

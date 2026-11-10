@@ -3,7 +3,8 @@
 // shrinkPhoto turns a phone photo into a ~1024 px JPEG data: URL: small and quick to send, and quick for a
 // small AI model to read (a title is still easy to read at this size).
 export async function shrinkPhoto(file) {
-  const bmp = await createImageBitmap(file);
+  // "from-image": turn the photo the way the phone was held (older browsers ignore that unless asked).
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" }).catch(() => createImageBitmap(file));
   const scale = Math.min(1, 1024 / Math.max(bmp.width, bmp.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bmp.width * scale);

@@ -139,8 +139,14 @@ func (s *Server) lookUp(w http.ResponseWriter, r *http.Request, query, image str
 		return l, false
 	}
 	l.id = s.Store.MatchBook(l.found.Title, l.found.Author)
+	if s.otherAuthor(l.id, l.found.Author) { // the same title by someone else is a different book
+		l.id = 0
+	}
 	if l.id == 0 && l.canonical.Title != "" {
-		l.id = s.Store.MatchBook(l.canonical.Title, l.canonical.Author)
+		id := s.Store.MatchBook(l.canonical.Title, l.canonical.Author)
+		if !s.otherAuthor(id, l.canonical.Author) && !s.otherAuthor(id, l.found.Author) {
+			l.id = id
+		}
 	}
 	return l, true
 }

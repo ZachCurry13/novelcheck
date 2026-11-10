@@ -165,7 +165,7 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 	}
 	for _, cid := range all {
 		// Compared like NovelCheck matches books: ignoring case, punctuation and numbering.
-		if title, found := have[cid]; found && store.NormKey(title, "") != store.NormKey(want[cid], "") {
+		if title, found := have[cid]; found && !sameCalibreTitle(title, want[cid]) {
 			writeErr(w, http.StatusConflict, "stopped: calibre's book #"+strconv.Itoa(cid)+" is \""+title+
 				"\" but NovelCheck expected \""+want[cid]+"\". Is the Content server using the same library? (If you renamed it in Calibre, run a sync first.) Nothing was changed.")
 			return 0, nil, false

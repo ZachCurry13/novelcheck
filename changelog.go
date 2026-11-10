@@ -9,7 +9,7 @@ import _ "embed"
 //go:embed CHANGELOG.md
 var Changelog string
 
-// ProviderGuide is docs/AI_PROVIDERS.md, shown in Admin → LLM Analysis Engine
+// ProviderGuide is docs/AI_PROVIDERS.md, shown in Admin → Your AI
 // as step-by-step setup instructions for each AI provider.
 //
 //go:embed docs/AI_PROVIDERS.md

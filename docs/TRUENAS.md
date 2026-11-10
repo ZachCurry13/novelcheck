@@ -96,11 +96,11 @@ services:
 Open the **Admin** tab.
 
 1. **Pick your Calibre library:** under **Delivery & Services**, in the **Calibre Library** box, click **Find libraries automatically** and then **Use this** next to your library. Or click **Browse folders…**, click through to it (for example `books` → `Clean Library`), and click **Use this**. Folders that are Calibre libraries show a 📚 **Calibre library** badge. NovelCheck then loads your books, which takes a few seconds.
-2. **AI settings** (the AI that rates books), under **AI & Scans**, in the **LLM Analysis Engine** box:
+2. **AI settings** (the AI that rates books), under **AI & Scans**, in the **Your AI** card:
    - Pick your **AI provider**: OpenAI, Anthropic Claude, Google Gemini, Perplexity, or Ollama (a free AI running on your own server). NovelCheck fills in the right address, a small low-cost model, and prices.
    - Paste the provider's **API key**. Click **Show setup steps** under the menu for step-by-step instructions for that provider, or see [AI_PROVIDERS.md](AI_PROVIDERS.md). Not sure which to choose? Click **Which one should I pick?**. Ollama doesn't need a key.
    - Click **Save settings**.
-3. Under **AI & Scans → Rate Caps & Batching**, set **Books per batch** to something small like `5`, then click **Analyze batch**. Watch "Tokens this hour" and "Spent to date" to see real costs before running bigger batches. With a local AI such as Ollama, NovelCheck also rates waiting books by itself while it's idle (**AI & Scans → Automatic rating**).
+3. Under **AI & Scans → When it runs**, set **Books per “Rate waiting books now”** to something small like `5`, then click **Rate waiting books now**. Watch "Tokens this hour" and "Spent to date" to see real costs before running bigger batches. With a local AI such as Ollama, NovelCheck also rates waiting books by itself while it's idle (**AI & Scans → Automatic rating**).
 4. **Accounts:** under **Users & Rules**, add everyone else:
    - **Editor**: for a spouse or co-parent. They can check and correct ratings, run scans, import Kindles, and manage kids' accounts, but can't change AI or email settings, API keys, or backups.
    - **Restricted (Kid)**: starts with the strictest content rules on. Untick any you don't need.

@@ -1,9 +1,9 @@
-// Admin control panel in four tabs: AI & Scans, Users & Rules, Delivery &
-// Services, System & Toggles. Editors see the first two, without technical
+// Admin control panel in tabs: AI & Scans, Users & Rules, Library cleanup, Delivery &
+// Services, System & Toggles. Each tab shows only its own notices; the others carry a count on their tab. Editors see the first two, without technical
 // settings, secrets, backups or the destructive queue wipe. Admins other than
 // the main admin see what their areas cover (the main admin gives areas).
 import { once } from "./inflight.js";
-import { get, post, qs } from "./api.js";
+import { get, post } from "./api.js";
 import { $, $$, esc, attempt, toast, fmtNum, fmtMoney, can } from "./ui.js";
 import { renderUsers } from "./users.js";
 import { renderCalibrePicker } from "./calibrepicker.js";
@@ -36,28 +36,28 @@ export async function renderAdmin(view, state) {
     ${adminNavHTML(current)}
     ${access}
     <div id="job-banner" class="mb-2 hidden rounded-lg bg-sky-950/50 p-3 text-sm"></div>
-    <div id="del-banner" class="mb-2 hidden rounded-lg bg-rose-950/50 p-3 text-sm"></div>
-    <div id="deep-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
-    <div id="titles-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
-    <div id="covers-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
-    <div id="box-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
-    <div id="problems-banner" class="mb-2 hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
-    <section data-panel="ai" class="space-y-6">
+    <section data-panel="ai" class="space-y-4">
+      <div id="deep-banner" class="hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
+      ${hasTab("cleanup") ? "" : `<div id="box-banner" class="hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>`}
       <div id="stats" class="grid grid-cols-2 gap-3 lg:grid-cols-4"></div>
       <div id="errors"></div>
-      <div class="card flex flex-wrap items-end gap-3">
-        <div><label class="label" for="batch-size">Batch size</label>
-          <input id="batch-size" type="number" min="0" max="500" value="20" class="input w-28" title="0 = all waiting books (up to 500)"></div>
-        <button data-act="batch" class="btn-primary">Analyze batch</button>
-        <button data-act="sync" class="btn-secondary">Sync Calibre now</button>
-        ${inArea("deep", `<a href="#/deepscan" class="btn-secondary">🧬 Deep Scan…</a>`)}
-        <button data-act="rerate-all" class="btn-ghost" title="Rate every AI-rated book again, e.g. after changing the AI or its rules">Re-rate whole library…</button>
-        ${inArea("ai", `<button data-act="wipe" class="btn-ghost">Wipe pending queue</button>`)}
-        <p id="worker" class="basis-full text-sm text-slate-400"></p>
-        <div id="rerate" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
-        <div id="genres-banner" class="hidden basis-full rounded-lg bg-slate-800/60 p-3 text-sm"></div>
+      <div class="card space-y-3">
+        <p id="worker" class="text-sm text-slate-300"></p>
+        <div class="flex flex-wrap items-center gap-2">
+          <button data-act="batch" id="batch-btn" class="btn-primary">Rate waiting books now</button>
+          <button data-act="sync" class="btn-secondary">Check Calibre for new books</button>
+        </div>
+        <details class="text-sm"><summary class="cursor-pointer text-slate-400">More actions</summary>
+          <div class="mt-2 space-y-2">
+            <p><button data-act="rerate-all" class="btn-secondary py-1 text-sm">Re-rate the whole library…</button>
+              <span class="text-xs text-slate-400">Rates every AI-rated book again, for example after changing the AI or its rules. Asks first.</span></p>
+            ${inArea("ai", `<p><button data-act="wipe" class="btn-secondary py-1 text-sm">Empty the rating queue…</button>
+              <span class="text-xs text-slate-400">Books queued for rating go back to waiting. No rating is lost.</span></p>`)}
+          </div></details>
+        <div id="rerate" class="hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
+        <div id="genres-banner" class="hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
       </div>
-      ${inArea("ai", `<div id="custom-flags"></div><div id="settings-ai"></div>`)}
+      ${inArea("ai", `<div id="settings-ai"></div>`)}
     </section>
     <section data-panel="users"><div id="users"></div></section>
     ${hasTab("cleanup") ? `<section data-panel="cleanup"><div id="cleanup-tab"></div></section>` : ""}
@@ -70,6 +70,7 @@ export async function renderAdmin(view, state) {
       ${inArea("system", `<div id="remote-access"></div>`)}
     </section>` : ""}
     ${inArea("system", `<section data-panel="system" class="space-y-4">
+      <div id="problems-banner" class="hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
       <div id="settings-system"></div>
       <div class="card flex flex-wrap gap-2">
         <a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db (backup)</a>
@@ -114,10 +115,10 @@ export async function renderAdmin(view, state) {
     } else if (act === "tidy-titles") {
       import("./titlefix.js").then((m) => m.openTitleFixes());
     } else if (act === "batch") {
-      const r = await attempt(() => post("/api/admin/analyze-batch" + qs({ size: $("#batch-size", view).value })));
+      const r = await attempt(() => post("/api/admin/analyze-batch"));
       if (r) toast(`Queued ${r.queued} books`);
     } else if (act === "wipe") {
-      if (!confirm("Return all queued books to Pending Analysis?")) return;
+      if (!confirm("Send every queued book back to waiting? No rating is lost.")) return;
       const r = await attempt(() => post("/api/admin/wipe-queue"));
       if (r) toast(`Reset ${r.reset} books to pending`);
     } else if (act === "rerate-language") {
@@ -158,7 +159,8 @@ export async function renderAdmin(view, state) {
   if (isAdmin) {
     // Only the settings in this admin's areas come back; their cards are the ones shown.
     const settings = (await attempt(() => get("/api/admin/settings"))) || {};
-    $("#batch-size", view).value = settings.batch_size ?? 20;
+    const n = Number(settings.batch_size ?? 20);
+    $("#batch-btn", view).textContent = n > 0 ? `Rate the next ${n} waiting books` : "Rate all waiting books now";
     for (const tab of ["ai", "delivery", "system"]) {
       const host = $(`#settings-${tab}`, view);
       if (host) renderSettingsTab(host, tab, settings, u);

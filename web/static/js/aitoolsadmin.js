@@ -1,4 +1,4 @@
-// AI machines (Admin → AI & Scans): whether the Deep Scan machine answers,
+// Admin → AI & Scans → Machines & costs (and Deep Scans): whether the Deep Scan machine answers,
 // newer versions of the Ollama models in use (Update downloads it again), and
 // the speed test that times each machine's models on a made-up sample book.
 import { get, post } from "./api.js";
@@ -9,17 +9,17 @@ const ago = (t) => (t ? new Date(t).toLocaleString([], { month: "short", day: "n
 const secs = (s) => (s >= 90 ? `${Math.round(s / 60)} min` : `${s.toFixed(s < 10 ? 1 : 0)} s`);
 const hours = (s) => (s >= 5400 ? `about ${(s / 3600).toFixed(1)} hours` : `about ${Math.max(1, Math.round(s / 60))} minutes`);
 
-export async function renderAITools(host) {
+export async function renderAITools(host, deepHost) {
   let timer;
   const paint = async () => {
     const st = await get("/api/admin/aitools").catch(() => null);
     if (!st || !host.isConnected) return clearInterval(timer);
     const ups = st.updates || [];
     const results = Object.values(st.results || {}).sort((a, b) => a.ai.localeCompare(b.ai) || a.model.localeCompare(b.model));
-    host.innerHTML = `
-      ${st.deep_machine ? box("🧬 Deep Scan machine", st.deep_away
+    if (deepHost) deepHost.innerHTML = `${st.deep_machine ? box("🧬 Deep Scan machine", st.deep_away
         ? `<p class="text-sm text-amber-300">⏸ Not answering right now (switched off or asleep).${st.deep_waiting ? " Deep Scans are waiting and carry on when it's back." : " Deep Scans will wait for it."}</p>`
-        : `<p class="text-sm text-emerald-300">✓ Answering: Deep Scans run there.</p>`) : ""}
+        : `<p class="text-sm text-emerald-300">✓ Answering: Deep Scans run there.</p>`) : ""}`;
+    host.innerHTML = `
       ${box("⬆️ Model updates", `${ups.length ? `<ul class="space-y-2">${ups.map((u, i) => `<li class="flex flex-wrap items-center gap-2 text-sm">
           <span class="min-w-0 flex-1">A newer <b>${esc(u.model)}</b> is out <span class="text-xs text-slate-400">(on ${esc(u.server)})</span></span>
           <button type="button" data-update="${i}" class="btn-secondary py-1 text-sm">Update</button></li>`).join("")}</ul>`

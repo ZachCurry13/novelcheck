@@ -148,7 +148,7 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 			continue
 		}
 		// Compare like NovelCheck matches books: ignoring case and punctuation.
-		if store.NormKey(title, "") != store.NormKey(want[id], "") {
+		if !sameCalibreTitle(title, want[id]) {
 			writeErr(w, http.StatusConflict, "stopped: calibre's book #"+strconv.Itoa(id)+" is \""+title+
 				"\" but NovelCheck expected \""+want[id]+"\". Is the Content server using the same library? Nothing was removed.")
 			return

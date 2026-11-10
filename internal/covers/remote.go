@@ -23,7 +23,7 @@ func (c Cache) Remote(ctx context.Context, raw string) (string, os.FileInfo, boo
 	}
 	sum := sha1.Sum([]byte(raw))
 	out := filepath.Join(c.Dir, "rm-"+hex.EncodeToString(sum[:10])+".jpg")
-	if info, err := os.Stat(out); err == nil {
+	if info, ok := c.have(out); ok {
 		return out, info, true
 	}
 	miss := out + ".none"

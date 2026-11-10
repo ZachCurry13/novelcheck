@@ -43,7 +43,7 @@ const EVERYONE = [
 
 const MANAGER = [
   ["🛠️ The Admin tab",
-    "Your account can manage NovelCheck. On the <b>Admin</b> tab (<b>Manage</b> on editor accounts), <b>AI &amp; Scans</b> shows how many books are rated and what the AI has cost so far. <b>Analyze batch</b> rates the next few unrated books, and <b>Sync Calibre now</b> picks up newly added books. Banners at the top point out anything waiting for you, such as delete requests or reported problems."],
+    "Your account can manage NovelCheck. On the <b>Admin</b> tab (<b>Manage</b> on editor accounts), <b>AI &amp; Scans</b> shows how many books are rated and what the AI has cost so far. <b>Rate waiting books now</b> rates the next few unrated books, and <b>Check Calibre for new books</b> picks up newly added ones. Banners at the top point out anything waiting for you, such as delete requests or reported problems."],
   ["✏️ Fixing a rating",
     "Open any book to set its <b>Age group</b> (Young kids, Middle grade, Teens, Young adult, Adults) and to leave <b>Parents' notes</b> after you've read it, for everyone or for parents only. If a rating looks wrong, choose <b>Edit rating</b>. Your correction is saved with your name. If a book is fine for your family even though a filter catches it (Harry Potter's magic, say), choose <b>✓ Mark as OK</b>: it then shows for everyone, kids included. <b>Find duplicates</b> (in the Library) lists books that are in Calibre twice."],
   ["👧 Kids' accounts",

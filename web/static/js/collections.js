@@ -50,7 +50,7 @@ export async function renderCollections(view, state) {
         <span class="min-w-0"><span class="block font-semibold">${esc(s.name)}</span>
           <span class="block text-xs text-slate-400">${s.now ? "In season now · " : ""}${s.collection ? "your AI-built collection" : "found by words"}</span></span></a>
       ${manager ? `<button data-build="${s.key}" class="btn-ghost py-1.5 text-sm">✨ ${s.collection ? "Build again" : "Build with AI"}</button>` : ""}</li>`).join("")}</ul>
-    ${manager && !data.ideas_on ? `<p class="mt-3 text-xs text-slate-500">Weekly AI ideas are off (Admin → AI &amp; Scans → Automatic rating).</p>` : ""}`;
+    ${manager && !data.ideas_on ? `<p class="mt-3 text-xs text-slate-500">Weekly AI ideas are off (Admin → AI &amp; Scans → Extras).</p>` : ""}`;
 
   const reload = () => renderCollections(view, state);
   view.onclick = async (e) => {

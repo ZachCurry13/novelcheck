@@ -36,9 +36,11 @@ func (s *Server) trashFile(calibreID, format string) string {
 	return ""
 }
 
-// checkTitles asks calibre for the books and stops at the first whose title
-// isn't the one NovelCheck has (the wrong library).
+// checkTitles asks calibre for the books. A book whose title isn't the one NovelCheck has is left out (and
+// noted on the job), so one renamed book doesn't hold up the rest; when more than one in five differ it is the
+// wrong library, and the job stops.
 func (s *Server) checkTitles(c *calibresrv.Client, want map[int]string) (map[int]calibresrv.Book, error) {
+	s.formats.update(func(st *formatJobState) { st.Current = "Checking the books with Calibre…" })
 	ids := make([]int, 0, len(want))
 	for id := range want {
 		ids = append(ids, id)
@@ -49,10 +51,19 @@ func (s *Server) checkTitles(c *calibresrv.Client, want map[int]string) (map[int
 	if err != nil {
 		return nil, err
 	}
+	var odd []int
 	for id, title := range want {
-		if b, ok := have[id]; ok && store.NormKey(b.Title, "") != store.NormKey(title, "") {
-			return nil, fmt.Errorf("calibre's book #%d is %q but NovelCheck expected %q. Is the Content server using the same library?", id, b.Title, title)
+		if b, ok := have[id]; ok && !sameCalibreTitle(b.Title, title) {
+			odd = append(odd, id)
 		}
+	}
+	if len(odd)*5 > len(want) {
+		id := odd[0]
+		return nil, fmt.Errorf("calibre's book #%d is %q but NovelCheck expected %q, and so on for %d of %d books. Is the Content server using the same library?", id, have[id].Title, want[id], len(odd), len(want))
+	}
+	for _, id := range odd {
+		s.formats.fail(want[id], fmt.Sprintf("Calibre calls book #%d %q; left alone. Read the Calibre library again (Library cleanup) and retry.", id, have[id].Title))
+		delete(have, id)
 	}
 	return have, nil
 }

@@ -1,4 +1,4 @@
-// The family's own AI filters (Admin → AI & Scans → Custom AI filters): chips on books,
+// The family's own AI filters (Admin → AI & Scans → Extras): chips on books,
 // Hide checkboxes in the Library, ticks in "Edit rating", and the admin editor.
 import { get, post, put, del } from "./api.js";
 import { $, esc, attempt } from "./ui.js";
@@ -36,16 +36,16 @@ export function verdictBoxes(b) {
 export async function renderFlagsAdmin(host, onChange) {
   await loadFlags(true);
   host.innerHTML = `
-    <section class="card mb-6 space-y-3">
-      <h2 class="text-lg font-semibold">Custom AI filters</h2>
+    <section class="space-y-3 border-t border-slate-700 pt-3">
+      <h2 class="font-semibold">Your own AI filters</h2>
       <p class="text-sm text-slate-400">Add your own topics, like <i>Heavy swearing</i>, <i>Gore / violence</i> or <i>Substance abuse</i>.
         The AI checks every book for them, and each gets a <b>Hide</b> box in the Library. Books rated before a new filter
-        can be re-rated from the banner above.</p>
+        can be re-rated from the notice at the top of this screen.</p>
       <ul class="space-y-2">${flags.map((f) => `
         <li data-flag="${f.id}" class="grid gap-2 rounded-lg bg-slate-800/60 p-3 sm:grid-cols-5">
           <input data-f="label" value="${esc(f.label)}" maxlength="40" class="input sm:col-span-1" aria-label="Name">
           <input data-f="description" value="${esc(f.description)}" maxlength="300" class="input sm:col-span-3" aria-label="What the AI looks for" placeholder="What should the AI look for?">
-          <span class="flex gap-2"><button data-fact="save" class="btn-secondary">Save</button><button data-fact="delete" class="btn-ghost" aria-label="Delete">🗑</button></span>
+          <span class="flex gap-2"><button type="button" data-fact="save" class="btn-secondary">Save</button><button type="button" data-fact="delete" class="btn-ghost" aria-label="Delete">🗑</button></span>
         </li>`).join("") || `<li class="text-sm text-slate-500">No custom filters yet.</li>`}</ul>
       <form data-fact="add" class="grid gap-2 sm:grid-cols-5">
         <input name="label" required maxlength="40" placeholder="Name, e.g. Heavy swearing" class="input sm:col-span-1">
@@ -60,7 +60,7 @@ export async function renderFlagsAdmin(host, onChange) {
   host.onsubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    if (await attempt(() => post("/api/admin/flags", { label: fd.get("label"), description: fd.get("description") }), "Filter added. Re-rate books from the banner to check them for it.")) done();
+    if (await attempt(() => post("/api/admin/flags", { label: fd.get("label"), description: fd.get("description") }), "Filter added. Re-rate books from the notice at the top to check them for it.")) done();
   };
   host.onclick = async (e) => {
     const act = e.target.closest("[data-fact]")?.dataset.fact;

@@ -112,9 +112,9 @@ func (s *Server) checks() []check {
 			if err := enrich.New(key).CheckGoogleBooks(ctx); err != nil {
 				if key == "" {
 					// Without a key everyone shares Google's anonymous quota.
-					return "warn", err.Error(), "Add a free Google Books API key: console.cloud.google.com → APIs & Services → enable \"Books API\" → Credentials → Create API key. Paste it in Admin → AI & Scans → LLM Analysis Engine → Google Books API key. Until then NovelCheck uses Open Library and Calibre's own descriptions."
+					return "warn", err.Error(), "Add a free Google Books API key: console.cloud.google.com → APIs & Services → enable \"Books API\" → Credentials → Create API key. Paste it in Admin → AI & Scans → Extras → Google Books API key. Until then NovelCheck uses Open Library and Calibre's own descriptions."
 				}
-				return errResult(err, "Check the Google Books API key in Admin → AI & Scans → LLM Analysis Engine (is the Books API enabled for it?), or clear it to use the shared free quota.")
+				return errResult(err, "Check the Google Books API key in Admin → AI & Scans → Extras (is the Books API enabled for it?), or clear it to use the shared free quota.")
 			}
 			if key == "" {
 				return "ok", "Working without an API key (shared daily limit)", "Optional: add a Google Books API key in Admin to avoid hitting the shared limit on big libraries."
@@ -200,7 +200,7 @@ func (s *Server) checks() []check {
 // checkModel sends a tiny request (a few tokens) to confirm the model answers.
 func (s *Server) checkModel(ctx context.Context, ai store.AIConfig, model string) (string, string, string) {
 	if model == "" {
-		return "error", "No model set", "Pick an AI provider in Admin → AI & Scans → LLM Analysis Engine."
+		return "error", "No model set", "Pick an AI provider in Admin → AI & Scans → Your AI."
 	}
 	// JSON mode off: the health check asks for a plain "OK", not JSON.
 	client := llm.New(ai.Provider, ai.BaseURL, ai.APIKey, false)
@@ -212,7 +212,7 @@ func (s *Server) checkModel(ctx context.Context, ai store.AIConfig, model string
 		return "error", "No answer in time", "The AI service is slow or unreachable right now. Try again shortly."
 	}
 	if analyzer.Unreachable(err) {
-		fix := "Check the address in Admin → AI & Scans → LLM Analysis Engine, and that the AI server is switched on."
+		fix := "Check the address in Admin → AI & Scans → Your AI, and that the AI server is switched on."
 		if llm.IsLocal(ai.BaseURL) {
 			fix = "Is Ollama running? In TrueNAS open Apps and check the Ollama app says Running, and that the address and port are right."
 		}
@@ -222,7 +222,7 @@ func (s *Server) checkModel(ctx context.Context, ai store.AIConfig, model string
 		return "error", "Can't reach the AI server at " + ai.BaseURL, fix
 	}
 	if err != nil {
-		return errResult(err, "Check the API key, model name and credit with your AI provider (Admin → AI & Scans → LLM Analysis Engine → Show setup steps).")
+		return errResult(err, "Check the API key, model name and credit with your AI provider (Admin → AI & Scans → Your AI → Show setup steps).")
 	}
 	if strings.TrimSpace(out) == "" {
 		return "warn", "Answered, but with an empty reply", "Try a different model."
