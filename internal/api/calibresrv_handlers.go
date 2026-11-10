@@ -141,20 +141,32 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
-	var toRemove []int
+	var toRemove, odd []int
 	for _, id := range ids {
 		title, found := have[id]
 		if !found {
 			skipped++ // already gone from calibre
 			continue
 		}
-		// Compare like NovelCheck matches books: ignoring case and punctuation.
+		// Compare like NovelCheck matches books: ignoring case, punctuation and a subtitle on one side.
 		if !sameCalibreTitle(title, want[id]) {
-			writeErr(w, http.StatusConflict, "stopped: calibre's book #"+strconv.Itoa(id)+" is \""+title+
-				"\" but NovelCheck expected \""+want[id]+"\". Is the Content server using the same library? Nothing was removed.")
-			return
+			odd = append(odd, id)
+			continue
 		}
 		toRemove = append(toRemove, id)
+	}
+	// One book renamed in Calibre is left alone and the rest go ahead; when more than one in five differ (or
+	// the only one asked for does), it is the wrong library, and nothing is removed.
+	if len(odd) > 0 && (len(odd)*5 > len(ids) || len(toRemove) == 0) {
+		id := odd[0]
+		writeErr(w, http.StatusConflict, "stopped: calibre's book #"+strconv.Itoa(id)+" is \""+have[id]+
+			"\" but NovelCheck expected \""+want[id]+"\". Is the Content server using the same library? Nothing was removed.")
+		return
+	}
+	for _, id := range odd {
+		skipped++
+		s.Store.Notify("warning", "calibre-remove", "Left alone: Calibre calls book #"+strconv.Itoa(id)+" \""+have[id]+
+			"\", NovelCheck expected \""+want[id]+"\". Read the Calibre library again (Library cleanup) and retry.", "#/admin?tab=cleanup")
 	}
 	for start := 0; start < len(toRemove); start += 200 {
 		end := min(start+200, len(toRemove))

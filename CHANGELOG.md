@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.66.3]
+
+### 🧹 Library cleanup
+- **Removing extra copies no longer stops on a short title with a subtitle.** "Rant" in Calibre against "Rant: An Oral Biography of Buster Casey" in NovelCheck was still taken for the wrong library, because very short titles were not compared that way. A title followed by a subtitle or a note in brackets now counts as the same book, whatever its length.
+- **One renamed book no longer holds up the rest.** A copy whose title really differs in Calibre is left alone, with a 🔔 notice saying which, and the other ticked copies are removed. It still stops with nothing removed when more than one in five differ, which means the wrong library.
+
 ## [1.66.2]
 
 ### 🐞 The link to recent bug reports shows more, and can tidy up after itself

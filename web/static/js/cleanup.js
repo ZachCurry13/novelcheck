@@ -146,7 +146,7 @@ export async function mountCleanup(host, close) {
     },
     dups: async (ids) => {
       const r = await attempt(() => post("/api/admin/calibre/duplicates/remove", { remove: ids }));
-      if (r) say(`Removed ${plural(r.removed ?? ids.length, "extra copy", "extra copies")} (Calibre's recycle bin keeps them).`);
+      if (r) say(`Removed ${plural(r.removed ?? ids.length, "extra copy", "extra copies")} (Calibre's recycle bin keeps them).${r.skipped ? ` ${plural(r.skipped, "entry", "entries")} left alone: already gone, or Calibre's title differs (see the 🔔 notices).` : ""}`);
       return !!r;
     },
     formats: async () => {
