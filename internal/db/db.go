@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite" // pure-Go driver, registered as "sqlite"
@@ -24,8 +25,21 @@ func Open(dataDir string) (*sqlx.DB, error) {
 		return nil, fmt.Errorf("create data dir: %w", err)
 	}
 	path := filepath.Join(dataDir, FileName)
-	dsn := "file:" + path + "?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
-	return OpenDSN(dsn)
+	// busy_timeout: a write waits up to 30 s for another to finish (as it did when there was one connection);
+	// _txlock=immediate: a transaction takes its place in the write queue at its start, so it can't fail halfway.
+	dsn := "file:" + path + "?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(30000)&_txlock=immediate"
+	d, err := OpenDSN(dsn)
+	if err != nil {
+		return nil, err
+	}
+	// WAL lets reads go on while a write happens, so a few connections stop one slow request from holding up every
+	// page (with one connection each request waited for the one before it). NOVELCHECK_DB_CONNS=1 goes back to one.
+	conns := 4
+	if n, err := strconv.Atoi(os.Getenv("NOVELCHECK_DB_CONNS")); err == nil && n >= 1 && n <= 16 {
+		conns = n
+	}
+	d.SetMaxOpenConns(conns)
+	return d, nil
 }
 
 // OpenDSN opens an arbitrary SQLite DSN and applies the schema (used by tests).
