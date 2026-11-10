@@ -74,6 +74,9 @@ export async function renderSameBooks(host, onChange, state) {
       li.remove();
       onChange?.();
       if (!host.querySelector("li[data-a]")) renderSameBooks(host, onChange, state);
-    } else toast("That didn't work", true);
+    } else {
+      toast("That pair may be out of date: refreshing the list", true);
+      renderSameBooks(host, onChange, state); // a book joined or removed meanwhile drops out of it
+    }
   };
 }

@@ -1,6 +1,11 @@
 package api
 
-import "net/http"
+import (
+	"errors"
+	"net/http"
+
+	"github.com/zachcurry13/novelcheck/internal/store"
+)
 
 // Same book, listed twice (Library → Find duplicates): the entries that look
 // like one book, to merge or to say are different.
@@ -34,6 +39,10 @@ func (s *Server) handleSameAction(merge bool) http.HandlerFunc {
 			_, err = s.Store.MergeKeeping(body.A, body.B, body.Keep)
 		} else {
 			err = s.Store.IgnoreSame(body.A, body.B)
+		}
+		if errors.Is(err, store.ErrNotFound) { // one of them was already joined or removed since the list was drawn
+			writeErr(w, http.StatusNotFound, "That pair is out of date: one of the books was already joined or removed. The list is being refreshed.")
+			return
 		}
 		if err != nil {
 			writeStoreErr(w, err)

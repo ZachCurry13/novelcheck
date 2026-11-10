@@ -58,6 +58,13 @@ export function slides(m, s, name) {
   const best = [...byDay(sum.rows)].sort((a, c) => c[1].sec - a[1].sec)[0];
   const pagesBook = books.slice().sort((a, c) => c.pages - a.pages)[0];
   const earned = awards(m, sum, s.period);
+  const whole = sum.books.map((x) => m.books[x.book]).filter(Boolean); // the books themselves (their full page counts)
+  const doneBooks = whole.filter((x) => (x.percent || 0) >= FINISHED && x.pages);
+  const longest = doneBooks.slice().sort((a, c) => c.pages - a.pages)[0];
+  const shortest = doneBooks.slice().sort((a, c) => a.pages - c.pages)[0];
+  const lastRead = new Map();
+  for (const r of sum.rows) lastRead.set(String(r.book), Math.max(lastRead.get(String(r.book)) || 0, r.ms));
+  const current = sum.books.map((x) => ({ ...m.books[x.book], last: lastRead.get(String(x.book)) || 0 })).filter((x) => x.title && (x.percent || 0) > 0 && (x.percent || 0) < FINISHED).sort((a, c) => c.last - a.last)[0];
   const out = [
     slide("🎁 Your Wrapped", `${esc(when)}`, `${esc(name)}'s reading, one tap at a time.`),
     slide("You read for", fmtDur(sum.sec), `across ${n(sum.days)} day${sum.days === 1 ? "" : "s"} and ${n(sum.pages)} pages. That is about ${n(Math.round(sum.sec / 60 / Math.max(1, sum.days)))} minutes on a day you read.`),
@@ -66,13 +73,23 @@ export function slides(m, s, name) {
   ];
   if (top) out.push(slide("Your most-read book", esc(top.title), `${fmtDur(top.sec)}${top.author ? ` · ${esc(top.author)}` : ""}`, top.book_id ? `<div>${coverImg(top.book_id, "h-44 w-28", true)}</div>` : "", "s-title"));
   if (authors[0]?.label) out.push(slide("Your top author", esc(authors[0].label), `${n(authors[0].n)} book${authors[0].n === 1 ? "" : "s"}${genres[0] ? `. Favourite genre: ${esc(genres[0].label)}` : ""}${authors[1]?.label ? `. Runner-up: ${esc(authors[1].label)}` : ""}.`, "", "s-title"));
-  out.push(slide("Your reading personality", `${part === "afternoon" ? "An" : "A"} ${part} reader`, `Your busiest hour was ${clock(peak)}.`, "", "s-title"), daySlide(hours, peak));
+  if (authors.filter((a) => a.label).length > 1) {
+    out.push(`<p class="s-kicker">Top authors</p><ul class="s-list">${authors.filter((a) => a.label).slice(0, 4).map((a, i) => `<li><span class="em">${["🥇", "🥈", "🥉", "4️⃣"][i]}</span><span><b>${esc(a.label)}</b><br>${n(a.n)} book${a.n === 1 ? "" : "s"}</span></li>`).join("")}</ul>`);
+  }
+  out.push(slide("Your reading personality", `${/^[aeiou]/.test(part) ? "An" : "A"} ${part} reader`, `Your busiest hour was ${clock(peak)}.`, "", "s-title"), daySlide(hours, peak));
   if (best) out.push(slide("Your longest day", fmtDur(best[1].sec), `${new Date(best[0] + "T12:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}, with ${n(best[1].pages)} pages.`));
   if (pagesBook?.pages) out.push(slide("Most pages from one book", n(pagesBook.pages), `${esc(pagesBook.title)}`));
+  if (longest && shortest && longest !== shortest) {
+    out.push(`<p class="s-kicker">Book extremes</p><ul class="s-list">
+      <li><span class="em">🧱</span><span><b>Longest:</b> ${esc(longest.title)}<br>${n(longest.pages)} pages</span></li>
+      <li><span class="em">🍬</span><span><b>Shortest:</b> ${esc(shortest.title)}<br>${n(shortest.pages)} pages</span></li></ul>`);
+  }
+  if (current) out.push(slide("Currently reading", esc(current.title), `${Math.round((current.percent || 0) * 100)}% done${current.author ? ` · ${esc(current.author)}` : ""}`, current.book_id ? `<div>${coverImg(current.book_id, "h-40 w-28", true)}</div>` : "", "s-title"));
   out.push(earned.length
     ? `<p class="s-kicker">Achievements</p><div class="s-grid">${earned.map(([e, t]) => `<div class="s-tile"><b>${e}</b>${esc(t)}</div>`).join("")}</div><ul class="s-list">${earned.slice(0, 3).map(([e, t, d]) => `<li><span class="em">${e}</span><span><b>${esc(t)}</b><br>${esc(d)}</span></li>`).join("")}</ul>`
     : slide("Achievements", "Keep reading", "Awards are for reading a lot, late, early, long or wide. You will earn some.", "", "s-title"));
-  out.push(`<p class="s-kicker">${esc(when)}</p><p class="s-title">${fmtDur(sum.sec)} · ${n(fin.length)} finished · ${n(sum.pages)} pages</p>
+  out.push(`<p class="s-kicker">${esc(when)}</p><div class="s-grid"><div class="s-tile"><b>${n(fin.length)}</b>Books read</div><div class="s-tile"><b>${n(sum.pages)}</b>Pages</div><div class="s-tile"><b>${fmtDur(sum.sec)}</b>Reading time</div></div>
+    ${authors[0]?.label ? `<p class="s-small">Top author: ${esc(authors[0].label)} (${n(authors[0].n)})${longest ? ` · Longest: ${esc(longest.title)} (${n(longest.pages)} pages)` : ""}</p>` : ""}
     <div class="s-actions"><button type="button" data-share>Share picture</button><button type="button" class="alt" data-sdone>Done</button></div>`);
   return out;
 }

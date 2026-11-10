@@ -143,6 +143,7 @@ const SHELL = [
   "/js/cleanreview.js",
   "/js/cleanup.js",
   "/js/trophies.js",
+  "/js/trophies2.js",
   "/js/wrapped.js",
   "/js/wrappedslides.js",
   "/js/wrappedstory.js",

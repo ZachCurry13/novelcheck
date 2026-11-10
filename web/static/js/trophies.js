@@ -3,6 +3,7 @@
 // Each trophy has levels (bronze, silver, gold, platinum, diamond) and shows how far to the next.
 import { esc } from "./ui.js";
 import { byDay, dayKey, fmtDur, streaks } from "./statscalc.js";
+import { moreTrophies } from "./trophies2.js";
 
 const LEVELS = ["Bronze", "Silver", "Gold", "Platinum", "Diamond"];
 const MEDAL = ["🥉", "🥈", "🥇", "💎", "👑"];
@@ -78,6 +79,7 @@ export function achievements(m) {
     const key = [...f.byGenre.keys()].find((k) => k.toLowerCase() === g.toLowerCase());
     add("Genres", `genre:${g}`, "🏷️", `${g} reader`, `${g} books finished`, key ? f.byGenre.get(key) : 0, [10, 25, 50, 100]);
   }
+  moreTrophies(m, f, add);
   return a;
 }
 
