@@ -31,7 +31,14 @@ export function startViewState() {
   } catch {
     /* an old browser: it keeps its own behaviour */
   }
-  window.addEventListener("popstate", () => (backAt = Date.now()));
+  // A tapped link to another #/page also fires popstate in some browsers (iPhone Safari): that is not Back.
+  let interactAt = 0;
+  for (const ev of ["click", "keydown"]) {
+    window.addEventListener(ev, () => (interactAt = Date.now()), { capture: true, passive: true });
+  }
+  window.addEventListener("popstate", () => {
+    if (Date.now() - interactAt > 700) backAt = Date.now();
+  });
   let pending = null;
   let timer;
   window.addEventListener("scroll", () => {

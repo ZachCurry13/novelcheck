@@ -2,6 +2,7 @@
 import { get, post, qs } from "./api.js";
 import { $, esc, attempt, toast, canManage, can } from "./ui.js";
 import { openCalibreRemoval } from "./calibreremove.js";
+import { libbySearchBox } from "./libbysearch.js";
 import { openBook } from "./bookdialog.js";
 import { openPepperGuide } from "./peppers.js";
 import { on } from "./modules.js";
@@ -98,7 +99,11 @@ export async function renderLibrary(view, state) {
     if (reset && data.total) recent.remember(form.q.value);
     $("#result-count", view).textContent = `${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}`;
     $("#more-btn", view).classList.toggle("hidden", offset >= data.total);
-    if (!data.total) grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>`;
+    if (!data.total) {
+      grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>${form.q.value.trim() && state.user.role !== "restricted" ? `<div class="card mt-3"><p class="mb-2 font-semibold">🔎 Look in your Libby libraries</p><div data-lsbox></div></div>` : ""}`;
+      const box = grid.querySelector("[data-lsbox]");
+      if (box) libbySearchBox(box, form.q.value.trim());
+    }
     sel.repaint();
     markKeptAudio(grid); // 🎧 at your library, from what the background check kept
   }
@@ -111,8 +116,19 @@ export async function renderLibrary(view, state) {
     const n = [...fd.entries()].filter(([k, v]) => k !== "q" && k !== "sort" && v !== "").length;
     toggle.textContent = n ? `Filters (${n})` : "Filters";
   };
-  toggle.addEventListener("click", () => {
-    toggle.setAttribute("aria-expanded", String(form.classList.toggle("filters-open")));
+  const setOpen = (open) => {
+    form.classList.toggle("filters-open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+  };
+  toggle.addEventListener("click", () => setOpen(!form.classList.contains("filters-open")));
+  form.addEventListener("click", (e) => {
+    if (e.target.closest("[data-filters-done]")) setOpen(false);
+  });
+  document.addEventListener("pointerdown", (e) => { // a tap anywhere outside the panel closes it
+    if (form.isConnected && form.classList.contains("filters-open") && !form.contains(e.target) && !e.target.closest(".combo-list")) setOpen(false);
+  });
+  form.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && form.classList.contains("filters-open")) setOpen(false);
   });
 
   let debounce;
@@ -168,9 +184,9 @@ export async function renderLibrary(view, state) {
   for (const k of ["q", "author", "series", "genre", "kind", "catalog", "spice", "narrator", "format", "sort"]) {
     if (preset.get(k) && form.elements[k]) form.elements[k].value = preset.get(k);
   }
-  if ([...preset.keys()].some((k) => !["q", "collection", "season", "event"].includes(k))) form.classList.add("filters-open");
-  // Back from a book's series, an author's page and so on: the search and filters are as you left them.
-  if (isBack() && [...preset.keys()].length === 0 && restoreForm("library", form)) form.classList.add("filters-open");
+  // Back from a book's series, an author's page and so on: the search and filters are as you left them
+  // (the chips under the search box show which are on; the panel stays closed).
+  if (isBack() && [...preset.keys()].length === 0) restoreForm("library", form);
   form.addEventListener("input", () => saveForm("library", form));
   form.addEventListener("change", () => saveForm("library", form));
   countFilters();

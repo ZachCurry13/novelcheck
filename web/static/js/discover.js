@@ -4,6 +4,7 @@
 import { get, post } from "./api.js";
 import { $, esc, attempt, toast, canManage } from "./ui.js";
 import { openBook } from "./bookdialog.js";
+import { libbySearchBox } from "./libbysearch.js";
 import { coverImg } from "./covers.js";
 import { PEPPERS, pepperIcons } from "./peppers.js";
 import { loadContent, contentIcons } from "./content.js";
@@ -57,6 +58,7 @@ export async function renderDiscover(view, state) {
     ${discoverTabsHTML("discover", state.user)}
     <h1 class="mb-1 text-2xl font-bold">🧭 Discover</h1>
     <p class="mb-2 text-sm text-slate-400">Popular and classic books with their peppers and content. Tap a book for details.</p>
+    <details id="libby-search" class="card mb-4 ${state.user.role === "restricted" ? "hidden" : ""}"><summary class="cursor-pointer font-semibold">🔎 Search my libraries (Libby)</summary><div id="ls-host" class="mt-3"></div></details>
     <div id="discover-seasons"></div>
     <label class="toggle mb-4 min-h-[2.5rem]"><input type="checkbox" id="show-owned" ${showOwned() ? "checked" : ""}> Also show books we already have <span id="owned-count" class="text-slate-500"></span></label>
     <div id="libby-filters" class="mb-4 hidden flex-wrap items-center gap-2" role="group" aria-label="Filter by what your library lends">
@@ -68,6 +70,10 @@ export async function renderDiscover(view, state) {
       <span id="lf-status" class="text-xs text-slate-500"></span></div>
     <div id="rows" class="space-y-6"><p class="text-slate-400">Loading…</p></div>
     <div id="credit" class="mt-8 space-y-1 text-xs text-slate-500"></div>`;
+  $("#libby-search", view).addEventListener("toggle", (e) => {
+    const host = $("#ls-host", view);
+    if (e.target.open && !host.firstChild) libbySearchBox(host);
+  }, { once: false });
   $("#show-owned", view).addEventListener("change", (e) => {
     try {
       localStorage.setItem(OWNED_KEY, e.target.checked ? "1" : "0");

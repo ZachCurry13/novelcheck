@@ -4,6 +4,18 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.56.0]
+
+### 🔎 Search your libraries
+- **Search Libby for any book, even one NovelCheck doesn't have** (Discover → "Search my libraries", and in the Library when a search finds nothing): looks at every library you added, e-books and audiobooks, and shows the best answer for each book (available now, or the holds and wait) with a link to it. **➕ Add to Nightstand** makes the book and puts it on your Nightstand.
+
+### 🎁 Wrapped, full screen
+- **Wrapped is now a full-screen story** (tap ▶ Play my Wrapped): a gradient slide at a time with progress bars across the top, huge numbers, your most-read book, top author with the runner-up, your reading personality, a 24-hour "A day in the life" donut, your longest day, an achievements grid, and a last slide to share a picture. Tap the right side to go on, the left to go back; Esc or ✕ leaves.
+
+### 🧰 Filters and fixes
+- **The Library filter panel is a compact popover** over the results (a full sheet on a phone) with a **Done** button; the rarely used hide-content options sit in a "More" fold. It closes when you tap outside it, and it no longer pops open by itself.
+- **Fixed Settings closing on an iPhone.** A window closing at the same moment as a link going to another page could send the browser back a step and undo the trip. Windows now only step back when nothing else has changed, and a tapped link is no longer mistaken for the Back button.
+
 ## [1.55.0]
 
 ### 🎁 Wrapped, trophies and records

@@ -61,10 +61,11 @@ export function filtersHTML({ facets, catOpts, event, state }) {
           ${AGE_GROUPS.map(([l, n, r]) => `<option value="${l}">Suitable for ${n} (${r})</option>`).join("")}
           <option value="unset">Age group not set yet</option></select>`, on(state.user, "parents") ? "" : "module-off")}
       </div>
-      <div class="fgroup fwide"><h3 title="Books with these are hidden (unless a parent marked them OK)">Hide content</h3>
+      <details class="fgroup fwide fmore"><summary>More: hide content and other options</summary>
+      <div class="fgroup"><h3 title="Books with these are hidden (unless a parent marked them OK)">Hide content</h3>
         ${hidePicker()}
       </div>
-      <div class="fgroup fwide"><h3>Hide books that have…</h3>
+      <div class="fgroup"><h3>Hide books that have…</h3>
         <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
           ${Object.entries(HIDE_LABELS).map(([k, v]) => `<label class="toggle"><input type="checkbox" name="hide" value="${k}"> ${esc(v)}</label>`).join("")}
           ${hideBoxes()}
@@ -75,6 +76,8 @@ export function filtersHTML({ facets, catOpts, event, state }) {
         <div class="flex flex-wrap gap-4 text-xs"><button type="button" id="pepper-help" class="text-slate-400 underline">🌶️ What do the peppers mean?</button>
           <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="text-slate-500 underline">Missing a filter? Suggest one</a></div>
       </div>
+      </details>
+      <div class="fgroup fwide fdone"><button type="button" class="btn-primary" data-filters-done>Done</button></div>
     </div>
   </form>`;
 }
