@@ -116,6 +116,7 @@ func (s *Server) errorRecorder(next http.Handler) http.Handler {
 		rec := &errRecorder{ResponseWriter: w}
 		began := time.Now()
 		next.ServeHTTP(rec, r)
+		s.noteActivity(r, rec.status, time.Since(began))
 		if changesData(r.Method, r.URL.Path) && rec.status > 0 && rec.status < 400 {
 			s.rcache.bump() // something changed: the kept list pages are out of date
 		}

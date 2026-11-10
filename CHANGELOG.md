@@ -4,6 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.57.0]
+
+### ⏺ Debug recording (Settings → Developer, admins)
+- **Record what happens for a few minutes** (5, 15 or 60; it stops by itself after an hour at most). While it is on, **everyone's NovelCheck shows a red bar** saying an admin is recording to fix a bug, and the server keeps a timeline: pages opened, buttons tapped (by name), what was typed (never passwords, codes or keys), failed requests and errors from each browser, plus **every call the server answers**, including KOReader, OPDS and sync.
+- **Timeline in Settings → Developer** to refresh, copy or delete, and the latest 200 lines are **added to bug reports** (the server report). Lines are deleted after a week.
+
+### 📱 Phone layout
+- **Library search gets its own full-width row** on a phone, with Sort, Filters and ⋯ under it (the box had shrunk to a small square).
+- **Seasons and Collections chips wrap** instead of scrolling sideways.
+
 ## [1.56.2]
 
 ### 🧹 Tidy in Calibre

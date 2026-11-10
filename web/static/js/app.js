@@ -1,6 +1,7 @@
 // NovelCheck app bootstrap: session check, hash router, PWA install prompt.
 import { get, post, setUnauthorizedHandler } from "./api.js";
 import { startRecording } from "./debugrec.js";
+import { startActivity } from "./activityrec.js";
 import { $, $$, attempt, canManage, can } from "./ui.js";
 import { renderLibrary } from "./library.js";
 import { renderCheck } from "./check.js";
@@ -173,6 +174,7 @@ async function boot() {
     showSignIn();
   });
   startRecording();
+  startActivity();
   startViewState();
   window.addEventListener("hashchange", route);
   for (const id of ["#help-btn", "#help-link"]) {

@@ -16,6 +16,9 @@ func (s *Server) adminRoutes(r chi.Router) {
 	r.Get("/admin/settings", s.handleGetSettings) // filtered to the admin's areas
 	r.Put("/admin/settings", s.handlePutSettings) // refused outside them
 	r.Put("/admin/users/{id}/access", s.handleUserAccess)
+	r.Get("/admin/activity", s.handleActivityLog)
+	r.Put("/admin/activity", s.handleActivityStart)
+	r.Delete("/admin/activity", s.handleActivityClear)
 	r.Post("/admin/users/{id}/owner", s.handleMakeOwner)
 
 	r.Group(func(r chi.Router) { // 🤖 AI settings

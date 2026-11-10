@@ -125,6 +125,8 @@ func (s *Server) Router() http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(s.Auth.RequireUser)
 			r.Get("/me", s.handleMe)
+			r.Get("/activity/status", s.handleActivityStatus)
+			r.Post("/activity/events", s.handleActivityEvents)
 			r.Put("/me/pin", s.handleMyPIN)
 			r.Put("/me/password", s.handleChangePassword)
 			r.Put("/me/delivery", s.handleUpdateDelivery)

@@ -51,7 +51,14 @@ function autoSend(why) {
   }, 3000);
 }
 
+// While an admin has debug recording on, activityrec.js takes every note too (setSink).
+let sink = null;
+export const setSink = (f) => {
+  sink = f;
+};
+
 export function note(kind, msg) {
+  sink?.(kind, String(msg));
   if (kind === "error" || (kind === "net" && /-> 5\d\d/.test(String(msg)))) autoSend(String(msg).slice(0, 80));
   lines.push(`${stamp()} [${kind}] ${String(msg).replace(/\s+/g, " ").slice(0, 300)}`);
   if (lines.length > MAX) lines = lines.slice(-MAX);

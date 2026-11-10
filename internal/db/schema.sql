@@ -637,3 +637,14 @@ CREATE TABLE IF NOT EXISTS libby_audio (
     PRIMARY KEY (user_id, book_id)
 );
 CREATE INDEX IF NOT EXISTS idx_libby_audio_found ON libby_audio (user_id, found);
+
+-- Debug recording (Settings, Developer): while an admin has it on, what people do is kept here for a short while
+-- (pages, taps, typed text except passwords, server calls, errors), shown to the admin and added to bug reports.
+CREATE TABLE IF NOT EXISTS activity_log (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    at       TEXT NOT NULL,
+    username TEXT NOT NULL DEFAULT '',
+    source   TEXT NOT NULL DEFAULT '',
+    kind     TEXT NOT NULL DEFAULT '',
+    detail   TEXT NOT NULL DEFAULT ''
+);

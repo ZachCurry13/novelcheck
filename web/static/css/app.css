@@ -73,3 +73,10 @@ body.story-open { overflow: hidden; }
 /* "A new version is ready" bar: see js/appupdate.js. */
 #update-bar { position: fixed; left: 0.75rem; right: 0.75rem; bottom: calc(4.5rem + env(safe-area-inset-bottom)); z-index: 80; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin: 0 auto; max-width: 28rem; border: 1px solid rgb(var(--indigo-400)); border-radius: 0.8rem; background: rgb(var(--slate-900)); padding: 0.6rem 0.8rem; font-size: 0.9rem; box-shadow: 0 12px 30px rgb(0 0 0 / 0.5); }
 #update-bar span { flex: 1; }
+
+/* Debug recording bar: see js/activityrec.js. */
+#debug-bar { position: sticky; top: 0; z-index: 85; background: #b91c1c; color: #fff; padding: 0.35rem 0.8rem; font-size: 0.8rem; text-align: center; }
+
+/* Search gets the whole first row; Sort, Filters and more sit under it (a phone squeezed it to a square). */
+@media (max-width: 640px) { #filters .fbar input[name="q"] { flex: 1 1 100%; min-height: 2.75rem; } }
+@media (max-width: 640px) { #filters .fbar .fsort { flex: 1 1 0; min-width: 8rem; } }
