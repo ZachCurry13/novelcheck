@@ -27,6 +27,9 @@ type fakeLibrary struct {
 	titles  map[string]string
 	formats map[string][]string
 	added   int
+
+	splitFail bool     // conversions fail with calibre's SplitError unless sent without size-based splitting
+	starts    []string // the bodies of the conversion requests
 }
 
 func (f *fakeLibrary) has(id, format string) bool {
@@ -77,8 +80,13 @@ func (f *fakeLibrary) serve(t *testing.T) *httptest.Server {
 			f.added++
 			fmt.Fprint(w, `{"result":true}`)
 		case r.URL.Path == "/conversion/start/2":
+			f.starts = append(f.starts, string(body))
 			fmt.Fprint(w, `5`)
 		case r.URL.Path == "/conversion/status/5":
+			if f.splitFail && !strings.Contains(f.starts[len(f.starts)-1], `"flow_size":0`) {
+				fmt.Fprint(w, `{"running":false,"ok":false,"traceback":"Traceback: calibre.ebooks.oeb.transforms.split.SplitError: Could not find reasonable point at which to split"}`)
+				break
+			}
 			f.formats["2"] = append(f.formats["2"], "EPUB")
 			fmt.Fprint(w, `{"running":false,"ok":true}`)
 		default:
@@ -176,5 +184,16 @@ func TestFormatCleanup(t *testing.T) {
 	admin.do("POST", "/api/admin/formats/convert", map[string]any{"book_ids": []int64{beta}}, true)
 	if job := waitFormatJob(t, admin); job["done"].(float64) != 1 || !fake.has("2", "EPUB") {
 		t.Fatalf("conversion: %v", job)
+	}
+
+	// A book calibre cannot split into small files is converted again without size-based splitting.
+	fake.mu.Lock()
+	fake.formats["2"] = []string{"MOBI"}
+	fake.splitFail = true
+	fake.starts = nil
+	fake.mu.Unlock()
+	admin.do("POST", "/api/admin/formats/convert", map[string]any{"book_ids": []int64{beta}}, true)
+	if job := waitFormatJob(t, admin); job["done"].(float64) != 1 || !fake.has("2", "EPUB") || len(fake.starts) != 2 || !strings.Contains(fake.starts[1], "flow_size") {
+		t.Fatalf("a SplitError is retried without splitting: %v %v", job, fake.starts)
 	}
 }

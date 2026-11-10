@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -47,9 +48,23 @@ func (s *Server) runConvert(files []store.CalibreFile) {
 // convertOne starts one conversion and follows it; calibre adds the EPUB
 // once it's asked for the finished job's status. "" means it worked.
 func (s *Server) convertOne(c *calibresrv.Client, id int, from string) string {
+	why := s.convertWith(c, id, from, nil)
+	// "Could not find reasonable point at which to split": calibre cut the book into files of about 260 KB for
+	// old readers and found no place to cut. Try again without size-based splitting (KOReader and phones cope).
+	if why != "" && regexp.MustCompile("(?i)reasonable point|SplitError").MatchString(why) {
+		if again := s.convertWith(c, id, from, map[string]any{"flow_size": 0}); again == "" {
+			return ""
+		} else {
+			return "tried twice (the second time without splitting the book into small files): " + again
+		}
+	}
+	return why
+}
+
+func (s *Server) convertWith(c *calibresrv.Client, id int, from string, options map[string]any) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
-	job, err := c.StartConversion(ctx, id, from)
+	job, err := c.StartConversionWith(ctx, id, from, options)
 	if err != nil {
 		return err.Error()
 	}

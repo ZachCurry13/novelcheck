@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.57.1]
+
+### 🔄 Conversion, Discover and Libby search
+- **Conversions that failed with "Could not find reasonable point at which to split"** (Cat's Cradle, Misery, Othello, The Terror…) are tried again without calibre's small-file splitting, which is what that error is about. The failure message says so if the second try fails too.
+- **Libby search results match what you typed.** A search for "Cinder" no longer fills the list with other popular books: results must contain the words you typed (title, author or series), best matches first; if nothing does, it says so.
+- **Libby search covers show.** The page only shows pictures from NovelCheck itself, so covers now come through it (only OverDrive's own picture addresses are fetched).
+
 ## [1.57.0]
 
 ### ⏺ Debug recording (Settings → Developer, admins)

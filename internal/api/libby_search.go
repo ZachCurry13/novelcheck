@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -76,6 +77,12 @@ func (s *Server) handleLibbySearch(w http.ResponseWriter, r *http.Request) {
 	books := make([]libby.Found, 0, len(order))
 	for _, k := range order {
 		books = append(books, *merged[k])
+	}
+	books = rankFound(q, books)
+	for i := range books {
+		if books[i].Cover != "" {
+			books[i].CoverImg = "/api/libby/cover?u=" + url.QueryEscape(books[i].Cover)
+		}
 	}
 	if len(books) > 40 {
 		books = books[:40]

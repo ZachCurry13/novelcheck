@@ -52,7 +52,15 @@ func (c *Client) libraryQuery() string {
 // StartConversion asks calibre to convert a book's format to EPUB (with its
 // default settings) and returns the job's id. Calibre adds the EPUB when done.
 func (c *Client) StartConversion(ctx context.Context, id int, from string) (int, error) {
-	body, _ := json.Marshal(map[string]any{"input_fmt": strings.ToUpper(from), "output_fmt": "EPUB", "options": map[string]any{}})
+	return c.StartConversionWith(ctx, id, from, nil)
+}
+
+// StartConversionWith is StartConversion with conversion options (calibre's own names, like "flow_size").
+func (c *Client) StartConversionWith(ctx context.Context, id int, from string, options map[string]any) (int, error) {
+	if options == nil {
+		options = map[string]any{}
+	}
+	body, _ := json.Marshal(map[string]any{"input_fmt": strings.ToUpper(from), "output_fmt": "EPUB", "options": options})
 	raw, err := c.do(ctx, http.MethodPost, "/conversion/start/"+strconv.Itoa(id)+c.libraryQuery(), body)
 	if err != nil {
 		return 0, err

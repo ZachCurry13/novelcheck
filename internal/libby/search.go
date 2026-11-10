@@ -10,16 +10,21 @@ import (
 
 // Found is one book a library lends, from a free-text search: it need not be in NovelCheck.
 type Found struct {
-	Title  string        `json:"title"`
-	Author string        `json:"author"`
-	Cover  string        `json:"cover,omitempty"`
-	Key    string        `json:"key"` // title+author, to match the same book across libraries
-	Ebook  *Availability `json:"ebook,omitempty"`
-	Audio  *Availability `json:"audio,omitempty"`
+	Title    string        `json:"title"`
+	Author   string        `json:"author"`
+	Cover    string        `json:"cover,omitempty"`
+	Key      string        `json:"key"` // title+author, to match the same book across libraries
+	Series   string        `json:"series,omitempty"`
+	CoverImg string        `json:"cover_img,omitempty"` // the cover through NovelCheck (the page may only show its own pictures)
+	Ebook    *Availability `json:"ebook,omitempty"`
+	Audio    *Availability `json:"audio,omitempty"`
 }
 
 type searchItem struct {
 	item
+	DetailedSeries struct {
+		Name string `json:"seriesName"`
+	} `json:"detailedSeries"`
 	Covers map[string]struct {
 		Href string `json:"href"`
 	} `json:"covers"`
@@ -44,7 +49,7 @@ func (c *Client) Search(ctx context.Context, key, query, media string) ([]Found,
 		for _, f := range it.Formats {
 			a.Kindle = a.Kindle || f.ID == "ebook-kindle"
 		}
-		f := Found{Title: it.Title, Author: it.Creator, Key: store.NormKey(it.Title, it.Creator)}
+		f := Found{Title: it.Title, Author: it.Creator, Series: it.DetailedSeries.Name, Key: store.NormKey(it.Title, it.Creator)}
 		for _, name := range []string{"cover150Wide", "cover300Wide", "cover510Wide"} {
 			if h := it.Covers[name].Href; h != "" {
 				f.Cover = h

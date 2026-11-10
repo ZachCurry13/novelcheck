@@ -30,6 +30,13 @@ func TestLibbySearchAndAdd(t *testing.T) {
 	if b, _ := short["books"].([]any); len(b) != 0 {
 		t.Fatalf("one letter is not a search: %v", short)
 	}
+	_, junk := admin.do("GET", "/api/libby/search?q=cinder", nil, false)
+	if b, _ := junk["books"].([]any); len(b) != 0 {
+		t.Fatalf("look-alikes that don't match the words are dropped: %v", junk)
+	}
+	if res, _ := admin.do("GET", "/api/libby/cover?u=https://evil.example/x.jpg", nil, false); res.StatusCode != 404 {
+		t.Fatalf("only OverDrive's picture hosts are fetched: %d", res.StatusCode)
+	}
 	res, made := admin.do("POST", "/api/libby/add", map[string]any{"title": "Dune", "author": "Frank Herbert", "cover": "https://img.example/d.jpg"}, true)
 	if res.StatusCode != 200 || made["book_id"] == nil {
 		t.Fatalf("add: %d %v", res.StatusCode, made)

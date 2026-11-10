@@ -161,6 +161,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/books/{id}/libby", s.handleBookLibby)
 			r.Post("/libby/check", s.handleLibbyCheck)
 			r.Get("/libby/search", s.handleLibbySearch)
+			r.Get("/libby/cover", s.handleLibbyCover)
 			r.Post("/libby/add", s.handleLibbyAdd)
 			r.Get("/me/hardcover", s.handleHardcoverStatus)
 			r.Put("/me/hardcover", s.handleHardcoverConnect)
