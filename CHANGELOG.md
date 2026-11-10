@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.59.1]
+
+### 🔗 Hardcover, more dependable
+- **Calls to Hardcover are spaced out** (it allows 60 a minute and a book sent takes up to five calls), wait and retry once if it says too many, say they come from NovelCheck, and **a write Hardcover refuses is now reported** instead of looking like it worked.
+- **Checked against Hardcover's published schema:** ratings support half stars, and the calls we use are the ones the official KOReader plugin still uses. What else the API offers is listed in `docs/HARDCOVER_API.md`.
+
 ## [1.59.0]
 
 ### ⭐ Ratings and Hardcover

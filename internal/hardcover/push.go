@@ -94,12 +94,23 @@ func (c *Client) FindUserBook(ctx context.Context, bookID int) (UserBook, error)
 // SetRating puts the person's stars on their Hardcover entry (Hardcover rates in half stars).
 func (c *Client) SetRating(ctx context.Context, userBookID int, stars float64) error {
 	stars = float64(int(stars*2+0.5)) / 2
-	return c.mutate(ctx, fmt.Sprintf(`mutation { update_user_book(id: %d, object: {rating: %g}) { __typename } }`, userBookID, stars))
+	return c.mutate(ctx, fmt.Sprintf(`mutation { update_user_book(id: %d, object: {rating: %g}) { id error } }`, userBookID, stars))
 }
 
+// mutate runs a write. Hardcover answers a refused write with 200 and an "error" text in the result, so that is checked.
 func (c *Client) mutate(ctx context.Context, q string) error {
-	var out json.RawMessage
-	return c.do(ctx, q, &out)
+	var out map[string]struct {
+		Error any `json:"error"`
+	}
+	if err := c.do(ctx, q, &out); err != nil {
+		return err
+	}
+	for _, r := range out {
+		if msg, ok := r.Error.(string); ok && msg != "" {
+			return fmt.Errorf("Hardcover refused it: %s", msg)
+		}
+	}
+	return nil
 }
 
 var errNoUserBook = errors.New("Hardcover didn't add the book to your shelves")
@@ -114,7 +125,7 @@ func (c *Client) Push(ctx context.Context, ed Edition, status, pages int, today 
 		return err
 	}
 	if ub.ID == 0 {
-		q := fmt.Sprintf(`mutation { insert_user_book(object: {book_id: %d, edition_id: %d, status_id: %d}) { __typename } }`, ed.BookID, ed.ID, status)
+		q := fmt.Sprintf(`mutation { insert_user_book(object: {book_id: %d, edition_id: %d, status_id: %d}) { id error } }`, ed.BookID, ed.ID, status)
 		if err := c.mutate(ctx, q); err != nil {
 			return err
 		}
@@ -125,7 +136,7 @@ func (c *Client) Push(ctx context.Context, ed Edition, status, pages int, today 
 			return errNoUserBook
 		}
 	} else if ub.Status < status && ub.Status != DNF && ub.Status != Paused {
-		if err := c.mutate(ctx, fmt.Sprintf(`mutation { update_user_book(id: %d, object: {status_id: %d}) { __typename } }`, ub.ID, status)); err != nil {
+		if err := c.mutate(ctx, fmt.Sprintf(`mutation { update_user_book(id: %d, object: {status_id: %d}) { id error } }`, ub.ID, status)); err != nil {
 			return err
 		}
 	}
@@ -138,14 +149,14 @@ func (c *Client) Push(ctx context.Context, ed Edition, status, pages int, today 
 	date := today.Format("2006-01-02")
 	switch {
 	case ub.ReadID == 0:
-		return c.mutate(ctx, fmt.Sprintf(`mutation { insert_user_book_read(user_book_id: %d, user_book_read: {progress_pages: %d, edition_id: %d, started_at: "%s"}) { __typename } }`, ub.ID, pages, ed.ID, date))
+		return c.mutate(ctx, fmt.Sprintf(`mutation { insert_user_book_read(user_book_id: %d, user_book_read: {progress_pages: %d, edition_id: %d, started_at: "%s"}) { id error } }`, ub.ID, pages, ed.ID, date))
 	case status == Read:
-		q := fmt.Sprintf(`mutation { update_user_book_read(id: %d, object: {progress_pages: %d, finished_at: "%s"}) { __typename } }`, ub.ReadID, pages, date)
+		q := fmt.Sprintf(`mutation { update_user_book_read(id: %d, object: {progress_pages: %d, finished_at: "%s"}) { id error } }`, ub.ReadID, pages, date)
 		if err := c.mutate(ctx, q); err != nil { // an older server may not take finished_at
-			return c.mutate(ctx, fmt.Sprintf(`mutation { update_user_book_read(id: %d, object: {progress_pages: %d}) { __typename } }`, ub.ReadID, pages))
+			return c.mutate(ctx, fmt.Sprintf(`mutation { update_user_book_read(id: %d, object: {progress_pages: %d}) { id error } }`, ub.ReadID, pages))
 		}
 		return nil
 	default:
-		return c.mutate(ctx, fmt.Sprintf(`mutation { update_user_book_read(id: %d, object: {progress_pages: %d}) { __typename } }`, ub.ReadID, pages))
+		return c.mutate(ctx, fmt.Sprintf(`mutation { update_user_book_read(id: %d, object: {progress_pages: %d}) { id error } }`, ub.ReadID, pages))
 	}
 }

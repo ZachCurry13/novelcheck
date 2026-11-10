@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -29,12 +30,38 @@ const (
 	DNF        = 5
 )
 
+// MinGap is the least time between two calls with one token: Hardcover allows 60 requests a minute, and a
+// book sent to it takes several calls. Tests set it to 0.
+var MinGap = 1100 * time.Millisecond
+
 // Client talks to Hardcover with one person's token.
 type Client struct {
 	Token string
 	URL   string // "" = Endpoint (tests point it elsewhere)
 	HTTP  *http.Client
+
+	mu   sync.Mutex
+	last time.Time
 }
+
+// pause waits until MinGap has passed since this client's last call.
+func (c *Client) pause(ctx context.Context) error {
+	c.mu.Lock()
+	wait := MinGap - time.Since(c.last)
+	c.last = time.Now().Add(max(wait, 0))
+	c.mu.Unlock()
+	if wait <= 0 {
+		return nil
+	}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(wait):
+		return nil
+	}
+}
+
+var errTooMany = errors.New("Hardcover says too many requests; it will try again later")
 
 // CleanToken drops a pasted "Bearer " and stray spaces.
 func CleanToken(t string) string {
@@ -44,7 +71,24 @@ func CleanToken(t string) string {
 	return strings.TrimSpace(t)
 }
 
+// do makes one call, kept under Hardcover's limit; if Hardcover still says "too many", it waits and tries once more.
 func (c *Client) do(ctx context.Context, query string, out any) error {
+	if err := c.pause(ctx); err != nil {
+		return err
+	}
+	err := c.doOnce(ctx, query, out)
+	if errors.Is(err, errTooMany) && MinGap > 0 {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(15 * time.Second):
+		}
+		return c.doOnce(ctx, query, out)
+	}
+	return err
+}
+
+func (c *Client) doOnce(ctx context.Context, query string, out any) error {
 	body, _ := json.Marshal(map[string]string{"query": query})
 	url := c.URL
 	if url == "" {
@@ -56,6 +100,7 @@ func (c *Client) do(ctx context.Context, query string, out any) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+CleanToken(c.Token))
+	req.Header.Set("User-Agent", "NovelCheck (self-hosted reading tracker)") // Hardcover asks scripts to say what they are
 	hc := c.HTTP
 	if hc == nil {
 		hc = &http.Client{Timeout: 30 * time.Second}
@@ -70,7 +115,7 @@ func (c *Client) do(ctx context.Context, query string, out any) error {
 	case http.StatusUnauthorized, http.StatusForbidden:
 		return errors.New("Hardcover didn't accept the token: copy it again from hardcover.app → Settings → Hardcover API (tokens can expire)")
 	case http.StatusTooManyRequests:
-		return errors.New("Hardcover says too many requests; it will try again later")
+		return errTooMany
 	}
 	var env struct {
 		Data   json.RawMessage `json:"data"`
