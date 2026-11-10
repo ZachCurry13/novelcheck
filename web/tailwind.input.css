@@ -207,3 +207,7 @@ body.story-open { overflow: hidden; }
 .story-body .s-actions button { border-radius: 9999px; background: #fff; color: #111827; padding: 0.7rem 1.4rem; font-weight: 700; }
 .story-body .s-actions button.alt { background: rgb(255 255 255 / 0.18); color: #fff; }
 .wrap-hero { background: radial-gradient(120% 90% at 20% 0%, #4f46e5, rgb(var(--slate-900)) 75%); }
+
+/* "A new version is ready" bar: see js/appupdate.js. */
+#update-bar { position: fixed; left: 0.75rem; right: 0.75rem; bottom: calc(4.5rem + env(safe-area-inset-bottom)); z-index: 80; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin: 0 auto; max-width: 28rem; border: 1px solid rgb(var(--indigo-400)); border-radius: 0.8rem; background: rgb(var(--slate-900)); padding: 0.6rem 0.8rem; font-size: 0.9rem; box-shadow: 0 12px 30px rgb(0 0 0 / 0.5); }
+#update-bar span { flex: 1; }

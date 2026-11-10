@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.56.1]
+
+### 🔄 Update bar
+- **"A new version of NovelCheck is ready" bar with a Reload button** at the bottom of the screen. The app now checks every couple of minutes while it is open (and soon after opening), instead of reloading by itself after five minutes away. Nothing reloads while you are typing; tap ✕ to wait.
+
 ## [1.56.0]
 
 ### 🔎 Search your libraries

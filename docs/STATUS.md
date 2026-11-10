@@ -21,3 +21,5 @@
 - 2026-11-09: v1.55.0 is the big release (everything on feature/v1.55). Before release: full test run. After: owner to try Wrapped, the Libby filters, Find the missing books, and read the next bug report for the conversion failures and the Clean Library vs config question.
 
 - 2026-11-09: v1.56 on branch feature/v1.56 (not released): Libby search + Add to Nightstand, full-screen Wrapped story, compact filter popover, iPhone Settings/dialog history fix. Tests: only the six known Windows failures. Next: owner OK to release 1.56.0; sister to retry Settings on her iPhone.
+
+- 2026-11-09: v1.56.1 on feature/v1.56.1 (not released): "new version ready" Reload bar (`appupdate.js`). Next: owner OK to release; owner reloads the phone to pick up 1.56.0 (the Settings fix).
