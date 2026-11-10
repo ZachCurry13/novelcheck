@@ -211,3 +211,16 @@ func (c *Client) cmd(ctx context.Context, name string, args any) (json.RawMessag
 	}
 	return out.Result, nil
 }
+
+// Probe asks about a route without using it (a GET to a route that only takes POST), to learn whether this
+// calibre has it: nil error or a "refused"/"answered 405" style error means the route exists; "not found" does not.
+func (c *Client) Probe(ctx context.Context, path string) string {
+	_, err := c.do(ctx, http.MethodGet, path+c.libraryQuery(), nil)
+	switch {
+	case err == nil:
+		return "exists"
+	case strings.Contains(err.Error(), "not found"):
+		return "not available on this calibre"
+	}
+	return "exists (" + err.Error() + ")"
+}

@@ -8,6 +8,7 @@ import { clearNotes, report, autoSendOn, setAutoSend } from "./debugrec.js";
 import { copyText } from "./copy.js";
 import { renderLink, renderErrors, handleDevLink } from "./devlink.js";
 import { activityCardHTML, bindActivityCard } from "./activitycard.js";
+import { serverCheckHTML, bindServerCheck } from "./servercheck.js";
 
 const when = (t) => {
   const d = new Date(/[zZ]$|[+-]\d\d:?\d\d$/.test(t) ? t : t.replace(" ", "T") + "Z");
@@ -41,7 +42,7 @@ const adminCards = () => `<div class="card space-y-2 lg:col-span-2"><h2 class="t
 
 export async function renderDevTab(host, user) {
   const admin = user.role === "admin";
-  host.innerHTML = (admin ? activityCardHTML() : "") + browserCard() + kindleCard(admin) + (admin ? adminCards() : "");
+  host.innerHTML = (admin ? activityCardHTML() + serverCheckHTML() : "") + browserCard() + kindleCard(admin) + (admin ? adminCards() : "");
   const show = () => {
     host.querySelector("#dev-web").textContent = report(appVersion());
   };
@@ -60,6 +61,7 @@ export async function renderDevTab(host, user) {
   logs();
   if (admin) {
     bindActivityCard(host);
+    bindServerCheck(host);
     renderLink(host.querySelector("#dev-link"));
     renderErrors(host.querySelector("#dev-errors"));
   }

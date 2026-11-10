@@ -90,6 +90,7 @@ func (s *Server) diagnosticsText() string {
 	s.formatJobSection(line)
 	s.tidyWaitingSection(line)
 	s.activitySection(line)
+	s.serverChecksSection(line)
 
 	if s.Tunnel != nil {
 		st := s.Tunnel.Status()
