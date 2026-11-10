@@ -33,7 +33,7 @@ func recordingHardcover(t *testing.T, mutations *[]string) *httptest.Server {
 			io.WriteString(w, `{"data": {"x": {"__typename": "ok"}}}`)
 		case strings.Contains(q.Query, "editions("):
 			io.WriteString(w, `{"data": {"editions": [{"id": 5, "book_id": 9, "pages": 500}]}}`)
-		case strings.Contains(q.Query, "_in: [2, 3]"): // the pull: nothing yet
+		case strings.Contains(q.Query, "_in: [1, 2, 3, 4]"): // the pull: nothing yet
 			io.WriteString(w, `{"data": {"me": [{"user_books": []}]}}`)
 		case strings.Contains(q.Query, "book_id: {_eq: 9}"):
 			if !onShelf {

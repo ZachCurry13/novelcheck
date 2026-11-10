@@ -23,7 +23,7 @@ func ratedHardcover(t *testing.T, mutations *[]string) *httptest.Server {
 			io.WriteString(w, `{"data": {"x": {"__typename": "ok"}}}`)
 		case strings.Contains(q.Query, "editions("):
 			io.WriteString(w, `{"data": {"editions": [{"id": 5, "book_id": 9, "pages": 500}]}}`)
-		case strings.Contains(q.Query, "_in: [2, 3]"):
+		case strings.Contains(q.Query, "_in: [1, 2, 3, 4]"):
 			io.WriteString(w, `{"data": {"me": [{"user_books": [{"status_id": 3, "updated_at": "2026-01-01T00:00:00Z", "rating": 4.5,
 				"book": {"title": "Dune", "pages": 500, "contributions": [{"author": {"name": "Frank Herbert"}}]},
 				"edition": {"pages": 500, "isbn_13": "9780441172719"}, "user_book_reads": []}]}]}}`)

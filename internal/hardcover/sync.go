@@ -2,6 +2,7 @@ package hardcover
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"time"
 
@@ -22,6 +23,11 @@ func SyncUser(ctx context.Context, st *store.Store, c *Client, userID int64) (bo
 			Percent: b.Percent, Rating: b.Rating, UpdatedAt: b.UpdatedAt.Unix()})
 	}
 	matched, err = st.SaveHardcover(userID, in)
+	if goals, gerr := c.Goals(ctx); gerr == nil { // the reading challenge, for Wrapped (best effort)
+		if raw, merr := json.Marshal(goals); merr == nil {
+			_ = st.SetHardcoverGoals(userID, string(raw))
+		}
+	}
 	return len(in), matched, err
 }
 
@@ -60,17 +66,36 @@ func Loop(ctx context.Context, st *store.Store) {
 	}
 }
 
+// findEdition finds a book on Hardcover by ISBN, or, when there is none or Hardcover doesn't know it, by an
+// exact title and author match through Hardcover's search.
+func (c *Client) findEdition(ctx context.Context, isbn, title, author string) (Edition, bool, error) {
+	if isbn != "" {
+		if ed, ok, err := c.FindEdition(ctx, isbn); err != nil || ok {
+			return ed, ok, err
+		}
+	}
+	return c.FindEditionByTitle(ctx, title, author)
+}
+
 // PushUser sends a person's reading state to their Hardcover (up to 15
 // books a run): reading or finished books on your Nightstand, matched by ISBN.
 // Books Hardcover doesn't know are marked done so they aren't retried every hour.
 func PushUser(ctx context.Context, st *store.Store, c *Client, userID int64) (sent int, err error) {
 	for _, p := range st.HardcoverPending(userID, 15) {
-		ed, ok, err := c.FindEdition(ctx, p.ISBN)
+		ed, ok, err := c.findEdition(ctx, p.ISBN, p.Title, p.Author)
 		if err != nil {
 			return sent, err
 		}
 		if !ok {
 			st.MarkHardcoverPushed(userID, p.BookID, p.Status, p.Percent)
+			continue
+		}
+		if p.Status == WantToRead || p.Status == Paused {
+			if err := c.PushShelf(ctx, ed, p.Status); err != nil {
+				return sent, err
+			}
+			st.MarkHardcoverPushed(userID, p.BookID, p.Status, 0)
+			sent++
 			continue
 		}
 		pages := 0
@@ -98,7 +123,7 @@ func PushUser(ctx context.Context, st *store.Store, c *Client, userID int64) (se
 // rating it again here sends it once more.
 func pushRatings(ctx context.Context, st *store.Store, c *Client, userID int64) error {
 	for _, r := range st.RatingsToPush(userID, 10) {
-		ed, ok, err := c.FindEdition(ctx, r.ISBN)
+		ed, ok, err := c.findEdition(ctx, r.ISBN, r.Title, r.Author)
 		if err != nil {
 			return err
 		}

@@ -52,9 +52,10 @@ func (s *Store) RatingsFor(userID int64, ids []int64) map[int64]float64 {
 
 // RatingToPush is a star rating whose newest value has not reached the person's Hardcover.
 type RatingToPush struct {
-	BookID int64
-	ISBN   string
-	Stars  float64
+	BookID        int64
+	ISBN          string
+	Title, Author string
+	Stars         float64
 }
 
 // RatingsToPush lists up to limit ratings of books with an ISBN that Hardcover has not been sent (or was sent
@@ -63,14 +64,16 @@ func (s *Store) RatingsToPush(userID int64, limit int) []RatingToPush {
 	var rows []struct {
 		BookID int64   `db:"book_id"`
 		ISBN   string  `db:"isbn"`
+		Title  string  `db:"title"`
+		Author string  `db:"author"`
 		Stars  float64 `db:"stars"`
 	}
-	_ = s.DB.Select(&rows, `SELECT r.book_id, b.isbn, r.stars FROM user_ratings r JOIN books b ON b.id = r.book_id
+	_ = s.DB.Select(&rows, `SELECT r.book_id, b.isbn, b.title, b.author, r.stars FROM user_ratings r JOIN books b ON b.id = r.book_id
 		LEFT JOIN hardcover_rated h ON h.user_id = r.user_id AND h.book_id = r.book_id
-		WHERE r.user_id = ? AND b.isbn != '' AND (h.stars IS NULL OR h.stars != r.stars) ORDER BY r.updated_at DESC LIMIT ?`, userID, limit)
+		WHERE r.user_id = ? AND (b.isbn != '' OR (b.title != '' AND b.author != '')) AND (h.stars IS NULL OR h.stars != r.stars) ORDER BY r.updated_at DESC LIMIT ?`, userID, limit)
 	out := make([]RatingToPush, 0, len(rows))
 	for _, r := range rows {
-		out = append(out, RatingToPush{r.BookID, r.ISBN, r.Stars})
+		out = append(out, RatingToPush{r.BookID, r.ISBN, r.Title, r.Author, r.Stars})
 	}
 	return out
 }

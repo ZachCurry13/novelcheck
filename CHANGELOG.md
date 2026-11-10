@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.60.0]
+
+### 🔗 Hardcover, both ways
+- **Want to read and Paused sync with Hardcover** (with "send my reading to Hardcover" on). Books on your Nightstand that you haven't started go to Hardcover as **Want to read**; a book you put aside with **⏸ Back to Nightstand** goes as **Paused**. In the other direction, a book that newly shows as Want to read at Hardcover joins your Nightstand (only books that are in your library, up to 25 a sync, and taking one off the Nightstand sticks), and one you pause at Hardcover goes back to your Nightstand.
+- **Books without an ISBN are found by title and author** through Hardcover's search, accepting only an exact title and author match, so a look-alike is never written to. This also covers star ratings.
+- **Your Hardcover reading goal in Wrapped:** the yearly "reading goal" slide shows how far you are.
+- See `docs/HARDCOVER_API.md` for what Hardcover offers that is still not used (reading journal, reviews, lists, finish dates).
+
 ## [1.59.1]
 
 ### 🔗 Hardcover, more dependable

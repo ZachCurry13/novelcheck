@@ -179,7 +179,7 @@ type Book struct {
 	UpdatedAt time.Time
 }
 
-const shelvesQuery = `query { me { user_books(where: {status_id: {_in: [2, 3]}}, order_by: {updated_at: desc}, limit: 300) {
+const shelvesQuery = `query { me { user_books(where: {status_id: {_in: [1, 2, 3, 4]}}, order_by: {updated_at: desc}, limit: 300) {
   status_id updated_at rating
   book { title pages contributions(limit: 1) { author { name } } }
   edition { pages isbn_10 isbn_13 }

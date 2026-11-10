@@ -1,6 +1,8 @@
 package api
 
 import (
+	"encoding/json"
+
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -97,5 +99,11 @@ func (s *Server) readingStatsFor(owner, viewer *store.User) map[string]any {
 	if _, at := s.statsPath(owner.ID); !at.IsZero() {
 		synced = at.Unix()
 	}
-	return map[string]any{"books": outBooks, "hours": rows, "synced_at": synced}
+	out := map[string]any{"books": outBooks, "hours": rows, "synced_at": synced}
+	if own {
+		if g := s.Store.HardcoverGoals(owner.ID); g != "" {
+			out["hardcover_goals"] = json.RawMessage(g)
+		}
+	}
+	return out
 }

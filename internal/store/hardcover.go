@@ -79,6 +79,23 @@ func (s *Store) SaveHardcover(userID int64, books []HardcoverBook) (int, error) 
 	for i, b := range books {
 		ids[i] = s.matchHardcover(b)
 	}
+	// With two-way sync on, a book that newly shows as Want to read at Hardcover joins the Nightstand (a few at
+	// a time, only books that are in the library, never one that was already seen as wanted: removing it from
+	// the Nightstand sticks).
+	twoWay := s.HardcoverPush(userID)
+	wasWanted := map[int64]bool{}
+	var prev []int64
+	_ = s.DB.Select(&prev, `SELECT book_id FROM hardcover_books WHERE user_id = ? AND status = 1 AND book_id IS NOT NULL`, userID)
+	for _, id := range prev {
+		wasWanted[id] = true
+	}
+	owned := map[int64]bool{}
+	for i, b := range books {
+		if twoWay && b.Status == 1 && ids[i] > 0 && !wasWanted[ids[i]] && s.Owned(ids[i]) {
+			owned[ids[i]] = true
+		}
+	}
+	added := 0
 	tx, err := s.DB.Beginx()
 	if err != nil {
 		return 0, err
@@ -108,6 +125,26 @@ func (s *Store) SaveHardcover(userID int64, books []HardcoverBook) (int, error) 
 		}
 		if b.Rating > 0 && b.Status == 3 { // a rating given at Hardcover fills a gap here; yours here is never replaced
 			rated = append(rated, hcRating{ids[i], b.Rating})
+		}
+		switch b.Status {
+		case 1:
+			if owned[ids[i]] && added < 25 {
+				added++
+				if _, err := tx.Exec(`INSERT INTO queue_items (user_id, book_id, position, delivery_note)
+					SELECT ?, ?, COALESCE(MAX(position) + 1, 0), 'Want to read on Hardcover' FROM queue_items WHERE user_id = ?
+					AND NOT EXISTS (SELECT 1 FROM queue_items WHERE user_id = ? AND book_id = ?)`, userID, ids[i], userID, userID, ids[i]); err != nil {
+					return 0, err
+				}
+			}
+			continue
+		case 4: // paused at Hardcover: a book being read goes back to the Nightstand
+			if _, err := tx.Exec(`UPDATE queue_items SET status = 'queued', delivery_note = 'Paused: from Hardcover', updated_at = CURRENT_TIMESTAMP
+				WHERE user_id = ? AND book_id = ? AND status = 'reading' AND CAST(strftime('%s', updated_at) AS INTEGER) < ?`, userID, ids[i], b.UpdatedAt); err != nil {
+				return 0, err
+			}
+			continue
+		case 5:
+			continue
 		}
 		status := "reading"
 		if b.Status == 3 {
@@ -173,7 +210,9 @@ func (s *Store) SetHardcoverPush(userID int64, on bool) error {
 type HardcoverToPush struct {
 	BookID   int64
 	ISBN     string
-	Status   int // 2 reading, 3 read
+	Title    string
+	Author   string
+	Status   int // 1 want to read, 2 reading, 3 read, 4 paused
 	Percent  float64
 	FromHere bool // the newest progress isn't from Hardcover itself
 }
@@ -183,31 +222,40 @@ func (s *Store) HardcoverPending(userID int64, limit int) []HardcoverToPush {
 	var rows []struct {
 		BookID int64  `db:"book_id"`
 		ISBN   string `db:"isbn"`
+		Title  string `db:"title"`
+		Author string `db:"author"`
 		Status string `db:"status"`
+		Note   string `db:"delivery_note"`
 		Sent   int    `db:"sent_status"`
 		Pages  int    `db:"sent_pages"`
 	}
-	_ = s.DB.Select(&rows, `SELECT q.book_id, b.isbn, q.status, COALESCE(p.status, 0) AS sent_status, COALESCE(p.pages, 0) AS sent_pages
+	_ = s.DB.Select(&rows, `SELECT q.book_id, b.isbn, b.title, b.author, q.status, q.delivery_note, COALESCE(p.status, 0) AS sent_status, COALESCE(p.pages, 0) AS sent_pages
 		FROM queue_items q JOIN books b ON b.id = q.book_id LEFT JOIN hardcover_pushed p ON p.user_id = q.user_id AND p.book_id = q.book_id
-		WHERE q.user_id = ? AND q.status IN ('reading', 'finished') AND b.isbn != ''
-		AND q.updated_at >= datetime('now', '-14 days') ORDER BY q.updated_at DESC LIMIT ?`, userID, limit*3)
+		WHERE q.user_id = ? AND ((q.status IN ('reading', 'finished') AND q.updated_at >= datetime('now', '-14 days')) OR q.status = 'queued')
+		AND (b.isbn != '' OR (b.title != '' AND b.author != '')) ORDER BY CASE q.status WHEN 'queued' THEN 1 ELSE 0 END, q.updated_at DESC LIMIT ?`, userID, limit*3)
 	progress := s.ReadingProgress(userID)
 	var out []HardcoverToPush
 	for _, r := range rows {
 		status, pct := 2, 0.0
 		pr, ok := progress[r.BookID]
-		if r.Status == "finished" {
+		switch {
+		case r.Status == "finished":
 			status, pct = 3, 1
-		} else if ok {
+		case r.Status == "queued": // on the Nightstand, not started: Want to read; or put aside (see PauseQueueItem): Paused
+			status = 1
+			if strings.HasPrefix(r.Note, "Paused") {
+				status = 4
+			}
+		case ok:
 			pct = pr.Percent
 		}
 		if ok && pr.Device == "Hardcover" && status == 2 {
 			continue // Hardcover is already where the reader is
 		}
-		if r.Sent == status && (status == 3 || int(pct*100) == r.Pages) {
+		if r.Sent == status && (status != 2 || int(pct*100) == r.Pages) {
 			continue
 		}
-		out = append(out, HardcoverToPush{BookID: r.BookID, ISBN: r.ISBN, Status: status, Percent: pct, FromHere: true})
+		out = append(out, HardcoverToPush{BookID: r.BookID, ISBN: r.ISBN, Title: r.Title, Author: r.Author, Status: status, Percent: pct, FromHere: true})
 		if len(out) >= limit {
 			break
 		}
@@ -220,3 +268,13 @@ func (s *Store) MarkHardcoverPushed(userID, bookID int64, status int, percent fl
 	_, _ = s.DB.Exec(`INSERT INTO hardcover_pushed (user_id, book_id, status, pages) VALUES (?, ?, ?, ?)
 		ON CONFLICT (user_id, book_id) DO UPDATE SET status = excluded.status, pages = excluded.pages`, userID, bookID, status, int(percent*100))
 }
+
+func hardcoverGoalsKey(userID int64) string { return "hardcover_goals_" + itoa64(userID) }
+
+// SetHardcoverGoals keeps the person's reading goals from Hardcover (JSON, as received).
+func (s *Store) SetHardcoverGoals(userID int64, jsonText string) error {
+	return s.SetSetting(hardcoverGoalsKey(userID), jsonText)
+}
+
+// HardcoverGoals returns the kept reading goals (JSON; "" when there are none).
+func (s *Store) HardcoverGoals(userID int64) string { return s.Setting(hardcoverGoalsKey(userID)) }

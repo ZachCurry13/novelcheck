@@ -73,6 +73,12 @@ export function slides(m, s, name) {
     slide("Finished", `${n(fin.length)} book${fin.length === 1 ? "" : "s"}`, `${n(books.length)} opened in all.`,
       fin.length ? `<div class="s-covers">${fin.slice(0, 8).map((x) => (x.book_id ? coverImg(x.book_id, "h-28 w-20") : "")).join("")}</div>` : ""),
   ];
+  const year = new Date(b.from).getFullYear();
+  const goal = s.period === "year" ? (m.goals || []).find((g) => g.goal > 0 && String(g.start_date || "").slice(0, 4) === String(year)) : null;
+  if (goal) {
+    const unit = goal.metric === "page" ? "pages" : "books";
+    out.push(slide(`Your ${year} reading goal`, `${n(Math.round(goal.progress))} of ${n(goal.goal)}`, `${unit} on Hardcover: ${Math.min(100, Math.round((goal.progress / goal.goal) * 100))}% of the way there.`));
+  }
   if (top) out.push(slide("Your most-read book", esc(top.title), `${fmtDur(top.sec)}${top.author ? ` · ${esc(top.author)}` : ""}`, top.book_id ? `<div>${coverImg(top.book_id, "h-44 w-28", true)}</div>` : "", "s-title"));
   if (authors[0]?.label) out.push(slide("Your top author", esc(authors[0].label), `${n(authors[0].n)} book${authors[0].n === 1 ? "" : "s"}${genres[0] ? `. Favourite genre: ${esc(genres[0].label)}` : ""}${authors[1]?.label ? `. Runner-up: ${esc(authors[1].label)}` : ""}.`, "", "s-title"));
   if (rated.length) {

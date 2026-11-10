@@ -17,15 +17,16 @@ Readest, which still make the same write calls we do.
 | `insert_user_book`, `update_user_book` (status, rating) | `Push`, `SetRating` | push status and stars |
 | `insert_user_book_read`, `update_user_book_read` | `Push` | push progress and finish date |
 | `series(where name)` with `book_series` | `SeriesBooks` | Find the missing books |
+| `search(query_type: "Book")` then `books(where id in)` | `FindEditionByTitle` | books without an ISBN (exact title and author only) (1.60) |
+| `me { goals }` | `Goals` | reading challenge in Wrapped (1.60) |
+| `insert_user_book` / `update_user_book` with status 1 and 4 | `PushShelf` | Want to read and Paused (1.60) |
+| `user_books` status 1 and 4 in the shelf pull | `Shelves`, `SaveHardcover` | Want to read joins the Nightstand; Paused returns a book to it (1.60) |
 
 Since 1.59.1: calls are spaced 1.1 s apart (a book sent takes up to five calls; the limit is 60 a minute), a 429 waits
 15 s and tries once more, calls send a `User-Agent`, and writes ask for `error` so a refused write is reported.
 
-## Available and not used (ideas, most useful first)
-1. **Want to read (status 1) both ways.** Pull it into the wishlist; push Nightstand books that are only queued.
-2. **Paused (4) and DNF (5).** The Nightstand's "Back to Nightstand" could set Paused on Hardcover.
-3. **`search(query, query_type: "Book")`.** Find a book without an ISBN (title and author, exact match only).
-4. **`me { goals }`** (reading challenge): show yearly goal progress in Wrapped and trophies.
+## Available and not used
+Done in 1.60: Want to read and Paused both ways, title search, goals. Still unused:
 5. **`user_book_reads.started_at/finished_at`** and `date_added`: real finish dates for Wrapped.
 6. **`insert_reading_journal`** (notes, quotes, progress events) for KOReader highlights.
 7. **`reviews`** (`review_raw`, `has_review`), **lists** (`me { lists }`, `insert_list_book`), **ASIN** edition match
