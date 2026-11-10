@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.52.0"
+local VERSION = "1.53.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -70,6 +70,8 @@ function NovelCheck:init()
     self.settings = LuaSettings:open(DataStorage:getSettingsDir() .. "/novelcheck.lua")
     self:importConfig()
     self.ui.menu:registerToMainMenu(self)
+    -- A shelf for the Bookshelf plugin, if it is installed (bookshelfsrc.lua); never allowed to stop the plugin.
+    pcall(function() if self.offerBookshelf then self:offerBookshelf() end end)
     if self.settings:readSetting("offer_setup") and self:isConnected() then
         -- First start after installing the downloaded plugin: offer the one-tap setup once.
         self.settings:saveSetting("offer_setup", nil)
@@ -448,7 +450,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

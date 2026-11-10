@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.63.0]
+
+### 🎁 Wrapped
+- **Books finished elsewhere count too.** When Hardcover has the day you finished a book (paper, audio, another reader), Wrapped adds it to that month's and year's "Finished" count and covers, without counting a book twice.
+
+### 📖 KOReader plugin 1.53.0
+- **A shelf for the Bookshelf plugin.** If you use Bookshelf, add a shelf there and pick **NovelCheck books** under Source / grouping: it shows the books NovelCheck downloaded to the device, newest first. It needs no network, and if Bookshelf isn't installed nothing changes.
+
 ## [1.62.1]
 
 ### 🔒 Security and upkeep
