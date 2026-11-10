@@ -75,6 +75,7 @@ export async function api(path, { method = "GET", body, raw = false } = {}) {
     // A server error shows its code (E-xxxx): it points at one line in the bug report.
     throw new ApiError(res.status, (data.error || res.statusText) + (code && res.status >= 500 ? ` (${code})` : ""), data);
   }
+  if (method !== "GET" && !path.startsWith("/api/activity/") && !path.startsWith("/api/me/bug-report")) note("net", `${method} ${path.split("?")[0]} -> ${res.status}`); // what was done, for the bug report
   return data;
 }
 

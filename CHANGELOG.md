@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.66.1]
+
+### 🧹 Library cleanup
+- **"Find covers now" (and Stop) no longer redraws the whole tab.** Only the list of tools updates, so the page keeps its place and open sections stay open. The list also updates after Tidy, Fill in now, Check and split and Read now, so the counts and buttons show what just happened.
+
+### 🐞 Bug reports
+- **The report now shows when part of a page is drawn again by itself**, which part, and how far down the page was ("redraw" lines), so a page that "refreshes" can be traced to the tap before it.
+- **It also lists what was done, not only what failed:** every change sent to the server (join, remove, convert and so on) with its result.
+
 ## [1.66.0]
 
 ### 🤖 Admin → AI & Scans, tidied up

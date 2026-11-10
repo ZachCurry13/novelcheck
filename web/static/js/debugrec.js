@@ -96,4 +96,32 @@ export function startRecording() {
   window.addEventListener("error", (e) => note("error", `${e.message} (${(e.filename || "").split("/").pop()}:${e.lineno})`));
   window.addEventListener("unhandledrejection", (e) => note("error", `promise: ${e.reason?.message || e.reason}`));
   note("page", `opened ${location.hash || "/"}`);
+  watchRedraws();
+}
+
+// watchRedraws notes when a big part of the page is drawn again (which part, and how far down the page was),
+// so a report shows a page that "refreshes" by itself, and after which tap.
+function watchRedraws() {
+  const view = document.getElementById("view");
+  if (!view || !("MutationObserver" in window)) return;
+  const name = (el) => {
+    for (let e = el; e && e !== document.body; e = e.parentElement) {
+      if (e.id) return "#" + e.id;
+    }
+    return "the page";
+  };
+  let last = "", lastAt = 0, pageAt = Date.now();
+  window.addEventListener("hashchange", () => (pageAt = Date.now())); // going to another page draws it: not news
+  new MutationObserver((records) => {
+    for (const r of records) {
+      const big = [...r.removedNodes].some((n) => n.nodeType === 1 && n.querySelectorAll("*").length >= 15);
+      if (!big || r.target.closest?.("dialog")) continue;
+      const what = r.target === view ? "the whole page" : name(r.target);
+      if (r.target === view && Date.now() - pageAt < 3000) continue;
+      if (what === last && Date.now() - lastAt < 1000) continue;
+      last = what;
+      lastAt = Date.now();
+      note("redraw", `${what} drawn again (scrolled ${Math.round(window.scrollY)} px down)`);
+    }
+  }).observe(view, { childList: true, subtree: true });
 }

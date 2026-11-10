@@ -25,6 +25,9 @@ export async function renderCleanupTab(host, state) {
     <div class="card space-y-2"><details id="cu-up"><summary class="cursor-pointer font-semibold">⬆️ Upload e-books to Calibre and audiobooks to Audiobookshelf (experimental)</summary>
       <div id="cu-up-body" class="mt-2"></div></details></div></div>`;
   mountCleanup(host.querySelector("#cu-guided"));
+  // paintTools draws only the list of tools (their counts and buttons), so the rest of the page stays as it is
+  // and keeps its place when a tool was started.
+  const paintTools = async () => {
   const [s, c, cv] = await Promise.all([attempt(() => get("/api/admin/status")), attempt(() => get("/api/admin/cleanup")), attempt(() => get("/api/admin/covers/missing"))]);
   const job = cv?.job || {};
   const g = s?.genres || {};
@@ -41,12 +44,15 @@ export async function renderCleanupTab(host, state) {
     row("🔄", "Read the Calibre library now", "Re-reads Calibre so NovelCheck matches what is there (it also happens by itself).", null, btn("sync", "Read now")),
     row("📖", "Kindle books to match", "Books on your e-readers NovelCheck could not match. Each person does their own, under Settings.", null, link("#/settings?s=kindle", "Open Settings")),
   ].join("");
+  };
+  await paintTools();
   host.onclick = async (e) => {
     const k = e.target.closest("[data-cu]")?.dataset.cu;
     if (k === "formats") import("./formats.js").then((m) => m.openFormats());
     else if (k === "covers-find" || k === "covers-stop") {
-      if (await attempt(() => post(`/api/admin/covers/${k === "covers-find" ? "find" : "stop"}`), k === "covers-find" ? "Looking for covers in the background" : "Stopping")) renderCleanupTab(host, state);
+      if (await attempt(() => post(`/api/admin/covers/${k === "covers-find" ? "find" : "stop"}`), k === "covers-find" ? "Looking for covers in the background" : "Stopping")) paintTools();
     }
+    else if (e.target.closest("[data-act]")) setTimeout(paintTools, 1500); // a tool the Admin page starts: show its new state
     else if (k === "twice") {
       const d = host.querySelector("#cu-twice");
       d.open = true;
