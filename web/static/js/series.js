@@ -8,6 +8,7 @@ import { openBook } from "./bookdialog.js";
 import { on } from "./modules.js";
 import { loadContent, contentIcons } from "./content.js";
 import { shelfTabsHTML } from "./shelftabs.js";
+import { gapRow, bindGap, novellaChip } from "./seriesgap.js";
 import { markLibby } from "./libby.js";
 
 const q = () => new URLSearchParams(location.hash.split("?")[1] || "");
@@ -59,8 +60,7 @@ async function renderOne(view, state, name) {
     <div class="mb-4"><button type="button" data-fill class="btn-secondary py-1 text-sm" title="Looks the series up at Hardcover and adds the books you don't have, so you can request them or find them at your library">🔎 Find the missing books</button>
       <span id="fill-note" class="ml-2 text-xs text-slate-400"></span></div>
     <ol id="books" class="space-y-2">${rows.map(({ n, b, gap }) => gap
-      ? `<li class="flex items-center gap-3 rounded-xl border border-dashed border-slate-700 p-3 text-sm text-slate-500">
-          <span class="w-8 shrink-0 text-center font-bold">#${n}</span><span>Not in your libraries</span></li>`
+      ? gapRow(n, !state.user.role.startsWith("restricted"))
       : `<li class="card flex gap-3 p-3 ${b.id === data.next ? "ring-2 ring-indigo-500" : ""}" data-book="${b.id}">
           <span class="w-8 shrink-0 pt-1 text-center font-bold text-slate-400">${b.series_index ? `#${FormatIndex(b.series_index)}` : "–"}</span>
           <button type="button" data-open class="shrink-0">${coverImg(b.id, "h-20 w-14")}</button>
@@ -68,12 +68,13 @@ async function renderOne(view, state, name) {
             ${b.id === data.next ? `<p class="text-xs font-semibold uppercase tracking-wide text-indigo-300">Next up</p>` : ""}
             <button type="button" data-open class="text-left font-semibold leading-snug line-clamp-2">${esc(b.title)}</button>
             <p class="truncate text-xs text-slate-400">${esc(b.author || "")}</p>
-            <div class="flex flex-wrap gap-1">${classChip(b)} ${contentIcons(b)} ${status(b)} ${b.owned === false ? `<span class="chip-pending">Not in a library</span>` : ""}</div>
-            ${b.owned === false ? `<div class="flex flex-wrap items-center gap-2"><button type="button" data-wish class="btn-secondary py-1 text-sm">⭐ Request it</button><span data-libby="${b.id}" class="flex flex-wrap gap-1"></span></div>`
+            <div class="flex flex-wrap gap-1">${classChip(b)} ${novellaChip(b)} ${contentIcons(b)} ${status(b)} ${b.owned === false ? `<span class="chip-pending">Not in a library</span>` : ""}</div>
+            ${b.owned === false ? `<div class="flex flex-wrap items-center gap-2"><button type="button" data-wish class="btn-secondary py-1 text-sm">⭐ Request it</button>${queueOn && !b.my_status ? `<button type="button" data-queue class="btn-secondary py-1 text-sm">＋ Nightstand</button>` : ""}<span data-libby="${b.id}" class="flex flex-wrap gap-1"></span></div>`
               : queueOn && !b.my_status ? `<button type="button" data-queue class="btn-secondary py-1 text-sm">＋ Nightstand</button>` : ""}
           </div></li>`).join("")}</ol>`;
   markLibby(view); // 📚 🎧 is it at your library? (the books you don't have)
   view.onclick = async (e) => {
+    if (bindGap(e, data.name)) return;
     if (e.target.closest("[data-fill]")) {
       const btn = e.target.closest("[data-fill]");
       btn.disabled = true;

@@ -100,6 +100,7 @@ const SHELL = [
   "/js/wishlist.js",
   "/js/delivery.js",
   "/js/series.js",
+  "/js/seriesgap.js",
   "/js/shelftabs.js",
   "/js/sameas.js",
   "/js/boxsets.js",

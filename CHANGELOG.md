@@ -9,6 +9,10 @@ becomes the release notes for that version and is shown in the app under
 ### 🔄 Update bar
 - **"A new version of NovelCheck is ready" bar with a Reload button** at the bottom of the screen. The app now checks every couple of minutes while it is open (and soon after opening), instead of reloading by itself after five minutes away. Nothing reloads while you are typing; tap ✕ to wait.
 
+### 🗂 Series
+- **Series gaps:** each missing number on a series page has **🔎 Find it**, which searches your Libby libraries for that book and offers **Add to Nightstand**. Books you don't have also get **＋ Nightstand** next to Request. Novellas and half-numbered books (1.5) are labelled "Novella, not a full novel".
+
+
 ## [1.56.0]
 
 ### 🔎 Search your libraries
