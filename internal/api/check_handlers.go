@@ -21,6 +21,10 @@ const maxPhoto = 5 << 20
 // app then polls GET /api/books/{id} until the rating is ready, which keeps
 // each request short (Cloudflare Tunnel gives up after 100 seconds).
 func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("async") == "1" { // run it on its own; see check_async.go
+		s.startCheckJob(w, r)
+		return
+	}
 	var body struct {
 		Query string        `json:"query"` // title, author or ISBN as typed
 		Image string        `json:"image"` // data:image/jpeg;base64,… of the cover

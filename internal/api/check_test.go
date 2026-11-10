@@ -120,3 +120,42 @@ func TestCheckABook(t *testing.T) {
 		t.Fatalf("Check a book is for parents: %d", res.StatusCode)
 	}
 }
+
+// With ?async=1 a check runs on its own and the page asks for the answer (a photo can outlast Cloudflare's 100 s).
+func TestCheckRunsInTheBackground(t *testing.T) {
+	fake := fakeBooks(t)
+	srv, st := setupWith(t, func(s *api.Server) {
+		s.Worker.NewEnricher = func() *enrich.Client {
+			c := enrich.New("")
+			c.OpenLibraryURL, c.GoogleBooksURL = fake.URL, fake.URL
+			return c
+		}
+	})
+	_ = st.SetSetting(store.KeyLLMBaseURL, fake.URL)
+	_ = st.SetSetting(store.KeyLLMModel, "vision-model")
+	admin := login(t, srv, "admin", "adminpass1")
+	cat, _ := st.EnsureCatalog("Calibre Main", "calibre")
+	hobbit, _ := st.UpsertBook("The Hobbit", "J. R. R. Tolkien", "", "")
+	_ = st.AddCopy(cat, hobbit, "/calibre/hobbit.epub", "epub", "7")
+
+	res, out := admin.do("POST", "/api/check?async=1", map[string]string{"query": "the hobbit tolkien"}, true)
+	job, _ := out["job"].(string)
+	if res.StatusCode != 202 || job == "" {
+		t.Fatalf("started: %d %v", res.StatusCode, out)
+	}
+	var done map[string]any
+	for i := 0; i < 100; i++ {
+		_, done = admin.do("GET", "/api/check/jobs/"+job, nil, false)
+		if done["done"] == true {
+			break
+		}
+		time.Sleep(30 * time.Millisecond)
+	}
+	body, _ := done["body"].(map[string]any)
+	if done["done"] != true || done["status"] != float64(200) || body["in_library"] != true {
+		t.Fatalf("the answer is the same as a direct check: %v", done)
+	}
+	if res, _ := login(t, srv, "admin", "adminpass1").do("GET", "/api/check/jobs/nope", nil, false); res.StatusCode != 404 {
+		t.Fatalf("an unknown job: %d", res.StatusCode)
+	}
+}

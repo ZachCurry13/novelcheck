@@ -77,6 +77,7 @@ const SHELL = [
   "/js/inflight.js",
   "/js/hcclean.js",
   "/js/servercheck.js",
+  "/js/checkasync.js",
   "/js/activitycard.js",
   "/js/shelf.js",
   "/js/photo.js",

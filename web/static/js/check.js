@@ -2,6 +2,7 @@
 // title) in a shop and see the rating. Known books answer at once; new ones
 // are looked up, rated by the AI, and kept under "Looked up".
 import { get, post, del, qs } from "./api.js";
+import { postCheck } from "./checkasync.js";
 import { $, esc, attempt, classChip, flagChips, ageChip } from "./ui.js";
 import { PEPPERS, whyChip, openPepperGuide } from "./peppers.js";
 import { loadFlags, customChips } from "./customflags.js";
@@ -61,7 +62,7 @@ export async function renderCheck(view, state) {
     slot.innerHTML = status(working);
     let res;
     try {
-      res = await post("/api/check", body);
+      res = await postCheck(body);
     } catch (e) {
       failCard(slot, e, Boolean(body.image));
       if (!body.image) form.q.focus();

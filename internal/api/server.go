@@ -239,6 +239,7 @@ func (s *Server) Router() http.Handler {
 			r.Group(func(r chi.Router) {
 				r.Use(auth.RequireManager)
 				r.Post("/check", s.handleCheck)
+				r.Get("/check/jobs/{id}", s.handleCheckJob)
 				r.Get("/admin/deep-scans/{id}/passage", s.handleDeepPassage) // parents read a scanned part
 				r.Get("/activity", s.handleActivity)
 				r.Post("/collections", s.handleCreateCollection)
