@@ -88,3 +88,8 @@ body.story-open { overflow: hidden; }
 .save-bar { position: sticky; bottom: calc(4.75rem + env(safe-area-inset-bottom)); z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; border: 1px solid rgb(var(--indigo-400)); border-radius: 0.8rem; background: rgb(var(--slate-900)); padding: 0.6rem 0.8rem; font-size: 0.9rem; box-shadow: 0 12px 30px rgb(0 0 0 / 0.5); }
 .save-bar.hidden { display: none; }
 @media (min-width: 768px) { .save-bar { bottom: 1rem; } }
+/* Duplicates in Calibre: a book's copies side by side, the one to keep outlined (v1.67) */
+.dup-copies { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.dup-copy { display: flex; gap: 0.6rem; align-items: flex-start; border: 2px solid transparent; border-radius: 0.6rem; background: rgb(var(--slate-800) / 0.6); padding: 0.5rem; cursor: pointer; }
+.dup-copy.keep { border-color: rgb(16 185 129); }
+.dup-cover { width: 3.5rem; height: 5.25rem; flex: none; border-radius: 0.3rem; object-fit: cover; background: rgb(var(--slate-900)); }

@@ -9,7 +9,8 @@ import (
 type DupEntry struct {
 	CalibreID string    `json:"calibre_id"`
 	Files     []DupFile `json:"files"`
-	Doubt     string    `json:"doubt,omitempty"` // why this may not be the same book as the copy that stays
+	Modified  string    `json:"modified,omitempty"` // Calibre's last change to the entry (UTC)
+	Doubt     string    `json:"doubt,omitempty"`    // why this may not be the same book as the copy that stays
 }
 
 // DupFile is one format of a Calibre entry.
@@ -37,8 +38,9 @@ func (s *Store) CalibreDuplicates() ([]DupGroup, error) {
 		ExternalID string `db:"external_id"`
 		Format     string `db:"format"`
 		Path       string `db:"path"`
+		Modified   string `db:"modified"`
 	}
-	err := s.DB.Select(&rows, `SELECT b.id AS book_id, b.title, b.author, cb.external_id, cb.format, cb.path
+	err := s.DB.Select(&rows, `SELECT b.id AS book_id, b.title, b.author, cb.external_id, cb.format, cb.path, cb.modified
 		FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id AND c.source = 'calibre'
 		JOIN books b ON b.id = cb.book_id
 		WHERE cb.book_id IN (SELECT d.book_id FROM catalog_books d JOIN catalogs dc ON dc.id = d.catalog_id
@@ -55,6 +57,9 @@ func (s *Store) CalibreDuplicates() ([]DupGroup, error) {
 		g := &out[len(out)-1]
 		if len(g.Entries) == 0 || g.Entries[len(g.Entries)-1].CalibreID != r.ExternalID {
 			g.Entries = append(g.Entries, DupEntry{CalibreID: r.ExternalID, Files: []DupFile{}})
+		}
+		if e := &g.Entries[len(g.Entries)-1]; r.Modified > e.Modified {
+			e.Modified = r.Modified
 		}
 		if r.Format != "" {
 			e := &g.Entries[len(g.Entries)-1]

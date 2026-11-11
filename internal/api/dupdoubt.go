@@ -28,6 +28,42 @@ func markDoubts(entries []store.DupEntry, keep string) {
 	}
 }
 
+// keepReason says in a few words why the suggested copy is the one to keep.
+func keepReason(entries []store.DupEntry, keep string) string {
+	var kept store.DupEntry
+	for _, e := range entries {
+		if e.CalibreID == keep {
+			kept = e
+		}
+	}
+	epub := func(e store.DupEntry) bool {
+		for _, f := range e.Files {
+			if strings.EqualFold(f.Format, "epub") {
+				return true
+			}
+		}
+		return false
+	}
+	onlyEPUB, moreFiles, larger := epub(kept), true, true
+	for _, e := range entries {
+		if e.CalibreID == keep {
+			continue
+		}
+		onlyEPUB = onlyEPUB && !epub(e)
+		moreFiles = moreFiles && len(kept.Files) > len(e.Files)
+		larger = larger && largest(kept) > largest(e)
+	}
+	switch {
+	case onlyEPUB:
+		return "it is the one with an EPUB"
+	case moreFiles:
+		return "it has more formats"
+	case larger:
+		return "its file is the larger one"
+	}
+	return "the copies look alike, so the older Calibre entry stays"
+}
+
 func doubt(extra, kept store.DupEntry) string {
 	has := map[string]int64{}
 	for _, f := range kept.Files {

@@ -43,6 +43,16 @@ func (s *Server) handleCover(w http.ResponseWriter, r *http.Request) {
 		return true
 	}
 	copies, _ := s.Store.BookCopies(id)
+	// ?copy=<Calibre id>: the cover of that Calibre entry only (Duplicates shows each copy's own cover).
+	if want := r.URL.Query().Get("copy"); want != "" {
+		var only []store.BookCopy
+		for _, c := range copies {
+			if c.ExternalID == want {
+				only = append(only, c)
+			}
+		}
+		copies = only
+	}
 	if src, info, found := covers.Find(copies, s.insideCalibre); found {
 		if p, err := s.Covers.Thumb(src, info, width); err == nil && serve(p, info) {
 			return

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"strconv"
@@ -21,6 +22,8 @@ func (s *Server) handleDuplicates(w http.ResponseWriter, r *http.Request) {
 	type group struct {
 		store.DupGroup
 		Keep string `json:"keep"`
+		Why  string `json:"why"`  // why that copy is the one suggested
+		Sure bool   `json:"sure"` // no extra copy carries a doubt
 	}
 	out := make([]group, 0, len(groups))
 	extra := 0
@@ -41,7 +44,11 @@ func (s *Server) handleDuplicates(w http.ResponseWriter, r *http.Request) {
 		extra += len(g.Entries) - 1
 		keep := store.SuggestKeep(g.Entries)
 		markDoubts(g.Entries, keep)
-		out = append(out, group{g, keep})
+		sure := true
+		for _, e := range g.Entries {
+			sure = sure && e.Doubt == ""
+		}
+		out = append(out, group{g, keep, keepReason(g.Entries, keep), sure})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"groups":     out,
@@ -56,6 +63,7 @@ func (s *Server) handleDuplicates(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleRemoveDuplicates(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Remove []string `json:"remove"`
+		Later  bool     `json:"later"` // answer at once; Calibre is read again in the background
 	}
 	if !readJSON(w, r, &body, 64<<10) {
 		return
@@ -100,9 +108,15 @@ func (s *Server) handleRemoveDuplicates(w http.ResponseWriter, r *http.Request) 
 		want[id] = groups[gi].Title
 		ids = append(ids, id)
 	}
+	if body.Later {
+		r = r.WithContext(context.WithValue(r.Context(), syncLaterKey{}, true))
+	}
 	removed, skipped, ok := s.removeFromCalibre(w, r, ids, want)
 	if !ok {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]int{"removed": removed, "skipped": skipped})
 }
+
+// syncLaterKey marks a removal whose re-read of Calibre happens in the background.
+type syncLaterKey struct{}

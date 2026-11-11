@@ -176,6 +176,16 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 		}
 	}
 	log.Printf("calibre: removed %d books via Content server (requested by admin)", len(toRemove))
+	// One book at a time from the Duplicates page: answer now and read Calibre again behind it (one read at a
+	// time; several removals in a row share the next one).
+	if later, _ := r.Context().Value(syncLaterKey{}).(bool); later {
+		go func() {
+			s.refreshMu.Lock()
+			defer s.refreshMu.Unlock()
+			s.refreshCalibre()
+		}()
+		return len(toRemove), skipped, true
+	}
 	// Re-read the library now, so the page shows the result straight away.
 	if s.Syncer.Available() {
 		if _, err := s.Syncer.Run(); err != nil {

@@ -4,7 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
-## [1.66.3]
+## [1.67.0]
+
+### 👯 Duplicates in Calibre, easier
+- **Pick the copy to keep.** Each book shows its copies side by side with "Keep this one"; the suggested copy is already chosen and outlined, with a line saying why. The others are what gets removed. No more ticking what to delete.
+- **Each copy shows its own cover, its formats with file sizes, and when it last changed in Calibre**, so two copies can be told apart at a glance.
+- **Sure ones first.** Books whose copies look the same are grouped at the top with one "Remove their extra copies" bar at the bottom of the screen. Books where something differs (size, a PDF or audiobook of its own) sit under "Check these" and are never removed in one go.
+- **A "Remove the other copy" button on every book.** It answers at once and the book leaves the list; Calibre is read again in the background. For a book under "Check these" it asks first and shows the reason.
+- "Books listed twice in NovelCheck" (a different job) is folded away on this page and opens by itself when there are pairs to look at.
 
 ### 🧹 Library cleanup
 - **Removing extra copies no longer stops on a short title with a subtitle.** "Rant" in Calibre against "Rant: An Oral Biography of Buster Casey" in NovelCheck was still taken for the wrong library, because very short titles were not compared that way. A title followed by a subtitle or a note in brackets now counts as the same book, whatever its length.
