@@ -26,17 +26,18 @@ type ModelInfo struct {
 	Note   string  `json:"note"`
 }
 
-// Catalog lists good book-rating models from small to large.
+// Catalog lists models from small to large; each note says what the model is good for in NovelCheck (rating
+// from a description, Deep Scan of the whole book, reading cover photos), judged from its kind and size.
 var Catalog = []ModelInfo{
-	{"qwen2.5:3b", "Qwen 2.5 3B", 1.9, "small and quick"},
-	{"llama3.2", "Llama 3.2 3B", 2.0, "fastest; fine without a GPU"},
-	{"gemma3:4b", "Gemma 3 4B", 3.3, "also reads cover photos (Check a book)"},
-	{"qwen2.5:7b", "Qwen 2.5 7B", 4.7, "great balance of speed and accuracy"},
-	{"llama3.1:8b", "Llama 3.1 8B", 4.9, "good alternative"},
-	{"gemma3:12b", "Gemma 3 12B", 8.1, "strong, a bit slower"},
-	{"qwen2.5:14b", "Qwen 2.5 14B", 9.0, "very accurate ratings"},
-	{"gemma3:27b", "Gemma 3 27B", 17, "large"},
-	{"qwen2.5:32b", "Qwen 2.5 32B", 20, "most accurate; needs a big GPU"},
+	{"qwen2.5:3b", "Qwen 2.5 3B", 1.9, "quick ratings; too small for Deep Scan"},
+	{"llama3.2", "Llama 3.2 3B", 2.0, "quick ratings, fine without a GPU; too small for Deep Scan"},
+	{"gemma3:4b", "Gemma 3 4B", 3.3, "reads cover photos (Check a book); fine for ratings; small for Deep Scan"},
+	{"qwen2.5:7b", "Qwen 2.5 7B", 4.7, "careful ratings; the smallest size that reads whole books well (Deep Scan)"},
+	{"llama3.1:8b", "Llama 3.1 8B", 4.9, "careful ratings and Deep Scan; an alternative to Qwen 2.5 7B"},
+	{"gemma3:12b", "Gemma 3 12B", 8.1, "careful Deep Scans and reads cover photos; slower"},
+	{"qwen2.5:14b", "Qwen 2.5 14B", 9.0, "more careful Deep Scans; needs about 11 GB of GPU memory"},
+	{"gemma3:27b", "Gemma 3 27B", 17, "large: careful Deep Scans, reads cover photos; needs about 19 GB"},
+	{"qwen2.5:32b", "Qwen 2.5 32B", 20, "the most careful here; needs a 24 GB GPU and is slow"},
 }
 
 // balanced are the preferred everyday picks, best first.

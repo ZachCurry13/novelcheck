@@ -1,5 +1,6 @@
 // The slides of Wrapped, in the big-number, bottom-left story style (played by wrappedstory.js).
 import { esc } from "./ui.js";
+import { GENRES } from "./genres.js";
 import { byDay, byHourOfDay, fmtDur } from "./statscalc.js";
 import { bounds, summary, count } from "./statsperiods.js";
 import { coverImg } from "./covers.js";
@@ -88,7 +89,7 @@ export function slides(m, s, name) {
     out.push(slide(`Your ${year} reading goal`, `${n(Math.round(goal.progress))} of ${n(goal.goal)}`, `${unit} on Hardcover: ${Math.min(100, Math.round((goal.progress / goal.goal) * 100))}% of the way there.`));
   }
   if (top) out.push(slide("Your most-read book", esc(top.title), `${fmtDur(top.sec)}${top.author ? ` · ${esc(top.author)}` : ""}`, top.book_id ? `<div>${coverImg(top.book_id, "h-44 w-28", true)}</div>` : "", "s-title"));
-  if (authors[0]?.label) out.push(slide("Your top author", esc(authors[0].label), `${n(authors[0].n)} book${authors[0].n === 1 ? "" : "s"}${genres[0] ? `. Favourite genre: ${esc(genres[0].label)}` : ""}${authors[1]?.label ? `. Runner-up: ${esc(authors[1].label)}` : ""}.`, "", "s-title"));
+  if (authors[0]?.label) out.push(slide("Your top author", esc(authors[0].label), `${n(authors[0].n)} book${authors[0].n === 1 ? "" : "s"}${genres[0] ? `. Favourite genre: ${esc(GENRES[genres[0].label] || genres[0].label)}` : ""}${authors[1]?.label ? `. Runner-up: ${esc(authors[1].label)}` : ""}.`, "", "s-title"));
   if (rated.length) {
     const star = (lo, hi) => rated.filter((x) => x.rating >= lo && x.rating < hi).length;
     const rows = [["⭐ 5 stars", star(5, 6)], ["4¼ to 4¾", star(4.25, 5)], ["4 stars", star(4, 4.25)], ["3 to 3¾", star(3, 4)], ["Under 3", star(0, 3)]].filter((r) => r[1]);

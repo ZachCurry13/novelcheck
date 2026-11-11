@@ -2,6 +2,7 @@
 // a year-in-review), drawn in this browser from your stats. Pick a look, save
 // it or share it from the phone. Nothing is uploaded anywhere.
 import { esc } from "./ui.js";
+import { GENRES } from "./genres.js";
 import { byDay, byHourOfDay, fmtDur, streaks } from "./statscalc.js";
 import { count, summary } from "./statsperiods.js";
 
@@ -23,7 +24,7 @@ function data(m, s, title) {
   const genre = count(books, (b) => b.genres || [])[0]?.label;
   const author = count(books, (b) => b.author || "")[0];
   const hours = byHourOfDay(sum.rows);
-  return { title, books, sum, genre: genre && cap(genre), author: author && author.n > 0 ? author.label : "", streak: streaks(byDay(m.rows)).current,
+  return { title, books, sum, genre: genre && (GENRES[genre] || cap(genre)), author: author && author.n > 0 ? author.label : "", streak: streaks(byDay(m.rows)).current,
     part: sum.sec ? partOfDay(hours.indexOf(Math.max(...hours))) : "" };
 }
 

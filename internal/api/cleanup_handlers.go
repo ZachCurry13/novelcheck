@@ -14,6 +14,12 @@ import (
 
 // handleCleanup is the summary: what each step would do now.
 func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
+	print := s.libraryPrint()
+	if kept, ok := s.cleanup.get(print); ok { // nothing changed since it was last worked out
+		kept["job"] = s.formats.state()
+		writeJSON(w, http.StatusOK, kept)
+		return
+	}
 	pairs, _ := s.Store.SamePairs()
 	fixes, err := s.Store.TitleFixes()
 	if err != nil {
@@ -50,7 +56,7 @@ func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
 		ids = append(ids, f.ID)
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	out := map[string]any{
 		"configured":     s.Store.Setting(store.KeyCalibreSrvURL) != "",
 		"pairs":          len(pairs),
 		"calibre_dups":   len(dupGroups),
@@ -62,7 +68,9 @@ func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
 		"remove_bytes":   bytes,
 		"job":            s.formats.state(),
 		"convert_failed": len(s.Store.ConvertFailures()),
-	})
+	}
+	s.cleanup.put(print, out)
+	writeJSON(w, http.StatusOK, out)
 }
 
 // refreshCalibre re-reads the Calibre library now (when it can), so the lists match what Calibre has.

@@ -8,9 +8,9 @@ import { openOllamaModels } from "./ollamamodels.js";
 
 // How each model fits the measured GPU (see internal/ollama/gpu.go).
 const FIT = {
-  best: ["⭐ Best for your GPU", "text-emerald-300"],
-  best_powerful: ["⭐ Best and most powerful for your GPU", "text-emerald-300"],
-  powerful: ["💪 Most powerful that fits", "text-indigo-300"],
+  best: ["⭐ Recommended on your GPU", "text-emerald-300"],
+  best_powerful: ["⭐ Recommended, and the largest that fits your GPU", "text-emerald-300"],
+  powerful: ["Largest that fits your GPU (most careful, slowest)", "text-indigo-300"],
   fits: ["✓ Fits your GPU", "text-slate-300"],
   too_big: ["⚠️ Too big for your GPU (slow)", "text-amber-300"],
   cpu_ok: ["✓ OK without a GPU", "text-slate-300"],
@@ -80,14 +80,15 @@ export function renderOllamaHelper(host, form, prefix = "") {
   function serverCard(s) {
     const current = [...(field("llm_model")?.value || "").split(","),
       ...(field("llm_fallback_model")?.value || "").split(",")].map((m) => m.trim()).filter(Boolean);
-    orders[s.url] = { list: initialOrder(s.models, current) };
+    orders[s.url] = { list: initialOrder(s.models, current), job: prefix === "deep_" ? "deep" : "rate" };
     if (!orders[s.url].list.some((m) => m.on) && orders[s.url].list.length) orders[s.url].list[0].on = true;
     return `
       <div class="min-w-0 space-y-2 rounded-lg ring-1 ring-slate-700 p-3" data-server="${esc(s.url)}">
         <p>✓ Found Ollama ${esc(s.version)} at <code>${esc(s.url)}</code></p>
         <p class="label mb-0">2. Tick the models to use and put them in order</p>
-        <p class="text-xs text-slate-400">#1 rates every book. If it fails on a book, #2 tries, then #3, and so on.</p>
-        <ul class="space-y-1" data-order>${orderHTML(orders[s.url].list)}</ul>
+        <p class="text-xs text-slate-400">${prefix === "deep_" ? "#1 reads every book for Deep Scans" : "#1 rates every book"}. If it fails on a book, #2 tries, then #3, and so on.
+          The line under each model says what it is good for here; it is judged from the model's kind and size, not measured on your books.</p>
+        <ul class="space-y-1" data-order>${orderHTML(orders[s.url].list, {}, orders[s.url].job)}</ul>
         ${s.models.length ? `<button type="button" data-ol="use" data-url="${esc(s.url)}" class="btn-primary py-1">Use these models in this order</button>` : ""}
         <p class="label mb-0">3. Download another model (optional)</p>
         <div class="space-y-2 rounded-lg bg-slate-900/60 p-2">
@@ -133,7 +134,7 @@ export function renderOllamaHelper(host, form, prefix = "") {
     // Flag downloaded models that are too big.
     const state = orders[url];
     state.fits = Object.fromEntries(res.models.map((m) => [m.name, m.fit]));
-    $("[data-order]", card).innerHTML = orderHTML(state.list, state.fits);
+    $("[data-order]", card).innerHTML = orderHTML(state.list, state.fits, state.job);
   }
 
   async function pull(url, card) {

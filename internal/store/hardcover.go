@@ -132,7 +132,7 @@ func (s *Store) SaveHardcover(userID int64, books []HardcoverBook) (int, error) 
 		case 1:
 			if owned[ids[i]] && added < 25 {
 				added++
-				if _, err := tx.Exec(`INSERT INTO queue_items (user_id, book_id, position, delivery_note)
+				if _, err := tx.Exec(`INSERT OR IGNORE INTO queue_items (user_id, book_id, position, delivery_note)
 					SELECT ?, ?, COALESCE(MAX(position) + 1, 0), 'Want to read on Hardcover' FROM queue_items WHERE user_id = ?
 					AND NOT EXISTS (SELECT 1 FROM queue_items WHERE user_id = ? AND book_id = ?)`, userID, ids[i], userID, userID, ids[i]); err != nil {
 					return 0, err

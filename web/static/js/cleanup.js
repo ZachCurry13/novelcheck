@@ -9,6 +9,7 @@ import { esc, attempt, toast } from "./ui.js";
 import { review } from "./cleanreview.js";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let lastSummary = null; // the last summary shown, kept while the app is open
 const gb = (b) => (b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(b / 1e6))} MB`);
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many || one + "s"}`;
 
@@ -80,9 +81,16 @@ export async function openCleanup() {
 
 // mountCleanup fills host with the cleanup steps; close is given when host is a dialog.
 export async function mountCleanup(host, close) {
-  host.innerHTML = `<div class="p-5"><p class="text-slate-400">Looking at your library…</p></div>`;
-  let c = await attempt(() => get("/api/admin/cleanup"));
-  if (!c) return close?.();
+  // What was shown last time goes up at once (the numbers are checked again right behind it), so opening
+  // this page never waits on the library being looked through.
+  let c = lastSummary;
+  const fresh = attempt(() => get("/api/admin/cleanup"));
+  if (!c) {
+    host.innerHTML = `<div class="p-5"><p class="text-slate-400">Looking at your library…</p></div>`;
+    c = await fresh;
+    if (!c) return close?.();
+    lastSummary = c;
+  }
   let busy = false;
   let status = {};
   let log = [];
@@ -106,7 +114,7 @@ export async function mountCleanup(host, close) {
       ${log.length ? `<pre class="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-2 text-xs text-slate-300">${esc(log.join("\n"))}</pre>` : ""}</div>`;
   };
   const reload = async () => {
-    c = (await attempt(() => get("/api/admin/cleanup"))) || c;
+    c = lastSummary = (await attempt(() => get("/api/admin/cleanup"))) || c;
     paint();
   };
   const job = async () => {
@@ -212,6 +220,12 @@ export async function mountCleanup(host, close) {
     }
   };
   paint();
+  fresh.then((now) => { // the numbers as they are now, when the page went up with the last ones
+    if (now && now !== c && !busy) {
+      c = lastSummary = now;
+      paint();
+    }
+  });
   // A job started earlier (maybe from another page, or before you left this one) is still running on the
   // server: show it, and follow it to the end.
   if (c.job?.running) {

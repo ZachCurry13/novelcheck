@@ -4,6 +4,7 @@
 // leave those cards out.
 import { esc } from "./ui.js";
 import { PEPPERS } from "./peppers.js";
+import { GENRES } from "./genres.js";
 import { byDay, byHourOfDay, byWeekday, fmtDur, streaks } from "./statscalc.js";
 import { count, pageBuckets, series, summary } from "./statsperiods.js";
 import { areaChart, barRows, bigNum, card, columns, coverTile, donut } from "./statsparts.js";
@@ -58,7 +59,7 @@ export function reportHTML(m, s) {
   const genres = count(books, (b) => b.genres || []);
   if (genres.length) {
     const missing = books.filter((b) => !(b.genres || []).length).length;
-    parts.push(card("Genres", `${esc(cap(genres[0].label))} is your top genre`, barRows(genres.slice(0, 8).map((g) => ({ label: cap(g.label), value: g.n, text: `${g.n} (${Math.round((g.n / books.length) * 100)}%)` })))
+    parts.push(card("Genres", `${esc(gname(genres[0].label))} is your top genre`, barRows(genres.slice(0, 8).map((g) => ({ label: gname(g.label), value: g.n, text: `${g.n} (${Math.round((g.n / books.length) * 100)}%)` })))
       + (missing ? `<p class="text-xs text-slate-500">Missing genres for ${plural(missing, "book")}.</p>` : "")));
   }
 
@@ -87,6 +88,8 @@ export function reportHTML(m, s) {
 }
 
 const cap = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
+// gname is a genre's proper name ("ya" is Young Adult, not "Ya").
+const gname = (key) => GENRES[key] || cap(key);
 
 function pace(m, sum, s) {
   const avg = sum.days ? sum.sec / sum.days : 0;

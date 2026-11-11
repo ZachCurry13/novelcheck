@@ -68,7 +68,7 @@ export async function renderStats(view, state, source = {}) {
 
   const draw = (top = false) => {
     view.innerHTML = `${s.page ? "" : back()}<h1 class="mb-3 text-2xl font-bold">${other ? `📊 ${esc(name)}'s reading` : "📊 Reading stats"}</h1>
-      ${s.page ? `<button type="button" data-back class="btn-ghost mb-3 px-3 py-1">‹ Back</button>` : tabStrip({ id: "stats-tabs", label: "Reading stats", active: s.tab, tabs: Object.entries(TABS) })}
+      ${s.page ? `<button type="button" data-back class="btn-ghost mb-3 px-3 py-1">‹ Back</button>` : tabStrip({ id: "stats-tabs", label: "Reading stats", active: s.tab, tabs: [...Object.entries(TABS), ...(other ? [] : [["wrapped", "🎁 Wrapped & trophies", "#/wrapped", false]])] })}
       ${body()}
       <p class="mt-6 text-xs text-slate-500">Days and hours use this device's time zone. Time is time with a page open (long pauses are cut short); pages are different pages seen. Books and details come from your library where NovelCheck knows the book.</p>`;
     setBars(view);

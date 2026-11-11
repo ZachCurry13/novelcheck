@@ -4,6 +4,23 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.68.0]
+
+### 🤖 Models, in NovelCheck's terms
+- **Every model in the Ollama list now says what it is good for here:** rating a book from its description, Deep Scan (reading the whole book) and reading cover photos. A small model on a Deep Scan machine shows "too small, tends to over-rate", and a "thinking" model is flagged as slow and prone to breaking the answer format.
+- **A tip when a better-suited model is further down your list**, with "Put the best suited first". The list knows which job it is for (your AI rates; the Deep Scan machine reads whole books).
+- **The models to download are described the same way**, and the GPU labels now say "Recommended on your GPU" and "Largest that fits (most careful, slowest)" instead of "most powerful". These notes are judged from each model's kind and size; they are not measured on your books.
+
+### 🧹 Library cleanup opens at once
+- **The summary is kept in memory** while the library is unchanged, instead of being worked out again (a second or two) each time. The page also shows the last numbers straight away and checks them behind the scenes.
+
+### 📊 Reading stats
+- **Wrapped and the trophies are back within reach:** a "🎁 Wrapped & trophies" tab on Reading stats. The link had gone missing once the page finished loading.
+- **"Young Adult" instead of "Ya"** in the genre chart, the share card and Wrapped (and proper names for the other genres).
+
+### 📚 Hardcover
+- **Sync no longer fails with "UNIQUE constraint failed"** when a Want to read book is already on your Nightstand.
+
 ## [1.67.0]
 
 ### 👯 Duplicates in Calibre, easier
