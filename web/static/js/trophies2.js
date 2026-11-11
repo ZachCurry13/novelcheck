@@ -32,16 +32,20 @@ export function moreTrophies(m, f, add) {
   add("Habit", "lunch", "🥪", "Lunch break reader", "Days you read between 11 and 2", lunch.size, [10, 50, 100, 200]);
   add("Habit", "streak7", "🔥", "On a roll", "Longest streak, in days", f.streak, [7, 14, 30, 60, 100]);
 
+  // Books finished elsewhere (statselsewhere.js) count for the month, the year, series and book length; not
+  // for anything that needs to know how long a book took.
+  const all = [...fin, ...(m.done || []).map((d) => ({ b: m.books[d.book], first: d.ms, last: d.ms })).filter((x) => x.b)];
+
   // Book shape
   const byMonth = new Map();
-  for (const x of fin) {
+  for (const x of all) {
     const d = new Date(x.last);
     const key = `${d.getFullYear()}-${d.getMonth()}`;
     byMonth.set(key, (byMonth.get(key) || 0) + 1);
   }
   add("Book shape", "month", "🗓️", "Hot streak", "Most books finished in one month", Math.max(0, ...byMonth.values()), [3, 5, 8, 10]);
-  add("Book shape", "long", "🧱", "Doorstop", "Books of 800+ pages finished", fin.filter((x) => (x.b.pages || 0) >= 800).length, [1, 3, 5, 10]);
-  add("Book shape", "short", "🍬", "Quick read", "Books under 100 pages finished", fin.filter((x) => x.b.pages && x.b.pages < 100).length, [1, 5, 10]);
+  add("Book shape", "long", "🧱", "Doorstop", "Books of 800+ pages finished", all.filter((x) => (x.b.pages || 0) >= 800).length, [1, 3, 5, 10]);
+  add("Book shape", "short", "🍬", "Quick read", "Books under 100 pages finished", all.filter((x) => x.b.pages && x.b.pages < 100).length, [1, 5, 10]);
 
   // Ratings
   const ratedBooks = Object.values(m.books).filter((b) => b && b.rating > 0);
@@ -50,10 +54,10 @@ export function moreTrophies(m, f, add) {
 
   // Series and year
   const series = new Map();
-  for (const x of fin) if (x.b.series) series.set(x.b.series, (series.get(x.b.series) || 0) + 1);
+  for (const x of all) if (x.b.series) series.set(x.b.series, (series.get(x.b.series) || 0) + 1);
   add("Series and year", "seriesrun", "🗂️", "Series marathon", "Most books of one series finished", Math.max(0, ...series.values()), [3, 5, 8, 12]);
   const year = new Date().getFullYear();
-  const inYear = (y) => fin.filter((x) => new Date(x.last).getFullYear() === y).length;
+  const inYear = (y) => all.filter((x) => new Date(x.last).getFullYear() === y).length;
   const thisYear = inYear(year);
   const lastYear = inYear(year - 1);
   if (lastYear > 0) add("Series and year", "beat", "📈", `Beat ${year - 1}`, `Books finished in ${year}`, thisYear, [lastYear + 1]);

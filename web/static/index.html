@@ -62,33 +62,33 @@
 
   <!-- App shell -->
   <div id="app-view" class="hidden">
-    <header class="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/90 backdrop-blur pt-safe">
-      <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-2 px-4 py-3 sm:gap-x-4">
-        <a href="#/library" class="mr-auto flex items-center gap-2 font-bold text-lg sm:mr-0">
-          <img src="/icons/icon.svg" alt="" class="h-7 w-7"> NovelCheck
+    <header class="top-bar">
+      <div>
+        <a href="#/library" class="top-title flex items-center gap-3 text-[1.375rem] leading-7">
+          <img src="/icons/icon.svg" alt="" class="h-8 w-8"> NovelCheck
         </a>
-        <nav id="nav" class="order-last flex basis-full gap-1 overflow-x-auto text-sm sm:order-none sm:flex-1 sm:basis-auto">
-          <a href="#/check" data-route="check" class="nav-link manager-only">📷 Check a book</a>
-          <a href="#/library" data-route="library" class="nav-link">Library</a>
-          <a href="#/discover" data-route="discover" data-module="discover" class="nav-link">🧭 Discover</a>
-          <a href="#/queue" data-route="queue" data-module="queue" class="nav-link">Nightstand</a>
-          <a href="#/collections" data-route="collections" class="nav-link">📚 Collections</a>
-          <a href="#/wishlist" data-route="wishlist" data-module-off="discover" class="nav-link">⭐ Wishlist</a>
-          <a href="#/stats" data-route="stats" class="nav-link">📊 Stats</a>
-          <a href="#/readers" data-route="readers" class="nav-link">👥 Readers</a>
-          <a href="#/profile" data-route="profile" class="nav-link">Profile</a>
-          <a href="#/settings" data-route="settings" class="nav-link">⚙ Settings</a>
-          <a href="#/admin" data-route="admin" id="admin-tab" class="nav-link manager-only">Admin</a>
-        </nav>
-        <a id="activity-pill" href="#/library?spice=Pending" class="btn-ghost hidden whitespace-nowrap px-2 text-sm tabular-nums"></a>
-        <button id="bell-btn" class="btn-ghost relative hidden px-2 text-sm" title="Notifications" aria-label="Notifications">🔔<span id="bell-badge"
-          class="absolute -right-1 -top-1 hidden min-w-[1.1rem] rounded-full bg-rose-600 px-1 text-center text-[10px] font-bold leading-4 text-white"></span></button>
-        <button id="help-btn" class="btn-ghost px-2 text-sm sm:px-4" title="How to use NovelCheck" aria-label="Help">❔<span class="hidden sm:inline"> Help</span></button>
-        <button id="install-btn" class="btn-ghost hidden text-sm">Install app</button>
-        <a href="#/whatsnew" id="header-version" class="hidden text-xs text-slate-500 hover:text-slate-300 md:inline" title="What's new"></a>
-        <button id="logout-btn" class="btn-ghost hidden px-2 text-sm sm:px-4 md:inline-flex">Sign out</button>
+        <button type="button" id="search-btn" class="search-bar" aria-label="Search settings, tools and pages" aria-haspopup="dialog"><span class="ms" aria-hidden="true">search</span><span class="search-hint">Search settings, tools and pages</span></button>
+        <a id="activity-pill" href="#/library?spice=Pending" class="btn-ghost hidden whitespace-nowrap tabular-nums"></a>
+        <button id="bell-btn" class="icon-btn hidden" title="Notifications" aria-label="Notifications"><span class="ms" aria-hidden="true">notifications</span><span id="bell-badge" class="badge hidden"></span></button>
+        <button id="help-btn" class="icon-btn" title="How to use NovelCheck" aria-label="Help"><span class="ms" aria-hidden="true">help</span></button>
+        <button id="install-btn" class="btn-text hidden">Install app</button>
+        <a href="#/whatsnew" id="header-version" class="hidden px-2 text-xs text-slate-500 hover:text-slate-300 md:inline" title="What's new"></a>
+        <button id="logout-btn" class="btn-ghost hidden md:inline-flex">Sign out</button>
       </div>
     </header>
+    <nav id="nav" aria-label="Pages">
+      <a href="#/check" data-route="check" class="nav-link manager-only"><span class="ms" aria-hidden="true">photo_camera</span>Check a book</a>
+      <a href="#/library" data-route="library" class="nav-link"><span class="ms" aria-hidden="true">local_library</span>Library</a>
+      <a href="#/discover" data-route="discover" data-module="discover" class="nav-link"><span class="ms" aria-hidden="true">explore</span>Discover</a>
+      <a href="#/queue" data-route="queue" data-module="queue" class="nav-link"><span class="ms" aria-hidden="true">bed</span>Nightstand</a>
+      <a href="#/collections" data-route="collections" class="nav-link"><span class="ms" aria-hidden="true">collections_bookmark</span>Collections</a>
+      <a href="#/wishlist" data-route="wishlist" data-module-off="discover" class="nav-link"><span class="ms" aria-hidden="true">star</span>Wishlist</a>
+      <a href="#/stats" data-route="stats" class="nav-link"><span class="ms" aria-hidden="true">bar_chart</span>Stats</a>
+      <a href="#/readers" data-route="readers" class="nav-link"><span class="ms" aria-hidden="true">group</span>Readers</a>
+      <a href="#/profile" data-route="profile" class="nav-link"><span class="ms" aria-hidden="true">person</span>Profile</a>
+      <a href="#/settings" data-route="settings" class="nav-link"><span class="ms" aria-hidden="true">settings</span>Settings</a>
+      <a href="#/admin" data-route="admin" id="admin-tab" class="nav-link manager-only"><span class="ms" aria-hidden="true">admin_panel_settings</span>Admin</a>
+    </nav>
     <div id="update-banner" class="hidden border-b border-emerald-800 bg-emerald-950/60">
       <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2 text-sm">
         <span id="update-text" class="text-emerald-200"></span>

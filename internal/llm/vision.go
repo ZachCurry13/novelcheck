@@ -81,9 +81,17 @@ func (c *AnthropicClient) ReadImage(ctx context.Context, model, prompt string, i
 }
 
 // CoverPrompt asks a vision model to identify the book in a photo.
-const CoverPrompt = `This is a photo of a book (its cover, spine or back) taken in a shop or at home.
-The photo may be sideways or upside down: read it anyway.
-Read the book's title and author from it. Copy the author exactly as printed; never fill in an author from memory.
-Also copy the ISBN if one is printed (digits only).
+const CoverPrompt = `This picture shows a book: a photo of its cover, spine or back taken in a shop or at home, or a
+screenshot of a page about it (a shop listing, a review, a post, an e-reader screen).
+The picture may be sideways or upside down: read it anyway.
+Read the book's title and author exactly as they are printed or written in the picture.
+- The title is the book's own name, usually the largest words on a cover. It is not the series name, a line
+  like "Book 2" or "A Novel", a slogan, a review quote, "New York Times bestseller", the publisher, or a shop's
+  buttons and menus.
+- The author is the name printed as the writer. Copy it letter for letter; never fill in or correct an author
+  from memory, and never use the name of someone quoted praising the book.
+- If the picture shows several books, read the one that is largest or in the middle.
+- Never guess a title you cannot read. Do not answer from what the cover art looks like.
+Also copy the ISBN if one is printed (digits only); never make one up.
 Reply with JSON only: {"title": "...", "author": "...", "isbn": "..."}.
-Use "" for anything you can't read. If the photo doesn't show a book, reply {"title": ""}.`
+Use "" for anything you can't read. If the picture doesn't show a book, reply {"title": ""}.`

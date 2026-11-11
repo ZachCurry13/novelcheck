@@ -104,7 +104,7 @@ func (s *Server) lookUp(w http.ResponseWriter, r *http.Request, query, image str
 			writeErr(w, http.StatusBadRequest, "that photo couldn't be opened; please take it again")
 			return l, false
 		}
-		f, err := s.Worker.ReadCover(ctx, img, mediaType)
+		f, sure, err := s.Worker.ReadCoverChecked(ctx, img, mediaType, func(f enrich.Found) bool { return s.realBook(ctx, f) })
 		if err != nil {
 			log.Printf("check a book: %v", err)
 			msg := "Your AI couldn't read the cover. Type the title instead."
@@ -116,6 +116,13 @@ func (s *Server) lookUp(w http.ResponseWriter, r *http.Request, query, image str
 		}
 		l.found, l.source = f, "photo"
 		l.canonical, _ = ec.FindTitle(ctx, f.Title, f.Author)
+		if !sure { // no AI's reading could be confirmed: show the closest real books and let the person pick
+			q := strings.TrimSpace(f.Title + " " + f.Author)
+			if choices := ec.Search(ctx, q, maxChoices); len(choices) > 1 {
+				writeJSON(w, http.StatusOK, map[string]any{"choices": choices, "query": q, "read": f})
+				return l, false
+			}
+		}
 	case enrich.CleanISBN(query) != "":
 		f, ok := ec.Find(ctx, query)
 		if !ok {

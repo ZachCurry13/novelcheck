@@ -692,3 +692,14 @@ CREATE TABLE IF NOT EXISTS convert_failures (
     as_is      INTEGER NOT NULL DEFAULT 0,
     at         TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Books a person finished somewhere else and brought in with a list (Goodreads, StoryGraph…): the day they
+-- finished, the pages and their own stars, so Reading stats can count them. One row per person and book.
+CREATE TABLE IF NOT EXISTS imported_reads (
+    user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id  INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    finished TEXT NOT NULL DEFAULT '',   -- YYYY-MM-DD; '' when the list had no day
+    pages    INTEGER NOT NULL DEFAULT 0,
+    rating   REAL NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, book_id)
+);

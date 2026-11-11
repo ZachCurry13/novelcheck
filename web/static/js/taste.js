@@ -40,8 +40,8 @@ export async function openTaste(onDone) {
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
       <p class="text-sm text-slate-400">Optional: mark any books you know and skip the rest. Your answers shape your 💡 Suggested Reads, and you can change them any time.</p>
       <nav class="flex gap-1 border-b border-slate-800">
-        <button data-tab="rate" class="nav-link rounded-b-none ${tab === "rate" ? "active" : ""}">Rate books</button>
-        <button data-tab="mine" class="nav-link rounded-b-none ${tab === "mine" ? "active" : ""}">Your answers (${marks.length})</button></nav>
+        <button data-tab="rate" class="tab ${tab === "rate" ? "active" : ""}">Rate books</button>
+        <button data-tab="mine" class="tab ${tab === "mine" ? "active" : ""}">Your answers (${marks.length})</button></nav>
       ${tab === "rate" ? rateHTML(books, chosen) : mineHTML(marks)}
     </div>`;
   };

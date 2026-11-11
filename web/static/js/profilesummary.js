@@ -2,6 +2,7 @@
 // with a way into the full Reading stats page. No data yet? It says how to
 // get it.
 import { get } from "./api.js";
+import { addElsewhere } from "./statselsewhere.js";
 import { esc } from "./ui.js";
 import { byDay, fmtDur, prepare, startOfDay, streaks, within } from "./statscalc.js";
 
@@ -9,8 +10,8 @@ const big = (n, label) => `<div class="rounded-lg bg-slate-800/60 p-3 text-cente
 
 export async function renderReadingSummary(host) {
   const data = await get("/api/me/reading-stats").catch(() => null);
-  const m = data && prepare(data);
-  if (!m || !m.rows.length) {
+  const m = data && addElsewhere(prepare(data), data.hardcover_read || [], data.imported_read || []);
+  if (!m || (!m.rows.length && !m.done.length)) {
     host.innerHTML = `<h2 class="text-lg font-semibold">📊 My reading</h2>
       <p class="text-sm text-slate-400">Your reading time, streaks and calendar show up here once your Kindle's reading statistics sync.</p>
       <a href="#/settings?s=kindle" class="btn-secondary inline-flex">Set up my Kindle</a>`;

@@ -48,6 +48,10 @@ export function detect(headers) {
     isbn: pick(headers, ["isbn13", "isbn 13", "isbn", "isbn/uid", "isbn10", "isbn 10", "isbns"]),
     asin: pick(headers, ["asin"]),
     shelf: pick(headers, ["exclusive shelf", "read status", "status", "shelf", "collections"]),
+    // For books on the "read" shelf: the day finished, the pages and your own stars, which Reading stats counts.
+    finished: pick(headers, ["date read", "last date read", "dates read", "date finished", "finished"]),
+    pages: pick(headers, ["number of pages", "pages", "page count"]),
+    rating: pick(headers, ["my rating", "star rating", "rating"]),
     // Libby's timeline lists each loan, hold and return: the same title many times, so rows are merged.
   };
   const source = h.includes("exclusive shelf") && h.includes("book id") ? "Goodreads"
@@ -70,6 +74,13 @@ function cleanAuthor(a = "") {
   return m ? `${m[2]} ${m[1]}` : a;
 }
 
+// lastDay finds the last day written in a cell as YYYY-MM-DD: "2026/03/14" (Goodreads), "2026-03-14", or
+// several read-throughs "2025/01/02-2025/01/09, 2026/03/01-2026/03/14" (StoryGraph). "" when there is none.
+export function lastDay(cell = "") {
+  const all = [...String(cell).matchAll(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/g)].map((m) => `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`);
+  return all.sort().pop() || "";
+}
+
 export function rowsToBooks(rows, cols, shelves) {
   const seen = new Set();
   const out = [];
@@ -88,6 +99,9 @@ export function rowsToBooks(rows, cols, shelves) {
       asin: cols.asin >= 0 ? (r[cols.asin] || "").trim() : "",
       // On the "read" shelf (Goodreads) or read (StoryGraph): counts as finished.
       read: cols.shelf >= 0 && /^read$/i.test((r[cols.shelf] || "").trim()),
+      finished: cols.finished >= 0 ? lastDay(r[cols.finished]) : "",
+      pages: cols.pages >= 0 ? Math.max(0, parseInt(r[cols.pages], 10) || 0) : 0,
+      rating: cols.rating >= 0 ? Math.min(5, Math.max(0, parseFloat(r[cols.rating]) || 0)) : 0,
     });
   }
   return out;

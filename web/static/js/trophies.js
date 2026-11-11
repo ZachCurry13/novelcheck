@@ -1,12 +1,12 @@
-// 🏆 Trophies (records and awards are in records.js), worked out in this browser from the same reading statistics as the report (so the
+// 🏆 Trophies (drawn by trophyview.js; records and awards are in records.js), worked out in this browser from the same reading statistics as the report (so the
 // time zone is yours). A book counts as read when KOReader's statistics show you finished it (97% or more).
 // Each trophy has levels (bronze, silver, gold, platinum, diamond) and shows how far to the next.
 import { esc } from "./ui.js";
 import { byDay, dayKey, fmtDur, streaks } from "./statscalc.js";
 import { moreTrophies } from "./trophies2.js";
+import { trophies3 } from "./trophies3.js";
 
-const LEVELS = ["Bronze", "Silver", "Gold", "Platinum", "Diamond"];
-const MEDAL = ["🥉", "🥈", "🥇", "💎", "👑"];
+export const LEVELS = ["Bronze", "Silver", "Gold", "Platinum", "Diamond"];
 const FINISHED = 0.97;
 const n = (x) => Number(x).toLocaleString();
 
@@ -80,26 +80,8 @@ export function achievements(m) {
     add("Genres", `genre:${g}`, "🏷️", `${g} reader`, `${g} books finished`, key ? f.byGenre.get(key) : 0, [10, 25, 50, 100]);
   }
   moreTrophies(m, f, add);
+  trophies3(m, f, add);
   return a;
-}
-
-const medals = (a) => a.tiers.map((t, i) => `<span title="${LEVELS[i] || `Level ${i + 1}`}: ${n(t)}" class="${i < a.level ? "" : "opacity-25 grayscale"}">${MEDAL[Math.min(i, MEDAL.length - 1)]}</span>`).join("");
-
-export function trophiesHTML(m) {
-  const list = achievements(m);
-  const groups = [...new Set(list.map((a) => a.group))];
-  const earned = list.reduce((t, a) => t + a.level, 0);
-  const total = list.reduce((t, a) => t + a.tiers.length, 0);
-  const card = (a) => `<li class="card space-y-1 p-3" data-trophy="${esc(a.id)}">
-    <div class="flex items-start gap-3"><span class="text-3xl" aria-hidden="true">${a.icon}</span>
-      <div class="min-w-0 flex-1"><p class="font-semibold leading-snug">${esc(a.title)}${a.level ? ` <span class="text-xs font-normal text-amber-300">${LEVELS[Math.min(a.level - 1, LEVELS.length - 1)]}</span>` : ""}</p>
-        <p class="text-xs text-slate-400">${esc(a.what)}: <b class="text-slate-200">${n(a.value)}</b>${a.next ? ` · next at ${n(a.next)}` : " · every level earned"}</p></div></div>
-    <div class="flex gap-1 text-lg">${medals(a)}</div>
-    <div class="h-1.5 overflow-hidden rounded-full bg-slate-800"><div class="h-full rounded-full bg-amber-400" data-pct="${a.pct}"></div></div></li>`;
-  return `<p class="mb-3 text-sm text-slate-400"><b class="text-slate-200">${n(earned)}</b> of ${n(total)} levels earned. A book counts when KOReader's statistics show you finished it.</p>
-    ${groups.map((g) => `<section class="mb-5"><h2 class="mb-2 text-lg font-semibold">${esc(g)}</h2>
-      <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">${list.filter((a) => a.group === g).map(card).join("")}</ul></section>`).join("")}
-    <p class="text-sm text-slate-400">Your records and yearly awards have their own tab: 🏅 Records &amp; awards.</p>`;
 }
 
 // paintBars sets the progress widths (the page's security rules allow no inline styles in the HTML).

@@ -9,8 +9,8 @@ export function tabStrip({ tabs, active, label = "Sections", id = "", attr = "da
   setTimeout(() => document.querySelector(`${id ? `#${id}` : "[data-tabs]"} .active`)?.scrollIntoView({ block: "nearest", inline: "center" }), 0);
   const item = ([key, text, href, inPlace = true]) => {
     const on = key === active;
-    const common = `${inPlace ? `${attr}="${esc(key)}"` : ""} role="tab" aria-selected="${on}" class="nav-link shrink-0 rounded-b-none${on ? " active" : ""}"`;
+    const common = `${inPlace ? `${attr}="${esc(key)}"` : ""} role="tab" aria-selected="${on}" class="tab${on ? " active" : ""}"`;
     return href ? `<a href="${esc(href)}" ${common}>${esc(text)}</a>` : `<button type="button" ${common}>${esc(text)}</button>`;
   };
-  return `<nav ${id ? `id="${id}"` : ""} data-tabs role="tablist" aria-label="${esc(label)}" class="-mx-4 mb-4 flex gap-1 overflow-x-auto border-b border-slate-800 px-4">${tabs.map(item).join("")}</nav>`;
+  return `<nav ${id ? `id="${id}"` : ""} data-tabs role="tablist" aria-label="${esc(label)}" class="tabs -mx-4 mb-4 px-4">${tabs.map(item).join("")}</nav>`;
 }

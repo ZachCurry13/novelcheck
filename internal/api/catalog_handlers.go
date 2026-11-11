@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/auth"
@@ -63,6 +64,11 @@ type driveBook struct {
 	Format string `json:"format"` // epub | mobi | azw3 | azw | kfx | pdf | list
 	ASIN   string `json:"asin"`
 	Read   bool   `json:"read"` // a list's "read" shelf (Goodreads, StoryGraph): finished by the importer
+	// From a list's own columns, for books on its "read" shelf: the day finished (YYYY-MM-DD), the pages and
+	// the importer's stars. Reading stats counts these books in the year they were finished.
+	Finished string  `json:"finished"`
+	Pages    int     `json:"pages"`
+	Rating   float64 `json:"rating"`
 }
 
 var driveFormats = map[string]bool{"epub": true, "mobi": true, "azw3": true, "azw": true, "kfx": true, "pdf": true,
@@ -141,6 +147,7 @@ func (s *Server) handleImportDrive(w http.ResponseWriter, r *http.Request) {
 		}
 		if b.Read {
 			_, _ = s.Store.SyncReading(auth.UserFrom(r).ID, id, true) // ✓ Finished in the importer's Nightstand history
+			s.keepImportedRead(auth.UserFrom(r).ID, id, b)
 		}
 		imported++
 	}
@@ -156,4 +163,27 @@ func truncateStr(s string, n int) string {
 		return s[:n]
 	}
 	return s
+}
+
+// keepImportedRead stores what the list says about a finished book (see driveBook), and the importer's stars
+// as their own rating when they have not rated the book here.
+func (s *Server) keepImportedRead(userID, bookID int64, b driveBook) {
+	finished := strings.TrimSpace(b.Finished)
+	if _, err := time.Parse("2006-01-02", finished); err != nil || finished > time.Now().AddDate(0, 0, 1).Format("2006-01-02") {
+		finished = ""
+	}
+	pages, rating := b.Pages, b.Rating
+	if pages < 0 || pages > 20000 {
+		pages = 0
+	}
+	if rating < 0.25 || rating > 5 {
+		rating = 0
+	}
+	if finished == "" && pages == 0 && rating == 0 {
+		return
+	}
+	_ = s.Store.SaveImportedRead(userID, bookID, finished, pages, rating)
+	if rating > 0 && s.Store.RatingOf(userID, bookID) == 0 {
+		_ = s.Store.SetRating(userID, bookID, rating)
+	}
 }

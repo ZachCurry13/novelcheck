@@ -19,6 +19,8 @@ export async function openBoxSets(onChange, focus = 0, state) {
   if (focus) list = list.filter((b) => b.book_id === focus);
   // What a title would become: a book the family already has (it joins it), or a new one.
   const badge = (e) => (!e.title ? "" : e.match_id ? `<span class="text-emerald-300">✓ already in your library as <button type="button" data-open="${e.match_id}" class="underline decoration-dotted">${esc(e.match_title)}</button>${e.match_owned ? "" : " (only on a list)"}: it joins that book</span>` : `<span class="text-sky-300">＋ new book, made from this box set</span>`);
+  const asking = new Set(); // box sets with a question out to the AI
+  const ASKING = "Asking… (a local AI can take a minute)";
   const row = (e = { title: "", number: 0 }) => `<li class="space-y-0.5" data-entry><div class="flex items-center gap-2">
     <input type="checkbox" data-on class="h-5 w-5 shrink-0" checked aria-label="Split this one out">
     <input data-n type="number" min="0" step="0.5" value="${e.number || ""}" class="input w-16 shrink-0 px-2 py-1 text-sm" placeholder="#" aria-label="Number in the series">
@@ -35,7 +37,7 @@ export async function openBoxSets(onChange, focus = 0, state) {
         <ul data-entries class="space-y-1">${(b.proposal.length ? b.proposal : [{ title: "", number: 0 }]).map(row).join("")}</ul>
         <div class="flex flex-wrap gap-2">
           <button type="button" data-act="add" class="btn-ghost py-1 text-sm">＋ Add a book</button>
-          <button type="button" data-act="ask" class="btn-secondary py-1 text-sm">✨ Ask the AI what's inside</button></div>
+          <button type="button" data-act="ask" class="btn-secondary py-1 text-sm" ${asking.has(b.book_id) ? "disabled" : ""}>${asking.has(b.book_id) ? ASKING : "✨ Ask the AI what's inside"}</button></div>
         <div class="grid grid-cols-2 gap-2">
           <button type="button" data-act="split" class="btn-primary">Split into these books</button>
           <button type="button" data-act="not" class="btn-ghost">Not a box set</button></div></li>`;
@@ -73,13 +75,23 @@ export async function openBoxSets(onChange, focus = 0, state) {
     if (act === "add") return li.querySelector("[data-entries]").insertAdjacentHTML("beforeend", row());
     btn.disabled = true;
     if (act === "ask") {
-      btn.textContent = "Asking… (a local AI can take a minute)";
-      const r = await attempt(() => post(`/api/box-sets/${id}/ask`));
-      if (r) {
-        box.proposal = r.proposal;
+      // One ask per set at a time; only this set's card is redrawn when the answer comes, so titles being
+      // typed in the other cards stay, and a set decided in the meantime is left alone.
+      if (asking.has(id)) return;
+      asking.add(id);
+      btn.textContent = ASKING;
+      const r = await post(`/api/box-sets/${id}/ask`).catch((err) => ({ error: err.message || "The AI couldn't answer" }));
+      asking.delete(id);
+      const now = list.find((b) => b.book_id === id);
+      const shown = d.querySelector(`[data-box="${id}"]`);
+      if (!now || now.state !== "found" || !shown) return;
+      if (r.error) toast(r.error, true);
+      else {
+        now.proposal = r.proposal;
         if (!r.proposal.length) toast("The AI doesn't know this one: type the titles instead", true);
       }
-      return paint();
+      shown.outerHTML = card(now);
+      return;
     }
     if (act === "split") {
       const books = [...li.querySelectorAll("[data-entry]")].filter((x) => x.querySelector("[data-on]").checked)

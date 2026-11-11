@@ -1,8 +1,11 @@
 package api
 
 import (
+	"context"
 	"strings"
 	"unicode"
+
+	"github.com/zachcurry13/novelcheck/internal/enrich"
 )
 
 // Check a book: a book found by its title alone must not be someone else's book of the same name
@@ -63,4 +66,38 @@ func lastNames(s string) []string {
 		}
 	}
 	return out
+}
+
+// realBook says whether what an AI read off a photo is a book that exists under that title by that author:
+// one the family already has, or one the book catalogue finds. It is how a misread cover is caught.
+func (s *Server) realBook(ctx context.Context, f enrich.Found) bool {
+	if id := s.Store.MatchBook(f.Title, f.Author); id != 0 && !s.otherAuthor(id, f.Author) {
+		return true
+	}
+	c, ok := s.Worker.Enricher().FindTitle(ctx, f.Title, f.Author)
+	if !ok || !titlesAgree(c.Title, f.Title) {
+		return false
+	}
+	return f.Author == "" || c.Author == "" || sameWriter(c.Author, f.Author)
+}
+
+// titlesAgree: one title holds the other once case, spaces and punctuation are gone ("Fourth Wing" and
+// "Fourth Wing (The Empyrean, #1)"); a title of under four letters has to match whole.
+func titlesAgree(a, b string) bool {
+	squash := func(s string) string {
+		return strings.Map(func(r rune) rune {
+			if unicode.IsLetter(r) || unicode.IsDigit(r) {
+				return unicode.ToLower(r)
+			}
+			return -1
+		}, s)
+	}
+	x, y := squash(a), squash(b)
+	if x == "" || y == "" {
+		return false
+	}
+	if len(x) < 4 || len(y) < 4 {
+		return x == y
+	}
+	return strings.Contains(x, y) || strings.Contains(y, x)
 }

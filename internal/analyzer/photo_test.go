@@ -12,6 +12,7 @@ import (
 
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/db"
+	"github.com/zachcurry13/novelcheck/internal/enrich"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -75,5 +76,50 @@ func TestPhotoModelFirstAndBlindModelsSkipped(t *testing.T) {
 	mu.Unlock()
 	if last != "gemma3:4b" || total != 2 {
 		t.Fatalf("the photo model is asked first, and nothing else after it answers: %v", asked)
+	}
+}
+
+// A reading that can't be confirmed as a real book is not taken at its word: the next AI reads the photo too,
+// and its confirmed answer wins. With nothing confirmed, the first reading comes back marked unsure.
+func TestPhotoReadingIsConfirmed(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	answer := func(title string) *httptest.Server {
+		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			raw, _ := io.ReadAll(r.Body)
+			if strings.Contains(string(raw), "llama3.2") { // the text-only model on the same machine
+				w.WriteHeader(http.StatusBadRequest)
+				io.WriteString(w, `{"error": {"message": "Multimodal data provided, but model does not support multimodal requests."}}`)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"choices": []any{map[string]any{"message": map[string]string{"role": "assistant", "content": `{"title": "` + title + `", "author": "Marissa Meyer"}`}}},
+				"usage":   map[string]int{"prompt_tokens": 10, "completion_tokens": 10},
+			})
+		}))
+	}
+	small, big := answer("Cider"), answer("Cinder")
+	defer small.Close()
+	defer big.Close()
+	_ = st.SetSetting(store.KeyLLMBaseURL, small.URL+"/v1")
+	_ = st.SetSetting(store.KeyLLMModel, "llama3.2:latest")
+	_ = st.SetSetting(store.KeyVisionModel, "gemma3:4b")
+	_ = st.SetSetting(store.KeyBackupBaseURL, big.URL+"/v1")
+	_ = st.SetSetting(store.KeyBackupModel, "big-model")
+	_ = st.SetSetting(store.KeyBackupEnabled, "true")
+	w := analyzer.New(st)
+	real := func(f enrich.Found) bool { return f.Title == "Cinder" }
+
+	f, sure, err := w.ReadCoverChecked(context.Background(), []byte("jpeg"), "image/jpeg", real)
+	if err != nil || !sure || f.Title != "Cinder" {
+		t.Fatalf("the confirmed reading wins: %+v sure=%v %v", f, sure, err)
+	}
+	f, sure, err = w.ReadCoverChecked(context.Background(), []byte("jpeg"), "image/jpeg", func(enrich.Found) bool { return false })
+	if err != nil || sure || f.Title != "Cider" {
+		t.Fatalf("nothing confirmed: the first reading, unsure: %+v sure=%v %v", f, sure, err)
 	}
 }

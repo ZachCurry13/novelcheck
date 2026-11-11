@@ -4,48 +4,150 @@
 @tailwind utilities;
 
 @layer components {
-  .input {
-    @apply w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500;
+  /* Material Design 3 pieces (docs/DESIGN.md). Colours are the roles set on :root below.
+     The older names (btn-primary, btn-secondary, btn-ghost, nav-link) stay as aliases until every page is moved. */
+  .btn, .btn-filled, .btn-tonal, .btn-outlined, .btn-text, .btn-danger, .btn-primary, .btn-secondary, .btn-ghost {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 9999px;
+    padding: 0.625rem 1.5rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; letter-spacing: 0.006em;
+    transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
   }
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+  :is(.btn, .btn-filled, .btn-tonal, .btn-outlined, .btn-text, .btn-danger, .btn-primary, .btn-secondary, .btn-ghost):disabled { cursor: not-allowed; opacity: 0.38; }
+  :is(.btn, .btn-filled, .btn-tonal, .btn-outlined, .btn-text, .btn-danger, .btn-primary, .btn-secondary, .btn-ghost, .icon-btn, .tab, .nav-link):focus-visible { outline: 2px solid rgb(var(--md-primary)); outline-offset: 2px; }
+  .btn-filled, .btn-primary { background: rgb(var(--md-primary)); color: rgb(var(--md-on-primary)); }
+  :is(.btn-filled, .btn-primary):hover:not(:disabled) { background: color-mix(in srgb, rgb(var(--md-primary)) 92%, rgb(var(--md-on-primary))); box-shadow: 0 1px 2px rgb(0 0 0 / 0.3); }
+  .btn-tonal, .btn-secondary { background: rgb(var(--md-secondary-container)); color: rgb(var(--md-on-secondary-container)); }
+  :is(.btn-tonal, .btn-secondary):hover:not(:disabled) { background: color-mix(in srgb, rgb(var(--md-secondary-container)) 92%, rgb(var(--md-on-secondary-container))); }
+  .btn-outlined { border: 1px solid rgb(var(--md-outline)); color: rgb(var(--md-primary)); }
+  .btn-text { color: rgb(var(--md-primary)); padding-left: 0.75rem; padding-right: 0.75rem; }
+  :is(.btn-outlined, .btn-text):hover:not(:disabled) { background: rgb(var(--md-primary) / 0.08); }
+  .btn-ghost { color: rgb(var(--md-on-surface-variant)); padding-left: 0.75rem; padding-right: 0.75rem; }
+  .btn-ghost:hover:not(:disabled) { background: rgb(var(--md-on-surface) / 0.08); color: rgb(var(--md-on-surface)); }
+  .btn-danger { background: rgb(var(--md-error)); color: rgb(var(--md-on-error)); }
+  .btn-danger:hover:not(:disabled) { background: color-mix(in srgb, rgb(var(--md-error)) 92%, rgb(var(--md-on-error))); }
+  .icon-btn { display: inline-flex; height: 2.5rem; width: 2.5rem; flex: none; align-items: center; justify-content: center; border-radius: 9999px; color: rgb(var(--md-on-surface-variant)); position: relative; }
+  .icon-btn:hover { background: rgb(var(--md-on-surface) / 0.08); color: rgb(var(--md-on-surface)); }
+  .fab { display: inline-flex; height: 3.5rem; min-width: 3.5rem; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 1rem; padding: 0 1rem; background: rgb(var(--md-primary-container)); color: rgb(var(--md-on-primary-container)); box-shadow: 0 3px 8px rgb(0 0 0 / 0.35); font-weight: 500; }
+
+  /* Text fields: outlined, the label above. */
+  .input, .field {
+    width: 100%; border-radius: 0.25rem; border: 1px solid rgb(var(--md-outline)); background: transparent;
+    padding: 0.75rem 1rem; font-size: 1rem; line-height: 1.5rem; color: rgb(var(--md-on-surface));
   }
-  .btn-primary { @apply btn bg-indigo-600 text-white hover:bg-indigo-500; }
-  .btn-secondary { @apply btn bg-slate-800 text-slate-100 ring-1 ring-slate-700 hover:bg-slate-700; }
-  .btn-danger { @apply btn bg-rose-700 text-white hover:bg-rose-600; }
-  .btn-ghost { @apply btn text-slate-300 hover:bg-slate-800; }
-  .nav-link { @apply whitespace-nowrap rounded-md px-3 py-1.5 text-slate-300 hover:bg-slate-800 hover:text-white; }
-  .nav-link.active { @apply bg-slate-800 text-white; }
-  .card { @apply rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800; }
-  .label { @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400; }
-  .chip { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+  :is(.input, .field)::placeholder { color: rgb(var(--md-on-surface-variant)); }
+  :is(.input, .field):hover { border-color: rgb(var(--md-on-surface)); }
+  :is(.input, .field):focus { border-color: rgb(var(--md-primary)); outline: none; box-shadow: inset 0 0 0 1px rgb(var(--md-primary)); }
+  select:is(.input, .field) { background-color: rgb(var(--md-surface-container-low)); }
+  .label { margin-bottom: 0.25rem; display: block; font-size: 0.75rem; line-height: 1rem; font-weight: 500; letter-spacing: 0.03em; color: rgb(var(--md-on-surface-variant)); }
+
+  /* Navigation: the drawer on wide screens (#nav) uses nav-link; pages use tabs. */
+  .nav-link { display: flex; align-items: center; gap: 0.75rem; white-space: nowrap; border-radius: 9999px; padding: 0.5rem 1rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; color: rgb(var(--md-on-surface-variant)); }
+  .nav-link:hover { background: rgb(var(--md-on-surface) / 0.08); color: rgb(var(--md-on-surface)); }
+  .nav-link.active { background: rgb(var(--md-primary-container)); color: rgb(var(--md-on-primary-container)); }
+  .tabs { display: flex; overflow-x: auto; border-bottom: 1px solid rgb(var(--md-outline-variant)); scrollbar-width: none; }
+  .tab { position: relative; display: inline-flex; height: 3rem; flex: none; align-items: center; justify-content: center; padding: 0 1rem; white-space: nowrap; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.006em; color: rgb(var(--md-on-surface-variant)); }
+  .tab:hover { background: rgb(var(--md-on-surface) / 0.08); color: rgb(var(--md-on-surface)); }
+  .tab.active { color: rgb(var(--md-primary)); }
+  .tab.active::after { content: ""; position: absolute; left: 1rem; right: 1rem; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: rgb(var(--md-primary)); }
+
+  /* Cards: filled by default. */
+  .card { border-radius: 0.75rem; background: rgb(var(--md-surface-container-low)); padding: 1rem; }
+  .card-outlined { border-radius: 0.75rem; border: 1px solid rgb(var(--md-outline-variant)); background: rgb(var(--md-surface)); padding: 1rem; }
+  .card-elevated { border-radius: 0.75rem; background: rgb(var(--md-surface-container-low)); padding: 1rem; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3), 0 4px 8px rgb(0 0 0 / 0.15); }
+
+  /* Chips. chip-info and the coloured ones carry meaning (pepper level, content, format); assist and filter chips are controls. */
+  .chip { display: inline-flex; align-items: center; gap: 0.25rem; border-radius: 0.5rem; padding: 0.125rem 0.5rem; font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
+  .chip-assist, .chip-filter { display: inline-flex; height: 2rem; align-items: center; gap: 0.5rem; border-radius: 0.5rem; border: 1px solid rgb(var(--md-outline-variant)); padding: 0 0.75rem; font-size: 0.875rem; font-weight: 500; color: rgb(var(--md-on-surface)); }
+  :is(.chip-assist, .chip-filter):hover { background: rgb(var(--md-on-surface) / 0.08); }
+  .chip-filter[aria-pressed="true"], .chip-filter.on { border-color: transparent; background: rgb(var(--md-secondary-container)); color: rgb(var(--md-on-secondary-container)); }
   .chip-none { @apply chip bg-emerald-900/60 text-emerald-300; }
   .chip-closed { @apply chip bg-amber-900/60 text-amber-300; }
   .chip-open { @apply chip bg-rose-900/60 text-rose-300; }
   .chip-pending { @apply chip bg-slate-800 text-slate-400; }
-  .chip-wait { @apply chip bg-amber-900/50 text-amber-200 ring-1 ring-amber-700/60; }
-  .chip-busy { @apply chip bg-indigo-900/70 text-indigo-100 ring-1 ring-indigo-500 motion-safe:animate-pulse; }
+  .chip-wait { @apply chip bg-amber-900/50 text-amber-200; }
+  .chip-busy { @apply chip bg-indigo-900/70 text-indigo-100 motion-safe:animate-pulse; }
   .chip-fail { @apply chip bg-rose-900/60 text-rose-200; }
-  .chip-deep { @apply chip bg-teal-900/60 text-teal-200 ring-1 ring-teal-700/60; }
+  .chip-deep { @apply chip bg-teal-900/60 text-teal-200; }
   .chip-flag { @apply chip bg-violet-900/60 text-violet-300; }
   .chip-cat { @apply chip bg-sky-900/50 text-sky-300; }
-  .chip-fmt { @apply chip rounded-md bg-slate-800 font-mono text-[10px] tracking-wide text-slate-300; }
+  .chip-fmt { @apply chip bg-slate-800 font-mono text-[10px] tracking-wide text-slate-300; }
   .chip-dup { @apply chip bg-orange-900/60 text-orange-300; }
-  .toggle { @apply flex items-center gap-2 text-sm text-slate-300; }
-  .toggle input { @apply h-4 w-4 rounded border-slate-600 bg-slate-800 text-indigo-600; }
-  .dialog { @apply w-full max-w-2xl rounded-2xl bg-slate-900 p-0 text-slate-100 ring-1 ring-slate-700 backdrop:bg-black/70; }
-  .toast { @apply fixed bottom-6 left-1/2 z-50 flex max-w-[90vw] -translate-x-1/2 items-start rounded-lg bg-slate-800 px-4 py-2 text-sm shadow-lg ring-1 ring-slate-700; }
-  .toast-error { @apply bg-rose-950 text-rose-100 ring-rose-800; }
-  .meter-track { @apply h-2 w-full overflow-hidden rounded-full; }
+
+  .toggle { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; color: rgb(var(--md-on-surface)); }
+  .toggle input { height: 1.125rem; width: 1.125rem; flex: none; accent-color: rgb(var(--md-primary)); }
+
+  /* Dialogs; a bottom sheet on phones (further down). */
+  .dialog { width: 100%; max-width: 42rem; border-radius: 1.75rem; background: rgb(var(--md-surface-container-low)); padding: 0; color: rgb(var(--md-on-surface)); box-shadow: 0 8px 24px rgb(0 0 0 / 0.4); }
+  .dialog::backdrop { background: rgb(0 0 0 / 0.6); }
+  .menu { border-radius: 0.5rem; background: rgb(var(--md-surface-container)); padding: 0.25rem 0; box-shadow: 0 2px 6px rgb(0 0 0 / 0.3), 0 8px 16px rgb(0 0 0 / 0.2); }
+
+  /* Snackbar (the old toast). */
+  .toast, .snackbar { position: fixed; bottom: 1.5rem; left: 50%; z-index: 50; display: flex; max-width: min(90vw, 36rem); transform: translateX(-50%); align-items: flex-start; gap: 0.5rem; border-radius: 0.25rem; background: rgb(var(--md-inverse-surface)); color: rgb(var(--md-inverse-on-surface)); padding: 0.875rem 1rem; font-size: 0.875rem; line-height: 1.25rem; box-shadow: 0 3px 8px rgb(0 0 0 / 0.35); }
+  .toast-error { background: rgb(var(--md-error-container)); color: rgb(var(--md-on-error-container)); }
+
+  /* Lists: rows with a leading icon, a title over supporting text, and a trailing value. */
+  .list > li + li { border-top: 1px solid rgb(var(--md-outline-variant)); }
+  .list-row { display: flex; min-height: 3.5rem; align-items: center; gap: 1rem; padding: 0.625rem 0; }
+  .ring-track { stroke: rgb(var(--md-surface-container-highest)); }
+  .ring-fill { stroke: rgb(var(--md-primary)); }
+  .meter-track { @apply h-1 w-full overflow-hidden rounded-full; }
   .meter-fill { @apply h-full rounded-full transition-[width] duration-500; }
+  .badge { position: absolute; right: 0; top: 0; min-width: 1rem; border-radius: 9999px; background: rgb(var(--md-error)); padding: 0 0.25rem; text-align: center; font-size: 0.625rem; font-weight: 700; line-height: 1rem; color: rgb(var(--md-on-error)); }
   .stat { @apply text-2xl font-bold; }
   .drag-handle { @apply cursor-grab select-none px-2 text-xl text-slate-500 active:cursor-grabbing; }
   .sortable-ghost { @apply opacity-40; }
+  .ms { font-family: "Material Symbols Rounded"; font-weight: normal; font-style: normal; font-size: 1.5rem; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr; -webkit-font-feature-settings: "liga"; font-feature-settings: "liga"; -webkit-font-smoothing: antialiased; flex: none; }
+  .active > .ms, .ms.fill { font-variation-settings: "FILL" 1; }
 }
 
 @layer utilities {
   .pt-safe { padding-top: env(safe-area-inset-top); }
   .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem); }
+}
+
+/* Material Design 3 colour roles (docs/DESIGN.md). They point at the themed palette below,
+   so the light theme follows without a second list. */
+:root {
+  --md-primary: var(--indigo-200); --md-on-primary: var(--indigo-950);
+  --md-primary-container: var(--indigo-800); --md-on-primary-container: var(--indigo-100);
+  --md-secondary-container: var(--slate-700); --md-on-secondary-container: var(--slate-100);
+  --md-surface: var(--slate-950); --md-on-surface: var(--slate-100); --md-on-surface-variant: var(--slate-400);
+  --md-surface-container-low: var(--slate-900); --md-surface-container: var(--slate-900);
+  --md-surface-container-high: var(--slate-800); --md-surface-container-highest: var(--slate-700);
+  --md-inverse-surface: var(--slate-200); --md-inverse-on-surface: var(--slate-900);
+  --md-outline: var(--slate-500); --md-outline-variant: var(--slate-800);
+  --md-error: var(--rose-300); --md-on-error: var(--rose-950);
+  --md-error-container: var(--rose-900); --md-on-error-container: var(--rose-100);
+}
+@font-face { font-family: "Material Symbols Rounded"; font-style: normal; font-weight: 400; font-display: block; src: url("../fonts/MaterialSymbolsRounded-subset.woff2") format("woff2"); }
+
+/* App shell: a 64px top bar; on wide screens the pages sit in a drawer down the left side. */
+.top-bar { position: sticky; top: 0; z-index: 20; background: rgb(var(--md-surface)); padding-top: env(safe-area-inset-top); }
+.top-bar > div { display: flex; min-height: 4rem; align-items: center; gap: 0.25rem; padding: 0 1rem; }
+/* Search: a bar in the top bar on wide screens, an icon on phones; it opens the search view (js/search.js). */
+.top-title { margin-right: auto; }
+.search-bar { display: inline-flex; height: 2.5rem; width: 2.5rem; flex: none; align-items: center; justify-content: center; border-radius: 9999px; color: rgb(var(--md-on-surface-variant)); }
+.search-bar:hover { background: rgb(var(--md-on-surface) / 0.08); }
+.search-bar:focus-visible { outline: 2px solid rgb(var(--md-primary)); outline-offset: 2px; }
+.search-hint { display: none; }
+.search-input { min-width: 0; flex: 1; background: transparent; padding: 0.75rem 0.25rem; font-size: 1rem; color: rgb(var(--md-on-surface)); outline: none; }
+.search-input::placeholder { color: rgb(var(--md-on-surface-variant)); }
+.search-input::-webkit-search-cancel-button { display: none; }
+.search-results { max-height: min(60vh, 28rem); overflow-y: auto; border-top: 1px solid rgb(var(--md-outline-variant)); padding-bottom: 0.5rem; }
+.search-row[aria-selected="true"], .search-row:hover { background: rgb(var(--md-on-surface) / 0.08); }
+dialog.search-view { margin-top: 0.5rem; max-width: 36rem; background: rgb(var(--md-surface-container-high)); }
+@media (max-width: 767px) {
+  dialog.dialog.search-view { margin: 0; height: 100dvh; max-height: 100dvh; border-radius: 0; padding-top: env(safe-area-inset-top); animation: none; }
+  dialog.dialog.search-view .search-results { max-height: none; height: calc(100dvh - 4rem - env(safe-area-inset-top)); }
+}
+@media (min-width: 768px) {
+  .top-title { margin-right: 0; width: 12.5rem; }
+  .search-bar { margin-right: auto; height: 3rem; width: min(100%, 28rem); flex: 0 1 28rem; justify-content: flex-start; gap: 0.75rem; padding: 0 1rem; background: rgb(var(--md-surface-container-high)); font-size: 1rem; }
+  .search-bar:hover { background: rgb(var(--md-surface-container-highest)); }
+  .search-hint { display: inline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #nav { position: fixed; left: 0; top: 4rem; bottom: 0; z-index: 15; display: flex; width: 13.5rem; flex-direction: column; gap: 0.125rem; overflow-y: auto; padding: 0.5rem 0.75rem 1rem; }
+  #nav .nav-link { min-height: 3rem; }
+  #app-view > main, #app-view > footer, #update-banner { margin-left: 13.5rem; }
+  #app-view > main { max-width: 72rem; padding-left: 1.5rem; padding-right: 1.5rem; }
 }
 
 /* Themes. The palette is CSS variables (see tailwind.config.js): dark is
@@ -59,6 +161,7 @@ html.light { color-scheme: light; --slate-50:2 6 23;--slate-100:15 23 42;--slate
 html.light [class~="text-white"]:not([class*="bg-indigo"]):not([class*="bg-rose"]):not([class*="bg-teal"]):not([class*="bg-emerald"]),
 html.light [class~="hover:text-white"]:hover, html.light .nav-link:hover, html.light .nav-link.active { color: rgb(var(--slate-100)); }
 html.light .dialog::backdrop { background: rgb(15 23 42 / 0.45); }
+html.light .dialog, html.light .card-elevated, html.light .menu { box-shadow: 0 1px 3px rgb(15 23 42 / 0.2), 0 6px 16px rgb(15 23 42 / 0.12); }
 
 /* Reduce motion (Profile → Appearance, or the device's own setting). */
 html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
@@ -115,18 +218,18 @@ html.font-dyslexic .leading-tight, html.font-dyslexic .leading-snug { line-heigh
   #nav { display: none; }
   .mobile-nav {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex;
-    border-top: 1px solid rgb(var(--slate-800)); background: rgb(var(--slate-950) / 0.95); backdrop-filter: blur(8px);
-    padding-bottom: env(safe-area-inset-bottom);
+    background: rgb(var(--md-surface-container)); padding-bottom: env(safe-area-inset-bottom);
   }
   .mobile-nav a, .mobile-nav button {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
-    padding: 0.5rem 0 0.45rem; font-size: 0.72rem; color: rgb(var(--slate-400));
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; height: 5rem;
+    padding: 0.75rem 0 1rem; font-size: 0.75rem; line-height: 1rem; font-weight: 500; color: rgb(var(--md-on-surface-variant));
   }
-  .mobile-nav .active { color: rgb(var(--indigo-300)); }
-  .mobile-nav .ico { font-size: 1.3rem; line-height: 1; }
-  #app-view { padding-bottom: calc(4.25rem + env(safe-area-inset-bottom)); }
-  .toast { bottom: calc(5rem + env(safe-area-inset-bottom)); }
-  .above-tabbar { bottom: calc(3.9rem + env(safe-area-inset-bottom)) !important; }
+  .mobile-nav .ico { display: flex; height: 2rem; width: 4rem; align-items: center; justify-content: center; border-radius: 9999px; transition: background-color 0.2s; }
+  .mobile-nav .active { color: rgb(var(--md-on-surface)); font-weight: 700; }
+  .mobile-nav .active .ico { background: rgb(var(--md-primary-container)); color: rgb(var(--md-on-primary-container)); font-variation-settings: "FILL" 1; }
+  #app-view { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(5.75rem + env(safe-area-inset-bottom)); }
+  .above-tabbar { bottom: calc(5rem + env(safe-area-inset-bottom)) !important; }
   input, select, textarea { font-size: 16px !important; }
 }
 
@@ -150,7 +253,7 @@ html.font-dyslexic .leading-tight, html.font-dyslexic .leading-snug { line-heigh
 @media (max-width: 767px) {
   dialog.dialog {
     width: 100%; max-width: 100%; margin: auto 0 0; max-height: 92dvh;
-    border-radius: 1rem 1rem 0 0; padding-bottom: env(safe-area-inset-bottom);
+    border-radius: 1.75rem 1.75rem 0 0; padding-bottom: env(safe-area-inset-bottom);
   }
   dialog.dialog > .overflow-y-auto { max-height: calc(92dvh - env(safe-area-inset-bottom)); }
 }

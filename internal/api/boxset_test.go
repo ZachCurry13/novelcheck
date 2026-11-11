@@ -60,6 +60,10 @@ func TestBoxSetSplit(t *testing.T) {
 	if res, _ := admin.do("POST", fmt.Sprintf("/api/box-sets/%d/not", box), nil, true); res.StatusCode != 200 {
 		t.Fatalf("not: %d", res.StatusCode)
 	}
+	// Asking the AI about a set that is no longer waiting answers at once, without calling the AI.
+	if res, _ := admin.do("POST", fmt.Sprintf("/api/box-sets/%d/ask", box), nil, true); res.StatusCode != 409 {
+		t.Fatalf("ask after a decision: %d, want 409", res.StatusCode)
+	}
 	if _, list = admin.doList("GET", "/api/box-sets"); len(list) != 0 {
 		t.Fatalf("dismissed box set came back: %v", list)
 	}

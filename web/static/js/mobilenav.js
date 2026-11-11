@@ -2,8 +2,8 @@
 // because the full top menu doesn't fit a phone screen. It's built from the
 // top menu's links, so it shows exactly what this account may open.
 
-const MAIN = [["check", "📷", "Check"], ["library", "📚", "Library"], ["discover", "🧭", "Discover"], ["queue", "🛏️", "Nightstand"], ["collections", "📚", "Collections"], ["wishlist", "⭐", "Wishlist"], ["profile", "👤", "Profile"]];
-const ICON = { readers: "👥", stats: "📊", settings: "⚙️", discover: "🧭", queue: "▶️", import: "💾", shelf: "📕", collections: "📚", admin: "🛠️", deepscan: "🧬", usage: "📈", system: "🩺", profile: "👤", wishlist: "⭐" };
+// Icons are Material Symbols names (the font in /fonts holds only the ones the app uses).
+const MAIN = [["check", "photo_camera", "Check"], ["library", "local_library", "Library"], ["discover", "explore", "Discover"], ["queue", "bed", "Nightstand"], ["collections", "collections_bookmark", "Collections"], ["wishlist", "star", "Wishlist"], ["profile", "person", "Profile"]];
 
 let moreRoutes = [];
 
@@ -16,8 +16,8 @@ export function buildMobileNav() {
   const main = MAIN.filter(([r]) => links.some((a) => a.dataset.route === r)).slice(0, 4);
   const more = links.filter((a) => !main.some(([r]) => r === a.dataset.route));
   moreRoutes = more.map((a) => a.dataset.route);
-  bar.innerHTML = main.map(([r, ico, label]) => `<a href="#/${r}" data-route="${r}"><span class="ico" aria-hidden="true">${ico}</span>${label}</a>`).join("")
-    + `<button type="button" data-more aria-haspopup="dialog"><span class="ico" aria-hidden="true">☰</span>More</button>`; // also Help and Sign out
+  bar.innerHTML = main.map(([r, ico, label]) => `<a href="#/${r}" data-route="${r}"><span class="ico ms" aria-hidden="true">${ico}</span>${label}</a>`).join("")
+    + `<button type="button" data-more aria-haspopup="dialog"><span class="ico ms" aria-hidden="true">menu</span>More</button>`; // also Help and Sign out
   bar.onclick = (e) => {
     if (e.target.closest("[data-more]")) openMore(more);
   };
@@ -44,19 +44,19 @@ function openMore(links) {
     document.body.append(d);
     swipeToClose(d);
   }
-  const tile = (a) => `<a href="${a.getAttribute("href")}" class="flex flex-col items-center gap-1 rounded-xl bg-slate-800/70 px-1 py-3 text-center text-sm hover:bg-slate-700">
-    <span class="text-2xl" aria-hidden="true">${ICON[a.dataset.route] || "•"}</span>${a.textContent.replace(/^[^\p{L}]+/u, "").trim()}</a>`;
+  const tile = (a) => `<a href="${a.getAttribute("href")}" class="flex flex-col items-center gap-1 rounded-xl bg-slate-800/70 px-1 py-3 text-center text-sm text-slate-200 hover:bg-slate-700">
+    <span class="ms" aria-hidden="true">${a.querySelector(".ms")?.textContent || "more_vert"}</span>${[...a.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim()}</a>`;
   const item = (ico, label, attrs) => `<a href="#" ${attrs} class="flex items-center gap-3 rounded-lg px-3 py-3 text-base hover:bg-slate-800">
-    <span class="w-6 text-center text-xl" aria-hidden="true">${ico}</span>${label}</a>`;
+    <span class="ms" aria-hidden="true">${ico}</span>${label}</a>`;
   d.innerHTML = `<div class="space-y-3 p-4">
     <div class="mx-auto h-1.5 w-10 rounded-full bg-slate-700" aria-hidden="true"></div>
     <div class="flex items-center justify-between"><h2 class="text-lg font-bold">More</h2>
-      <button data-close class="btn-ghost h-10 w-10 p-0 text-xl" aria-label="Close">✕</button></div>
+      <button data-close class="icon-btn" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button></div>
     <div class="grid grid-cols-3 gap-2">${links.map(tile).join("")}</div>
     <div class="border-t border-slate-800 pt-2">
-      ${item("❔", "How to use NovelCheck", "data-help")}
-      ${item("🐞", "Report a problem or idea", "data-report")}
-      ${document.getElementById("logout-btn")?.textContent.includes("Switch") ? item("👥", "Switch profile", "data-logout") : item("🚪", "Sign out", "data-logout")}
+      ${item("help", "How to use NovelCheck", "data-help")}
+      ${item("bug_report", "Report a problem or idea", "data-report")}
+      ${document.getElementById("logout-btn")?.textContent.includes("Switch") ? item("group", "Switch profile", "data-logout") : item("logout", "Sign out", "data-logout")}
     </div>
   </div>`;
   d.onclick = (e) => {

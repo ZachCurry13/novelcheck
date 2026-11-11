@@ -104,9 +104,42 @@ func (s *Server) readingStatsFor(owner, viewer *store.User) map[string]any {
 		if hr := s.Store.HardcoverFinished(owner.ID); len(hr) > 0 {
 			out["hardcover_read"] = hr // finished elsewhere (paper, audio): Wrapped counts them too
 		}
+		if ir := s.Store.ImportedFinished(owner.ID); len(ir) > 0 {
+			out["imported_read"] = s.withBriefs(ir) // finished according to an imported list (Goodreads…)
+		}
 		if g := s.Store.HardcoverGoals(owner.ID); g != "" {
 			out["hardcover_goals"] = json.RawMessage(g)
 		}
+	}
+	return out
+}
+
+// elsewhereRead is a book finished somewhere other than KOReader, with what the library knows about it.
+type elsewhereRead struct {
+	store.HardcoverRead
+	Kind   string   `json:"kind,omitempty"`
+	Genres []string `json:"genres,omitempty"`
+	Series string   `json:"series,omitempty"`
+}
+
+// withBriefs adds each book's kind, genres and series, so trophies and awards can count it like any other.
+func (s *Server) withBriefs(list []store.HardcoverRead) []elsewhereRead {
+	var ids []int64
+	for _, h := range list {
+		if h.BookID != nil {
+			ids = append(ids, *h.BookID)
+		}
+	}
+	briefs := s.Store.BookBriefs(ids)
+	out := make([]elsewhereRead, 0, len(list))
+	for _, h := range list {
+		e := elsewhereRead{HardcoverRead: h}
+		if h.BookID != nil {
+			if br, ok := briefs[*h.BookID]; ok {
+				e.Kind, e.Genres, e.Series = br.Kind, br.GenreList(), br.Series
+			}
+		}
+		out = append(out, e)
 	}
 	return out
 }

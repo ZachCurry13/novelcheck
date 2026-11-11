@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -38,6 +39,9 @@ func (s *Server) handleBoxMatch(w http.ResponseWriter, r *http.Request) {
 
 // handleAskBoxSet asks the AI what's inside a box set and keeps the answer
 // as the suggestion.
+// boxDecided is the answer to asking about a box set that is no longer waiting.
+const boxDecided = "this box set was already split or marked as not a box set"
+
 func (s *Server) handleAskBoxSet(w http.ResponseWriter, r *http.Request) {
 	id, ok := pathID(r, "id")
 	if !ok {
@@ -47,6 +51,10 @@ func (s *Server) handleAskBoxSet(w http.ResponseWriter, r *http.Request) {
 	box, err := s.Store.BoxSetFor(id)
 	if err != nil {
 		writeStoreErr(w, err)
+		return
+	}
+	if box.State != "found" { // already split or marked "not a box set": say so at once, not after the AI's minute
+		writeErr(w, http.StatusConflict, boxDecided)
 		return
 	}
 	book, err := s.Store.BookByID(id, nil)
@@ -67,7 +75,10 @@ func (s *Server) handleAskBoxSet(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadGateway, "the AI couldn't answer: "+err.Error())
 		return
 	}
-	if err := s.Store.SetBoxProposal(id, found); err != nil {
+	if err := s.Store.SetBoxProposal(id, found); errors.Is(err, store.ErrNotFound) {
+		writeErr(w, http.StatusConflict, boxDecided) // decided while the AI was thinking
+		return
+	} else if err != nil {
 		writeStoreErr(w, err)
 		return
 	}

@@ -3,6 +3,7 @@
 Go (chi, sqlx, pure-Go SQLite) + vanilla JS PWA, self-hosted. Read `HANDOFF.md` first for where things stand; `NOVELCHECK_SPEC.md` has the numbered feature list; `CHANGELOG.md` is the release notes.
 
 ## Standing rules
+- **The handoff is shared between machines.** The owner uses Claude Code on Windows and on Linux. Read `HANDOFF.md` at the start of every session and again whenever a few hours have passed since the last message (the other machine may have moved on; `git fetch` first). Rewrite its "IN PROGRESS" entry whenever the state changes: what is done, what is checked, what is not, what the owner was asked. Unpushed work exists on one machine only, so say so in the handoff and ask the owner before pushing.
 - **Releases only with the owner's OK**, from `main`, one command per call (merge `--ff-only`, push, `gh workflow run docker.yml --ref main -f version=X`, then watch the run). Update `HANDOFF.md` after each release.
 - Never put the owner's own setup details (hardware, LAN addresses, ports, pool names, time zone, domain names) in the repo.
 - Keep source files small (about 200 lines); docs (CHANGELOG, README, spec item) and the `web/static/sw.js` cache version change with every user-facing change.

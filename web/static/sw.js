@@ -1,7 +1,7 @@
 // NovelCheck service worker: caches the app shell for offline launch and
 // home-screen installs. API responses are never cached (they are private and
 // sent with Cache-Control: no-store).
-const CACHE = "novelcheck-shell-v135";
+const CACHE = "novelcheck-shell-v136";
 const SHELL = [
   "/",
   "/index.html",
@@ -10,6 +10,7 @@ const SHELL = [
   "/icons/icon.svg",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  "/fonts/MaterialSymbolsRounded-subset.woff2",
   "/vendor/Sortable.min.js",
   "/vendor/jszip.min.js",
   "/js/app.js",
@@ -152,6 +153,12 @@ const SHELL = [
   "/js/cleanup.js",
   "/js/trophies.js",
   "/js/trophies2.js",
+  "/js/trophies3.js",
+  "/js/trophyview.js",
+  "/js/statsrecords.js",
+  "/js/statselsewhere.js",
+  "/js/search.js",
+  "/js/searchindex.js",
   "/js/stars.js",
   "/js/wrapped.js",
   "/js/wrappedslides.js",

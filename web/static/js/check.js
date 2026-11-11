@@ -70,7 +70,7 @@ export async function renderCheck(view, state) {
     }
     if (res.choices) { // not sure which book was meant: ask
       slot.innerHTML = "";
-      const pick = await pickBook(res.choices, res.query);
+      const pick = await pickBook(res.choices, res.query, res.read);
       if (!pick) return slot.remove();
       return check({ ...body, pick }, working, slot);
     }

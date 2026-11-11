@@ -71,8 +71,10 @@ export function within(m, from, to = Infinity) {
     perBook.set(r.book, b);
   }
   const books = [...perBook.values()].sort((a, b) => b.sec - a.sec);
-  const finished = books.filter((b) => (m.books[b.book]?.percent || 0) >= 0.97).length;
-  return { sec, pages, books, finished, days: byDay(rows).size, rows };
+  // Books finished elsewhere in that time (an imported list, Hardcover: see statselsewhere.js) count as finished too.
+  const elsewhere = (m.done || []).filter((d) => d.ms >= from && d.ms < to);
+  const finished = books.filter((b) => (m.books[b.book]?.percent || 0) >= 0.97).length + elsewhere.length;
+  return { sec, pages, books, finished, elsewhere, days: byDay(rows).size, rows };
 }
 
 export function byHourOfDay(rows) {

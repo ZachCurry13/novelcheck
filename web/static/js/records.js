@@ -1,7 +1,6 @@
 // 🏅 Records and awards: the best of your reading, for all time or for one year, and that year's awards
 // (book of the year, fastest read, author of the year…). Worked out in this browser from the same hourly
 // reading statistics as the rest of Reading stats, so days and hours are in your own time zone.
-import { esc } from "./ui.js";
 import { byDay, dayKey, keyDate, fmtDur, streaks } from "./statscalc.js";
 import { GENRES } from "./genres.js";
 
@@ -16,7 +15,7 @@ const top = (map) => [...map].sort((a, b) => b[1] - a[1])[0];
 const add = (map, k, v = 1) => map.set(k, (map.get(k) || 0) + v);
 
 // yearsOf lists the years that have reading, newest first.
-export const yearsOf = (m) => [...new Set(m.rows.map((r) => new Date(r.ms).getFullYear()))].sort((a, b) => b - a);
+export const yearsOf = (m) => [...new Set([...m.rows, ...(m.done || [])].map((r) => new Date(r.ms).getFullYear()))].sort((a, b) => b - a);
 
 // facts gathers everything the records and awards are read from, for one year or (year = null) all time.
 function facts(m, year) {
@@ -31,6 +30,9 @@ function facts(m, year) {
   }
   const fin = [...span].map(([i, e]) => ({ b: m.books[i], ...e, days: Math.max(1, Math.round((e.last - e.first) / 864e5) + 1) }))
     .filter((x) => x.b && (x.b.percent || 0) >= FINISHED && (year == null || new Date(x.last).getFullYear() === year));
+  for (const d of m.done || []) { // finished elsewhere (statselsewhere.js): a finished book with no reading time
+    if (m.books[d.book] && (year == null || new Date(d.ms).getFullYear() === year)) fin.push({ b: m.books[d.book], first: d.ms, last: d.ms, sec: 0, days: 1, elsewhere: true });
+  }
   const days = byDay(rows);
   const weeks = new Map(), months = new Map(), finMonths = new Map(), hours = new Map(), weekdays = new Map();
   for (const r of rows) {
@@ -70,7 +72,21 @@ export function records(m, year = null) {
   const f = facts(m, year);
   const out = [];
   const put = (icon, title, value, note = "") => out.push({ icon, title, value, note });
-  if (!f.rows.length) return out;
+  if (!f.rows.length && !f.fin.length) return out;
+  if (!f.rows.length) { // only an imported list or Hardcover so far: what the finished books themselves say
+    put("📚", "Books finished", plural(f.fin.length, "book"), "from your imported list or Hardcover; hours and pages a day come from KOReader");
+    const pages = f.fin.reduce((t, x) => t + (x.b.pages || 0), 0);
+    if (pages) put("📄", "Pages in those books", `${n(pages)} pages`, "");
+    const fm = top(f.finMonths);
+    if (fm && fm[1] > 1) put("🏁", "Most books finished in a month", plural(fm[1], "book"), monthText(fm[0]));
+    const big = f.fin.slice().sort((a, b) => (b.b.pages || 0) - (a.b.pages || 0))[0];
+    if (big?.b.pages) put("🧱", "Longest book finished", `${n(big.b.pages)} pages`, big.b.title);
+    const au = top(f.authors), ge = top(f.genres), se = top(f.series);
+    if (au) put("✍️", "Most-read author", au[0], `${plural(au[1], "book")} finished`);
+    if (ge) put("🏷️", "Most-read genre", GENRES[ge[0]] || ge[0], `${plural(ge[1], "book")} finished`);
+    if (se && se[1] > 1) put("🗂️", "Most-read series", se[0], `${plural(se[1], "book")} finished`);
+    return out;
+  }
   put("⏱️", "Time read", fmtDur(f.sec), `${plural(f.days.size, "reading day")} · ${n(f.pages)} pages · ${plural(f.fin.length, "book")} finished`);
   const dSec = top(new Map([...f.days].map(([k, v]) => [k, v.sec])));
   const dPages = top(new Map([...f.days].map(([k, v]) => [k, v.pages])));
@@ -86,7 +102,7 @@ export function records(m, year = null) {
   const paced = [...f.days].filter(([, v]) => v.sec >= 3600 && v.pages).map(([k, v]) => [k, Math.round(v.pages / (v.sec / 3600))]);
   const pace = top(new Map(paced));
   if (pace) put("💨", "Fastest pace", `${n(pace[1])} pages an hour`, `${keyText(pace[0])} (days with an hour or more)`);
-  const real = f.fin.filter((x) => (x.b.pages || 0) >= 100);
+  const real = f.fin.filter((x) => !x.elsewhere && (x.b.pages || 0) >= 100); // how long a book took is only known from KOReader
   const fast = real.slice().sort((a, b) => a.days - b.days || (b.b.pages || 0) - (a.b.pages || 0))[0];
   const slow = real.slice().sort((a, b) => b.days - a.days)[0];
   if (fast) put("⚡", "Fastest finish", plural(fast.days, "day"), `${fast.b.title} · ${n(fast.b.pages)} pages`);
@@ -94,7 +110,7 @@ export function records(m, year = null) {
   const big = f.fin.slice().sort((a, b) => (b.b.pages || 0) - (a.b.pages || 0))[0];
   if (big?.b.pages) put("🧱", "Longest book finished", `${n(big.b.pages)} pages`, big.b.title);
   const most = f.fin.slice().sort((a, b) => b.sec - a.sec)[0];
-  if (most) put("⌛", "Book you spent the most time on", fmtDur(most.sec), most.b.title);
+  if (most?.sec) put("⌛", "Book you spent the most time on", fmtDur(most.sec), most.b.title);
   const night = f.rows.filter((r) => new Date(r.ms).getHours() < 5).sort((a, b) => new Date(b.ms).getHours() - new Date(a.ms).getHours())[0];
   const early = f.rows.filter((r) => { const h = new Date(r.ms).getHours(); return h >= 4 && h < 8; }).sort((a, b) => new Date(a.ms).getHours() - new Date(b.ms).getHours())[0];
   if (night) put("🌙", "Latest night", `still reading after ${hourText(new Date(night.ms).getHours())}`, dayText(night.ms));
@@ -116,9 +132,9 @@ export function awards(m, year) {
   const out = [];
   const put = (icon, title, winner, why) => winner && out.push({ icon, title, winner, why });
   const by = (fn) => f.fin.slice().sort(fn)[0];
-  const real = f.fin.filter((x) => (x.b.pages || 0) >= 100);
+  const real = f.fin.filter((x) => !x.elsewhere && (x.b.pages || 0) >= 100);
   const book = by((a, b) => b.sec - a.sec);
-  put("📕", "Book of the year", book?.b.title, book && `${fmtDur(book.sec)} with it${book.b.author ? ` · ${book.b.author}` : ""}`);
+  put("📕", "Book of the year", book?.sec ? book.b.title : "", book && `${fmtDur(book.sec)} with it${book.b.author ? ` · ${book.b.author}` : ""}`);
   const fav = f.fin.filter((x) => x.b.rating > 0).sort((a, b) => b.b.rating - a.b.rating || b.sec - a.sec)[0];
   put("⭐", "Your favourite", fav?.b.title, fav && `you gave it ${fav.b.rating} star${fav.b.rating === 1 ? "" : "s"}`);
   const fast = real.slice().sort((a, b) => a.days - b.days)[0];
@@ -132,25 +148,13 @@ export function awards(m, year) {
   put("📅", "Month of the year", mo && monthText(mo[0]), mo && `${fmtDur(mo[1])} of reading`);
   const nights = new Set(f.rows.filter((r) => new Date(r.ms).getHours() < 4).map((r) => dayKey(r.ms))).size;
   const dawns = new Set(f.rows.filter((r) => { const h = new Date(r.ms).getHours(); return h >= 4 && h < 7; }).map((r) => dayKey(r.ms))).size;
+  const day = top(new Map([...f.days].map(([k, v]) => [k, v.sec])));
+  put("📆", "Day of the year", day?.[1] ? keyText(day[0]) : "", day && `${fmtDur(day[1])} of reading`);
+  if (f.sit.sec >= 2 * 3600) put("🪑", "Sitting of the year", fmtDur(f.sit.sec), `hours in a row, starting ${dayText(f.sit.at)}`);
+  const marked = f.fin.slice().sort((a, b) => (b.b.highlights || 0) - (a.b.highlights || 0))[0];
+  put("🖍️", "Most highlighted", marked?.b.highlights ? marked.b.title : "", marked && `${plural(marked.b.highlights, "highlight")}`);
+  const st = streaks(f.days);
+  if (st.longest >= 3) put("🔥", "Streak of the year", `${plural(st.longest, "day")} in a row`, "your longest run of reading days");
   if (nights || dawns) put(nights >= dawns ? "🌙" : "🌅", nights >= dawns ? "Night owl award" : "Early bird award", plural(Math.max(nights, dawns), "day"), nights >= dawns ? "you read past midnight" : "you read before 7");
   return out;
-}
-
-// recordsHTML is the whole tab: a year picker, that year's awards, then the records.
-export function recordsHTML(m, year) {
-  const years = yearsOf(m);
-  const pick = `<div class="mb-4 flex flex-wrap gap-1"><button type="button" data-year="" class="${year == null ? "btn-primary" : "btn-secondary"} px-3 py-1 text-sm">All time</button>
-    ${years.map((y) => `<button type="button" data-year="${y}" class="${y === year ? "btn-primary" : "btn-secondary"} px-3 py-1 text-sm">${y}</button>`).join("")}</div>`;
-  const aw = year == null ? [] : awards(m, year);
-  const rec = records(m, year);
-  const tile = (r) => `<li class="card p-3"><p class="text-2xl" aria-hidden="true">${r.icon}</p><p class="text-xs uppercase tracking-wide text-slate-400">${esc(r.title)}</p>
-    <p class="break-words text-xl font-bold">${esc(r.value)}</p><p class="break-words text-xs text-slate-400">${esc(r.note)}</p></li>`;
-  return `${pick}
-    ${aw.length ? `<section class="mb-6"><h2 class="mb-2 text-lg font-semibold">🏆 Your ${year} awards</h2>
-      <ul class="grid grid-cols-2 gap-3 lg:grid-cols-3">${aw.map((a) => `<li class="card award p-3"><p class="text-2xl" aria-hidden="true">${a.icon}</p>
-        <p class="text-xs uppercase tracking-wide text-amber-300">${esc(a.title)}</p><p class="break-words text-lg font-bold">${esc(a.winner)}</p>
-        <p class="break-words text-xs text-slate-400">${esc(a.why || "")}</p></li>`).join("")}</ul></section>` : ""}
-    <section class="mb-5"><h2 class="mb-2 text-lg font-semibold">🏅 ${year == null ? "All-time records" : `${year} records`}</h2>
-      ${rec.length ? `<ul class="grid grid-cols-2 gap-3 lg:grid-cols-3">${rec.map(tile).join("")}</ul>` : `<p class="text-sm text-slate-400">No reading recorded ${year == null ? "yet" : `in ${year}`}.</p>`}</section>
-    <p class="text-xs text-slate-500">A book counts as finished when KOReader's statistics show 97% or more. Sittings and hours are counted by the hour, as KOReader records them.</p>`;
 }

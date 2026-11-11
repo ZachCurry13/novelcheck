@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/zachcurry13/novelcheck/internal/enrich"
 	"github.com/zachcurry13/novelcheck/internal/llm"
@@ -80,9 +81,47 @@ func looksVisual(model string) bool {
 	return false
 }
 
-// ReadCover asks the AIs which book a photo shows (see coverAttempts). Models that can't see images fail at
-// once and are remembered, and the next one is tried.
+// ReadCover asks the AIs which book a photo shows and takes the first answer (see ReadCoverChecked).
 func (w *Worker) ReadCover(ctx context.Context, image []byte, mediaType string) (enrich.Found, error) {
+	f, _, err := w.ReadCoverChecked(ctx, image, mediaType, nil)
+	return f, err
+}
+
+// maxReadings is how many models may read one photo when none of their answers can be confirmed.
+const maxReadings = 3
+
+// sameReading: two models read the same title off the photo (letters and digits only).
+func sameReading(a, b enrich.Found) bool {
+	squash := func(s string) string {
+		return strings.Map(func(r rune) rune {
+			if unicode.IsLetter(r) || unicode.IsDigit(r) {
+				return unicode.ToLower(r)
+			}
+			return -1
+		}, s)
+	}
+	return squash(a.Title) != "" && squash(a.Title) == squash(b.Title)
+}
+
+// ReadCoverChecked asks the AIs which book a photo shows (see coverAttempts). Models that can't see images fail at
+// once and are remembered, and the next one is tried. A small model can misread a cover or a screenshot, so with
+// confirm (is this a real book by that author?) an answer that can't be confirmed is not taken at its word: the
+// next model reads the photo too, and the answer is sure once one is confirmed or two models read the same title.
+// Otherwise the first reading comes back with sure = false, for the person to check.
+func (w *Worker) ReadCoverChecked(ctx context.Context, image []byte, mediaType string, confirm func(enrich.Found) bool) (enrich.Found, bool, error) {
+	var readings []enrich.Found
+	accept := func(f enrich.Found) bool {
+		if confirm == nil || confirm(f) {
+			return true
+		}
+		for _, p := range readings {
+			if sameReading(p, f) {
+				return true
+			}
+		}
+		readings = append(readings, f)
+		return false
+	}
 	var errs []string
 	tried := map[string]bool{}
 	for _, ai := range w.coverAttempts() {
@@ -109,13 +148,14 @@ func (w *Worker) ReadCover(ctx context.Context, image []byte, mediaType string) 
 				_ = w.Store.RecordUsageCost(0, model, usage.PromptTokens, usage.CompletionTokens, ai, time.Since(start))
 			}
 			if err == nil {
-				if f, ok := parseCover(out); ok {
-					return f, nil
-				}
+				f, ok := parseCover(out)
 				// It can see, but read no title: the book may be sideways or upside down in the photo.
 				for _, q := range []int{1, 3, 2} {
-					alt, ok := turned(image, q)
-					if !ok || ctx.Err() != nil {
+					if ok {
+						break
+					}
+					alt, can := turned(image, q)
+					if !can || ctx.Err() != nil {
 						break
 					}
 					tctx, tcancel := context.WithTimeout(ctx, limit)
@@ -127,9 +167,16 @@ func (w *Worker) ReadCover(ctx context.Context, image []byte, mediaType string) 
 					if terr != nil {
 						break
 					}
-					if f, ok := parseCover(out); ok {
-						return f, nil
+					f, ok = parseCover(out)
+				}
+				if ok {
+					if accept(f) {
+						return f, true, nil
 					}
+					if len(readings) >= maxReadings || ctx.Err() != nil {
+						return readings[0], false, nil
+					}
+					continue // not confirmed: let the next model read it too
 				}
 				err = errors.New("no book title in the answer")
 			} else if cantSee(err) {
@@ -137,21 +184,27 @@ func (w *Worker) ReadCover(ctx context.Context, image []byte, mediaType string) 
 			}
 			errs = append(errs, fmt.Sprintf("%s (%s): %v", ai.Name, model, err))
 			if ctx.Err() != nil {
-				return enrich.Found{}, ctx.Err()
+				if len(readings) > 0 {
+					return readings[0], false, nil
+				}
+				return enrich.Found{}, false, ctx.Err()
 			}
 			if Unreachable(err) {
 				break
 			}
 		}
 	}
+	if len(readings) > 0 {
+		return readings[0], false, nil
+	}
 	if len(errs) == 0 {
-		return enrich.Found{}, fmt.Errorf("%w: no AI is set up", ErrCantSee)
+		return enrich.Found{}, false, fmt.Errorf("%w: no AI is set up", ErrCantSee)
 	}
 	hint := ""
 	if strings.TrimSpace(w.Store.Setting(store.KeyVisionModel)) == "" {
 		hint = " Tip: give your local AI a model that can read photos (Admin → AI & Scans → Your AI → Photo-reading model, for example gemma3:4b)."
 	}
-	return enrich.Found{}, fmt.Errorf("%w (%s)%s", ErrCantSee, strings.Join(errs, "; "), hint)
+	return enrich.Found{}, false, fmt.Errorf("%w (%s)%s", ErrCantSee, strings.Join(errs, "; "), hint)
 }
 
 // visionOrder puts AIs on the internet before AIs on the home network: a small

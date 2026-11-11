@@ -34,6 +34,7 @@ import { renderEvents } from "./events.js";
 import { initBell } from "./notifications.js";
 import { on, applyModules } from "./modules.js";
 import { buildMobileNav, markMobileNav } from "./mobilenav.js";
+import { initSearch, setSearchUser } from "./search.js";
 import { keepUpToDate } from "./appupdate.js";
 import { initActivity } from "./activity.js";
 import { showFamily } from "./family.js";
@@ -117,9 +118,10 @@ function showApp() {
   applyModules(state.user);
   initBell(state);
   initActivity(state);
-  $("#admin-tab").textContent = state.user.role === "admin" ? "Admin" : "Manage";
-  $("#logout-btn").textContent = state.user.family_device ? "👥 Switch profile" : "Sign out";
+  $("#admin-tab").lastChild.textContent = state.user.role === "admin" ? "Admin" : "Manage";
+  $("#logout-btn").textContent = state.user.family_device ? "Switch profile" : "Sign out";
   buildMobileNav();
+  setSearchUser(state.user);
   route();
   if (!state.user.guide_seen) openGuide(state);
   checkForUpdates(state);
@@ -169,6 +171,7 @@ async function boot() {
       err.classList.remove("hidden");
     }
   });
+  initSearch();
   $("#logout-btn").addEventListener("click", async () => {
     await attempt(() => post("/api/auth/logout"));
     showSignIn();
