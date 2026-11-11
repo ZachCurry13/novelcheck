@@ -86,8 +86,14 @@ var busyWaits = []time.Duration{3 * time.Second, 8 * time.Second, 20 * time.Seco
 // send posts a chat request, trying again a few times while the service says
 // it's busy, and returns the assistant text and usage.
 func (c *Client) send(ctx context.Context, body chatRequest) (string, Usage, error) {
+	if err := rested(c.BaseURL, body.Model); err != nil { // its daily quota is used up: not asked until it resets
+		return "", Usage{}, err
+	}
 	for try := 0; ; try++ {
 		out, u, err := c.sendOnce(ctx, body)
+		if quotaRest(err) > 0 { // "retry in 4 hours": no point trying again now
+			return out, u, noteQuota(c.BaseURL, body.Model, err)
+		}
 		if err == nil || !errors.Is(err, errBusy) || try >= len(busyWaits) {
 			return out, u, err
 		}

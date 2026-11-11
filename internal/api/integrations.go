@@ -154,7 +154,14 @@ func (s *Server) integrations(ctx context.Context) []IntegGroup {
 		if name == "" {
 			name = ai.Name + " AI"
 		}
-		ais = append(ais, row("ai-"+ai.Name, name, "ok", "Set up", strings.Join(ai.Models, ", ")+" · "+where, "#/admin?tab=ai"))
+		r := row("ai-"+ai.Name, name, "ok", "Set up", strings.Join(ai.Models, ", ")+" · "+where, "#/admin?tab=ai")
+		for _, model := range ai.Models { // a service that said its daily quota is used up is left alone until it resets
+			if until, resting := llm.Resting()[model]; resting {
+				r.Badge, r.Label = "update", "Daily limit used"
+				r.Detail += fmt.Sprintf(" · %s has used up its free requests for today; asked again in %s.", model, time.Until(until).Round(time.Minute))
+			}
+		}
+		ais = append(ais, r)
 	}
 	if len(ais) == 0 {
 		ais = append(ais, row("ai-main", "Your AI", "warn", "Not set up", "No AI model is chosen yet, so books can't be rated.", "#/admin?tab=ai"))

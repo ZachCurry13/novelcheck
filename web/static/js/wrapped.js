@@ -1,5 +1,5 @@
 // 🎁 Wrapped: your reading as a full-screen story you tap through, for any month or any year, plus your
-// trophies and records. Everything is worked out in this browser from your reading statistics (so days and
+// records and yearly awards (records.js) and your trophies. Everything is worked out in this browser from your reading statistics (so days and
 // hours are in your own time zone), and nothing is sent anywhere. The last slide makes a picture to share.
 import { get } from "./api.js";
 import { esc } from "./ui.js";
@@ -10,8 +10,10 @@ import { openShareCard } from "./statscard.js";
 import { trophiesHTML, paintBars } from "./trophies.js";
 import { slides } from "./wrappedslides.js";
 import { openStory } from "./wrappedstory.js";
+import { recordsHTML, yearsOf } from "./records.js";
 
-const TITLE = `<h1 class="mb-2 text-2xl font-bold">🎁 Wrapped &amp; trophies</h1>`;
+const TITLE = `<h1 class="mb-2 text-2xl font-bold">🎁 Wrapped, awards &amp; trophies</h1>`;
+const TABS = [["wrapped", "🎁 Wrapped"], ["records", "🏅 Records & awards"], ["trophies", "🏆 Trophies"]];
 
 export async function renderWrapped(view, state) {
   view.innerHTML = `${TITLE}<p class="text-slate-400">Loading…</p>`;
@@ -23,7 +25,8 @@ export async function renderWrapped(view, state) {
   const m = prepare(data);
   m.goals = data.hardcover_goals || [];
   m.hcRead = data.hardcover_read || []; // books finished according to Hardcover, with the day // reading challenge from Hardcover, when connected
-  const s = { tab: new URLSearchParams(location.hash.split("?")[1] || "").get("tab") === "trophies" ? "trophies" : "wrapped", period: "month", offset: -1 };
+  const asked = new URLSearchParams(location.hash.split("?")[1] || "").get("tab");
+  const s = { tab: TABS.some(([k]) => k === asked) ? asked : "wrapped", period: "month", offset: -1, year: yearsOf(m)[0] ?? null };
   if (!m.rows.length && !m.books.length) {
     view.innerHTML = `${TITLE}<div class="card space-y-2 text-sm text-slate-300"><p>Nothing to look back on yet. Wrapped and trophies come from KOReader's reading statistics.</p>
       <a href="#/settings?s=kindle" class="btn-secondary inline-flex">Set up statistics sync</a></div>`;
@@ -34,9 +37,13 @@ export async function renderWrapped(view, state) {
     onShare: () => openShareCard(m, { period: s.period, offset: s.offset }, bounds(s.period, s.offset).title, state.user.username),
   });
   const draw = () => {
-    const strip = tabStrip({ id: "wrap-tabs", label: "Wrapped", active: s.tab, tabs: [["wrapped", "🎁 Wrapped"], ["trophies", "🏆 Trophies"]] });
+    const strip = tabStrip({ id: "wrap-tabs", label: "Wrapped", active: s.tab, tabs: TABS });
+    if (s.tab === "records") {
+      view.innerHTML = `${strip}<h1 class="mb-2 text-2xl font-bold">🏅 Records &amp; awards</h1>${recordsHTML(m, s.year)}`;
+      return;
+    }
     if (s.tab === "trophies") {
-      view.innerHTML = `${strip}<h1 class="mb-2 text-2xl font-bold">🏆 Trophies &amp; records</h1>${trophiesHTML(m)}`;
+      view.innerHTML = `${strip}<h1 class="mb-2 text-2xl font-bold">🏆 Trophies</h1>${trophiesHTML(m)}`;
       paintBars(view);
       return;
     }
@@ -59,6 +66,11 @@ export async function renderWrapped(view, state) {
     const t = e.target.closest("[data-tab]")?.dataset.tab;
     if (t) {
       s.tab = t;
+      return draw();
+    }
+    const y = e.target.closest("[data-year]");
+    if (y) {
+      s.year = y.dataset.year ? Number(y.dataset.year) : null;
       return draw();
     }
     const p = e.target.closest("[data-period]")?.dataset.period;

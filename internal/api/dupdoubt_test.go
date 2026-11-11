@@ -19,6 +19,7 @@ func TestDuplicateDoubts(t *testing.T) {
 		"an omnibus":            {store.DupEntry{CalibreID: "2", Files: []store.DupFile{f("EPUB", 6_000_000)}}, "differ a lot"},
 		"a PDF only there":      {store.DupEntry{CalibreID: "2", Files: []store.DupFile{f("EPUB", 1_000_000), f("PDF", 9_000_000)}}, "has a PDF"},
 		"sizes unknown":         {store.DupEntry{CalibreID: "2", Files: []store.DupFile{f("EPUB", 0)}}, "couldn't be compared"},
+		"an empty entry":        {store.DupEntry{CalibreID: "2"}, ""},
 	} {
 		entries := []store.DupEntry{kept, c.extra}
 		markDoubts(entries, "1")

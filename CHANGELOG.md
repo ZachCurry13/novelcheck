@@ -4,6 +4,21 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.69.0]
+
+### 🏅 Records & awards (a new tab in Wrapped)
+- **Your yearly awards**, for any year you have reading in: Book of the year, Your favourite (from your star ratings), Couldn't put it down, The doorstop, Author, Genre, Series and Month of the year, and a Night owl or Early bird award.
+- **About twenty records, for all time or one year:** time read, longest day, most pages in a day, longest sitting, longest streak (and the one you are on), biggest week and month, most books finished in a month, fastest pace, fastest finish and longest haul, longest book, the book you spent the most time on, latest night and earliest start, your reading hour and weekday, most-read author, genre and series, and the day your statistics begin.
+- Wrapped now has three tabs: 🎁 Wrapped (the story), 🏅 Records & awards, 🏆 Trophies.
+
+### 👯 Duplicates in Calibre: something to compare
+- **"Compare what Calibre has for each"** on every book: under each copy, Calibre's own title, authors, series, ISBN, tags and the start of the description, with what differs from the copy you keep marked, and a link to open the copy in Calibre-Web when its address is saved.
+- **An empty Calibre entry (no book file in it) no longer carries a warning.** There is nothing in it to lose, so it counts as safe to remove.
+- **The guided cleanup sends you to this page for extra copies** instead of a list of names and sizes, which was not enough to decide by.
+
+### 🤖 When an AI service runs out of free requests
+- **A service that says its daily limit is used up is left alone until it resets**, instead of being asked again on every book. In place of the service's long error you see one sentence: which model, and when NovelCheck will ask it again. Admin → Integrations shows "Daily limit used" on that AI.
+
 ## [1.68.0]
 
 ### 🔌 Integrations (replaces System checks)

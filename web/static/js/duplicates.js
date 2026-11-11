@@ -17,13 +17,14 @@ const day = (s) => {
 function copyHTML(g, e, canRemove) {
   const keep = e.calibre_id === g.keep;
   const files = e.files.length ? e.files.map((f) => `<span class="chip-fmt">${esc(f.format.toUpperCase())}${f.size ? ` ${fmtSize(f.size)}` : ""}</span>`).join(" ")
-    : `<span class="text-xs text-slate-500">no file</span>`;
+    : `<span class="text-xs text-slate-400">an empty Calibre entry (no book file in it)</span>`;
   return `<label class="dup-copy${keep ? " keep" : ""}" data-copy="${esc(e.calibre_id)}">
     <img class="dup-cover" loading="lazy" alt="" src="/api/books/${g.book_id}/cover?copy=${encodeURIComponent(e.calibre_id)}">
     <span class="min-w-0 space-y-1">
       <span class="block text-sm"><b>Calibre #${esc(e.calibre_id)}</b>${day(e.modified) ? ` <span class="text-xs text-slate-400">· changed ${esc(day(e.modified))}</span>` : ""}</span>
       <span class="flex flex-wrap gap-1">${files}</span>
       ${e.doubt ? `<span class="block text-xs text-amber-300">⚠️ ${esc(e.doubt)}</span>` : ""}
+      <span data-detail class="block space-y-0.5 text-xs text-slate-300"></span>
       ${canRemove ? `<span class="toggle text-sm"><input type="radio" name="keep-${g.book_id}" value="${esc(e.calibre_id)}" ${keep ? "checked" : ""}> <span data-keep-label>${keep ? "Keep this one" : "Keep this one instead"}</span></span>` : keep ? `<span class="chip-none">✓ Suggested keep</span>` : ""}
     </span></label>`;
 }
@@ -34,6 +35,7 @@ function bookHTML(g, canRemove) {
     <h3 class="font-semibold">${esc(g.title)} <span class="font-normal text-slate-400">· ${esc(g.author || "Unknown author")}</span></h3>
     <p class="text-xs text-slate-400">Suggested to keep #${esc(g.keep)}: ${esc(g.why || "it is the best copy")}.</p>
     <div class="dup-copies">${g.entries.map((e) => copyHTML(g, e, canRemove)).join("")}</div>
+    <button type="button" data-compare class="btn-ghost py-1 text-sm">🔍 Compare what Calibre has for each</button>
     ${canRemove ? `<button type="button" data-one class="${g.sure ? "btn-secondary" : "btn-ghost"} py-1 text-sm">Remove the other ${others === 1 ? "copy" : `${others} copies`}${g.sure ? "" : " anyway"}</button>` : ""}
   </section>`;
 }
@@ -133,6 +135,8 @@ export async function renderDuplicates(view, state) {
       }
       return;
     }
+    const cmp = e.target.closest("[data-compare]");
+    if (cmp) return void compare(cmp.closest("[data-book]"), cmp);
     const one = e.target.closest("[data-one]");
     if (one) {
       const card = one.closest("[data-book]");
@@ -175,4 +179,25 @@ export async function renderDuplicates(view, state) {
     say(`✓ Removed ${copies(r.removed)} (in Calibre's recycle bin)${r.skipped ? `; ${r.skipped} left alone: already gone, or Calibre's title differs (see the 🔔 notices)` : ""}.`, !r.skipped);
   });
   await load();
+
+  // compare shows, under each copy, what Calibre itself has for it; what differs from the copy to keep is marked.
+  async function compare(card, btn) {
+    const g = group(card.dataset.book);
+    btn.disabled = true;
+    btn.textContent = "Asking Calibre…";
+    const r = await attempt(() => get("/api/admin/calibre/duplicates/details?ids=" + g.entries.map((x) => x.calibre_id).join(",")));
+    btn.disabled = false;
+    btn.textContent = "🔍 Compare what Calibre has for each";
+    if (!r) return;
+    const keep = $("input[type=radio]:checked", card)?.value || g.keep;
+    const base = r.details[keep] || {};
+    const FIELDS = [["title", "Title in Calibre"], ["authors", "By"], ["series", "Series"], ["ids", "ISBN and ids"], ["tags", "Tags"], ["about", "About"]];
+    $$(".dup-copy", card).forEach((c) => {
+      const d = r.details[c.dataset.copy];
+      $("[data-detail]", c).innerHTML = !d ? `<span class="text-slate-500">Calibre has nothing for this entry.</span>` : FIELDS.map(([k, label]) => {
+        const differs = c.dataset.copy !== keep && (d[k] || "") !== (base[k] || "");
+        return d[k] || differs ? `<span class="block break-words"><span class="text-slate-500">${label}:</span> ${esc(d[k] || "(none)")}${differs ? ` <span class="text-amber-300">· differs</span>` : ""}</span>` : "";
+      }).join("") + (d.open ? `<a href="${esc(d.open)}" target="_blank" rel="noopener noreferrer" class="underline">Open in Calibre-Web ↗</a>` : "");
+    });
+  }
 }

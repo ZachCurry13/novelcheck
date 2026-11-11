@@ -65,6 +65,9 @@ func keepReason(entries []store.DupEntry, keep string) string {
 }
 
 func doubt(extra, kept store.DupEntry) string {
+	if len(extra.Files) == 0 { // an empty Calibre record: there is no book in it to lose
+		return ""
+	}
 	has := map[string]int64{}
 	for _, f := range kept.Files {
 		has[strings.ToLower(f.Format)] = f.Size

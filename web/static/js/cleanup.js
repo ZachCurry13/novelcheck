@@ -30,11 +30,10 @@ const rows = (c) => [
   { id: "pairs", n: c.pairs, title: "Join duplicates in NovelCheck", note: `${plural(c.pairs, "possible pair")}. Do this first, by hand: you pick what is the same book.`, btn: "Review…" },
   { id: "titles", n: c.titles, title: "Tidy titles in Calibre", note: `${plural(c.titles, "title")} with track or series numbers.`, btn: "Review…" },
   { id: "convert", n: c.convert, title: "Convert to EPUB", note: `${plural(c.convert, "book")} with no EPUB. Calibre converts them one at a time; the originals stay until the last step.${c.convert_failed ? ` ${plural(c.convert_failed, "book")} did not convert before: see why, or leave them as they are, under Each tool → Formats….` : ""}`, btn: "Review…" },
-  { id: "dups", n: c.dup_count, title: "Remove extra Calibre copies of a book", note: `${plural(c.dup_count, "extra entry", "extra entries")}: the same book in Calibre more than once. Each book keeps its best copy (EPUB first); the rest go to Calibre's recycle bin.`, btn: "Review…" },
+  { id: "dups", n: c.dup_count, title: "Remove extra Calibre copies of a book", note: `${plural(c.dup_count, "extra entry", "extra entries")}: the same book in Calibre more than once. You compare the copies side by side (covers, sizes, what Calibre has for each) and pick the one to keep.`, btn: "Compare…" },
   { id: "formats", n: c.remove_files, title: "Remove other formats where an EPUB exists", note: `${plural(c.remove_files, "file")} (${gb(c.remove_bytes)}). Undo for 7 days under Formats….`, btn: "Review…" },
 ];
 
-const fmts = (e) => (e?.files || []).map((f) => `${f.format.toUpperCase()}${f.size ? ` ${gb(f.size)}` : ""}`).join(", ") || "no files";
 
 // What each step shows in its review window, and what it does with what stays ticked.
 const reviews = {
@@ -50,18 +49,6 @@ const reviews = {
     return { title: "Convert to EPUB", intro: "Calibre converts each book on this list, one at a time; this can take a while. The original file stays until the last step. A book that fails keeps its file. Untick a book to leave it.", confirm: "Convert the ticked books",
       items: (r.convert || []).map((f) => ({ id: f.book_id, label: f.title, detail: `${f.author || ""} · ${String(f.format).toUpperCase()} → EPUB` })),
       more: r.convert_count > (r.convert || []).length ? `…and ${r.convert_count - r.convert.length} more, left for another run.` : "" };
-  },
-  dups: async () => {
-    const r = await attempt(() => get("/api/admin/calibre/duplicates"));
-    if (!r) return null;
-    const items = [];
-    for (const g of r.groups || []) {
-      const keep = g.entries.find((e) => e.calibre_id === g.keep);
-      for (const e of g.entries) {
-        if (e.calibre_id !== g.keep) items.push({ id: e.calibre_id, label: g.title, detail: `${g.author || ""} · removes Calibre #${e.calibre_id} (${fmts(e)}) · keeps #${g.keep} (${fmts(keep)})`, warn: e.doubt || "" });
-      }
-    }
-    return { title: "Remove extra Calibre copies", intro: "These have the same title and author as another Calibre entry. NovelCheck can't open the books to compare them, so check the list: an entry whose files look different from the copy that stays (much bigger or smaller, or with a PDF or audiobook of its own) is marked and left unticked. For each ticked entry the best copy stays (EPUB first, then more files, then the larger) and the entry listed here goes to Calibre's recycle bin (in Calibre: Remove books → Restore recently deleted).", confirm: "Remove the ticked copies", items };
   },
   formats: async () => {
     const r = await attempt(() => get("/api/admin/formats"));
@@ -109,7 +96,7 @@ export async function mountCleanup(host, close) {
       <ul class="space-y-2">${list.map((r, i) => `<li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-800/60 p-3">
         <div class="min-w-0 flex-1"><p class="font-semibold">${status[r.id] || (r.n ? "⬜" : "✅")} ${i}. ${esc(r.title)}</p><p class="text-xs text-slate-400">${r.n ? esc(r.note) : "Nothing to do."}</p></div>
         ${r.n && c.configured ? `<button type="button" data-step="${r.id}" class="btn-secondary py-1 text-sm" ${busy ? "disabled" : ""}>${r.btn}</button>` : ""}</li>`).join("")}</ul>
-      <button type="button" data-run class="btn-primary w-full" ${busy || !todo || !c.configured ? "disabled" : ""}>▶ Go through steps 1 to 4, reviewing each</button>
+      <button type="button" data-run class="btn-primary w-full" ${busy || !todo || !c.configured ? "disabled" : ""}>▶ Go through the steps, reviewing each (extra copies are compared by hand)</button>
       <p class="text-xs text-slate-400">Then on the Kindle: <b>Update plugin</b> → <b>Report books on this device</b> → <b>Tidy book names</b> → <b>Download all Nightstand</b>.</p>
       ${log.length ? `<pre class="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-2 text-xs text-slate-300">${esc(log.join("\n"))}</pre>` : ""}</div>`;
   };
@@ -152,10 +139,10 @@ export async function mountCleanup(host, close) {
       say(`Converting ${plural(ids.length, "book")} in the background. You can leave this page; NovelCheck sends a notice when it is done. Come back to review the next steps.`);
       return "background";
     },
-    dups: async (ids) => {
-      const r = await attempt(() => post("/api/admin/calibre/duplicates/remove", { remove: ids }));
-      if (r) say(`Removed ${plural(r.removed ?? ids.length, "extra copy", "extra copies")} (Calibre's recycle bin keeps them).${r.skipped ? ` ${plural(r.skipped, "entry", "entries")} left alone: already gone, or Calibre's title differs (see the 🔔 notices).` : ""}`);
-      return !!r;
+    dups: async () => { // the Duplicates page shows the copies side by side; a list of names is not enough to decide
+      close?.();
+      location.hash = "#/duplicates";
+      return true;
     },
     formats: async () => {
       if (!(await attempt(() => post("/api/admin/formats/remove", { keep: ["EPUB"], expected_files: c.remove_files })))) return false;
@@ -166,6 +153,7 @@ export async function mountCleanup(host, close) {
   // run reviews a step, then does it. "cancelled" means you left it out at the review.
   const run = async (id) => {
     let ids = [];
+    if (id === "dups") return steps.dups();
     if (reviews[id]) {
       const spec = await reviews[id]();
       if (!spec) return false;
@@ -197,7 +185,7 @@ export async function mountCleanup(host, close) {
     if (e.target.closest("[data-run]")) {
       if (!confirm("You'll go through each step in turn. Before anything is changed you see the list for that step, and you can leave items out or stop. Start?")) return;
       log = [];
-      for (const k of ["titles", "convert", "dups", "formats"]) {
+      for (const k of ["titles", "convert", "formats"]) { // extra copies are compared by hand on their own page
         if (!rows(c).find((r) => r.id === k).n) continue; // an earlier step already took care of it
         say(`Step: ${rows(c).find((r) => r.id === k).title}`);
         const ok = await run(k);

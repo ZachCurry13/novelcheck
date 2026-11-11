@@ -300,6 +300,7 @@ func (s *Server) Router() http.Handler {
 
 				r.With(s.cached).Get("/admin/status", s.handleAdminStatus)
 				r.Get("/admin/calibre/duplicates", s.handleDuplicates)
+				r.Get("/admin/calibre/duplicates/details", s.handleDuplicateDetails)
 				r.Get("/admin/same-books", s.handleSamePairs)
 				r.Post("/admin/same-books/merge", s.handleSameAction(true))
 				r.Post("/admin/same-books/not", s.handleSameAction(false))

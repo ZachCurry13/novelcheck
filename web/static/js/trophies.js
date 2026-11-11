@@ -1,4 +1,4 @@
-// 🏆 Trophies and records, worked out in this browser from the same reading statistics as the report (so the
+// 🏆 Trophies (records and awards are in records.js), worked out in this browser from the same reading statistics as the report (so the
 // time zone is yours). A book counts as read when KOReader's statistics show you finished it (97% or more).
 // Each trophy has levels (bronze, silver, gold, platinum, diamond) and shows how far to the next.
 import { esc } from "./ui.js";
@@ -83,28 +83,6 @@ export function achievements(m) {
   return a;
 }
 
-// records: the best of you, all time.
-export function records(m) {
-  const f = facts(m);
-  const long = (ms) => new Date(ms).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
-  const out = [];
-  if (f.bestDay) {
-    out.push({ icon: "📆", title: "Longest day of reading", value: fmtDur(f.bestDay[1].sec), note: long(new Date(f.bestDay[0] + "T12:00:00").getTime()) });
-    const pagesDay = [...f.days].sort((a, b) => b[1].pages - a[1].pages)[0];
-    if (pagesDay?.[1].pages) out.push({ icon: "📖", title: "Most pages in a day", value: `${n(pagesDay[1].pages)} pages`, note: long(new Date(pagesDay[0] + "T12:00:00").getTime()) });
-  }
-  if (f.streak) out.push({ icon: "🔥", title: "Longest streak", value: `${n(f.streak)} day${f.streak === 1 ? "" : "s"} in a row`, note: "" });
-  const per = new Map();
-  for (const r of m.rows) per.set(r.book, (per.get(r.book) || 0) + r.pages);
-  const most = [...per].sort((a, b) => b[1] - a[1])[0];
-  if (most && most[1]) out.push({ icon: "🏆", title: "Book with the most pages read", value: `${n(most[1])} pages`, note: m.books[most[0]]?.title || "" });
-  const big = f.fin.slice().sort((a, b) => (b.pages || 0) - (a.pages || 0))[0];
-  if (big?.pages) out.push({ icon: "🧱", title: "Longest book finished", value: `${n(big.pages)} pages`, note: big.title });
-  const slow = f.fin.filter((b) => b.read_seconds > 0).sort((a, b) => b.read_seconds - a.read_seconds)[0];
-  if (slow) out.push({ icon: "🐢", title: "Book you spent the most time on", value: fmtDur(slow.read_seconds), note: slow.title });
-  return out;
-}
-
 const medals = (a) => a.tiers.map((t, i) => `<span title="${LEVELS[i] || `Level ${i + 1}`}: ${n(t)}" class="${i < a.level ? "" : "opacity-25 grayscale"}">${MEDAL[Math.min(i, MEDAL.length - 1)]}</span>`).join("");
 
 export function trophiesHTML(m) {
@@ -121,9 +99,7 @@ export function trophiesHTML(m) {
   return `<p class="mb-3 text-sm text-slate-400"><b class="text-slate-200">${n(earned)}</b> of ${n(total)} levels earned. A book counts when KOReader's statistics show you finished it.</p>
     ${groups.map((g) => `<section class="mb-5"><h2 class="mb-2 text-lg font-semibold">${esc(g)}</h2>
       <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">${list.filter((a) => a.group === g).map(card).join("")}</ul></section>`).join("")}
-    <section class="mb-5"><h2 class="mb-2 text-lg font-semibold">🏅 Records</h2>
-      <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">${records(m).map((r) => `<li class="card p-3"><p class="text-2xl">${r.icon}</p><p class="text-xs uppercase tracking-wide text-slate-400">${esc(r.title)}</p>
-        <p class="text-xl font-bold">${esc(r.value)}</p><p class="text-xs text-slate-400">${esc(r.note)}</p></li>`).join("") || `<li class="text-sm text-slate-400">Your records show up once KOReader's statistics are in.</li>`}</ul></section>`;
+    <p class="text-sm text-slate-400">Your records and yearly awards have their own tab: 🏅 Records &amp; awards.</p>`;
 }
 
 // paintBars sets the progress widths (the page's security rules allow no inline styles in the HTML).
