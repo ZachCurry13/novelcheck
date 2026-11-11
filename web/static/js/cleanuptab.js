@@ -7,6 +7,7 @@ import { mountCleanup } from "./cleanup.js";
 import { renderSameBooks } from "./samebooks.js";
 import { renderHCClean } from "./hcclean.js";
 import { renderUpload } from "./uploadbooks.js";
+import { renderCalTrash } from "./caltrash.js";
 
 const row = (icon, title, note, count, action) => `<li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-800/60 p-3">
   <div class="min-w-0 flex-1"><p class="font-semibold">${icon} ${esc(title)}${count === null ? "" : count ? ` <span class="rounded-full bg-amber-900/60 px-2 text-xs text-amber-200">${fmtNum(count)}</span>` : ` <span class="text-xs text-emerald-400">✓ nothing waiting</span>`}</p>
@@ -18,6 +19,8 @@ const link = (href, label) => `<a href="${href}" class="btn-secondary py-1 text-
 export async function renderCleanupTab(host, state) {
   host.innerHTML = `<div class="space-y-4"><div id="cu-guided" class="card"></div>
     <div class="card space-y-2"><h2 class="text-lg font-semibold">🧰 Each tool on its own</h2><ul id="cu-tools" class="space-y-2"></ul></div>
+    <div class="card space-y-2"><details id="cu-trash"><summary class="cursor-pointer font-semibold">🗑️ Calibre's recycle bin: what was removed, and put a book back</summary>
+      <div id="cu-trash-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-twice"><summary class="cursor-pointer font-semibold">👯 Books listed twice in NovelCheck (with the evidence)</summary>
       <div id="cu-twice-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-hc"><summary class="cursor-pointer font-semibold">📚 Fix Calibre details from Hardcover (series, titles, authors, ISBN, descriptions, genres)</summary>
@@ -59,6 +62,9 @@ export async function renderCleanupTab(host, state) {
       d.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
+  host.querySelector("#cu-trash").addEventListener("toggle", (e) => {
+    if (e.target.open) renderCalTrash(host.querySelector("#cu-trash-body")); // read again each time it is opened
+  });
   host.querySelector("#cu-up").addEventListener("toggle", (e) => {
     const body = host.querySelector("#cu-up-body");
     if (e.target.open && !body.dataset.done) {

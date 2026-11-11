@@ -71,6 +71,8 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/calibre/removal", s.handleCalibreRemoval)
 		r.Post("/admin/calibre/remove", s.handleCalibreRemove)
 		r.Post("/admin/calibre/duplicates/remove", s.handleRemoveDuplicates)
+		r.Get("/admin/calibre/trash", s.handleCalibreTrash)
+		r.Post("/admin/calibre/trash/restore", s.handleCalibreTrashRestore)
 		r.Get("/admin/calibre/server", s.handleCalibreServerGet)
 		r.Put("/admin/calibre/server", s.handleCalibreServerSave)
 		r.Put("/admin/calibre/library", s.handleSetCalibreLibrary)

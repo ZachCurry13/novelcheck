@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.70.0]
+
+### 🗑️ Calibre's recycle bin, in NovelCheck
+- **See what was removed from Calibre, and when.** Admin → Library cleanup → "Calibre's recycle bin" lists every book Calibre still holds in its bin, whoever removed it (NovelCheck, Calibre or Calibre-Web): the title and authors it had, its files and sizes, and the day and time it was removed, with a count per day and a box to find a title.
+- **Put back.** One button adds a book to Calibre again from its files in the bin, as a new entry with the title and authors it had. Calibre empties its bin by itself after a while, so this only works until then.
+
 ## [1.69.1]
 
 ### 🛡️ Duplicates in Calibre
