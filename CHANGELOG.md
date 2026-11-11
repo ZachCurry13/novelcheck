@@ -9,6 +9,7 @@ becomes the release notes for that version and is shown in the app under
 ### 🏅 Records & awards (a new tab in Wrapped)
 - **Your yearly awards**, for any year you have reading in: Book of the year, Your favourite (from your star ratings), Couldn't put it down, The doorstop, Author, Genre, Series and Month of the year, and a Night owl or Early bird award.
 - **About twenty records, for all time or one year:** time read, longest day, most pages in a day, longest sitting, longest streak (and the one you are on), biggest week and month, most books finished in a month, fastest pace, fastest finish and longest haul, longest book, the book you spent the most time on, latest night and earliest start, your reading hour and weekday, most-read author, genre and series, and the day your statistics begin.
+- **The year story now plays your awards and records too** (about 18 slides for a year with reading in it).
 - Wrapped now has three tabs: 🎁 Wrapped (the story), 🏅 Records & awards, 🏆 Trophies.
 
 ### 👯 Duplicates in Calibre: something to compare

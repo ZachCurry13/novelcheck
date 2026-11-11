@@ -1,6 +1,7 @@
 // The slides of Wrapped, in the big-number, bottom-left story style (played by wrappedstory.js).
 import { esc } from "./ui.js";
 import { GENRES } from "./genres.js";
+import { awards as yearAwards, records as allRecords } from "./records.js";
 import { byDay, byHourOfDay, fmtDur } from "./statscalc.js";
 import { bounds, summary, count } from "./statsperiods.js";
 import { coverImg } from "./covers.js";
@@ -108,6 +109,16 @@ export function slides(m, s, name) {
       <li><span class="em">🍬</span><span><b>Shortest:</b> ${esc(shortest.title)}<br>${n(shortest.pages)} pages</span></li></ul>`);
   }
   if (current) out.push(slide("Currently reading", esc(current.title), `${Math.round((current.percent || 0) * 100)}% done${current.author ? ` · ${esc(current.author)}` : ""}`, current.book_id ? `<div>${coverImg(current.book_id, "h-40 w-28", true)}</div>` : "", "s-title"));
+  // A year's story also hands out its awards and shows the year's records (records.js).
+  if (s.period === "year") {
+    const list = (title, items) => `<p class="s-kicker">${title}</p><ul class="s-list">${items.map((x) => `<li><span class="em">${x.icon}</span><span><b>${esc(x.title)}</b><br>${esc(x.winner || x.value)}${x.why || x.note ? ` · ${esc(x.why || x.note)}` : ""}</span></li>`).join("")}</ul>`;
+    const aw = yearAwards(m, year);
+    const rec = allRecords(m, year).slice(1); // without the total, which the story opened with
+    if (aw.length) out.push(list(`🏆 Your ${year} awards`, aw.slice(0, 5)));
+    if (aw.length > 5) out.push(list(`🏆 More ${year} awards`, aw.slice(5)));
+    if (rec.length) out.push(list(`🏅 Your ${year} records`, rec.slice(0, 5)));
+    if (rec.length > 5) out.push(list(`🏅 More ${year} records`, rec.slice(5, 10)));
+  }
   out.push(earned.length
     ? `<p class="s-kicker">Achievements</p><div class="s-grid">${earned.map(([e, t]) => `<div class="s-tile"><b>${e}</b>${esc(t)}</div>`).join("")}</div><ul class="s-list">${earned.slice(0, 3).map(([e, t, d]) => `<li><span class="em">${e}</span><span><b>${esc(t)}</b><br>${esc(d)}</span></li>`).join("")}</ul>`
     : slide("Achievements", "Keep reading", "Awards are for reading a lot, late, early, long or wide. You will earn some.", "", "s-title"));
