@@ -24,7 +24,7 @@ export function addElsewhere(m, ...lists) {
     if (byId) have.add(byId);
     have.add(byTitle);
     m.books.push({ title: h.title, author: h.author, book_id: h.book_id, pages: h.pages || 0, percent: 1, rating: h.rating || 0,
-      read_seconds: 0, kind: h.kind, genres: h.genres, series: h.series, elsewhere: true });
+      read_seconds: 0, format: h.format, reads: h.reads || 1, kind: h.kind, genres: h.genres, series: h.series, elsewhere: true });
     m.done.push({ book: m.books.length - 1, ms });
   }
   return m;

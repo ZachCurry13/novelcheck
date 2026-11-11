@@ -52,6 +52,8 @@ export function detect(headers) {
     finished: pick(headers, ["date read", "last date read", "dates read", "date finished", "finished"]),
     pages: pick(headers, ["number of pages", "pages", "page count"]),
     rating: pick(headers, ["my rating", "star rating", "rating"]),
+    binding: pick(headers, ["binding", "format"]),
+    reads: pick(headers, ["read count"]),
     // Libby's timeline lists each loan, hold and return: the same title many times, so rows are merged.
   };
   const source = h.includes("exclusive shelf") && h.includes("book id") ? "Goodreads"
@@ -72,6 +74,16 @@ function cleanAuthor(a = "") {
   a = a.split(/;|\s&\s|\s+and\s+/)[0].trim();
   const m = a.match(/^([^,]+),\s*([^,]+)$/);
   return m ? `${m[2]} ${m[1]}` : a;
+}
+
+// bindingKind turns a list's binding or format ("Kindle Edition", "Mass Market Paperback", "Audible Audio",
+// "digital") into paper, ebook or audio; "" when it says nothing useful.
+export function bindingKind(cell = "") {
+  const v = String(cell).toLowerCase();
+  if (/audio|audible|\bcd\b|mp3/.test(v)) return "audio";
+  if (/kindle|e-?book|digital|nook|epub/.test(v)) return "ebook";
+  if (/paper|hard|board|bound|binding|print/.test(v)) return "paper";
+  return "";
 }
 
 // lastDay finds the last day written in a cell as YYYY-MM-DD: "2026/03/14" (Goodreads), "2026-03-14", or
@@ -102,6 +114,8 @@ export function rowsToBooks(rows, cols, shelves) {
       finished: cols.finished >= 0 ? lastDay(r[cols.finished]) : "",
       pages: cols.pages >= 0 ? Math.max(0, parseInt(r[cols.pages], 10) || 0) : 0,
       rating: cols.rating >= 0 ? Math.min(5, Math.max(0, parseFloat(r[cols.rating]) || 0)) : 0,
+      binding: cols.binding >= 0 ? bindingKind(r[cols.binding]) : "",
+      reads: cols.reads >= 0 ? Math.max(0, parseInt(r[cols.reads], 10) || 0) : 0,
     });
   }
   return out;

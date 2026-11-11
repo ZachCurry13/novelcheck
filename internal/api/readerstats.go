@@ -116,14 +116,14 @@ func (s *Server) readingStatsFor(owner, viewer *store.User) map[string]any {
 
 // elsewhereRead is a book finished somewhere other than KOReader, with what the library knows about it.
 type elsewhereRead struct {
-	store.HardcoverRead
+	store.ImportedRead
 	Kind   string   `json:"kind,omitempty"`
 	Genres []string `json:"genres,omitempty"`
 	Series string   `json:"series,omitempty"`
 }
 
 // withBriefs adds each book's kind, genres and series, so trophies and awards can count it like any other.
-func (s *Server) withBriefs(list []store.HardcoverRead) []elsewhereRead {
+func (s *Server) withBriefs(list []store.ImportedRead) []elsewhereRead {
 	var ids []int64
 	for _, h := range list {
 		if h.BookID != nil {
@@ -133,7 +133,7 @@ func (s *Server) withBriefs(list []store.HardcoverRead) []elsewhereRead {
 	briefs := s.Store.BookBriefs(ids)
 	out := make([]elsewhereRead, 0, len(list))
 	for _, h := range list {
-		e := elsewhereRead{HardcoverRead: h}
+		e := elsewhereRead{ImportedRead: h}
 		if h.BookID != nil {
 			if br, ok := briefs[*h.BookID]; ok {
 				e.Kind, e.Genres, e.Series = br.Kind, br.GenreList(), br.Series

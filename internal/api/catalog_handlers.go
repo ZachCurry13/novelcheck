@@ -69,6 +69,8 @@ type driveBook struct {
 	Finished string  `json:"finished"`
 	Pages    int     `json:"pages"`
 	Rating   float64 `json:"rating"`
+	Binding  string  `json:"binding"` // paper, ebook or audio
+	Reads    int     `json:"reads"`
 }
 
 var driveFormats = map[string]bool{"epub": true, "mobi": true, "azw3": true, "azw": true, "kfx": true, "pdf": true,
@@ -179,10 +181,18 @@ func (s *Server) keepImportedRead(userID, bookID int64, b driveBook) {
 	if rating < 0.25 || rating > 5 {
 		rating = 0
 	}
-	if finished == "" && pages == 0 && rating == 0 {
+	format, reads := b.Binding, b.Reads
+	if format != "paper" && format != "ebook" && format != "audio" {
+		format = ""
+	}
+	if reads < 0 || reads > 1000 {
+		reads = 0
+	}
+	if finished == "" && pages == 0 && rating == 0 && format == "" && reads == 0 {
 		return
 	}
-	_ = s.Store.SaveImportedRead(userID, bookID, finished, pages, rating)
+	_ = s.Store.SaveImportedRead(userID, bookID, store.ImportedRead{
+		HardcoverRead: store.HardcoverRead{Finished: finished, Pages: pages, Rating: rating}, Format: format, Reads: reads})
 	if rating > 0 && s.Store.RatingOf(userID, bookID) == 0 {
 		_ = s.Store.SetRating(userID, bookID, rating)
 	}

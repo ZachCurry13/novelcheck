@@ -13,6 +13,7 @@ import { tabStrip } from "./tabs.js";
 import { openShareCard } from "./statscard.js";
 import { recordsTab } from "./statsrecords.js";
 import { addElsewhere } from "./statselsewhere.js";
+import { listReport } from "./statslist.js";
 import { trophiesTab } from "./trophyview.js";
 import { slides } from "./wrappedslides.js";
 import { openStory } from "./wrappedstory.js";
@@ -53,9 +54,9 @@ export async function renderStats(view, state, source = {}) {
     return;
   }
   const now = new Date();
-  const tabs = Object.entries(TABS).filter(([k]) => (!other || SHARED.includes(k)) && (!listOnly || !SHARED.includes(k)));
+  const tabs = Object.entries(TABS).filter(([k]) => (!other || SHARED.includes(k)) && (!listOnly || k === "report" || !SHARED.includes(k)));
   const asked = source.tab || new URLSearchParams(location.hash.split("?")[1] || "").get("tab");
-  const s = { tab: tabs.some(([k]) => k === asked) ? asked : tabs[0][0], year: null, period: "month", offset: 0, kind: "week", month: new Date(now.getFullYear(), now.getMonth(), 1), page: null, stack: [], day: dayKey(Date.now()) };
+  const s = { tab: tabs.some(([k]) => k === asked) ? asked : tabs[0][0], year: null, period: listOnly ? "year" : "month", offset: 0, kind: "week", month: new Date(now.getFullYear(), now.getMonth(), 1), page: null, stack: [], day: dayKey(Date.now()) };
 
   const title = () => {
     const b = bounds(s.period, s.offset);
@@ -76,7 +77,7 @@ export async function renderStats(view, state, source = {}) {
     if (s.tab === "calendar") return calendarTab(m, s.month);
     if (s.tab === "records") return recordsTab(m, s);
     if (s.tab === "trophies") return trophiesTab(m);
-    return `<div class="mb-3 flex items-start justify-between gap-2"><h2 class="min-w-0 break-words text-2xl font-semibold">${esc(title())}</h2>${other ? "" : `<button type="button" data-share class="btn-tonal shrink-0 px-4 py-1.5">Share</button>`}</div>${picker()}<div class="space-y-4">${reportHTML(m, s)}</div>`;
+    return `<div class="mb-3 flex items-start justify-between gap-2"><h2 class="min-w-0 break-words text-2xl font-semibold">${esc(title())}</h2>${other || listOnly ? "" : `<button type="button" data-share class="btn-tonal shrink-0 px-4 py-1.5">Share</button>`}</div>${picker()}<div class="space-y-4">${listOnly ? listReport(m, s) : reportHTML(m, s)}</div>`;
   };
 
   const draw = (top = false) => {

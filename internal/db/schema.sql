@@ -701,5 +701,7 @@ CREATE TABLE IF NOT EXISTS imported_reads (
     finished TEXT NOT NULL DEFAULT '',   -- YYYY-MM-DD; '' when the list had no day
     pages    INTEGER NOT NULL DEFAULT 0,
     rating   REAL NOT NULL DEFAULT 0,
+    format   TEXT NOT NULL DEFAULT '',   -- paper, ebook or audio, when the list says
+    reads    INTEGER NOT NULL DEFAULT 0, -- times read, when the list says
     PRIMARY KEY (user_id, book_id)
 );

@@ -58,6 +58,15 @@ export function trophies3(m, f, add) {
   // Variety
   add("Variety", "nonfiction", "🎓", "Fact finder", "Non-fiction books finished", f.fin.filter((b) => b.kind === "nonfiction").length, [1, 5, 10, 25]);
 
+  // Formats, when an imported list says how each book was read
+  const fmt = (k) => f.fin.filter((b) => b.format === k).length;
+  if (f.fin.some((b) => b.format)) {
+    add("Formats", "paper", "📕", "Paper trail", "Paper books finished", fmt("paper"), [1, 10, 25, 50, 100]);
+    add("Formats", "audio", "🎧", "Good listener", "Audiobooks finished", fmt("audio"), [1, 10, 25, 50]);
+    add("Formats", "ebook", "📱", "Screen reader", "E-books finished", fmt("ebook"), [1, 10, 25, 50, 100]);
+  }
+  add("Reading", "rereads", "🔁", "Old friends", "Books you read more than once", f.fin.filter((b) => (b.reads || 1) > 1).length, [1, 5, 10, 25]);
+
   // Hardcover goals, when connected
   const goals = (m.goals || []).filter((g) => g.goal > 0);
   if (goals.length) add("Hardcover goals", "goals", "🎯", "Goal getter", "Hardcover reading goals reached", goals.filter((g) => (g.progress || 0) >= g.goal).length, [1, 2, 3, 5]);
