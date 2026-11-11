@@ -61,6 +61,8 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 		"usage":             usage,
 		"tokens_per_hour":   s.Store.SettingInt(store.KeyTokensPerHour),
 		"cost_spent":        spent,
+		"cost_spent_30d":    s.Store.SpentSinceUSD("-30 days"),
+		"main_free":         s.Store.SettingFloat(store.KeyPriceInputPerM) == 0 && s.Store.SettingFloat(store.KeyPriceOutputPerM) == 0,
 		"cost_projected":    projected,
 		"tokens_projected":  int(float64(remaining) * perBook),
 		"worker":            s.Worker.Status(),

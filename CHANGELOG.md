@@ -4,6 +4,20 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.69.1]
+
+### 🛡️ Duplicates in Calibre
+- **The last copy of a book can no longer be removed.** NovelCheck's list can be a few seconds behind Calibre after a removal. Before removing anything, NovelCheck now asks Calibre itself which copies it still has, and refuses when that would take the last one. The list then refreshes by itself.
+
+### 📱 Phones
+- **Pulling down at the top of a page no longer reloads the whole app.** On Android that gesture reloaded NovelCheck, which is what "the page completely refreshes" was: it also cut off whatever was being saved, with a "Can't reach NovelCheck" message. The app's own Reload bar still appears when there is a new version.
+
+### ⚙️ Admin
+- **"Spent to date" explains itself:** it now shows what was spent in the last 30 days and says that your own AI counts as free (enter its watts under Machines & costs to count electricity). The total only moves when a paid AI service is used.
+- **Saving settings is one write instead of sixty**, and is tried again when the database is busy, so it no longer fails with "internal error" during a long job.
+- **Server errors in the bug report show their real cause** again; some only said "internal error".
+- "Apply ticked to Calibre" can't be pressed twice.
+
 ## [1.69.0]
 
 ### 🏅 Records & awards (a new tab in Wrapped)

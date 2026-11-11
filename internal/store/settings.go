@@ -142,6 +142,23 @@ func (s *Store) SetSetting(key, value string) error {
 	return err
 }
 
+// SetSettings saves several settings together: all of them, or none (one write instead of sixty, so a busy
+// database is waited for once).
+func (s *Store) SetSettings(values map[string]string) error {
+	tx, err := s.DB.Beginx()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	for k, v := range values {
+		if _, err := tx.Exec(`INSERT INTO settings (key, value) VALUES (?, ?)
+			ON CONFLICT(key) DO UPDATE SET value = excluded.value`, k, v); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
 // LLMModels returns the models to try, in order: the main model, then each
 // fallback (the fallback setting may hold several, comma-separated).
 func (s *Store) LLMModels() []string {

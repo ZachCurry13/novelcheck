@@ -240,3 +240,5 @@ body.story-open { overflow: hidden; }
 .integ-update { background: rgb(120 53 15 / 0.6); color: rgb(252 211 77); }
 .integ-warn { background: rgb(127 29 29 / 0.5); color: rgb(252 165 165); }
 .integ-off { background: rgb(var(--slate-800)); color: rgb(148 163 184); }
+/* A phone reloads the whole page when you pull down at its top; the app has its own Reload bar (v1.69.1) */
+html, body { overscroll-behavior-y: contain; }

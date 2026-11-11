@@ -98,8 +98,18 @@ func recordable(status int) bool {
 
 // setDetail tells the recorder the real cause of an error response.
 func setDetail(w http.ResponseWriter, err error) {
-	if d, ok := w.(interface{ SetDetail(string) }); ok && err != nil {
-		d.SetDetail(err.Error())
+	// The recorder may sit under other wrappers (a later middleware wraps the writer again): look through them,
+	// or the bug report shows "internal error" with no cause.
+	for i := 0; i < 8 && w != nil && err != nil; i++ {
+		if d, ok := w.(interface{ SetDetail(string) }); ok {
+			d.SetDetail(err.Error())
+			return
+		}
+		u, ok := w.(interface{ Unwrap() http.ResponseWriter })
+		if !ok {
+			return
+		}
+		w = u.Unwrap()
 	}
 }
 

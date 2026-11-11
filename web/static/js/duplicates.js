@@ -148,9 +148,10 @@ export async function renderDuplicates(view, state) {
       one.textContent = "Removing…";
       // "later": the answer comes at once and Calibre is read again in the background.
       const r = await attempt(() => post("/api/admin/calibre/duplicates/remove", { remove: ids, later: true }));
-      if (!r) {
+      if (!r) { // refused: the list here is behind Calibre, so read it again
         one.disabled = false;
         one.textContent = "Try again";
+        setTimeout(load, 2500);
         return;
       }
       gone += r.removed;

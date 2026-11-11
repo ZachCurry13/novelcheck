@@ -63,7 +63,10 @@ export async function renderHCClean(host) {
       const ids = ticked();
       if (!ids.length) return toast("Tick at least one change", true);
       if (k === "apply" && !confirm(`Write ${ids.length} change${ids.length === 1 ? "" : "s"} to Calibre? Calibre renames each book's files to match; this can take a while and runs in the background.`)) return;
+      const btn = e.target.closest("[data-hc]");
+      btn.disabled = true; // one tap starts it; a second would only be refused as "already running"
       if (await attempt(() => post(`/api/admin/hc-clean/${k}`, { ids }), k === "apply" ? "Applying in the background" : "Skipped")) refresh();
+      else btn.disabled = false;
     }
   });
   refresh();

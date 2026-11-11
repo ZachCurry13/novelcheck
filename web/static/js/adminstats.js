@@ -20,7 +20,7 @@ export function renderStats(view, s) {
   $("#stats", view).innerHTML = [
     tile("Analyzed", fmtNum(c.analyzed), `${fmtNum(c.pending)} pending · ${fmtNum(c.queued + c.processing)} queued · ${fmtNum(c.error)} errors`),
     tile("Tokens this hour", fmtNum(s.usage.last_hour_tokens), cap ? `${pct}% of ${fmtNum(cap)} cap` : "No hourly cap"),
-    tile("Spent to date", fmtMoney(s.cost_spent), `${fmtNum(s.usage.total_prompt_tokens + s.usage.total_completion_tokens)} tokens · ${fmtNum(s.usage.total_calls)} calls`),
+    tile("Spent to date", fmtMoney(s.cost_spent), `${fmtMoney(s.cost_spent_30d || 0)} in the last 30 days · ${fmtNum(s.usage.total_calls)} calls${s.main_free ? " · your own AI counts as free (enter its watts under Machines &amp; costs to count electricity)" : ""}`),
     tile("Est. to finish library", fmtMoney(s.cost_projected), `≈ ${fmtNum(s.tokens_projected)} tokens remaining`),
   ].join("");
   banner($("#deep-banner", view), (s.pending_deep || s.deep_review) && canHere("deep"), [

@@ -164,14 +164,20 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		body[k] = v
 	}
+	save := map[string]string{}
 	for k, v := range body {
 		if store.SecretKeys[k] && v == secretMask {
 			continue // unchanged secret
 		}
-		if err := s.Store.SetSetting(k, v); err != nil {
-			writeStoreErr(w, err)
-			return
-		}
+		save[k] = v
+	}
+	err := s.Store.SetSettings(save)
+	if err != nil { // the database was busy (a long job was writing): once more
+		err = s.Store.SetSettings(save)
+	}
+	if err != nil {
+		writeStoreErr(w, err)
+		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -107,6 +108,46 @@ func (s *Server) handleRemoveDuplicates(w http.ResponseWriter, r *http.Request) 
 		}
 		want[id] = groups[gi].Title
 		ids = append(ids, id)
+	}
+	// NovelCheck's list can be behind Calibre (a copy removed a moment ago is still on it until Calibre is read
+	// again). So ask Calibre itself: every book must keep a copy that is really still there, or nothing goes.
+	var stay []int
+	for gi := range removing {
+		for _, e := range groups[gi].Entries {
+			if id, err := strconv.Atoi(e.CalibreID); err == nil {
+				if _, going := want[id]; !going {
+					stay = append(stay, id)
+				}
+			}
+		}
+	}
+	cctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	there, err := s.calibreClient().Titles(cctx, stay)
+	cancel()
+	if err != nil {
+		writeErr(w, http.StatusBadGateway, "couldn't ask Calibre which copies it still has: "+err.Error()+". Nothing was removed.")
+		return
+	}
+	for gi := range removing {
+		kept := false
+		for _, e := range groups[gi].Entries {
+			if id, err := strconv.Atoi(e.CalibreID); err == nil {
+				if _, ok := there[id]; ok {
+					if _, going := want[id]; !going {
+						kept = true
+					}
+				}
+			}
+		}
+		if !kept {
+			go func() { // the list is out of date: read Calibre again so it is right next time
+				s.refreshMu.Lock()
+				defer s.refreshMu.Unlock()
+				s.refreshCalibre()
+			}()
+			writeErr(w, http.StatusConflict, "that would remove the last copy of \""+groups[gi].Title+"\" that Calibre still has (the other one is already gone). Nothing was removed; the list is being refreshed.")
+			return
+		}
 	}
 	if body.Later {
 		r = r.WithContext(context.WithValue(r.Context(), syncLaterKey{}, true))

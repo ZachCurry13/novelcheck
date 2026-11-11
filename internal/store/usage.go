@@ -30,6 +30,13 @@ func (s *Store) RecordUsageCost(bookID int64, model string, prompt, completion i
 	return err
 }
 
+// SpentSinceUSD is the spending recorded since a time such as "-30 days" (calls with a recorded cost only).
+func (s *Store) SpentSinceUSD(since string) float64 {
+	var v float64
+	_ = s.DB.Get(&v, `SELECT COALESCE(SUM(cost), 0) FROM token_usage WHERE at >= datetime('now', ?)`, since)
+	return v
+}
+
 // SpentUSD totals AI spending. Calls recorded before per-call costs existed
 // are priced with the main AI's current rates.
 func (s *Store) SpentUSD() float64 {
