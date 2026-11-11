@@ -1,5 +1,5 @@
 // The admin area's tabs: the Admin page's sections plus Deep Scan, Usage and
-// System checks, at the top of each of those pages (so they need no place in
+// Integrations (the page that took over from System checks), at the top of each of those pages (so they need no place in
 // the main menu). Sections switch in place on the Admin page; the others are
 // pages of their own. Editors see the first two; other admins see the ones
 // their areas cover (the main admin gives areas).
@@ -15,7 +15,7 @@ const TABS = [
   ["system", "⚙️", "System & Toggles", () => canHere("system")],
   ["@deepscan", "🧬", "Deep Scan", () => canHere("deep")],
   ["@usage", "📈", "Usage", () => canHere("system")],
-  ["@system", "🩺", "System checks", () => canHere("system")],
+  ["@system", "🔌", "Integrations", () => canHere("system")],
 ];
 
 const hrefOf = (k) => (k.startsWith("@") ? `#/${k.slice(1)}` : `#/admin?tab=${k}`);

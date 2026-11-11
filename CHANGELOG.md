@@ -6,6 +6,17 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.68.0]
 
+### 🔌 Integrations (replaces System checks)
+- **One page for everything NovelCheck is made of and talks to**, under Admin → Integrations. Each row shows a status badge, what it is for, when it was last used, and a button where there is something to do.
+- **NovelCheck:** your version and whether a newer one is out, the database (size, and "Check it" runs SQLite's own check of the file), the bundled Cloudflare connector with its version and whether it is connected, and the KOReader plugin version with what each e-reader last reported.
+- **Your AI:** each AI and its models, whether the Deep Scan machine is answering, and whether newer versions of your Ollama models are out.
+- **Your library and accounts:** the Calibre folder, the Content server, Calibre-Web, Audiobookshelf (with its last read), Hardcover, Libby and email, each with "Read now" where that applies.
+- **Book data from outside:** Open Library, Google Books, the Discover lists ("Update now") and the cover finder ("Find now").
+- **"Check now"** tests every connection, as "Check everything" did, and shows each result on the row it belongs to. It runs in the background, so you can leave the page. "Diagnose with AI" is still here, folded away at the bottom.
+
+### 📱 Switching apps
+- **No more "Can't reach NovelCheck right now" after switching to another app and back.** The phone pauses the app while it is in the background, and what it was loading failed. Those loads are now tried again quietly once the app is in front.
+
 ### 🤖 Models, in NovelCheck's terms
 - **Every model in the Ollama list now says what it is good for here:** rating a book from its description, Deep Scan (reading the whole book) and reading cover photos. A small model on a Deep Scan machine shows "too small, tends to over-rate", and a "thinking" model is flagged as slow and prone to breaking the answer format.
 - **A tip when a better-suited model is further down your list**, with "Put the best suited first". The list knows which job it is for (your AI rates; the Deep Scan machine reads whole books).

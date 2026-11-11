@@ -74,7 +74,7 @@ export async function renderAdmin(view, state) {
       <div id="settings-system"></div>
       <div class="card flex flex-wrap gap-2">
         <a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db (backup)</a>
-        <a href="#/system" class="btn-ghost">🩺 System checks</a><a href="#/usage" class="btn-ghost">📈 Usage</a>
+        <a href="#/system" class="btn-ghost">🔌 Integrations</a><a href="#/usage" class="btn-ghost">📈 Usage</a>
       </div>
     </section>`)}`;
 

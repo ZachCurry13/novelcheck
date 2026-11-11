@@ -35,7 +35,7 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 			if err == nil {
 				if ai.Name == "backup" {
 					w.Store.Notify("warning", "llm-backup",
-						"The main AI isn't working, so the backup AI rated some books. Check System → Check everything.", "#/system")
+						"The main AI isn't working, so the backup AI rated some books. Check Admin → Integrations → Check now.", "#/system")
 				} else {
 					w.Store.Resolve("llm-backup")
 				}

@@ -104,7 +104,7 @@ A second AI that takes over when the main one fails, for example a second Ollama
 
 1. **Admin → AI & Scans → Backup AI (optional)**: tick **Use a backup AI when the main one fails**.
 2. Pick the backup's **AI provider**. For a second Ollama, type its address in the Ollama box (for example `192.168.1.60:11434`), click **Find Ollama**, tick its models in order and click **Use these models in this order**. For a cloud AI, paste its API key and model like in the sections above.
-3. Click **Save settings**, then **System → Check everything** to see both AIs answer.
+3. Click **Save settings**, then **Admin → Integrations → Check now** to see both AIs answer.
 
 When the main AI fails on a book, NovelCheck tries the backup. If the main server can't be reached at all, it goes straight to the backup instead of waiting on each model. The 🔔 bell tells you when the backup was used. Each AI's cost is counted at its own prices.
 
@@ -126,7 +126,7 @@ Before rating a book, NovelCheck looks up its back-cover blurb from Open Library
 2. Open **APIs & Services → Library**, search for **Books API**, and click **Enable**.
 3. Open **APIs & Services → Credentials → Create credentials → API key**, and copy the key.
 4. In NovelCheck: **Admin → AI & Scans → Extras → Google Books API key**, paste it, and click **Save settings**.
-5. Check it: **System → Check everything** should show Google Books "Working with your API key".
+5. Check it: **Admin → Integrations → Check now** should show Google Books "Working with your API key".
 
 The Books API is free for normal use. No billing account is needed.
 

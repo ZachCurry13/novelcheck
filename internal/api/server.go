@@ -57,6 +57,7 @@ type Server struct {
 	formats     formatJob     // format cleanup's background job
 	refreshMu   sync.Mutex    // one Calibre re-read from Library cleanup at a time
 	cleanup     cleanupCache  // the Library cleanup summary, kept while the library is unchanged
+	integ       integState    // Integrations: the last connection checks
 	hcjob       hcJob         // Hardcover cleanup: the scan or apply running in the background
 	rcache      respCache     // short-lived copies of the heavy list pages (respcache.go)
 	later       laterSync     // Calibre re-reads after a save, in the background (synclater.go)

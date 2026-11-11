@@ -45,7 +45,7 @@ const isReview = (n) => n.source === "deep-scan-review" || (n.source === "deep-s
 function actionLabel(n) {
   if (isReview(n)) return "Review";
   if (n.link.startsWith("#/deepscan")) return "Open Deep Scan";
-  if (n.link.startsWith("#/system")) return "Open System";
+  if (n.link.startsWith("#/system")) return "Open Integrations";
   if (n.link.startsWith("#/admin")) return "Open settings";
   return "Open";
 }

@@ -36,7 +36,28 @@ function backOnline(ms) {
   });
 }
 
+// Switching to another app pauses this one: requests that were under way fail, and so does anything asked
+// in the first moments back. That is not "can't reach NovelCheck", so those are asked again once the app is
+// in front (reads only: a change is never sent twice).
+let frontSince = Date.now();
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) frontSince = Date.now();
+});
+const wasAway = () => document.hidden || Date.now() - frontSince < 5000;
+function inFront() {
+  return new Promise((resolve) => {
+    const go = () => {
+      if (document.hidden) return;
+      document.removeEventListener("visibilitychange", go);
+      setTimeout(resolve, 600); // the network takes a moment to come back
+    };
+    document.addEventListener("visibilitychange", go);
+    go();
+  });
+}
+
 async function send(path, opts) {
+  let away = 0;
   for (let attempt = 0; ; attempt++) {
     try {
       const res = await fetch(path, opts);
@@ -46,6 +67,12 @@ async function send(path, opts) {
       }
       return res;
     } catch {
+      if (opts.method === "GET" && wasAway() && away < 4) {
+        away++;
+        attempt--; // not counted: the app was in the background
+        await inFront();
+        continue;
+      }
       if (opts.method !== "GET" || attempt >= RETRIES) {
         note("net", `${opts.method} ${path} could not connect`);
         throw new ApiError(0, "Can't reach NovelCheck right now. Check your connection and try again.");
