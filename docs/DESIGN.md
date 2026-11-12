@@ -16,6 +16,8 @@ The owner asked for the [unslop](../.claude/skills/unslop/SKILL.md) skill (by Da
 
 What that means in practice: surfaces are a neutral graphite ramp (not navy), the main button is an off-white fill (dark fill on the light theme), the indigo accent marks only the selection, links and a key figure, emoji never decorate headings, buttons, tabs or status (they stay only where they are the content: trophies, awards, Wrapped, content flags), headings get their weight from size (page titles 28px at 500, `.page-title`), labels are sentence case, interface text has no exclamation marks, and no text is smaller than 11px. Material's fully round buttons are kept (the owner's choice of Material Design 3); unslop's smaller corners apply to cards and fields.
 
+**Update (v1.73, chosen by the owner and his wife from mock-ups):** the 1.72 graphite look was "clean but sad". The themes are now **Paperback** (light: cream, dark-blue ink, red-orange) and **Ember** (dark: warm near-black, burnt orange), with Literata for headings and book titles and Instrument Sans for text, and a "Read this year" banner on the Library. All theme values live in `web/static/themes/` (one file per theme, plain CSS, with a README listing what each variable colours); the meaning colours stay shared.
+
 ## 1. How it is wired
 
 - Styles live in `web/tailwind.input.css` and compile to `web/static/css/app.css` with `make css`.

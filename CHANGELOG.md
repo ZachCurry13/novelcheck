@@ -14,6 +14,11 @@ becomes the release notes for that version and is shown in the app under
 - **Keeps your place.** Close the book and it opens where you left off, on any device. When KOReader's progress sync has you further on, it offers to jump there ("Your Kindle is at 54%"). The match is by percentage, so it lands within about a page. Reading in the browser does not move your Kindle's place yet.
 - **Safe:** a book's own styles and fonts show, but any script inside a book is blocked.
 
+### 🎨 Warmer: Paperback by day, Ember by night
+- **A new look, chosen by the family.** The light theme is Paperback: a cream page, dark-blue ink and red-orange buttons. The dark theme is Ember: a warm near-black with a burnt-orange glow. Headings and book titles are in Literata, a bookish serif; everything else in Instrument Sans. Both fonts are stored with the app.
+- **"Read this year" on the Library.** A banner at the top shows how many books you finished this year (KOReader, imported lists, Hardcover and "I read this" all count) and how that compares with last year. Tap it for Reading stats.
+- **Themes have their own folder.** Every colour and font a theme decides is in `web/static/themes` (`paperback.css`, `ember.css`), with a guide to what each setting changes, so the look can be adjusted without touching the rest of the app.
+
 ## [1.72.1]
 
 ### 🖼️ Find covers

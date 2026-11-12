@@ -1,0 +1,48 @@
+/* Ember: NovelCheck's dark theme (a warm reading room at night, a burnt-orange glow).
+   Everything a theme decides is here; see README.md beside this file. Colours are "R G B" (0 to 255), so
+   "241 231 214" is #f1e7d6. Change a value, and the whole app follows: no build step for the styles. */
+:root {
+  color-scheme: dark;
+
+  /* Neutrals, darkest page (950) to lightest text (50). 950 page, 900 cards, 800 raised and lines,
+     400 secondary text, 100 main text. */
+  --slate-950: 23 19 15;
+  --slate-900: 33 26 20;
+  --slate-800: 45 36 27;
+  --slate-700: 58 47 36;
+  --slate-600: 90 76 60;
+  --slate-500: 125 110 92;
+  --slate-400: 179 164 141;
+  --slate-300: 205 192 170;
+  --slate-200: 226 216 199;
+  --slate-100: 241 231 214;
+  --slate-50: 250 244 234;
+
+  /* Accent, the ember orange. 300 links and highlights, 400 the main button, 800/900 tinted backgrounds. */
+  --indigo-50: 255 247 237;
+  --indigo-100: 255 237 213;
+  --indigo-200: 254 215 170;
+  --indigo-300: 253 186 116;
+  --indigo-400: 240 138 75;
+  --indigo-500: 234 108 46;
+  --indigo-600: 194 65 12;
+  --indigo-700: 154 52 18;
+  --indigo-800: 92 40 16;
+  --indigo-900: 67 28 10;
+  --indigo-950: 43 18 5;
+
+  /* The main button (Read, Save, Add) and its text. */
+  --nc-button: 240 138 75;
+  --nc-on-button: 43 18 5;
+  /* A selected filter chip. */
+  --nc-chip-on: 240 138 75;
+  --nc-on-chip-on: 43 18 5;
+  /* The "Read this year" banner on the Library: background, text, bar. */
+  --nc-banner: linear-gradient(135deg, #9a3412, #431407);
+  --nc-on-banner: 255 243 223;
+  --nc-banner-bar: 253 186 116;
+
+  /* Fonts: headings and book titles, then everything else. */
+  --nc-font-head: "Literata", Georgia, "Times New Roman", serif;
+  --nc-font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

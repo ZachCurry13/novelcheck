@@ -1,0 +1,5 @@
+/* The fonts the themes name (--nc-font-head, --nc-font-body), stored with the app. Both are variable fonts:
+   one file covers every weight. Literata and Instrument Sans are under the SIL Open Font License 1.1
+   (web/static/fonts/OFL.txt covers them as it does OpenDyslexic). */
+@font-face { font-family: "Literata"; src: url("../fonts/Literata-var.woff2") format("woff2"); font-weight: 200 900; font-display: swap; }
+@font-face { font-family: "Instrument Sans"; src: url("../fonts/InstrumentSans-var.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }

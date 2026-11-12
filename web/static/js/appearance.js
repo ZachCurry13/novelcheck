@@ -21,7 +21,7 @@ function paint() {
   root.classList.toggle("light", light);
   root.classList.toggle("font-dyslexic", current.font === "dyslexic");
   root.classList.toggle("reduce-motion", current.motion === "reduce");
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", light ? "#f7f7f8" : "#141415");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", light ? "#f6efe2" : "#17130f");
 }
 
 // applyAppearance uses the signed-in person's choices (or the device's last ones).

@@ -1,0 +1,44 @@
+/* Paperback: NovelCheck's light theme (a cream page, dark-blue ink, a publisher's red-orange).
+   Used when the light theme is on (html.light). Same names as ember.css; see README.md beside this file.
+   In the light theme the neutral ramp runs the other way: 50 is the darkest text, 950 the page. */
+html.light {
+  color-scheme: light;
+
+  /* Neutrals: 950 page, 900 cards, 800 raised and lines, 400 secondary text, 100 main text. */
+  --slate-950: 246 239 226;
+  --slate-900: 255 250 241;
+  --slate-800: 236 226 207;
+  --slate-700: 227 216 195;
+  --slate-600: 196 186 166;
+  --slate-500: 122 116 102;
+  --slate-400: 106 100 87;
+  --slate-300: 74 70 60;
+  --slate-200: 50 52 60;
+  --slate-100: 29 36 51;
+  --slate-50: 15 20 32;
+
+  /* Accent, the red-orange. Runs the other way too: 300 is the strong colour for links and highlights,
+     800/900 the pale tints. */
+  --indigo-50: 69 20 8;
+  --indigo-100: 110 32 12;
+  --indigo-200: 140 40 15;
+  --indigo-300: 166 58 23;
+  --indigo-400: 217 83 43;
+  --indigo-500: 232 110 70;
+  --indigo-600: 240 138 93;
+  --indigo-700: 250 190 160;
+  --indigo-800: 253 214 196;
+  --indigo-900: 253 228 214;
+  --indigo-950: 255 243 236;
+
+  --nc-button: 217 83 43;
+  --nc-on-button: 255 255 255;
+  --nc-chip-on: 29 36 51;
+  --nc-on-chip-on: 246 239 226;
+  --nc-banner: #1d2433;
+  --nc-on-banner: 246 239 226;
+  --nc-banner-bar: 240 138 93;
+
+  --nc-font-head: "Literata", Georgia, "Times New Roman", serif;
+  --nc-font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

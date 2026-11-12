@@ -14,6 +14,7 @@ import { eventShelf } from "./eventshelf.js";
 import { recentSearches } from "./recentsearches.js";
 import { liveCards } from "./livestatus.js";
 import { refreshActivity } from "./activity.js";
+import { renderYearBanner } from "./yearbanner.js";
 import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
 import { shelfBanner } from "./collections.js";
 import { audioParams } from "./libaudio.js";
@@ -36,6 +37,7 @@ export async function renderLibrary(view, state) {
   const season = collection || event ? "" : shelf.get("season") || "";
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
   view.innerHTML = `
+    ${event || collection || season ? "" : `<div id="year-banner"></div>`}
     ${event ? "" : seasonChipsHTML(shelves.seasons || [], season)}
     <div id="shelf-banner"></div>
     ${filtersHTML({ facets, catOpts, event, state })}
@@ -53,6 +55,7 @@ export async function renderLibrary(view, state) {
   });
   const recent = recentSearches(form.q, () => load(true));
   if (!event) bindSeasonChips(view.querySelector("[data-season-chips]"));
+  if (!event && !collection && !season) renderYearBanner($("#year-banner", view));
   if (collection || season) shelfBanner($("#shelf-banner", view), { collection, season, seasons: shelves.seasons }, state, () => load(true));
   const evShelf = event ? await eventShelf($("#shelf-banner", view), event, state, () => load(true)) : null;
   const cardFor = (b) => card(b, on(state.user, "queue"), evShelf?.extra(b) || "");
