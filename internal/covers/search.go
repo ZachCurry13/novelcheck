@@ -32,7 +32,7 @@ func (c Cache) Search(ctx context.Context, name, title, author string) (string, 
 	// A miss is remembered for a week so the same book is not searched again and again. (Before v1.72 the
 	// file was name.jpg.none and the search could not see past series names; those old misses are ignored.)
 	miss := out + ".miss"
-	if info, err := os.Stat(miss); err == nil && time.Since(info.ModTime()) < 7*24*time.Hour {
+	if c.Missed(name) {
 		return "", nil, false
 	}
 	_ = os.Remove(out + ".none")
@@ -48,6 +48,22 @@ func (c Cache) Search(ctx context.Context, name, title, author string) (string, 
 	_ = os.MkdirAll(c.Dir, 0o755)
 	_ = os.WriteFile(miss, nil, 0o644)
 	return "", nil, false
+}
+
+// Missed says whether this book was searched in the last week and nothing was found (Search then skips it).
+func (c Cache) Missed(name string) bool {
+	if c.Dir == "" {
+		return false
+	}
+	info, err := os.Stat(filepath.Join(c.Dir, name+".jpg.miss"))
+	return err == nil && time.Since(info.ModTime()) < 7*24*time.Hour
+}
+
+// Forget drops the memory of a miss, so the next Search looks again.
+func (c Cache) Forget(name string) {
+	if c.Dir != "" {
+		_ = os.Remove(filepath.Join(c.Dir, name+".jpg.miss"))
+	}
 }
 
 // searchTitles is what to search for a library title, best first: the title tidied of track and series

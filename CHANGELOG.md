@@ -14,6 +14,14 @@ becomes the release notes for that version and is shown in the app under
 - **Keeps your place.** Close the book and it opens where you left off, on any device. When KOReader's progress sync has you further on, it offers to jump there ("Your Kindle is at 54%"). The match is by percentage, so it lands within about a page. Reading in the browser does not move your Kindle's place yet.
 - **Safe:** a book's own styles and fonts show, but any script inside a book is blocked.
 
+## [1.72.1]
+
+### 🖼️ Find covers
+- **"Find covers now" looks at every book again.** A book searched in the last week with nothing found was skipped without a word, which is why a second run right after the first found 0 of 213. Pressing the button now searches them all again; the daily run still skips them, and its message says how many it skipped and why.
+
+### 🗑️ Calibre's recycle bin
+- **It no longer stops with an error** when the bin holds an entry with no book files in it.
+
 
 ## [1.72.0]
 

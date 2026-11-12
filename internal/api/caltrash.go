@@ -51,7 +51,7 @@ func (s *Server) trashDir() string {
 // metadata.opf and its book files. Calibre keeps the files directly in the folder; one level of subfolders is
 // looked into as well.
 func readTrashBook(dir string, e os.DirEntry) trashBook {
-	b := trashBook{ID: e.Name()}
+	b := trashBook{ID: e.Name(), Files: []trashFile{}} // an empty entry lists no files, not null
 	root := filepath.Join(dir, e.Name())
 	if info, err := e.Info(); err == nil {
 		b.Removed = info.ModTime().UTC().Format(time.RFC3339)

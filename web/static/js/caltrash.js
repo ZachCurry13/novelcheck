@@ -31,7 +31,7 @@ export async function renderCalTrash(host, fresh = false) {
   for (const x of removals) if (!byId.has(String(x.calibre_id))) byId.set(String(x.calibre_id), x);
   const utc = (at) => (at.includes("T") ? at : `${at.replace(" ", "T")}Z`);
   const who = (x) => `removed through NovelCheck by ${esc(x.by || "someone")} (${esc(x.tool)})`;
-  const empty = books.filter((b) => !b.files.length).length;
+  const empty = books.filter((b) => !(b.files || []).length).length;
   const days = new Map();
   for (const b of books) {
     const k = dayOf(b.removed);
@@ -49,9 +49,9 @@ export async function renderCalTrash(host, fresh = false) {
       <ul class="space-y-1">${list.slice(0, shown).map((b) => `<li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-800/60 p-2 text-sm" data-id="${esc(b.id)}">
         <span class="min-w-0 flex-1"><b class="break-words">${esc(b.title)}</b>
           <span class="block break-words text-xs text-slate-400">${esc(b.author || "Unknown author")} · was Calibre #${esc(b.id)} · removed ${esc(when(b.removed))}
-            · ${b.files.length ? b.files.map((f) => `${esc(f.format)} ${size(f.size)}`).join(", ") : "no book file"}</span>
+            · ${(b.files || []).length ? (b.files || []).map((f) => `${esc(f.format)} ${size(f.size)}`).join(", ") : "no book file"}</span>
           <span class="block text-xs ${byId.has(b.id) ? "text-amber-300" : "text-slate-500"}">${byId.has(b.id) ? who(byId.get(b.id)) : "not removed through NovelCheck (Calibre, Calibre-Web, or before v1.71.1)"}</span></span>
-        ${b.files.length ? `<button type="button" data-back class="btn-secondary shrink-0 py-1 text-sm">Put back</button>` : ""}</li>`).join("") || `<li class="text-sm text-slate-400">Nothing matches.</li>`}</ul>
+        ${(b.files || []).length ? `<button type="button" data-back class="btn-secondary shrink-0 py-1 text-sm">Put back</button>` : ""}</li>`).join("") || `<li class="text-sm text-slate-400">Nothing matches.</li>`}</ul>
       ${list.length > shown ? `<button type="button" data-more class="btn-ghost mt-2 py-1 text-sm">Show ${fmtNum(Math.min(100, list.length - shown))} more of ${fmtNum(list.length)}</button>` : ""}
       ${removals.length ? `<details class="mt-3 rounded-lg bg-slate-900/40 px-3 py-2"><summary class="cursor-pointer text-sm font-semibold">NovelCheck's removal log (${fmtNum(removals.length)})</summary>
         <p class="mt-1 text-xs text-slate-400">Every book NovelCheck removed from Calibre, newest first, kept for a year. File formats removed are under Removed formats.</p>
