@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"sync"
 	"strconv"
 	"strings"
 	"time"
@@ -46,26 +47,28 @@ func (s *Server) trashDir() string {
 	return filepath.Join(s.Syncer.LibraryDir(), ".caltrash", "b")
 }
 
-// readTrash lists the books in Calibre's recycle bin, the newest removal first.
-func (s *Server) readTrash() ([]trashBook, bool) {
-	dir := s.trashDir()
-	entries, err := os.ReadDir(dir)
-	if dir == "" || err != nil {
-		return nil, false
+// readTrashBook reads one entry of Calibre's recycle bin (.caltrash/b/<id>/): the title and authors from its
+// metadata.opf and its book files. Calibre keeps the files directly in the folder; one level of subfolders is
+// looked into as well.
+func readTrashBook(dir string, e os.DirEntry) trashBook {
+	b := trashBook{ID: e.Name()}
+	root := filepath.Join(dir, e.Name())
+	if info, err := e.Info(); err == nil {
+		b.Removed = info.ModTime().UTC().Format(time.RFC3339)
 	}
-	out := []trashBook{}
-	for _, e := range entries {
-		if !e.IsDir() {
-			continue
+	var look func(folder string, depth int)
+	look = func(folder string, depth int) {
+		items, err := os.ReadDir(folder)
+		if err != nil {
+			return
 		}
-		b := trashBook{ID: e.Name()}
-		root := filepath.Join(dir, e.Name())
-		if info, err := e.Info(); err == nil {
-			b.Removed = info.ModTime().UTC().Format(time.RFC3339)
-		}
-		_ = filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
-			if err != nil || d.IsDir() || strings.Count(strings.TrimPrefix(p, root), string(filepath.Separator)) > 3 {
-				return nil
+		for _, d := range items {
+			p := filepath.Join(folder, d.Name())
+			if d.IsDir() {
+				if depth < 1 {
+					look(p, depth+1)
+				}
+				continue
 			}
 			ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(d.Name()), "."))
 			if ext == "opf" && b.Title == "" {
@@ -87,24 +90,65 @@ func (s *Server) readTrash() ([]trashBook, bool) {
 				}
 				b.Files = append(b.Files, f)
 			}
-			return nil
-		})
-		if b.Title == "" && len(b.Files) > 0 {
-			b.Title = strings.TrimSuffix(b.Files[0].Name, filepath.Ext(b.Files[0].Name))
 		}
-		if b.Title == "" {
-			b.Title = "(no title: Calibre entry #" + b.ID + ")"
-		}
-		out = append(out, b)
 	}
+	look(root, 0)
+	if b.Title == "" && len(b.Files) > 0 {
+		b.Title = strings.TrimSuffix(b.Files[0].Name, filepath.Ext(b.Files[0].Name))
+	}
+	if b.Title == "" {
+		b.Title = "(no title: Calibre entry #" + b.ID + ")"
+	}
+	return b
+}
+
+// readTrash lists the books in Calibre's recycle bin, the newest removal first. Folders are read eight at a
+// time (the library is usually on a network share, where each read waits); progress reports how far it got.
+func (s *Server) readTrash(progress func(done, total int)) ([]trashBook, bool) {
+	dir := s.trashDir()
+	entries, err := os.ReadDir(dir)
+	if dir == "" || err != nil {
+		return nil, false
+	}
+	var dirs []os.DirEntry
+	for _, e := range entries {
+		if e.IsDir() {
+			dirs = append(dirs, e)
+		}
+	}
+	out := make([]trashBook, len(dirs))
+	next := make(chan int)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	done := 0
+	for w := 0; w < 8; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range next {
+				out[i] = readTrashBook(dir, dirs[i])
+				mu.Lock()
+				done++
+				if progress != nil {
+					progress(done, len(dirs))
+				}
+				mu.Unlock()
+			}
+		}()
+	}
+	for i := range dirs {
+		next <- i
+	}
+	close(next)
+	wg.Wait()
 	sort.Slice(out, func(i, j int) bool { return out[i].Removed > out[j].Removed })
 	return out, true
 }
 
-// handleCalibreTrash: GET /api/admin/calibre/trash.
+// handleCalibreTrash: GET /api/admin/calibre/trash. The bin is read in the background (see caltrash_cache.go);
+// until that is done the answer is {"reading": true, "done", "total"} and the page asks again.
 func (s *Server) handleCalibreTrash(w http.ResponseWriter, r *http.Request) {
-	books, found := s.readTrash()
-	writeJSON(w, http.StatusOK, map[string]any{"found": found, "books": books, "count": len(books)})
+	writeJSON(w, http.StatusOK, s.trashListing(r.URL.Query().Get("fresh") == "1"))
 }
 
 // handleCalibreTrashRestore: POST /api/admin/calibre/trash/restore {"id": "804"} adds the book to Calibre
@@ -120,11 +164,15 @@ func (s *Server) handleCalibreTrashRestore(w http.ResponseWriter, r *http.Reques
 		writeErr(w, http.StatusBadRequest, "which book?")
 		return
 	}
-	books, _ := s.readTrash()
-	var b *trashBook
-	for i := range books {
-		if books[i].ID == body.ID {
-			b = &books[i]
+	var b *trashBook // only this book's folder is read, not the whole bin
+	if dir := s.trashDir(); dir != "" {
+		if entries, err := os.ReadDir(dir); err == nil {
+			for _, e := range entries {
+				if e.IsDir() && e.Name() == body.ID {
+					one := readTrashBook(dir, e)
+					b = &one
+				}
+			}
 		}
 	}
 	if b == nil || len(b.Files) == 0 {
@@ -184,5 +232,6 @@ func (s *Server) handleCalibreTrashRestore(w http.ResponseWriter, r *http.Reques
 		defer s.refreshMu.Unlock()
 		s.refreshCalibre()
 	}()
+	s.forgetTrash()
 	writeJSON(w, http.StatusOK, map[string]any{"new_id": newID, "title": b.Title, "notes": notes})
 }

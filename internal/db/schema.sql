@@ -705,3 +705,16 @@ CREATE TABLE IF NOT EXISTS imported_reads (
     reads    INTEGER NOT NULL DEFAULT 0, -- times read, when the list says
     PRIMARY KEY (user_id, book_id)
 );
+
+-- Books NovelCheck removed from Calibre (to Calibre's recycle bin): who, when, from which page, and the
+-- title Calibre had, so a drop in the library's size can be explained later. Format removals have their own
+-- log (removed_formats).
+CREATE TABLE IF NOT EXISTS calibre_removals (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    at         TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    by_user    TEXT NOT NULL DEFAULT '',
+    tool       TEXT NOT NULL DEFAULT '',
+    calibre_id INTEGER NOT NULL,
+    title      TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_calibre_removals_at ON calibre_removals(at);

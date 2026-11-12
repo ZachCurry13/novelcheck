@@ -111,7 +111,8 @@ func (s *Server) checkABS(ctx context.Context, o *checkOut) {
 			Version string `json:"version"`
 		} `json:"serverSettings"`
 	}
-	if err := c.JSON(ctx, http.MethodGet, "/api/authorize", nil, &auth); err != nil {
+	// Audiobookshelf answers "who is this token" only to a POST (a GET gives 404 even with a good token).
+	if err := c.JSON(ctx, http.MethodPost, "/api/authorize", nil, &auth); err != nil {
 		o.line("the token: %v", err)
 	} else {
 		o.line("server version %s · token's account type %s · may upload: %v · may download: %v", orNone(auth.ServerSettings.Version),

@@ -8,9 +8,12 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/zachcurry13/novelcheck/internal/titles"
 )
 
 // Search finds a cover for a book that has no ISBN to look up (or whose ISBN has no cover): Open
@@ -26,14 +29,19 @@ func (c Cache) Search(ctx context.Context, name, title, author string) (string, 
 	if info, ok := c.have(out); ok {
 		return out, info, true
 	}
-	miss := out + ".none"
-	if info, err := os.Stat(miss); err == nil && time.Since(info.ModTime()) < 14*24*time.Hour {
+	// A miss is remembered for a week so the same book is not searched again and again. (Before v1.72 the
+	// file was name.jpg.none and the search could not see past series names; those old misses are ignored.)
+	miss := out + ".miss"
+	if info, err := os.Stat(miss); err == nil && time.Since(info.ModTime()) < 7*24*time.Hour {
 		return "", nil, false
 	}
-	for _, find := range []func(context.Context, string, string) string{c.openLibraryCoverURL, c.googleCoverURL} {
-		if u := find(ctx, title, author); u != "" {
-			if p, info, ok := c.fetch(ctx, u, out, miss); ok {
-				return p, info, true
+	_ = os.Remove(out + ".none")
+	for _, t := range searchTitles(title) {
+		for _, find := range []func(context.Context, string, string) string{c.openLibraryCoverURL, c.googleCoverURL} {
+			if u := find(ctx, t, author); u != "" {
+				if p, info, ok := c.fetch(ctx, u, out, miss); ok {
+					return p, info, true
+				}
 			}
 		}
 	}
@@ -41,6 +49,44 @@ func (c Cache) Search(ctx context.Context, name, title, author string) (string, 
 	_ = os.WriteFile(miss, nil, 0o644)
 	return "", nil, false
 }
+
+// searchTitles is what to search for a library title, best first: the title tidied of track and series
+// numbers ("01 - Guards! Guards!"), without a series in brackets at the end ("Stars Above (The Lunar
+// Chronicles)"), the part after a numbered series prefix ("Percy Jackson 2 - The Sea of Monsters"), and the
+// part before a subtitle. Each is searched only once.
+func searchTitles(raw string) []string {
+	var out []string
+	add := func(s string) {
+		s = strings.TrimSpace(s)
+		for _, o := range out {
+			if strings.EqualFold(o, s) {
+				return
+			}
+		}
+		if len([]rune(s)) >= 2 {
+			out = append(out, s)
+		}
+	}
+	t := titles.Clean(raw)
+	add(t)
+	if i := strings.LastIndex(t, " ("); i > 0 && strings.HasSuffix(t, ")") {
+		t = strings.TrimSpace(t[:i])
+		add(t)
+	}
+	if m := seriesPrefix.FindStringSubmatch(t); m != nil {
+		add(m[1])
+	}
+	for _, s := range out {
+		if i := strings.Index(s, ":"); i > 0 {
+			add(s[:i])
+			break
+		}
+	}
+	return out
+}
+
+// seriesPrefix is "Series Name 2 - Title" or "Series #2: Title": the title after the number.
+var seriesPrefix = regexp.MustCompile(`^.+?\s#?\d+(?:\.\d+)?\s*[-–—:]\s*(.+)$`)
 
 // norm boils a title or name down to its letters and digits, without a leading "the".
 func norm(s string) string {
@@ -147,6 +193,10 @@ func (c Cache) googleCoverURL(ctx context.Context, title, author string) string 
 	if lastName(author) != "" {
 		q += " inauthor:" + author
 	}
+	key := ""
+	if c.GoogleKey != nil {
+		key = strings.TrimSpace(c.GoogleKey())
+	}
 	var res struct {
 		Items []struct {
 			Info struct {
@@ -158,7 +208,11 @@ func (c Cache) googleCoverURL(ctx context.Context, title, author string) string 
 			} `json:"volumeInfo"`
 		} `json:"items"`
 	}
-	if !c.getJSON(ctx, base+"/books/v1/volumes?"+url.Values{"q": {q}, "maxResults": {"6"}}.Encode(), &res) {
+	params := url.Values{"q": {q}, "maxResults": {"6"}}
+	if key != "" {
+		params.Set("key", key)
+	}
+	if !c.getJSON(ctx, base+"/books/v1/volumes?"+params.Encode(), &res) {
 		return ""
 	}
 	for _, it := range res.Items {

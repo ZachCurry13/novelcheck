@@ -4,6 +4,23 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.71.1]
+
+### 🖼️ Find covers
+- **The cover finder finds covers again.** It searched with the title exactly as Calibre has it, so "Percy Jackson 2 - The Sea of Monsters", "01 - Guards! Guards!" or "Stars Above (The Lunar Chronicles)" never matched. It now also tries the title without its series name or number, and without a subtitle.
+- **Google Books is asked with your own API key** (Admin → Delivery & Services). Without it Google's shared daily limit was always used up, so every search there was refused.
+- **Books it missed before are tried again.** A miss used to be remembered for two weeks, which is why the runs after the first also found nothing. Misses from before this version are forgotten, and a new miss is remembered for a week.
+
+### 🗑️ Calibre's recycle bin
+- **It opens without the long wait.** The bin is read in the background, eight books at a time, with a count of how far it got; you can leave the page while it reads. The result is kept for an hour (or until something is removed or put back), so opening it again is instant. **Read the bin again** reads it fresh.
+- **Who removed what.** NovelCheck now keeps a log of every book it removes from Calibre: when, who, and from which page (Duplicates, Delete requests, Library cleanup). Each book in the bin says whether NovelCheck removed it and who did, and the full log is at the bottom of the bin view. Books removed before this version, or by Calibre or Calibre-Web, show as not removed through NovelCheck.
+
+### 📦 Box sets
+- **"Find what's inside" reads the box set's own table of contents first.** Most box sets list their books there, so sets a small AI doesn't know (like a lesser-known series) now fill in by themselves. The AI is only asked when the contents don't list the books.
+
+### 🩺 Check my servers
+- **The Audiobookshelf token line is right.** It asked Audiobookshelf in a way it doesn't answer and reported "404" even when the token works.
+
 ## [1.71.0]
 
 ### 🎨 A new look, on one standard

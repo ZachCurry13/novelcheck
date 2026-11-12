@@ -140,7 +140,7 @@ func main() {
 		Push:        pusher,
 		Deep:        deep,
 		Suggest:     suggest.New(st),
-		Covers:      covers.Cache{Dir: filepath.Join(cfg.DataDir, "covers")},
+		Covers:      covers.Cache{Dir: filepath.Join(cfg.DataDir, "covers"), GoogleKey: func() string { return st.Setting(store.KeyGoogleBooksAPIKey) }},
 		Genres:      genres,
 		Discover:    discoverSvc,
 		Collections: collectionsSvc,

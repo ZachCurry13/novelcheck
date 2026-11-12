@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/zachcurry13/novelcheck"
+	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/calibresrv"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -175,7 +176,14 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 			return
 		}
 	}
-	log.Printf("calibre: removed %d books via Content server (requested by admin)", len(toRemove))
+	by := ""
+	if u := auth.UserFrom(r); u != nil {
+		by = u.Username
+	}
+	if err := s.Store.LogCalibreRemovals(by, removalTool(r.URL.Path), have, toRemove); err != nil {
+		log.Printf("calibre: logging removals failed: %v", err)
+	}
+	log.Printf("calibre: removed %d books via Content server (requested by %s)", len(toRemove), by)
 	// One book at a time from the Duplicates page: answer now and read Calibre again behind it (one read at a
 	// time; several removals in a row share the next one).
 	if later, _ := r.Context().Value(syncLaterKey{}).(bool); later {
@@ -193,4 +201,17 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 		}
 	}
 	return len(toRemove), skipped, true
+}
+
+// removalTool names the page a removal came from, for the removal log.
+func removalTool(path string) string {
+	switch {
+	case strings.Contains(path, "duplicates"):
+		return "Duplicates in Calibre"
+	case strings.Contains(path, "delet"):
+		return "Delete requests"
+	case strings.Contains(path, "extra"):
+		return "Library cleanup: extra entries"
+	}
+	return "Library cleanup"
 }

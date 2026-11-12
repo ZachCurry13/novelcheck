@@ -29,6 +29,9 @@ type Cache struct {
 	OpenLibraryURL string // "" = covers.openlibrary.org (tests use a fake)
 	SearchURL      string // "" = openlibrary.org (its search)
 	GoogleURL      string // "" = www.googleapis.com (Google Books)
+	// GoogleKey is the admin's Google Books API key (Admin → Delivery & Services). Without one, Google's
+	// shared daily limit is used up by others and every cover search there is refused.
+	GoogleKey func() string
 }
 
 // Find returns the cover.jpg next to any of the book's Calibre files that

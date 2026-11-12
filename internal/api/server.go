@@ -62,6 +62,7 @@ type Server struct {
 	rcache      respCache     // short-lived copies of the heavy list pages (respcache.go)
 	later       laterSync     // Calibre re-reads after a save, in the background (synclater.go)
 	covers      coverJob      // the cover finder (coverfinder.go)
+	trash       trashCache    // Calibre's recycle bin, read in the background (caltrash_cache.go)
 	titleMu     sync.Mutex    // one title save at a time
 	dav         davState      // KOReader statistics folders
 	pins        pinTries      // wrong PINs on family devices

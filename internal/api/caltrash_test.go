@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/api"
 )
@@ -15,7 +16,7 @@ func TestCalibreRecycleBinList(t *testing.T) {
 	srv, _ := setupWith(t, func(s *api.Server) { s.Cfg.CalibreDir, s.Syncer.Dir = lib, lib })
 	admin := login(t, srv, "admin", "adminpass1")
 
-	if _, out := admin.do("GET", "/api/admin/calibre/trash", nil, false); out["found"] != false {
+	if out := readBin(t, admin, false); out["found"] != false {
 		t.Fatalf("no bin yet: %v", out)
 	}
 	book := filepath.Join(lib, ".caltrash", "b", "804", "Rant (804)")
@@ -26,9 +27,9 @@ func TestCalibreRecycleBinList(t *testing.T) {
 		<dc:creator opf:role="aut">Chuck Palahniuk</dc:creator></metadata></package>`), 0o644)
 	_ = os.MkdirAll(filepath.Join(lib, ".caltrash", "b", "1618"), 0o755) // an empty entry
 
-	res, out := admin.do("GET", "/api/admin/calibre/trash", nil, false)
-	if res.StatusCode != 200 || out["found"] != true || out["count"].(float64) != 2 {
-		t.Fatalf("two books in the bin: %d %v", res.StatusCode, out)
+	out := readBin(t, admin, true)
+	if out["found"] != true || out["count"].(float64) != 2 {
+		t.Fatalf("two books in the bin: %v", out)
 	}
 	var rant map[string]any
 	for _, b := range out["books"].([]any) {
@@ -45,4 +46,26 @@ func TestCalibreRecycleBinList(t *testing.T) {
 	if res, _ := kid.do("GET", "/api/admin/calibre/trash", nil, false); res.StatusCode == 200 {
 		t.Fatal("not for kids")
 	}
+}
+
+// readBin asks for the bin until the background reading is done (fresh: read it again now).
+func readBin(t *testing.T, c *client, fresh bool) map[string]any {
+	t.Helper()
+	path := "/api/admin/calibre/trash"
+	if fresh {
+		path += "?fresh=1"
+	}
+	for i := 0; i < 100; i++ {
+		res, out := c.do("GET", path, nil, false)
+		if res.StatusCode != 200 {
+			t.Fatalf("bin: %d", res.StatusCode)
+		}
+		if out["reading"] != true {
+			return out
+		}
+		path = "/api/admin/calibre/trash"
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("the bin was never read")
+	return nil
 }

@@ -33,11 +33,11 @@ export async function openBoxSets(onChange, focus = 0, state) {
     : `<li class="card space-y-2" data-box="${b.book_id}">
         <p class="font-semibold leading-snug">📦 <button type="button" data-open="${b.book_id}" class="text-left underline decoration-dotted" title="Open this book to look at it">${esc(b.title)}</button></p>
         <p class="text-xs text-slate-400">${esc(b.author || "")}${b.series ? ` · ${esc(b.series)}` : ""}${b.formats ? ` · ${esc(b.formats)}` : ""}${b.added ? ` · added to the library ${esc(new Date(b.added.length > 10 ? b.added : b.added + "T00:00:00").toLocaleDateString())}` : ""}</p>
-        <p class="text-xs text-slate-400">${b.proposal.length ? "Untick what isn't inside, fix titles, or add one:" : "What's inside? Ask the AI, or type the titles:"}</p>
+        <p class="text-xs text-slate-400">${b.proposal.length ? "Untick what isn't inside, fix titles, or add one:" : "What's inside? Press Find, or type the titles:"}</p>
         <ul data-entries class="space-y-1">${(b.proposal.length ? b.proposal : [{ title: "", number: 0 }]).map(row).join("")}</ul>
         <div class="flex flex-wrap gap-2">
           <button type="button" data-act="add" class="btn-ghost py-1 text-sm">＋ Add a book</button>
-          <button type="button" data-act="ask" class="btn-secondary py-1 text-sm" ${asking.has(b.book_id) ? "disabled" : ""}>${asking.has(b.book_id) ? ASKING : "✨ Ask the AI what's inside"}</button></div>
+          <button type="button" data-act="ask" class="btn-secondary py-1 text-sm" ${asking.has(b.book_id) ? "disabled" : ""}>${asking.has(b.book_id) ? ASKING : "✨ Find what's inside"}</button></div>
         <div class="grid grid-cols-2 gap-2">
           <button type="button" data-act="split" class="btn-primary">Split into these books</button>
           <button type="button" data-act="not" class="btn-ghost">Not a box set</button></div></li>`;
@@ -88,7 +88,8 @@ export async function openBoxSets(onChange, focus = 0, state) {
       if (r.error) toast(r.error, true);
       else {
         now.proposal = r.proposal;
-        if (!r.proposal.length) toast("The AI doesn't know this one: type the titles instead", true);
+        if (!r.proposal.length) toast("Neither the book's contents nor the AI list the books in this one: type the titles instead", true);
+        else if (r.from === "contents") toast(`Found ${r.proposal.length} books in the box set's own table of contents`);
       }
       shown.outerHTML = card(now);
       return;

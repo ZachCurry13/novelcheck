@@ -93,7 +93,55 @@ func TestSearchFindsMatchingCover(t *testing.T) {
 	if _, _, ok := c.Search(context.Background(), "book-7", "A Book Nobody Wrote", "Frank Herbert"); ok {
 		t.Fatal("no matching title, no cover")
 	}
-	if _, err := os.Stat(filepath.Join(c.Dir, "book-7.jpg.none")); err != nil {
+	if _, err := os.Stat(filepath.Join(c.Dir, "book-7.jpg.miss")); err != nil {
 		t.Fatal("a miss is remembered")
+	}
+}
+
+// A library title carrying a series ("Dune Chronicles 1 - Dune", "01 - Dune", "Dune (Dune Chronicles)") is
+// searched without it, and an old miss from before v1.71.1 (.none) does not stop the search.
+func TestSearchTitlesWithoutSeries(t *testing.T) {
+	for raw, want := range map[string]string{
+		"Percy Jackson 2 - The Sea of Monsters": "The Sea of Monsters",
+		"01 - Guards! Guards!":                  "Guards! Guards!",
+		"Stars Above: A Lunar Chronicles Collection (The Lunar Chronicles)": "Stars Above",
+	} {
+		got := searchTitles(raw)
+		found := false
+		for _, g := range got {
+			found = found || g == want
+		}
+		if !found {
+			t.Errorf("%q: %q has no %q", raw, got, want)
+		}
+	}
+	img := bytes.Repeat([]byte{0xff}, 400)
+	var googleKey string
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/search.json":
+			fmt.Fprint(w, `{"docs":[]}`)
+		case r.URL.Path == "/books/v1/volumes":
+			googleKey = r.URL.Query().Get("key")
+			if strings.Contains(r.URL.Query().Get("q"), "intitle:Dune inauthor") {
+				fmt.Fprintf(w, `{"items":[{"volumeInfo":{"title":"Dune","authors":["Frank Herbert"],"imageLinks":{"thumbnail":"%s/cover.jpg"}}}]}`, "http://"+r.Host)
+				return
+			}
+			fmt.Fprint(w, `{"items":[]}`)
+		case r.URL.Path == "/cover.jpg":
+			w.Header().Set("Content-Type", "image/jpeg")
+			w.Write(img)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer fake.Close()
+	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, GoogleURL: fake.URL, GoogleKey: func() string { return "k123" }}
+	_ = os.WriteFile(filepath.Join(c.Dir, "book-9.jpg.none"), nil, 0o644)
+	if _, _, ok := c.Search(context.Background(), "book-9", "Dune Chronicles 1 - Dune", "Frank Herbert"); !ok && googleKey == "" {
+		t.Fatal("the old miss is ignored and the series is left out of the search")
+	}
+	if googleKey != "k123" {
+		t.Fatalf("Google is asked with the admin's key: %q", googleKey)
 	}
 }

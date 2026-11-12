@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
+	"github.com/zachcurry13/novelcheck/internal/epub"
 	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -61,6 +62,27 @@ func (s *Server) handleAskBoxSet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeStoreErr(w, err)
 		return
+	}
+	// The set's own table of contents usually lists its books: read that first. A small local AI often
+	// doesn't know a less famous series ("The AI doesn't know this one").
+	if s.Deep != nil {
+		if path, ok := s.Deep.EPUBFor(id); ok {
+			if titles, _ := epub.Books(path); len(titles) >= 2 {
+				found := make([]store.BoxEntry, len(titles))
+				for i, title := range titles {
+					found[i] = store.BoxEntry{Title: title, Number: float64(i + 1)}
+				}
+				if err := s.Store.SetBoxProposal(id, found); errors.Is(err, store.ErrNotFound) {
+					writeErr(w, http.StatusConflict, boxDecided)
+					return
+				} else if err != nil {
+					writeStoreErr(w, err)
+					return
+				}
+				writeJSON(w, http.StatusOK, map[string]any{"proposal": found, "from": "contents"})
+				return
+			}
+		}
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Minute)
 	defer cancel()
