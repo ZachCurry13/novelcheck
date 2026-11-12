@@ -148,7 +148,11 @@ func (s *Server) CoverLoop(ctx context.Context) {
 
 func (s *Server) handleMissingCovers(w http.ResponseWriter, r *http.Request) {
 	missing := s.MissingCovers()
-	list := missing[:min(len(missing), 50)]
+	limit := 50
+	if n, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && n > 0 && n <= 2000 {
+		limit = n // Review covers goes through them all
+	}
+	list := missing[:min(len(missing), limit)]
 	writeJSON(w, http.StatusOK, map[string]any{"count": len(missing), "books": list, "job": s.covers.state()})
 }
 

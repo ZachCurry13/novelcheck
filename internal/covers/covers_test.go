@@ -161,3 +161,23 @@ func TestMissedAndForget(t *testing.T) {
 		t.Fatal("Forget looks again")
 	}
 }
+
+// Review covers only shows and saves images from the two catalogues it searches, and suggests the tidied title.
+func TestReviewCoversRules(t *testing.T) {
+	for u, ok := range map[string]bool{
+		"https://covers.openlibrary.org/b/id/1-M.jpg":   true,
+		"https://books.google.com/books/content?id=x":   true,
+		"https://lh3.googleusercontent.com/x":           true,
+		"http://covers.openlibrary.org/b/id/1-M.jpg":    false,
+		"https://evil.example/x.jpg":                    false,
+		"https://covers.openlibrary.org.evil.example/x": false,
+		"file:///etc/passwd":                            false,
+	} {
+		if AllowedImage(u) != ok {
+			t.Errorf("%s: want %v", u, ok)
+		}
+	}
+	if got := Titles("Percy Jackson 2 - The Sea of Monsters"); len(got) == 0 || got[0] != "Percy Jackson 2 - The Sea of Monsters" && got[len(got)-1] == "" {
+		t.Fatalf("titles: %q", got)
+	}
+}

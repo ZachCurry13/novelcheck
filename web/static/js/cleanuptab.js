@@ -41,7 +41,7 @@ export async function renderCleanupTab(host, state) {
     row("🗂️", "Formats", "Keep only the formats you choose (say EPUB), convert books with no EPUB, undo for 7 days.", c?.remove_files, `<button type="button" data-cu="formats" class="btn-secondary py-1 text-sm">Formats…</button>`),
     row("🔖", "Genres", "Library books Calibre has no tags for. They are filled in by the AI by themselves; this runs it now.", g.missing, g.running ? btn("genres-stop", "Stop") : btn("genres-fill", "Fill in now")),
     row("📦", "Box sets", "Several books in one file: check them and split them into their books.", s?.box_sets, btn("box-sets", "Check and split")),
-    row("🖼️", "Books with no cover", job.running ? `Looking now: ${job.checked} of ${job.total} checked, ${job.found} found${job.current ? ` · ${esc(job.current)}` : ""}.` : "Books Calibre has no cover for show a drawn one. This looks for the real cover in Open Library and Google Books in the background (it also runs once a day), and only uses one whose title matches.", cv?.count ?? null, job.running ? `<button type="button" data-cu="covers-stop" class="btn-secondary py-1 text-sm">Stop</button>` : `<button type="button" data-cu="covers-find" class="btn-secondary py-1 text-sm">Find covers now</button>`),
+    row("🖼️", "Books with no cover", job.running ? `Looking now: ${job.checked} of ${job.total} checked, ${job.found} found${job.current ? ` · ${esc(job.current)}` : ""}.` : "Books Calibre has no cover for show a drawn one. This looks for the real cover in Open Library and Google Books in the background (it also runs once a day), and only uses one whose title matches.", cv?.count ?? null, job.running ? `<button type="button" data-cu="covers-stop" class="btn-secondary py-1 text-sm">Stop</button>` : `<span class="flex flex-wrap gap-2"><button type="button" data-cu="covers-review" class="btn-primary py-1 text-sm">Review one by one</button><button type="button" data-cu="covers-find" class="btn-secondary py-1 text-sm">Find covers now</button></span>`),
     row("🖼️", "Covers reported as wrong", "Covers your family flagged.", s?.cover_reports, btn("cover-reports", "Review")),
     row("🗑️", "Delete requests", "Books your family asked to remove.", s?.pending_deletes, link("#/deletions", "Review")),
     row("🔄", "Read the Calibre library now", "Re-reads Calibre so NovelCheck matches what is there (it also happens by itself).", null, btn("sync", "Read now")),
@@ -52,6 +52,7 @@ export async function renderCleanupTab(host, state) {
   host.onclick = async (e) => {
     const k = e.target.closest("[data-cu]")?.dataset.cu;
     if (k === "formats") import("./formats.js").then((m) => m.openFormats());
+    else if (k === "covers-review") import("./coverreview.js").then((m) => m.openCoverReview(paintTools));
     else if (k === "covers-find" || k === "covers-stop") {
       if (await attempt(() => post(`/api/admin/covers/${k === "covers-find" ? "find" : "stop"}`), k === "covers-find" ? "Looking for covers in the background" : "Stopping")) paintTools();
     }
