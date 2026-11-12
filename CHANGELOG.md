@@ -12,6 +12,9 @@ becomes the release notes for that version and is shown in the app under
 - **No emoji as decoration.** Headings, buttons, tabs, status chips and messages lost about 480 decorative emoji. They stay where they are the content: trophies, awards, Wrapped, content flags and seasonal shelves.
 - **Lighter headings and sentence case.** Page titles get their weight from size, labels are no longer in capitals, and messages lost their exclamation marks.
 - **The Wrapped card** lost its purple glow.
+- **Admin → Rating errors** shows each error in full, in plain text, with its buttons under it (it was squeezed into a narrow column, one word per line).
+- **Collections and Series** switch with the same tabs as every other page.
+- **Nightstand** labels are in sentence case and its notes lost their emoji.
 - The design guide (`docs/DESIGN.md`) records the direction, from a review with the [unslop](https://github.com/heydamir/unslop) skill by Damir Sokolovsky.
 
 

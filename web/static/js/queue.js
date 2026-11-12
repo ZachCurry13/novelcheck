@@ -17,13 +17,13 @@ export async function renderQueue(view, state) {
       <h1 class="page-title">Nightstand</h1>
       <p class="text-sm text-slate-400">Delivery: <span id="delivery-mode"></span> · <a href="#/settings" class="underline">change</a></p>
     </div>
-    <p id="nightstand-intro" class="mb-4 hidden rounded-lg bg-slate-800/60 p-3 text-sm text-slate-300">🛏️ <b>Your Nightstand</b> (it used to be called Up Next): what you're reading now,
+    <p id="nightstand-intro" class="mb-4 hidden rounded-lg bg-slate-800/60 p-3 text-sm text-slate-300"><b>Your Nightstand</b> (it used to be called Up Next): what you're reading now,
       then the pile you plan to read next. Books you open on your e-reader show up here by themselves.
       <button type="button" data-intro-ok class="ml-1 underline">Got it</button></p>
     <div id="listening"></div>
     <div id="twins"></div>
     <section class="mb-8">
-      <h2 class="label">Currently Reading</h2>
+      <h2 class="label">Currently reading</h2>
       <div id="reading" class="grid gap-3 sm:grid-cols-2"></div>
       <div id="hidden" class="mt-2 text-sm"></div>
     </section>
@@ -68,7 +68,7 @@ export async function renderQueue(view, state) {
     const cur = items.filter((i) => i.status === "reading");
     const next = items.filter((i) => i.status === "queued");
     reading.innerHTML = cur.length ? cur.map(readingCard).join("")
-      : `<p class="text-sm text-slate-500">Nothing in progress. Press ▶ Start Reading on a book from the pile.</p>`;
+      : `<p class="text-sm text-slate-500">Nothing in progress. Press Start reading on a book from the pile.</p>`;
     queued.innerHTML = next.length ? next.map((i, idx) => queueRow(i, idx, state.user)).join("")
       : `<li class="text-sm text-slate-500">Your pile is empty. Add books from the Library with ＋.</li>`;
     setBars(reading);
@@ -149,7 +149,7 @@ function noFile(i, user) {
   const method = user.delivery_method;
   if (!i.owned || i.file === "send" || !["email", "koreader"].includes(method)) return "";
   const why = i.file === "other" ? "AZW3/MOBI only, which Amazon won't take" : `No ${method === "email" ? "EPUB or PDF" : "file"} to send`;
-  return `<span class="block text-xs text-slate-400" title="▶ marks it as reading without sending anything">${i.file === "other" ? "🔄" : "📕"} ${why}: ▶ marks it as reading</span>`;
+  return `<span class="block text-xs text-slate-400" title="▶ marks it as reading without sending anything">${why}: ▶ marks it as reading</span>`;
 }
 
 // On phones the row is the cover, two lines of title and small ▶ / ✕
@@ -192,7 +192,7 @@ function readingCard(i) {
           <span class="block text-sm text-slate-400">${esc(i.author || "Unknown author")}</span>
         </button>
         ${deepBanner(i)}
-        <p class="text-xs font-semibold text-indigo-300">▶ Currently reading</p>
+        <p class="text-xs font-medium text-indigo-300">Currently reading</p>
         ${i.progress ? `<div class="space-y-1">${progressBar(i.progress)}<p class="text-xs text-slate-400">${progressText(i.progress)}</p></div>`
           : i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
         <div class="flex flex-wrap gap-2"><button data-act="finish" class="btn-secondary">Finished</button>

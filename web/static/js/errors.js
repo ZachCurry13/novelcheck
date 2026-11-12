@@ -36,9 +36,9 @@ export async function renderErrors(host, isAdmin, onChange) {
       <p class="text-sm text-slate-400">Grouped by what went wrong. Failed books aren't tried again on their own; retry them once the cause is fixed.</p>
       <ul class="space-y-3">${data.groups.map((g, i) => `
         <li class="rounded-lg bg-slate-800/60 p-3 text-sm" data-i="${i}">
-          <div class="flex flex-wrap items-start justify-between gap-2">
-            <p class="min-w-0 flex-1"><b>${g.count.toLocaleString()} book${g.count === 1 ? "" : "s"}</b> ·
-              <span class="break-words font-mono text-xs text-rose-300">${esc(g.message)}</span></p>
+          <div class="space-y-2">
+            <p class="font-medium">${g.count.toLocaleString()} book${g.count === 1 ? "" : "s"}</p>
+            <p class="break-words text-sm text-rose-300">${esc(g.message)}</p>
             <span class="flex flex-wrap gap-1">
               <button data-retry="${i}" class="btn-secondary px-2 py-0.5 text-xs">Retry ${g.count.toLocaleString()}</button>
               <button data-copy="${i}" class="btn-ghost px-2 py-0.5 text-xs">Copy</button>
