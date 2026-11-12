@@ -26,6 +26,7 @@ type coverJob struct {
 	Total   int    `json:"total"`
 	Current string `json:"current"`
 	Note    string `json:"note"`
+	Skipped int    `json:"skipped"` // searched in the last week with nothing found, left out this time
 }
 
 func (j *coverJob) state() coverJob {
@@ -61,19 +62,25 @@ func (s *Server) MissingCovers() []store.BriefBook {
 }
 
 // findCovers goes through the books with no cover, one every second or so, until done or stopped.
-func (s *Server) findCovers() {
+// again (Find covers now, pressed by a person) looks again at books searched in the last week; the daily run
+// skips them and says how many it skipped.
+func (s *Server) findCovers(again bool) {
 	j := &s.covers
 	missing := s.MissingCovers()
 	j.mu.Lock()
-	j.Running, j.stop, j.Checked, j.Found, j.Total, j.Note = true, false, 0, 0, len(missing), ""
+	j.Running, j.stop, j.Checked, j.Found, j.Total, j.Note, j.Skipped = true, false, 0, 0, len(missing), "", 0
 	j.mu.Unlock()
 	defer func() {
 		j.mu.Lock()
 		j.Running, j.Current = false, ""
-		found, total, note := j.Found, j.Total, j.Note
+		found, total, note, skipped := j.Found, j.Total, j.Note, j.Skipped
 		j.mu.Unlock()
 		if total > 0 {
-			s.Store.NotifyRoutine("covers-found", fmt.Sprintf("Cover finder: found covers for %d of %d books that had none.%s", found, total, note), "#/admin?tab=cleanup")
+			msg := fmt.Sprintf("Cover finder: found covers for %d of %d books that had none.%s", found, total, note)
+			if skipped > 0 {
+				msg += fmt.Sprintf(" %d were searched in the last week with nothing found, so they were skipped; Find covers now looks at them again.", skipped)
+			}
+			s.Store.NotifyRoutine("covers-found", msg, "#/admin?tab=cleanup")
 		}
 	}()
 	ctx := context.Background()
@@ -87,6 +94,15 @@ func (s *Server) findCovers() {
 			j.Note = " (stopped)"
 			j.mu.Unlock()
 			return
+		}
+		if again {
+			s.Covers.Forget(s.coverName(b.ID))
+		} else if s.Covers.Missed(s.coverName(b.ID)) {
+			j.mu.Lock()
+			j.Checked++
+			j.Skipped++
+			j.mu.Unlock()
+			continue
 		}
 		_, _, ok := s.Covers.OpenLibrary(ctx, b.ISBN) // the ISBN's cover, when it has one
 		if !ok {
@@ -103,7 +119,7 @@ func (s *Server) findCovers() {
 }
 
 // StartCoverFinder runs the finder unless it already runs; it says whether it started one.
-func (s *Server) StartCoverFinder() bool {
+func (s *Server) StartCoverFinder(again bool) bool {
 	j := &s.covers
 	j.mu.Lock()
 	if j.Running {
@@ -112,7 +128,7 @@ func (s *Server) StartCoverFinder() bool {
 	}
 	j.Running = true // claimed here, so two clicks do not start two
 	j.mu.Unlock()
-	go s.findCovers()
+	go s.findCovers(again)
 	return true
 }
 
@@ -126,7 +142,7 @@ func (s *Server) CoverLoop(ctx context.Context) {
 		case <-time.After(wait):
 		}
 		wait = 24 * time.Hour
-		s.StartCoverFinder()
+		s.StartCoverFinder(false)
 	}
 }
 
@@ -137,7 +153,7 @@ func (s *Server) handleMissingCovers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleFindCovers(w http.ResponseWriter, r *http.Request) {
-	if !s.StartCoverFinder() {
+	if !s.StartCoverFinder(true) {
 		writeErr(w, http.StatusConflict, "the cover finder is already running")
 		return
 	}

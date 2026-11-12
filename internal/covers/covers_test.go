@@ -145,3 +145,19 @@ func TestSearchTitlesWithoutSeries(t *testing.T) {
 		t.Fatalf("Google is asked with the admin's key: %q", googleKey)
 	}
 }
+
+// A miss is remembered so the daily run skips the book, and Forget (Find covers now) clears it.
+func TestMissedAndForget(t *testing.T) {
+	c := Cache{Dir: t.TempDir()}
+	if c.Missed("book-1") {
+		t.Fatal("nothing searched yet")
+	}
+	_ = os.WriteFile(filepath.Join(c.Dir, "book-1.jpg.miss"), nil, 0o644)
+	if !c.Missed("book-1") {
+		t.Fatal("a fresh miss is remembered")
+	}
+	c.Forget("book-1")
+	if c.Missed("book-1") {
+		t.Fatal("Forget looks again")
+	}
+}

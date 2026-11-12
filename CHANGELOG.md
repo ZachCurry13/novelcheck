@@ -4,7 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
-## [1.72.0]
+## [1.72.1]
+
+### 🖼️ Find covers
+- **"Find covers now" looks at every book again.** A book searched in the last week with nothing found was skipped without a word, which is why a second run right after the first found 0 of 213. Pressing the button now searches them all again; the daily run still skips them, and its message says how many it skipped and why.
+
+### 🗑️ Calibre's recycle bin
+- **It no longer stops with an error** when the bin holds an entry with no book files in it.
+
 
 ### 🎨 Calmer screens, everywhere
 - **Grey, not navy.** The dark theme's surfaces are a neutral graphite, and the light theme a neutral white and grey, so book covers and the 0 to 5 level colours are what stand out.
