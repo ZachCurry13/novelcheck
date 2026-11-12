@@ -16,7 +16,7 @@ export const noCover = (cls = "h-20 w-14") =>
 export async function reportCover(b) {
   const note = prompt(`What's wrong with the cover of "${b.title}"? (optional)\nAn admin will fix it.`, "");
   if (note === null) return false;
-  return !!(await attempt(() => post(`/api/books/${b.id}/cover-report`, { note }), "Thanks! An admin will fix the cover."));
+  return !!(await attempt(() => post(`/api/books/${b.id}/cover-report`, { note }), "Thanks. An admin will fix the cover."));
 }
 
 function dialog() {
@@ -39,7 +39,7 @@ export async function openCoverReports(onDone) {
     const cw = data.calibre_web_url;
     const now = Date.now(); // show the cover as it is now, not a cached one
     d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
-      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">🖼️ Covers reported as wrong</h2>
+      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">Covers reported as wrong</h2>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
       <p class="text-sm text-slate-400">Change the cover in Calibre (Edit metadata → Download cover, or choose an image), then press <b>Fixed</b>. NovelCheck shows the new cover by itself.</p>
       <ul class="space-y-2">${data.reports.map((r) => `<li class="flex gap-3 rounded-lg bg-slate-800/60 p-3">
@@ -51,7 +51,7 @@ export async function openCoverReports(onDone) {
             ${cw && r.calibre_id ? `<a href="${esc(cw)}/book/${r.calibre_id}" target="_blank" rel="noopener noreferrer" class="text-sm text-sky-300 underline">Open in Calibre-Web ↗</a>` : ""}
             <button data-fix="${r.id}" class="btn-primary py-1 text-sm">✓ Fixed</button>
             <button data-dismiss="${r.id}" class="btn-ghost py-1 text-sm">Dismiss</button>
-          </div></div></li>`).join("") || `<li class="text-sm text-slate-500">No cover reports. 🎉</li>`}</ul></div>`;
+          </div></div></li>`).join("") || `<li class="text-sm text-slate-500">No cover reports.</li>`}</ul></div>`;
     return true;
   };
   if (!(await load())) return;

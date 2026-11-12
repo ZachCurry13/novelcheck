@@ -11,12 +11,12 @@ const COLORS = ["bg-indigo-600", "bg-emerald-600", "bg-rose-600", "bg-teal-600"]
 
 function tiles(data) {
   return `<div class="mb-6 flex items-center justify-center gap-3"><img src="/icons/icon.svg" alt="" class="h-10 w-10">
-      <h1 class="text-2xl font-bold">Who's reading?</h1></div>
+      <h1 class="page-title">Who's reading?</h1></div>
     <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3">${data.profiles.map((p, i) => `<li>
       <button type="button" data-pick="${p.id}" class="card flex w-full flex-col items-center gap-2 py-5 hover:ring-indigo-600">
-        <span class="flex h-16 w-16 items-center justify-center rounded-full ${COLORS[i % COLORS.length]} text-2xl font-bold text-white">${initial(p.username)}</span>
+        <span class="flex h-16 w-16 items-center justify-center rounded-full ${COLORS[i % COLORS.length]} text-2xl font-semibold text-white">${initial(p.username)}</span>
         <span class="max-w-full break-words px-2 text-center font-semibold leading-snug line-clamp-2">${esc(p.username)}</span>
-        <span class="text-xs text-slate-400">${p.needs === "pin" ? "🔒 PIN" : p.needs === "password" ? "🔑 Password" : p.role === "restricted" ? "Tap to read" : ""}</span>
+        <span class="text-xs text-slate-400">${p.needs === "pin" ? "PIN" : p.needs === "password" ? "Password" : p.role === "restricted" ? "Tap to read" : ""}</span>
       </button></li>`).join("")}</ul>
     <button type="button" data-password class="btn-ghost mx-auto mt-6 block text-sm">Sign in with a username and password</button>`;
 }

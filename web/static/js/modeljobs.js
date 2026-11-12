@@ -37,8 +37,8 @@ export function jobLine(name, job = "rate") {
   const j = jobsOf(name);
   const part = (k) => `<span class="${TONE[j[k]]}">${MARK[j[k]]} ${esc(WORDS[k][j[k]])}</span>`;
   const out = [part(job), part(job === "rate" ? "deep" : "rate")];
-  if (j.photos) out.push(`<span class="text-emerald-300">📷 reads cover photos</span>`);
-  if (j.thinking) out.push(`<span class="text-amber-300">⚠️ a "thinking" model: slow, and it often breaks the answer format</span>`);
+  if (j.photos) out.push(`<span class="text-emerald-300">reads cover photos</span>`);
+  if (j.thinking) out.push(`<span class="text-amber-300">a "thinking" model: slow, and it often breaks the answer format</span>`);
   return out.join(` <span class="text-slate-600">·</span> `);
 }
 

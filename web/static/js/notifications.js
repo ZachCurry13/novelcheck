@@ -63,8 +63,8 @@ function noticeCard(n) {
     </div>
     <div class="mt-2 flex flex-wrap gap-2 pl-8">
       ${n.link ? `<a href="${esc(n.link)}" data-go data-read-on-go="${n.id}" class="btn-secondary text-sm">${actionLabel(n)}</a>` : ""}
-      ${n.level === "error" ? `<button data-copy-msg="${esc(n.message)}" class="btn-ghost text-sm">📋 Copy</button>
-        <button data-diagnose="${esc(n.message)}" class="btn-ghost admin-link text-sm">🩺 Diagnose</button>` : ""}
+      ${n.level === "error" ? `<button data-copy-msg="${esc(n.message)}" class="btn-ghost text-sm">Copy</button>
+        <button data-diagnose="${esc(n.message)}" class="btn-ghost admin-link text-sm">Diagnose</button>` : ""}
     </div>
   </li>`;
 }
@@ -98,14 +98,14 @@ function paintPanel() {
   panel.innerHTML = `
     <div class="max-h-[80vh] space-y-4 overflow-y-auto p-5">
       <div class="flex items-center justify-between gap-3">
-        <h2 class="text-lg font-bold">Notifications</h2>
+        <h2 class="text-lg font-semibold">Notifications</h2>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>
       </div>
       <div class="flex flex-wrap gap-2">
         <button data-all class="btn-secondary py-1 text-xs" ${data.unread ? "" : "disabled"}>Mark all read</button>
         <button data-clear class="btn-ghost py-1 text-xs" ${data.items.length ? "" : "disabled"}>Clear all</button>
         <a href="#/system" data-go class="btn-ghost py-1 text-xs admin-link">Check everything →</a>
-        <button data-copy-all class="btn-ghost py-1 text-xs">📋 Copy all</button>
+        <button data-copy-all class="btn-ghost py-1 text-xs">Copy all</button>
       </div>
       <section>
         <p class="label">From NovelCheck</p>

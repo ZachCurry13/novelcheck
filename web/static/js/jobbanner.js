@@ -11,7 +11,7 @@ export function watchJob(box) {
     const j = await get("/api/admin/formats/job").catch(() => null);
     if (j && j.running) {
       box.classList.remove("hidden");
-      box.innerHTML = `⚙️ <b>${esc(KINDS[j.kind] || "Working on your library")}</b> in the background: ${j.done} of ${j.total}${j.failed ? `, ${j.failed} did not work` : ""}${j.current ? ` · ${esc(j.current)}${j.percent ? ` (${j.percent}%)` : ""}` : ""}
+      box.innerHTML = `<b>${esc(KINDS[j.kind] || "Working on your library")}</b> in the background: ${j.done} of ${j.total}${j.failed ? `, ${j.failed} did not work` : ""}${j.current ? ` · ${esc(j.current)}${j.percent ? ` (${j.percent}%)` : ""}` : ""}
         <button type="button" data-job="stop" class="ml-2 underline">Stop after this one</button>
         <span class="block text-xs text-slate-400">You can leave this page. NovelCheck sends a notice when it is done.</span>`;
       setTimeout(tick, 4000);

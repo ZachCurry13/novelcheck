@@ -8,7 +8,7 @@ import { refreshUser } from "./app.js";
 // familyCardHTML is the Profile card.
 export function familyCardHTML(u) {
   return `<div id="family-card" class="card space-y-3">
-    <h2 class="text-lg font-semibold">👥 Family device &amp; PIN</h2>
+    <h2 class="text-lg font-semibold">Family device &amp; PIN</h2>
     ${canManage(u) ? `<p class="text-sm text-slate-400">${u.family_device
       ? "This device opens on <b>Who's reading?</b>: everyone picks their profile, kids with a tap, parents with their PIN or password."
       : "On a shared tablet or computer, everyone can pick their profile instead of typing a password: kids tap their name, parents use a PIN."}</p>
@@ -63,7 +63,7 @@ export function bindFamilyCard(view, rerender) {
 export async function renderFamilyDevices(host) {
   const list = await get("/api/admin/family-devices").catch(() => []);
   host.innerHTML = list.length ? `<div class="card mb-4 space-y-2">
-    <h3 class="font-semibold">👥 Family devices</h3>
+    <h3 class="font-semibold">Family devices</h3>
     <p class="text-xs text-slate-400">These open on Who's reading?. Remove one you no longer use (it will ask for a password again).</p>
     <ul class="space-y-1">${list.map((d) => `<li class="flex items-center justify-between gap-2 text-sm">
       <span class="min-w-0 truncate">${esc(d.name)} <span class="text-xs text-slate-500">· set up by ${esc(d.created_by)}</span></span>

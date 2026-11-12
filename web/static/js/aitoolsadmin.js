@@ -16,8 +16,8 @@ export async function renderAITools(host, deepHost) {
     if (!st || !host.isConnected) return clearInterval(timer);
     const ups = st.updates || [];
     const results = Object.values(st.results || {}).sort((a, b) => a.ai.localeCompare(b.ai) || a.model.localeCompare(b.model));
-    if (deepHost) deepHost.innerHTML = `${st.deep_machine ? box("🧬 Deep Scan machine", st.deep_away
-        ? `<p class="text-sm text-amber-300">⏸ Not answering right now (switched off or asleep).${st.deep_waiting ? " Deep Scans are waiting and carry on when it's back." : " Deep Scans will wait for it."}</p>`
+    if (deepHost) deepHost.innerHTML = `${st.deep_machine ? box("Deep Scan machine", st.deep_away
+        ? `<p class="text-sm text-amber-300">Not answering right now (switched off or asleep).${st.deep_waiting ? " Deep Scans are waiting and carry on when it's back." : " Deep Scans will wait for it."}</p>`
         : `<p class="text-sm text-emerald-300">✓ Answering: Deep Scans run there.</p>`) : ""}`;
     host.innerHTML = `
       ${box("⬆️ Model updates", `${ups.length ? `<ul class="space-y-2">${ups.map((u, i) => `<li class="flex flex-wrap items-center gap-2 text-sm">
@@ -27,7 +27,7 @@ export async function renderAITools(host, deepHost) {
         ${st.check_error ? `<p class="text-xs text-amber-300">Couldn't check: ${esc(st.check_error)}</p>` : ""}
         <div data-progress class="hidden text-sm"><progress max="100" class="w-full"></progress><p class="text-xs text-slate-400"></p></div>
         <button type="button" data-check class="btn-ghost py-1 text-sm">Check now</button>`)}
-      ${box("⏱ Speed test", `<p class="text-xs text-slate-400">Times each model on a made-up sample book: one rating, and one Deep Scan part of about 600 words. Deep Scan estimates then say how long a book takes (and its electricity).</p>
+      ${box("Speed test", `<p class="text-xs text-slate-400">Times each model on a made-up sample book: one rating, and one Deep Scan part of about 600 words. Deep Scan estimates then say how long a book takes (and its electricity).</p>
         <div class="flex flex-wrap gap-2">${[["main", "Main AI"], ["backup", "Backup AI"], ["deep", "Deep Scans"]].map(([k, l]) =>
           `<button type="button" data-bench="${k}" class="btn-secondary py-1 text-sm" ${st.benching ? "disabled" : ""}>Test ${l}</button>`).join("")}</div>
         ${st.benching ? `<p class="text-sm text-slate-300">Testing… a local model can take a few minutes.</p>` : ""}

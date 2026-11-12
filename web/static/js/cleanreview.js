@@ -27,7 +27,7 @@ export function review(spec) {
       resolve(value);
     };
     d.innerHTML = `<div class="max-h-[88vh] space-y-3 overflow-y-auto p-5">
-      <h2 class="text-lg font-bold">🔍 Review: ${esc(spec.title)}</h2>
+      <h2 class="text-lg font-semibold">Review: ${esc(spec.title)}</h2>
       <p class="text-sm text-slate-400">${esc(spec.intro || "")}</p>
       ${spec.fixed ? "" : `<div class="flex flex-wrap items-center gap-3 text-sm"><button type="button" data-all class="underline">${items.some((it) => it.warn) ? "Tick all without a warning" : "Tick all"}</button>
         <button type="button" data-none class="underline">Tick none</button><span data-count class="text-slate-400"></span></div>`}
@@ -35,7 +35,7 @@ export function review(spec) {
         ${spec.fixed ? "" : `<input type="checkbox" data-i="${i}" ${it.warn ? "" : "checked"} class="mt-1">`}
         <span class="min-w-0"><span class="break-words font-semibold">${esc(it.label)}</span>
           ${it.detail ? `<span class="block break-words text-xs text-slate-400">${esc(it.detail)}</span>` : ""}
-          ${it.warn ? `<span class="block break-words text-xs text-amber-300">⚠️ Not ticked: ${esc(it.warn)}</span>` : ""}</span></label></li>`).join("")}</ul>
+          ${it.warn ? `<span class="block break-words text-xs text-amber-300">Not ticked: ${esc(it.warn)}</span>` : ""}</span></label></li>`).join("")}</ul>
       ${spec.more ? `<p class="text-xs text-slate-400">${esc(spec.more)}</p>` : ""}
       <div class="flex flex-wrap gap-2"><button type="button" data-ok class="btn-primary">${esc(spec.confirm || "Go ahead")}</button>
         <button type="button" data-cancel class="btn-ghost">Cancel</button></div></div>`;

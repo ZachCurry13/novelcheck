@@ -33,8 +33,8 @@ export async function openPlayer(bookId) {
   dlg.innerHTML = `<div class="max-h-[90vh] space-y-4 overflow-y-auto p-5">
     <div class="flex items-start justify-between gap-3"><div class="flex min-w-0 gap-3">
         <img src="/api/books/${bookId}/cover?size=l" alt="" class="h-24 w-16 shrink-0 rounded object-cover">
-        <div class="min-w-0"><h2 class="break-words text-lg font-bold">${esc(info.title)}</h2><p class="text-sm text-slate-400">${esc(info.author || "")}</p>
-          ${info.narrator ? `<p class="text-xs text-slate-500">🎙 ${esc(info.narrator)}</p>` : ""}<p id="pl-chapter" class="mt-1 text-sm text-indigo-300"></p></div></div>
+        <div class="min-w-0"><h2 class="break-words text-lg font-semibold">${esc(info.title)}</h2><p class="text-sm text-slate-400">${esc(info.author || "")}</p>
+          ${info.narrator ? `<p class="text-xs text-slate-500">${esc(info.narrator)}</p>` : ""}<p id="pl-chapter" class="mt-1 text-sm text-indigo-300"></p></div></div>
       <button data-close class="btn-ghost px-2 text-xl" aria-label="Close player">✕</button></div>
     <audio id="pl-audio" preload="metadata"></audio>
     <div class="space-y-1"><input id="pl-seek" type="range" min="0" max="${Math.floor(total)}" step="1" value="0" class="w-full accent-indigo-500" aria-label="Position in the book">

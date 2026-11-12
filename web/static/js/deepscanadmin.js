@@ -16,10 +16,10 @@ export async function renderDeepScanAdmin(view, state) {
   clearInterval(timer);
   view.innerHTML = `
     ${adminNavHTML("@deepscan")}
-    <h1 class="mb-1 text-2xl font-bold">🧬 Deep Scan</h1>
+    <h1 class="mb-1 page-title">Deep Scan</h1>
     <p class="mb-3 text-sm text-slate-400">The AI reads a book's whole EPUB, part by part, instead of guessing from the description.</p>
     <div id="model-warning"></div>
-    <p id="deep-waiting" class="card mb-3 hidden text-sm text-amber-300">⏸ The Deep Scan machine isn't answering. Scans wait and carry on by themselves when it's switched on again.</p>
+    <p id="deep-waiting" class="card mb-3 hidden text-sm text-amber-300">The Deep Scan machine isn't answering. Scans wait and carry on by themselves when it's switched on again.</p>
     <div class="mb-4 grid grid-cols-4 gap-1 rounded-xl bg-slate-900 p-1 ring-1 ring-slate-800" role="tablist">
       ${TABS.map(([k, label]) => `<button type="button" role="tab" data-tab="${k}" class="rounded-lg px-1 py-2 text-sm text-slate-300">${label}<span data-count="${k}" class="block text-xs text-slate-500"></span></button>`).join("")}
     </div>
@@ -175,7 +175,7 @@ export async function renderDeepScanAdmin(view, state) {
 
 function paintModelWarning(box, data) {
   if (!data.model_warning) return;
-  box.innerHTML = `<div class="mb-4 space-y-2 rounded-lg bg-amber-950/50 p-3 text-sm text-amber-200"><p>⚠️ ${esc(data.model_warning)}</p>
+  box.innerHTML = `<div class="mb-4 space-y-2 rounded-lg bg-amber-950/50 p-3 text-sm text-amber-200"><p>${esc(data.model_warning)}</p>
     <div class="flex flex-wrap items-center gap-2">
       ${data.suggest_model && canHere("ai") ? `<button id="use-model" class="btn-secondary py-1 text-sm">Use ${esc(data.suggest_model)} for Deep Scan</button>
         <span class="text-xs text-amber-200/80">(already on your Ollama; other ratings keep their model)</span>` : ""}

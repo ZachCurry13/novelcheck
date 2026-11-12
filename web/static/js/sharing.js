@@ -9,7 +9,7 @@ export async function renderSharingCard(host, user) {
   const [me, kids] = await Promise.all([get("/api/me/sharing").catch(() => null), canManage(user) ? get("/api/admin/kids-sharing").catch(() => null) : null]);
   if (!me) return;
   const sh = me.sharing;
-  host.innerHTML = `<h2 class="text-lg font-semibold">👥 Sharing</h2>
+  host.innerHTML = `<h2 class="text-lg font-semibold">Sharing</h2>
     <p class="text-sm text-slate-400">Your reading profile is <b>${sh.profile ? "shared with the family" : "private"}</b>. When it's shared, the family can see your reading time, books and charts on the <a href="#/readers" class="underline">Readers</a> page. Everyone only sees books they're allowed to see, never your highlights or notes, and not files that aren't in the library.</p>
     ${me.kid ? `<p class="text-sm text-slate-300">A parent decides whether your profile is shared.</p>` : `${toggle("Share my reading profile with the family", "data-me-profile", sh.profile)}
       ${toggle("Also show what I'm reading right now", "data-me-current", sh.current, "Only when my profile is shared.")}`}

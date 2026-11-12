@@ -15,8 +15,8 @@ const fmtGB = (b) => (b < GB ? `${Math.round(b / MB)} MB` : `${(b / GB).toFixed(
 // Meter fill turns amber then red as usage climbs; the label repeats the
 // state in words so colour is never the only signal.
 function meter(pct, label, progress) {
-  const level = progress ? ["bg-indigo-500", "bg-indigo-950", `${Math.round(pct)}% done`] : pct >= 90 ? ["bg-rose-500", "bg-rose-950", "⛔ Very high"]
-    : pct >= 75 ? ["bg-amber-400", "bg-amber-950", "⚠️ High"] : ["bg-indigo-500", "bg-indigo-950", "OK"];
+  const level = progress ? ["bg-indigo-500", "bg-indigo-950", `${Math.round(pct)}% done`] : pct >= 90 ? ["bg-rose-500", "bg-rose-950", "Very high"]
+    : pct >= 75 ? ["bg-amber-400", "bg-amber-950", "High"] : ["bg-indigo-500", "bg-indigo-950", "OK"];
   return `<div class="meter-track ${level[1]} mt-3" role="meter" aria-valuemin="0" aria-valuemax="100"
       aria-valuenow="${Math.round(pct)}" aria-label="${esc(label)}" title="${esc(label)}: ${Math.round(pct)}%">
       <div class="meter-fill ${level[0]}" data-w="${Math.max(0, Math.min(100, pct))}"></div></div>
@@ -37,7 +37,7 @@ function ollamaCard(o) {
   if (!o) {
     return `<p class="text-sm text-slate-400">Not using Ollama. Pick it as the AI provider in Admin to see its usage here.</p>`;
   }
-  if (o.error && !o.version) return `<p class="text-sm text-rose-300">⛔ ${esc(o.error)}</p>`;
+  if (o.error && !o.version) return `<p class="text-sm text-rose-300">${esc(o.error)}</p>`;
   const loaded = o.loaded || [];
   const rows = loaded.map((m) => {
     const gpu = m.vram_bytes, ram = Math.max(0, m.size_bytes - m.vram_bytes), total = m.size_bytes || 1;
@@ -79,7 +79,7 @@ function libraryTiles(s) {
 export async function renderUsage(view) {
   view.innerHTML = `
     ${adminNavHTML("@usage")}
-    <h1 class="mb-1 text-2xl font-bold">Usage</h1>
+    <h1 class="mb-1 page-title">Usage</h1>
     <p class="mb-4 text-sm text-slate-400">What NovelCheck is using right now. Refreshes every 5 seconds; charts show the last 15 minutes.</p>
     <div id="nc-tiles" class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>
     <div class="mb-6 grid gap-3 lg:grid-cols-2">

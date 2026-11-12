@@ -9,7 +9,7 @@ export function extrasHTML(d) {
   return `<select id="pl-sleep" class="input w-auto py-1" aria-label="Sleep timer">${SLEEP.map(([l, v]) => `<option value="${v}">${l}</option>`).join("")}
       ${d.chapters.length ? `<option value="ch">End of this chapter</option>` : ""}</select>
     ${d.chapters.length ? `<select id="pl-chapters" class="input min-w-0 flex-1 py-1" aria-label="Chapters">${d.chapters.map((c, i) => `<option value="${i}">${esc(c.title)} · ${fmtClock(c.start)}</option>`).join("")}</select>` : ""}
-    <button type="button" id="pl-mark" class="btn-secondary py-1 text-sm">🔖 Bookmark</button>
+    <button type="button" id="pl-mark" class="btn-secondary py-1 text-sm">Bookmark</button>
     <ul id="pl-marks" class="w-full space-y-1 text-sm"></ul>`;
 }
 

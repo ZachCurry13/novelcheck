@@ -20,7 +20,7 @@ import { renderDevTab } from "./devsettings.js";
 import { tabStrip } from "./tabs.js";
 import { renderSharingCard } from "./sharing.js";
 
-const SECTIONS = { general: "General", account: "Account", kindle: "Kindle & KOReader", connections: "Connections", developer: "🛠 Developer" };
+const SECTIONS = { general: "General", account: "Account", kindle: "Kindle & KOReader", connections: "Connections", developer: "Developer" };
 
 // sectionFromHash reads #/settings?s=kindle.
 const sectionFromHash = () => {
@@ -55,7 +55,7 @@ const accountHTML = (u) => `<form id="password" class="card space-y-3">
 function kindleHTML(u) {
   const off = on(u, "koreader") ? "" : " module-off";
   return `<div class="card space-y-2 lg:col-span-2${off}">
-      <h2 class="text-lg font-semibold">📖 KOReader setup</h2>
+      <h2 class="text-lg font-semibold">KOReader setup</h2>
       <p class="text-sm text-slate-400">The catalog address, QR code and reading-sync steps for a Kindle or phone. With the plugin below you rarely need them: <b>NovelCheck → Set up everything</b> does it on the Kindle.</p>
       <button type="button" id="ko-setup" class="btn-secondary">Open KOReader setup</button></div>
     <div id="plugin-card" class="card space-y-2${off}"></div>
@@ -68,7 +68,7 @@ export async function renderSettings(view, state) {
   const u = state.user;
   let section = sectionFromHash();
   const draw = () => {
-    view.innerHTML = `<h1 class="mb-3 text-2xl font-bold">⚙ Settings</h1>
+    view.innerHTML = `<h1 class="mb-3 page-title">Settings</h1>
       ${tabStrip({ id: "settings-tabs", attr: "data-section", label: "Settings", active: section, tabs: Object.entries(SECTIONS) })}
       <div class="grid gap-4 lg:grid-cols-2">${{ general: () => generalHTML(u), account: () => accountHTML(u), kindle: () => kindleHTML(u), connections: connectionsHTML, developer: () => `<div id="dev-tab" class="contents"></div>` }[section]()}</div>`;
     bind();

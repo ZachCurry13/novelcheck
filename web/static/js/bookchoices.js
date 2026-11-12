@@ -14,7 +14,7 @@ export function pickBook(choices, query, read = null) {
     document.body.append(d);
   }
   d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
-    <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-bold">${read ? "Which book is in the picture?" : "Which book did you mean?"}</h2>
+    <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-semibold">${read ? "Which book is in the picture?" : "Which book did you mean?"}</h2>
       <button type="button" data-close class="btn-ghost h-10 w-10 p-0 text-xl" aria-label="Close">✕</button></div>
     <p class="text-sm text-slate-400">${read ? `The AI read “${esc(read.title)}”${read.author ? ` by ${esc(read.author)}` : ""}, but couldn't find that exact book. Pick the right one:` : `For “${esc(query)}”:`}</p>
     <ul class="space-y-2">${choices.map((c, i) => `<li><button type="button" data-i="${i}" class="w-full rounded-lg bg-slate-800/70 p-3 text-left hover:bg-slate-700">

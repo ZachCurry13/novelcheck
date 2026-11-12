@@ -33,7 +33,7 @@ function dialog() {
 export function openNewEvent() {
   const d = dialog();
   d.innerHTML = `<form class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
-    <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-bold">🎉 New event</h2>
+    <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-semibold">New event</h2>
       <button type="button" data-close class="btn-ghost h-10 w-10 p-0 text-xl" aria-label="Close">✕</button></div>
     <label class="block"><span class="label">The page's address</span>
       <input name="url" type="url" class="input" placeholder="https://…" autocomplete="off">
@@ -93,7 +93,7 @@ export function openNewEvent() {
 export function openEditEvent(ev, onDone) {
   const d = dialog();
   d.innerHTML = `<form class="space-y-3 p-5">
-    <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-bold">✏️ Edit event</h2>
+    <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-semibold">Edit event</h2>
       <button type="button" data-close class="btn-ghost h-10 w-10 p-0 text-xl" aria-label="Close">✕</button></div>
     <label class="block"><span class="label">Name</span>
       <input name="name" required maxlength="100" class="input" value="${esc(ev.name)}"></label>

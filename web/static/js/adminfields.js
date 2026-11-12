@@ -2,7 +2,7 @@
 // [tab, title, fields]; a field is [key, label, placeholder/choices, type, shown only while this switch is on,
 // "adv" = under the card's Advanced line].
 export const SECTIONS = [
-  ["ai", "🤖 Your AI", [
+  ["ai", "Your AI", [
     ["llm_provider", "", "", "hidden"],
     ["llm_base_url", "Address", "https://api.openai.com/v1 · http://ollama:11434/v1"],
     ["llm_api_key", "API key", "Leave blank for local Ollama", "password"],
@@ -13,7 +13,7 @@ export const SECTIONS = [
     ["llm_timeout_seconds", "AI time limit per book (seconds)", "0 = automatic: 10 minutes for Ollama, 2 for cloud", "number", "", "adv"],
     ["local_context_tokens", "Context size of your local AI (tokens)", "4096", "number", "", "adv"],
   ]],
-  ["ai", "🛟 Backup AI", [
+  ["ai", "Backup AI", [
     ["backup_llm_enabled", "Use a backup AI when the main one fails (a second Ollama, or a cloud AI)", "", "bool"],
     ["backup_llm_provider", "", "", "hidden"],
     ["backup_llm_base_url", "Address", "http://192.168.1.60:11434/v1 · https://api.openai.com/v1", "text", "backup_llm_enabled"],
@@ -21,7 +21,7 @@ export const SECTIONS = [
     ["backup_llm_model", "Model(s), in order", "e.g. llama3.2, or gpt-4o-mini; several? separate with commas", "text", "backup_llm_enabled"],
     ["backup_llm_json_mode", "JSON response mode", "", "bool", "backup_llm_enabled", "adv"],
   ]],
-  ["ai", "🧬 Deep Scans", [
+  ["ai", "Deep Scans", [
     ["deep_llm_enabled", "Run Deep Scans on a separate, bigger machine (they wait while it's switched off)", "", "bool"],
     ["deep_llm_provider", "", "", "hidden"],
     ["deep_llm_base_url", "Address", "http://<the machine's address>:11434/v1", "text", "deep_llm_enabled"],
@@ -30,17 +30,17 @@ export const SECTIONS = [
     ["deep_read_model", "Deep Scan model when there is no separate machine (optional)", "Blank = the models of Your AI · e.g. a cheaper model with a big context window"],
     ["deep_llm_json_mode", "JSON response mode", "", "bool", "deep_llm_enabled", "adv"],
   ]],
-  ["ai", "⏰ When it runs", [
+  ["ai", "When it runs", [
     ["tokens_per_hour_cap", "Most tokens per hour (0 = no limit)", "25000", "number"],
     ["batch_size", "Books per “Rate waiting books now” (0 = all waiting books)", "20", "number"],
     ["scan_delay_seconds", "Pause between books (seconds)", "2", "number", "", "adv"],
   ]],
-  ["ai", "✨ Extras", [
+  ["ai", "Extras", [
     ["suggest_mode", "How suggestions under Nightstand are picked", "AI picks + books you don't own|AI picks from your library|Free matching only (no AI)", "select"],
     ["language", "Language for book summaries", "English (US)|English (UK)|Spanish|French|German|Portuguese|Italian|Dutch", "select"],
     ["google_books_api_key", "Google Books API key (optional)", "", "password"],
   ]],
-  ["ai", "🖥️ Machines & costs", [
+  ["ai", "Machines & costs", [
     ["power_price_kwh", "Electricity price per kWh (USD)", "0 = don't count electricity", "number"],
     ["main_ai_watts", "Main AI machine: extra watts while it works", "e.g. 150 · 0 for a cloud AI", "number"],
     ["backup_ai_watts", "Backup AI machine: extra watts while it works", "0 for a cloud AI", "number", "backup_llm_enabled"],
@@ -76,10 +76,10 @@ export const SECTIONS = [
     ["module_koreader", "KOReader catalog delivery", "", "bool"],
     ["module_import", "Import books (Kindle / drive scanner and lists)", "", "bool"],
     ["module_parents", "Parent tools (kids' accounts, age groups, parents' notes)", "", "bool"],
-    ["module_suggestions", "💡 Suggested Reads under Nightstand", "", "bool"],
-    ["module_taste", "🎯 Taste profile: people can rate books they know to improve their suggestions (uses no AI)", "", "bool"],
-    ["module_discover", "🧭 Discover tab: best sellers, classics, and the family's new and popular books", "", "bool"],
-    ["notify_routine", "🔔 Also show everyday events: new books from Calibre, rating finished, someone started a book", "", "bool"],
+    ["module_suggestions", "Suggested Reads under Nightstand", "", "bool"],
+    ["module_taste", "Taste profile: people can rate books they know to improve their suggestions (uses no AI)", "", "bool"],
+    ["module_discover", "Discover tab: best sellers, classics, and the family's new and popular books", "", "bool"],
+    ["notify_routine", "Also show everyday events: new books from Calibre, rating finished, someone started a book", "", "bool"],
   ]],
   ["system", "Sign-in & Updates", [
     ["session_days", "Keep people signed in for (days, renewed while they use the app)", "30", "number"],
@@ -93,33 +93,33 @@ export const SECTION_MODULE = { "SMTP / Send-to-Kindle": "send_to_kindle", Disco
 // The area each card belongs to; an admin sees the cards of the areas the
 // main admin gave them (the server sorts each setting the same way: settingArea).
 export const SECTION_AREA = {
-  "🤖 Your AI": "ai", "🛟 Backup AI": "ai", "🧬 Deep Scans": "ai", "⏰ When it runs": "ai", "✨ Extras": "ai", "🖥️ Machines & costs": "ai",
+  "Your AI": "ai", "Backup AI": "ai", "Deep Scans": "ai", "When it runs": "ai", "Extras": "ai", "Machines & costs": "ai",
   "SMTP / Send-to-Kindle": "services", "Calibre Library": "calibre", Audiobookshelf: "services", Discover: "services",
   Features: "system", "Sign-in & Updates": "system",
 };
 
 // One line under a card's title: what the card is for.
 export const NOTE = {
-  "🛟 Backup AI": "A second AI, tried only when the main one fails.",
-  "🧬 Deep Scans": "Reading a whole book, on this AI or a bigger machine.",
-  "⏰ When it runs": "Automatic rating, its hours and its limits.",
-  "✨ Extras": "Suggestions, collection ideas, summary language, your own filters.",
-  "🖥️ Machines & costs": "Model updates, the speed test, electricity and token prices.",
+  "Backup AI": "A second AI, tried only when the main one fails.",
+  "Deep Scans": "Reading a whole book, on this AI or a bigger machine.",
+  "When it runs": "Automatic rating, its hours and its limits.",
+  "Extras": "Suggestions, collection ideas, summary language, your own filters.",
+  "Machines & costs": "Model updates, the speed test, electricity and token prices.",
 };
 
 const note = (when, text) => `<p class="text-xs text-slate-400"${when ? ` data-when="${when}"` : ""}>${text}</p>`;
 
 // What a card holds besides its fields: before them (TOP) or after them.
 export const TOP = {
-  "🤖 Your AI": `<div id="llm-preset-host"></div>`,
-  "⏰ When it runs": `<div id="auto-rate-host" class="space-y-3"></div>`,
-  "🖥️ Machines & costs": `<div id="aitools-host" class="space-y-3"></div>`,
+  "Your AI": `<div id="llm-preset-host"></div>`,
+  "When it runs": `<div id="auto-rate-host" class="space-y-3"></div>`,
+  "Machines & costs": `<div id="aitools-host" class="space-y-3"></div>`,
   Features: note("", "Turn off what your family doesn't use. It disappears for everyone; kids' content rules always keep applying."),
 };
 export const EXTRA = {
-  "🛟 Backup AI": note("backup_llm_enabled", "Tried only when the main AI fails on a book. If the main server is switched off, NovelCheck goes straight to the backup. You'll get a 🔔 notice when the backup is used.") + `<div id="backup-preset-host" data-when="backup_llm_enabled"></div>`,
-  "🧬 Deep Scans": note("deep_llm_enabled", "Deep Scans read whole books, so a bigger model on a stronger machine rates them better. Ratings stay on the main AI. While this machine is off or asleep, Deep Scans wait (🧬⏸) and carry on when it answers.") + `<div id="deep-preset-host" data-when="deep_llm_enabled"></div><div id="deep-status-host"></div>`,
-  "✨ Extras": `<div id="ideas-host"></div><div id="custom-flags"></div>`,
+  "Backup AI": note("backup_llm_enabled", "Tried only when the main AI fails on a book. If the main server is switched off, NovelCheck goes straight to the backup. You'll get a 🔔 notice when the backup is used.") + `<div id="backup-preset-host" data-when="backup_llm_enabled"></div>`,
+  "Deep Scans": note("deep_llm_enabled", "Deep Scans read whole books, so a bigger model on a stronger machine rates them better. Ratings stay on the main AI. While this machine is off or asleep, Deep Scans wait (🧬⏸) and carry on when it answers.") + `<div id="deep-preset-host" data-when="deep_llm_enabled"></div><div id="deep-status-host"></div>`,
+  "Extras": `<div id="ideas-host"></div><div id="custom-flags"></div>`,
   "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,
   "Calibre Library": `<div id="calibre-picker"></div><div id="calibre-server"></div>`,
   Discover: `<div id="discover-admin" class="space-y-2"></div>`,

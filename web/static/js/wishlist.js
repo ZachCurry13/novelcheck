@@ -10,8 +10,8 @@ import { when } from "./deepscan.js";
 import { coverImg } from "./covers.js";
 
 const STATUS = {
-  wanted: ["⭐ Wanted", "chip-pending"],
-  approved: ["🛒 To get", "chip-closed"],
+  wanted: ["Wanted", "chip-pending"],
+  approved: ["To get", "chip-closed"],
   acquired: ["✓ Got it", "chip-none"],
   declined: ["Declined", "chip-pending"],
 };
@@ -30,7 +30,7 @@ export async function renderWishlist(view, state) {
       if (mine && w.status === "wanted") acts.push(`<button data-act="remove" class="btn-ghost py-1 text-sm">Remove</button>`);
       return `<li class="card space-y-2" data-wish="${w.id}" data-book="${w.book_id}">
         <div class="flex flex-wrap items-start justify-between gap-2">
-          <button data-act="open" class="flex min-w-0 gap-3 text-left">${coverImg(w.book_id, "h-20 w-14")}<span class="min-w-0"><span class="block font-semibold">${esc(w.title)}${w.format ? ` <span class="chip-fmt align-middle">${w.format === "audio" ? "🎧 Audiobook" : "📖 E-book"}</span>` : ""}</span>
+          <button data-act="open" class="flex min-w-0 gap-3 text-left">${coverImg(w.book_id, "h-20 w-14")}<span class="min-w-0"><span class="block font-semibold">${esc(w.title)}${w.format ? ` <span class="chip-fmt align-middle">${w.format === "audio" ? "Audiobook" : "E-book"}</span>` : ""}</span>
             <span class="block text-sm text-slate-400">${esc(w.author || "")}</span></span></button>
           <span class="flex flex-wrap gap-1">${w.spice_level === null ? "" : pepperChip(w.spice_level)}<span class="${cls}">${label}</span></span>
         </div>
@@ -40,11 +40,11 @@ export async function renderWishlist(view, state) {
     };
     view.innerHTML = `
       ${discoverTabsHTML("wishlist", state.user)}
-      <h1 class="mb-1 text-2xl font-bold">⭐ Wishlist</h1>
+      <h1 class="mb-1 page-title">Wishlist</h1>
       <p class="mb-4 text-sm text-slate-400">${data.manager
         ? "Books the family would like to get. <b>Approve & Track</b> the ones you'll buy; they're marked as got by themselves once they show up in your library."
         : "Books you'd like to get. A parent decides; you'll see here when they're on the way."}
-        Add books with <b>⭐ Add to Wishlist</b> on Check a book or in a book's window.</p>
+        Add books with <b>Add to Wishlist</b> on Check a book or in a book's window.</p>
       <ul class="space-y-2">${open.map(row).join("") || `<li class="text-sm text-slate-500">Nothing on the wishlist right now.</li>`}</ul>
       ${done.length ? `<h2 class="mb-2 mt-6 text-lg font-semibold">Done</h2><ul class="space-y-2">${done.map(row).join("")}</ul>` : ""}`;
   };

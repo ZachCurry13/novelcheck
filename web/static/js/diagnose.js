@@ -27,14 +27,14 @@ export function renderDiagnose(host) {
   }
   host.innerHTML = `
     <section class="card mb-6 space-y-3">
-      <h2 class="text-lg font-semibold">🩺 Diagnose with AI</h2>
+      <h2 class="text-lg font-semibold">Diagnose with AI</h2>
       <p class="text-sm text-slate-400">Your AI reads NovelCheck's diagnostics (settings, recent problems and logs, never passwords or keys),
         explains what's wrong, and keeps what it found with your bug reports (Settings → Developer, and the link to recent bug reports).</p>
       <textarea id="dx-problem" rows="3" class="input" placeholder="What went wrong? (optional) e.g. 'Send test email fails' or paste an error">${esc(pending)}</textarea>
       <div class="flex flex-wrap items-center gap-2">
-        <button id="dx-run" class="btn-primary">🩺 Diagnose</button>
+        <button id="dx-run" class="btn-primary">Diagnose</button>
         <span class="text-xs text-slate-500">Just the raw report:</span>
-        <button id="dx-raw-copy" class="btn-ghost px-2 py-0.5 text-xs">📋 Copy diagnostics</button>
+        <button id="dx-raw-copy" class="btn-ghost px-2 py-0.5 text-xs">Copy diagnostics</button>
         <a href="/api/admin/diagnostics" download="novelcheck-diagnostics.txt" class="btn-ghost px-2 py-0.5 text-xs">⬇ Download diagnostics</a>
       </div>
       <div id="dx-out"></div>
@@ -53,7 +53,7 @@ export function renderDiagnose(host) {
     e.target.textContent = "Diagnosing… (a local AI can take a minute)";
     const d = await attempt(() => post("/api/admin/diagnose", { problem: $("#dx-problem", host).value }));
     e.target.disabled = false;
-    e.target.textContent = "🩺 Diagnose";
+    e.target.textContent = "Diagnose";
     if (!d) return;
     report = d.report;
     const verdict = d.ai_error ? "" : d.is_bug
@@ -61,7 +61,7 @@ export function renderDiagnose(host) {
       : `<span class="chip-none">Looks like something you can fix</span>`;
     out.innerHTML = `
       <div class="space-y-3 rounded-lg bg-slate-800/60 p-4">
-        ${d.ai_error ? `<p class="text-sm text-amber-300">⚠️ The AI couldn't help this time (${esc(d.ai_error)}). The bug report below still has the diagnostics.</p>` : `
+        ${d.ai_error ? `<p class="text-sm text-amber-300">The AI couldn't help this time (${esc(d.ai_error)}). The bug report below still has the diagnostics.</p>` : `
         <div class="flex flex-wrap items-center gap-2"><b>${esc(d.title)}</b> ${verdict}</div>
         <p class="whitespace-pre-line text-sm text-slate-200">${esc(d.diagnosis)}</p>
         ${d.fix_steps?.length ? `<ol class="ml-5 list-decimal space-y-1 text-sm">${d.fix_steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>` : ""}

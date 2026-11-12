@@ -8,8 +8,8 @@ import { fmtLen } from "./audioui.js";
 export function renderAudioSection(host, data, b, state) {
   const wishes = { audio: data.my_audio_wish, ebook: data.my_ebook_wish };
   const request = (fmt, what) => {
-    if (wishes[fmt]) return `<button type="button" data-unwish-fmt="${fmt}" class="btn-ghost text-sm" title="Take it off your wishlist">⭐ ${what} requested · Cancel</button>`;
-    return `<button type="button" data-wish-fmt="${fmt}" class="btn-secondary text-sm">⭐ Request the ${what.toLowerCase()}</button>`;
+    if (wishes[fmt]) return `<button type="button" data-unwish-fmt="${fmt}" class="btn-ghost text-sm" title="Take it off your wishlist">${what} requested · Cancel</button>`;
+    return `<button type="button" data-wish-fmt="${fmt}" class="btn-secondary text-sm">Request the ${what.toLowerCase()}</button>`;
   };
   const draw = () => {
     const wanted = [];
@@ -20,7 +20,7 @@ export function renderAudioSection(host, data, b, state) {
       return;
     }
     host.innerHTML = `<div class="space-y-2 rounded-lg bg-slate-800/60 p-3 text-sm">
-      ${data.has_audio ? `<p class="label">🎧 Audiobook</p>
+      ${data.has_audio ? `<p class="label">Audiobook</p>
         <p>${b.duration_sec ? `<b>${fmtLen(b.duration_sec)}</b>` : "Audiobook"}${b.narrator ? ` · read by ${esc(b.narrator)}` : ""}</p>
         <div class="flex flex-wrap gap-2"><button type="button" data-listen class="btn-primary text-sm">▶ Listen</button>
           <a href="/api/books/${b.id}/download?format=audio" class="btn-secondary text-sm">⬇ Download audiobook</a></div>` : ""}

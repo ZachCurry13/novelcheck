@@ -19,7 +19,7 @@ function libraryBlock(l, many) {
   if (l.error) return `<div><p class="font-semibold">${esc(l.name)}</p><p class="text-slate-400">Couldn't check it just now.</p></div>`;
   const a = l.availability;
   const ebook = a?.found ? `<p>E-book: ${status(a)}${a.kindle ? " · Kindle supported" : ""}</p>${link(a, ["Borrow in Libby ↗", "Place a hold in Libby ↗", "Open at the library ↗"])}` : `<p class="text-slate-400">Not an e-book here.</p>`;
-  const audio = l.audio?.found ? `<p class="mt-2">🎧 Audiobook: ${status(l.audio)}</p>${link(l.audio, ["Borrow the audiobook ↗", "Hold the audiobook ↗", "Open the audiobook ↗"])}` : "";
+  const audio = l.audio?.found ? `<p class="mt-2">Audiobook: ${status(l.audio)}</p>${link(l.audio, ["Borrow the audiobook ↗", "Hold the audiobook ↗", "Open the audiobook ↗"])}` : "";
   return `<div>${many ? `<p class="font-semibold">${esc(l.name)}</p>` : ""}${ebook}${audio}</div>`;
 }
 
@@ -28,14 +28,14 @@ export async function renderBookLibby(host, bookId) {
   const r = await get(`/api/books/${bookId}/libby`).catch(() => null);
   if (!r) return;
   if (!r.configured) {
-    host.innerHTML = `<p class="text-xs text-slate-500">📚 Borrow from your library? <a href="#/settings?s=connections" data-close class="underline">Set your Libby library in Settings</a></p>`;
+    host.innerHTML = `<p class="text-xs text-slate-500">Borrow from your library? <a href="#/settings?s=connections" data-close class="underline">Set your Libby library in Settings</a></p>`;
     return;
   }
   const libs = r.libraries || [];
   const found = libs.filter((l) => l.availability?.found || l.audio?.found);
   const show = libs.length > 1 && found.length ? found : libs; // several libraries: show the ones that have it
   const none = libs.length > 1 && !found.length ? `<p class="text-slate-400">Not at ${libs.map((l) => esc(l.name)).join(" or ")}.</p>` : "";
-  host.innerHTML = `<div class="space-y-2 rounded-lg bg-slate-800/60 p-3 text-sm"><p class="label">📚 ${libs.length > 1 ? "Your libraries" : esc(r.library)} (Libby)</p>
+  host.innerHTML = `<div class="space-y-2 rounded-lg bg-slate-800/60 p-3 text-sm"><p class="label">${libs.length > 1 ? "Your libraries" : esc(r.library)} (Libby)</p>
     ${none || show.map((l) => libraryBlock(l, libs.length > 1)).join("")}</div>`;
 }
 
@@ -112,7 +112,7 @@ export async function hasLibraries() {
   return Boolean(r?.libraries?.length);
 }
 
-// markKeptAudio puts "🎧 at your library" on Library cards from what the background check kept (no waiting).
+// markKeptAudio puts "at your library" on Library cards from what the background check kept (no waiting).
 export async function markKeptAudio(host) {
   const els = [...host.querySelectorAll("[data-libaudio]")].filter((el) => !el.dataset.done);
   if (!els.length) return;
@@ -128,11 +128,11 @@ export async function markKeptAudio(host) {
 export async function renderLibbyCard(host) {
   const draw = (c) => {
     const libs = c.libraries || [];
-    host.innerHTML = `<h2 class="text-lg font-semibold">📚 Libby libraries</h2>
+    host.innerHTML = `<h2 class="text-lg font-semibold">Libby libraries</h2>
       ${libs.length ? `<ul class="space-y-1 text-sm">${libs.map((l) => `<li class="flex items-center justify-between gap-2 rounded-lg bg-slate-800/60 p-2"><span><b>${esc(l.name)}</b> <span class="text-xs text-slate-500">(${esc(l.key)})</span></span>
           <button type="button" data-lb-rm="${esc(l.key)}" class="btn-ghost py-1 text-sm">Remove</button></li>`).join("")}</ul>
         <p class="text-sm text-slate-400">Books show whether any of these lend them, and the book that is available soonest wins. In the background NovelCheck also checks the audiobook of every book you don't have as audio and keeps the answer, so the Library can show 🎧 and filter by it.</p>
-        <button type="button" data-lb-scan class="btn-secondary">🎧 Check my books now</button>`
+        <button type="button" data-lb-scan class="btn-secondary">Check my books now</button>`
       : `<p class="text-sm text-slate-400">Free. See whether your library lends a book, how long the hold is, and open it in Libby. Libby does the borrowing; NovelCheck can't sign in for you. You can add more than one library.</p>`}
       <p class="text-xs text-slate-500">${libs.length ? "Add another library: " : ""}type its key, the first part of its OverDrive address (lapl for lapl.overdrive.com). You can paste the whole address.</p>
       <form data-lb-form class="flex flex-wrap gap-2"><input name="library" required class="input min-w-0 flex-1" placeholder="e.g. lapl" autocomplete="off" aria-label="Library key">

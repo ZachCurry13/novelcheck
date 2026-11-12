@@ -28,11 +28,11 @@ export async function renderCalibreServer(host) {
         ${data.configured ? `<button type="button" data-cs="off" class="btn-ghost">Turn off</button>` : ""}
       </div>
       <div class="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
-        <button type="button" data-cs="formats" class="btn-secondary">🗂️ Formats…</button>
+        <button type="button" data-cs="formats" class="btn-secondary">Formats…</button>
         <span class="text-xs text-slate-400">Keep only the formats you want (e.g. EPUB), with Undo, and convert books with no EPUB.</span>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <button type="button" data-cs="cleanup" class="btn-primary">🧹 Library cleanup…</button>
+        <button type="button" data-cs="cleanup" class="btn-primary">Library cleanup…</button>
         <span class="text-xs text-slate-400">Tidy titles, remove extra copies, convert to EPUB and remove other formats, in order.</span>
       </div>
     </div>`;

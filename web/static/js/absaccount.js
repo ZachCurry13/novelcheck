@@ -8,7 +8,7 @@ export async function renderABSCard(host) {
   if (!cur || !cur.available) return void (host.hidden = true);
   host.hidden = false;
   const draw = (c) => {
-    host.innerHTML = `<h2 class="text-lg font-semibold">🎧 Audiobookshelf</h2>
+    host.innerHTML = `<h2 class="text-lg font-semibold">Audiobookshelf</h2>
       ${c.linked ? `<p class="text-sm">Linked as <b>${esc(c.name)}</b>. Your place in each audiobook, bookmarks and Continue listening are yours.</p>
         <button type="button" data-abs="off" class="btn-ghost">Unlink</button>`
       : `<p class="text-sm text-slate-400">Audiobooks play in NovelCheck. Right now your place is kept on the family's shared Audiobookshelf account. Link your own to keep it separate.

@@ -89,7 +89,7 @@ export async function mountCleanup(host, close) {
     const list = rows(c);
     const todo = list.filter((r) => r.id !== "pairs" && r.n > 0).length;
     host.innerHTML = `<div class="${close ? "max-h-[88vh] overflow-y-auto p-5" : ""} space-y-3">
-      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">🧹 ${close ? "Library cleanup" : "The guided cleanup"}</h2>
+      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">${close ? "Library cleanup" : "The guided cleanup"}</h2>
         ${close ? `<button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>` : ""}</div>
       <p class="text-sm text-slate-400">Every step shows you exactly what it will change first, and you can leave items out. Nothing changes until you confirm.</p>
       ${c.configured ? "" : `<p class="rounded-lg bg-amber-950/40 p-3 text-sm text-amber-200">Connect the Calibre Content server first (Admin → Delivery &amp; Services → Calibre Library). Changes to Calibre go through it.</p>`}

@@ -32,7 +32,7 @@ export async function openPassage(scanID, title, part) {
     const pct = p.total ? Math.round((100 * p.from) / p.total) : 0;
     d.innerHTML = `<div class="flex max-h-[92dvh] flex-col">
       <div class="flex items-start justify-between gap-3 border-b border-slate-800 p-4">
-        <div class="min-w-0"><h2 class="font-bold leading-snug">📖 ${esc(title)}</h2>
+        <div class="min-w-0"><h2 class="font-semibold leading-snug">${esc(title)}</h2>
           <p class="text-xs text-slate-400">${mark ? `${esc(label)}${label.includes("%") ? "" : ` · about ${pct}% into the book`} · the highlighted part is what the AI read` : `About ${pct}% into the book`}</p></div>
         <button type="button" data-close class="btn-ghost h-10 w-10 shrink-0 p-0 text-xl" aria-label="Close">✕</button></div>
       <div data-scroll class="space-y-3 overflow-y-auto p-4 text-[0.95rem] leading-relaxed">

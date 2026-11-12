@@ -27,7 +27,7 @@ export async function openBoxSets(onChange, focus = 0, state) {
     <input data-t value="${esc(e.title)}" class="input min-w-0 flex-1 py-1 text-sm" placeholder="Title" aria-label="Title"></div>
     <p data-badge class="pl-7 text-xs">${badge(e)}</p></li>`;
   const card = (b) => b.state === "split"
-    ? `<li class="card space-y-2" data-box="${b.book_id}"><p class="font-semibold">📦 ${esc(b.title)}</p>
+    ? `<li class="card space-y-2" data-box="${b.book_id}"><p class="font-semibold">${esc(b.title)}</p>
         <p class="text-xs text-slate-400">Split into: ${b.members.map((m) => esc(m.title)).join(" · ")}</p>
         <button type="button" data-act="undo" class="btn-ghost py-1 text-sm">Undo the split</button></li>`
     : `<li class="card space-y-2" data-box="${b.book_id}">
@@ -37,13 +37,13 @@ export async function openBoxSets(onChange, focus = 0, state) {
         <ul data-entries class="space-y-1">${(b.proposal.length ? b.proposal : [{ title: "", number: 0 }]).map(row).join("")}</ul>
         <div class="flex flex-wrap gap-2">
           <button type="button" data-act="add" class="btn-ghost py-1 text-sm">＋ Add a book</button>
-          <button type="button" data-act="ask" class="btn-secondary py-1 text-sm" ${asking.has(b.book_id) ? "disabled" : ""}>${asking.has(b.book_id) ? ASKING : "✨ Find what's inside"}</button></div>
+          <button type="button" data-act="ask" class="btn-secondary py-1 text-sm" ${asking.has(b.book_id) ? "disabled" : ""}>${asking.has(b.book_id) ? ASKING : "Find what's inside"}</button></div>
         <div class="grid grid-cols-2 gap-2">
           <button type="button" data-act="split" class="btn-primary">Split into these books</button>
           <button type="button" data-act="not" class="btn-ghost">Not a box set</button></div></li>`;
   const paint = () => {
     d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
-      <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-bold">📦 Box sets</h2>
+      <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-semibold">Box sets</h2>
         <button type="button" data-close class="btn-ghost h-10 w-10 p-0 text-xl" aria-label="Close">✕</button></div>
       <p class="text-sm text-slate-400">Once split, each book is its own card in the Library with its own rating, counts as yours, and opens the box set's file.</p>
       <ul class="space-y-3">${list.map(card).join("") || `<li class="text-sm text-slate-400">No box sets to check.</li>`}</ul></div>`;

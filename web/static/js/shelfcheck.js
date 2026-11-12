@@ -25,7 +25,7 @@ export async function openShelfCheck(shelf, name, onChange) {
   if (!start) return;
   const d = dialog();
   d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
-    <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-bold">🔍 Check these books</h2>
+    <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-semibold">Check these books</h2>
       <button type="button" data-close class="btn-ghost h-10 w-10 p-0 text-xl" aria-label="Close">✕</button></div>
     <div data-out class="space-y-2"></div></div>`;
   const out = d.querySelector("[data-out]");
@@ -38,7 +38,7 @@ export async function openShelfCheck(shelf, name, onChange) {
   while (d.open) {
     job = await get(`/api/collections/ai/${start.job}`).catch(() => null);
     if (!job || job.status !== "running") break;
-    out.innerHTML = `<p class="rounded-lg bg-slate-800 p-3 text-sm">🔍 Checked ${job.done} of ${books(job.total)}…
+    out.innerHTML = `<p class="rounded-lg bg-slate-800 p-3 text-sm">Checked ${job.done} of ${books(job.total)}…
       <span class="block text-xs text-slate-400">A local AI can take a minute or two.</span></p>`;
     await new Promise((r) => setTimeout(r, 2000));
   }
@@ -47,7 +47,7 @@ export async function openShelfCheck(shelf, name, onChange) {
   const more = start.more ? `<p class="text-xs text-slate-400">Only the first ${books(start.total)} (by title) were checked.</p>` : "";
   const partial = job.error ? `<p class="text-xs text-amber-300">${esc(job.error)}</p>` : "";
   if (!job.picks.length) {
-    out.innerHTML = `<p class="text-sm">Every book checked fits “${esc(name)}”. 🎉</p>${partial}${more}`;
+    out.innerHTML = `<p class="text-sm">Every book checked fits “${esc(name)}”.</p>${partial}${more}`;
     return;
   }
   out.innerHTML = `<p class="text-sm text-slate-300">These ${books(job.picks.length)} don't seem to be about “${esc(name)}”. Untick any to keep:</p>
@@ -57,7 +57,7 @@ export async function openShelfCheck(shelf, name, onChange) {
       ${coverImg(p.book.id, "h-14 w-10")}
       <span class="min-w-0 flex-1"><span class="font-semibold leading-snug line-clamp-2">${esc(p.book.title)}</span>
         <span class="block truncate text-xs text-slate-400">${esc(p.book.author || "")}</span>
-        <span class="block text-xs text-slate-300">🔍 ${esc(p.reason)}</span></span></label>`).join("")}
+        <span class="block text-xs text-slate-300">${esc(p.reason)}</span></span></label>`).join("")}
     <button type="button" data-take class="btn-primary sticky bottom-0 w-full"></button>`;
   const paint = () => {
     const n = $$("[data-pick]:checked", out).length;

@@ -17,12 +17,12 @@ export async function renderLibraries(host, state) {
   const mine = cats.filter((c) => canEditLibrary(c, user));
   const adults = (users || []).filter((u) => u.role !== "restricted");
   host.innerHTML = `<div class="card space-y-3">
-    <h2 class="text-lg font-semibold">📚 Your libraries</h2>
+    <h2 class="text-lg font-semibold">Your libraries</h2>
     <p class="text-sm text-slate-400">Libraries you imported are yours. <b>Private</b> ones are seen only by you and the admins; <b>shared</b> ones by everyone (kids still only see what their rules allow).</p>
     <ul class="space-y-2">${mine.map((c) => `<li data-cat="${c.id}" class="flex flex-wrap items-center gap-2 rounded-lg bg-slate-800/60 p-3">
       <span class="min-w-0 flex-1"><b>${esc(c.name)}</b> <span class="text-xs text-slate-400">${c.book_count.toLocaleString()} books ·
         ${c.owner ? `owned by ${esc(c.owner)}` : "the family's"}</span></span>
-      ${c.owner_id != null ? `<label class="toggle text-sm"><input type="checkbox" data-private ${c.private ? "checked" : ""}> 🔒 Private</label>` : ""}
+      ${c.owner_id != null ? `<label class="toggle text-sm"><input type="checkbox" data-private ${c.private ? "checked" : ""}> Private</label>` : ""}
       ${admin ? `<select data-owner class="input w-auto py-1 text-xs" aria-label="Owner of ${esc(c.name)}">
         <option value="0">Family (no owner)</option>${adults.map((u) => `<option value="${u.id}" ${u.id === c.owner_id ? "selected" : ""}>${esc(u.username)}</option>`).join("")}</select>` : ""}
       <button data-rename class="btn-ghost py-1 text-sm">Rename</button>

@@ -56,7 +56,7 @@ function showBar() {
     document.body.classList.add("debugging");
   }
   const mins = Math.max(0, Math.ceil((until * 1000 - Date.now()) / 60000));
-  bar.textContent = `🔴 Debug mode: an admin is recording what happens in NovelCheck (pages, taps, what you type except passwords) to fix a bug. Ends in about ${mins} min.`;
+  bar.textContent = `Debug mode: an admin is recording what happens in NovelCheck (pages, taps, what you type except passwords) to fix a bug. Ends in about ${mins} min.`;
 }
 
 function apply(state) {

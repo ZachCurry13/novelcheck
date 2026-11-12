@@ -12,7 +12,7 @@ export async function renderListening(host) {
     host.innerHTML = "";
     return;
   }
-  host.innerHTML = `<section class="mb-8"><h2 class="label">🎧 Continue listening</h2>
+  host.innerHTML = `<section class="mb-8"><h2 class="label">Continue listening</h2>
     <div class="grid gap-3 sm:grid-cols-2">${r.books.map((b) => {
       const pct = Math.min(100, Math.round((b.progress || b.at / (b.duration_sec || 1)) * 100));
       const left = Math.max(0, b.duration_sec - b.at);

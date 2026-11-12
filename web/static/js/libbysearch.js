@@ -17,7 +17,7 @@ function row(b, i) {
     ${b.cover_img ? `<img src="${esc(b.cover_img || "")}" alt="" loading="lazy" referrerpolicy="no-referrer" class="h-24 w-16 shrink-0 rounded object-cover">` : `<div class="h-24 w-16 shrink-0 rounded bg-slate-800"></div>`}
     <div class="min-w-0 flex-1 space-y-1"><p class="font-semibold leading-tight">${esc(b.title)}</p><p class="text-sm text-slate-400">${esc(b.author)}</p>
       ${line("📚", b.ebook)}${line("🎧", b.audio)}
-      <button type="button" data-lsadd="${i}" class="btn-secondary mt-1 py-1 text-sm">➕ Add to Nightstand</button></div></li>`;
+      <button type="button" data-lsadd="${i}" class="btn-secondary mt-1 py-1 text-sm">Add to Nightstand</button></div></li>`;
 }
 
 // libbySearchBox fills host with a search box and its results. If q is given it fills the box (auto: search at once).

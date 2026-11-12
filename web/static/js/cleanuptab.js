@@ -18,12 +18,12 @@ const link = (href, label) => `<a href="${href}" class="btn-secondary py-1 text-
 
 export async function renderCleanupTab(host, state) {
   host.innerHTML = `<div class="space-y-4"><div id="cu-guided" class="card"></div>
-    <div class="card space-y-2"><h2 class="text-lg font-semibold">🧰 Each tool on its own</h2><ul id="cu-tools" class="space-y-2"></ul></div>
-    <div class="card space-y-2"><details id="cu-trash"><summary class="cursor-pointer font-semibold">🗑️ Calibre's recycle bin: what was removed, and put a book back</summary>
+    <div class="card space-y-2"><h2 class="text-lg font-semibold">Each tool on its own</h2><ul id="cu-tools" class="space-y-2"></ul></div>
+    <div class="card space-y-2"><details id="cu-trash"><summary class="cursor-pointer font-semibold">Calibre's recycle bin: what was removed, and put a book back</summary>
       <div id="cu-trash-body" class="mt-2"></div></details></div>
-    <div class="card space-y-2"><details id="cu-twice"><summary class="cursor-pointer font-semibold">👯 Books listed twice in NovelCheck (with the evidence)</summary>
+    <div class="card space-y-2"><details id="cu-twice"><summary class="cursor-pointer font-semibold">Books listed twice in NovelCheck (with the evidence)</summary>
       <div id="cu-twice-body" class="mt-2"></div></details></div>
-    <div class="card space-y-2"><details id="cu-hc"><summary class="cursor-pointer font-semibold">📚 Fix Calibre details from Hardcover (series, titles, authors, ISBN, descriptions, genres)</summary>
+    <div class="card space-y-2"><details id="cu-hc"><summary class="cursor-pointer font-semibold">Fix Calibre details from Hardcover (series, titles, authors, ISBN, descriptions, genres)</summary>
       <div id="cu-hc-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-up"><summary class="cursor-pointer font-semibold">⬆️ Upload e-books to Calibre and audiobooks to Audiobookshelf (experimental)</summary>
       <div id="cu-up-body" class="mt-2"></div></details></div></div>`;

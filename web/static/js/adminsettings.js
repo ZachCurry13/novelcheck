@@ -10,9 +10,9 @@ import { SECTIONS, SECTION_MODULE, SECTION_AREA, NOTE, TOP, EXTRA, HELP } from "
 
 // What each AI card is set to right now, shown beside its title while it is closed.
 const STATE = {
-  "🤖 Your AI": (v) => v.llm_model || "not set up yet",
-  "🛟 Backup AI": (v) => (v.backup_llm_enabled === "true" ? v.backup_llm_model || "on" : "off"),
-  "🧬 Deep Scans": (v) => (v.deep_llm_enabled === "true" ? "on a separate machine" : "on your AI"),
+  "Your AI": (v) => v.llm_model || "not set up yet",
+  "Backup AI": (v) => (v.backup_llm_enabled === "true" ? v.backup_llm_model || "on" : "off"),
+  "Deep Scans": (v) => (v.deep_llm_enabled === "true" ? "on a separate machine" : "on your AI"),
 };
 
 // renderSettingsTab puts one tab's settings (as collapsible cards) into host.
@@ -22,7 +22,7 @@ export function renderSettingsTab(host, tab, settings, user) {
   // Not a <form>: cards hold small forms of their own (custom filters), and forms can't be nested.
   const form = document.createElement("div");
   form.className = "space-y-3";
-  const open = (title, i) => (tab === "ai" ? title === "🤖 Your AI" && !settings.llm_model : i === 0);
+  const open = (title, i) => (tab === "ai" ? title === "Your AI" && !settings.llm_model : i === 0);
   form.innerHTML = sections.map(([, title, fields], i) => {
     const plain = fields.filter((f) => f[5] !== "adv");
     const adv = fields.filter((f) => f[5] === "adv");

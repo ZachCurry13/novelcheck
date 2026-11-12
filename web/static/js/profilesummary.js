@@ -6,13 +6,13 @@ import { addElsewhere } from "./statselsewhere.js";
 import { esc } from "./ui.js";
 import { byDay, fmtDur, prepare, startOfDay, streaks, within } from "./statscalc.js";
 
-const big = (n, label) => `<div class="rounded-lg bg-slate-800/60 p-3 text-center"><p class="text-lg font-bold">${n}</p><p class="text-xs text-slate-400">${label}</p></div>`;
+const big = (n, label) => `<div class="rounded-lg bg-slate-800/60 p-3 text-center"><p class="text-lg font-semibold">${n}</p><p class="text-xs text-slate-400">${label}</p></div>`;
 
 export async function renderReadingSummary(host) {
   const data = await get("/api/me/reading-stats").catch(() => null);
   const m = data && addElsewhere(prepare(data), data.hardcover_read || [], data.imported_read || []);
   if (!m || (!m.rows.length && !m.done.length)) {
-    host.innerHTML = `<h2 class="text-lg font-semibold">📊 My reading</h2>
+    host.innerHTML = `<h2 class="text-lg font-semibold">My reading</h2>
       <p class="text-sm text-slate-400">Your reading time, streaks and calendar show up here once your Kindle's reading statistics sync.</p>
       <a href="#/settings?s=kindle" class="btn-secondary inline-flex">Set up my Kindle</a>`;
     return;
@@ -23,8 +23,8 @@ export async function renderReadingSummary(host) {
   const week = within(m, now - 6 * 864e5);
   const year = within(m, new Date(new Date().getFullYear(), 0, 1).getTime());
   const st = streaks(byDay(m.rows));
-  host.innerHTML = `<h2 class="text-lg font-semibold">📊 My reading</h2>
+  host.innerHTML = `<h2 class="text-lg font-semibold">My reading</h2>
     <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">${big(esc(fmtDur(week.sec)), "last 7 days")}${big(esc(fmtDur(month.sec)), "this month")}
       ${big(`${st.current} day${st.current === 1 ? "" : "s"}`, `reading streak (best ${st.longest})`)}${big(year.finished, "books finished this year")}</div>
-    <a href="#/stats" class="btn-secondary inline-flex">📊 Open Reading stats</a>`;
+    <a href="#/stats" class="btn-secondary inline-flex">Open Reading stats</a>`;
 }

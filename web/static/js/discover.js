@@ -56,16 +56,16 @@ function showOwned() {
 export async function renderDiscover(view, state) {
   view.innerHTML = `
     ${discoverTabsHTML("discover", state.user)}
-    <h1 class="mb-1 text-2xl font-bold">🧭 Discover</h1>
+    <h1 class="mb-1 page-title">Discover</h1>
     <p class="mb-2 text-sm text-slate-400">Popular and classic books with their peppers and content. Tap a book for details.</p>
-    <details id="libby-search" class="card mb-4 ${state.user.role === "restricted" ? "hidden" : ""}"><summary class="cursor-pointer font-semibold">🔎 Search my libraries (Libby)</summary><div id="ls-host" class="mt-3"></div></details>
+    <details id="libby-search" class="card mb-4 ${state.user.role === "restricted" ? "hidden" : ""}"><summary class="cursor-pointer font-semibold">Search my libraries (Libby)</summary><div id="ls-host" class="mt-3"></div></details>
     <div id="discover-seasons"></div>
     <label class="toggle mb-4 min-h-[2.5rem]"><input type="checkbox" id="show-owned" ${showOwned() ? "checked" : ""}> Also show books we already have <span id="owned-count" class="text-slate-500"></span></label>
     <div id="libby-filters" class="mb-4 hidden flex-wrap items-center gap-2" role="group" aria-label="Filter by what your library lends">
       <span class="text-sm text-slate-400">At my library:</span>
       <button type="button" data-lf="" class="btn-primary py-1 text-sm">All books</button>
-      <button type="button" data-lf="here" class="btn-secondary py-1 text-sm">📚 Lends it</button>
-      <button type="button" data-lf="audio" class="btn-secondary py-1 text-sm">🎧 Audiobook</button>
+      <button type="button" data-lf="here" class="btn-secondary py-1 text-sm">Lends it</button>
+      <button type="button" data-lf="audio" class="btn-secondary py-1 text-sm">Audiobook</button>
       <button type="button" data-lf="now" class="btn-secondary py-1 text-sm">✓ Available now</button>
       <span id="lf-status" class="text-xs text-slate-500"></span></div>
     <div id="rows" class="space-y-6"><p class="text-slate-400">Loading…</p></div>
@@ -134,7 +134,7 @@ export async function renderDiscover(view, state) {
     const ok = btn.dataset.act === "wish"
       ? await attempt(() => post(`/api/books/${id}/wish`, {}), "Added to the wishlist")
       : await attempt(() => post("/api/queue", { book_id: Number(id) }), "Added to your Nightstand");
-    btn.textContent = ok ? (btn.dataset.act === "wish" ? "⭐ On wishlist" : "✓ On your Nightstand") : btn.textContent;
+    btn.textContent = ok ? (btn.dataset.act === "wish" ? "On wishlist" : "✓ On your Nightstand") : btn.textContent;
     btn.disabled = Boolean(ok);
   };
   const fresh = Promise.all([attempt(() => get("/api/discover" + (showOwned() ? "?owned=1" : ""))), get("/api/collections").catch(() => null)]);
@@ -177,15 +177,15 @@ function card(b, kid, queueOn) {
   if (b.owned && queueOn) {
     action = b.queued ? `<span class="text-xs text-slate-400">✓ On your Nightstand</span>` : `<button data-act="queue" class="btn-secondary px-2 py-1 text-xs">＋ Nightstand</button>`;
   } else if (!b.owned) {
-    action = b.wished ? `<span class="text-xs text-slate-400">⭐ On wishlist</span>` : `<button data-act="wish" class="btn-secondary px-2 py-1 text-xs">⭐ Wishlist</button>`;
+    action = b.wished ? `<span class="text-xs text-slate-400">On wishlist</span>` : `<button data-act="wish" class="btn-secondary px-2 py-1 text-xs">Wishlist</button>`;
   }
   return `<article data-book="${b.id}" class="card flex w-44 shrink-0 snap-start cursor-pointer flex-col gap-2 p-3">
     <div class="relative">${coverImg(b.id, "h-56 w-full")}
-      ${b.list?.startsWith("nyt:") && b.rank ? `<span class="absolute left-1 top-1 rounded bg-slate-950/80 px-1.5 text-xs font-bold">#${b.rank}</span>` : ""}</div>
+      ${b.list?.startsWith("nyt:") && b.rank ? `<span class="absolute left-1 top-1 rounded bg-slate-950/80 px-1.5 text-xs font-semibold">#${b.rank}</span>` : ""}</div>
     <h3 class="line-clamp-2 text-sm font-semibold leading-tight">${esc(b.title)}</h3>
     <p class="truncate text-xs text-slate-400">${esc(b.author || "")}</p>
     <div class="flex flex-wrap gap-1 text-xs">${pepper} ${contentIcons(b)}
-      ${b.owned ? `<span class="chip-cat">📚 Yours</span>` : ""}<span data-libby="${b.id}"></span>${nytChip(b)}${b.weeks_on_list === 1 ? ` <span class="chip-open">New</span>` : ""}</div>
+      ${b.owned ? `<span class="chip-cat">Yours</span>` : ""}<span data-libby="${b.id}"></span>${nytChip(b)}${b.weeks_on_list === 1 ? ` <span class="chip-open">New</span>` : ""}</div>
     <p class="line-clamp-4 text-xs text-slate-300">${esc(cardBlurb(b, 200))}</p>
     <div class="mt-auto space-y-1">${action}
       <p class="flex gap-3 text-xs">${kid ? "" : `<a href="https://www.amazon.com/s?k=${q}&i=digital-text" target="_blank" rel="noopener noreferrer" class="underline">Amazon</a>`}
@@ -199,5 +199,5 @@ function nytChip(b) {
   if (!b.list?.startsWith("nyt:")) return "";
   const weeks = b.weeks_on_list > 1 ? ` · ${b.weeks_on_list} weeks` : "";
   const list = NYT_LISTS[b.list] || "Best Sellers";
-  return ` <span class="chip-cat" title="On The New York Times Best Sellers list (${esc(list)})${b.rank ? `, #${b.rank}` : ""}${weeks}. Data provided by The New York Times.">📰 NYT list${weeks}</span>`;
+  return ` <span class="chip-cat" title="On The New York Times Best Sellers list (${esc(list)})${b.rank ? `, #${b.rank}` : ""}${weeks}. Data provided by The New York Times.">NYT list${weeks}</span>`;
 }

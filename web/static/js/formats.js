@@ -70,7 +70,7 @@ function convertHTML(data, busy) {
       <details><summary class="cursor-pointer text-sm text-sky-300">See the books${n > data.convert.length ? ` (the first ${fmtNum(data.convert.length)})` : ""}</summary>
         <ul class="mt-2 space-y-1">${books}</ul></details>
       <button type="button" data-f="convert-all" class="btn-secondary" ${busy}>Convert ${n === 1 ? "it" : `all ${fmtNum(n)}`}</button>`
-    : `<p class="text-sm text-slate-400">Every book Calibre could convert has an EPUB. 🎉</p>`}${failedHTML(data, busy)}</section>`;
+    : `<p class="text-sm text-slate-400">Every book Calibre could convert has an EPUB.</p>`}${failedHTML(data, busy)}</section>`;
 }
 
 // Books that did not convert: why, and the choice to leave one as it is (it is then not offered again).
@@ -106,7 +106,7 @@ export async function openFormats() {
   const d = dialog();
   let data = null, keep = null, watching = false, timer = null;
   d.innerHTML = `<div class="max-h-[85vh] space-y-4 overflow-y-auto p-5">
-    <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">🗂️ Formats in Calibre</h2>
+    <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">Formats in Calibre</h2>
       <button type="button" data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
     <div id="fmt-job"></div><div id="fmt-body" class="space-y-4"></div></div>`;
   const bars = () => d.querySelectorAll("[data-pct]").forEach((e) => (e.style.width = e.dataset.pct + "%"));

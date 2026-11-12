@@ -4,6 +4,18 @@ NovelCheck follows **Material Design 3** (m3.material.io), Google's published gu
 
 Status: written for v1.71 (the all-screens redesign). Until that release, the app still uses the older styles.
 
+## 0. Direction (from the unslop review, 2026-11-12)
+
+The owner asked for the [unslop](../.claude/skills/unslop/SKILL.md) skill (by Damir Sokolovsky, CC BY 4.0) to guide the restyle. Its direction for NovelCheck, agreed with the owner:
+
+- **Product.** Tells a family how much romance and what content is in each book before someone reads it, and keeps track of what everyone reads.
+- **Character.** Careful, warm, bookish.
+- **World.** A home library in the evening: paper, cloth spines, a reading lamp.
+- **Moments.** The book covers, and the 0 to 5 level colours, which carry meaning. Everything else is quiet.
+- **Signature.** The coloured level square (`levelBadge` in `js/peppers.js`), used wherever a level shows, like a library spine label.
+
+What that means in practice: surfaces are a neutral graphite ramp (not navy), the main button is an off-white fill (dark fill on the light theme), the indigo accent marks only the selection, links and a key figure, emoji never decorate headings, buttons, tabs or status (they stay only where they are the content: trophies, awards, Wrapped, content flags), headings get their weight from size (page titles 28px at 500, `.page-title`), labels are sentence case, interface text has no exclamation marks, and no text is smaller than 11px. Material's fully round buttons are kept (the owner's choice of Material Design 3); unslop's smaller corners apply to cards and fields.
+
 ## 1. How it is wired
 
 - Styles live in `web/tailwind.input.css` and compile to `web/static/css/app.css` with `make css`.
@@ -81,7 +93,7 @@ Sentence case everywhere. No all-capitals labels (the old `.label` style goes).
 | **Badges** | `badge` | Small `error` dot or count on an icon (notifications, tab counts). |
 | **Empty and error states** | `state` | Icon, one sentence saying what is going on, one button for the next step. |
 
-**Icons:** Material Symbols (Rounded, Apache 2.0), as a small font in `web/static/fonts` that holds only the icons the app uses, so nothing loads from outside. Write `<span class="ms" aria-hidden="true">icon_name</span>`; a new icon means fetching the font again with its name added. Emoji stay only where they are content (pepper levels, trophies), not as button or menu icons.
+**Icons:** Material Symbols (Rounded, Apache 2.0), as a small font in `web/static/fonts` that holds only the icons the app uses, so nothing loads from outside. Write `<span class="ms" aria-hidden="true">icon_name</span>`; a new icon means fetching the font again with its name added. Icons in the font: account_circle, add, admin_panel_settings, arrow_back, bar_chart, barcode_scanner, bed, bug_report, check, close, collections_bookmark, delete, download, expand_more, explore, filter_list, group, help, local_library, logout, menu, more_vert, notifications, person, photo_camera, search, settings, star. Emoji stay only where they are content (pepper levels, trophies), not as button or menu icons.
 
 ## 6. Search in the top bar
 

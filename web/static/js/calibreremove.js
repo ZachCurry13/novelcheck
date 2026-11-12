@@ -13,7 +13,7 @@ export async function openCalibreRemoval(filters, onDone) {
   dlg.innerHTML = `
     <div class="max-h-[85vh] space-y-4 overflow-y-auto p-6 text-sm">
       <div class="flex items-start justify-between gap-4">
-        <h2 class="text-xl font-bold">Remove hidden books from Calibre</h2>
+        <h2 class="text-xl font-semibold">Remove hidden books from Calibre</h2>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button>
       </div>
       ${data.count === 0 ? `<p class="text-slate-300">No Calibre books match these Hide filters (books marked OK are never included).</p>` : `

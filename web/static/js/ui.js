@@ -84,10 +84,10 @@ export async function attempt(fn, okMsg) {
 
 // Books without a rating yet: where they are on the way to one.
 const STATUS_CHIPS = {
-  pending: ["chip-wait", "⏳ Waiting", "Waiting to be rated"],
-  queued: ["chip-wait", "⏳ In line", "In line to be rated"],
-  processing: ["chip-busy", "⚡ Rating now…", "The AI is rating this book"],
-  error: ["chip-fail", "⚠ Rating failed", "Rating this book failed; a parent can try again"],
+  pending: ["chip-wait", "Waiting", "Waiting to be rated"],
+  queued: ["chip-wait", "In line", "In line to be rated"],
+  processing: ["chip-busy", "Rating now…", "The AI is rating this book"],
+  error: ["chip-fail", "Rating failed", "Rating this book failed; a parent can try again"],
 };
 
 export function classChip(book) {
@@ -114,7 +114,7 @@ export const ageLabel = (lvl) => {
   const g = AGE_GROUPS.find(([l]) => l === lvl);
   return g ? `${g[1]} (${g[2]})` : "";
 };
-export const ageChip = (b) => (b.age_level ? `<span class="chip-cat" title="Age group set by ${esc(b.age_set_by)}">👪 ${esc(ageLabel(b.age_level))}</span>` : "");
+export const ageChip = (b) => (b.age_level ? `<span class="chip-cat" title="Age group set by ${esc(b.age_set_by)}">${esc(ageLabel(b.age_level))}</span>` : "");
 
 // GitHub issue form for suggesting new filters (the footer links to all forms).
 export const FILTER_IDEA_URL = "https://github.com/ZachCurry13/novelcheck/issues/new?template=filter_suggestion.yml";

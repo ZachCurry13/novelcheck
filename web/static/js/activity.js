@@ -1,6 +1,6 @@
-// What the AI is doing, for parents: a pill in the header ("⚡ 38" while
-// books are being rated, "⏸ 38" while paused for the hourly limit, "🧬 4/12"
-// during a Deep Scan, "🌙 38" when books wait for the automatic-rating hours)
+// What the AI is doing, for parents: a pill in the header ("38" while
+// books are being rated, "38" while paused for the hourly limit, "4/12"
+// during a Deep Scan, "38" when books wait for the automatic-rating hours)
 // and an "nc:activity" event that pages with live status listen to.
 import { get } from "./api.js";
 import { canManage } from "./ui.js";
@@ -49,7 +49,7 @@ function paint(pill, a) {
     title = "Deep Scans wait for the Deep Scan machine to be switched on";
     href = "#/deepscan?running";
   } else if (a.deep) {
-    show = `🧬 ${a.deep.part}/${a.deep.parts}`;
+    show = `${a.deep.part}/${a.deep.parts}`;
     title = `Deep Scan of “${a.deep.title}”: part ${a.deep.part} of ${a.deep.parts}`;
     href = "#/deepscan?running";
   } else if (busy) {
@@ -57,7 +57,7 @@ function paint(pill, a) {
     show = `${paused ? "⏸" : "⚡"} ${n}`;
     title = paused ? `Paused for the hourly AI limit; ${a.waiting} waiting` : `Rating “${a.title}”${a.waiting ? `; ${a.waiting} more waiting` : ""}`;
   } else if (a.waiting && a.auto && !a.hours_open) {
-    show = `🌙 ${n}`;
+    show = `${n}`;
     title = `${a.waiting} books wait for the automatic-rating hours`;
   }
   pill.classList.toggle("hidden", !show);

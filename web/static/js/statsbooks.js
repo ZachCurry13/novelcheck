@@ -40,7 +40,7 @@ export function bookPage(m, i, readonly = false) {
   const pct = Math.round((b.percent || 0) * 100);
   const lastPage = b.pages ? `${n(Math.round((b.percent || 0) * b.pages))} / ${n(b.pages)} (${pct}%)` : `${pct}%`;
   return `<div class="mb-4 flex gap-4">${b.book_id ? `<div class="w-24 shrink-0">${coverImg(b.book_id, "h-36 w-24")}</div>` : ""}
-      <div class="min-w-0 space-y-2"><h2 class="break-words text-2xl font-bold leading-tight">${esc(b.title)}</h2>
+      <div class="min-w-0 space-y-2"><h2 class="break-words text-2xl font-semibold leading-tight">${esc(b.title)}</h2>
         <p class="text-slate-400">${esc(b.author || "")}</p>
         <div class="h-2 overflow-hidden rounded-full bg-slate-800"><div class="h-full rounded-full bg-indigo-500" data-pct="${pct}"></div></div>
         <p class="text-sm text-slate-400">${pct}% read${b.series ? ` · ${esc(b.series)}` : ""}</p>

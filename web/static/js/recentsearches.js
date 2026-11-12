@@ -11,7 +11,7 @@ export function recentSearches(input, onPick) {
   let timer;
   const paint = () => {
     box.innerHTML = list.length
-      ? `<span class="text-slate-500">Recent:</span> ${list.map((q) => `<button type="button" data-q="${esc(q)}" class="chip-cat">🕘 ${esc(q)}</button>`).join(" ")}
+      ? `<span class="text-slate-500">Recent:</span> ${list.map((q) => `<button type="button" data-q="${esc(q)}" class="chip-cat">${esc(q)}</button>`).join(" ")}
         <button type="button" data-clear class="ml-1 text-slate-500 underline">Clear</button>`
       : "";
   };

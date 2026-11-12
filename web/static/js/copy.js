@@ -40,7 +40,7 @@ export function downloadText(filename, text) {
 // (or, with getText registered via bindCopy, for generated text).
 export function copyBar(target, filename) {
   return `<span class="inline-flex gap-1">
-    <button type="button" data-copy-for="${target}" class="btn-ghost px-2 py-0.5 text-xs" title="Copy to clipboard">📋 Copy</button>
+    <button type="button" data-copy-for="${target}" class="btn-ghost px-2 py-0.5 text-xs" title="Copy to clipboard">Copy</button>
     ${filename ? `<button type="button" data-download-for="${target}" data-filename="${filename}" class="btn-ghost px-2 py-0.5 text-xs" title="Save as a text file">⬇ Download</button>` : ""}
   </span>`;
 }

@@ -34,7 +34,7 @@ export function reviewCard(d) {
       <div class="min-w-0 flex-1 space-y-1">
         ${title(d)}
         <p class="truncate text-sm text-slate-400">${esc(d.author || "")}</p>
-        <p class="text-sm font-semibold text-amber-300">⚠️ Level ${d.prev_level ?? "–"} → Level ${d.proposed_level}</p>
+        <p class="text-sm font-semibold text-amber-300">Level ${d.prev_level ?? "–"} → Level ${d.proposed_level}</p>
       </div>
     </div>
     ${d.proposed_level >= 4 && explicit === 1 ? `<p class="rounded-lg bg-amber-950/40 p-2 text-sm text-amber-200">This rests on one passage. Read it and decide; the book gets a note for parents either way.</p>` : ""}
@@ -46,7 +46,7 @@ export function reviewCard(d) {
         <p class="text-xs text-slate-300">${esc(kindOf(n.level))}</p>
         <button type="button" data-read data-from="${n.from || 0}" data-to="${n.to || 0}" data-label="${esc(n.label)}"
           data-about="${esc(aboutText(n))}"
-          class="mt-1 text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button></div></li>`).join("")
+          class="mt-1 text-xs font-semibold text-sky-300 underline">Read this part in the book</button></div></li>`).join("")
         || "<li>No parts with sexual content were noted.</li>"}</ul>
       <p class="mt-2 text-xs text-slate-400">A part counts as Level 4 or more only when the AI names sentences that really are in the book and a second question agrees.</p>
     </details>
@@ -82,7 +82,7 @@ export function openRow(d, place) {
     <p class="text-xs text-slate-400">${esc(SOURCE[d.source] || d.source)}${d.requested_by ? ` by ${esc(d.requested_by)}` : ""}
       · ${fmtNum(d.words)} words${d.reason ? ` · “${esc(d.reason)}”` : ""}</p>
     ${d.status === "reading" ? `<div class="space-y-1"><div class="meter-track bg-slate-800"><div class="meter-fill bg-indigo-500" data-pct="${pct}"></div></div>
-      <p class="text-xs text-slate-400">📖 Part ${d.parts_done + 1} of ${d.parts_total} (${pct}%)</p></div>`
+      <p class="text-xs text-slate-400">Part ${d.parts_done + 1} of ${d.parts_total} (${pct}%)</p></div>`
       : `<p class="text-xs text-slate-400">${d.status === "requested" ? "Waiting for your approval" : "Waiting to start"}</p>`}
     <div class="flex flex-wrap gap-2">
       ${d.status === "requested" ? `<button data-act="approve" class="btn-primary py-1.5 text-sm">Approve</button><button data-act="decline" class="btn-ghost py-1.5 text-sm">Decline</button>`

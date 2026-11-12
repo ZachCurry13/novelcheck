@@ -4,7 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
-## [1.71.2]
+## [1.72.0]
+
+### 🎨 Calmer screens, everywhere
+- **Grey, not navy.** The dark theme's surfaces are a neutral graphite, and the light theme a neutral white and grey, so book covers and the 0 to 5 level colours are what stand out.
+- **One main button per screen.** The main action is an off-white button (dark on the light theme); the next one is a quiet grey button. The indigo accent now only marks the page you are on, links and the odd key figure.
+- **No emoji as decoration.** Headings, buttons, tabs, status chips and messages lost about 480 decorative emoji. They stay where they are the content: trophies, awards, Wrapped, content flags and seasonal shelves.
+- **Lighter headings and sentence case.** Page titles get their weight from size, labels are no longer in capitals, and messages lost their exclamation marks.
+- **The Wrapped card** lost its purple glow.
+- The design guide (`docs/DESIGN.md`) records the direction, from a review with the [unslop](https://github.com/heydamir/unslop) skill by Damir Sokolovsky.
+
 
 ### ✓ Count a book you read yourself
 - **"I read this" on every book.** In a book's window, press **✓ I read this** and pick the day you finished it. The book then counts in Reading stats for that year: a paper book, a library loan, or one an imported list missed. **Change** picks another day and **Not read** takes it out again.

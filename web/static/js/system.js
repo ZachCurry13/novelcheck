@@ -28,7 +28,7 @@ const ago = (iso) => {
 function rowHTML(r) {
   const checks = (r.checks || []).map((c) => {
     const [icon, cls] = CHECK[c.status] || CHECK.skip;
-    return `<p class="text-xs ${cls}">${icon} ${esc(c.name)}: ${esc(c.message)}${c.fix ? ` <span class="text-slate-400">💡 ${esc(c.fix)}</span>` : ""}</p>`;
+    return `<p class="text-xs ${cls}">${icon} ${esc(c.name)}: ${esc(c.message)}${c.fix ? ` <span class="text-slate-400">${esc(c.fix)}</span>` : ""}</p>`;
   }).join("");
   return `<li class="integ-row">
     <div class="min-w-0 flex-1 space-y-1">
@@ -45,7 +45,7 @@ function rowHTML(r) {
 export async function renderSystem(view) {
   view.innerHTML = `
     ${adminNavHTML("@system")}
-    <h1 class="mb-1 text-2xl font-bold">Integrations</h1>
+    <h1 class="mb-1 page-title">Integrations</h1>
     <p class="mb-4 text-sm text-slate-400">Everything NovelCheck is made of and talks to, in one place. Keys and passwords stay on your server and are never shown again.</p>
     <div class="card mb-4 flex flex-wrap items-center gap-3">
       <button id="integ-check" class="btn-primary">Check now</button>
@@ -54,7 +54,7 @@ export async function renderSystem(view) {
     </div>
     <div id="integ-body"><p class="text-slate-400">Loading…</p></div>
     <p class="my-4 text-sm text-slate-400">Looking for CPU, memory, network or AI token use? See <a href="#/usage" class="underline">Usage</a>.</p>
-    <details class="card"><summary class="cursor-pointer font-semibold">🩺 Diagnose with AI</summary><div id="diagnose" class="mt-3"></div></details>`;
+    <details class="card"><summary class="cursor-pointer font-semibold">Diagnose with AI</summary><div id="diagnose" class="mt-3"></div></details>`;
   renderDiagnose($("#diagnose", view));
   const body = $("#integ-body", view);
   const btn = $("#integ-check", view);

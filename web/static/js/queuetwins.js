@@ -19,7 +19,7 @@ export async function renderTwins(box, items, state, reload) {
   const pairs = (r?.pairs || []).filter((p) => ids.has(p.a.id) && ids.has(p.b.id));
   if (!pairs.length) return;
   box.innerHTML = `<div class="mb-4 space-y-2 rounded-lg border border-amber-700/50 bg-amber-950/30 p-3">
-    <p class="text-sm text-amber-200">👯 ${pairs.length === 1 ? "Two books here may be" : `${pairs.length} pairs here may be`} the same book. Check the evidence, then choose which one to keep: the joined book shows that one's title and details, and everything from both (your place, rating and shelves) moves onto it.</p>
+    <p class="text-sm text-amber-200">${pairs.length === 1 ? "Two books here may be" : `${pairs.length} pairs here may be`} the same book. Check the evidence, then choose which one to keep: the joined book shows that one's title and details, and everything from both (your place, rating and shelves) moves onto it.</p>
     ${pairs.map((p, i) => `<div data-i="${i}" class="space-y-2 rounded-lg bg-slate-800/60 p-2 text-sm">
       ${badge(p)}<p>1. ${line(p.a)}<br>2. ${line(p.b)}</p>${reasons(p)}${suggestion(p)}
       <div class="flex flex-wrap gap-2"><button type="button" data-twin="merge" data-keep="a" class="btn-primary py-1 text-sm">Join, keep 1</button>

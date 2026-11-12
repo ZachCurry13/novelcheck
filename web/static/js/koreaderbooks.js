@@ -35,11 +35,11 @@ export async function renderKOReaderBooks(host, state, onChange) {
     if (!books.length) {
       // A hint for KOReader readers who haven't turned the statistics sync on.
       host.innerHTML = state.user.delivery_method !== "koreader" ? ""
-        : `<p class="card mt-8 text-sm text-slate-400">📱 See every book you open in KOReader here, with how far you are:
+        : `<p class="card mt-8 text-sm text-slate-400">See every book you open in KOReader here, with how far you are:
           turn on its reading statistics sync. <button type="button" data-setup class="underline">KOReader setup</button></p>`;
       return;
     }
-    host.innerHTML = `<div class="mt-8"><h2 class="label">📱 On your KOReader</h2>
+    host.innerHTML = `<div class="mt-8"><h2 class="label">On your KOReader</h2>
       <p class="mb-2 text-xs text-slate-400">Every book opened on your KOReader devices${data.synced_at ? ` · synced ${ago(data.synced_at)}` : ""}
         ${books.some((b) => !b.owned) ? ` · <button type="button" data-match class="underline">Match the unmatched</button>` : ""}</p>
       <ul class="space-y-2">${(all ? books : books.slice(0, SHOW)).map(row).join("")}</ul>

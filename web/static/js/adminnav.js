@@ -27,7 +27,7 @@ export const tabsFor = () => TABS.filter(([, , , shown]) => !shown || shown());
 export function adminNavHTML(active) {
   return tabStrip({
     id: "admin-tabs", label: "Admin", active,
-    tabs: tabsFor().map(([k, icon, label]) => [k, `${icon} ${label}`, hrefOf(k), !k.startsWith("@")]),
+    tabs: tabsFor().map(([k, , label]) => [k, label, hrefOf(k), !k.startsWith("@")]),
   });
 }
 

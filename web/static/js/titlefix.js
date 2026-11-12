@@ -12,7 +12,7 @@ export function seriesText(b) {
   return b.series_index ? `Book ${num(b.series_index)}` : "";
 }
 
-export const seriesLine = (b) => (seriesText(b) ? `<p class="text-sm text-sky-300">📚 ${esc(seriesText(b))}</p>` : "");
+export const seriesLine = (b) => (seriesText(b) ? `<p class="text-sm text-sky-300">${esc(seriesText(b))}</p>` : "");
 
 function dialog(id) {
   let d = document.getElementById(id);
@@ -34,7 +34,7 @@ export async function openTitleEdit(b, calibreIds, cw, onSaved) {
   if (!srv) return;
   const d = dialog("title-edit-dialog");
   d.innerHTML = `<form class="space-y-3 p-5">
-    <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">✏️ Title in Calibre</h2>
+    <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">Title in Calibre</h2>
       <button type="button" data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
     <p class="text-sm text-slate-400">${b.title_fix ? `Calibre calls it <b class="text-slate-200">“${esc(b.title_fix)}”</b>. NovelCheck already shows it tidied; save to make Calibre match.`
       : "Changes the title in your Calibre library."} Calibre renames the book's folder to match.</p>
@@ -79,9 +79,9 @@ export async function openTitleFixes(onDone) {
     if (!data) return false;
     const { fixes, server, calibre_web_url: cw } = data;
     d.innerHTML = `<form class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
-      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">🏷️ Tidy titles in Calibre</h2>
+      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">Tidy titles in Calibre</h2>
         <button type="button" data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
-      <p class="text-sm text-slate-400">${fixes.length ? `These titles carry track or series numbers in Calibre. NovelCheck already shows them tidied${server ? "; tick the ones to change in Calibre too." : "."}` : "Every title in Calibre is tidy. 🎉"}</p>
+      <p class="text-sm text-slate-400">${fixes.length ? `These titles carry track or series numbers in Calibre. NovelCheck already shows them tidied${server ? "; tick the ones to change in Calibre too." : "."}` : "Every title in Calibre is tidy."}</p>
       ${!server && fixes.length ? noServer(cw) : ""}
       ${note ? `<div class="rounded-lg bg-amber-950/40 p-3 text-sm text-amber-200">${note}</div>` : ""}
       ${server && fixes.length > 1 ? `<label class="flex items-center gap-2 text-sm"><input type="checkbox" data-all checked> All ${fixes.length}</label>` : ""}

@@ -40,7 +40,7 @@ export async function renderLibrary(view, state) {
     <div id="shelf-banner"></div>
     ${filtersHTML({ facets, catOpts, event, state })}
     <div class="mb-3 flex items-center justify-between gap-2"><p id="result-count" class="text-sm text-slate-400"></p>
-      <button type="button" id="select-toggle" class="btn-ghost py-1 text-sm" title="Pick several books to add to your Nightstand, Deep Scan or delete">☑ Select</button></div>
+      <button type="button" id="select-toggle" class="btn-ghost py-1 text-sm" title="Pick several books to add to your Nightstand, Deep Scan or delete">Select</button></div>
     <div id="grid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
     <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>`;
 
@@ -100,7 +100,7 @@ export async function renderLibrary(view, state) {
     $("#result-count", view).textContent = `${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}`;
     $("#more-btn", view).classList.toggle("hidden", offset >= data.total);
     if (!data.total) {
-      grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>${form.q.value.trim() && state.user.role !== "restricted" ? `<div class="card mt-3"><p class="mb-2 font-semibold">🔎 Look in your Libby libraries</p><div data-lsbox></div></div>` : ""}`;
+      grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>${form.q.value.trim() && state.user.role !== "restricted" ? `<div class="card mt-3"><p class="mb-2 font-semibold">Look in your Libby libraries</p><div data-lsbox></div></div>` : ""}`;
       const box = grid.querySelector("[data-lsbox]");
       if (box) libbySearchBox(box, form.q.value.trim());
     }

@@ -28,7 +28,7 @@ export async function renderLink(box, method = "GET") {
   }
   box.innerHTML = `<input class="input text-xs" readonly value="${esc(r.url)}" aria-label="Bug report link">
     <p class="text-xs text-slate-400">Works until ${esc(nice(r.expires))} · ${r.seen ? `last opened ${esc(nice(r.seen))}` : "not opened yet"}</p>
-    <div class="flex flex-wrap gap-2"><button type="button" data-link="copy" data-url="${esc(r.url)}" class="btn-primary">📋 Copy link</button>
+    <div class="flex flex-wrap gap-2"><button type="button" data-link="copy" data-url="${esc(r.url)}" class="btn-primary">Copy link</button>
       <button type="button" data-link="extend" class="btn-secondary">Extend 7 days</button>
       <button type="button" data-link="new" class="btn-secondary">New link</button>
       <button type="button" data-link="off" class="btn-ghost">Turn off</button></div>`;
@@ -42,8 +42,8 @@ export async function renderErrors(box) {
   box.innerHTML = list.length ? `<ul class="max-h-72 space-y-1 overflow-auto text-xs">${list.map((e) => `<li class="rounded bg-slate-800/60 p-2">
       <b>${esc(e.code)}</b> · ${esc(nice(e.at))} · ${esc(e.method)} ${esc(e.path)} → ${e.status}${e.username ? ` · ${esc(e.username)}` : ""}
       <span class="block break-words text-slate-400">${esc(e.detail)}</span></li>`).join("")}</ul>
-    <div class="flex gap-2"><button type="button" data-err="copy" class="btn-secondary">📋 Copy</button><button type="button" data-err="clear" class="btn-ghost">Clear list</button></div>`
-    : `<p class="text-sm text-slate-400">No server errors. 🎉</p>`;
+    <div class="flex gap-2"><button type="button" data-err="copy" class="btn-secondary">Copy</button><button type="button" data-err="clear" class="btn-ghost">Clear list</button></div>`
+    : `<p class="text-sm text-slate-400">No server errors.</p>`;
   box.dataset.text = list.map((e) => `${e.code} ${e.at} ${e.method} ${e.path} -> ${e.status} ${e.username}: ${e.detail}`).join("\n");
 }
 

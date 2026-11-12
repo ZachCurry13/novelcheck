@@ -8,7 +8,7 @@ import { ago } from "./progress.js";
 export async function renderHardcover(host) {
   const draw = (s) => {
     const at = s.synced_at ? Date.parse(s.synced_at) / 1000 : 0;
-    host.innerHTML = `<h2 class="text-lg font-semibold">📚 Hardcover</h2>
+    host.innerHTML = `<h2 class="text-lg font-semibold">Hardcover</h2>
       ${s.connected ? `<p class="text-sm">${s.username ? `Connected as <b>${esc(s.username)}</b>. ` : "Connected. "}${at ? `Last synced ${esc(ago(at))}` : "Not synced yet"}:
           ${s.books} book${s.books === 1 ? "" : "s"} (reading and read), ${s.matched} in your library.</p>
         <label class="toggle"><input type="checkbox" data-hc-push ${s.push ? "checked" : ""}> Also send my reading progress to Hardcover</label>

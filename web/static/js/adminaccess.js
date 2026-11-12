@@ -4,8 +4,8 @@
 import { put, post } from "./api.js";
 import { esc, attempt } from "./ui.js";
 
-export const AREA_NAMES = { ai: "🤖 AI settings", deep: "🧬 Deep Scans", calibre: "📚 Calibre & cleanup",
-  services: "✉️ Email & Discover", system: "🖥️ System", users: "👥 Users" };
+export const AREA_NAMES = { ai: "AI settings", deep: "Deep Scans", calibre: "Calibre & cleanup",
+  services: "Email & Discover", system: "System", users: "Users" };
 
 const AREA_HELP = {
   ai: "AI engine, keys, models, prices, limits, AI machines, custom AI filters",
@@ -27,7 +27,7 @@ export function accessHTML(u, viewer) {
       <span>${esc(name)}<span class="block text-xs text-slate-400">${esc(AREA_HELP[k])}</span></span></label>`).join("")}
     <div class="flex flex-wrap gap-2 pt-1">
       <button type="button" data-uact="access" class="btn-secondary py-1 text-sm">Save access</button>
-      <button type="button" data-uact="owner" class="btn-ghost py-1 text-sm" title="They decide what other admins can reach; you keep every area">🔑 Make main admin</button></div>
+      <button type="button" data-uact="owner" class="btn-ghost py-1 text-sm" title="They decide what other admins can reach; you keep every area">Make main admin</button></div>
   </fieldset>`;
 }
 

@@ -29,7 +29,7 @@ export function lineChart(el, { series, labels, fmt, max }) {
       ${paths}
       <line class="crosshair hidden stroke-slate-400" y1="0" y2="${H}" stroke-width="1" vector-effect="non-scaling-stroke"/>
     </svg>
-    <div class="flex justify-between text-[10px] text-slate-500"><span>${esc(labels[0])}</span><span>now</span></div>`;
+    <div class="flex justify-between text-[11px] text-slate-500"><span>${esc(labels[0])}</span><span>now</span></div>`;
   const svg = el.querySelector("svg"), hair = el.querySelector(".crosshair"), out = el.querySelector(".readout");
   const show = (i) => {
     hair.setAttribute("x1", x(i)); hair.setAttribute("x2", x(i));
@@ -63,7 +63,7 @@ export function columnChart(el, bars, cls = "fill-indigo-500") {
         <rect data-bar="${i}" x="${i * slot + gap}" y="${H - h}" width="${slot - 2 * gap}" height="${h}" rx="2" class="${cls} group-hover:opacity-80 pointer-events-none"/></g>`;
     }).join("")}
     <line x1="0" x2="${W}" y1="${H}" y2="${H}" class="stroke-slate-700" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>
-    <div class="flex justify-between text-[10px] text-slate-500"><span>${esc(bars[0]?.label || "")}</span><span>today</span></div>`;
+    <div class="flex justify-between text-[11px] text-slate-500"><span>${esc(bars[0]?.label || "")}</span><span>today</span></div>`;
   const svg = el.querySelector("svg"), out = el.querySelector(".readout");
   const show = (e) => {
     const i = e.target.closest?.("[data-i]")?.dataset.i;

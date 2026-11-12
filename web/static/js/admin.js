@@ -17,7 +17,7 @@ import { renderStats, perBookCost } from "./adminstats.js";
 import { adminNavHTML, markAdminSection, tabsFor } from "./adminnav.js";
 import { AREA_NAMES } from "./adminaccess.js";
 
-const TABS = [["ai", "🤖 AI & Scans"], ["users", "👪 Users & Rules"], ["cleanup", "🧹 Library cleanup"], ["delivery", "📬 Delivery & Services"], ["system", "⚙️ System & Toggles"]];
+const TABS = [["ai", "AI & Scans"], ["users", "Users & Rules"], ["cleanup", "Library cleanup"], ["delivery", "Delivery & Services"], ["system", "System & Toggles"]];
 
 // The open tab lives in the address (#/admin?tab=users) so a reload keeps it.
 const tabFromHash = () => new URLSearchParams(location.hash.split("?")[1] || "").get("tab");
@@ -64,9 +64,9 @@ export async function renderAdmin(view, state) {
     ${hasTab("delivery") ? `<section data-panel="delivery" class="space-y-4">
       <div id="settings-delivery"></div>
       <div class="card space-y-1 text-sm${on(state.user, "koreader") ? "" : " module-off"}" data-module="koreader">
-        <p class="font-semibold">📖 KOReader</p>
+        <p class="font-semibold">KOReader</p>
         <p class="text-slate-400">Nothing to set up here: each reader finds their private catalog address and QR code under
-          <b>Settings → KOReader setup</b>. For kids' e-readers, use the <b>📖 KOReader</b> button on their card in <b>Users &amp; Rules</b>.</p></div>
+          <b>Settings → KOReader setup</b>. For kids' e-readers, use the <b>KOReader</b> button on their card in <b>Users &amp; Rules</b>.</p></div>
       ${inArea("system", `<div id="remote-access"></div>`)}
     </section>` : ""}
     ${inArea("system", `<section data-panel="system" class="space-y-4">
@@ -74,7 +74,7 @@ export async function renderAdmin(view, state) {
       <div id="settings-system"></div>
       <div class="card flex flex-wrap gap-2">
         <a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db (backup)</a>
-        <a href="#/system" class="btn-ghost">🔌 Integrations</a><a href="#/usage" class="btn-ghost">📈 Usage</a>
+        <a href="#/system" class="btn-ghost">Integrations</a><a href="#/usage" class="btn-ghost">Usage</a>
       </div>
     </section>`)}`;
 

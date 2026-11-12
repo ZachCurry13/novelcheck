@@ -50,7 +50,7 @@ function openMore(links) {
     <span class="ms" aria-hidden="true">${ico}</span>${label}</a>`;
   d.innerHTML = `<div class="space-y-3 p-4">
     <div class="mx-auto h-1.5 w-10 rounded-full bg-slate-700" aria-hidden="true"></div>
-    <div class="flex items-center justify-between"><h2 class="text-lg font-bold">More</h2>
+    <div class="flex items-center justify-between"><h2 class="text-lg font-semibold">More</h2>
       <button data-close class="icon-btn" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button></div>
     <div class="grid grid-cols-3 gap-2">${links.map(tile).join("")}</div>
     <div class="border-t border-slate-800 pt-2">

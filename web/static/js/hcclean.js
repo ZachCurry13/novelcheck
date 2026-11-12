@@ -11,7 +11,7 @@ const SHOW = 400;
 
 export async function renderHCClean(host) {
   host.innerHTML = `<p class="text-sm text-slate-400">Compares every book in Calibre with Hardcover (your Hardcover, set under Settings → Connections) in the background; for a library of a few thousand books it can take up to an hour. It only fills gaps and tidies how things are written; it never swaps one book's details for another's. You choose what to apply.</p>
-    <div class="my-2 flex flex-wrap items-center gap-2"><button type="button" data-hc="scan" class="btn-primary py-1 text-sm">🔎 Scan the library</button>
+    <div class="my-2 flex flex-wrap items-center gap-2"><button type="button" data-hc="scan" class="btn-primary py-1 text-sm">Scan the library</button>
       <button type="button" data-hc="stop" class="btn-ghost hidden py-1 text-sm">Stop</button><span id="hc-status" class="text-sm text-slate-300"></span></div>
     <div id="hc-errors" class="hidden rounded-lg bg-amber-950/40 p-2 text-xs text-amber-200"></div>
     <div id="hc-list" class="space-y-2"></div>`;

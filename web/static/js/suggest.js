@@ -11,8 +11,8 @@ import { on } from "./modules.js";
 
 const SUBTITLE = {
   free: "Matched from your library",
-  ai: "✨ Picked by AI from your library, refreshed daily",
-  ai_outside: "✨ Picked by AI, refreshed daily",
+  ai: "Picked by AI from your library, refreshed daily",
+  ai_outside: "Picked by AI, refreshed daily",
 };
 
 export async function renderSuggestions(host, state, onQueued, polls = 0) {
@@ -39,13 +39,13 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
       .concat(outside.map((o) => (asking.has(o.key) ? whyCard(o.key, {}) : outsideCard(o, liked.has(o.key)))));
     host.innerHTML = `<section class="mt-10">
       <div class="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 class="text-lg font-bold">💡 Suggested Reads${taste ? ` <button data-taste class="btn-ghost ml-1 px-2 py-0.5 text-xs font-normal">🎯 Your taste</button>` : ""}</h2>
+        <h2 class="text-lg font-semibold">Suggested Reads${taste ? ` <button data-taste class="btn-ghost ml-1 px-2 py-0.5 text-xs font-normal">Your taste</button>` : ""}</h2>
         <p class="flex flex-wrap items-center gap-2 text-xs text-slate-500">${libs.length > 1 ? `<label class="flex min-w-0 items-center gap-1">From <select data-from class="input w-auto min-w-0 max-w-[60vw] py-0.5 text-xs">
           <option value="">All libraries</option>${libs.map((c) => `<option value="${c.id}" ${String(c.id) === from ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>` : ""}
-          <span>${data.refreshing ? "✨ The AI is picking new suggestions…" : SUBTITLE[data.mode]}</span></p>
+          <span>${data.refreshing ? "The AI is picking new suggestions…" : SUBTITLE[data.mode]}</span></p>
       </div>
       ${cards.length ? `<ul data-strip class="flex max-w-full snap-x gap-3 overflow-x-auto px-px pt-1 pb-2">${cards.join("")}</ul>`
-        : `<p class="text-sm text-slate-500">Add a few books to your Nightstand (or finish some) and suggestions will show up here.${taste ? ` Or <button data-taste class="underline">🎯 mark a few books you know</button> to get started.` : ""}</p>`}
+        : `<p class="text-sm text-slate-500">Add a few books to your Nightstand (or finish some) and suggestions will show up here.${taste ? ` Or <button data-taste class="underline">mark a few books you know</button> to get started.` : ""}</p>`}
       ${data.up + data.down ? `<p class="mt-1 text-xs text-slate-500">Your feedback so far: 👍 ${data.up} · 👎 ${data.down} ·
         <button data-reset class="underline">Start over</button></p>` : ""}
     </section>`;
@@ -124,7 +124,7 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
 const votes = (liked, addButton) => `<div class="mt-auto flex items-center gap-1 pt-1">
   ${liked ? addButton : ""}
   <span class="flex-1"></span>
-  ${liked ? `<span class="text-xs text-emerald-300">👍 Liked</span>` : `<button data-vote="1" class="btn-ghost px-2" title="More like this" aria-label="More like this">👍</button>`}
+  ${liked ? `<span class="text-xs text-emerald-300">Liked</span>` : `<button data-vote="1" class="btn-ghost px-2" title="More like this" aria-label="More like this">👍</button>`}
   <button data-vote="-1" class="btn-ghost px-2" title="Not for me: hide it and show fewer like it" aria-label="Not for me">👎</button></div>`;
 
 function libraryCard({ book: b, reason, by_ai: byAI }, liked) {
@@ -145,8 +145,8 @@ function outsideCard(o, liked) {
     <p class="font-semibold leading-tight line-clamp-2">${esc(o.title)}</p>
     <p class="line-clamp-2 text-sm text-slate-400">${esc(o.author || "Unknown author")}</p></div></div>
     <p><span class="chip-none" title="Not in your library, so NovelCheck hasn't rated it yet">Not in your library</span></p>
-    <p class="text-xs text-slate-300">✨ ${esc(o.reason)}</p>
-    ${votes(liked, `<button data-wish class="btn-secondary py-1 text-sm">⭐ Wishlist</button>`)}
+    <p class="text-xs text-slate-300">${esc(o.reason)}</p>
+    ${votes(liked, `<button data-wish class="btn-secondary py-1 text-sm">Wishlist</button>`)}
   </li>`;
 }
 
@@ -157,7 +157,7 @@ const WHY = [["story", "Not my kind of story"], ["author", "Not this author"], [
 function whyCard(key, b) {
   const opts = WHY.filter(([k]) => (k !== "series" || b.series) && (k !== "spicy" || (b.spice_level ?? -1) > 0));
   return `<li data-sg="${key}" class="card flex w-64 shrink-0 snap-start flex-col gap-2">
-    <p class="text-sm font-semibold">👎 Hidden. Why not?</p>
+    <p class="text-sm font-semibold">Hidden. Why not?</p>
     <p class="text-xs text-slate-400">Optional, but it helps your next suggestions.</p>
     <div class="flex flex-wrap gap-1.5">${opts.map(([k, l]) => `<button data-why="${k}" class="btn-ghost border border-slate-700 px-2 py-1 text-xs">${l}</button>`).join("")}</div>
     <button data-why="" class="mt-auto self-start text-xs text-slate-400 underline">Skip</button>

@@ -14,7 +14,7 @@ import { renderTwins } from "./queuetwins.js";
 export async function renderQueue(view, state) {
   view.innerHTML = `
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h1 class="text-2xl font-bold">Nightstand</h1>
+      <h1 class="page-title">Nightstand</h1>
       <p class="text-sm text-slate-400">Delivery: <span id="delivery-mode"></span> · <a href="#/settings" class="underline">change</a></p>
     </div>
     <p id="nightstand-intro" class="mb-4 hidden rounded-lg bg-slate-800/60 p-3 text-sm text-slate-300">🛏️ <b>Your Nightstand</b> (it used to be called Up Next): what you're reading now,
@@ -74,7 +74,7 @@ export async function renderQueue(view, state) {
     setBars(reading);
     renderTwins($("#twins", view), items, state, load);
     const hid = (await attempt(() => get("/api/queue?hidden=1"))) || [];
-    hiddenEl.innerHTML = hid.length ? `<details class="rounded-lg bg-slate-800/40 p-2"><summary class="cursor-pointer text-slate-400">🙈 Hidden (${hid.length})</summary>
+    hiddenEl.innerHTML = hid.length ? `<details class="rounded-lg bg-slate-800/40 p-2"><summary class="cursor-pointer text-slate-400">Hidden (${hid.length})</summary>
       <ul class="mt-2 space-y-1">${hid.map((i) => `<li data-item="${i.id}" data-book="${i.book_id}" class="flex items-center justify-between gap-2">
         <span class="min-w-0 truncate">${esc(i.title)}</span><button data-act="unhide" class="btn-ghost shrink-0 py-1 text-xs">Show again</button></li>`).join("")}</ul></details>` : "";
   }
@@ -164,8 +164,8 @@ function queueRow(i, idx, user) {
           <span data-title class="font-semibold leading-snug line-clamp-2">${esc(i.title)}</span>
           <span class="block truncate text-xs text-slate-400"><span data-pos>${idx + 1}</span> · ${esc(i.author || "Unknown author")}</span>
           ${deepBanner(i)}
-          ${i.progress ? `<span class="block text-xs text-indigo-300">📖 ${pct(i.progress)}% read · ${ago(i.progress.at)}</span>` : ""}
-          ${i.owned ? noFile(i, user) : `<span class="block text-xs text-sky-300">📦 Not in your library yet</span>`}
+          ${i.progress ? `<span class="block text-xs text-indigo-300">${pct(i.progress)}% read · ${ago(i.progress.at)}</span>` : ""}
+          ${i.owned ? noFile(i, user) : `<span class="block text-xs text-sky-300">Not in your library yet</span>`}
         </span>
       </button>
       <span class="hidden shrink-0 md:block">${classChip(i)}</span>
@@ -180,7 +180,7 @@ function queueRow(i, idx, user) {
 
 // "2→4": a Deep Scan found more than the blurb suggested.
 const deepBanner = (i) => (i.deep_change
-  ? `<span class="block text-xs font-semibold text-amber-300" title="The full text was rated higher than the description">⚠️ Deep Scan: Level ${esc(i.deep_change.replace("→", " → "))}</span>` : "");
+  ? `<span class="block text-xs font-semibold text-amber-300" title="The full text was rated higher than the description">Deep Scan: Level ${esc(i.deep_change.replace("→", " → "))}</span>` : "");
 
 function readingCard(i) {
   return `
@@ -193,11 +193,11 @@ function readingCard(i) {
         </button>
         ${deepBanner(i)}
         <p class="text-xs font-semibold text-indigo-300">▶ Currently reading</p>
-        ${i.progress ? `<div class="space-y-1">${progressBar(i.progress)}<p class="text-xs text-slate-400">📖 ${progressText(i.progress)}</p></div>`
+        ${i.progress ? `<div class="space-y-1">${progressBar(i.progress)}<p class="text-xs text-slate-400">${progressText(i.progress)}</p></div>`
           : i.delivery_note ? `<p class="text-xs text-slate-500">${esc(i.delivery_note)}</p>` : ""}
         <div class="flex flex-wrap gap-2"><button data-act="finish" class="btn-secondary">Finished</button>
-          <button data-act="pause" class="btn-ghost whitespace-nowrap" title="Put it back at the top of your Nightstand; your place in the book is kept">⏸ Back to Nightstand</button>
-          <button data-act="hide" class="btn-ghost whitespace-nowrap" title="Hide from your Nightstand (stays in your library)">🙈 Hide</button>
+          <button data-act="pause" class="btn-ghost whitespace-nowrap" title="Put it back at the top of your Nightstand; your place in the book is kept">Back to Nightstand</button>
+          <button data-act="hide" class="btn-ghost whitespace-nowrap" title="Hide from your Nightstand (stays in your library)">Hide</button>
           <button data-act="remove" class="btn-ghost">Remove</button></div></div>
     </div>`;
 }

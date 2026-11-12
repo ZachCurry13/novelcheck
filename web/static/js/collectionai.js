@@ -22,7 +22,7 @@ function dialog() {
   return d;
 }
 
-const head = (title) => `<div class="flex items-center justify-between gap-3"><h2 class="text-lg font-bold">${title}</h2>
+const head = (title) => `<div class="flex items-center justify-between gap-3"><h2 class="text-lg font-semibold">${title}</h2>
   <button type="button" data-close class="btn-ghost h-10 w-10 p-0 text-xl" aria-label="Close">✕</button></div>`;
 const iconSelect = (sel) => `<select name="icon" class="input w-auto text-xl" aria-label="Icon">${ICONS.map((i) => `<option ${i === sel ? "selected" : ""}>${i}</option>`).join("")}</select>`;
 
@@ -54,7 +54,7 @@ export function openNewCollection(onDone, existing = null) {
 export function openAICollection(opts = {}, onDone) {
   const d = dialog();
   const into = opts.collection;
-  d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">${head(into ? `✨ Find more for ${esc(into.name)}` : "✨ Describe a collection")}
+  d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">${head(into ? `Find more for ${esc(into.name)}` : "Describe a collection")}
     <form data-ask class="space-y-2">
       <textarea name="theme" rows="2" required maxlength="500" class="input" placeholder="e.g. Dragon adventures for ages 8-10, not too scary">${esc(opts.theme || into?.theme || "")}</textarea>
       ${into ? "" : `<div class="flex gap-2">${iconSelect(opts.icon || "✨")}
@@ -82,7 +82,7 @@ export function openAICollection(opts = {}, onDone) {
     const t0 = Date.now();
     let job = null;
     while (Date.now() - t0 < 6 * 60 * 1000 && d.open) {
-      out.innerHTML = `<p class="rounded-lg bg-slate-800 p-3 text-sm">✨ Looking through your libraries… ${Math.round((Date.now() - t0) / 1000)} s
+      out.innerHTML = `<p class="rounded-lg bg-slate-800 p-3 text-sm">Looking through your libraries… ${Math.round((Date.now() - t0) / 1000)} s
         <span class="block text-xs text-slate-400">A local AI can take a minute or two.</span></p>`;
       await new Promise((r) => setTimeout(r, 2000));
       job = await get(`/api/collections/ai/${start.job}`).catch(() => null);
@@ -99,7 +99,7 @@ export function openAICollection(opts = {}, onDone) {
         ${coverImg(p.book.id, "h-14 w-10")}
         <span class="min-w-0 flex-1"><span class="font-semibold leading-snug line-clamp-2">${esc(p.book.title)}</span>
           <span class="block truncate text-xs text-slate-400">${esc(p.book.author || "")}</span>
-          <span class="block text-xs text-slate-300">✨ ${esc(p.reason)}</span></span></label>`).join("")}
+          <span class="block text-xs text-slate-300">${esc(p.reason)}</span></span></label>`).join("")}
       <button type="button" data-save class="btn-primary sticky bottom-0 w-full"></button>`;
     paint();
   };

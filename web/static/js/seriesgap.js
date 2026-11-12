@@ -10,8 +10,8 @@ export const novellaChip = (b) => (isNovella(b) ? `<span class="chip-pending" ti
 
 export function gapRow(n, canSearch) {
   return `<li class="rounded-xl border border-dashed border-slate-700 p-3 text-sm text-slate-400" data-gap="${n}">
-    <div class="flex items-center gap-3"><span class="w-8 shrink-0 text-center font-bold">#${n}</span><span class="flex-1">Not in your libraries</span>
-    ${canSearch ? `<button type="button" data-gapfind class="btn-secondary py-1 text-sm">🔎 Find it</button>` : ""}</div><div data-gaphost class="mt-2 hidden"></div></li>`;
+    <div class="flex items-center gap-3"><span class="w-8 shrink-0 text-center font-semibold">#${n}</span><span class="flex-1">Not in your libraries</span>
+    ${canSearch ? `<button type="button" data-gapfind class="btn-secondary py-1 text-sm">Find it</button>` : ""}</div><div data-gaphost class="mt-2 hidden"></div></li>`;
 }
 
 // bindGap handles a tap on "Find it": opens the Libby search for this series and number.

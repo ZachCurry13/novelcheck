@@ -6,8 +6,8 @@ import { esc, attempt, classChip } from "./ui.js";
 import { seriesText } from "./titlefix.js";
 import { coverImg } from "./covers.js";
 
-const MARKS = [["want", "📖 Want to read"], ["liked", "❤️ Read & liked"], ["disliked", "👎 Read, didn't like"], ["notwant", "🙅 Not for me"]];
-const LABEL = { ...Object.fromEntries(MARKS), up: "👍 Liked a suggestion", down: "👎 Hid a suggestion" };
+const MARKS = [["want", "Want to read"], ["liked", "Read & liked"], ["disliked", "Read, didn't like"], ["notwant", "Not for me"]];
+const LABEL = { ...Object.fromEntries(MARKS), up: "Liked a suggestion", down: "Hid a suggestion" };
 const WHY = { story: "not my kind of story", author: "not this author", series: "not this series", spicy: "too spicy", read: "already read it" };
 
 function dialog() {
@@ -36,7 +36,7 @@ export async function openTaste(onDone) {
   };
   const draw = () => {
     d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
-      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">🎯 Your reading taste</h2>
+      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">Your reading taste</h2>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
       <p class="text-sm text-slate-400">Optional: mark any books you know and skip the rest. Your answers shape your 💡 Suggested Reads, and you can change them any time.</p>
       <nav class="flex gap-1 border-b border-slate-800">
@@ -97,7 +97,7 @@ export async function openTaste(onDone) {
 }
 
 function rateHTML(books, chosen) {
-  if (!books.length) return `<p class="text-sm text-slate-500">You've been through every book there is to rate. 🎉</p>`;
+  if (!books.length) return `<p class="text-sm text-slate-500">You've been through every book there is to rate.</p>`;
   return `<ul class="space-y-2">${books.map((b) => {
     const cur = chosen.get(b.id) || "";
     const series = seriesText(b);

@@ -18,14 +18,14 @@ export async function renderCheck(view, state) {
   view.innerHTML = `
     <div class="mx-auto max-w-xl space-y-4">
       <div>
-        <h1 class="text-2xl font-bold">Check a book</h1>
+        <h1 class="page-title">Check a book</h1>
         <p class="text-sm text-slate-400">At the shop? Scan the barcode, snap the cover, or type the title.</p>
       </div>
       <div class="grid gap-2 sm:grid-cols-2">
-        <button id="scan" class="btn-primary py-4 text-lg">▦ Scan the barcode</button>
-        <button id="snap" class="btn-primary py-4 text-lg">📷 Photo of the cover</button>
+        <button id="scan" class="btn-primary py-4 text-lg"><span class="ms" aria-hidden="true">barcode_scanner</span>Scan the barcode</button>
+        <button id="snap" class="btn-tonal py-4 text-lg"><span class="ms" aria-hidden="true">photo_camera</span>Photo of the cover</button>
       </div>
-      <button id="pick" class="btn-ghost w-full text-sm">🖼 Or choose a photo you already took</button>
+      <button id="pick" class="btn-ghost w-full text-sm">Or choose a photo you already took</button>
       <dialog id="scan-dialog" class="dialog"></dialog>
       <input id="photo" type="file" accept="image/*" capture="environment" class="hidden">
       <input id="library-photo" type="file" accept="image/*" multiple class="hidden">
@@ -105,7 +105,7 @@ export async function renderCheck(view, state) {
         Try <b>Choose a photo</b>, take the picture again, or type the title below.</p>`;
       return;
     }
-    return check({ image }, "📷 Reading the cover…", slot);
+    return check({ image }, "Reading the cover…", slot);
   };
   const pump = async () => {
     if (reading) return;
@@ -120,7 +120,7 @@ export async function renderCheck(view, state) {
     const files = [...e.target.files];
     e.target.value = "";
     for (const file of files) {
-      const slot = newSlot(photoQueue.length || reading ? "⏳ Waiting for the photos before it…" : "📷 Getting the photo ready…");
+      const slot = newSlot(photoQueue.length || reading ? "Waiting for the photos before it…" : "Getting the photo ready…");
       photoQueue.push({ file, slot });
     }
     pump();
@@ -189,7 +189,7 @@ function resultCard(b, res) {
   if (b.status === "error" || b.spice_level === null || b.spice_level === undefined) {
     const why = b.status === "error" ? `Rating failed: ${esc(b.analysis_error)}` : b.status === "processing" ? "The AI is still working on it." : "It hasn't been rated yet.";
     return `<div class="card space-y-3" data-id="${b.id}">
-      <div class="flex gap-3">${coverImg(b.id, "h-28 w-20", true)}<div class="min-w-0"><h2 class="text-xl font-bold">${esc(b.title)}</h2><p class="text-sm text-slate-400">${esc(b.author || "")}</p></div></div>
+      <div class="flex gap-3">${coverImg(b.id, "h-28 w-20", true)}<div class="min-w-0"><h2 class="text-xl font-semibold">${esc(b.title)}</h2><p class="text-sm text-slate-400">${esc(b.author || "")}</p></div></div>
       <p class="text-sm text-amber-200">${why}</p>${where}
       <div class="flex flex-wrap gap-2"><button data-act="retry" data-q="${esc(`${b.title} ${b.author || ""}`.trim())}" class="btn-primary">Try again</button>
         <button data-act="another" class="btn-ghost">Check another</button></div></div>`;
@@ -200,7 +200,7 @@ function resultCard(b, res) {
     : b.spice_level === 3 ? ["bg-amber-950/60 text-amber-200", "⚠"] : ["bg-rose-950/60 text-rose-200", "✕"];
   const verdict = [tone[0], `${tone[1]} Level ${b.spice_level}: ${p.name}`];
   return `<div class="card space-y-3" data-id="${b.id}">
-    <div class="flex gap-3">${coverImg(b.id, "h-28 w-20", true)}<div class="min-w-0"><h2 class="text-xl font-bold">${esc(b.title)}</h2><p class="text-sm text-slate-400">${esc(b.author || "Unknown author")}</p></div></div>
+    <div class="flex gap-3">${coverImg(b.id, "h-28 w-20", true)}<div class="min-w-0"><h2 class="text-xl font-semibold">${esc(b.title)}</h2><p class="text-sm text-slate-400">${esc(b.author || "Unknown author")}</p></div></div>
     <p class="rounded-lg p-3 text-lg font-semibold ${verdict[0]}">${verdict[1]}</p>
     <div class="flex flex-wrap gap-1">${classChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)}</div>
     ${b.spice_reason ? `<p class="text-sm"><b>Why:</b> ${esc(b.spice_reason)}</p>` : ""}
@@ -219,8 +219,8 @@ function resultCard(b, res) {
 function actions(res) {
   if (res.in_library) return `<button data-act="queue" class="btn-primary">＋ Add to your Nightstand</button>`;
   const wish = res.my_wish
-    ? `<button data-act="unwish" class="btn-secondary" title="Remove it from your wishlist">⭐ On your wishlist${res.my_wish.status === "approved" ? " (to get)" : ""}</button>`
-    : `<button data-act="wish" class="btn-primary">⭐ Add to Wishlist</button>`;
+    ? `<button data-act="unwish" class="btn-secondary" title="Remove it from your wishlist">On your wishlist${res.my_wish.status === "approved" ? " (to get)" : ""}</button>`
+    : `<button data-act="wish" class="btn-primary">Add to Wishlist</button>`;
   return `${wish}<button data-act="queue" class="btn-secondary" title="Add it to your Nightstand until you get a copy">＋ Nightstand (to get)</button>`;
 }
 
@@ -231,7 +231,7 @@ async function loadRecent(view, state) {
   if (!host || !cat) return;
   const data = await attempt(() => get("/api/books" + qs({ catalog: cat.id, sort: "recent", limit: 8 })));
   if (!data?.books.length) return;
-  host.innerHTML = `<h2 class="mb-2 mt-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Recently checked</h2>
+  host.innerHTML = `<h2 class="mb-2 mt-4 text-sm font-medium text-slate-400">Recently checked</h2>
     <ul class="space-y-2">${data.books.map((b) => `<li><button data-open="${b.id}" class="card flex w-full items-center justify-between gap-3 text-left">
       ${coverImg(b.id, "h-12 w-8")}
       <span class="min-w-0 flex-1"><span class="block truncate font-semibold">${esc(b.title)}</span><span class="block truncate text-xs text-slate-400">${esc(b.author || "")}</span></span>

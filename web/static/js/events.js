@@ -12,12 +12,12 @@ export async function renderEvents(view, state) {
   if (id) return location.replace(`#/library?event=${encodeURIComponent(id)}`); // older links
   const manager = canManage(state.user);
   view.innerHTML = `${discoverTabsHTML("events", state.user)}
-    <div class="mb-3 flex flex-wrap items-center justify-between gap-2"><h1 class="text-2xl font-bold">🎉 Events</h1>
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2"><h1 class="page-title">Events</h1>
       ${manager ? `<button data-new class="btn-primary">＋ New event</button>` : ""}</div>
     <p class="mb-4 text-sm text-slate-400">Free-book days such as Stuff Your Kindle: see which books suit your family, which you already have${state.user.role === "restricted" ? "" : ", and claim them on Amazon"}.
       An event moves to the archive when it ends (or after 30 days, unless a parent pins it).</p>
     <ul id="events" class="space-y-2"><li class="text-slate-400">Loading…</li></ul>
-    <details id="archive" class="mt-5 hidden"><summary class="cursor-pointer text-sm font-semibold text-slate-300">🗄 Archive</summary>
+    <details id="archive" class="mt-5 hidden"><summary class="cursor-pointer text-sm font-semibold text-slate-300">Archive</summary>
       <ul class="mt-2 space-y-2"></ul></details>`;
   view.querySelector("[data-new]")?.addEventListener("click", openNewEvent);
   const evs = (await attempt(() => get("/api/events"))) || [];
@@ -32,6 +32,6 @@ export async function renderEvents(view, state) {
     || `<li class="card text-sm text-slate-400">No events on now.${manager ? " When a free-book day comes up, press ＋ New event and paste its list or its page's address." : ""}</li>`;
   const archive = $("#archive", view);
   archive.classList.toggle("hidden", !old.length);
-  archive.querySelector("summary").textContent = `🗄 Archive (${old.length})`;
+  archive.querySelector("summary").textContent = `Archive (${old.length})`;
   archive.querySelector("ul").innerHTML = old.map(row).join("");
 }

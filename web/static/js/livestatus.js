@@ -1,5 +1,5 @@
-// Live status on the Library's cards (parents): "⚡ Rating now…" on the book
-// the AI is rating, "🧬 Part 4 of 12" on the one being Deep Scanned, and each
+// Live status on the Library's cards (parents): "Rating now…" on the book
+// the AI is rating, "Part 4 of 12" on the one being Deep Scanned, and each
 // card's rating in place as soon as it's saved, without reloading the page.
 // Driven by the "nc:activity" event (js/activity.js).
 import { get } from "./api.js";
@@ -34,12 +34,12 @@ export function liveCards(grid, render, after) {
     });
     const chip = a.book_id && a.state !== "idle" && grid.querySelector(`[data-book="${a.book_id}"] [data-status]`);
     if (chip) {
-      chip.insertAdjacentHTML("beforebegin", `<span class="chip-busy" data-live>⚡ Rating now…</span>`);
+      chip.insertAdjacentHTML("beforebegin", `<span class="chip-busy" data-live>Rating now…</span>`);
       chip.classList.add("hidden");
       chip.setAttribute("data-live-hidden", "");
     }
     const deep = a.deep && grid.querySelector(`[data-book="${a.deep.book_id}"] [data-chips]`);
-    if (deep) deep.insertAdjacentHTML("afterbegin", `<span class="chip-deep" data-live title="Deep Scan: the AI is reading the whole book">🧬 Part ${a.deep.part} of ${a.deep.parts}</span>`);
+    if (deep) deep.insertAdjacentHTML("afterbegin", `<span class="chip-deep" data-live title="Deep Scan: the AI is reading the whole book">Part ${a.deep.part} of ${a.deep.parts}</span>`);
   }
 
   const onActivity = async (e) => {

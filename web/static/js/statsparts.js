@@ -9,7 +9,7 @@ export const card = (label, headline, inner) => `<section class="card space-y-3"
   <div><p class="text-sm text-slate-400">${esc(label)}</p><h2 class="text-xl font-semibold leading-snug">${headline}</h2></div>${inner}</section>`;
 
 export const bigNum = (icon, n, label) => `<div class="flex items-start gap-3"><span class="text-xl" aria-hidden="true">${icon}</span>
-  <div class="min-w-0"><p class="text-xl font-bold leading-tight">${n}</p><p class="text-sm text-slate-400">${esc(label)}</p></div></div>`;
+  <div class="min-w-0"><p class="text-xl font-semibold leading-tight">${n}</p><p class="text-sm text-slate-400">${esc(label)}</p></div></div>`;
 
 const FILLS = ["bg-indigo-500", "bg-sky-500", "bg-pink-500", "bg-amber-500", "bg-emerald-500", "bg-violet-500", "bg-rose-500", "bg-orange-500"];
 const TEXTS = ["text-indigo-400", "text-sky-400", "text-pink-400", "text-amber-400", "text-emerald-400", "text-violet-400", "text-rose-400", "text-orange-400"];
@@ -68,7 +68,7 @@ export function columns(points, fmt, cls = "fill-indigo-500") {
   }).join("");
   return `<div><svg viewBox="0 0 ${W} ${H}" class="h-28 w-full" role="img" aria-label="${esc(points.map((p) => `${p.label} ${fmt(p.value)}`).join(", "))}">
     <line x1="0" x2="${W}" y1="${H}" y2="${H}" class="stroke-slate-700"/>${bars}</svg>
-    <div class="flex justify-between text-[10px] text-slate-500">${points.map((p, i) => `<span class="${n > 12 && i % Math.ceil(n / 6) ? "invisible" : ""}">${esc(p.label)}</span>`).join("")}</div></div>`;
+    <div class="flex justify-between text-[11px] text-slate-500">${points.map((p, i) => `<span class="${n > 12 && i % Math.ceil(n / 6) ? "invisible" : ""}">${esc(p.label)}</span>`).join("")}</div></div>`;
 }
 
 // coverTile: a book's cover (or its first letter) that opens the book's page.

@@ -10,7 +10,7 @@ export function ageAndNotesHTML(b, notes, manager, viewer) {
         ${AGE_GROUPS.map(([l, n, r]) => `<option value="${l}" ${b.age_level === l ? "selected" : ""}>${esc(n)} (${esc(r)})</option>`).join("")}
       </select>
       <span class="text-xs text-slate-500">Kids see books rated for their age group or younger (even before the AI rates them); older ones stay hidden.${b.age_set_by ? ` Set by ${esc(b.age_set_by)}.` : ""}</span></label>`
-    : b.age_level ? `<p class="text-sm">👪 Age group: <b>${esc(ageLabel(b.age_level))}</b></p>` : "";
+    : b.age_level ? `<p class="text-sm">Age group: <b>${esc(ageLabel(b.age_level))}</b></p>` : "";
   return `
     ${ageSel}
     <section data-notes-box>
@@ -38,7 +38,7 @@ function notesList(notes, viewer) {
     return `<li class="rounded-lg bg-slate-800/60 p-3 text-sm" data-note="${n.id}">
       <p class="whitespace-pre-line text-slate-200">${esc(n.body)}</p>
       <p class="mt-1 text-xs text-slate-500">— ${esc(n.author || "former user")} · ${esc(isNaN(d) ? "" : d.toLocaleDateString())}
-        ${n.visibility === "parents" ? ` · <span class="text-amber-300">🔒 parents only</span>` : ""}
+        ${n.visibility === "parents" ? ` · <span class="text-amber-300">parents only</span>` : ""}
         ${mine ? ` · <button data-note-edit class="underline">Edit</button> · <button data-note-del class="underline">Delete</button>` : ""}</p>
     </li>`;
   }).join("");

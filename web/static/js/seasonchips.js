@@ -1,5 +1,5 @@
 // Seasonal shelves as a row of chips (Library, Discover): the ones in season
-// first, a link to all collections, and "🗓️ More seasons" for the rest. Each
+// first, a link to all collections, and "More seasons" for the rest. Each
 // opens the Library filtered to that shelf.
 import { esc } from "./ui.js";
 
@@ -14,8 +14,8 @@ export function seasonChipsHTML(seasons, active = "") {
   // The chips wrap onto more lines rather than scrolling sideways.
   return `<div data-season-chips class="mb-2 flex flex-wrap gap-2 py-1">
     ${now.map((s) => chip(s, false)).join("")}
-    <a href="#/collections" class="${chipCls} bg-slate-800 text-slate-300">📚 Collections</a>
-    ${rest.length ? `<button type="button" data-more-seasons class="${chipCls} bg-slate-800 text-slate-400">🗓️ More seasons</button>` : ""}
+    <a href="#/collections" class="${chipCls} bg-slate-800 text-slate-300">Collections</a>
+    ${rest.length ? `<button type="button" data-more-seasons class="${chipCls} bg-slate-800 text-slate-400">More seasons</button>` : ""}
     ${rest.map((s) => chip(s, true)).join("")}
   </div>`;
 }

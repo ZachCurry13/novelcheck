@@ -20,7 +20,7 @@ export function fmtClock(sec) {
 
 // audioChip is the 🎧 length on a card.
 export const audioChip = (b) => b.duration_sec
-  ? `<span class="chip-fmt" title="Audiobook${b.narrator ? ` · read by ${esc(b.narrator)}` : ""}">🎧 ${fmtLen(b.duration_sec)}</span>` : "";
+  ? `<span class="chip-fmt" title="Audiobook${b.narrator ? ` · read by ${esc(b.narrator)}` : ""}">${fmtLen(b.duration_sec)}</span>` : "";
 
 // Length choices for the Library's filter: [label, min hours, max hours].
 export const LENGTHS = [["Any length", 0, 0], ["Under 5 hours", 0, 5], ["5 to 10 hours", 5, 10], ["10 to 20 hours", 10, 20], ["Over 20 hours", 20, 0]];

@@ -27,7 +27,7 @@ export async function renderErrors(host, isAdmin, onChange) {
   host.innerHTML = `
     <section class="card mb-6 space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-lg font-semibold">⛔ Rating errors · ${total.toLocaleString()} book${total === 1 ? "" : "s"}</h2>
+        <h2 class="text-lg font-semibold">Rating errors · ${total.toLocaleString()} book${total === 1 ? "" : "s"}</h2>
         <span class="flex flex-wrap gap-2">
           <a href="#/library" data-failed class="btn-ghost py-1 text-xs">Show in Library</a>
           <button data-retry-all class="btn-primary py-1">Retry all ${total.toLocaleString()}</button>
@@ -41,11 +41,11 @@ export async function renderErrors(host, isAdmin, onChange) {
               <span class="break-words font-mono text-xs text-rose-300">${esc(g.message)}</span></p>
             <span class="flex flex-wrap gap-1">
               <button data-retry="${i}" class="btn-secondary px-2 py-0.5 text-xs">Retry ${g.count.toLocaleString()}</button>
-              <button data-copy="${i}" class="btn-ghost px-2 py-0.5 text-xs">📋 Copy</button>
-              ${isAdmin ? `<button data-dx="${i}" class="btn-ghost px-2 py-0.5 text-xs">🩺 Diagnose</button>` : ""}
+              <button data-copy="${i}" class="btn-ghost px-2 py-0.5 text-xs">Copy</button>
+              ${isAdmin ? `<button data-dx="${i}" class="btn-ghost px-2 py-0.5 text-xs">Diagnose</button>` : ""}
             </span>
           </div>
-          ${hintFor(g.message) ? `<p class="mt-1 text-slate-300">💡 ${esc(hintFor(g.message))}</p>` : ""}
+          ${hintFor(g.message) ? `<p class="mt-1 text-slate-300">${esc(hintFor(g.message))}</p>` : ""}
           <p class="mt-1 text-xs text-slate-500">For example: ${g.titles.map(esc).join(" · ")}${g.count > g.titles.length ? " …" : ""}</p>
         </li>`).join("")}</ul>
     </section>`;

@@ -1,4 +1,4 @@
-// "📱 Phone notifications" on the Profile page: turn Web Push on or off for
+// "Phone notifications" on the Profile page: turn Web Push on or off for
 // this device (see internal/push). Parents get the 🔔 notices; everyone gets
 // "your book is on its way".
 import { get, post } from "./api.js";
@@ -62,10 +62,10 @@ export async function renderPushCard(host, user) {
   const mine = Boolean(sub && here);
   const others = info.devices.filter((d) => d !== here);
   host.innerHTML = `
-    <h2 class="text-lg font-semibold">📱 Phone notifications</h2>
+    <h2 class="text-lg font-semibold">Phone notifications</h2>
     <p class="text-sm text-slate-300">${intro}</p>
     ${why || !reg ? `<p class="rounded-lg bg-slate-800/60 p-3 text-sm text-amber-200">${why || "This browser isn't ready for notifications yet. Reload the page and try again."}</p>` : `
-      <p class="text-sm">${mine ? "✅ On for this device." : "Off for this device."}</p>
+      <p class="text-sm">${mine ? "On for this device." : "Off for this device."}</p>
       ${manager ? `<label class="block"><span class="label">What to send</span>
         <select data-push="scope" class="input">
           <option value="all">Problems and everyday events</option>

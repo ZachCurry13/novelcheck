@@ -43,10 +43,10 @@ function typeOptions(role, age, viewer, kids = true) {
 // rules stay as the parent set them.
 const STRICT_RULES = ["hide_open_door", "hide_nudity", "hide_solo_acts", "hide_innuendo", "hide_unrated"];
 const PRESETS = {
-  strict: { label: "👪 Strict Family (Max Level 2)", max_spice: 2, rules: STRICT_RULES, content: "strict",
+  strict: { label: "Strict Family (Max Level 2)", max_spice: 2, rules: STRICT_RULES, content: "strict",
     title: "Up to Level 2; hides Open Door, nudity, solo acts, heavy innuendo, books not yet rated, and a starter set of content (such as the F-word, torture and self-harm). Keeps the age group.",
     done: "Strict Family preset saved: up to Level 2, nothing explicit or unrated" },
-  young: { label: "🧒 Young Reader (Level 1, ages 9–12)", type: "restricted:2", max_spice: 1, rules: [...STRICT_RULES, "hide_dark_occult"], content: "young",
+  young: { label: "Young Reader (Level 1, ages 9–12)", type: "restricted:2", max_spice: 1, rules: [...STRICT_RULES, "hide_dark_occult"], content: "young",
     title: "Middle grade (9–12), up to Level 1; also hides dark occult and a larger set of content (such as swearing, murder and drugs). Books a parent rated for older readers stay hidden.",
     done: "Young Reader preset saved: ages 9–12, up to Level 1" },
 };
@@ -68,7 +68,7 @@ export async function renderUsers(host, viewer) {
   const root = document.createElement("div");
   host.replaceChildren(root);
   root.innerHTML = `
-    <h2 class="mb-1 text-xl font-bold">${parents ? "Users & Content Rules" : "Kids' Accounts & Content Rules"}</h2>
+    <h2 class="mb-1 text-xl font-semibold">${parents ? "Users & Content Rules" : "Kids' Accounts & Content Rules"}</h2>
     <p class="mb-3 text-sm text-slate-400">${parents
       ? `Main admin: everything, and decides what each other admin can reach. Admin: what the main admin ticks on their card. Editor: manages books, scans and kids' accounts, but no technical settings. Kid: an account filtered by its rules.`
       : "Add kid accounts, reset their passwords, and choose what each one can see."}</p>
@@ -161,7 +161,7 @@ function userCard(u, parents, viewer) {
       <div><span class="label" title="Books with any ticked item are hidden from this account, unless a parent marked them OK">Hide content</span>
         ${hidePicker(u.hidden_content || [], "data-hide")}</div>
       ${u.role === "restricted" ? `<label class="toggle min-h-[2.5rem]"><input type="checkbox" data-ai-features ${u.ai_features ? "checked" : ""}>
-        🤖 Allow AI features (Suggested Reads picked by the AI, asking for a Deep Scan)</label>${collectionLimitHTML(u, collections)}` : ""}
+        Allow AI features (Suggested Reads picked by the AI, asking for a Deep Scan)</label>${collectionLimitHTML(u, collections)}` : ""}
       <div class="grid gap-2 sm:grid-cols-2">
         <select name="delivery_method" class="input">${deliveryOptions(viewer, u.delivery_method)}</select>
         <input name="kindle_email" value="${esc(u.kindle_email)}" placeholder="name@kindle.com" class="input">
@@ -169,8 +169,8 @@ function userCard(u, parents, viewer) {
       <div class="flex flex-wrap gap-2">
         <button data-uact="save" class="btn-primary">Save</button>
         <button data-uact="password" class="btn-secondary">Reset password</button>
-        ${parents || u.role === "restricted" ? `<button data-uact="pin" class="btn-ghost" title="A 4-digit PIN for family devices">🔢 PIN</button>` : ""}
-        ${(parents || u.role === "restricted") && on(viewer, "koreader") ? `<button data-uact="koreader" class="btn-ghost" title="Set up this reader's KOReader">📖 KOReader</button>` : ""}
+        ${parents || u.role === "restricted" ? `<button data-uact="pin" class="btn-ghost" title="A 4-digit PIN for family devices">PIN</button>` : ""}
+        ${(parents || u.role === "restricted") && on(viewer, "koreader") ? `<button data-uact="koreader" class="btn-ghost" title="Set up this reader's KOReader">KOReader</button>` : ""}
         ${u.owner ? "" : `<button data-uact="delete" class="btn-danger">Delete</button>`}
       </div>
     </div>`;
@@ -178,20 +178,20 @@ function userCard(u, parents, viewer) {
 
 // badges sum an account up at a glance: role, and for kids their limits.
 function badges(u) {
-  const role = { admin: [u.owner ? "🔑 Main admin" : "Admin", "chip-open"], editor: ["Parent (editor)", "chip-cat"], restricted: ["Kid", "chip-none"] }[u.role] || [u.role, "chip-pending"];
+  const role = { admin: [u.owner ? "Main admin" : "Admin", "chip-open"], editor: ["Parent (editor)", "chip-cat"], restricted: ["Kid", "chip-none"] }[u.role] || [u.role, "chip-pending"];
   const out = [`<span class="${role[1]}">${esc(role[0])}</span>`];
   if (u.role === "admin" && !u.owner) {
     const n = (u.admin_areas || "").split(",").filter(Boolean).length;
     out.push(`<span class="chip-cat" title="Areas the main admin gave">${n} of 6 areas</span>`);
   }
   if (u.role === "restricted") {
-    out.push(`<span class="chip-closed">${u.max_spice < 0 ? "No pepper limit" : `🌶️ Max Level ${u.max_spice}`}</span>`);
+    out.push(`<span class="chip-closed">${u.max_spice < 0 ? "No pepper limit" : `Max Level ${u.max_spice}`}</span>`);
     const age = AGE_GROUPS.find(([l]) => l === u.age_level);
-    if (age) out.push(`<span class="chip-cat">👪 ${esc(age[1])}</span>`);
+    if (age) out.push(`<span class="chip-cat">${esc(age[1])}</span>`);
     const n = (u.hidden_content || []).length;
-    if (n) out.push(`<span class="chip-cat" title="Content items or groups hidden from this account">🚫 ${n} content rule${n === 1 ? "" : "s"}</span>`);
-    if (u.ai_features) out.push(`<span class="chip-cat" title="A parent allowed AI features">🤖 AI on</span>`);
-    if (u.only_collections) out.push(`<span class="chip-cat" title="Sees only books in the collections chosen for them">📚 Collections only</span>`);
+    if (n) out.push(`<span class="chip-cat" title="Content items or groups hidden from this account">${n} content rule${n === 1 ? "" : "s"}</span>`);
+    if (u.ai_features) out.push(`<span class="chip-cat" title="A parent allowed AI features">AI on</span>`);
+    if (u.only_collections) out.push(`<span class="chip-cat" title="Sees only books in the collections chosen for them">Collections only</span>`);
   }
   return out.join("");
 }

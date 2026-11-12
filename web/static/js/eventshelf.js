@@ -48,9 +48,9 @@ export async function eventShelf(host, id, state, reload) {
           ${ev.source_url && !kid ? ` · <a href="${esc(ev.source_url)}" target="_blank" rel="noopener noreferrer" class="underline">event page ↗</a>` : ""}</p></div>
       <a href="#/events" class="btn-ghost shrink-0 py-1.5 text-sm" title="All events">✕<span class="hidden sm:inline"> All events</span></a>
     </div>
-    ${manager ? `<div class="flex flex-wrap gap-1">${btn("edit", "✏️ Edit", "Rename it or change when it ends")}
-      ${ev.archived_at ? btn("restore", "↩ Restore") : `${btn("pin", ev.pinned ? "Unpin" : "📌 Pin", "Pinned events without an end stay out of the archive")}${btn("archive", "🗄 Archive")}`}
-      ${btn("delete", "🗑 Delete", "Delete this event (books you claimed stay)")}</div>` : ""}
+    ${manager ? `<div class="flex flex-wrap gap-1">${btn("edit", "Edit", "Rename it or change when it ends")}
+      ${ev.archived_at ? btn("restore", "↩ Restore") : `${btn("pin", ev.pinned ? "Unpin" : "Pin", "Pinned events without an end stay out of the archive")}${btn("archive", "Archive")}`}
+      ${btn("delete", "Delete", "Delete this event (books you claimed stay)")}</div>` : ""}
     ${ev.archived_at ? `<p class="text-xs text-amber-300">This event is over. Its books and ratings are kept here; Amazon's prices may have changed.</p>` : ""}
     ${manager && !ev.archived_at ? `<label class="flex min-w-0 flex-wrap items-center gap-2 text-xs text-slate-400">Books you claim go to
       <select data-claim-lib class="input w-auto min-w-0 py-1 text-sm">${libs.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}
@@ -86,13 +86,13 @@ export async function eventShelf(host, id, state, reload) {
   const extra = (book) => {
     const m = marks.get(book.id);
     if (!m) return "";
-    if (m.owned) return `<div data-ev class="flex flex-wrap gap-1"><span class="chip-cat">📚 Yours</span></div>`;
+    if (m.owned) return `<div data-ev class="flex flex-wrap gap-1"><span class="chip-cat">Yours</span></div>`;
     const q = encodeURIComponent(`${m.title} ${m.author || ""}`.trim());
     const amazon = m.link || (m.asin ? `https://www.amazon.com/dp/${encodeURIComponent(m.asin)}` : `https://www.amazon.com/s?k=${q}&i=digital-text`);
     return `<div data-ev class="flex flex-wrap gap-2">
       ${kid ? "" : `<a href="${esc(amazon)}" target="_blank" rel="noopener noreferrer" class="btn-primary py-1.5 text-sm">${ev.archived_at ? "Amazon ↗" : "Claim on Amazon ↗"}</a>`}
       ${manager ? `<button data-ev-act="claimed" class="btn-secondary py-1.5 text-sm">✓ I claimed it</button>` : ""}
-      ${m.wished ? `<span class="chip-cat">⭐ Wishlist</span>` : `<button data-ev-act="wish" class="btn-ghost py-1.5 text-sm">⭐ Wishlist</button>`}
+      ${m.wished ? `<span class="chip-cat">Wishlist</span>` : `<button data-ev-act="wish" class="btn-ghost py-1.5 text-sm">Wishlist</button>`}
     </div>`;
   };
   const click = async (e) => {

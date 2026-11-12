@@ -164,7 +164,7 @@ export async function openShareCard(m, s, title, name) {
   const covers = await Promise.all(info.books.filter((b) => b.book_id).slice(0, 8).map(loadCover));
   const select = (key, opts) => `<select data-opt="${key}" class="input min-w-0 flex-1">${Object.entries(opts).map(([k, v]) => `<option value="${k}" ${o[key] === k ? "selected" : ""}>${esc(Array.isArray(v) ? v[0] : v.label)}</option>`).join("")}</select>`;
   d.innerHTML = `<div class="max-h-[90vh] space-y-3 overflow-y-auto p-5">
-    <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">📤 Share your reading</h2>
+    <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">📤 Share your reading</h2>
       <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
     <canvas class="mx-auto max-h-[55vh] w-auto max-w-full rounded-lg" aria-label="Preview of your share card"></canvas>
     <div class="flex flex-wrap gap-2">${select("format", FORMATS)}${select("theme", THEMES)}</div>

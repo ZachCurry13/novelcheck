@@ -30,7 +30,7 @@ const remembered = () => {
 
 export async function renderShelf(view, state) {
   view.innerHTML = `
-    <h1 class="mb-1 text-2xl font-bold">📚 Paper books</h1>
+    <h1 class="mb-1 page-title">Paper books</h1>
     <p class="mb-4 text-sm text-slate-400">Add the printed books on your shelves: scan the barcodes one after another, type a title or ISBN,
       or take a photo of the cover. Each book is rated as it's added, and kids see it under their usual rules.</p>
     <div class="card mb-4 space-y-3">
@@ -38,8 +38,8 @@ export async function renderShelf(view, state) {
       <div id="new-shelf" class="hidden gap-2"><input id="new-name" class="input min-w-0 flex-1" placeholder="e.g. Living room shelf" maxlength="80">
         <button id="create" type="button" class="btn-secondary">Create</button></div>
       <div class="grid grid-cols-2 gap-2">
-        <button id="scan" type="button" class="btn-primary">▦ Scan barcodes</button>
-        <button id="snap" type="button" class="btn-secondary">📸 Cover photo</button>
+        <button id="scan" type="button" class="btn-primary"><span class="ms" aria-hidden="true">barcode_scanner</span>Scan barcodes</button>
+        <button id="snap" type="button" class="btn-secondary">Cover photo</button>
       </div>
       <input id="photo" type="file" accept="image/*" capture="environment" class="hidden">
       <form id="typed" class="flex gap-2"><input name="q" class="input min-w-0 flex-1" placeholder="Title, author or ISBN" autocomplete="off" enterkeyhint="done">

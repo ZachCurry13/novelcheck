@@ -21,7 +21,7 @@ const ref = (i) => ({ kind: i.kind, device: i.device, filename: i.filename, titl
 
 function row(i, n) {
   const where = i.kind === "device" ? `on ${esc(i.device)}` : "from KOReader's statistics";
-  const found = i.match_title ? `<span class="block text-xs text-sky-300">🔎 Open Library: ${esc(i.match_title)}${i.match_author ? ` by ${esc(i.match_author)}` : ""}</span>` : "";
+  const found = i.match_title ? `<span class="block text-xs text-sky-300">Open Library: ${esc(i.match_title)}${i.match_author ? ` by ${esc(i.match_author)}` : ""}</span>` : "";
   return `<li data-n="${n}" class="card space-y-2 p-3">
     <div class="flex gap-3">
       <div class="w-10 shrink-0">${i.book_id ? coverImg(i.book_id, "h-14 w-10") : `<span class="flex h-14 w-10 items-center justify-center rounded bg-slate-800" aria-hidden="true">📄</span>`}</div>
@@ -29,9 +29,9 @@ function row(i, n) {
         <p class="font-semibold leading-snug">${esc(i.title || i.filename)}</p>
         <p class="break-words text-xs text-slate-400">${esc(i.authors || i.filename || "")} · ${where}${i.percent ? ` · ${Math.round(i.percent * 100)}%` : ""}</p>
         ${found}</div></div>
-    <div class="flex flex-wrap gap-2"><button type="button" data-act="add" class="btn-primary px-3 py-1 text-sm" title="Keep this book in NovelCheck, with the title and author shown">➕ Add to NovelCheck</button>
-      <button type="button" data-act="match" class="btn-secondary px-3 py-1 text-sm">🔗 Match…</button>
-      <button type="button" data-act="ignore" class="btn-ghost px-3 py-1 text-sm" title="A file that isn't a book: hide it">🚫 Not a book</button></div>
+    <div class="flex flex-wrap gap-2"><button type="button" data-act="add" class="btn-primary px-3 py-1 text-sm" title="Keep this book in NovelCheck, with the title and author shown">Add to NovelCheck</button>
+      <button type="button" data-act="match" class="btn-secondary px-3 py-1 text-sm">Match…</button>
+      <button type="button" data-act="ignore" class="btn-ghost px-3 py-1 text-sm" title="A file that isn't a book: hide it">Not a book</button></div>
     <div data-search class="hidden space-y-2"></div></li>`;
 }
 
@@ -43,9 +43,9 @@ export async function openKindleBooks(onChange) {
   let items = data?.items || [];
   const paint = () => {
     d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
-      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">🔗 Match books on my e-readers</h2>
+      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">Match books on my e-readers</h2>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
-      <p class="text-sm text-slate-400">${items.length ? "These books on your e-readers aren't matched to your library. Add it to NovelCheck, match it to a book you already have, or mark it not a book." : "Everything on your e-readers is matched. 🎉"}</p>
+      <p class="text-sm text-slate-400">${items.length ? "These books on your e-readers aren't matched to your library. Add it to NovelCheck, match it to a book you already have, or mark it not a book." : "Everything on your e-readers is matched."}</p>
       <ul class="space-y-2">${items.map(row).join("")}</ul></div>`;
   };
   paint();

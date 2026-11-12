@@ -17,11 +17,11 @@ export async function renderUpload(host) {
   const t = await get("/api/admin/upload/targets").catch(() => ({}));
   const libs = t.abs || [];
   host.innerHTML = `<p class="text-sm text-slate-400">Experimental. Run <b>Settings → Developer → Check my servers</b> first to see whether your Calibre and Audiobookshelf have the features this uses. Files are sent through NovelCheck: the remote address (Cloudflare) refuses more than 100 MB at a time, so send big audiobooks while on the home network.</p>
-    <div class="mt-3 space-y-2"><h3 class="font-semibold">📖 E-books into Calibre</h3>
+    <div class="mt-3 space-y-2"><h3 class="font-semibold">E-books into Calibre</h3>
       ${t.calibre ? "" : `<p class="text-sm text-amber-200">Set up the Calibre Content server first (Admin → Calibre Library).</p>`}
       <input id="up-eb" type="file" multiple accept=".epub,.pdf,.mobi,.azw3,.azw,.kepub,.fb2,.cbz" class="input">
       <button type="button" data-up="ebook" class="btn-primary py-1 text-sm" ${t.calibre ? "" : "disabled"}>Add to Calibre</button><p id="up-eb-out" class="text-sm text-slate-300"></p></div>
-    <div class="mt-4 space-y-2"><h3 class="font-semibold">🎧 Audiobook into Audiobookshelf</h3>
+    <div class="mt-4 space-y-2"><h3 class="font-semibold">Audiobook into Audiobookshelf</h3>
       ${libs.length ? "" : `<p class="text-sm text-amber-200">${esc(t.abs_error || "Connect Audiobookshelf first (Admin → Audiobookshelf).")}</p>`}
       <div class="grid gap-2 sm:grid-cols-2"><input id="up-title" class="input" placeholder="Title" aria-label="Title"><input id="up-author" class="input" placeholder="Author" aria-label="Author">
         <input id="up-series" class="input" placeholder="Series (optional)" aria-label="Series">

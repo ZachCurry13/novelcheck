@@ -24,14 +24,14 @@ export async function openOllamaModels(url) {
     const data = await attempt(() => get("/api/admin/ollama/models" + qs({ url })));
     if (!data) return false;
     d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
-      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-bold">🧹 Ollama models on ${esc(url)}</h2>
+      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">Ollama models on ${esc(url)}</h2>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
       <p class="text-sm text-slate-400">${data.models.length} model${data.models.length === 1 ? "" : "s"} using <b>${gb(data.total)}</b>. Delete the ones you don't use to free space on the server; you can always download them again.</p>
       <ul class="space-y-2">${data.models.map((m) => `<li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-800/60 p-3">
         <span class="min-w-0"><b class="break-all">${esc(m.name)}</b>
           <span class="block text-xs text-slate-400">${gb(m.size)}${m.params ? ` · ${esc(m.params)} parameters` : ""}${m.quant ? ` · ${esc(m.quant)}` : ""}</span></span>
         ${m.in_use ? `<span class="chip-none" title="NovelCheck is set to use this model">In use</span>`
-          : `<button data-del="${esc(m.name)}" class="btn-ghost py-1 text-sm">🗑 Delete</button>`}</li>`).join("")
+          : `<button data-del="${esc(m.name)}" class="btn-ghost py-1 text-sm">Delete</button>`}</li>`).join("")
         || `<li class="text-sm text-slate-500">No models installed.</li>`}</ul></div>`;
     return true;
   };

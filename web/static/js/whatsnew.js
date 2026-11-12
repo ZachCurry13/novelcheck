@@ -32,7 +32,7 @@ export async function renderWhatsNew(view, state) {
     .map((s) => section(`v${s.version}${sameVersion(s.version, st.current) ? " (installed)" : ""}`, s.body)).join("");
 
   view.innerHTML = `
-    <h1 class="mb-1 text-2xl font-bold">What's new</h1>
+    <h1 class="mb-1 page-title">What's new</h1>
     <p class="mb-4 text-sm text-slate-400">You're running NovelCheck <b>${esc(st.current)}</b>.</p>
     ${banner}
     <div class="space-y-4">${upcoming}${bundled}</div>`;
@@ -45,7 +45,7 @@ function sameVersion(a, b) {
 function section(title, notes, date, url) {
   return `<article class="card">
     <div class="flex flex-wrap items-baseline justify-between gap-2">
-      <h2 class="text-lg font-bold">${esc(title)}</h2>
+      <h2 class="text-lg font-semibold">${esc(title)}</h2>
       <span class="text-xs text-slate-500">${date ? esc(new Date(date).toLocaleDateString()) : ""}
         ${url ? ` · <a href="${esc(url)}" target="_blank" rel="noopener noreferrer" class="underline">GitHub</a>` : ""}</span>
     </div>

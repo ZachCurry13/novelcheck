@@ -8,13 +8,13 @@ import { openOllamaModels } from "./ollamamodels.js";
 
 // How each model fits the measured GPU (see internal/ollama/gpu.go).
 const FIT = {
-  best: ["⭐ Recommended on your GPU", "text-emerald-300"],
-  best_powerful: ["⭐ Recommended, and the largest that fits your GPU", "text-emerald-300"],
+  best: ["Recommended on your GPU", "text-emerald-300"],
+  best_powerful: ["Recommended, and the largest that fits your GPU", "text-emerald-300"],
   powerful: ["Largest that fits your GPU (most careful, slowest)", "text-indigo-300"],
   fits: ["✓ Fits your GPU", "text-slate-300"],
-  too_big: ["⚠️ Too big for your GPU (slow)", "text-amber-300"],
+  too_big: ["Too big for your GPU (slow)", "text-amber-300"],
   cpu_ok: ["✓ OK without a GPU", "text-slate-300"],
-  cpu_slow: ["⚠️ Slow without a GPU", "text-amber-300"],
+  cpu_slow: ["Slow without a GPU", "text-amber-300"],
 };
 const RANK = { best_powerful: 0, best: 1, cpu_ok: 2, powerful: 3, fits: 4, "": 5, cpu_slow: 6, too_big: 7 };
 const GB = 1 << 30;
@@ -23,10 +23,10 @@ const vramKey = (url) => `nc:vram:${url}`;
 function gpuText(g, msg) {
   const gb = (b) => (b / GB).toFixed(b >= 10 * GB ? 0 : 1);
   const text = {
-    none: "⚠️ Ollama is running on the CPU only. Small models are recommended. If this server has a GPU, turn it on in the TrueNAS Ollama app's settings (GPU → allocate).",
-    about: `🎮 About ${gb(g.vram_bytes)} GB of GPU memory (measured with ${g.basis}).`,
-    at_least: `🎮 At least ${gb(g.vram_bytes)} GB of GPU memory (${g.basis} fits entirely). Bigger models may fit too; pick your GPU size to be sure.`,
-    manual: `🎮 ${gb(g.vram_bytes)} GB of GPU memory (your choice).`,
+    none: "Ollama is running on the CPU only. Small models are recommended. If this server has a GPU, turn it on in the TrueNAS Ollama app's settings (GPU → allocate).",
+    about: `About ${gb(g.vram_bytes)} GB of GPU memory (measured with ${g.basis}).`,
+    at_least: `At least ${gb(g.vram_bytes)} GB of GPU memory (${g.basis} fits entirely). Bigger models may fit too; pick your GPU size to be sure.`,
+    manual: `${gb(g.vram_bytes)} GB of GPU memory (your choice).`,
   }[g.kind] || "GPU not measured yet. Click Check my GPU, or pick your GPU size.";
   return msg ? `${text} (${msg})` : text;
 }
@@ -42,7 +42,7 @@ export function renderOllamaHelper(host, form, prefix = "") {
       <p class="text-slate-400">First install the <b>Ollama</b> app from TrueNAS <b>Apps → Discover Apps</b> (turn on your GPU there if you have one). Then:</p>
       <div class="flex flex-wrap gap-2">
         <button type="button" data-ol="find" class="btn-primary py-1">1. Find Ollama</button>
-        <button type="button" data-ol="models" class="btn-ghost py-1" title="See installed models and free disk space">🧹 Installed models</button>
+        <button type="button" data-ol="models" class="btn-ghost py-1" title="See installed models and free disk space">Installed models</button>
         <input data-ol-url class="input w-64 max-w-full py-1" placeholder="or type its address, e.g. 192.168.1.50:11434">
       </div>
       <div data-ol-servers class="space-y-3"></div>
@@ -94,7 +94,7 @@ export function renderOllamaHelper(host, form, prefix = "") {
         <div class="space-y-2 rounded-lg bg-slate-900/60 p-2">
           <p data-gpu-text class="text-xs text-slate-300">Checking what your GPU can hold…</p>
           <div class="flex flex-wrap items-center gap-2">
-            <button type="button" data-ol="gpu" data-url="${esc(s.url)}" class="btn-ghost px-2 py-0.5 text-xs" title="Loads your biggest model for a moment to see how much fits on the GPU">🎮 Check my GPU</button>
+            <button type="button" data-ol="gpu" data-url="${esc(s.url)}" class="btn-ghost px-2 py-0.5 text-xs" title="Loads your biggest model for a moment to see how much fits on the GPU">Check my GPU</button>
             <select data-gpu-manual class="input w-auto py-0.5 text-xs" aria-label="GPU memory">
               <option value="">…or pick your GPU memory</option><option value="0">No GPU</option>
               ${[4, 6, 8, 10, 12, 16, 20, 24, 32, 48].map((n) => `<option value="${n}">${n} GB</option>`).join("")}
@@ -188,7 +188,7 @@ export function renderOllamaHelper(host, form, prefix = "") {
     set("price_input_per_million", "0");
     set("price_output_per_million", "0");
     const backups = r.fallback ? `, with ${r.fallback.split(",").join(" then ")} as backup` : "";
-    toast(`NovelCheck will now use ${r.model}${backups}. Try a small batch!`);
+    toast(`NovelCheck will now use ${r.model}${backups}. Try a small batch first.`);
   }
 
   host.addEventListener("change", (e) => {

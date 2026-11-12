@@ -45,16 +45,16 @@ export function filtersHTML({ facets, catOpts, event, state }) {
         ${field("File format", `<select name="format" class="input" title="File format">
           <option value="">Any format</option>
           ${["epub", "azw3", "mobi", "kfx", "pdf"].map((f) => `<option value="${f}">${f.toUpperCase()}</option>`).join("")}
-          <option value="paper">📕 Paper books</option>
-          ${(facets.narrators || []).length ? `<option value="audio">🎧 Audiobooks</option>` : ""}
+          <option value="paper">Paper books</option>
+          ${(facets.narrators || []).length ? `<option value="audio">Audiobooks</option>` : ""}
           <option value="multi">2+ formats</option><option value="dupes">Duplicates</option><option value="none">No file</option></select>`)}
         ${audioFilterHTML(facets)}
-        ${field("At my Libby library", `<select name="libby_audio" class="input" title="Books you don't have as an audiobook, checked against your libraries in the background"><option value="">Any</option><option value="1">🎧 The audiobook is there</option><option value="now">🎧 The audiobook is available now</option></select>`)}
+        ${field("At my Libby library", `<select name="libby_audio" class="input" title="Books you don't have as an audiobook, checked against your libraries in the background"><option value="">Any</option><option value="1">The audiobook is there</option><option value="now">The audiobook is available now</option></select>`)}
       </div>
       <div class="fgroup"><h3>Content</h3>
         ${field("Peppers", `<select name="spice" class="input" title="Peppers: how much romance and sexual content">
           <option value="">Any peppers</option>${pepperOptions(null)}
-          <option value="review">⚠ Needs review (the AI wasn't sure)</option>
+          <option value="review">Needs review (the AI wasn't sure)</option>
           <option value="old">Older rating (not on pepper scale)</option><option value="Pending">Not rated yet</option><option value="failed">Rating failed</option></select>`)}
         ${field("Age group", `<select name="age" class="input" title="Books a parent rated for this age group or younger">
           <option value="">Any age group</option>
@@ -71,9 +71,9 @@ export function filtersHTML({ facets, catOpts, event, state }) {
           ${hideBoxes()}
           ${event ? `<label class="toggle"><input type="checkbox" name="not_owned"> Hide books we have</label>` : ""}
           <label class="toggle"><input type="checkbox" name="multi"> Only books in 2+ libraries</label>
-          <label class="toggle" title="Books whose whole text was read by the AI"><input type="checkbox" name="deep"> 🧬 Deep Scanned only</label>
+          <label class="toggle" title="Books whose whole text was read by the AI"><input type="checkbox" name="deep"> Deep Scanned only</label>
         </div>
-        <div class="flex flex-wrap gap-4 text-xs"><button type="button" id="pepper-help" class="text-slate-400 underline">🌶️ What do the peppers mean?</button>
+        <div class="flex flex-wrap gap-4 text-xs"><button type="button" id="pepper-help" class="text-slate-400 underline">What do the peppers mean?</button>
           <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="text-slate-500 underline">Missing a filter? Suggest one</a></div>
       </div>
       </details>

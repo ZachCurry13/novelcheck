@@ -22,7 +22,7 @@ export function pluginStepsHTML(zipUrl, latest) {
     <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
       <li>Unzip it, and connect the e-reader to the computer by USB.</li>
       <li>Copy the <b>novelcheck.koplugin</b> folder into <b>koreader/plugins/</b> on the e-reader (replace the old one when updating).</li>
-      <li>Restart KOReader. It offers <b>Set up NovelCheck sync?</b>: tap <b>Set up</b>. That connects progress sync and reading statistics for you (no WebDAV or catalog to add by hand) and asks to restart once more. The same button is always in the top menu under <b>🛠 Tools → NovelCheck → Set up everything</b>.</li>
+      <li>Restart KOReader. It offers <b>Set up NovelCheck sync?</b>: tap <b>Set up</b>. That connects progress sync and reading statistics for you (no WebDAV or catalog to add by hand) and asks to restart once more. The same button is always in the top menu under <b>Tools → NovelCheck → Set up everything</b>.</li>
     </ol>`;
 }
 
@@ -33,11 +33,11 @@ export async function renderPluginCard(host) {
   const badge = (d) => (!d.plugin_version ? `<span class="chip-pending">plugin before 1.38</span>`
     : older(d.plugin_version, s.plugin_latest) ? `<span class="chip-wait">plugin ${esc(d.plugin_version)}: update to ${esc(s.plugin_latest)}</span>`
       : `<span class="chip-none">plugin ${esc(d.plugin_version)}</span>`);
-  host.innerHTML = `<h2 class="text-lg font-semibold">📱 KOReader plugin</h2>
+  host.innerHTML = `<h2 class="text-lg font-semibold">KOReader plugin</h2>
     <p class="text-sm text-slate-400">Nightstand on your e-reader, one-tap downloads, a list of what's on it with delete, and reports back to NovelCheck.</p>
     ${pluginStepsHTML("/api/me/koplugin.zip", s.plugin_latest)}
     <label class="toggle min-h-[2.5rem] text-sm"><input type="checkbox" data-autoadd ${s.kindle_autoadd ? "checked" : ""}> Add the books on my e-reader to your Nightstand (started ones show as Currently reading)</label>
-    <button type="button" data-match class="btn-secondary w-full text-sm">🔗 Match books on my e-readers${s.kindle_attention ? ` (${s.kindle_attention} to look at)` : ""}</button>
+    <button type="button" data-match class="btn-secondary w-full text-sm">Match books on my e-readers${s.kindle_attention ? ` (${s.kindle_attention} to look at)` : ""}</button>
     <div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">Your e-readers</p>
       ${devices.length ? `<ul class="space-y-2">${devices.map((d) => `<li><b>${esc(d.name)}</b> ${badge(d)}<br>
         <span class="text-xs text-slate-400">${d.books} book${d.books === 1 ? "" : "s"}, ${d.in_library} in your library · reported ${esc(ago(d.reported_at))}</span></li>`).join("")}</ul>`

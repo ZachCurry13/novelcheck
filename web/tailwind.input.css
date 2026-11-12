@@ -9,13 +9,14 @@
   .btn, .btn-filled, .btn-tonal, .btn-outlined, .btn-text, .btn-danger, .btn-primary, .btn-secondary, .btn-ghost {
     display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 9999px;
     padding: 0.625rem 1.5rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; letter-spacing: 0.006em;
-    transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+    transition: background-color 0.15s cubic-bezier(0.22, 1, 0.36, 1), color 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.15s, transform 0.12s cubic-bezier(0.22, 1, 0.36, 1);
   }
   :is(.btn, .btn-filled, .btn-tonal, .btn-outlined, .btn-text, .btn-danger, .btn-primary, .btn-secondary, .btn-ghost):disabled { cursor: not-allowed; opacity: 0.38; }
   :is(.btn, .btn-filled, .btn-tonal, .btn-outlined, .btn-text, .btn-danger, .btn-primary, .btn-secondary, .btn-ghost, .icon-btn, .tab, .nav-link):focus-visible { outline: 2px solid rgb(var(--md-primary)); outline-offset: 2px; }
-  .btn-filled, .btn-primary { background: rgb(var(--md-primary)); color: rgb(var(--md-on-primary)); }
-  :is(.btn-filled, .btn-primary):hover:not(:disabled) { background: color-mix(in srgb, rgb(var(--md-primary)) 92%, rgb(var(--md-on-primary))); box-shadow: 0 1px 2px rgb(0 0 0 / 0.3); }
-  .btn-tonal, .btn-secondary { background: rgb(var(--md-secondary-container)); color: rgb(var(--md-on-secondary-container)); }
+  .btn-filled, .btn-primary { background: rgb(var(--slate-100)); color: rgb(var(--slate-950)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12); }
+  :is(.btn-filled, .btn-primary):hover:not(:disabled) { background: rgb(var(--slate-200)); }
+  :is(.btn-filled, .btn-primary, .btn-tonal, .btn-secondary, .btn-outlined, .btn-danger):active:not(:disabled) { transform: scale(0.98); }
+  .btn-tonal, .btn-secondary { background: rgb(var(--md-surface-container-high)); color: rgb(var(--md-on-surface)); box-shadow: inset 0 0 0 1px rgb(var(--slate-100) / 0.08); }
   :is(.btn-tonal, .btn-secondary):hover:not(:disabled) { background: color-mix(in srgb, rgb(var(--md-secondary-container)) 92%, rgb(var(--md-on-secondary-container))); }
   .btn-outlined { border: 1px solid rgb(var(--md-outline)); color: rgb(var(--md-primary)); }
   .btn-text { color: rgb(var(--md-primary)); padding-left: 0.75rem; padding-right: 0.75rem; }
@@ -42,7 +43,8 @@
   /* Navigation: the drawer on wide screens (#nav) uses nav-link; pages use tabs. */
   .nav-link { display: flex; align-items: center; gap: 0.75rem; white-space: nowrap; border-radius: 9999px; padding: 0.5rem 1rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; color: rgb(var(--md-on-surface-variant)); }
   .nav-link:hover { background: rgb(var(--md-on-surface) / 0.08); color: rgb(var(--md-on-surface)); }
-  .nav-link.active { background: rgb(var(--md-primary-container)); color: rgb(var(--md-on-primary-container)); }
+  .nav-link.active { background: rgb(var(--md-surface-container-high)); color: rgb(var(--md-on-surface)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06); }
+  .nav-link.active .ms { color: rgb(var(--md-primary)); }
   .tabs { display: flex; overflow-x: auto; border-bottom: 1px solid rgb(var(--md-outline-variant)); scrollbar-width: none; }
   .tab { position: relative; display: inline-flex; height: 3rem; flex: none; align-items: center; justify-content: center; padding: 0 1rem; white-space: nowrap; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.006em; color: rgb(var(--md-on-surface-variant)); }
   .tab:hover { background: rgb(var(--md-on-surface) / 0.08); color: rgb(var(--md-on-surface)); }
@@ -50,7 +52,7 @@
   .tab.active::after { content: ""; position: absolute; left: 1rem; right: 1rem; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: rgb(var(--md-primary)); }
 
   /* Cards: filled by default. */
-  .card { border-radius: 0.75rem; background: rgb(var(--md-surface-container-low)); padding: 1rem; }
+  .card { border-radius: 0.75rem; background: rgb(var(--md-surface-container-low)); padding: 1rem; box-shadow: inset 0 0 0 1px rgb(var(--slate-100) / 0.06); }
   .card-outlined { border-radius: 0.75rem; border: 1px solid rgb(var(--md-outline-variant)); background: rgb(var(--md-surface)); padding: 1rem; }
   .card-elevated { border-radius: 0.75rem; background: rgb(var(--md-surface-container-low)); padding: 1rem; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3), 0 4px 8px rgb(0 0 0 / 0.15); }
 
@@ -69,7 +71,7 @@
   .chip-deep { @apply chip bg-teal-900/60 text-teal-200; }
   .chip-flag { @apply chip bg-violet-900/60 text-violet-300; }
   .chip-cat { @apply chip bg-sky-900/50 text-sky-300; }
-  .chip-fmt { @apply chip bg-slate-800 font-mono text-[10px] tracking-wide text-slate-300; }
+  .chip-fmt { @apply chip bg-slate-800 font-mono text-[11px] tracking-wide text-slate-300; }
   .chip-dup { @apply chip bg-orange-900/60 text-orange-300; }
 
   .toggle { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; color: rgb(var(--md-on-surface)); }
@@ -89,6 +91,7 @@
   .list-row { display: flex; min-height: 3.5rem; align-items: center; gap: 1rem; padding: 0.625rem 0; }
   .ring-track { stroke: rgb(var(--md-surface-container-highest)); }
   .ring-fill { stroke: rgb(var(--md-primary)); }
+  .page-title { font-size: 1.75rem; line-height: 2.25rem; font-weight: 500; letter-spacing: -0.01em; color: rgb(var(--md-on-surface)); }
   .meter-track { @apply h-1 w-full overflow-hidden rounded-full; }
   .meter-fill { @apply h-full rounded-full transition-[width] duration-500; }
   .badge { position: absolute; right: 0; top: 0; min-width: 1rem; border-radius: 9999px; background: rgb(var(--md-error)); padding: 0 0.25rem; text-align: center; font-size: 0.625rem; font-weight: 700; line-height: 1rem; color: rgb(var(--md-on-error)); }
@@ -107,14 +110,14 @@
 /* Material Design 3 colour roles (docs/DESIGN.md). They point at the themed palette below,
    so the light theme follows without a second list. */
 :root {
-  --md-primary: var(--indigo-200); --md-on-primary: var(--indigo-950);
+  --md-primary: var(--indigo-300); --md-on-primary: var(--indigo-950);
   --md-primary-container: var(--indigo-800); --md-on-primary-container: var(--indigo-100);
   --md-secondary-container: var(--slate-700); --md-on-secondary-container: var(--slate-100);
   --md-surface: var(--slate-950); --md-on-surface: var(--slate-100); --md-on-surface-variant: var(--slate-400);
   --md-surface-container-low: var(--slate-900); --md-surface-container: var(--slate-900);
   --md-surface-container-high: var(--slate-800); --md-surface-container-highest: var(--slate-700);
   --md-inverse-surface: var(--slate-200); --md-inverse-on-surface: var(--slate-900);
-  --md-outline: var(--slate-500); --md-outline-variant: var(--slate-800);
+  --md-outline: var(--slate-600); --md-outline-variant: var(--slate-800);
   --md-error: var(--rose-300); --md-on-error: var(--rose-950);
   --md-error-container: var(--rose-900); --md-on-error-container: var(--rose-100);
 }
@@ -153,8 +156,8 @@ dialog.search-view { margin-top: 0.5rem; max-width: 36rem; background: rgb(var(-
 /* Themes. The palette is CSS variables (see tailwind.config.js): dark is
    Tailwind's own colors; the light theme (js/appearance.js sets html.light)
    swaps grays around and darkens the accent colors used for text. */
-:root { color-scheme: dark; --slate-50:248 250 252;--slate-100:241 245 249;--slate-200:226 232 240;--slate-300:203 213 225;--slate-400:148 163 184;--slate-500:100 116 139;--slate-600:71 85 105;--slate-700:51 65 85;--slate-800:30 41 59;--slate-900:15 23 42;--slate-950:2 6 23;--indigo-50:238 242 255;--indigo-100:224 231 255;--indigo-200:199 210 254;--indigo-300:165 180 252;--indigo-400:129 140 248;--indigo-500:99 102 241;--indigo-600:79 70 229;--indigo-700:67 56 202;--indigo-800:55 48 163;--indigo-900:49 46 129;--indigo-950:30 27 75;--sky-50:240 249 255;--sky-100:224 242 254;--sky-200:186 230 253;--sky-300:125 211 252;--sky-400:56 189 248;--sky-500:14 165 233;--sky-600:2 132 199;--sky-700:3 105 161;--sky-800:7 89 133;--sky-900:12 74 110;--sky-950:8 47 73;--emerald-50:236 253 245;--emerald-100:209 250 229;--emerald-200:167 243 208;--emerald-300:110 231 183;--emerald-400:52 211 153;--emerald-500:16 185 129;--emerald-600:5 150 105;--emerald-700:4 120 87;--emerald-800:6 95 70;--emerald-900:6 78 59;--emerald-950:2 44 34;--amber-50:255 251 235;--amber-100:254 243 199;--amber-200:253 230 138;--amber-300:252 211 77;--amber-400:251 191 36;--amber-500:245 158 11;--amber-600:217 119 6;--amber-700:180 83 9;--amber-800:146 64 14;--amber-900:120 53 15;--amber-950:69 26 3;--rose-50:255 241 242;--rose-100:255 228 230;--rose-200:254 205 211;--rose-300:253 164 175;--rose-400:251 113 133;--rose-500:244 63 94;--rose-600:225 29 72;--rose-700:190 18 60;--rose-800:159 18 57;--rose-900:136 19 55;--rose-950:76 5 25;--orange-50:255 247 237;--orange-100:255 237 213;--orange-200:254 215 170;--orange-300:253 186 116;--orange-400:251 146 60;--orange-500:249 115 22;--orange-600:234 88 12;--orange-700:194 65 12;--orange-800:154 52 18;--orange-900:124 45 18;--orange-950:67 20 7;--teal-50:240 253 250;--teal-100:204 251 241;--teal-200:153 246 228;--teal-300:94 234 212;--teal-400:45 212 191;--teal-500:20 184 166;--teal-600:13 148 136;--teal-700:15 118 110;--teal-800:17 94 89;--teal-900:19 78 74;--teal-950:4 47 46;--violet-50:245 243 255;--violet-100:237 233 254;--violet-200:221 214 254;--violet-300:196 181 253;--violet-400:167 139 250;--violet-500:139 92 246;--violet-600:124 58 237;--violet-700:109 40 217;--violet-800:91 33 182;--violet-900:76 29 149;--violet-950:46 16 101; }
-html.light { color-scheme: light; --slate-50:2 6 23;--slate-100:15 23 42;--slate-200:30 41 59;--slate-300:51 65 85;--slate-400:71 85 105;--slate-600:148 163 184;--slate-700:203 213 225;--slate-800:226 232 240;--slate-900:255 255 255;--slate-950:241 245 249;--indigo-50:30 27 75;--indigo-100:49 46 129;--indigo-200:55 48 163;--indigo-300:67 56 202;--indigo-400:79 70 229;--indigo-800:199 210 254;--indigo-900:224 231 255;--indigo-950:238 242 255;--sky-50:8 47 73;--sky-100:12 74 110;--sky-200:7 89 133;--sky-300:3 105 161;--sky-400:2 132 199;--sky-800:186 230 253;--sky-900:224 242 254;--sky-950:240 249 255;--emerald-50:2 44 34;--emerald-100:6 78 59;--emerald-200:6 95 70;--emerald-300:4 120 87;--emerald-400:5 150 105;--emerald-800:167 243 208;--emerald-900:209 250 229;--emerald-950:236 253 245;--amber-50:69 26 3;--amber-100:120 53 15;--amber-200:146 64 14;--amber-300:180 83 9;--amber-400:217 119 6;--amber-800:253 230 138;--amber-900:254 243 199;--amber-950:255 251 235;--rose-50:76 5 25;--rose-100:136 19 55;--rose-200:159 18 57;--rose-300:190 18 60;--rose-400:225 29 72;--rose-800:254 205 211;--rose-900:255 228 230;--rose-950:255 241 242;--orange-50:67 20 7;--orange-100:124 45 18;--orange-200:154 52 18;--orange-300:194 65 12;--orange-400:234 88 12;--orange-800:254 215 170;--orange-900:255 237 213;--orange-950:255 247 237;--teal-50:4 47 46;--teal-100:19 78 74;--teal-200:17 94 89;--teal-300:15 118 110;--teal-400:13 148 136;--teal-800:153 246 228;--teal-900:204 251 241;--teal-950:240 253 250;--violet-50:46 16 101;--violet-100:76 29 149;--violet-200:91 33 182;--violet-300:109 40 217;--violet-400:124 58 237;--violet-800:221 214 254;--violet-900:237 233 254;--violet-950:245 243 255; }
+:root { color-scheme: dark; --slate-50:250 250 250;--slate-100:237 237 237;--slate-200:212 212 215;--slate-300:190 190 195;--slate-400:152 152 158;--slate-500:113 113 119;--slate-600:74 74 79;--slate-700:46 46 50;--slate-800:35 35 37;--slate-900:25 25 27;--slate-950:20 20 21;--indigo-50:238 242 255;--indigo-100:224 231 255;--indigo-200:199 210 254;--indigo-300:165 180 252;--indigo-400:129 140 248;--indigo-500:99 102 241;--indigo-600:79 70 229;--indigo-700:67 56 202;--indigo-800:55 48 163;--indigo-900:49 46 129;--indigo-950:30 27 75;--sky-50:240 249 255;--sky-100:224 242 254;--sky-200:186 230 253;--sky-300:125 211 252;--sky-400:56 189 248;--sky-500:14 165 233;--sky-600:2 132 199;--sky-700:3 105 161;--sky-800:7 89 133;--sky-900:12 74 110;--sky-950:8 47 73;--emerald-50:236 253 245;--emerald-100:209 250 229;--emerald-200:167 243 208;--emerald-300:110 231 183;--emerald-400:52 211 153;--emerald-500:16 185 129;--emerald-600:5 150 105;--emerald-700:4 120 87;--emerald-800:6 95 70;--emerald-900:6 78 59;--emerald-950:2 44 34;--amber-50:255 251 235;--amber-100:254 243 199;--amber-200:253 230 138;--amber-300:252 211 77;--amber-400:251 191 36;--amber-500:245 158 11;--amber-600:217 119 6;--amber-700:180 83 9;--amber-800:146 64 14;--amber-900:120 53 15;--amber-950:69 26 3;--rose-50:255 241 242;--rose-100:255 228 230;--rose-200:254 205 211;--rose-300:253 164 175;--rose-400:251 113 133;--rose-500:244 63 94;--rose-600:225 29 72;--rose-700:190 18 60;--rose-800:159 18 57;--rose-900:136 19 55;--rose-950:76 5 25;--orange-50:255 247 237;--orange-100:255 237 213;--orange-200:254 215 170;--orange-300:253 186 116;--orange-400:251 146 60;--orange-500:249 115 22;--orange-600:234 88 12;--orange-700:194 65 12;--orange-800:154 52 18;--orange-900:124 45 18;--orange-950:67 20 7;--teal-50:240 253 250;--teal-100:204 251 241;--teal-200:153 246 228;--teal-300:94 234 212;--teal-400:45 212 191;--teal-500:20 184 166;--teal-600:13 148 136;--teal-700:15 118 110;--teal-800:17 94 89;--teal-900:19 78 74;--teal-950:4 47 46;--violet-50:245 243 255;--violet-100:237 233 254;--violet-200:221 214 254;--violet-300:196 181 253;--violet-400:167 139 250;--violet-500:139 92 246;--violet-600:124 58 237;--violet-700:109 40 217;--violet-800:91 33 182;--violet-900:76 29 149;--violet-950:46 16 101; }
+html.light { color-scheme: light; --slate-500:115 115 115; --slate-50:10 10 10;--slate-100:23 23 23;--slate-200:38 38 38;--slate-300:64 64 64;--slate-400:82 82 82;--slate-600:163 163 163;--slate-700:212 212 212;--slate-800:229 229 231;--slate-900:255 255 255;--slate-950:247 247 248;--indigo-50:30 27 75;--indigo-100:49 46 129;--indigo-200:55 48 163;--indigo-300:67 56 202;--indigo-400:79 70 229;--indigo-800:199 210 254;--indigo-900:224 231 255;--indigo-950:238 242 255;--sky-50:8 47 73;--sky-100:12 74 110;--sky-200:7 89 133;--sky-300:3 105 161;--sky-400:2 132 199;--sky-800:186 230 253;--sky-900:224 242 254;--sky-950:240 249 255;--emerald-50:2 44 34;--emerald-100:6 78 59;--emerald-200:6 95 70;--emerald-300:4 120 87;--emerald-400:5 150 105;--emerald-800:167 243 208;--emerald-900:209 250 229;--emerald-950:236 253 245;--amber-50:69 26 3;--amber-100:120 53 15;--amber-200:146 64 14;--amber-300:180 83 9;--amber-400:217 119 6;--amber-800:253 230 138;--amber-900:254 243 199;--amber-950:255 251 235;--rose-50:76 5 25;--rose-100:136 19 55;--rose-200:159 18 57;--rose-300:190 18 60;--rose-400:225 29 72;--rose-800:254 205 211;--rose-900:255 228 230;--rose-950:255 241 242;--orange-50:67 20 7;--orange-100:124 45 18;--orange-200:154 52 18;--orange-300:194 65 12;--orange-400:234 88 12;--orange-800:254 215 170;--orange-900:255 237 213;--orange-950:255 247 237;--teal-50:4 47 46;--teal-100:19 78 74;--teal-200:17 94 89;--teal-300:15 118 110;--teal-400:13 148 136;--teal-800:153 246 228;--teal-900:204 251 241;--teal-950:240 253 250;--violet-50:46 16 101;--violet-100:76 29 149;--violet-200:91 33 182;--violet-300:109 40 217;--violet-400:124 58 237;--violet-800:221 214 254;--violet-900:237 233 254;--violet-950:245 243 255; }
 /* White text on a gray surface (tabs, menu links, close buttons) turns dark in
    the light theme; on a colored button it stays white. */
 /* (Attribute selectors, so Tailwind doesn't copy this into components that @apply text-white.) */
@@ -192,7 +195,7 @@ html.font-dyslexic .leading-tight, html.font-dyslexic .leading-snug { line-heigh
 #filters .fpanel { display: grid; gap: 1.25rem 1.75rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); padding-top: 0.9rem; border-top: 1px solid rgb(var(--slate-800)); }
 #filters .fgroup { display: flex; flex-direction: column; gap: 0.65rem; min-width: 0; }
 #filters .fgroup.fwide { grid-column: 1 / -1; }
-#filters .fgroup > h3 { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: rgb(var(--slate-400)); }
+#filters .fgroup > h3 { font-size: 0.8125rem; font-weight: 500; color: rgb(var(--slate-400)); }
 #filters label.field { display: block; font-size: 0.78rem; color: rgb(var(--slate-400)); }
 #filters label.field .input { margin-top: 0.2rem; }
 .fmenu { position: relative; }
@@ -226,7 +229,7 @@ html.font-dyslexic .leading-tight, html.font-dyslexic .leading-snug { line-heigh
   }
   .mobile-nav .ico { display: flex; height: 2rem; width: 4rem; align-items: center; justify-content: center; border-radius: 9999px; transition: background-color 0.2s; }
   .mobile-nav .active { color: rgb(var(--md-on-surface)); font-weight: 700; }
-  .mobile-nav .active .ico { background: rgb(var(--md-primary-container)); color: rgb(var(--md-on-primary-container)); font-variation-settings: "FILL" 1; }
+  .mobile-nav .active .ico { background: rgb(var(--md-surface-container-highest)); color: rgb(var(--md-primary)); font-variation-settings: "FILL" 1; }
   #app-view { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
   .toast { bottom: calc(5.75rem + env(safe-area-inset-bottom)); }
   .above-tabbar { bottom: calc(5rem + env(safe-area-inset-bottom)) !important; }
@@ -311,7 +314,7 @@ body.story-open { overflow: hidden; }
 .story-body .s-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .story-body .s-actions button { border-radius: 9999px; background: #fff; color: #111827; padding: 0.7rem 1.4rem; font-weight: 700; }
 .story-body .s-actions button.alt { background: rgb(255 255 255 / 0.18); color: #fff; }
-.wrap-hero { background: radial-gradient(120% 90% at 20% 0%, #4f46e5, rgb(var(--slate-900)) 75%); }
+.wrap-hero { background: rgb(var(--slate-900)); box-shadow: inset 0 0 0 1px rgb(var(--slate-100) / 0.08); }
 
 /* "A new version is ready" bar: see js/appupdate.js. */
 #update-bar { position: fixed; left: 0.75rem; right: 0.75rem; bottom: calc(4.5rem + env(safe-area-inset-bottom)); z-index: 80; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin: 0 auto; max-width: 28rem; border: 1px solid rgb(var(--indigo-400)); border-radius: 0.8rem; background: rgb(var(--slate-900)); padding: 0.6rem 0.8rem; font-size: 0.9rem; box-shadow: 0 12px 30px rgb(0 0 0 / 0.5); }
@@ -337,7 +340,7 @@ body.story-open { overflow: hidden; }
 .dup-copy.keep { border-color: rgb(16 185 129); }
 .dup-cover { width: 3.5rem; height: 5.25rem; flex: none; border-radius: 0.3rem; object-fit: cover; background: rgb(var(--slate-900)); }
 /* Admin → Integrations: rows with a status badge (v1.68) */
-.integ-title { margin-bottom: 0.25rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(148 163 184); }
+.integ-title { margin-bottom: 0.25rem; font-size: 0.875rem; font-weight: 500; color: rgb(var(--slate-400)); }
 .integ-list > li + li { border-top: 1px solid rgb(var(--slate-800)); }
 .integ-row { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.75rem 0; }
 .integ-badge { border-radius: 9999px; padding: 0.05rem 0.6rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }

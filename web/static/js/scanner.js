@@ -14,7 +14,7 @@ export async function renderImport(view, state) {
   // Libraries this person may add to: their own (and, for editors, the family's).
   const catalogs = ((await attempt(() => get("/api/catalogs"))) || []).filter((c) => canEditLibrary(c, state.user) && !c.physical && c.source !== "calibre"); // paper shelves and Calibre take no imports
   view.innerHTML = `
-    <h1 class="mb-1 text-2xl font-bold">Import books</h1>
+    <h1 class="mb-1 page-title">Import books</h1>
     <p class="mb-6 text-sm text-slate-400">Plug in a Kindle or e-reader and pick its <code>documents</code> folder, or,
       with no cable, bring in a list from Amazon, Goodreads, StoryGraph, Hardcover or a spreadsheet (second box).
       Everything is read in your browser; only titles, authors and identifiers are sent to NovelCheck.</p>
@@ -38,7 +38,7 @@ export async function renderImport(view, state) {
       ${MTP_HELP}
     </div>
     <div class="card mb-4 space-y-3">
-      <h2 class="text-lg font-semibold">📄 From Amazon, Goodreads, StoryGraph, Hardcover or a spreadsheet</h2>
+      <h2 class="text-lg font-semibold">From Amazon, Goodreads, StoryGraph, Hardcover or a spreadsheet</h2>
       <p class="text-sm text-slate-400">No Kindle cable needed. Get a list of your books from the app or website you use (steps below),
         then pick the file here, or copy the page and use <b>Paste a list</b> above.</p>
       <label class="btn-primary inline-flex cursor-pointer">Choose a list file (.csv)
@@ -52,13 +52,13 @@ export async function renderImport(view, state) {
           <label class="label" for="cat-select">Add to library</label>
           <select id="cat-select" class="input">
             <option value="new">+ New library…</option>
-            ${catalogs.map((c) => `<option value="${c.id}">${esc(c.name)}${c.private ? " 🔒" : ""}</option>`).join("")}
+            ${catalogs.map((c) => `<option value="${c.id}">${esc(c.name)}${c.private ? "" : ""}</option>`).join("")}
           </select>
         </div>
         <div id="new-cat-wrap">
           <label class="label" for="new-cat">New library name</label>
           <input id="new-cat" class="input" placeholder="e.g. Kids' Kindle">
-          <label class="toggle mt-2 text-sm"><input type="checkbox" id="new-cat-private"> 🔒 Private: only I (and the admins) see these books</label>
+          <label class="toggle mt-2 text-sm"><input type="checkbox" id="new-cat-private"> Private: only I (and the admins) see these books</label>
         </div>
       </div>
       <div class="max-h-96 overflow-y-auto rounded-lg ring-1 ring-slate-800">

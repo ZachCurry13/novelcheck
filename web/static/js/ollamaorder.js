@@ -26,11 +26,11 @@ export function orderHTML(list, fits = {}, job = "rate") {
     const rank = m.on ? ++n : 0;
     const role = rank === 1 ? "main" : rank ? `backup ${rank - 1}` : "not used";
     return `<li class="flex flex-wrap items-center gap-2 rounded-lg bg-slate-900/60 px-2 py-1" data-i="${i}">
-      <span class="w-6 text-center font-bold ${rank ? "text-indigo-300" : "text-slate-600"}">${rank || "–"}</span>
+      <span class="w-6 text-center font-semibold ${rank ? "text-indigo-300" : "text-slate-600"}">${rank || "–"}</span>
       <label class="toggle min-w-0 flex-1"><input type="checkbox" data-ord="on" ${m.on ? "checked" : ""}>
         <code class="break-all">${esc(m.name)}</code></label>
       <span class="text-xs ${rank === 1 ? "text-emerald-300" : "text-slate-500"}">${role}</span>
-      ${["too_big", "cpu_slow"].includes(fitOf(m.name)) ? `<span class="text-xs text-amber-300" title="Too big to run fully on your GPU; it will be slow">⚠️ slow</span>` : ""}
+      ${["too_big", "cpu_slow"].includes(fitOf(m.name)) ? `<span class="text-xs text-amber-300" title="Too big to run fully on your GPU; it will be slow">slow</span>` : ""}
       <button type="button" data-ord="up" class="btn-ghost px-2 py-0.5" ${i === 0 ? "disabled" : ""} aria-label="Move ${esc(m.name)} up">↑</button>
       <button type="button" data-ord="down" class="btn-ghost px-2 py-0.5" ${i === list.length - 1 ? "disabled" : ""} aria-label="Move ${esc(m.name)} down">↓</button>
       <span class="basis-full pl-8 text-xs">${jobLine(m.name, job)}</span>

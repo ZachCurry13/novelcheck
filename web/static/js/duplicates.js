@@ -23,7 +23,7 @@ function copyHTML(g, e, canRemove) {
     <span class="min-w-0 space-y-1">
       <span class="block text-sm"><b>Calibre #${esc(e.calibre_id)}</b>${day(e.modified) ? ` <span class="text-xs text-slate-400">· changed ${esc(day(e.modified))}</span>` : ""}</span>
       <span class="flex flex-wrap gap-1">${files}</span>
-      ${e.doubt ? `<span class="block text-xs text-amber-300">⚠️ ${esc(e.doubt)}</span>` : ""}
+      ${e.doubt ? `<span class="block text-xs text-amber-300">${esc(e.doubt)}</span>` : ""}
       <span data-detail class="block space-y-0.5 text-xs text-slate-300"></span>
       ${canRemove ? `<span class="toggle text-sm"><input type="radio" name="keep-${g.book_id}" value="${esc(e.calibre_id)}" ${keep ? "checked" : ""}> <span data-keep-label>${keep ? "Keep this one" : "Keep this one instead"}</span></span>` : keep ? `<span class="chip-none">✓ Suggested keep</span>` : ""}
     </span></label>`;
@@ -35,7 +35,7 @@ function bookHTML(g, canRemove) {
     <h3 class="font-semibold">${esc(g.title)} <span class="font-normal text-slate-400">· ${esc(g.author || "Unknown author")}</span></h3>
     <p class="text-xs text-slate-400">Suggested to keep #${esc(g.keep)}: ${esc(g.why || "it is the best copy")}.</p>
     <div class="dup-copies">${g.entries.map((e) => copyHTML(g, e, canRemove)).join("")}</div>
-    <button type="button" data-compare class="btn-ghost py-1 text-sm">🔍 Compare what Calibre has for each</button>
+    <button type="button" data-compare class="btn-ghost py-1 text-sm">Compare what Calibre has for each</button>
     ${canRemove ? `<button type="button" data-one class="${g.sure ? "btn-secondary" : "btn-ghost"} py-1 text-sm">Remove the other ${others === 1 ? "copy" : `${others} copies`}${g.sure ? "" : " anyway"}</button>` : ""}
   </section>`;
 }
@@ -44,11 +44,11 @@ export async function renderDuplicates(view, state) {
   const isAdmin = can(state.user, "calibre"); // may remove the extra copies
   view.innerHTML = `
     <a href="#/library" class="text-sm text-slate-400 underline">← Library</a>
-    <h1 class="mb-1 mt-2 text-2xl font-bold">Duplicates in Calibre</h1>
+    <h1 class="mb-1 mt-2 page-title">Duplicates in Calibre</h1>
     <p class="mb-4 max-w-3xl text-sm text-slate-400">Books that are in Calibre more than once (same title and author). For each, pick the copy to keep;
       the others go to Calibre's recycle bin (in Calibre: Remove books → Restore recently deleted).</p>
     <div class="mb-3 flex flex-wrap items-center gap-3 text-sm">
-      <button id="dup-recheck" class="btn-secondary py-1">🔄 Check again</button>
+      <button id="dup-recheck" class="btn-secondary py-1">Check again</button>
       <span id="dup-synced" class="text-slate-400"></span>
     </div>
     <details id="dup-twice" class="card mb-4"><summary class="cursor-pointer font-semibold">Books listed twice in NovelCheck (a different list: entries to join, nothing is removed from Calibre)</summary><div id="same-books" class="mt-2"></div></details>
@@ -67,7 +67,7 @@ export async function renderDuplicates(view, state) {
     e.target.textContent = "Reading Calibre…";
     const r = await attempt(() => post("/api/admin/calibre-sync?wait=1"));
     e.target.disabled = false;
-    e.target.textContent = "🔄 Check again";
+    e.target.textContent = "Check again";
     if (r) load();
   });
 
@@ -104,10 +104,10 @@ export async function renderDuplicates(view, state) {
       ? `To remove copies from here, turn on <a href="#/admin?tab=delivery" class="underline">Admin → Delivery &amp; Services → Calibre Library → One-click removal</a>.`
       : "Only an admin can remove books from Calibre."} <button type="button" id="dup-copy" class="underline">Copy a Calibre search for the suggested removals</button></p>`;
     body.innerHTML = `${cant}
-      ${sure.length ? `<section data-group data-sure class="mb-6 space-y-3"><h2 class="text-xl font-semibold">✅ Looks like the same book (<span data-count></span>)</h2>
+      ${sure.length ? `<section data-group data-sure class="mb-6 space-y-3"><h2 class="text-xl font-semibold">Looks like the same book (<span data-count></span>)</h2>
         <p class="text-sm text-slate-400">Each copy's files match the one that stays in kind and size. NovelCheck can't open the books to compare the text, so glance at the covers.</p>
         ${sure.map((g) => bookHTML(g, data.can_remove)).join("")}</section>` : ""}
-      ${check.length ? `<section data-group class="space-y-3"><h2 class="text-xl font-semibold">⚠️ Check these (<span data-count></span>)</h2>
+      ${check.length ? `<section data-group class="space-y-3"><h2 class="text-xl font-semibold">Check these (<span data-count></span>)</h2>
         <p class="text-sm text-slate-400">Something differs: maybe another edition, an omnibus, or a copy with a PDF or audiobook of its own. These are never removed in one go.</p>
         ${check.map((g) => bookHTML(g, data.can_remove)).join("")}</section>` : ""}
       ${data.can_remove ? `<div id="dup-bar" class="save-bar hidden"><span></span><button type="button" data-all class="btn-primary">Remove their extra copies</button></div>` : ""}`;
@@ -188,7 +188,7 @@ export async function renderDuplicates(view, state) {
     btn.textContent = "Asking Calibre…";
     const r = await attempt(() => get("/api/admin/calibre/duplicates/details?ids=" + g.entries.map((x) => x.calibre_id).join(",")));
     btn.disabled = false;
-    btn.textContent = "🔍 Compare what Calibre has for each";
+    btn.textContent = "Compare what Calibre has for each";
     if (!r) return;
     const keep = $("input[type=radio]:checked", card)?.value || g.keep;
     const base = r.details[keep] || {};

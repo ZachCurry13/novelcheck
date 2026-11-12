@@ -10,9 +10,9 @@ import { coverImg } from "./covers.js";
 import { openBook } from "./bookdialog.js";
 
 const BADGES = {
-  sure: ["✅ Very likely the same book", "text-emerald-300"],
-  likely: ["🟡 Probably the same book", "text-amber-300"],
-  check: ["🔴 Check carefully: these may be different books", "text-rose-300"],
+  sure: ["Very likely the same book", "text-emerald-300"],
+  likely: ["Probably the same book", "text-amber-300"],
+  check: ["Check carefully: these may be different books", "text-rose-300"],
 };
 
 export const badge = (p) => `<p class="text-sm font-semibold ${BADGES[p.confidence][1]}">${BADGES[p.confidence][0]}</p>`;
@@ -22,11 +22,11 @@ export const reasons = (p) => `<ul class="space-y-0.5 text-xs">${(p.reasons || [
 export const confirmJoin = (p) => p.confidence !== "check" || confirm("These may be different books (for example a book and its spin-off). Join them anyway?");
 
 // suggestion says which one to keep, when one stands out ("the left one: its file is newer").
-export const suggestion = (p) => (p.suggest ? `<p class="text-xs text-sky-300">👉 Suggested to keep: <b>${p.suggest === "a" ? "the first" : "the second"}</b>, because ${esc(p.suggest_why)}.</p>` : "");
+export const suggestion = (p) => (p.suggest ? `<p class="text-xs text-sky-300">Suggested to keep: <b>${p.suggest === "a" ? "the first" : "the second"}</b>, because ${esc(p.suggest_why)}.</p>` : "");
 
 const size = (b) => (b >= 1 << 20 ? `${(b / (1 << 20)).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 const day = (t) => (t ? new Date(t.length > 10 ? t : t + "T00:00:00").toLocaleDateString() : "");
-const series = (b) => (b.series ? `<p class="text-sky-300">📚 ${esc(b.series)}${b.series_index ? ` #${b.series_index}` : ""}</p>` : b.series_index ? `<p class="text-sky-300">📚 Book ${b.series_index}</p>` : "");
+const series = (b) => (b.series ? `<p class="text-sky-300">${esc(b.series)}${b.series_index ? ` #${b.series_index}` : ""}</p>` : b.series_index ? `<p class="text-sky-300">Book ${b.series_index}</p>` : "");
 
 // side is one book of the pair: its details, and a button to keep this one.
 const side = (b, which, p) => `<div class="flex min-w-0 flex-1 gap-3 rounded-lg ${p.suggest === which ? "bg-sky-950/40 ring-1 ring-sky-700" : "bg-slate-800/60"} p-3 text-sm">
@@ -56,7 +56,7 @@ export async function renderSameBooks(host, onChange, state) {
   const check = by("check");
   host.innerHTML = `<p class="mb-2 text-sm text-slate-400">${pairs.length} possible pair${pairs.length === 1 ? "" : "s"}, the surest first. Read the evidence under each pair, then press <b>Join, keep this one</b> on the book you want to remain: the joined book shows that one's title and details (for example a newer edition), and everything moves onto it, ratings included. <b>Not the same</b> hides the pair for good. NovelCheck only joins pairs by itself when it is very sure.</p>
     <ul class="space-y-3">${sure.map(card).join("")}</ul>
-    ${check.length ? `<details class="mt-3 rounded-lg border border-rose-900/50 p-2"><summary class="cursor-pointer text-sm text-rose-300">🔴 ${check.length} pair${check.length === 1 ? "" : "s"} to check carefully (often a book and its spin-off)</summary>
+    ${check.length ? `<details class="mt-3 rounded-lg border border-rose-900/50 p-2"><summary class="cursor-pointer text-sm text-rose-300">${check.length} pair${check.length === 1 ? "" : "s"} to check carefully (often a book and its spin-off)</summary>
       <ul class="mt-2 space-y-3">${check.map(card).join("")}</ul></details>` : ""}`;
   host.onclick = async (e) => {
     const open = e.target.closest("[data-open]");

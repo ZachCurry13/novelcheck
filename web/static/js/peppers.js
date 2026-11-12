@@ -66,7 +66,7 @@ export function openPepperGuide() {
     document.body.append(dlg);
   }
   dlg.innerHTML = `<div class="max-h-[85vh] space-y-4 overflow-y-auto p-6">
-    <div class="flex items-start justify-between gap-4"><h2 class="text-xl font-bold">What do the peppers mean?</h2>
+    <div class="flex items-start justify-between gap-4"><h2 class="text-xl font-semibold">What do the peppers mean?</h2>
       <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
     ${pepperScaleHTML()}
     <p class="text-xs text-slate-500">Books rated before the pepper scale show their older label (No Spice, Closed Door, Open Door) until they're re-rated. The <b>Strict family</b> preset for kids' accounts allows up to 2 peppers.</p>

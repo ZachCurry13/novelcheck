@@ -32,8 +32,8 @@ export function setupSelect(view, grid, state, reload, shelf = null) {
     bar.innerHTML = `<div class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 text-sm">
       <b>${n ? `${plural(n, "book")} selected` : "Tap books to select them"}</b>
       ${n && on(state.user, "queue") ? `<button data-bulk="queue" class="btn-primary py-1">＋ Nightstand</button>` : ""}
-      ${n ? `<button data-bulk="deep" class="btn-secondary py-1">🧬 ${admin ? "Deep Scan" : "Ask for Deep Scan"}</button>
-        <button data-bulk="delete" class="btn-ghost py-1 text-rose-300">🗑 Delete…</button>` : ""}
+      ${n ? `<button data-bulk="deep" class="btn-secondary py-1">${admin ? "Deep Scan" : "Ask for Deep Scan"}</button>
+        <button data-bulk="delete" class="btn-ghost py-1 text-rose-300">Delete…</button>` : ""}
       ${n && unshelve ? `<button data-bulk="unshelve" class="btn-ghost py-1">✕ Not for this shelf</button>` : ""}
       <span class="flex-1"></span>
       <button data-all class="btn-ghost py-1">Select all shown</button>
@@ -46,7 +46,7 @@ export function setupSelect(view, grid, state, reload, shelf = null) {
     grid.classList.toggle("selecting", on_);
     grid.classList.toggle("select-none", on_);
     bar.classList.toggle("hidden", !on_);
-    toggleBtn.textContent = on_ ? "✓ Selecting" : "☑ Select";
+    toggleBtn.textContent = on_ ? "✓ Selecting" : "Select";
     paint();
   };
   const set = (card, value) => {

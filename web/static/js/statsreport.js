@@ -95,12 +95,12 @@ function pace(m, sum, s) {
   const avg = sum.days ? sum.sec / sum.days : 0;
   const pph = sum.sec ? (sum.pages / sum.sec) * 3600 : 0;
   const st = streaks(byDay(m.rows));
-  const lines = [`<li>⏳ About <b>${fmtDur(avg)}</b> on a day you read.</li>`, pph ? `<li>📖 Around <b>${n(Math.round(pph))} pages an hour</b>.</li>` : "",
-    `<li>🔥 Reading streak: <b>${plural(st.current, "day")}</b> (best ${plural(st.longest, "day")}).</li>`];
+  const lines = [`<li>About <b>${fmtDur(avg)}</b> on a day you read.</li>`, pph ? `<li>Around <b>${n(Math.round(pph))} pages an hour</b>.</li>` : "",
+    `<li>Reading streak: <b>${plural(st.current, "day")}</b> (best ${plural(st.longest, "day")}).</li>`];
   if (s.period === "year" && s.offset === 0 && sum.finished) {
     const now = new Date();
     const dayOfYear = Math.ceil((now - new Date(now.getFullYear(), 0, 1)) / 864e5);
-    lines.push(`<li>🔮 At this pace you'll finish about <b>${plural(Math.round((sum.finished / dayOfYear) * 365), "book")}</b> this year.</li>`);
+    lines.push(`<li>At this pace you'll finish about <b>${plural(Math.round((sum.finished / dayOfYear) * 365), "book")}</b> this year.</li>`);
   }
   return card("Reading pace", `You read ${fmtDur(avg)} a day when you read`, `<ul class="space-y-1 text-sm">${lines.join("")}</ul>`);
 }

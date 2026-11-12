@@ -4,7 +4,7 @@ import { get, post } from "./api.js";
 import { $, $$, esc, attempt } from "./ui.js";
 import { copyText } from "./copy.js";
 
-const STATUS = { deleted: ["🗑 Deleted", "text-rose-300"], dismissed: ["↩ Kept", "text-slate-300"], done: ["✓ Done", "text-emerald-300"] };
+const STATUS = { deleted: ["Deleted", "text-rose-300"], dismissed: ["↩ Kept", "text-slate-300"], done: ["✓ Done", "text-emerald-300"] };
 const when = (s) => {
   const d = new Date(s && !s.includes("T") ? s.replace(" ", "T") + "Z" : s);
   return isNaN(d) ? "" : d.toLocaleDateString();
@@ -12,7 +12,7 @@ const when = (s) => {
 
 export async function renderDeletions(view) {
   view.innerHTML = `
-    <h1 class="mb-1 text-2xl font-bold">Delete requests</h1>
+    <h1 class="mb-1 page-title">Delete requests</h1>
     <p class="mb-4 max-w-3xl text-sm text-slate-400">Books someone asked to delete. <b>Delete from Calibre</b> moves them to Calibre's
       recycle bin (you can restore them from Calibre's Trash). <b>Keep</b> dismisses the request. For books that aren't in Calibre
       (for example only on a Kindle), delete them on the device and click <b>Mark done</b>.</p>
@@ -27,10 +27,10 @@ export async function renderDeletions(view) {
     const pending = data.pending.length ? `
       <div class="card mb-4 flex flex-wrap items-center gap-2">
         <label class="toggle mr-auto"><input type="checkbox" id="del-all" checked> <b>${data.pending.length}</b>&nbsp;book${data.pending.length === 1 ? "" : "s"} waiting</label>
-        <button data-do="copy" class="btn-ghost py-1 text-xs">📋 Copy Calibre search</button>
+        <button data-do="copy" class="btn-ghost py-1 text-xs">Copy Calibre search</button>
         <button data-do="done" class="btn-ghost py-1 text-xs">✓ Mark done</button>
         <button data-do="dismiss" class="btn-secondary py-1">↩ Keep</button>
-        ${data.can_remove ? `<button data-do="delete" class="btn-danger py-1">🗑 Delete from Calibre</button>`
+        ${data.can_remove ? `<button data-do="delete" class="btn-danger py-1">Delete from Calibre</button>`
           : `<span class="text-xs text-slate-400">Turn on <a href="#/admin" class="underline">One-click removal</a> to delete from here.</span>`}
       </div>
       <div class="mb-6 space-y-2">${data.pending.map((g) => `
@@ -44,7 +44,7 @@ export async function renderDeletions(view) {
             ${g.requests.map((r) => `<p class="text-slate-300">🗑 <b>${esc(r.username || "someone")}</b>, ${esc(when(r.created_at))}${r.reason ? `: “${esc(r.reason)}”` : ""}</p>`).join("")}
           </div>
         </label>`).join("")}</div>`
-      : `<div class="card mb-6 text-slate-300">✓ No books waiting. People can ask for a book to be deleted with <b>🗑 Request to delete</b> in the book's window.</div>`;
+      : `<div class="card mb-6 text-slate-300">✓ No books waiting. People can ask for a book to be deleted with <b>Request to delete</b> in the book's window.</div>`;
     const recent = data.recent.length ? `
       <h2 class="mb-2 text-lg font-semibold">Recently handled</h2>
       <ul class="card divide-y divide-slate-800 text-sm">${data.recent.map((r) => {
@@ -76,7 +76,7 @@ export async function renderDeletions(view) {
     b.disabled = false;
     if (!r) return;
     result.innerHTML = `<div class="card mb-4 text-emerald-200">${{
-      delete: `🗑 Deleted ${r.removed} from Calibre (in its recycle bin)${r.skipped ? `; ${r.skipped} were already gone` : ""}.${
+      delete: `Deleted ${r.removed} from Calibre (in its recycle bin)${r.skipped ? `; ${r.skipped} were already gone` : ""}.${
         r.not_in_calibre ? ` ${r.not_in_calibre} aren't in Calibre: delete those on the device, then Mark done.` : ""}`,
       dismiss: `↩ Kept ${n}; the requests are closed.`,
       done: `✓ Marked ${n} done.`,
