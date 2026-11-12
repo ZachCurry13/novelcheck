@@ -18,8 +18,16 @@ func securityHeaders(next http.Handler) http.Handler {
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "same-origin")
 		h.Set("Permissions-Policy", "camera=(self), microphone=(), geolocation=()") // camera: live barcode scanning
-		h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; "+
-			"style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'")
+		if r.URL.Path == "/reader.html" {
+			// The reader shows a book's own pages in frames made from the file (blob: addresses) with the book's
+			// own styles and fonts. Scripts stay 'self' only, so a script inside a book never runs; the frames
+			// inherit this policy.
+			h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' blob:; "+
+				"font-src 'self' data: blob:; frame-src 'self' blob:; media-src 'self' blob:; script-src 'self'; connect-src 'self' blob:; base-uri 'self'")
+		} else {
+			h.Set("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; "+
+				"style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'")
+		}
 		next.ServeHTTP(w, r)
 	})
 }

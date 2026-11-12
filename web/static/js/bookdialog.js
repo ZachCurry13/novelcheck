@@ -52,6 +52,8 @@ export async function openBook(id, state, onChange) {
   // wishlist, never deleting or removing it. The server knows.
   const owned = Boolean(data.owned);
   const cw = data.calibre_web_url; // set by an admin; only sent to admins and editors
+  // The reader (reader.html) opens a Calibre file in a format it knows.
+  const readable = data.copies.some((c) => c.source === "calibre" && ["epub", "mobi", "azw3", "azw", "fb2", "cbz"].includes((c.format || "").toLowerCase()));
   const copies = [...entries.values()].map((e) => `
     <li class="text-sm">
       <div class="flex flex-wrap items-center gap-2">
@@ -121,7 +123,8 @@ export async function openBook(id, state, onChange) {
         ${owned && can(state.user, "calibre") && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
       </div>
       <div class="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap gap-2 border-t border-slate-800 bg-slate-900/95 px-6 py-3 backdrop-blur">
-        ${on(state.user, "queue") ? `<button data-act="queue" class="btn-primary">${owned ? "＋ Nightstand" : "＋ Nightstand (to get)"}</button>` : ""}
+        ${readable ? `<a href="/reader.html?id=${b.id}" class="btn-primary"><span class="ms" aria-hidden="true">local_library</span>Read</a>` : ""}
+        ${on(state.user, "queue") ? `<button data-act="queue" class="${readable ? "btn-secondary" : "btn-primary"}">${owned ? "＋ Nightstand" : "＋ Nightstand (to get)"}</button>` : ""}
         ${!owned ? (data.my_wish ? `<button data-act="unwish" class="btn-ghost" title="Remove it from your wishlist">On your wishlist · Remove</button>` : `<button data-act="wish" class="btn-secondary">Add to Wishlist</button>`) : ""}
         ${manager ? `<button data-act="edit-verdict" class="btn-secondary">Edit rating</button>` : ""}
       </div>

@@ -718,3 +718,13 @@ CREATE TABLE IF NOT EXISTS calibre_removals (
     title      TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_calibre_removals_at ON calibre_removals(at);
+
+-- Where a person is in a book in NovelCheck's own reader: an EPUB CFI and how far through (0 to 1).
+CREATE TABLE IF NOT EXISTS reader_positions (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    cfi        TEXT NOT NULL DEFAULT '',
+    fraction   REAL NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL DEFAULT 0, -- Unix seconds
+    PRIMARY KEY (user_id, book_id)
+);

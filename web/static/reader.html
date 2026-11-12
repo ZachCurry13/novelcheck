@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Reading · NovelCheck</title>
+  <meta name="theme-color" content="#141415">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="/js/reader.js" type="module"></script>
+</head>
+<!-- NovelCheck's reader (js/reader.js, js/readermenu.js) on foliate-js (vendor/foliate). This page has its own
+     security rules (internal/api/middleware.go): a book's styles and fonts load, its scripts never run. -->
+<body class="reader">
+  <div id="reader-book" class="reader-book"></div>
+  <!-- KOReader's tap zones: the top band opens the menu, the left third goes back, the rest goes forward. -->
+  <header id="reader-top" class="reader-top" hidden>
+    <a href="/#/library" id="reader-close" class="icon-btn" aria-label="Back to NovelCheck"><span class="ms" aria-hidden="true">arrow_back</span></a>
+    <p id="reader-title" class="reader-title"></p>
+    <button type="button" id="reader-toc-btn" class="icon-btn" aria-label="Contents"><span class="ms" aria-hidden="true">menu</span></button>
+    <button type="button" id="reader-settings-btn" class="icon-btn" aria-label="Reading settings"><span class="ms" aria-hidden="true">settings</span></button>
+  </header>
+  <div id="reader-panel" class="reader-panel" hidden></div>
+  <footer id="reader-status" class="reader-status" aria-live="polite"></footer>
+  <p id="reader-note" class="reader-note" hidden></p>
+</body>
+</html>

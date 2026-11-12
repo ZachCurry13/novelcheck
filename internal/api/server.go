@@ -188,6 +188,8 @@ func (s *Server) Router() http.Handler {
 			r.Post("/books/bulk", s.handleBulkBooks)
 			r.Get("/books/{id}", s.handleGetBook)
 			r.Get("/books/{id}/download", s.handleDownload)
+			r.Get("/books/{id}/position", s.handleReaderPosition)
+			r.Put("/books/{id}/position", s.handleReaderPosition)
 			r.Get("/books/{id}/audio/{ino}", s.handleAudioStream)
 			r.Get("/books/{id}/listen", s.handleListen)
 			r.Put("/books/{id}/listen/progress", s.handleListenProgress)
