@@ -15,6 +15,7 @@ export function addElsewhere(m, ...lists) {
     have.add(`t:${key(b.title)}`);
   }
   m.done = [];
+  delete m.finishes; // recount with these
   for (const h of lists.flat()) {
     const ms = new Date(`${h.finished}T12:00:00`).getTime();
     if (!h.finished || Number.isNaN(ms)) continue;

@@ -2,7 +2,7 @@
 // time zone is yours). A book counts as read when KOReader's statistics show you finished it (97% or more).
 // Each trophy has levels (bronze, silver, gold, platinum, diamond) and shows how far to the next.
 import { esc } from "./ui.js";
-import { byDay, dayKey, fmtDur, streaks } from "./statscalc.js";
+import { byDay, dayKey, fmtDur, streaks, finishes } from "./statscalc.js";
 import { moreTrophies } from "./trophies2.js";
 import { trophies3 } from "./trophies3.js";
 
@@ -13,7 +13,8 @@ const n = (x) => Number(x).toLocaleString();
 // The genres that always get a trophy, so there is something to aim for; any other genre you read gets one too.
 const GENRES = ["Young Adult", "Romance", "Science Fiction", "Fantasy", "Mystery", "Thriller", "Historical", "Horror"];
 
-export const finished = (m) => m.books.filter((b) => (b.percent || 0) >= FINISHED);
+// finished is every finished book once (statscalc.js finishes), so trophies count what the rest of Reading stats counts.
+export const finished = (m) => finishes(m).map((d) => m.books[d.book]).filter(Boolean);
 
 function facts(m) {
   const fin = finished(m);

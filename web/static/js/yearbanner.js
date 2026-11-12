@@ -17,8 +17,7 @@ export async function renderYearBanner(host) {
   // Last year up to the same day, so early in the year the comparison is fair.
   const lastAll = summary(m, "year", -1);
   const sameDay = Date.now() - 365 * 864e5;
-  const lastByNow = lastAll.elsewhere.filter((d) => d.ms <= sameDay).length
-    + lastAll.books.filter((b) => (m.books[b.book]?.percent || 0) >= 0.97 && b.last <= sameDay).length;
+  const lastByNow = lastAll.finishedList.filter((d) => d.ms <= sameDay).length;
   const lastTotal = lastAll.finished;
   if (!now && !lastTotal) return;
   const goal = Math.max(lastTotal, now, 1);

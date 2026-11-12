@@ -49,16 +49,11 @@ export function slides(m, s, name) {
   const b = bounds(s.period, s.offset);
   const when = s.period === "year" ? `${b.title}` : new Date(b.from).toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const books = sum.books.map((x) => ({ ...m.books[x.book], sec: x.sec, pages: x.pages }));
-  if (!sum.sec) return [slide("", `Nothing read in ${esc(when)}`, "Pick another month or year, or sync your KOReader statistics.", "", "s-title")];
-  const fin = books.filter((x) => (x.percent || 0) >= FINISHED);
-  // Books finished elsewhere (paper, audio, another reader) that Hardcover has a finish day for, in this period
-  // and not already counted from KOReader.
-  const seen = new Set(fin.flatMap((x) => [x.book_id ? `id:${x.book_id}` : "", `t:${(x.title || "").toLowerCase()}`]));
-  const extra = (m.hcRead || []).filter((h) => {
-    const t = new Date(`${h.finished}T12:00:00`).getTime();
-    return t >= b.from && t < b.to && !seen.has(`id:${h.book_id}`) && !seen.has(`t:${(h.title || "").toLowerCase()}`);
-  });
-  const finCount = fin.length + extra.length;
+  if (!sum.sec && !sum.finished) return [slide("", `Nothing read in ${esc(when)}`, "Pick another month or year, or sync your KOReader statistics.", "", "s-title")];
+  // Finished in this period: the same list every other page counts from (statscalc.js finishes).
+  const finBooks = sum.finishedList.map((d) => m.books[d.book]).filter(Boolean);
+  const extra = finBooks.filter((x) => x.elsewhere);
+  const finCount = finBooks.length;
   const top = books[0];
   const authors = count(books, (x) => x.author || "");
   const genres = count(books, (x) => x.genres || []);
@@ -69,7 +64,7 @@ export function slides(m, s, name) {
   const pagesBook = books.slice().sort((a, c) => c.pages - a.pages)[0];
   const earned = awards(m, sum, s.period);
   const whole = sum.books.map((x) => m.books[x.book]).filter(Boolean); // the books themselves (their full page counts)
-  const doneBooks = whole.filter((x) => (x.percent || 0) >= FINISHED && x.pages);
+  const doneBooks = finBooks.filter((x) => x.pages); // finished in this period, as counted everywhere
   const longest = doneBooks.slice().sort((a, c) => c.pages - a.pages)[0];
   const shortest = doneBooks.slice().sort((a, c) => a.pages - c.pages)[0];
   const rated = whole.filter((x) => x.rating > 0);
@@ -80,14 +75,16 @@ export function slides(m, s, name) {
   const out = [
     slide("🎁 Your Wrapped", `${esc(when)}`, `${esc(name)}'s reading, one tap at a time.`),
     slide("You read for", fmtDur(sum.sec), `across ${n(sum.days)} day${sum.days === 1 ? "" : "s"} and ${n(sum.pages)} pages. That is about ${n(Math.round(sum.sec / 60 / Math.max(1, sum.days)))} minutes on a day you read.`),
-    slide("Finished", `${n(finCount)} book${finCount === 1 ? "" : "s"}`, `${n(books.length)} opened on your e-reader${extra.length ? `; ${n(extra.length)} more finished according to Hardcover` : ""}.`,
-      finCount ? `<div class="s-covers">${[...fin, ...extra].slice(0, 8).map((x) => (x.book_id ? coverImg(x.book_id, "h-28 w-20") : "")).join("")}</div>` : ""),
+    slide("Finished", `${n(finCount)} book${finCount === 1 ? "" : "s"}`, `${n(books.length)} opened on your e-reader${extra.length ? `; ${n(extra.length)} of the finished books were read elsewhere (an imported list, Hardcover or "I read this")` : ""}.`,
+      finCount ? `<div class="s-covers">${finBooks.slice(0, 8).map((x) => (x.book_id ? coverImg(x.book_id, "h-28 w-20") : "")).join("")}</div>` : ""),
   ];
   const year = new Date(b.from).getFullYear();
   const goal = s.period === "year" ? (m.goals || []).find((g) => g.goal > 0 && String(g.start_date || "").slice(0, 4) === String(year)) : null;
   if (goal) {
     const unit = goal.metric === "page" ? "pages" : "books";
-    out.push(slide(`Your ${year} reading goal`, `${n(Math.round(goal.progress))} of ${n(goal.goal)}`, `${unit} on Hardcover: ${Math.min(100, Math.round((goal.progress / goal.goal) * 100))}% of the way there.`));
+    // The goal and its count are Hardcover's; when NovelCheck counts a different number of books, say why.
+    const differs = goal.metric !== "page" && Math.round(goal.progress) !== finCount;
+    out.push(slide(`Your ${year} reading goal`, `${n(Math.round(goal.progress))} of ${n(goal.goal)}`, `${unit} on Hardcover: ${Math.min(100, Math.round((goal.progress / goal.goal) * 100))}% of the way there.${differs ? ` NovelCheck counts ${n(finCount)}: Hardcover only counts the books marked read there.` : ""}`));
   }
   if (top) out.push(slide("Your most-read book", esc(top.title), `${fmtDur(top.sec)}${top.author ? ` · ${esc(top.author)}` : ""}`, top.book_id ? `<div>${coverImg(top.book_id, "h-44 w-28", true)}</div>` : "", "s-title"));
   if (authors[0]?.label) out.push(slide("Your top author", esc(authors[0].label), `${n(authors[0].n)} book${authors[0].n === 1 ? "" : "s"}${genres[0] ? `. Favourite genre: ${esc(GENRES[genres[0].label] || genres[0].label)}` : ""}${authors[1]?.label ? `. Runner-up: ${esc(authors[1].label)}` : ""}.`, "", "s-title"));

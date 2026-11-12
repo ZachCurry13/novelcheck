@@ -11,6 +11,12 @@ becomes the release notes for that version and is shown in the app under
 - **Simple to work with.** The bin opens with one line (how many books are missing), one Put back all button, and just the missing books: title, author, the day it went, and Put back. The books you still have are one tap away; the removal log and the rest are folded under Details.
 - **Put back all missing.** One button puts every missing book back in Calibre, one entry per book (the EPUB when there is one), with a count as it goes and a list of any that did not work.
 
+### 📊 Reading stats: one count everywhere
+- **"Books finished" is the same number on every page.** Highlights, Records, Wrapped, trophies, the Profile summary and the Library banner now count from one list: each finished book once, on the day it was finished (the last day you read it in KOReader, or its finish day from an imported list, Hardcover or "I read this"). Before, a book read across two months counted as finished in both, and Wrapped added Hardcover's books its own way, so one page could say 11 and another 12.
+- **The Hardcover goal says why it can differ.** The goal and its count are Hardcover's; when NovelCheck counts a different number, the slide says so (Hardcover only counts books marked read there).
+- **Books KOReader finished without reading hours** now count on the day KOReader last opened them, so the all-time and yearly counts agree.
+- **Wrapped works for a reader whose books come from a list**, and its longest and shortest books are the ones finished in that period.
+
 ### 🧬 Deep Scan: every part shows, and a second look
 - **The review lists every part the scan noted**, not only Level 3 and up. A Level 1 or 2 suggestion used to show "What the AI found (0 parts)", which made it look like a mistake; now it shows the parts behind it. New scans also note Level 1 parts.
 - **A second look at books kept too low.** The review tab lists the books whose scan found Level 1 or 2 but were kept at a lower level, and puts them back in the review with one button, so each can be decided again with its parts in view.

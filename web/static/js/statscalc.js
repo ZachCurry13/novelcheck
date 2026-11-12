@@ -56,6 +56,28 @@ export function streaks(days) {
   return { current, longest };
 }
 
+// FINISHED is how far through a book counts as finished (KOReader's statistics rarely reach exactly 100%).
+export const FINISHED = 0.97;
+
+// finishes is every finished book once, with the day it was finished: a KOReader book on the last hour it was
+// read, a book finished elsewhere (an imported list, Hardcover, "I read this": statselsewhere.js) on its finish
+// day. Every count of "books finished" in Reading stats, Records, Wrapped, trophies and the Library banner comes
+// from this one list, so they always agree. [{ book (index into m.books), ms }]
+export function finishes(m) {
+  if (m.finishes) return m.finishes;
+  const last = new Map();
+  for (const r of m.rows) last.set(r.book, Math.max(last.get(r.book) || 0, r.ms));
+  const out = [];
+  m.books.forEach((b, i) => {
+    if (!b || b.elsewhere || (b.percent || 0) < FINISHED) return;
+    // No reading hours for it (statistics from before NovelCheck kept them): the day KOReader last opened it.
+    const ms = last.get(i) ?? (b.last_open ? b.last_open * 1000 : 0);
+    if (ms) out.push({ book: i, ms });
+  });
+  for (const d of m.done || []) out.push(d);
+  return (m.finishes = out.sort((a, b) => a.ms - b.ms));
+}
+
 // within sums rows from `from` up to (not including) `to` (ms).
 export function within(m, from, to = Infinity) {
   const rows = m.rows.filter((r) => r.ms >= from && r.ms < to);
@@ -71,10 +93,11 @@ export function within(m, from, to = Infinity) {
     perBook.set(r.book, b);
   }
   const books = [...perBook.values()].sort((a, b) => b.sec - a.sec);
-  // Books finished elsewhere in that time (an imported list, Hardcover: see statselsewhere.js) count as finished too.
-  const elsewhere = (m.done || []).filter((d) => d.ms >= from && d.ms < to);
-  const finished = books.filter((b) => (m.books[b.book]?.percent || 0) >= 0.97).length + elsewhere.length;
-  return { sec, pages, books, finished, elsewhere, days: byDay(rows).size, rows };
+  // Books finished in that time, each once, on the day it was finished (see finishes): a book read across two
+  // months counts as finished only in the month it ended.
+  const finishedList = finishes(m).filter((d) => d.ms >= from && d.ms < to);
+  const elsewhere = finishedList.filter((d) => m.books[d.book]?.elsewhere);
+  return { sec, pages, books, finished: finishedList.length, finishedList, elsewhere, days: byDay(rows).size, rows };
 }
 
 export function byHourOfDay(rows) {
