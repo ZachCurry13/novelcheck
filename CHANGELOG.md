@@ -15,10 +15,14 @@ becomes the release notes for that version and is shown in the app under
 - The design guide (`docs/DESIGN.md`) records the direction, from a review with the [unslop](https://github.com/heydamir/unslop) skill by Damir Sokolovsky.
 
 
+## [1.71.2]
+
 ### ✓ Count a book you read yourself
 - **"I read this" on every book.** In a book's window, press **✓ I read this** and pick the day you finished it. The book then counts in Reading stats for that year: a paper book, a library loan, or one an imported list missed. **Change** picks another day and **Not read** takes it out again.
 - **Finished books with no day.** Goodreads leaves "Date Read" empty when you never set one, so those books couldn't be counted in any year. Reading stats now lists them under Records (and Highlights, when your reading comes from a list) with a box for the day. Give each one its day, a guess is fine, and it counts.
 
+
+## [1.71.1]
 
 ### 🖼️ Find covers
 - **The cover finder finds covers again.** It searched with the title exactly as Calibre has it, so "Percy Jackson 2 - The Sea of Monsters", "01 - Guards! Guards!" or "Stars Above (The Lunar Chronicles)" never matched. It now also tries the title without its series name or number, and without a subtitle.
