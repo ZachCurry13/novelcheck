@@ -51,3 +51,4 @@
 - 2026-11-12: v1.71.0 released (Material Design 3 base, one-page Reading stats, search, Goodreads lists in stats, photo-check confirmation, Deep Scan levels at a glance without spoilers). Next: owner updates the NAS; sister re-imports her Goodreads file; the remaining screens' Material pass.
 - 2026-11-12: v1.71.1 released (covers found again, recycle bin in the background, removal log, box sets from their own contents, Audiobookshelf check). Next: the remaining screens' Material pass (1.72).
 - 2026-11-12: v1.71.2 ("I read this", finished books with no day) and v1.72.0 (the unslop restyle on every screen) released. Next: the in-app reader, unless the owner reports problems after updating.
+- 2026-11-12: v1.72.1 (covers retry, recycle bin fix) and v1.73.0 (the reader with two-way KOReader sync; Paperback and Ember themes in web/static/themes) released. Next: owner tries the reader and the Kindle hand-off on real books.
