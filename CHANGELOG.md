@@ -13,6 +13,8 @@ becomes the release notes for that version and is shown in the app under
 - **It no longer stops with an error** when the bin holds an entry with no book files in it.
 
 
+## [1.72.0]
+
 ### 🎨 Calmer screens, everywhere
 - **Grey, not navy.** The dark theme's surfaces are a neutral graphite, and the light theme a neutral white and grey, so book covers and the 0 to 5 level colours are what stand out.
 - **One main button per screen.** The main action is an off-white button (dark on the light theme); the next one is a quiet grey button. The indigo accent now only marks the page you are on, links and the odd key figure.
