@@ -226,7 +226,7 @@ var StartPages = map[string]bool{"check": true, "library": true, "discover": tru
 
 // Appearance choices ("" = follow the device / the standard).
 var (
-	Themes  = map[string]bool{"": true, "dark": true, "light": true}
+	Themes  = map[string]bool{"": true, "dark": true, "light": true, "blue": true, "blue-dark": true, "blue-light": true} // blue*: Classic blue (web/static/themes/classic.css)
 	Fonts   = map[string]bool{"": true, "dyslexic": true}
 	Motions = map[string]bool{"": true, "reduce": true}
 )

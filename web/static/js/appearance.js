@@ -17,11 +17,15 @@ function read() {
 
 function paint() {
   const root = document.documentElement;
-  const light = current.theme === "light" || (!current.theme && !darkDevice.matches);
+  // Theme is "" / "dark" / "light" (Paperback and Ember) or "blue" / "blue-dark" / "blue-light" (Classic blue).
+  const blue = (current.theme || "").startsWith("blue");
+  const mode = blue ? (current.theme.split("-")[1] || "") : current.theme || "";
+  const light = mode === "light" || (!mode && !darkDevice.matches);
   root.classList.toggle("light", light);
+  root.classList.toggle("theme-blue", blue);
   root.classList.toggle("font-dyslexic", current.font === "dyslexic");
   root.classList.toggle("reduce-motion", current.motion === "reduce");
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", light ? "#f6efe2" : "#17130f");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", blue ? (light ? "#f1f5f9" : "#020617") : light ? "#f6efe2" : "#17130f");
 }
 
 // applyAppearance uses the signed-in person's choices (or the device's last ones).

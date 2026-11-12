@@ -11,6 +11,9 @@ becomes the release notes for that version and is shown in the app under
 - **Simple to work with.** The bin opens with one line (how many books are missing), one Put back all button, and just the missing books: title, author, the day it went, and Put back. The books you still have are one tap away; the removal log and the rest are folded under Details.
 - **Put back all missing.** One button puts every missing book back in Calibre, one entry per book (the EPUB when there is one), with a count as it goes and a list of any that did not work.
 
+### 🎨 Classic blue is back, as a choice
+- **Settings → Appearance → Theme** now offers **Classic blue** (the navy and indigo from before 1.73, with today's layout) beside Paperback and Ember: match my device, dark, or light. Each person picks their own.
+
 ### 🖼️ Review covers, one book at a time
 - **For the books still showing a drawn cover.** Admin → Library cleanup → Books with no cover → **Review one by one** shows each book with the title and author it has, a cleaner title when its title carries series numbers or brackets (**Use this title in Calibre**), and cover choices from Open Library and Google Books to tap. A search box tries other words, and Skip moves on. Saving a title leaves the book's series alone.
 

@@ -4,6 +4,7 @@ Everything that decides how NovelCheck looks, as opposed to how it is laid out, 
 
 - `ember.css`: the dark theme (the default).
 - `paperback.css`: the light theme (on when someone picks Light, or their device is in light mode).
+- `classic.css`: Classic blue, the navy and indigo from before v1.73, dark and light (picked in Settings → Appearance).
 - `fonts.css`: the fonts the themes name, stored in `web/static/fonts` (nothing loads from outside).
 
 To change a colour, edit the number in one of these files. Colours are written as `R G B` (0 to 255) so the

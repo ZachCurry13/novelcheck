@@ -7,7 +7,8 @@ import { refreshUser } from "./app.js";
 import { applyAppearance } from "./appearance.js";
 
 const LOOKS = [
-  ["theme", "Theme", [["", "Match my device"], ["dark", "Dark"], ["light", "Light"]]],
+  ["theme", "Theme", [["", "Paperback and Ember · match my device"], ["dark", "Ember (dark)"], ["light", "Paperback (light)"],
+    ["blue", "Classic blue · match my device"], ["blue-dark", "Classic blue · dark"], ["blue-light", "Classic blue · light"]]],
   ["font", "Font", [["", "Standard"], ["dyslexic", "OpenDyslexic (easier to read for some people with dyslexia)"]]],
   ["motion", "Motion", [["", "Match my device"], ["reduce", "Reduce motion"]]],
 ];
