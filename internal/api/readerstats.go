@@ -104,6 +104,9 @@ func (s *Server) readingStatsFor(owner, viewer *store.User) map[string]any {
 		if hr := s.Store.HardcoverFinished(owner.ID); len(hr) > 0 {
 			out["hardcover_read"] = hr // finished elsewhere (paper, audio): Wrapped counts them too
 		}
+		if un := s.Store.ImportedUndated(owner.ID); len(un) > 0 {
+			out["imported_undated"] = un // on a list's "read" shelf with no day: Reading stats asks for one
+		}
 		if ir := s.Store.ImportedFinished(owner.ID); len(ir) > 0 {
 			out["imported_read"] = s.withBriefs(ir) // finished according to an imported list (Goodreads…)
 		}

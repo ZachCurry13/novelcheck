@@ -102,8 +102,8 @@ func TestSearchFindsMatchingCover(t *testing.T) {
 // searched without it, and an old miss from before v1.71.1 (.none) does not stop the search.
 func TestSearchTitlesWithoutSeries(t *testing.T) {
 	for raw, want := range map[string]string{
-		"Percy Jackson 2 - The Sea of Monsters": "The Sea of Monsters",
-		"01 - Guards! Guards!":                  "Guards! Guards!",
+		"Percy Jackson 2 - The Sea of Monsters":                             "The Sea of Monsters",
+		"01 - Guards! Guards!":                                              "Guards! Guards!",
 		"Stars Above: A Lunar Chronicles Collection (The Lunar Chronicles)": "Stars Above",
 	} {
 		got := searchTitles(raw)

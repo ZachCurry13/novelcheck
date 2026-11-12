@@ -14,6 +14,7 @@ import { openShareCard } from "./statscard.js";
 import { recordsTab } from "./statsrecords.js";
 import { addElsewhere } from "./statselsewhere.js";
 import { listReport } from "./statslist.js";
+import { undatedHTML, saveUndated } from "./statsundated.js";
 import { trophiesTab } from "./trophyview.js";
 import { slides } from "./wrappedslides.js";
 import { openStory } from "./wrappedstory.js";
@@ -39,7 +40,8 @@ export async function renderStats(view, state, source = {}) {
   m.goals = data.hardcover_goals || []; // reading challenge from Hardcover, when connected
   m.hcRead = [...(data.hardcover_read || []), ...(data.imported_read || [])]; // finished elsewhere, with the day: Hardcover, or an imported list
   addElsewhere(m, m.hcRead); // they count as finished books in the year's numbers, records and trophies
-  const listOnly = !m.rows.length && m.done.length > 0; // no KOReader reading, but finished books from a list
+  const undated = other ? [] : data.imported_undated || []; // on a list's "read" shelf with no day
+  const listOnly = !m.rows.length && (m.done.length > 0 || undated.length > 0); // no KOReader reading, but finished books from a list
   if (!m.rows.length && other) {
     view.innerHTML = `${back()}<h1 class="mb-2 text-[1.375rem] leading-7">${esc(name)}'s reading</h1><div class="card text-sm text-slate-300">Nothing to show yet.</div>`;
     return;
@@ -75,9 +77,9 @@ export async function renderStats(view, state, source = {}) {
     if (s.page?.type === "day") return dayPage(m, s.page.key);
     if (s.tab === "books") return booksTab(m, s);
     if (s.tab === "calendar") return calendarTab(m, s.month);
-    if (s.tab === "records") return recordsTab(m, s);
+    if (s.tab === "records") return `${other ? "" : undatedHTML(undated)}${recordsTab(m, s)}`;
     if (s.tab === "trophies") return trophiesTab(m);
-    return `<div class="mb-3 flex items-start justify-between gap-2"><h2 class="min-w-0 break-words text-2xl font-semibold">${esc(title())}</h2>${other || listOnly ? "" : `<button type="button" data-share class="btn-tonal shrink-0 px-4 py-1.5">Share</button>`}</div>${picker()}<div class="space-y-4">${listOnly ? listReport(m, s) : reportHTML(m, s)}</div>`;
+    return `<div class="mb-3 flex items-start justify-between gap-2"><h2 class="min-w-0 break-words text-2xl font-semibold">${esc(title())}</h2>${other || listOnly ? "" : `<button type="button" data-share class="btn-tonal shrink-0 px-4 py-1.5">Share</button>`}</div>${picker()}${listOnly ? undatedHTML(undated) : ""}<div class="space-y-4">${listOnly ? listReport(m, s) : reportHTML(m, s)}</div>`;
   };
 
   const draw = (top = false) => {
@@ -99,6 +101,12 @@ export async function renderStats(view, state, source = {}) {
     onShare: () => openShareCard(m, { period, offset }, bounds(period, offset).title, name),
   });
   view.onclick = (e) => {
+    const dated = e.target.closest("[data-undated-save]");
+    if (dated) {
+      dated.disabled = true;
+      saveUndated(dated).then((ok) => (ok ? renderStats(view, state, { ...source, tab: s.tab }) : (dated.disabled = false)));
+      return;
+    }
     const t = e.target.closest("[data-year],[data-play],[data-tab],[data-period],[data-offset],[data-kind],[data-period-open],[data-book],[data-day],[data-day-key],[data-shift],[data-month],[data-back],[data-open-lib],[data-share]");
     if (!t) return;
     const d = t.dataset;

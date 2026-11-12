@@ -100,7 +100,8 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		"has_audio": s.Store.HasFormat(id, "audio"), "has_ebook": s.Store.HasFormat(id, "ebook"),
 		"my_audio_wish": s.Store.MyWishFormat(id, u.ID, "audio"), "my_ebook_wish": s.Store.MyWishFormat(id, u.ID, "ebook"),
 		"my_cover_report": s.Store.MyCoverReport(id, u.ID), "editable_catalogs": s.editableCatalogs(copies, u),
-		"collections": s.Store.BookCollections(id, u), "my_rating": s.Store.RatingOf(u.ID, id)}
+		"collections": s.Store.BookCollections(id, u), "my_rating": s.Store.RatingOf(u.ID, id),
+		"finished_on": s.Store.FinishedOn(u.ID, id)}
 	if p, ok := s.Store.ReadingProgress(u.ID)[id]; ok {
 		out["my_progress"] = p // from their e-reader's sync
 	}

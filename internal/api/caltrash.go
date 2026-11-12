@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-	"sync"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 

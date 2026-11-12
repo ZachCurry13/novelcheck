@@ -188,9 +188,8 @@ func (s *Server) keepImportedRead(userID, bookID int64, b driveBook) {
 	if reads < 0 || reads > 1000 {
 		reads = 0
 	}
-	if finished == "" && pages == 0 && rating == 0 && format == "" && reads == 0 {
-		return
-	}
+	// A book on the "read" shelf is kept even with nothing else known, so it shows among the finished books
+	// with no day (the person can give one in Reading stats).
 	_ = s.Store.SaveImportedRead(userID, bookID, store.ImportedRead{
 		HardcoverRead: store.HardcoverRead{Finished: finished, Pages: pages, Rating: rating}, Format: format, Reads: reads})
 	if rating > 0 && s.Store.RatingOf(userID, bookID) == 0 {

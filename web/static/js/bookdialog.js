@@ -20,6 +20,7 @@ import { bookCollectionsHTML, bindBookCollections } from "./bookcollections.js";
 import { progressText } from "./progress.js";
 import { renderBookLibby } from "./libby.js";
 import { starsHTML, bindStars } from "./stars.js";
+import { finishedHTML, bindFinished } from "./finished.js";
 import { renderAudioSection } from "./bookaudio.js";
 
 // Lists that aren't the family's libraries: books only looked up (Check a
@@ -107,6 +108,7 @@ export async function openBook(id, state, onChange) {
       <div id="audio-section"></div>
       <div id="libby-section"></div>
       ${state.user.role === "restricted" ? "" : starsHTML(data.my_rating || 0)}
+      ${finishedHTML(data.finished_on || "")}
       ${manager ? verdictFormHTML(b) : ""}
       ${parents ? ageAndNotesHTML(b, data.notes || [], manager, state.user) : ""}
       <div class="flex flex-wrap gap-2">
@@ -200,6 +202,7 @@ export async function openBook(id, state, onChange) {
   renderAudioSection($("#audio-section", dlg), data, b, state);
   renderBookLibby($("#libby-section", dlg), b.id);
   bindStars(dlg, b.id);
+  bindFinished(dlg, b.id);
   bindBookCollections(dlg, b.id, manager, data.collections || []);
 }
 

@@ -126,4 +126,3 @@ func tidy(s string) string {
 	s = strings.TrimSpace(spaces.ReplaceAllString(s, " "))
 	return strings.TrimSpace(leading.ReplaceAllString(s, ""))
 }
-
