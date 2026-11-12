@@ -15,6 +15,9 @@ becomes the release notes for that version and is shown in the app under
 - **Admin → Rating errors** shows each error in full, in plain text, with its buttons under it (it was squeezed into a narrow column, one word per line).
 - **Collections and Series** switch with the same tabs as every other page.
 - **Nightstand** labels are in sentence case and its notes lost their emoji.
+- **Library cleanup and Reading sync** show a small coloured mark for done, to do and needs a look, in place of ✅ ⬜ ⚠️.
+- **Suggested Reads** use proper thumbs-up and thumbs-down icons.
+- **Users and content rules** are written in sentence case ("Hide open door").
 - The design guide (`docs/DESIGN.md`) records the direction, from a review with the [unslop](https://github.com/heydamir/unslop) skill by Damir Sokolovsky.
 
 

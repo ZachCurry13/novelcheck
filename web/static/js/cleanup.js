@@ -4,6 +4,7 @@
 // step a review window lists exactly what would change, with a tick box for each item, and nothing
 // is changed until you confirm. Each step uses the same checked tools as before (Content server,
 // Undo for formats).
+import { mark } from "./marks.js";
 import { get, post } from "./api.js";
 import { esc, attempt, toast } from "./ui.js";
 import { review } from "./cleanreview.js";
@@ -94,7 +95,7 @@ export async function mountCleanup(host, close) {
       <p class="text-sm text-slate-400">Every step shows you exactly what it will change first, and you can leave items out. Nothing changes until you confirm.</p>
       ${c.configured ? "" : `<p class="rounded-lg bg-amber-950/40 p-3 text-sm text-amber-200">Connect the Calibre Content server first (Admin → Delivery &amp; Services → Calibre Library). Changes to Calibre go through it.</p>`}
       <ul class="space-y-2">${list.map((r, i) => `<li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-800/60 p-3">
-        <div class="min-w-0 flex-1"><p class="font-semibold">${status[r.id] || (r.n ? "⬜" : "✅")} ${i}. ${esc(r.title)}</p><p class="text-xs text-slate-400">${r.n ? esc(r.note) : "Nothing to do."}</p></div>
+        <div class="min-w-0 flex-1"><p class="font-semibold">${mark(status[r.id] || (r.n ? "todo" : "done"))} ${i}. ${esc(r.title)}</p><p class="text-xs text-slate-400">${r.n ? esc(r.note) : "Nothing to do."}</p></div>
         ${r.n && c.configured ? `<button type="button" data-step="${r.id}" class="btn-secondary py-1 text-sm" ${busy ? "disabled" : ""}>${r.btn}</button>` : ""}</li>`).join("")}</ul>
       <button type="button" data-run class="btn-primary w-full" ${busy || !todo || !c.configured ? "disabled" : ""}>▶ Go through the steps, reviewing each (extra copies are compared by hand)</button>
       <p class="text-xs text-slate-400">Then on the Kindle: <b>Update plugin</b> → <b>Report books on this device</b> → <b>Tidy book names</b> → <b>Download all Nightstand</b>.</p>
@@ -163,16 +164,16 @@ export async function mountCleanup(host, close) {
       }
       ids = await review(spec);
       if (!ids || !ids.length) {
-        status[id] = "⏭";
+        status[id] = "skip";
         paint();
         return "cancelled";
       }
     }
     busy = true;
-    status[id] = "⏳";
+    status[id] = "busy";
     paint();
     const ok = await steps[id](ids);
-    status[id] = ok === "background" ? "⚙️" : ok ? "✅" : "⚠️";
+    status[id] = ok === "background" ? "background" : ok ? "done" : "warn";
     if (id !== "pairs" && ok !== "background") await refresh();
     busy = false;
     await reload();

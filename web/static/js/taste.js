@@ -114,7 +114,7 @@ function rateHTML(books, chosen) {
 }
 
 function mineHTML(marks) {
-  if (!marks.length) return `<p class="text-sm text-slate-500">No answers yet. Mark a few books under Rate books, or use 👍 / 👎 on your suggestions.</p>`;
+  if (!marks.length) return `<p class="text-sm text-slate-500">No answers yet. Mark a few books under Rate books, or use the thumbs on your suggestions.</p>`;
   return `<ul class="space-y-2">${marks.map((m, i) => {
     const opts = MARKS.map(([k, l]) => [k, l]);
     if (m.mark === "up" || m.mark === "down") opts.unshift([m.mark, LABEL[m.mark] + (WHY[m.reason] ? ` (${WHY[m.reason]})` : "")]);

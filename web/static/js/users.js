@@ -13,11 +13,11 @@ import { renderFamilyDevices, setUserPIN } from "./familysettings.js";
 import { accessHTML, accessAction } from "./adminaccess.js";
 
 export const RULES = [
-  ["hide_open_door", "Hide Open Door"],
-  ["hide_nudity", "Hide Nudity"],
-  ["hide_solo_acts", "Hide Solo Acts"],
-  ["hide_innuendo", "Hide Heavy Innuendo"],
-  ["hide_dark_occult", "Hide Dark Occult / Demonic"],
+  ["hide_open_door", "Hide open door"],
+  ["hide_nudity", "Hide nudity"],
+  ["hide_solo_acts", "Hide solo acts"],
+  ["hide_innuendo", "Hide heavy innuendo"],
+  ["hide_dark_occult", "Hide dark occult / demonic"],
   ["hide_unrated", "Hide books not yet analyzed"],
 ];
 
@@ -68,7 +68,7 @@ export async function renderUsers(host, viewer) {
   const root = document.createElement("div");
   host.replaceChildren(root);
   root.innerHTML = `
-    <h2 class="mb-1 text-xl font-semibold">${parents ? "Users & Content Rules" : "Kids' Accounts & Content Rules"}</h2>
+    <h2 class="mb-1 text-xl font-semibold">${parents ? "Users and content rules" : "Kids' accounts and content rules"}</h2>
     <p class="mb-3 text-sm text-slate-400">${parents
       ? `Main admin: everything, and decides what each other admin can reach. Admin: what the main admin ticks on their card. Editor: manages books, scans and kids' accounts, but no technical settings. Kid: an account filtered by its rules.`
       : "Add kid accounts, reset their passwords, and choose what each one can see."}</p>

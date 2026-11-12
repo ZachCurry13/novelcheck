@@ -31,7 +31,7 @@ const EVERYONE = [
       <li><b>On the pile</b> is what you plan to read next. Tap <b>＋</b> on any book to put it there, and drag the <b>⠿</b> handle to put them in order.</li>
       <li>When you're ready, press <b>▶ Start Reading</b> (just <b>▶</b> on a phone). If you've set up your e-reader, the book is sent to it.</li>
       <li>Finished books leave the list. <b>Hide</b> takes a book off the Nightstand without removing it from your library, and <b>Hidden</b> brings it back.</li>
-      <li>Below, <b>On your KOReader</b> lists every book you've opened on your e-reader, and <b>Suggested Reads</b> picks books for you: 👍 means more like this, 👎 hides one (a quick "Why not?" helps it learn).</li>
+      <li>Below, <b>On your KOReader</b> lists every book you've opened on your e-reader, and <b>Suggested Reads</b> picks books for you: thumbs up means more like this, thumbs down hides one (a quick "Why not?" helps it learn).</li>
     </ul>`],
   ["Readers and sharing",
     "Your reading stats are private. In <b>Settings → Account → Sharing</b> you can share your reading profile with the family, and then the <b>Readers</b> page shows each person who shares with their reading time, streak-style numbers and, if they choose, what they're reading right now. Tap someone to see their reading report. You only see books you're allowed to see; highlights, notes and files that aren't in the library are never shown. Parents choose for their kids and can always see their own kids' reading."],

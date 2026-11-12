@@ -93,7 +93,7 @@ Sentence case everywhere. No all-capitals labels (the old `.label` style goes).
 | **Badges** | `badge` | Small `error` dot or count on an icon (notifications, tab counts). |
 | **Empty and error states** | `state` | Icon, one sentence saying what is going on, one button for the next step. |
 
-**Icons:** Material Symbols (Rounded, Apache 2.0), as a small font in `web/static/fonts` that holds only the icons the app uses, so nothing loads from outside. Write `<span class="ms" aria-hidden="true">icon_name</span>`; a new icon means fetching the font again with its name added. Icons in the font: account_circle, add, admin_panel_settings, arrow_back, bar_chart, barcode_scanner, bed, bug_report, check, close, collections_bookmark, delete, download, expand_more, explore, filter_list, group, help, local_library, logout, menu, more_vert, notifications, person, photo_camera, search, settings, star. Emoji stay only where they are content (pepper levels, trophies), not as button or menu icons.
+**Icons:** Material Symbols (Rounded, Apache 2.0), as a small font in `web/static/fonts` that holds only the icons the app uses, so nothing loads from outside. Write `<span class="ms" aria-hidden="true">icon_name</span>`; a new icon means fetching the font again with its name added. Icons in the font: account_circle, add, admin_panel_settings, arrow_back, bar_chart, barcode_scanner, bed, bug_report, check, close, collections_bookmark, delete, download, expand_more, explore, filter_list, group, help, local_library, logout, menu, more_vert, notifications, person, photo_camera, search, settings, star, thumb_down, thumb_up. Emoji stay only where they are content (pepper levels, trophies), not as button or menu icons.
 
 ## 6. Search in the top bar
 

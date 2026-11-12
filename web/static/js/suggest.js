@@ -46,7 +46,7 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
       </div>
       ${cards.length ? `<ul data-strip class="flex max-w-full snap-x gap-3 overflow-x-auto px-px pt-1 pb-2">${cards.join("")}</ul>`
         : `<p class="text-sm text-slate-500">Add a few books to your Nightstand (or finish some) and suggestions will show up here.${taste ? ` Or <button data-taste class="underline">mark a few books you know</button> to get started.` : ""}</p>`}
-      ${data.up + data.down ? `<p class="mt-1 text-xs text-slate-500">Your feedback so far: 👍 ${data.up} · 👎 ${data.down} ·
+      ${data.up + data.down ? `<p class="mt-1 text-xs text-slate-500">Your feedback so far: ${data.up} liked · ${data.down} not for you ·
         <button data-reset class="underline">Start over</button></p>` : ""}
     </section>`;
     const strip = host.querySelector("[data-strip]");
@@ -71,7 +71,7 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
     const card = e.target.closest("[data-sg]");
     if (e.target.closest("[data-taste]")) return openTaste(() => renderSuggestions(host, state, onQueued));
     if (e.target.closest("[data-reset]")) {
-      if (confirm("Forget all your 👍 and 👎? Books you hid can be suggested again.")) {
+      if (confirm("Forget all your likes and \"not for me\" answers? Books you hid can be suggested again.")) {
         if (await attempt(() => del("/api/suggestions/votes"), "Starting over")) renderSuggestions(host, state, onQueued);
       }
       return;
@@ -124,8 +124,8 @@ export async function renderSuggestions(host, state, onQueued, polls = 0) {
 const votes = (liked, addButton) => `<div class="mt-auto flex items-center gap-1 pt-1">
   ${liked ? addButton : ""}
   <span class="flex-1"></span>
-  ${liked ? `<span class="text-xs text-emerald-300">Liked</span>` : `<button data-vote="1" class="btn-ghost px-2" title="More like this" aria-label="More like this">👍</button>`}
-  <button data-vote="-1" class="btn-ghost px-2" title="Not for me: hide it and show fewer like it" aria-label="Not for me">👎</button></div>`;
+  ${liked ? `<span class="text-xs text-emerald-300">Liked</span>` : `<button data-vote="1" class="icon-btn" title="More like this" aria-label="More like this"><span class="ms text-[1.25rem]" aria-hidden="true">thumb_up</span></button>`}
+  <button data-vote="-1" class="icon-btn" title="Not for me: hide it and show fewer like it" aria-label="Not for me"><span class="ms text-[1.25rem]" aria-hidden="true">thumb_down</span></button></div>`;
 
 function libraryCard({ book: b, reason, by_ai: byAI }, liked) {
   const series = seriesText(b);
