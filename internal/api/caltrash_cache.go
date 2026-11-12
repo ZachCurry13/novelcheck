@@ -41,7 +41,8 @@ func (s *Server) trashListing(fresh bool) map[string]any {
 	defer c.mu.Unlock()
 	current := !c.at.IsZero() && c.stamp == stamp && time.Since(c.at) < time.Hour && !fresh
 	if current && !c.reading {
-		return map[string]any{"found": c.found, "books": c.books, "count": len(c.books), "read_at": c.at.UTC().Format(time.RFC3339),
+		// Checked against the library on every answer (cheap, and the library changes as books are put back).
+		return map[string]any{"found": c.found, "books": s.matchTrash(c.books), "count": len(c.books), "read_at": c.at.UTC().Format(time.RFC3339),
 			"removals": s.Store.CalibreRemovals(1000)} // who removed what through NovelCheck
 	}
 	if !c.reading {

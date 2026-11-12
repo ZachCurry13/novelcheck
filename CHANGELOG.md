@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.73.1]
+
+### 🗑️ Calibre's recycle bin, checked against your library
+- **Each removed book says whether you still have it.** "Missing from your library" means no copy of that book is in Calibre now: those are the ones that probably should not have gone. "Still in your library" means another copy is there (with its Calibre number), so an extra copy was removed. Empty entries have nothing to put back.
+- **Filters** for missing, still in your library, empty and all, with a count on each. The bin opens on the missing ones.
+- **Put back all missing.** One button puts every missing book back in Calibre, one entry per book (the EPUB when there is one), with a count as it goes and a list of any that did not work.
+
 ## [1.73.0]
 
 ### 📖 Read in NovelCheck
