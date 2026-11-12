@@ -6,7 +6,7 @@
 import { get, post, put } from "./api.js";
 import { $, $$, esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes, canHere } from "./ui.js";
 import { openBook } from "./bookdialog.js";
-import { isOpen, reviewCard, reviewHeader, openRow, resultRow, setMeters } from "./deepscanlists.js";
+import { isOpen, reviewCard, reviewHeader, openRow, resultRow, setMeters, secondLook } from "./deepscanlists.js";
 import { adminNavHTML } from "./adminnav.js";
 
 const TABS = [["review", "Review"], ["running", "Running"], ["results", "Results"], ["settings", "Settings"]];
@@ -23,7 +23,7 @@ export async function renderDeepScanAdmin(view, state) {
     <div class="mb-4 grid grid-cols-4 gap-1 rounded-xl bg-slate-900 p-1 ring-1 ring-slate-800" role="tablist">
       ${TABS.map(([k, label]) => `<button type="button" role="tab" data-tab="${k}" class="rounded-lg px-1 py-2 text-sm text-slate-300">${label}<span data-count="${k}" class="block text-xs text-slate-500"></span></button>`).join("")}
     </div>
-    <section data-panel="review" class="space-y-3"><div data-head></div><ul data-list class="space-y-3"></ul></section>
+    <section data-panel="review" class="space-y-3"><div data-second-look></div><div data-head></div><ul data-list class="space-y-3"></ul></section>
     <section data-panel="running" class="space-y-3"><ul data-list class="space-y-3"></ul></section>
     <section data-panel="results"><ul data-list></ul></section>
     <section data-panel="settings" class="space-y-4"></section>`;
@@ -37,6 +37,11 @@ export async function renderDeepScanAdmin(view, state) {
     $('[data-count="review"]', view).textContent = held.length ? `${held.length} waiting` : "none";
     $('[data-count="running"]', view).textContent = open ? String(open) : "none";
   };
+  // Books kept below what their scan found while Level 1 and 2 parts were hidden (see secondLook).
+  secondLook($("[data-second-look]", panel("review")), (n) => {
+    toast(`${n} book${n === 1 ? " is" : "s are"} back in the review`);
+    renderDeepScanAdmin(view, state);
+  });
   const paintReview = () => {
     $("[data-head]", panel("review")).innerHTML = reviewHeader(held.length);
     $("[data-list]", panel("review")).innerHTML = held.map(reviewCard).join("");

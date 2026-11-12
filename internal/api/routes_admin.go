@@ -50,6 +50,8 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/deep-scans/next", s.handleDeepScanNext)
 		r.Post("/admin/deep-scans/next", s.handleDeepScanNext)
 		r.Post("/admin/deep-scans/keep-all", s.handleKeepAllDeepScans)
+		r.Get("/admin/deep-scans/kept-below", s.handleKeptBelow)
+		r.Post("/admin/deep-scans/kept-below", s.handleKeptBelow)
 		r.Post("/admin/deep-scans/accept-all", s.handleAcceptAllDeepScans)
 		r.Put("/admin/deep-scans/order", s.handleOrderDeepScans)
 		r.Post("/admin/deep-scans/{id}/{action}", s.handleDecideDeepScan)

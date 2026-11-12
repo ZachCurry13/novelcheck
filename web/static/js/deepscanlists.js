@@ -2,6 +2,7 @@
 // in place, without reloading the page), scans waiting or running (with
 // progress), and recent results. Titles and covers open the book's window.
 import { esc, fmtNum } from "./ui.js";
+import { get, post } from "./api.js";
 import { coverImg } from "./covers.js";
 import { deepChangeLine, when, aboutText } from "./deepscan.js";
 import { PEPPERS, levelBadge, levelTally, kindOf } from "./peppers.js";
@@ -14,7 +15,7 @@ export const isOpen = (d) => ["requested", "queued", "reading"].includes(d.statu
 function evidence(d) {
   let notes = [];
   try {
-    notes = JSON.parse(d.notes || "[]").filter((n) => n.level >= 3);
+    notes = JSON.parse(d.notes || "[]").filter((n) => n.level >= 1); // every part with romance, not only Level 3 and up
   } catch {
     /* no notes */
   }
@@ -103,4 +104,28 @@ export function resultRow(d) {
 // setMeters sizes progress bars (the CSP allows no inline styles in markup).
 export function setMeters(host) {
   host.querySelectorAll("[data-pct]").forEach((el) => (el.style.width = `${el.dataset.pct}%`));
+}
+
+// secondLook fills host with the books whose scan found Level 1 or 2 but were kept lower (the review page used to
+// hide Level 1 and 2 parts), and a button that puts them back in the review list. onDone reloads the page.
+export async function secondLook(host, onDone) {
+  if (!host) return;
+  const r = await get("/api/admin/deep-scans/kept-below").catch(() => null);
+  const books = r?.books || [];
+  if (!books.length) {
+    host.innerHTML = "";
+    return;
+  }
+  host.innerHTML = `<div class="card-outlined space-y-2 p-4">
+    <p class="font-medium">${books.length} book${books.length === 1 ? "" : "s"} kept below what the scan found</p>
+    <p class="text-sm text-slate-400">The scan found Level 1 or 2 in ${books.length === 1 ? "this book" : "these books"}, but the review only showed parts at Level 3 or more, so it read as "0 parts".
+      Now every part shows. Put ${books.length === 1 ? "it" : "them"} back in the review to decide again.</p>
+    <p class="text-sm text-slate-300">${books.slice(0, 8).map((b) => `${esc(b.title)} (found ${b.found}, now ${b.now ?? 0})`).join(" · ")}${books.length > 8 ? ` and ${books.length - 8} more` : ""}</p>
+    <button type="button" data-reopen class="btn-primary">Put ${books.length} back in the review</button></div>`;
+  host.querySelector("[data-reopen]").onclick = async (e) => {
+    e.target.disabled = true;
+    const res = await post("/api/admin/deep-scans/kept-below").catch(() => null);
+    if (res) onDone?.(res.reopened);
+    else e.target.disabled = false;
+  };
 }

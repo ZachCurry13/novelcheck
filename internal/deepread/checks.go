@@ -87,7 +87,7 @@ func combine(parts []Part, results []llm.PartResult) (store.Analysis, []Note) {
 		for g := range groups {
 			groupParts[g]++
 		}
-		if res.Note != "" || res.Level >= 2 {
+		if res.Note != "" || res.Level >= 1 { // every part with romance, so a Level 1 or 2 result shows why
 			note := res.Note
 			if res.Level >= 3 && res.Evidence != "" {
 				note = res.Evidence

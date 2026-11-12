@@ -11,6 +11,10 @@ becomes the release notes for that version and is shown in the app under
 - **Simple to work with.** The bin opens with one line (how many books are missing), one Put back all button, and just the missing books: title, author, the day it went, and Put back. The books you still have are one tap away; the removal log and the rest are folded under Details.
 - **Put back all missing.** One button puts every missing book back in Calibre, one entry per book (the EPUB when there is one), with a count as it goes and a list of any that did not work.
 
+### 🧬 Deep Scan: every part shows, and a second look
+- **The review lists every part the scan noted**, not only Level 3 and up. A Level 1 or 2 suggestion used to show "What the AI found (0 parts)", which made it look like a mistake; now it shows the parts behind it. New scans also note Level 1 parts.
+- **A second look at books kept too low.** The review tab lists the books whose scan found Level 1 or 2 but were kept at a lower level, and puts them back in the review with one button, so each can be decided again with its parts in view.
+
 ## [1.73.0]
 
 ### 📖 Read in NovelCheck
