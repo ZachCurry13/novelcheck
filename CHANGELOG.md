@@ -11,6 +11,8 @@ becomes the release notes for that version and is shown in the app under
 - **Finished books with no day.** Goodreads leaves "Date Read" empty when you never set one, so those books couldn't be counted in any year. Reading stats now lists them under Records (and Highlights, when your reading comes from a list) with a box for the day. Give each one its day, a guess is fine, and it counts.
 
 
+## [1.71.1]
+
 ### 🖼️ Find covers
 - **The cover finder finds covers again.** It searched with the title exactly as Calibre has it, so "Percy Jackson 2 - The Sea of Monsters", "01 - Guards! Guards!" or "Stars Above (The Lunar Chronicles)" never matched. It now also tries the title without its series name or number, and without a subtitle.
 - **Google Books is asked with your own API key** (Admin → Delivery & Services). Without it Google's shared daily limit was always used up, so every search there was refused.
