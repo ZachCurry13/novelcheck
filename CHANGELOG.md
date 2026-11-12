@@ -30,6 +30,7 @@ becomes the release notes for that version and is shown in the app under
 - **Screenshots are read better:** the AI is told to ignore series names, slogans, review quotes and a shop's buttons, and never to guess from the cover art.
 
 ### 🧬 Deep Scan
+- **Why a book got its level, at the top.** A Deep Scanned book's window now starts with "Why Level 4": what that level means, how many of the noted parts reached it, and those parts by name with **Read it** beside each. A book gets the highest level found anywhere in it, so those parts are the reason. Parents can open what the AI saw in them (spoilers) in one tap.
 - **Each part's level is easy to see while scrolling.** In "What the AI found", every part now starts with a coloured square holding its level (grey 0, green 1, teal 2, amber 3, red 4, deep red 5), with the part's name beside it and the level's name under it. A line at the top counts the parts at each level, highest first.
 
 ### 📦 Box sets

@@ -34,18 +34,36 @@ export function deepChangeLine(d) {
 export const aboutText = (n) => [n.note, n.scene].filter(Boolean).map((s) => s.trim())
   .map((s) => (/[.!?…]$/.test(s) ? s : `${s}.`)).join(" ");
 
-// foundHTML lists the parts a scan noted: where and how high, without what
-// happens (no spoilers). Parents get 📖 to read the part in the book, which
+// whyHTML answers "why this level?" at the top: what the level means, how many parts reached it, and those
+// parts by name. A book's level is the highest level found anywhere in it, so these parts are the reason.
+// Parents can open what the AI saw in them (spoilers) and read each one in the book.
+function whyHTML(notes, parents, rated = null) {
+  const top = Math.max(...notes.map((n) => n.level));
+  const those = notes.map((n, i) => ({ n, i })).filter((x) => x.n.level === top);
+  const p = PEPPERS[top];
+  return `<div class="card-outlined space-y-2 p-3">
+    <p class="flex items-center gap-2 font-semibold">${levelBadge(top)}<span>${rated == null || rated === top ? "Why" : "The highest parts are"} Level ${top}${p ? `: ${esc(p.name)}` : ""}</span></p>
+    ${rated != null && rated !== top ? `<p class="text-sm text-amber-200">The book itself is rated Level ${rated}: the scan's own checks, or a parent, settled on that after these parts were noted.</p>` : ""}
+    ${p ? `<p class="text-sm text-slate-300">${esc(p.desc)}</p>` : ""}
+    <p class="text-sm text-slate-300"><b>${those.length} of ${notes.length}</b> noted part${notes.length === 1 ? "" : "s"} reached Level ${top}. A book gets the highest level found anywhere in it, so ${those.length === 1 ? "this part is" : "these parts are"} the reason:</p>
+    <ul class="space-y-1 text-sm">${those.map(({ n, i }) => `<li><span class="font-semibold">${esc(n.label)}</span>
+      ${parents ? `<button type="button" data-read="${i}" class="ml-1 text-xs font-semibold text-sky-300 underline">Read it</button>` : ""}</li>`).join("")}</ul>
+    ${parents && those.some(({ n }) => aboutText(n)) ? `<details class="text-sm"><summary class="cursor-pointer font-semibold text-slate-200">Show what the AI saw there (spoilers)</summary>
+      <ul class="mt-1 space-y-2 text-slate-300">${those.filter(({ n }) => aboutText(n)).map(({ n }) => `<li><b>${esc(n.label)}:</b> ${esc(aboutText(n))}</li>`).join("")}</ul></details>` : ""}</div>`;
+}
+
+// foundHTML lists the parts a scan noted: first why the book got its level (whyHTML), then every part, where
+// and how high, without what happens (no spoilers). Parents get 📖 to read the part in the book, which
 // also shows what the AI saw there.
-function foundHTML(notes, parents) {
+function foundHTML(notes, parents, rated = null) {
   const list = `${notes.length > 3 ? levelTally(notes) : ""}<ul class="mt-2 space-y-2 text-sm">${notes.map((n, i) => `<li class="flex items-start gap-3${parents ? " rounded-md bg-slate-900/60 p-2" : ""}">
     ${levelBadge(n.level)}
     <div class="min-w-0 flex-1"><p class="font-semibold leading-snug">${esc(n.label)}</p>
       <p class="text-xs text-slate-400">Level ${n.level}${PEPPERS[n.level] ? ` · ${esc(PEPPERS[n.level].name)}` : ""}</p>
       ${parents ? `<button type="button" data-read="${i}" class="mt-1 block text-left text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button>` : ""}</div></li>`).join("")}</ul>`;
-  if (!parents) return list;
-  return `<details class="rounded-lg bg-slate-900/40 px-3 py-2"><summary class="cursor-pointer py-1 text-sm text-slate-300">
-    What the AI found (${notes.length} part${notes.length === 1 ? "" : "s"})</summary><div class="mt-1">${list}</div></details>`;
+  if (!parents) return `${whyHTML(notes, false, rated)}${list}`;
+  return `${whyHTML(notes, true, rated)}<details class="rounded-lg bg-slate-900/40 px-3 py-2"><summary class="cursor-pointer py-1 text-sm text-slate-300">
+    Every part the AI noted (${notes.length})</summary><div class="mt-1">${list}</div></details>`;
 }
 
 // renderDeepSection fills host (in the book window) and wires its buttons.
@@ -62,7 +80,7 @@ export async function renderDeepSection(host, bookId, user, title = "") {
     const notes = JSON.parse(d.notes || "[]");
     body = `<p class="text-sm text-emerald-300">🧬 Deep Scanned: the whole book was read${d.model ? ` by ${esc(d.model)}` : ""} (${esc(when(d.updated_at).toLocaleDateString())}).</p>
       ${deepChangeLine(d)}
-      ${notes.length ? foundHTML(notes, canManage(user))
+      ${notes.length ? foundHTML(notes, canManage(user), d.held ? d.proposed_level : d.new_level)
         : `<p class="text-sm text-slate-400">No romance or flagged content was noted anywhere in the text.</p>`}`;
   } else if (d?.status === "error") {
     body = `<p class="text-sm text-rose-300">The last Deep Scan failed: ${esc(d.error)}</p>`;
