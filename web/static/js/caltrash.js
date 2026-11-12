@@ -27,10 +27,7 @@ export async function renderCalTrash(host, fresh = false) {
   const books = r.books || [];
   // NovelCheck's own removal log: which of these it removed, who asked and from which page.
   const removals = r.removals || [];
-  const byId = new Map();
-  for (const x of removals) if (!byId.has(String(x.calibre_id))) byId.set(String(x.calibre_id), x);
   const utc = (at) => (at.includes("T") ? at : `${at.replace(" ", "T")}Z`);
-  const who = (x) => `removed through NovelCheck by ${esc(x.by || "someone")} (${esc(x.tool)})`;
   const empty = books.filter((b) => !(b.files || []).length).length;
   const days = new Map();
   for (const b of books) {
@@ -53,46 +50,48 @@ export async function renderCalTrash(host, fresh = false) {
     }
     return [...pick.values()];
   };
-  const FILTERS = { missing: "Missing from your library", kept: "Still in your library", empty: "Empty entries", all: "All" };
-  let filter = books.some((b) => stateOf(b) === "missing") ? "missing" : "all";
   let busy = false;
-  const stateLine = (b) => {
-    const s = stateOf(b);
-    if (s === "missing") return `<span class="block text-xs font-medium text-rose-300">Missing from your library: no copy of this book is in Calibre now</span>`;
-    if (s === "kept") return `<span class="block text-xs text-emerald-300">Still in your library${b.library_at ? ` as Calibre #${esc(b.library_at)}` : ""}${b.library_title && b.library_title !== b.title ? ` (“${esc(b.library_title)}”)` : ""}: this was an extra copy</span>`;
-    if (s === "back") return `<span class="block text-xs text-emerald-300">Put back in Calibre just now</span>`;
-    return `<span class="block text-xs text-slate-500">An empty entry: nothing to put back</span>`;
-  };
+  let showKept = false;
   let shown = 100;
   let q = "";
+  const day = (iso) => (iso ? new Date(iso).toLocaleDateString([], { month: "short", day: "numeric" }) : "");
+  // One row: the title, the author, when it went, and (for a missing book) Put back. Nothing else.
+  const row = (b) => {
+    const s = stateOf(b);
+    const note = s === "kept" ? "Still in your library" : s === "back" ? "Back in Calibre" : s === "empty" ? "Empty entry" : `Removed ${esc(day(b.removed))}`;
+    return `<li class="list-row" data-id="${esc(b.id)}">
+      <div class="min-w-0 flex-1"><p class="book-title break-words font-medium leading-snug">${esc(b.title)}</p>
+        <p class="text-sm text-slate-400">${esc(b.author || "Unknown author")} · <span class="${s === "back" || s === "kept" ? "text-emerald-300" : ""}">${note}</span></p></div>
+      ${s === "missing" ? `<button type="button" data-back class="btn-secondary shrink-0">Put back</button>` : ""}</li>`;
+  };
   const paint = () => {
-    const counts = Object.fromEntries(Object.keys(FILTERS).map((k) => [k, k === "all" ? books.length : books.filter((b) => stateOf(b) === k).length]));
+    const missing = books.filter((b) => stateOf(b) === "missing" && (!q || `${b.title} ${b.author}`.toLowerCase().includes(q)));
+    const others = books.filter((b) => stateOf(b) !== "missing" && (!q || `${b.title} ${b.author}`.toLowerCase().includes(q)));
     const picks = missingPicks();
-    const list = books.filter((b) => (filter === "all" || stateOf(b) === filter) && (!q || `${b.title} ${b.author}`.toLowerCase().includes(q)));
-    host.innerHTML = `<p class="text-sm text-slate-300"><b>${fmtNum(books.length)}</b> book${books.length === 1 ? "" : "s"} in Calibre's recycle bin${empty ? ` (${fmtNum(empty)} of them empty entries with no book file)` : ""}.
-        Calibre empties the bin by itself after a while, so put back what you want to keep soon.</p>
-      <p class="text-xs text-slate-400">${[...days].map(([d, n]) => `${esc(d)}: ${fmtNum(n)}`).join(" · ")}</p>
-      <p class="text-xs text-slate-500">${r.read_at ? `Read ${esc(when(r.read_at))}. ` : ""}<button type="button" data-again class="underline">Read the bin again</button></p>
-      <div class="my-2 flex flex-wrap gap-2" role="group" aria-label="Show">${Object.entries(FILTERS).map(([k, l]) =>
-        `<button type="button" data-filter="${k}" aria-pressed="${filter === k}" class="chip-filter">${l} · ${fmtNum(counts[k])}</button>`).join("")}</div>
-      ${picks.length ? `<div class="card-outlined my-2 space-y-2 p-3"><p class="text-sm"><b>${fmtNum(picks.length)}</b> book${picks.length === 1 ? " is" : "s are"} in the bin with no copy left in your library.
-          Put back adds each to Calibre again (one entry per book, the EPUB when there is one).</p>
-        <button type="button" data-all class="btn-primary" ${busy ? "disabled" : ""}>Put back all ${fmtNum(picks.length)} missing</button>
-        <p data-progress class="text-xs text-slate-400"></p></div>` : counts.missing === 0 && books.length ? `<p class="my-2 text-sm text-emerald-300">Every book in the bin still has a copy in your library.</p>` : ""}
-      <input data-q class="input my-2" placeholder="Find a title or author" value="${esc(q)}" aria-label="Find in the recycle bin">
-      <ul class="space-y-1">${list.slice(0, shown).map((b) => `<li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-800/60 p-2 text-sm" data-id="${esc(b.id)}">
-        <span class="min-w-0 flex-1"><b class="break-words">${esc(b.title)}</b>
-          <span class="block break-words text-xs text-slate-400">${esc(b.author || "Unknown author")} · was Calibre #${esc(b.id)} · removed ${esc(when(b.removed))}
-            · ${(b.files || []).length ? (b.files || []).map((f) => `${esc(f.format)} ${size(f.size)}`).join(", ") : "no book file"}</span>
-          ${stateLine(b)}
-          <span class="block text-xs ${byId.has(b.id) ? "text-amber-300" : "text-slate-500"}">${byId.has(b.id) ? who(byId.get(b.id)) : "not removed through NovelCheck (Calibre, Calibre-Web, or before v1.71.1)"}</span></span>
-        ${(b.files || []).length && stateOf(b) !== "back" ? `<button type="button" data-back class="btn-secondary shrink-0 py-1 text-sm">Put back</button>` : ""}</li>`).join("") || `<li class="text-sm text-slate-400">Nothing matches.</li>`}</ul>
-      ${list.length > shown ? `<button type="button" data-more class="btn-ghost mt-2 py-1 text-sm">Show ${fmtNum(Math.min(100, list.length - shown))} more of ${fmtNum(list.length)}</button>` : ""}
-      ${removals.length ? `<details class="mt-3 rounded-lg bg-slate-900/40 px-3 py-2"><summary class="cursor-pointer text-sm font-semibold">NovelCheck's removal log (${fmtNum(removals.length)})</summary>
-        <p class="mt-1 text-xs text-slate-400">Every book NovelCheck removed from Calibre, newest first, kept for a year. File formats removed are under Removed formats.</p>
-        <ul class="list mt-1 text-sm">${removals.slice(0, 300).map((x) => `<li class="list-row items-start"><div class="min-w-0 flex-1"><p class="break-words font-medium">${esc(x.title || `Calibre #${x.calibre_id}`)}</p>
-          <p class="text-xs text-slate-400">${esc(when(utc(x.at)))} · ${esc(x.by || "someone")} · ${esc(x.tool)} · was Calibre #${x.calibre_id}</p></div></li>`).join("")}</ul></details>` : ""}
-      <p class="mt-2 text-xs text-slate-400">“Put back” adds the book to Calibre again from its files, as a new entry with the title and authors it had. Its place in a series, tags and cover come back only as far as the file itself carries them.</p>`;
+    host.innerHTML = `
+      <div class="card-outlined space-y-3 p-4">
+        ${picks.length
+          ? `<p class="text-lg font-medium">${fmtNum(picks.length)} book${picks.length === 1 ? " is" : "s are"} missing from your library</p>
+             <p class="text-sm text-slate-400">They are in Calibre's bin with no copy left in your library. Put them back before Calibre empties the bin.</p>
+             <button type="button" data-all class="btn-primary" ${busy ? "disabled" : ""}>Put back all ${fmtNum(picks.length)}</button>
+             <p data-progress class="text-sm text-slate-400"></p>`
+          : `<p class="text-lg font-medium">Nothing is missing</p>
+             <p class="text-sm text-slate-400">Every book in Calibre's bin still has a copy in your library.</p>`}
+      </div>
+      ${books.length > 8 ? `<input data-q class="input mt-3" placeholder="Find a book" value="${esc(q)}" aria-label="Find a book in the bin">` : ""}
+      ${missing.length ? `<ul class="list mt-2">${missing.slice(0, shown).map(row).join("")}</ul>` : ""}
+      ${missing.length > shown ? `<button type="button" data-more class="btn-text mt-1">Show ${fmtNum(Math.min(100, missing.length - shown))} more</button>` : ""}
+      ${others.length ? `<button type="button" data-kept class="btn-text mt-2">${showKept ? "Hide" : "Show"} the ${fmtNum(others.length)} book${others.length === 1 ? "" : "s"} you still have</button>
+        ${showKept ? `<ul class="list">${others.slice(0, 200).map(row).join("")}</ul>` : ""}` : ""}
+      <details class="mt-4 text-sm text-slate-400"><summary class="cursor-pointer">Details</summary>
+        <div class="mt-2 space-y-2">
+          <p>${fmtNum(books.length)} entries in Calibre's bin${empty ? `, ${fmtNum(empty)} of them empty` : ""}. Removed: ${[...days].map(([d, n]) => `${esc(d)} (${fmtNum(n)})`).join(", ")}.</p>
+          <p>${r.read_at ? `Read ${esc(when(r.read_at))}. ` : ""}<button type="button" data-again class="underline">Read the bin again</button></p>
+          <p>“Put back” adds the book to Calibre again from its files, as a new entry with the title and authors it had. Calibre empties its bin by itself after a while.</p>
+          ${removals.length ? `<p class="pt-1 font-medium text-slate-300">Removed through NovelCheck (${fmtNum(removals.length)})</p>
+            <ul class="list">${removals.slice(0, 300).map((x) => `<li class="list-row"><div class="min-w-0 flex-1"><p class="break-words text-slate-200">${esc(x.title || `Calibre #${x.calibre_id}`)}</p>
+              <p class="text-xs">${esc(when(utc(x.at)))} · ${esc(x.by || "someone")} · ${esc(x.tool)}</p></div></li>`).join("")}</ul>` : ""}
+        </div></details>`;
   };
   host.oninput = (e) => {
     if (!e.target.matches("[data-q]")) return;
@@ -112,10 +111,8 @@ export async function renderCalTrash(host, fresh = false) {
   };
   host.onclick = async (e) => {
     if (e.target.closest("[data-again]")) return renderCalTrash(host, true);
-    const f = e.target.closest("[data-filter]");
-    if (f) {
-      filter = f.dataset.filter;
-      shown = 100;
+    if (e.target.closest("[data-kept]")) {
+      showKept = !showKept;
       return paint();
     }
     if (e.target.closest("[data-all]") && !busy) {
