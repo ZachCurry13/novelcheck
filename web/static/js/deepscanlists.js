@@ -4,6 +4,7 @@
 import { esc, fmtNum } from "./ui.js";
 import { coverImg } from "./covers.js";
 import { deepChangeLine, when, aboutText } from "./deepscan.js";
+import { PEPPERS, levelBadge, levelTally } from "./peppers.js";
 
 const SOURCE = { admin: "started by an admin", request: "requested", batch: "Nightstand batch", auto: "automatic" };
 
@@ -39,13 +40,14 @@ export function reviewCard(d) {
     ${d.proposed_level >= 4 && explicit === 1 ? `<p class="rounded-lg bg-amber-950/40 p-2 text-sm text-amber-200">This rests on one passage. Read it and decide; the book gets a note for parents either way.</p>` : ""}
     <details class="rounded-lg bg-slate-800/60 px-3 py-2 text-sm" ${explicit === 1 ? "open" : ""}>
       <summary class="cursor-pointer py-1 text-slate-300">What the AI found (${notes.length} part${notes.length === 1 ? "" : "s"})</summary>
-      <ul class="mt-1 space-y-2 text-slate-300">${notes.map((n) => `<li class="rounded-md bg-slate-900/60 p-2">
-        <p><b>${esc(n.label)}</b> · Level ${n.level}</p>
+      ${notes.length > 3 ? levelTally(notes) : ""}
+      <ul class="mt-1 space-y-2 text-slate-300">${notes.map((n) => `<li class="flex items-start gap-3 rounded-md bg-slate-900/60 p-2">${levelBadge(n.level)}<div class="min-w-0 flex-1">
+        <p class="font-semibold leading-snug">${esc(n.label)}</p><p class="text-xs text-slate-400">Level ${n.level}${PEPPERS[n.level] ? ` · ${esc(PEPPERS[n.level].name)}` : ""}</p>
         ${n.note || n.scene ? `<details class="mt-1 text-xs text-slate-400"><summary class="cursor-pointer">What happens (spoilers)</summary>
           <p class="mt-1">${esc(aboutText(n))}</p></details>` : ""}
         <button type="button" data-read data-from="${n.from || 0}" data-to="${n.to || 0}" data-label="${esc(n.label)}"
           data-about="${esc(aboutText(n))}"
-          class="mt-1 text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button></li>`).join("")
+          class="mt-1 text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button></div></li>`).join("")
         || "<li>No parts with sexual content were noted.</li>"}</ul>
       <p class="mt-2 text-xs text-slate-400">A part counts as Level 4 or more only when the AI names sentences that really are in the book and a second question agrees.</p>
     </details>

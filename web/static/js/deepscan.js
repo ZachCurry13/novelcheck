@@ -3,7 +3,7 @@
 // in the book), and start / request buttons.
 import { get, post } from "./api.js";
 import { esc, attempt, toast, fmtNum, fmtMoney, fmtMinutes, canManage, can } from "./ui.js";
-import { PEPPERS } from "./peppers.js";
+import { PEPPERS, levelBadge, levelTally } from "./peppers.js";
 
 const STATUS = {
   requested: "🕓 Deep Scan requested; waiting for an admin to approve it.",
@@ -38,9 +38,11 @@ export const aboutText = (n) => [n.note, n.scene].filter(Boolean).map((s) => s.t
 // happens (no spoilers). Parents get 📖 to read the part in the book, which
 // also shows what the AI saw there.
 function foundHTML(notes, parents) {
-  const list = `<ul class="space-y-2 text-sm">${notes.map((n, i) => `<li${parents ? ` class="rounded-md bg-slate-900/60 p-2"` : ""}>
-    <b>${esc(n.label)}</b> · Level ${n.level}${PEPPERS[n.level] ? ` (${esc(PEPPERS[n.level].name)})` : ""}
-    ${parents ? `<button type="button" data-read="${i}" class="mt-1 block text-left text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button>` : ""}</li>`).join("")}</ul>`;
+  const list = `${notes.length > 3 ? levelTally(notes) : ""}<ul class="mt-2 space-y-2 text-sm">${notes.map((n, i) => `<li class="flex items-start gap-3${parents ? " rounded-md bg-slate-900/60 p-2" : ""}">
+    ${levelBadge(n.level)}
+    <div class="min-w-0 flex-1"><p class="font-semibold leading-snug">${esc(n.label)}</p>
+      <p class="text-xs text-slate-400">Level ${n.level}${PEPPERS[n.level] ? ` · ${esc(PEPPERS[n.level].name)}` : ""}</p>
+      ${parents ? `<button type="button" data-read="${i}" class="mt-1 block text-left text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button>` : ""}</div></li>`).join("")}</ul>`;
   if (!parents) return list;
   return `<details class="rounded-lg bg-slate-900/40 px-3 py-2"><summary class="cursor-pointer py-1 text-sm text-slate-300">
     What the AI found (${notes.length} part${notes.length === 1 ? "" : "s"})</summary><div class="mt-1">${list}</div></details>`;

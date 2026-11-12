@@ -4,6 +4,37 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.71.0]
+
+### 🎨 A new look, on one standard
+- **NovelCheck now follows Material Design 3**, the design guide Android apps use. Buttons, text fields, cards, chips, tabs, lists and pop-up windows are each defined once and look the same everywhere. This release brings the shared pieces, the top bar, navigation and Reading stats; the other pages pick up the new buttons, cards and fields now and get their own pass in a later release.
+- **Navigation.** On a computer or tablet the pages are listed down the left side. On a phone the bottom bar shows the open page with a pill behind its icon. Icons are Material's own, stored inside the app.
+- **Light theme, OpenDyslexic and Reduce motion** work as before.
+
+### 🔎 Search at the top
+- **Find a setting, an admin tool, a page or an action by name.** Press the search bar (or `/`, or Ctrl+K), type a few letters and press Enter: "password", "recycle", "duplicates", "theme", "sign out". It shows only what you may open. Books are still searched on the Library page.
+
+### 📊 Reading stats, one page
+- **Highlights, Books, Calendar, Records and Trophies are tabs of one page.** The separate Wrapped page is gone; old links open Records.
+- **Records:** a tile each for this week, this month, this year and all time, with how it compares with the one before. The month and year tiles have **Play it as Wrapped**. Your awards for a year and your personal bests are lists.
+- **Trophies:** how many levels you have earned out of all of them, **Next up** with a ring for each trophy you are closest to and a likely date at your recent pace, then every trophy with its named levels ticked off.
+- **More to earn:** trophies for reading days, books opened, weeks in a row, weekend reading, long sittings, different authors, series started, non-fiction, re-reads, Hardcover goals, and (from an imported list) paper books, audiobooks and e-books. Four more yearly awards: day of the year, sitting of the year, most highlighted, streak of the year.
+
+### 📥 Goodreads and other lists count in Reading stats
+- **A list's "read" shelf now brings the day you finished each book, its pages, your stars, the format and how many times you read it.** Those books count in the year you finished them: in the tiles, records, awards, trophies and the Profile summary. Your stars become your rating here when you had not rated the book.
+- **No KOReader needed to see your reading.** Someone whose reading comes only from a list gets Highlights (books, pages, authors, ratings, books by month, formats, genres, book length, every book), Records and Trophies. Hours, pages a day, streaks, the calendar and Wrapped still need KOReader, and the page says so.
+- **If you imported a list before this version, import the same file once more**: the earlier import did not keep the dates.
+
+### 📷 Check a book
+- **A photo or screenshot is no longer taken at the AI's word.** What the AI reads has to be a real book by that author (one you have, or one the book catalogue knows). If it is not, the next AI reads the picture too, and the answer is accepted when one is confirmed or two agree. When nothing can be confirmed, you pick from the closest real books.
+- **Screenshots are read better:** the AI is told to ignore series names, slogans, review quotes and a shop's buttons, and never to guess from the cover art.
+
+### 🧬 Deep Scan
+- **Each part's level is easy to see while scrolling.** In "What the AI found", every part now starts with a coloured square holding its level (grey 0, green 1, teal 2, amber 3, red 4, deep red 5), with the part's name beside it and the level's name under it. A line at the top counts the parts at each level, highest first.
+
+### 📦 Box sets
+- **"Ask the AI what's inside" asks once.** The buttons could come back to life while an answer was on its way, so a set was asked two or three times and ended with "not found" after a long wait. Now each set is asked once, only its own card changes when the answer comes (titles you are typing elsewhere stay), and a set you already decided answers at once.
+
 ## [1.70.0]
 
 ### 🗑️ Calibre's recycle bin, in NovelCheck

@@ -73,3 +73,15 @@ export function openPepperGuide() {
   </div>`;
   dlg.showModal();
 }
+
+// levelBadge is a part's level as a coloured square with the number in it, so a long list of parts (Deep Scan)
+// can be read at a glance: grey 0, green 1, teal 2, amber 3, red 4, deep red 5.
+export const levelBadge = (level) => `<span class="lvl lvl-${Math.max(0, Math.min(5, Number(level) || 0))}" aria-hidden="true">${Number(level) || 0}</span>`;
+
+// levelTally counts the parts at each level, highest first: "Level 3 × 1 · Level 2 × 5 …" as badges.
+export function levelTally(notes) {
+  const by = new Map();
+  for (const n of notes) by.set(n.level, (by.get(n.level) || 0) + 1);
+  return `<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">${[...by].sort((a, b) => b[0] - a[0])
+    .map(([level, k]) => `<span class="inline-flex items-center gap-1">${levelBadge(level)}<span>× ${k}<span class="sr-only"> at level ${level}</span></span></span>`).join("")}</p>`;
+}
