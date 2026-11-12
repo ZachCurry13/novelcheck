@@ -42,13 +42,33 @@ function paintStatus() {
   $("#reader-status").textContent = `${status.chapter ? `${status.chapter} · ` : ""}${pct}%${left}`;
 }
 
-// save keeps your place on the server a moment after you stop turning pages.
-function save(cfi, fraction) {
+// readerXPointer is the same place the way KOReader names it (a crengine XPointer): the book part (DocFragment,
+// counted from 1 in the book's reading order) and the path of elements down to the one the page starts in, with
+// [n] only where an element has same-named brothers. The server keeps it as KOReader progress, so KOReader opens
+// at this paragraph. "" when the place can't be named.
+export function readerXPointer(detail) {
+  const index = detail.section?.current;
+  let el = detail.range?.startContainer;
+  if (index == null || !el) return "";
+  if (el.nodeType !== 1) el = el.parentElement;
+  const body = el?.ownerDocument?.body;
+  if (!el || !body || (el !== body && !body.contains(el))) return "";
+  const parts = [];
+  for (let n = el; n && n !== body; n = n.parentElement) {
+    const name = n.localName.toLowerCase();
+    const same = [...n.parentElement.children].filter((c) => c.localName.toLowerCase() === name);
+    parts.unshift(same.length > 1 ? `${name}[${same.indexOf(n) + 1}]` : name);
+  }
+  return `/body/DocFragment[${index + 1}]/body${parts.length ? `/${parts.join("/")}` : ""}`;
+}
+
+// save keeps your place on the server a moment after you stop turning pages (and, for KOReader, as an XPointer).
+function save(cfi, fraction, xpointer) {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     if (!cfi || cfi === lastSaved) return;
     lastSaved = cfi;
-    api(`/api/books/${id}/position`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cfi, fraction }) }).catch(() => {});
+    api(`/api/books/${id}/position`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cfi, fraction, xpointer }) }).catch(() => {});
   }, 1500);
 }
 
@@ -88,7 +108,7 @@ function onRelocate({ detail }) {
   status.fraction = detail.fraction || 0;
   status.left = detail.time?.section != null ? Math.max(1, Math.round(detail.time.section)) : null;
   paintStatus();
-  save(detail.cfi, status.fraction);
+  save(detail.cfi, status.fraction, readerXPointer(detail));
 }
 
 async function start() {

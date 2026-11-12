@@ -27,3 +27,10 @@ func (s *Store) FingerprintCounts() (done, total int) {
 		WHERE cb.format IN ('epub', 'pdf', 'mobi', 'azw3', 'azw', 'fb2', 'cbz', 'txt', 'djvu') AND cb.path != ''`)
 	return done, total
 }
+
+// FingerprintOf is a library file's KOReader fingerprint ("" when it hasn't been worked out yet).
+func (s *Store) FingerprintOf(path string) string {
+	var md5 string
+	_ = s.DB.Get(&md5, `SELECT md5 FROM file_fingerprints WHERE path = ?`, path)
+	return md5
+}

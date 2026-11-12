@@ -24,12 +24,16 @@ func (s *Store) ReaderPositionOf(userID, bookID int64) (ReaderPosition, bool) {
 	return p, err == nil
 }
 
+// ReaderDeviceID is how NovelCheck's own reader signs the progress it writes for KOReader, so the reader never
+// offers its own place back as "your e-reader is at…".
+const ReaderDeviceID = "novelcheck-reader"
+
 // KOReaderPositionOf is the newest place KOReader's progress sync has for this person in this book: the
 // percentage (0 to 1), the device and when (ok false when there is none).
 func (s *Store) KOReaderPositionOf(userID, bookID int64) (KosyncProgress, bool) {
 	var p KosyncProgress
 	err := s.DB.Get(&p, `SELECT p.document, p.progress, p.percentage, p.device, p.device_id, p.updated_at
 		FROM kosync_progress p JOIN kosync_docs d ON d.document = p.document
-		WHERE p.user_id = ? AND d.book_id = ? ORDER BY p.updated_at DESC LIMIT 1`, userID, bookID)
+		WHERE p.user_id = ? AND d.book_id = ? AND p.device_id != ? ORDER BY p.updated_at DESC LIMIT 1`, userID, bookID, ReaderDeviceID)
 	return p, err == nil
 }

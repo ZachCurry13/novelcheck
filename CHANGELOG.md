@@ -11,7 +11,8 @@ becomes the release notes for that version and is shown in the app under
 - **Laid out like KOReader.** Tap the right two thirds of the page to go forward and the left third to go back (or swipe, or use the arrow keys); tap the top of the page for the menu. A slim line at the bottom shows the chapter, how far you are and the minutes left in the chapter.
 - **Settings like KOReader's:** the book's own font, serif, sans or OpenDyslexic; text size; line spacing; margins; justified or ragged text; and day, sepia or night pages. They are kept on each device.
 - **Contents:** the book's table of contents, one tap to a chapter.
-- **Keeps your place.** Close the book and it opens where you left off, on any device. When KOReader's progress sync has you further on, it offers to jump there ("Your Kindle is at 54%"). The match is by percentage, so it lands within about a page. Reading in the browser does not move your Kindle's place yet.
+- **Keeps your place.** Close the book and it opens where you left off, on any device. When KOReader's progress sync has you further on, it offers to jump there ("Your Kindle is at 54%"). The match is by percentage, so it lands within about a page.
+- **…and sends your place back to your Kindle.** As you read, NovelCheck saves your place the way KOReader names it (the paragraph the page starts on) for the same EPUB file, through the progress sync your Kindle already uses. Open the book on the Kindle and KOReader's sync takes you there (or asks first, depending on KOReader's sync settings). It works when the Kindle has the same EPUB file as Calibre, for example one downloaded through NovelCheck.
 - **Safe:** a book's own styles and fonts show, but any script inside a book is blocked.
 
 ### 🎨 Warmer: Paperback by day, Ember by night
