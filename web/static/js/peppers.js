@@ -74,6 +74,13 @@ export function openPepperGuide() {
   dlg.showModal();
 }
 
+// KIND says in a few words what kind of content a level is, with no names and nothing about the story, so a
+// Deep Scan list can say why a part got its level without spoiling it. What actually happens is shown only
+// when the parent opens the part in the book.
+export const KIND = ["No romance", "Crushes, flirting or a sweet kiss", "Kissing and romantic affection",
+  "Sexual desire or making out; any sex stays off the page", "Sex on the page, described", "Long, graphic sex scenes"];
+export const kindOf = (level) => KIND[Math.max(0, Math.min(5, Number(level) || 0))];
+
 // levelBadge is a part's level as a coloured square with the number in it, so a long list of parts (Deep Scan)
 // can be read at a glance: grey 0, green 1, teal 2, amber 3, red 4, deep red 5.
 export const levelBadge = (level) => `<span class="lvl lvl-${Math.max(0, Math.min(5, Number(level) || 0))}" aria-hidden="true">${Number(level) || 0}</span>`;

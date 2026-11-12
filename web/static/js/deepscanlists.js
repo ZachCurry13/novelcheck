@@ -4,7 +4,7 @@
 import { esc, fmtNum } from "./ui.js";
 import { coverImg } from "./covers.js";
 import { deepChangeLine, when, aboutText } from "./deepscan.js";
-import { PEPPERS, levelBadge, levelTally } from "./peppers.js";
+import { PEPPERS, levelBadge, levelTally, kindOf } from "./peppers.js";
 
 const SOURCE = { admin: "started by an admin", request: "requested", batch: "Nightstand batch", auto: "automatic" };
 
@@ -43,8 +43,7 @@ export function reviewCard(d) {
       ${notes.length > 3 ? levelTally(notes) : ""}
       <ul class="mt-1 space-y-2 text-slate-300">${notes.map((n) => `<li class="flex items-start gap-3 rounded-md bg-slate-900/60 p-2">${levelBadge(n.level)}<div class="min-w-0 flex-1">
         <p class="font-semibold leading-snug">${esc(n.label)}</p><p class="text-xs text-slate-400">Level ${n.level}${PEPPERS[n.level] ? ` · ${esc(PEPPERS[n.level].name)}` : ""}</p>
-        ${n.note || n.scene ? `<details class="mt-1 text-xs text-slate-400"><summary class="cursor-pointer">What happens (spoilers)</summary>
-          <p class="mt-1">${esc(aboutText(n))}</p></details>` : ""}
+        <p class="text-xs text-slate-300">${esc(kindOf(n.level))}</p>
         <button type="button" data-read data-from="${n.from || 0}" data-to="${n.to || 0}" data-label="${esc(n.label)}"
           data-about="${esc(aboutText(n))}"
           class="mt-1 text-xs font-semibold text-sky-300 underline">📖 Read this part in the book</button></div></li>`).join("")
