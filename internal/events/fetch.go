@@ -46,25 +46,43 @@ func public(ip net.IP) bool {
 // loads more books on request ("Load more books") or splits it over pages.
 // Some sites refuse programs; pasting the page always works.
 func Fetch(ctx context.Context, rawURL string) (string, error) {
+	page, _, err := FetchLanding(ctx, rawURL)
+	return page, err
+}
+
+// FetchLanding is Fetch that also says which part of the page the address
+// pointed at (its "#…" after any redirects): a Linktree short link lands on
+// the whole Linktree, marked with the link it was shared for.
+func FetchLanding(ctx context.Context, rawURL string) (page, focus string, err error) {
 	u, err := url.Parse(strings.TrimSpace(rawURL))
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-		return "", errors.New("that doesn't look like a web address (https://…)")
+		return "", "", errors.New("that doesn't look like a web address (https://…)")
 	}
-	page, err := get(ctx, u.String(), "text/html,application/xhtml+xml")
+	page, landed, err := fetch(ctx, u.String(), "text/html,application/xhtml+xml")
 	switch {
 	case errors.Is(err, ErrPrivate):
-		return "", ErrPrivate
+		return "", "", ErrPrivate
 	case err != nil:
-		return "", fmt.Errorf("the page couldn't be read (%v); paste the list instead", err)
+		return "", "", fmt.Errorf("the page couldn't be read (%v); paste the list instead", err)
 	}
-	return page + loadMore(ctx, u, page), nil
+	focus = u.Fragment
+	if landed != nil && landed.Fragment != "" {
+		focus = landed.Fragment
+	}
+	return page + loadMore(ctx, u, page), focus, nil
 }
 
 // get reads one address; a JSON Accept asks the way a page's own script does.
 func get(ctx context.Context, link, accept string) (string, error) {
+	body, _, err := fetch(ctx, link, accept)
+	return body, err
+}
+
+// fetch is get that also gives the address it ended at after redirects.
+func fetch(ctx context.Context, link, accept string) (string, *url.URL, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, link, nil)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; NovelCheck; +https://github.com/ZachCurry13/novelcheck)")
 	req.Header.Set("Accept", accept)
@@ -74,14 +92,28 @@ func get(ctx context.Context, link, accept string) (string, error) {
 	res, err := client.Do(req)
 	if err != nil {
 		if errors.Is(err, ErrPrivate) {
-			return "", ErrPrivate
+			return "", nil, ErrPrivate
 		}
-		return "", err
+		return "", nil, err
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("the site answered %s", res.Status)
+		return "", nil, fmt.Errorf("the site answered %s", res.Status)
 	}
 	body, err := io.ReadAll(io.LimitReader(res.Body, maxPage))
-	return string(body), err
+	return string(body), landedAt(res.Request), err
+}
+
+// landedAt is the final address, keeping a "#…" that an earlier redirect
+// gave (a later hop without one keeps it, as browsers do).
+func landedAt(req *http.Request) *url.URL {
+	u := *req.URL
+	for r := req; u.Fragment == "" && r != nil; {
+		u.Fragment = r.URL.Fragment
+		if r.Response == nil {
+			break
+		}
+		r = r.Response.Request
+	}
+	return &u
 }

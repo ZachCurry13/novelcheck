@@ -22,6 +22,16 @@ func TestStuffYourKindleEvent(t *testing.T) {
 	if res.StatusCode != 200 || len(books) != 2 {
 		t.Fatalf("preview: %d %v", res.StatusCode, out)
 	}
+	// A Linktree of the day's lists: the lists are offered, not taken as books.
+	res, out = admin.do("POST", "/api/events/preview", map[string]string{
+		"html": `<a href="https://www.amazon.com/hz/wishlist/ls/9ZMDH4VWWM2?ref_=wl_share" aria-label="Kids"><img alt=""></a>` +
+			`<a href="https://www.amazon.com/hz/wishlist/ls/14HPPTSUAF5NE?ref_=wl_share" aria-label="Mystery">Mystery</a>`}, true)
+	if lists, _ := out["lists"].([]any); res.StatusCode != 200 || len(lists) != 2 || len(out["books"].([]any)) != 0 {
+		t.Fatalf("lists: %d %v", res.StatusCode, out)
+	}
+	if res, _ = admin.do("POST", "/api/events/preview", map[string]any{"urls": []string{"https://example.com/list"}}, true); res.StatusCode != 400 {
+		t.Fatalf("a list that isn't Amazon's was read: %d", res.StatusCode)
+	}
 	res, out = admin.do("POST", "/api/events", map[string]any{"name": "Stuff Your Kindle: Fall", "books": books}, true)
 	if res.StatusCode != 201 || out["rating"].(float64) != 1 {
 		t.Fatalf("create: %d %v", res.StatusCode, out)

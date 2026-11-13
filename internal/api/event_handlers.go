@@ -49,22 +49,34 @@ func (s *Server) handleGetEvent(w http.ResponseWriter, r *http.Request) {
 // saving anything.
 func (s *Server) handlePreviewEvent(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		HTML string `json:"html"`
-		Text string `json:"text"`
-		URL  string `json:"url"`
+		HTML string   `json:"html"`
+		Text string   `json:"text"`
+		URL  string   `json:"url"`
+		URLs []string `json:"urls"` // Amazon lists picked from a page of lists
 	}
 	if !readJSON(w, r, &body, 8<<20) {
 		return
 	}
-	page := body.HTML
-	if strings.TrimSpace(body.URL) != "" && strings.TrimSpace(body.HTML+body.Text) == "" {
-		var err error
-		if page, err = events.Fetch(r.Context(), body.URL); err != nil {
-			writeErr(w, http.StatusBadRequest, err.Error())
+	page, focus := body.HTML, ""
+	var err error
+	switch {
+	case len(body.URLs) > 0:
+		page, err = events.FetchLists(r.Context(), body.URLs)
+	case strings.TrimSpace(body.URL) != "" && strings.TrimSpace(body.HTML+body.Text) == "":
+		page, focus, err = events.FetchLanding(r.Context(), body.URL)
+	}
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	entries := events.Parse(page, body.Text)
+	if len(entries) == 0 && len(body.URLs) == 0 {
+		if lists := events.Lists(page, focus); len(lists) > 0 {
+			// A page of lists (a Linktree of the day's free books): pick which to read.
+			writeJSON(w, http.StatusOK, map[string]any{"books": []any{}, "lists": lists})
 			return
 		}
 	}
-	entries := events.Parse(page, body.Text)
 	if len(entries) == 0 {
 		writeErr(w, http.StatusBadRequest, "no books found; copy the list of books (with its Amazon links, if you can) and paste it here")
 		return

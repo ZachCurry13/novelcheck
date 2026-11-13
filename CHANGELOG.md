@@ -8,6 +8,7 @@ becomes the release notes for that version and is shown in the app under
 
 ### 🎁 Events from an Amazon wish list
 - **Pasting a shared Amazon wish list now reads its books.** The list's books were skipped and Amazon's own menu and footer links (Careers, Press Center, Accessibility) were saved as the event's "books" instead. Now every book on the list comes in with its title and Amazon link, including the books Amazon shows only after scrolling (a 71-book list reads all 71), and the event is named after the list.
+- **A Linktree of the day's free books works too.** Paste the Linktree (or a tr.ee short link to it) and NovelCheck lists the Amazon lists on it (Kids, Mystery, Thrillers…) with the one the link was shared for already ticked. Tick the ones you want and press Read the chosen lists: their books come into one event, named after the lists (two lists of about 160 books take about ten seconds).
 - **Review covers** keeps each cover the right shape again (a style rule was missing from the built stylesheet).
 
 ## [1.73.1]
