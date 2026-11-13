@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.74.0]
+
+### 🎁 Free books found by themselves
+- **Stuff Your Kindle days come in on their own.** NovelCheck checks stuffyourkindle.com every three hours. On the day of an event (for example "Mystery, Thriller & Horror Stuff Your Kindle Day") it makes the event with the day's whole list, ending that night, and the bell says so. Each day is made once; one you delete stays deleted.
+- **Free right now.** A pinned event that keeps the books posted to Reddit's r/FreeEBOOKS in the last four days, refreshed every three hours. Books named only by a link, a store ("US", "UK") or a date are left out, and a book linked for several countries counts once. Archive it to stop it coming back.
+- Both are on by default and can be switched off in Admin → Free book events. New books from them are rated within your hourly AI limit: Stuff Your Kindle books first in line, Reddit books in line with the rest.
+
 ## [1.73.2]
 
 ### 🎁 Events from an Amazon wish list

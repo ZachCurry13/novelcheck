@@ -70,6 +70,10 @@ export const SECTIONS = [
     ["nyt_api_key", "New York Times Books API key (optional, free)", "Paste the key from developer.nytimes.com", "password"],
     ["discover_daily_ratings", "Discover books the AI rates per day (0 = none)", "30", "number"],
   ]],
+  ["delivery", "Free book events", [
+    ["events_auto_syk", "Make each Stuff Your Kindle day an event on its day (checked every 3 hours)", "", "bool"],
+    ["events_auto_reddit", "Keep a \"Free right now\" event of the books posted to Reddit's r/FreeEBOOKS in the last 4 days", "", "bool"],
+  ]],
   ["system", "Features", [
     ["module_queue", "Nightstand reading queue", "", "bool"],
     ["module_send_to_kindle", "Send-to-Kindle email delivery", "", "bool"],
@@ -94,7 +98,7 @@ export const SECTION_MODULE = { "SMTP / Send-to-Kindle": "send_to_kindle", Disco
 // main admin gave them (the server sorts each setting the same way: settingArea).
 export const SECTION_AREA = {
   "Your AI": "ai", "Backup AI": "ai", "Deep Scans": "ai", "When it runs": "ai", "Extras": "ai", "Machines & costs": "ai",
-  "SMTP / Send-to-Kindle": "services", "Calibre Library": "calibre", Audiobookshelf: "services", Discover: "services",
+  "SMTP / Send-to-Kindle": "services", "Calibre Library": "calibre", Audiobookshelf: "services", Discover: "services", "Free book events": "services",
   Features: "system", "Sign-in & Updates": "system",
 };
 

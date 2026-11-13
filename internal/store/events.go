@@ -72,6 +72,14 @@ func (s *Store) CreateEvent(name, sourceURL, by, endsAt string, entries []EventE
 		return 0, nil, err
 	}
 	id, _ := res.LastInsertId()
+	unrated, err := s.addEventBooks(id, cat, entries)
+	return id, unrated, err
+}
+
+// addEventBooks lists entries on an event (in their order), adding books
+// the library doesn't know to the Events catalog. It returns the newly
+// listed books that still need rating.
+func (s *Store) addEventBooks(id, cat int64, entries []EventEntry) ([]int64, error) {
 	var unrated []int64
 	for i, e := range entries {
 		book, err := s.UpsertBook(e.Title, e.Author, "", "")
@@ -82,13 +90,13 @@ func (s *Store) CreateEvent(name, sourceURL, by, endsAt string, entries []EventE
 		_ = s.DB.Get(&copies, `SELECT COUNT(*) FROM catalog_books WHERE book_id = ?`, book)
 		if copies == 0 {
 			if err := s.AddCopy(cat, book, "event:"+e.ASIN+":"+e.Title, "list", e.ASIN); err != nil {
-				return id, unrated, err
+				return unrated, err
 			}
 		}
 		res, err := s.DB.Exec(`INSERT OR IGNORE INTO event_books (event_id, book_id, position, asin, link) VALUES (?, ?, ?, ?, ?)`,
 			id, book, i+1, e.ASIN, e.Link)
 		if err != nil {
-			return id, unrated, err
+			return unrated, err
 		}
 		if n, _ := res.RowsAffected(); n > 0 {
 			var status string
@@ -98,7 +106,7 @@ func (s *Store) CreateEvent(name, sourceURL, by, endsAt string, entries []EventE
 			}
 		}
 	}
-	return id, unrated, nil
+	return unrated, nil
 }
 
 // eventWhere is the viewer's content rules; kids never see unrated books.
