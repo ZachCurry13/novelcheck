@@ -103,7 +103,10 @@ func migrate(d *sqlx.DB) error {
 	if err := firstOwner(d); err != nil {
 		return err
 	}
-	return moveLGBTQ(d)
+	if err := moveLGBTQ(d); err != nil {
+		return err
+	}
+	return addFriendRole(d)
 }
 
 // firstOwner runs once, on the first start of a version with a main admin:

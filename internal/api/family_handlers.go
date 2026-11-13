@@ -77,6 +77,9 @@ func (s *Server) handleFamily(w http.ResponseWriter, r *http.Request) {
 	}
 	out := make([]map[string]any, 0, len(profiles))
 	for _, p := range profiles {
+		if p.Role == store.RoleFriend {
+			continue // a friend isn't family: not on the family's shared devices
+		}
 		out = append(out, map[string]any{"id": p.ID, "username": p.Username, "role": p.Role, "age_level": p.AgeLevel, "needs": needs(p)})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"family": true, "name": d.Name, "profiles": out})
@@ -98,7 +101,7 @@ func (s *Server) handleFamilySwitch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u, err := s.Store.UserByID(body.UserID)
-	if err != nil || u == nil {
+	if err != nil || u == nil || u.IsFriend() {
 		writeErr(w, http.StatusNotFound, "no such profile")
 		return
 	}

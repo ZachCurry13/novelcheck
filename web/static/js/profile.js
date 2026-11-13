@@ -20,7 +20,7 @@ export async function renderProfile(view, state) {
         <p class="text-sm text-slate-400">${esc(role)}${u.age_level ? ` · 👪 ${esc(ageLabel(u.age_level))}` : ""}</p></div>
       <a href="#/settings" class="btn-secondary ml-auto">Settings</a></div>
     <div class="grid gap-4 lg:grid-cols-2">
-      <div id="reading-summary" class="card space-y-2${on(u, "koreader") ? "" : " module-off"} lg:col-span-2"></div>
+      <div id="reading-summary" class="card space-y-2${on(u, "koreader") || u.role === "friend" ? "" : " module-off"} lg:col-span-2"></div>
       ${on(u, "queue") && on(u, "suggestions") && on(u, "taste") ? `<div class="card space-y-2">
         <h2 class="text-lg font-semibold">Your reading taste</h2>
         <p class="text-sm text-slate-400">Optional: mark books you know (want to read, read &amp; liked, …) so 💡 Suggested Reads on your Nightstand fit you better.</p>
@@ -42,5 +42,5 @@ export async function renderProfile(view, state) {
 
   $("#replay-guide", view).addEventListener("click", () => openGuide(state));
   $("#taste-open", view)?.addEventListener("click", () => openTaste());
-  if (on(u, "koreader")) renderReadingSummary($("#reading-summary", view));
+  if (on(u, "koreader") || u.role === "friend") renderReadingSummary($("#reading-summary", view), u.role === "friend");
 }

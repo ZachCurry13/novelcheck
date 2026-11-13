@@ -36,7 +36,7 @@ func (s *Store) KosyncCode(userID int64, renew bool) (string, error) {
 // the sync code (KOReader sends that, not the code).
 func (s *Store) KosyncUser(username, key string) (*User, bool) {
 	u, err := s.UserByName(strings.TrimSpace(username))
-	if err != nil {
+	if err != nil || u.IsFriend() { // a friend's account never reaches the libraries' files
 		return nil, false
 	}
 	var code string

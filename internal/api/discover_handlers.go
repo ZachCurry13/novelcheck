@@ -25,13 +25,20 @@ func (s *Server) handleDiscover(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	newIn, _ := s.Store.NewInLibraries(u, 20)
-	family, _ := s.Store.FamilyFavorites(u, 20)
+	var newIn, family []store.DiscoverBook
+	if !u.IsFriend() { // the family's own books are not a friend's to see
+		newIn, _ = s.Store.NewInLibraries(u, 20)
+		family, _ = s.Store.FamilyFavorites(u, 20)
+	}
 	rows, owned := discover.Compose(items, newIn, family, u, r.URL.Query().Get("owned") == "1")
 	if rows == nil {
 		rows = []discover.Row{}
 	}
-	rows = append(s.seasonRows(u), rows...)
+	if u.IsFriend() {
+		owned = 0
+	} else {
+		rows = append(s.seasonRows(u), rows...)
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"rows":       rows,
 		"owned":      owned, // listed books the family has, left out unless ?owned=1

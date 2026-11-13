@@ -34,6 +34,7 @@ export async function openBook(id, state, onChange) {
   const b = data.book;
   const isAdmin = state.user.role === "admin";
   const manager = canManage(state.user);
+  const friend = state.user.role === "friend"; // a friend's account: none of the family's tools
   const parents = on(state.user, "parents"); // age groups and parents' notes
   // One row per catalog entry (a Calibre book id, or a Kindle/drive catalog), listing its formats.
   const entries = new Map();
@@ -98,7 +99,7 @@ export async function openBook(id, state, onChange) {
         <button type="button" data-copy-err class="ml-1 text-xs underline">Copy</button>${can(state.user, "system") ? ` <button type="button" data-dx-err class="text-xs underline">Diagnose</button>` : ""}</p>` : ""}
       ${(b.blurb || b.description) ? `<div><span class="label">Blurb</span>
         <p class="text-sm leading-relaxed text-slate-300 whitespace-pre-line">${esc(b.blurb || b.description)}</p></div>` : ""}
-      ${bookCollectionsHTML(data.collections || [], manager)}
+      ${friend ? "" : bookCollectionsHTML(data.collections || [], manager)}
       <div><span class="label">In libraries</span><ul class="space-y-2">${copies || "<li class='text-sm text-slate-500'>Not in your libraries yet</li>"}</ul>${dupNote}
         ${manager && data.box_state === "found" ? `<button type="button" data-act="box-split" class="mt-1 block text-xs font-semibold text-sky-300 underline">This is a box set: split it into its books…</button>` : ""}
         ${manager && data.box_state === "split" ? `<p class="mt-1 text-xs text-slate-400">Split into its books (they show in the Library instead). <button type="button" data-act="box-split" class="underline">Change</button></p>` : ""}
@@ -106,8 +107,8 @@ export async function openBook(id, state, onChange) {
       ${b.analysis_model ? `<p class="text-xs text-slate-500">${b.analysis_model.startsWith("manual: ")
         ? "Rated by hand by " + esc(b.analysis_model.slice(8)) : b.analysis_model.startsWith("deep: ") ? "Deep Scanned (whole book) by " + esc(b.analysis_model.slice(6)) : "Rated from the description by " + esc(b.analysis_model)}${b.analyzed_at ? " · " + esc(new Date(b.analyzed_at).toLocaleDateString()) : ""}</p>` : ""}
       ${b.approved ? `<p class="text-xs text-emerald-400">✓ Marked OK by ${esc(b.approved_by)}: shown to everyone, even if it matches their hide filters or content rules.</p>` : ""}
-      <div id="deep-section"></div>
-      <div id="audio-section"></div>
+      ${friend ? "" : `<div id="deep-section"></div>
+      <div id="audio-section"></div>`}
       <div id="libby-section"></div>
       ${state.user.role === "restricted" ? "" : starsHTML(data.my_rating || 0)}
       ${finishedHTML(data.finished_on || "")}
@@ -117,15 +118,15 @@ export async function openBook(id, state, onChange) {
         ${data.downloadable ? `<a href="/api/books/${b.id}/download" class="btn-secondary">${data.has_audio ? "Download e-book" : "Download"}</a>` : ""}
         ${manager ? `<button data-act="analyze" class="btn-secondary">${b.classification ? "Re-analyze" : "Analyze now"}</button>
           <button data-act="approve" class="btn-secondary" title="Show this book even when it matches someone's hide filters or content rules">${b.approved ? "Remove OK mark" : "✓ Mark as OK"}</button>` : ""}
-        ${!owned ? "" : data.my_delete_request
+        ${!owned || friend ? "" : data.my_delete_request
             ? `<button data-act="cancel-delete" class="btn-ghost" title="${esc(data.my_delete_request.reason || "")}">Delete requested · Cancel</button>`
             : `<button data-act="request-delete" class="btn-ghost" title="Ask an admin to delete this book">Request to delete</button>`}
         ${owned && can(state.user, "calibre") && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
       </div>
       <div class="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap gap-2 border-t border-slate-800 bg-slate-900/95 px-6 py-3 backdrop-blur">
         ${readable ? `<a href="/reader.html?id=${b.id}" class="btn-primary"><span class="ms" aria-hidden="true">local_library</span>Read</a>` : ""}
-        ${on(state.user, "queue") ? `<button data-act="queue" class="${readable ? "btn-secondary" : "btn-primary"}">${owned ? "＋ Nightstand" : "＋ Nightstand (to get)"}</button>` : ""}
-        ${!owned ? (data.my_wish ? `<button data-act="unwish" class="btn-ghost" title="Remove it from your wishlist">On your wishlist · Remove</button>` : `<button data-act="wish" class="btn-secondary">Add to Wishlist</button>`) : ""}
+        ${on(state.user, "queue") && !friend ? `<button data-act="queue" class="${readable ? "btn-secondary" : "btn-primary"}">${owned ? "＋ Nightstand" : "＋ Nightstand (to get)"}</button>` : ""}
+        ${!owned && !friend ? (data.my_wish ? `<button data-act="unwish" class="btn-ghost" title="Remove it from your wishlist">On your wishlist · Remove</button>` : `<button data-act="wish" class="btn-secondary">Add to Wishlist</button>`) : ""}
         ${manager ? `<button data-act="edit-verdict" class="btn-secondary">Edit rating</button>` : ""}
       </div>
     </div>`;
@@ -201,12 +202,14 @@ export async function openBook(id, state, onChange) {
     }
   };
   dlg.showModal();
-  renderDeepSection($("#deep-section", dlg), b.id, state.user, b.title);
-  renderAudioSection($("#audio-section", dlg), data, b, state);
+  if (!friend) {
+    renderDeepSection($("#deep-section", dlg), b.id, state.user, b.title);
+    renderAudioSection($("#audio-section", dlg), data, b, state);
+    bindBookCollections(dlg, b.id, manager, data.collections || []);
+  }
   renderBookLibby($("#libby-section", dlg), b.id);
   bindStars(dlg, b.id);
   bindFinished(dlg, b.id);
-  bindBookCollections(dlg, b.id, manager, data.collections || []);
 }
 
 // realPaths are a copy's files, without the markers of books that came from a

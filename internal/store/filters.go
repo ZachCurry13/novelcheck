@@ -114,6 +114,13 @@ func visibilityClause(u *User) (string, []any) {
 		clause += " AND EXISTS (SELECT 1 FROM collection_books kb JOIN user_collections kc ON kc.collection_id = kb.collection_id WHERE kb.book_id = b.id AND kc.user_id = ?)"
 		args = append(args, u.ID)
 	}
+	// A friend sees only books on Discover, in an event, in her own library or
+	// on her own reading list, and never one any family library holds.
+	if u.Role == RoleFriend {
+		fc, fa := friendClause(u)
+		clause += fc
+		args = append(args, fa...)
+	}
 	// Private libraries: a book only in someone else's private library is
 	// seen by its owner and the admins only.
 	if u.Role != RoleAdmin {

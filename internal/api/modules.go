@@ -20,6 +20,11 @@ type meJSON struct {
 
 func (s *Server) me(u *store.User) meJSON {
 	out := meJSON{User: u, Modules: s.Store.Modules(), DeliveryFrom: s.Store.Setting(store.KeySMTPFrom)}
+	if u.IsFriend() { // the family's tools are off on a friend's account, so the app hides them
+		for _, m := range []string{"queue", "send_to_kindle", "koreader", "import", "parents", "suggestions", "taste"} {
+			out.Modules[m] = false
+		}
+	}
 	if u.Can(store.AreaSystem) {
 		out.SafeMode = s.Safe.Reason()
 	}

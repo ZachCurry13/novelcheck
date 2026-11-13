@@ -23,10 +23,13 @@ import { renderSharingCard } from "./sharing.js";
 const SECTIONS = { general: "General", account: "Account", kindle: "Kindle & KOReader", connections: "Connections", developer: "Developer" };
 
 // sectionFromHash reads #/settings?s=kindle.
-const sectionFromHash = () => {
+const sectionFromHash = (u) => {
   const s = new URLSearchParams(location.hash.split("?")[1] || "").get("s");
-  return SECTIONS[s] ? s : "general";
+  return sectionsFor(u)[s] ? s : "general";
 };
+
+// A friend's account has no Kindle sync or family device: no Kindle & KOReader tab.
+const sectionsFor = (u) => (u?.role === "friend" ? Object.fromEntries(Object.entries(SECTIONS).filter(([k]) => k !== "kindle")) : SECTIONS);
 
 function generalHTML(u) {
   return `${profileExtrasHTML(u)}
@@ -49,8 +52,8 @@ const accountHTML = (u) => `<form id="password" class="card space-y-3">
     <input name="new_password" type="password" required minlength="8" placeholder="New password (8+ chars)" class="input" autocomplete="new-password">
     <button class="btn-primary">Update password</button>
   </form>
-  <div id="sharing-card" class="card space-y-3 lg:col-span-2"></div>
-  ${familyCardHTML(u)}`;
+  ${u.role === "friend" ? "" : `<div id="sharing-card" class="card space-y-3 lg:col-span-2"></div>
+  ${familyCardHTML(u)}`}`;
 
 function kindleHTML(u) {
   const off = on(u, "koreader") ? "" : " module-off";
@@ -66,10 +69,10 @@ const connectionsHTML = () => `<div id="hardcover-card" class="card space-y-2"><
 
 export async function renderSettings(view, state) {
   const u = state.user;
-  let section = sectionFromHash();
+  let section = sectionFromHash(u);
   const draw = () => {
     view.innerHTML = `<h1 class="mb-3 page-title">Settings</h1>
-      ${tabStrip({ id: "settings-tabs", attr: "data-section", label: "Settings", active: section, tabs: Object.entries(SECTIONS) })}
+      ${tabStrip({ id: "settings-tabs", attr: "data-section", label: "Settings", active: section, tabs: Object.entries(sectionsFor(u)) })}
       <div class="grid gap-4 lg:grid-cols-2">${{ general: () => generalHTML(u), account: () => accountHTML(u), kindle: () => kindleHTML(u), connections: connectionsHTML, developer: () => `<div id="dev-tab" class="contents"></div>` }[section]()}</div>`;
     bind();
   };
@@ -88,8 +91,10 @@ export async function renderSettings(view, state) {
       bindProfileExtras(view);
       renderPushCard($("#push-card", view), u);
     } else if (section === "account") {
-      renderSharingCard($("#sharing-card", view), u);
-      bindFamilyCard(view, draw);
+      if (u.role !== "friend") {
+        renderSharingCard($("#sharing-card", view), u);
+        bindFamilyCard(view, draw);
+      }
       $("#password", view).addEventListener("submit", async (e) => {
         e.preventDefault();
         const ok = await attempt(() => put("/api/me/password", Object.fromEntries(new FormData(e.target))), "Password updated");
@@ -106,7 +111,7 @@ export async function renderSettings(view, state) {
     } else {
       renderHardcover($("#hardcover-card", view));
       renderLibbyCard($("#libby-card", view));
-      renderABSCard($("#abs-card", view));
+      if (u.role !== "friend") renderABSCard($("#abs-card", view)); // the family's audiobook server
     }
   };
   view.onclick = (e) => {

@@ -96,6 +96,14 @@ func (s *Server) handleImportDrive(w http.ResponseWriter, r *http.Request) {
 	// needs its owner (or an admin).
 	u := auth.UserFrom(r)
 	catID := body.CatalogID
+	if u.IsFriend() { // a friend imports into her own library only
+		lib, err := s.Store.FriendLibrary(u)
+		if err != nil {
+			writeStoreErr(w, err)
+			return
+		}
+		catID = lib
+	}
 	if catID == 0 {
 		name, ok := validCatalogName(body.CatalogName)
 		if !ok || store.ReservedCatalogName(name) {

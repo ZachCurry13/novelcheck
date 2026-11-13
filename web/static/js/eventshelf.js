@@ -30,6 +30,7 @@ export function eventWhen(ev) {
 export async function eventShelf(host, id, state, reload) {
   const manager = canManage(state.user);
   const kid = state.user.role === "restricted";
+  const friend = state.user.role === "friend"; // her claims go to her own library
   const [data, cats] = await Promise.all([get(`/api/events/${id}`).catch(() => null), manager ? get("/api/catalogs").catch(() => []) : []]);
   if (!data) {
     host.innerHTML = `<div class="card mb-3 text-sm text-slate-400">That event is gone. <a href="#/events" class="underline">All events</a></div>`;
@@ -91,8 +92,8 @@ export async function eventShelf(host, id, state, reload) {
     const amazon = m.link || (m.asin ? `https://www.amazon.com/dp/${encodeURIComponent(m.asin)}` : `https://www.amazon.com/s?k=${q}&i=digital-text`);
     return `<div data-ev class="flex flex-wrap gap-2">
       ${kid ? "" : `<a href="${esc(amazon)}" target="_blank" rel="noopener noreferrer" class="btn-primary py-1.5 text-sm">${ev.archived_at ? "Amazon ↗" : "Claim on Amazon ↗"}</a>`}
-      ${manager ? `<button data-ev-act="claimed" class="btn-secondary py-1.5 text-sm">✓ I claimed it</button>` : ""}
-      ${m.wished ? `<span class="chip-cat">Wishlist</span>` : `<button data-ev-act="wish" class="btn-ghost py-1.5 text-sm">Wishlist</button>`}
+      ${manager || friend ? `<button data-ev-act="claimed" class="btn-secondary py-1.5 text-sm">✓ I claimed it</button>` : ""}
+      ${friend ? "" : m.wished ? `<span class="chip-cat">Wishlist</span>` : `<button data-ev-act="wish" class="btn-ghost py-1.5 text-sm">Wishlist</button>`}
     </div>`;
   };
   const click = async (e) => {
@@ -104,7 +105,9 @@ export async function eventShelf(host, id, state, reload) {
     if (!act || !m) return true; // the Amazon link, or a gap between the buttons
     e.stopPropagation();
     if (act === "wish" && (await attempt(() => post(`/api/books/${bookID}/wish`, {}), "Added to the wishlist"))) m.wished = true;
-    else if (act === "claimed") {
+    else if (act === "claimed" && friend) {
+      if (await attempt(() => post(`/api/me/events/${id}/books/${bookID}/claim`, {}), `${m.title} is in your library now`)) m.owned = true;
+    } else if (act === "claimed") {
       const lib = host.querySelector("[data-claim-lib]")?.value;
       if (!lib || lib === "new") return toast("Pick the library claimed books go to (at the top)", true), true;
       if (await attempt(() => post(`/api/events/${id}/books/${bookID}/claim`, { catalog_id: Number(lib) }), `${m.title} is in your library now`)) m.owned = true;

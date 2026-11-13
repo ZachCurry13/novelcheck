@@ -18,12 +18,13 @@ const PAGES = [
   ["library", "Library", () => true],
   ["discover", "Discover", (u) => on(u, "discover")],
   ["queue", "▶️ Nightstand", (u) => on(u, "queue")],
-  ["collections", "Collections", () => true],
-  ["wishlist", "Wishlist", () => true],
+  ["collections", "Collections", (u) => u.role !== "friend"],
+  ["wishlist", "Wishlist", (u) => u.role !== "friend"],
+  ["stats", "Reading stats", (u) => u.role === "friend"],
 ];
 
 export function profileExtrasHTML(u) {
-  const def = canManage(u) ? "Check a book" : "Library";
+  const def = canManage(u) ? "Check a book" : u.role === "friend" ? "Discover" : "Library";
   return `
     ${canManage(u) ? `<div class="card space-y-2">
       <h2 class="text-lg font-semibold">Add books</h2>

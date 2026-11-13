@@ -19,10 +19,14 @@ func (s *Store) ListCatalogs(viewer *User) ([]Catalog, error) {
 		id = viewer.ID
 	}
 	cs := []Catalog{}
+	shared := "c.private = 0 OR "
+	if viewer.IsFriend() {
+		shared = "" // a friend has only her own
+	}
 	err := s.DB.Select(&cs, `SELECT `+catalogCols+`,
 		(SELECT COUNT(DISTINCT book_id) FROM catalog_books cb WHERE cb.catalog_id = c.id) AS book_count
 		FROM catalogs c LEFT JOIN users u ON u.id = c.owner_id
-		WHERE c.name NOT IN (?, ?) AND (? OR c.private = 0 OR c.owner_id = ?) ORDER BY c.name`, DiscoverCatalog, EventsCatalog, all, id)
+		WHERE c.name NOT IN (?, ?) AND (? OR `+shared+`c.owner_id = ?) ORDER BY c.name`, DiscoverCatalog, EventsCatalog, all, id)
 	return cs, err
 }
 

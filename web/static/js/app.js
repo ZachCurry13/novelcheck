@@ -66,6 +66,8 @@ const routes = {
   events: renderEvents,
 };
 const managerRoutes = new Set(["check", "import", "shelf", "admin", "duplicates"]);
+// A friend's account (an adult from outside the family) reaches only these.
+const friendRoutes = new Set(["library", "discover", "events", "stats", "wrapped", "profile", "settings", "whatsnew"]);
 // Admin pages and the area each needs (the main admin gives areas).
 const ROUTE_AREA = { system: "system", usage: "system", deletions: "calibre", deepscan: "deep" };
 const moduleRoutes = { queue: "queue", import: "import", shelf: "import" }; // pages an admin can turn off
@@ -115,6 +117,7 @@ function showApp() {
   applyAppearance(state.user);
   $$(".manager-only").forEach((el) => el.classList.toggle("hidden", !canManage(state.user)));
   $$(".admin-only").forEach((el) => el.classList.toggle("hidden", state.user.role !== "admin"));
+  $$(".family-only").forEach((el) => el.classList.toggle("hidden", state.user.role === "friend"));
   applyModules(state.user);
   initBell(state);
   initActivity(state);
@@ -123,7 +126,7 @@ function showApp() {
   buildMobileNav();
   setSearchUser(state.user);
   route();
-  if (!state.user.guide_seen) openGuide(state);
+  if (!state.user.guide_seen && state.user.role !== "friend") openGuide(state); // the guide is about the family's library
   checkForUpdates(state);
   showSafeMode(state.user);
 }
@@ -134,7 +137,9 @@ async function route() {
   beginRoute(); // was this Back or Forward? (decided before the page takes time to draw)
   // Everyone lands on their chosen start page; by default parents on Check a
   // book (the main feature), kids on the Library.
-  let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || state.user.start_page || (canManage(state.user) ? "check" : "library");
+  const friend = state.user.role === "friend";
+  let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || state.user.start_page || (canManage(state.user) ? "check" : friend ? "discover" : "library");
+  if (friend && !friendRoutes.has(name)) name = "discover";
   if (!routes[name] || (managerRoutes.has(name) && !canManage(state.user)) ||
     (ROUTE_AREA[name] && !can(state.user, ROUTE_AREA[name])) ||
     (moduleRoutes[name] && !on(state.user, moduleRoutes[name]))) name = "library";

@@ -129,7 +129,10 @@ func (s *Server) Router() http.Handler {
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.Auth.RequireUser)
+			r.Use(friendGuard) // friends' accounts: only the parts listed in friend.go
 			r.Get("/me", s.handleMe)
+			r.Post("/me/events/{id}/books/{book}/claim", friendOnly(s.handleClaimEventBook)) // into her own library
+			r.Post("/me/import", friendOnly(s.handleImportDrive))                            // her Goodreads list, into her library
 			r.Get("/activity/status", s.handleActivityStatus)
 			r.Post("/activity/events", s.handleActivityEvents)
 			r.Put("/me/pin", s.handleMyPIN)

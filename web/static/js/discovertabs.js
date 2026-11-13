@@ -5,7 +5,7 @@ import { on } from "./modules.js";
 import { tabStrip } from "./tabs.js";
 
 export function discoverTabsHTML(active, user) {
-  const tabs = [["discover", "Discover", on(user, "discover")], ["wishlist", "Wishlist", true], ["events", "Events", true]]
+  const tabs = [["discover", "Discover", on(user, "discover")], ["wishlist", "Wishlist", user?.role !== "friend"], ["events", "Events", true]]
     .filter(([, , shown]) => shown).map(([k, label]) => [k, label, `#/${k}`, false]);
   return tabStrip({ tabs, active, label: "Discover" });
 }

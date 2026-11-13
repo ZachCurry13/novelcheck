@@ -32,6 +32,7 @@ function typeOptions(role, age, viewer, kids = true) {
     opts.push(...AGE_GROUPS.filter(([l]) => l < 5).map(([l, n, r]) => [`restricted:${l}`, `Kid · ${n} (${r})`]));
     opts.push(["restricted:0", "Kid · no age group (content rules only)"]);
   }
+  opts.push(["friend:0", "Friend · an adult who never sees the family's books (Discover, events, Libby, her own library and stats)"]);
   if (viewer?.owner || can(viewer, "users")) opts.push(["editor:0", "Editor (parent, no technical settings)"]);
   if (viewer?.owner || role === "admin") opts.push(["admin:0", "Admin"]); // only the main admin makes admins
   return opts.map(([v, l]) => `<option value="${v}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`).join("");
@@ -70,7 +71,7 @@ export async function renderUsers(host, viewer) {
   root.innerHTML = `
     <h2 class="mb-1 text-xl font-semibold">${parents ? "Users and content rules" : "Kids' accounts and content rules"}</h2>
     <p class="mb-3 text-sm text-slate-400">${parents
-      ? `Main admin: everything, and decides what each other admin can reach. Admin: what the main admin ticks on their card. Editor: manages books, scans and kids' accounts, but no technical settings. Kid: an account filtered by its rules.`
+      ? `Main admin: everything, and decides what each other admin can reach. Admin: what the main admin ticks on their card. Editor: manages books, scans and kids' accounts, but no technical settings. Kid: an account filtered by its rules. Friend: an adult from outside the family who never sees your books, only Discover, events, Libby, her own library and her reading stats.`
       : "Add kid accounts, reset their passwords, and choose what each one can see."}</p>
     <form id="new-user" class="card mb-4 grid gap-3 md:grid-cols-4${kids || parents ? "" : " module-off"}">
       <input name="username" required placeholder="Username" class="input">
@@ -170,7 +171,7 @@ function userCard(u, parents, viewer) {
         <button data-uact="save" class="btn-primary">Save</button>
         <button data-uact="password" class="btn-secondary">Reset password</button>
         ${parents || u.role === "restricted" ? `<button data-uact="pin" class="btn-ghost" title="A 4-digit PIN for family devices">PIN</button>` : ""}
-        ${(parents || u.role === "restricted") && on(viewer, "koreader") ? `<button data-uact="koreader" class="btn-ghost" title="Set up this reader's KOReader">KOReader</button>` : ""}
+        ${(parents || u.role === "restricted") && u.role !== "friend" && on(viewer, "koreader") ? `<button data-uact="koreader" class="btn-ghost" title="Set up this reader's KOReader">KOReader</button>` : ""}
         ${u.owner ? "" : `<button data-uact="delete" class="btn-danger">Delete</button>`}
       </div>
     </div>`;
@@ -178,7 +179,7 @@ function userCard(u, parents, viewer) {
 
 // badges sum an account up at a glance: role, and for kids their limits.
 function badges(u) {
-  const role = { admin: [u.owner ? "Main admin" : "Admin", "chip-open"], editor: ["Parent (editor)", "chip-cat"], restricted: ["Kid", "chip-none"] }[u.role] || [u.role, "chip-pending"];
+  const role = { admin: [u.owner ? "Main admin" : "Admin", "chip-open"], editor: ["Parent (editor)", "chip-cat"], restricted: ["Kid", "chip-none"], friend: ["Friend", "chip-pending"] }[u.role] || [u.role, "chip-pending"];
   const out = [`<span class="${role[1]}">${esc(role[0])}</span>`];
   if (u.role === "admin" && !u.owner) {
     const n = (u.admin_areas || "").split(",").filter(Boolean).length;

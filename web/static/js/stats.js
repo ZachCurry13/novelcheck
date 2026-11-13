@@ -18,6 +18,7 @@ import { undatedHTML, saveUndated } from "./statsundated.js";
 import { trophiesTab } from "./trophyview.js";
 import { slides } from "./wrappedslides.js";
 import { openStory } from "./wrappedstory.js";
+import { friendImportHTML, bindFriendImport } from "./friendimport.js";
 
 const TABS = { report: "Highlights", books: "Books", calendar: "Calendar", records: "Records", trophies: "Trophies" };
 const SHARED = ["report", "books", "calendar"]; // what another reader's page shows
@@ -44,6 +45,12 @@ export async function renderStats(view, state, source = {}) {
   const listOnly = !m.rows.length && (m.done.length > 0 || undated.length > 0); // no KOReader reading, but finished books from a list
   if (!m.rows.length && other) {
     view.innerHTML = `${back()}<h1 class="mb-2 text-[1.375rem] leading-7">${esc(name)}'s reading</h1><div class="card text-sm text-slate-300">Nothing to show yet.</div>`;
+    return;
+  }
+  const friend = !other && state.user.role === "friend"; // her reading comes from her Goodreads list
+  if (friend && !m.rows.length && !listOnly) {
+    view.innerHTML = `${heading()}${friendImportHTML(false)}`;
+    bindFriendImport(view, () => renderStats(view, state, source));
     return;
   }
   if (!m.rows.length && !listOnly) {
@@ -79,7 +86,7 @@ export async function renderStats(view, state, source = {}) {
     if (s.tab === "calendar") return calendarTab(m, s.month);
     if (s.tab === "records") return `${other ? "" : undatedHTML(undated)}${recordsTab(m, s)}`;
     if (s.tab === "trophies") return trophiesTab(m);
-    return `<div class="mb-3 flex items-start justify-between gap-2"><h2 class="min-w-0 break-words text-2xl font-semibold">${esc(title())}</h2>${other || listOnly ? "" : `<button type="button" data-share class="btn-tonal shrink-0 px-4 py-1.5">Share</button>`}</div>${picker()}${listOnly ? undatedHTML(undated) : ""}<div class="space-y-4">${listOnly ? listReport(m, s) : reportHTML(m, s)}</div>`;
+    return `<div class="mb-3 flex items-start justify-between gap-2"><h2 class="min-w-0 break-words text-2xl font-semibold">${esc(title())}</h2>${other || listOnly ? "" : `<button type="button" data-share class="btn-tonal shrink-0 px-4 py-1.5">Share</button>`}</div>${picker()}${listOnly ? undatedHTML(undated) : ""}<div class="space-y-4">${listOnly ? listReport(m, s) : reportHTML(m, s)}${friend ? friendImportHTML(true) : ""}</div>`;
   };
 
   const draw = (top = false) => {
@@ -89,6 +96,7 @@ export async function renderStats(view, state, source = {}) {
       ${body()}
       <p class="mt-6 text-xs text-slate-500">Days and hours use this device's time zone. Time is time with a page open (long pauses are cut short); pages are different pages seen. Books and details come from your library where NovelCheck knows the book.</p>`;
     setBars(view);
+    if (friend) bindFriendImport(view, () => renderStats(view, state, source));
     if (top) window.scrollTo(0, 0);
   };
   const open = (page) => {

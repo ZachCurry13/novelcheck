@@ -4,6 +4,18 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.75.0]
+
+### 🤝 Friends' accounts
+- **A new kind of account: Friend.** For an adult from outside the family who wants Discover, the free-book events and Libby, but not your library. A parent or admin adds one in Users (pick "Friend" as the type).
+- **She never sees a book any family library holds**, anywhere: not in the Library, search, Discover, events, a book's page, its cover or a download. Your Kindle, Calibre and audiobook files are closed to her, and so are KOReader's sync, catalog and file sharing, Collections, the Nightstand, the family wishlist (no requests to buy), Readers, the family's shared devices and the bell.
+- **What she has:** Discover (the outside lists only), Events with **Claim on Amazon** and **✓ I claimed it**, which files the book in her own private library, Libby availability and holds, ratings, and Hardcover if she uses it.
+- **Her reading stats, Wrapped and trophies** from her Goodreads (or StoryGraph) export: Stats → **Choose the file**. The books on her "read" shelf go to her own library and her numbers.
+- Her menu shows Library (her own books), Discover, Stats, Profile and Settings; the welcome guide about the family's library is skipped.
+
+### 📚 Titles with the author stuck on
+- **Titles like "Cornwell, Patricia_From Potter's Field" are tidied** to "From Potter's Field": the book's own author is taken off the front or the end of its title ("Patricia Cornwell - Postmortem", "Postmortem by Patricia Cornwell"), and a file name's underscores become spaces. Only the book's own author is taken off, so "Eleanor Oliphant Is Completely Fine" stays as it is. The library is tidied when NovelCheck starts, the cover finder then searches by the real title, and the old titles are offered as fixes for Calibre (Library cleanup → titles to tidy in Calibre).
+
 ## [1.74.1]
 
 ### 🎁 A Linktree as one event per list

@@ -117,7 +117,7 @@ export async function renderDiscover(view, state) {
     <section>
       <h2 class="mb-2 text-lg font-semibold">${r.icon} ${esc(r.title)} <span class="text-sm font-normal text-slate-500">${r.books.length}</span></h2>
       ${r.books.some((b) => b.list?.startsWith("nyt:")) ? `<p class="-mt-1 mb-2 text-xs text-slate-500">From The New York Times Best Sellers lists · ${NYT_CREDIT}</p>` : ""}
-      <div data-row="${esc(r.key)}" class="flex snap-x gap-3 overflow-x-auto px-px pt-1 pb-2">${r.books.map((b) => card(b, kid, queueOn)).join("")}</div>
+      <div data-row="${esc(r.key)}" class="flex snap-x gap-3 overflow-x-auto px-px pt-1 pb-2">${r.books.map((b) => card(b, kid, queueOn, state.user.role !== "friend")).join("")}</div>
     </section>`).join("") : `<p class="text-slate-400">${emptyText(data, state.user)}</p>`;
     rows.querySelectorAll("[data-row]").forEach((r) => (r.scrollLeft = scrolled[r.dataset.row] || 0));
     credit(data);
@@ -166,7 +166,7 @@ function emptyText(data, user) {
     : "No lists yet. Check back later.";
 }
 
-function card(b, kid, queueOn) {
+function card(b, kid, queueOn, wishOn = true) { // wishOn: a friend's account has no family wishlist
   const lvl = b.spice_level;
   const rated = b.status === "analyzed" && lvl !== null && lvl !== undefined;
   const pepper = rated ? `<span class="chip-none" title="Level ${lvl}: ${esc(PEPPERS[lvl].name)}">${pepperIcons(lvl)}</span>`
@@ -176,7 +176,7 @@ function card(b, kid, queueOn) {
   let action = "";
   if (b.owned && queueOn) {
     action = b.queued ? `<span class="text-xs text-slate-400">✓ On your Nightstand</span>` : `<button data-act="queue" class="btn-secondary px-2 py-1 text-xs">＋ Nightstand</button>`;
-  } else if (!b.owned) {
+  } else if (!b.owned && wishOn) {
     action = b.wished ? `<span class="text-xs text-slate-400">On wishlist</span>` : `<button data-act="wish" class="btn-secondary px-2 py-1 text-xs">Wishlist</button>`;
   }
   return `<article data-book="${b.id}" class="card flex w-44 shrink-0 snap-start cursor-pointer flex-col gap-2 p-3">

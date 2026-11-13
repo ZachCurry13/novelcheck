@@ -150,7 +150,16 @@ func (s *Server) handleClaimEventBook(w http.ResponseWriter, r *http.Request) {
 	if !ok1 || !ok2 || !readJSON(w, r, &body, 1<<10) {
 		return
 	}
-	switch err := s.Store.ClaimEventBook(id, book, body.CatalogID, auth.UserFrom(r)); {
+	u := auth.UserFrom(r)
+	if u.IsFriend() { // a friend's books always go to her own library
+		lib, err := s.Store.FriendLibrary(u)
+		if err != nil {
+			writeStoreErr(w, err)
+			return
+		}
+		body.CatalogID = lib
+	}
+	switch err := s.Store.ClaimEventBook(id, book, body.CatalogID, u); {
 	case err == store.ErrNotLibrary:
 		writeErr(w, http.StatusBadRequest, err.Error())
 	case err != nil:

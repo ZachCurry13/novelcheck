@@ -32,14 +32,22 @@ func New(db *sqlx.DB) *Store { return &Store{DB: db} }
 //   - editor:     day-to-day management (scans, verdict corrections, drive
 //     imports, kids' accounts) without the technical settings
 //   - restricted: kid account, filtered by its content rules
+//   - friend:     an adult from outside the family who never sees the family's
+//     libraries: Discover, events, Libby, her own library and reading stats
 const (
 	RoleAdmin      = "admin"
 	RoleEditor     = "editor"
 	RoleRestricted = "restricted"
+	RoleFriend     = "friend"
 )
 
 // ValidRole reports whether r is a known role.
-func ValidRole(r string) bool { return r == RoleAdmin || r == RoleEditor || r == RoleRestricted }
+func ValidRole(r string) bool {
+	return r == RoleAdmin || r == RoleEditor || r == RoleRestricted || r == RoleFriend
+}
+
+// IsFriend: an account that never sees the family's libraries (see friend.go).
+func (u *User) IsFriend() bool { return u != nil && u.Role == RoleFriend }
 
 type User struct {
 	ID              int64    `db:"id" json:"id"`

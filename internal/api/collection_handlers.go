@@ -51,6 +51,10 @@ func (s *Server) seasonFilter(f *store.BookFilter, key string) {
 }
 
 func (s *Server) handleListCollections(w http.ResponseWriter, r *http.Request) {
+	if auth.UserFrom(r).IsFriend() {
+		writeJSON(w, http.StatusOK, []any{}) // the family's shelves are not a friend's
+		return
+	}
 	cs, err := s.Store.ListCollections(auth.UserFrom(r))
 	if err != nil {
 		writeStoreErr(w, err)

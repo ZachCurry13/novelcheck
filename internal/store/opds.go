@@ -40,5 +40,9 @@ func (s *Store) UserByOPDSToken(token string) (*User, error) {
 	if len(token) != 40 || s.DB.Get(&id, `SELECT user_id FROM opds_tokens WHERE token = ?`, token) != nil {
 		return nil, ErrNotFound
 	}
-	return s.UserByID(id)
+	u, err := s.UserByID(id)
+	if err == nil && u.IsFriend() { // a friend's account never reaches the libraries' files
+		return nil, ErrNotFound
+	}
+	return u, err
 }
