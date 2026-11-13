@@ -35,7 +35,7 @@ type CopyKey struct {
 
 // UpsertCalibreBook adds or updates the book for a Calibre entry and returns its id.
 func (s *Store) UpsertCalibreBook(catalogID int64, e CalibreEntry) (int64, error) {
-	t := titles.Parse(e.Title)
+	t := titles.Parse(titles.WithoutAuthor(e.Title, e.Authors))
 	if t.Title == "" {
 		return 0, errors.New("title required")
 	}
@@ -140,7 +140,7 @@ func (s *Store) TidyTitles() (int, error) {
 	}
 	n := 0
 	for _, b := range books {
-		t := titles.Parse(b.Title)
+		t := titles.Parse(titles.WithoutAuthor(b.Title, b.Author))
 		if t.Title == strings.Join(strings.Fields(b.Title), " ") {
 			continue
 		}

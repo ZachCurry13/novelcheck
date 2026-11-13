@@ -32,7 +32,7 @@ const derivedCols = `, COALESCE((SELECT GROUP_CONCAT(f, ',') FROM (SELECT DISTIN
 func (s *Store) UpsertBook(title, author, isbn, description string) (int64, error) {
 	// "**" is bold marking left over from lists copied out of AI chats.
 	title, author = strings.ReplaceAll(title, "**", ""), strings.ReplaceAll(author, "**", "")
-	t := titles.Parse(title)
+	t := titles.Parse(titles.WithoutAuthor(title, author))
 	if t.Title == "" {
 		return 0, errors.New("title required")
 	}
