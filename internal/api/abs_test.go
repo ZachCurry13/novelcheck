@@ -95,7 +95,8 @@ func TestAudiobookshelf(t *testing.T) {
 		t.Fatalf("sync: %d", res.StatusCode)
 	}
 	for i := 0; i < 100; i++ {
-		if _, out := admin.do("GET", "/api/admin/audiobookshelf", nil, false); out["busy"] == false && out["audiobooks"].(float64) == 2 {
+		if _, out := admin.do("GET", "/api/admin/audiobookshelf", nil, false); out["busy"] == false && out["audiobooks"].(float64) == 2 &&
+			out["result"] != "" { // the result line is written just after the count
 			break
 		}
 		time.Sleep(50 * time.Millisecond)
