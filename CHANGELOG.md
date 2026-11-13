@@ -10,7 +10,8 @@ becomes the release notes for that version and is shown in the app under
 - **Make each list its own event** (on by default) when you read a Linktree of lists: each list (Kids, Mystery, Thrillers…) is read and saved as its own event, named with the list and the day, one after another with a count as it goes. A page of a dozen lists comes in whole, and kids' lists stay apart from the 18+ ones. Untick it to put the lists in one event as before. You can give them an end time.
 
 ### 💸 Money spent counts Gemini's thinking
-- **Spent to date was too low with Gemini.** Gemini thinks before it answers and bills that thinking as output, but its answers don't count it with the rest of the output; NovelCheck now counts it. Earlier calls can't be recounted, so the total grows from here. Your own AI (Ollama) still counts as free unless you enter its watts.
+- **Spent to date was too low with Gemini.** Gemini thinks before it answers and bills that thinking as output, but its answers don't count it with the rest of the output; NovelCheck now counts it. Earlier calls can't be recounted, so the total grows from here.
+- **Electricity for calls already made.** Enter your machines' watts in Admin → Machines & costs (with the price per kWh) and NovelCheck works out what every call so far cost in electricity, from how long each one took, not just the calls from now on. Spent to date shows how much of it is electricity. Change the watts later and it counts again.
 
 ## [1.74.0]
 

@@ -180,6 +180,12 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
+	for _, k := range []string{store.KeyPowerPrice, store.KeyMainWatts, store.KeyBackupWatts, store.KeyDeepWatts} {
+		if _, ok := save[k]; ok {
+			_, _ = s.Store.RecountElectricity() // past calls too: their times are kept
+			break
+		}
+	}
 	for k := range save {
 		if strings.HasPrefix(k, "events_") {
 			events.Poke() // look for free books now, with the new settings
