@@ -20,11 +20,12 @@ var (
 	attrRe    = regexp.MustCompile(`(?is)\b(?:title|aria-label|alt)\s*=\s*["']([^"']{3,300})["']`)
 	asinRe    = regexp.MustCompile(`(?i)/(?:dp|gp/product|gp/aw/d|d)/([A-Z0-9]{10})(?:[/?#]|$)`)
 	headingRe = regexp.MustCompile(`(?is)<h[1-5][^>]*>(.*?)</h[1-5]>`)
+	navRe     = regexp.MustCompile(`(?i)\bclass\s*=\s*["'][^"']*\bnav_a\b`)
 	tagRe     = regexp.MustCompile(`(?s)<[^>]*>`)
 	spaceRe   = regexp.MustCompile(`\s+`)
 	lineNoise = regexp.MustCompile(`(?i)^[\s\-•*·\d.)]+|\s*[(\[]?(free|\$\s?0\.00|0,00\s?€|kindle edition|ebook)[)\]]?\s*$`)
 	// Link texts that say what to do, not which book.
-	genericRe = regexp.MustCompile(`(?i)^(buy|get|grab|claim|download|free|view|see|shop|read|amazon|kindle|click|here|more|link|now|on|it|the|book|this|for|at|a|an|copy|your|you|store|e-?book|details|\W)+$`)
+	genericRe = regexp.MustCompile(`(?i)^(buy|get|grab|claim|download|free|view|see|shop|read|amazon|kindle|click|here|more|link|now|on|it|the|book|this|for|at|a|an|copy|your|you|store|e-?book|details|quick|all|buying|options|add|to|cart|list|\W)+$`)
 	// "By Author" just after a book's link (or its heading's).
 	byRe = regexp.MustCompile(`(?is)^(?:[^<]{0,3}|.{0,600}?>)\s*by\s+([^<>]{2,80}?)\s*<`)
 )
@@ -78,6 +79,7 @@ func Parse(htmlText, plain string) []store.EventEntry {
 func fromHTML(page string) []store.EventEntry {
 	var out []store.EventEntry
 	ms := anchorRe.FindAllStringSubmatchIndex(page, -1)
+	site := amazonSite(page)
 	hrefs := make([]string, len(ms))
 	for i, m := range ms {
 		if hm := hrefRe.FindStringSubmatch(page[m[2]:m[3]]); hm != nil {
@@ -85,9 +87,10 @@ func fromHTML(page string) []store.EventEntry {
 		}
 	}
 	for i, m := range ms {
-		attrs, inner, link := page[m[2]:m[3]], page[m[4]:m[5]], hrefs[i]
-		if !isAmazon(link) {
-			continue
+		attrs, inner := page[m[2]:m[3]], page[m[4]:m[5]]
+		link, ok := bookLink(hrefs[i], site)
+		if !ok || navRe.MatchString(attrs) {
+			continue // Amazon's own menus and footer (nav_a) are not on the list
 		}
 		e := store.EventEntry{Link: link}
 		if am := asinRe.FindStringSubmatch(link); am != nil {
@@ -96,9 +99,13 @@ func fromHTML(page string) []store.EventEntry {
 		title := text(inner)
 		if genericRe.MatchString(title) || title == "" {
 			title = ""
-			if am := attrRe.FindStringSubmatch(inner + " " + attrs); am != nil && !genericRe.MatchString(html.UnescapeString(am[1])) {
-				title = html.UnescapeString(am[1])
-			} else if hs := headingRe.FindAllStringSubmatch(page[max(0, m[0]-1500):m[0]], -1); len(hs) > 0 {
+			for _, am := range attrRe.FindAllStringSubmatch(attrs+" "+inner, -1) {
+				if t := html.UnescapeString(am[1]); !genericRe.MatchString(t) && !strings.HasPrefix(strings.ToLower(t), "quick view") {
+					title = t // the link's own name first, then a picture's
+					break
+				}
+			}
+			if hs := headingRe.FindAllStringSubmatch(page[max(0, m[0]-1500):m[0]], -1); title == "" && len(hs) > 0 {
 				title = text(hs[len(hs)-1][1]) // the nearest heading before the button
 			}
 		}
@@ -109,7 +116,7 @@ func fromHTML(page string) []store.EventEntry {
 		// The author: "By …" after the link, before the next book's link.
 		end := min(len(page), m[1]+700)
 		for j := i + 1; j < len(ms) && ms[j][0] < end; j++ {
-			if hrefs[j] != link && isAmazon(hrefs[j]) {
+			if _, ok := bookLink(hrefs[j], site); ok && hrefs[j] != hrefs[i] {
 				end = ms[j][0]
 			}
 		}
@@ -119,11 +126,6 @@ func fromHTML(page string) []store.EventEntry {
 		out = append(out, e)
 	}
 	return out
-}
-
-func isAmazon(link string) bool {
-	l := strings.ToLower(link)
-	return strings.Contains(l, "amazon.") || strings.Contains(l, "amzn.to/") || strings.Contains(l, "a.co/")
 }
 
 // text is HTML as plain words.

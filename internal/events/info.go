@@ -11,12 +11,19 @@ var (
 	h1Re       = regexp.MustCompile(`(?is)<h1[^>]*>(.*?)</h1>`)
 	dayRe      = regexp.MustCompile(`(?i)\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})\b`)
 	titleSepRe = regexp.MustCompile(`\s+[|—–-]\s+`)
+	// An Amazon wish list's own name; its page title is just "Amazon.com".
+	listNameRe = regexp.MustCompile(`(?is)<[a-z0-9]+\b[^>]*\bid\s*=\s*["']profile-list-name["'][^>]*>(.*?)</`)
 )
 
 // Info guesses an event's name and day from its page's title or top
 // heading: "Romance Day — October 2, 2026" gives "Romance Day" and
 // "2026-10-02". Either may be "".
 func Info(page string) (name, day string) {
+	if m := listNameRe.FindStringSubmatch(page); m != nil {
+		if t := text(m[1]); t != "" {
+			return t, ""
+		}
+	}
 	var heads []string
 	for _, re := range []*regexp.Regexp{titleTagRe, h1Re} {
 		if m := re.FindStringSubmatch(page); m != nil {

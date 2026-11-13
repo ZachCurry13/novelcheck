@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.73.2]
+
+### 🎁 Events from an Amazon wish list
+- **Pasting a shared Amazon wish list now reads its books.** The list's books were skipped and Amazon's own menu and footer links (Careers, Press Center, Accessibility) were saved as the event's "books" instead. Now every book on the list comes in with its title and Amazon link, including the books Amazon shows only after scrolling (a 71-book list reads all 71), and the event is named after the list.
+- **Review covers** keeps each cover the right shape again (a style rule was missing from the built stylesheet).
+
 ## [1.73.1]
 
 ### 🗑️ Calibre's recycle bin, checked against your library

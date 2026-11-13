@@ -20,6 +20,8 @@ var (
 	moreRe = regexp.MustCompile(`(?is)<(?:button|a)\b([^>]*)>(?:\s|<[^>]*>)*(?:load|show|see|view)\s+more\b`)
 	attrKV = regexp.MustCompile(`(?is)\b(data-[a-z-]+|href)\s*=\s*["']([^"']*)["']`)
 	nextRe = regexp.MustCompile(`(?is)<(?:link|a)\b[^>]*\brel\s*=\s*["']next["'][^>]*>`)
+	// An Amazon wish list keeps the address of its next items here.
+	showMoreRe = regexp.MustCompile(`(?is)<input\b[^>]*\bname\s*=\s*["']showMoreUrl["'][^>]*\bvalue\s*=\s*["']([^"']+)["']`)
 )
 
 const (
@@ -112,6 +114,9 @@ func followLinks(ctx context.Context, page *url.URL, body string) string {
 
 // nextLink is where the rest of the list is, on the same site.
 func nextLink(base *url.URL, body string) *url.URL {
+	if m := showMoreRe.FindStringSubmatch(body); m != nil {
+		return sameSite(base, html.UnescapeString(m[1]))
+	}
 	if m := nextRe.FindString(body); m != "" {
 		return sameSite(base, attrs(m)["href"])
 	}
