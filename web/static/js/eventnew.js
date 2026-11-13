@@ -5,6 +5,7 @@
 // changes when it ends.
 import { post, patch } from "./api.js";
 import { esc, attempt } from "./ui.js";
+import { saveEachList } from "./eventlists.js";
 
 // A time as a date-and-time box shows it (the viewer's own time), and back.
 const pad = (n) => String(n).padStart(2, "0");
@@ -59,6 +60,9 @@ export function openNewEvent() {
       <div class="space-y-1">${lists.map((l) => `<label class="flex items-center gap-3 rounded-lg px-2 py-2 text-sm hover:bg-slate-800">
         <input type="checkbox" data-list value="${esc(l.url)}" data-name="${esc(l.name)}" ${l.picked ? "checked" : ""} class="h-5 w-5">
         <span>${esc(l.name)}</span></label>`).join("")}</div>
+      <label class="flex items-start gap-3 rounded-lg bg-slate-800 p-3 text-sm"><input type="checkbox" data-each checked class="mt-0.5 h-5 w-5">
+        <span>Make each list its own event<span class="block text-xs text-slate-400">Kids' lists stay apart from the 18+ ones, and no event gets too big. Untick to put them all in one event.</span></span></label>
+      ${endsField()}
       <button type="button" data-read-lists class="btn-primary w-full">Read the chosen lists</button>`;
   };
   const showBooks = (r) => {
@@ -85,11 +89,26 @@ export function openNewEvent() {
       if (r.lists?.length && !r.books.length) return showLists(r.lists);
       return showBooks(r);
     }
+    if (e.target.closest("[data-see-events]")) {
+      d.close();
+      if (location.hash === "#/events") return window.dispatchEvent(new HashChangeEvent("hashchange")); // draw the new ones
+      location.hash = "#/events";
+      return;
+    }
     if (e.target.closest("[data-read-lists]")) {
       const btn = e.target.closest("[data-read-lists]");
       const picked = [...found.querySelectorAll("input[data-list]:checked")].map((c) => ({ url: c.value, name: c.dataset.name }));
       if (!picked.length) return;
       btn.disabled = true;
+      if (found.querySelector("[data-each]")?.checked) {
+        const { made, failed } = await saveEachList(picked, fromBox(form.ends.value), (msg) => (btn.textContent = msg));
+        found.innerHTML = `<p class="rounded-lg bg-slate-800 p-3 text-sm">Made <b>${made.length} event${made.length === 1 ? "" : "s"}</b>:
+          <span class="mt-1 block">${made.map((m) => `<a class="text-indigo-300" href="#/library?event=${m.id}">${esc(m.name)}</a> (${m.books})`).join(" · ")}</span>
+          ${failed.length ? `<span class="mt-2 block text-slate-400">Not read: ${failed.map(esc).join(", ")}. Try those again in a minute.</span>` : ""}</p>
+          <p class="text-xs text-slate-400">Books NovelCheck hasn't rated yet are rated first in line, within your hourly AI limit.</p>
+          <button type="button" data-see-events class="btn-primary w-full">See the events</button>`;
+        return;
+      }
       btn.textContent = `Reading ${picked.length} list${picked.length === 1 ? "" : "s"}… (about ${Math.max(5, Math.ceil(picked.length / 4) * 8)} seconds)`;
       const r = await attempt(() => post("/api/events/preview", { urls: picked.map((p) => p.url) }));
       btn.disabled = false;

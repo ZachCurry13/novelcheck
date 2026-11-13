@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.74.1]
+
+### 🎁 A Linktree as one event per list
+- **Make each list its own event** (on by default) when you read a Linktree of lists: each list (Kids, Mystery, Thrillers…) is read and saved as its own event, named with the list and the day, one after another with a count as it goes. A page of a dozen lists comes in whole, and kids' lists stay apart from the 18+ ones. Untick it to put the lists in one event as before. You can give them an end time.
+
+### 💸 Money spent counts Gemini's thinking
+- **Spent to date was too low with Gemini.** Gemini thinks before it answers and bills that thinking as output, but its answers don't count it with the rest of the output; NovelCheck now counts it. Earlier calls can't be recounted, so the total grows from here. Your own AI (Ollama) still counts as free unless you enter its watts.
+
 ## [1.74.0]
 
 ### 🎁 Free books found by themselves

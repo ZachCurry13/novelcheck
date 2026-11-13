@@ -29,6 +29,26 @@ type Usage struct {
 
 func (u Usage) Total() int { return u.PromptTokens + u.CompletionTokens }
 
+// UnmarshalJSON reads an answer's token counts. Gemini's OpenAI-style answers
+// leave its thinking out of completion_tokens but count it in total_tokens,
+// and Google bills thinking as output: the difference is counted as output,
+// so the money spent isn't shown too low. (OpenAI's own total adds up.)
+func (u *Usage) UnmarshalJSON(b []byte) error {
+	var raw struct {
+		Prompt     int `json:"prompt_tokens"`
+		Completion int `json:"completion_tokens"`
+		Total      int `json:"total_tokens"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	u.PromptTokens, u.CompletionTokens = raw.Prompt, raw.Completion
+	if extra := raw.Total - raw.Prompt - raw.Completion; extra > 0 {
+		u.CompletionTokens += extra
+	}
+	return nil
+}
+
 type message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
