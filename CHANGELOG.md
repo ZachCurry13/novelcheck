@@ -1251,7 +1251,7 @@ becomes the release notes for that version and is shown in the app under
 ## [1.8.1]
 
 ### Fixed
-- **Ollama address without `http://`**: typing an address like `10.13.6.41:30068` broke book rating ("first path segment in URL cannot contain colon"). NovelCheck now fills in `http://` and Ollama's `/v1` for you, including for an address you already saved.
+- **Ollama address without `http://`**: typing an address like `192.168.1.50:30068` broke book rating ("first path segment in URL cannot contain colon"). NovelCheck now fills in `http://` and Ollama's `/v1` for you, including for an address you already saved.
 - **Find Ollama button missing**: with the TrueNAS Ollama app's port (30068), the AI provider showed as "Other" and hid the Ollama easy setup. Port 30068 is now recognized, and your saved address is filled in for **Find Ollama**.
 
 ### New

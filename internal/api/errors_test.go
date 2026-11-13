@@ -14,7 +14,7 @@ func TestErrorsListAndRetry(t *testing.T) {
 		_ = st.SetStatus(id, "error", timeout)
 	}
 	bad, _ := st.UpsertBook("Bad Address", "B", "", "")
-	_ = st.SetStatus(bad, "error", `parse "10.13.6.41:30068/chat/completions": first path segment in URL cannot contain colon`)
+	_ = st.SetStatus(bad, "error", `parse "192.168.1.50:30068/chat/completions": first path segment in URL cannot contain colon`)
 
 	res, out := admin.do("GET", "/api/admin/errors", nil, false)
 	groups, _ := out["groups"].([]any)

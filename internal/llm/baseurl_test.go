@@ -8,8 +8,8 @@ import (
 func TestNormalizeBaseURL(t *testing.T) {
 	cases := map[string]string{
 		"":                           "",
-		"10.13.6.41:30068":           "http://10.13.6.41:30068/v1",
-		"10.13.6.41:30068/":          "http://10.13.6.41:30068/v1",
+		"192.168.1.50:30068":         "http://192.168.1.50:30068/v1",
+		"192.168.1.50:30068/":        "http://192.168.1.50:30068/v1",
 		"http://ollama:11434/v1":     "http://ollama:11434/v1",
 		"https://api.openai.com/v1/": "https://api.openai.com/v1",
 		"https://api.openai.com/v1/chat/completions": "https://api.openai.com/v1",
@@ -28,7 +28,7 @@ func TestTimeout(t *testing.T) {
 		override int
 		want     time.Duration
 	}{
-		{"10.13.6.41:30068", 0, 10 * time.Minute},
+		{"192.168.1.50:30068", 0, 10 * time.Minute},
 		{"http://ollama:11434/v1", 0, 10 * time.Minute},
 		{"http://192.168.1.20:8000/v1", 0, 10 * time.Minute},
 		{"https://api.openai.com/v1", 0, 2 * time.Minute},
