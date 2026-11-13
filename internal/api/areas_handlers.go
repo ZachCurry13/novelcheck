@@ -38,7 +38,7 @@ func settingArea(k string) string {
 	case strings.HasPrefix(k, "calibre_") || k == "format_keep":
 		return store.AreaCalibre
 	case strings.HasPrefix(k, "smtp_") || strings.HasPrefix(k, "abs_") || k == "nyt_api_key" || strings.HasPrefix(k, "discover_") ||
-		strings.HasPrefix(k, "events_auto_"):
+		strings.HasPrefix(k, "events_"):
 		return store.AreaServices
 	case strings.HasPrefix(k, "module_") || strings.HasPrefix(k, "tunnel_") || k == "session_days" ||
 		k == "check_updates" || k == "notify_routine":

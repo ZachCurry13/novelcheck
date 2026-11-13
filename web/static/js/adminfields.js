@@ -73,6 +73,10 @@ export const SECTIONS = [
   ["delivery", "Free book events", [
     ["events_auto_syk", "Make each Stuff Your Kindle day an event on its day (checked every 3 hours)", "", "bool"],
     ["events_auto_reddit", "Keep a \"Free right now\" event of the books posted to Reddit's r/FreeEBOOKS in the last 4 days", "", "bool"],
+    ["events_auto_bookbub", "Keep a \"BookBub free today\" event from the newest BookBub email (needs the mailbox below; the AI names the free books)", "", "bool"],
+    ["events_mail_user", "Mailbox BookBub's emails arrive in", "you@gmail.com"],
+    ["events_mail_password", "App password (Gmail: Google Account → Security → 2-Step Verification → App passwords). Read-only: nothing is marked, moved or deleted", "16 letters from Google", "password"],
+    ["events_mail_host", "Mail server (IMAP)", "imap.gmail.com:993"],
   ]],
   ["system", "Features", [
     ["module_queue", "Nightstand reading queue", "", "bool"],

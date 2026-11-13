@@ -16,6 +16,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/events"
 	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/hardcover"
+	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -46,9 +47,12 @@ func (b *background) start(ctx context.Context) {
 			"you can Deep Scan them again from the Deep Scan page.", len(old)), "#/deepscan")
 	}
 	go b.collections.Loop(ctx)
-	go events.Loop(ctx, b.st)                    // events are archived when they end
-	go events.Watch(ctx, b.st, b.worker.Enqueue) // Stuff Your Kindle days and books free right now, every 3 hours
-	go b.aiTools.Loop(ctx)                       // daily: newer versions of the Ollama models in use
+	go events.Loop(ctx, b.st) // events are archived when they end
+	go events.Watch(ctx, b.st, func(ctx context.Context, system, user string, parse func(string) error) error {
+		_, err := llm.Ask(ctx, b.st, b.st.AIConfigs(), 0, system, user, parse)
+		return err
+	}, b.worker.Enqueue) // Stuff Your Kindle days, books free right now and BookBub's email, every 3 hours
+	go b.aiTools.Loop(ctx) // daily: newer versions of the Ollama models in use
 	go b.syncer.Loop(ctx)
 	go b.deep.Run(ctx)                  // Deep Scans: full-text reading of chosen books, one at a time
 	go b.discover.Loop(ctx)             // outside book lists refreshed daily; their books rated a few dozen a day

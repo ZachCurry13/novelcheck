@@ -99,7 +99,7 @@ func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 			Link   string `json:"link"`
 		} `json:"books"`
 	}
-	if !readJSON(w, r, &body, 2<<20) {
+	if !readJSON(w, r, &body, 4<<20) {
 		return
 	}
 	name := strings.TrimSpace(body.Name)
@@ -113,7 +113,7 @@ func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(body.Books) == 0 || len(body.Books) > events.MaxBooks {
-		writeErr(w, http.StatusBadRequest, "an event needs 1 to 500 books")
+		writeErr(w, http.StatusBadRequest, "an event needs 1 to 1,000 books")
 		return
 	}
 	entries := make([]store.EventEntry, 0, len(body.Books))

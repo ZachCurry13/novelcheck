@@ -23,26 +23,53 @@ var (
 	sykDayRe = regexp.MustCompile(`href\s*=\s*["']([^"']*/days/([a-z0-9-]+))["']`)
 )
 
+// poke wakes Watch early (settings for it changed).
+var poke = make(chan struct{}, 1)
+
+// Poke has Watch look again now, for example after its settings changed.
+func Poke() {
+	select {
+	case poke <- struct{}{}:
+	default:
+	}
+}
+
 // Watch looks for free books every three hours (first a few minutes after
-// start). enqueue rates new books; first says whether ahead of the rest.
-func Watch(ctx context.Context, st *store.Store, enqueue func(first bool, ids ...int64)) {
+// start, and soon after its settings change). enqueue rates new books;
+// first says whether ahead of the rest. ask reads BookBub's email.
+func Watch(ctx context.Context, st *store.Store, ask Asker, enqueue func(first bool, ids ...int64)) {
 	wait := 3 * time.Minute
+	told := map[string]string{} // the last problem told per source, so the bell isn't filled
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-time.After(wait):
+		case <-poke:
+			time.Sleep(5 * time.Second) // let the rest of a settings save land
 		}
 		wait = 3 * time.Hour
-		if st.SettingBool(store.KeyEventsAutoSYK) {
-			if err := stuffYourKindle(ctx, st, enqueue, time.Now()); err != nil {
-				log.Printf("events: Stuff Your Kindle: %v", err)
+		for _, src := range []struct {
+			key, name string
+			run       func() error
+		}{
+			{store.KeyEventsAutoSYK, "Stuff Your Kindle", func() error { return stuffYourKindle(ctx, st, enqueue, time.Now()) }},
+			{store.KeyEventsAutoReddit, "Free right now", func() error { return freeRightNow(ctx, st, enqueue, time.Now()) }},
+			{store.KeyEventsAutoBookBub, "BookBub email", func() error { return bookBub(ctx, st, ask, enqueue, time.Now()) }},
+		} {
+			if !st.SettingBool(src.key) {
+				continue
 			}
-		}
-		if st.SettingBool(store.KeyEventsAutoReddit) {
-			if err := freeRightNow(ctx, st, enqueue, time.Now()); err != nil {
-				log.Printf("events: free right now: %v", err)
+			err := src.run()
+			if err == nil {
+				told[src.name] = ""
+				continue
 			}
+			log.Printf("events: %s: %v", src.name, err)
+			if src.name == "BookBub email" && told[src.name] != err.Error() { // the one an admin can fix
+				st.Notify("warning", "events", "BookBub email: "+err.Error(), "#/admin?tab=delivery")
+			}
+			told[src.name] = err.Error()
 		}
 	}
 }

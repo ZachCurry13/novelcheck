@@ -9,7 +9,9 @@ becomes the release notes for that version and is shown in the app under
 ### 🎁 Free books found by themselves
 - **Stuff Your Kindle days come in on their own.** NovelCheck checks stuffyourkindle.com every three hours. On the day of an event (for example "Mystery, Thriller & Horror Stuff Your Kindle Day") it makes the event with the day's whole list, ending that night, and the bell says so. Each day is made once; one you delete stays deleted.
 - **Free right now.** A pinned event that keeps the books posted to Reddit's r/FreeEBOOKS in the last four days, refreshed every three hours. Books named only by a link, a store ("US", "UK") or a date are left out, and a book linked for several countries counts once. Archive it to stop it coming back.
-- Both are on by default and can be switched off in Admin → Free book events. New books from them are rated within your hourly AI limit: Stuff Your Kindle books first in line, Reddit books in line with the rest.
+- **BookBub free today.** Give NovelCheck the mailbox BookBub's emails arrive in (for Gmail, an app password) and it reads the newest BookBub email by itself, read-only: nothing is marked, moved or deleted. BookBub's links don't go straight to Amazon, so the AI picks out the books that are free (not the discounted ones), and they become a pinned event that is replaced with each new email. Only the email's words go to the AI, without its links or email addresses. If the mailbox can't be reached or refuses the password, the bell says so.
+- All three are on by default and can be switched off in Admin → Free book events (BookBub only does anything once a mailbox is filled in). New books from them are rated within your hourly AI limit: Stuff Your Kindle books first in line, the others in line with the rest. Saving these settings looks for free books at once.
+- **Events hold up to 1,000 books** (was 500), so all twelve lists of a Linktree fit in one event.
 
 ## [1.73.2]
 

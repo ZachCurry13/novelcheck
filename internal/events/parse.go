@@ -12,7 +12,7 @@ import (
 )
 
 // MaxBooks caps one event's list.
-const MaxBooks = 500
+const MaxBooks = 1000
 
 var (
 	anchorRe  = regexp.MustCompile(`(?is)<a\b([^>]*)>(.*?)</a>`)

@@ -37,7 +37,7 @@ func init() {
 // IsBoolSetting reports whether key holds true/false (module switches).
 func IsBoolSetting(key string) bool {
 	_, ok := moduleNames[key]
-	return ok || key == KeyNotifyRoutine || key == KeyEventsAutoSYK || key == KeyEventsAutoReddit
+	return ok || key == KeyNotifyRoutine || key == KeyEventsAutoSYK || key == KeyEventsAutoReddit || key == KeyEventsAutoBookBub
 }
 
 // Modules reports which features are on, keyed by short name ("queue", …).

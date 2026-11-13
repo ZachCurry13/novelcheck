@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/zachcurry13/novelcheck/internal/events"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -178,6 +179,12 @@ func (s *Server) handlePutSettings(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeStoreErr(w, err)
 		return
+	}
+	for k := range save {
+		if strings.HasPrefix(k, "events_") {
+			events.Poke() // look for free books now, with the new settings
+			break
+		}
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }

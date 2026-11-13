@@ -4,13 +4,23 @@ import "database/sql"
 
 // Switches for finding free books by themselves (both on by default).
 const (
-	KeyEventsAutoSYK    = "events_auto_syk"    // make each Stuff Your Kindle day an event on its day
-	KeyEventsAutoReddit = "events_auto_reddit" // keep "Free right now" from r/FreeEBOOKS
+	KeyEventsAutoSYK     = "events_auto_syk"     // make each Stuff Your Kindle day an event on its day
+	KeyEventsAutoReddit  = "events_auto_reddit"  // keep "Free right now" from r/FreeEBOOKS
+	KeyEventsAutoBookBub = "events_auto_bookbub" // keep "BookBub free today" from the newest BookBub email
+	// The mailbox BookBub's emails arrive in, read-only over IMAP.
+	KeyEventsMailHost     = "events_mail_host"
+	KeyEventsMailUser     = "events_mail_user"
+	KeyEventsMailPassword = "events_mail_password" // an app password, never shown again
+	KeyEventsBookBubSeen  = "events_bookbub_seen"  // the last BookBub email read (its Message-ID)
 )
 
 func init() {
 	Defaults[KeyEventsAutoSYK] = "true"
 	Defaults[KeyEventsAutoReddit] = "true"
+	Defaults[KeyEventsAutoBookBub] = "true"
+	Defaults[KeyEventsMailHost] = "imap.gmail.com:993"
+	Defaults[KeyEventsMailUser] = ""
+	SecretKeys[KeyEventsMailPassword] = true
 }
 
 // Events NovelCheck makes by itself (Stuff Your Kindle days, the standing
