@@ -728,3 +728,12 @@ CREATE TABLE IF NOT EXISTS reader_positions (
     updated_at INTEGER NOT NULL DEFAULT 0, -- Unix seconds
     PRIMARY KEY (user_id, book_id)
 );
+
+-- Books a friend's account checked (Check a book): their pages open for her
+-- even when the family has the book. Friends never see the family's copies.
+CREATE TABLE IF NOT EXISTS friend_checks (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    checked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, book_id)
+);

@@ -184,7 +184,7 @@ const status = (text) => `<p class="card flex items-center gap-3 text-sm text-sl
 
 // The verdict first, big and plain; then the details.
 function resultCard(b, res) {
-  const where = res.in_library ? `<p class="text-sm text-emerald-300">✓ In your library: ${esc(res.catalogs.join(", "))}</p>`
+  const where = res.friend ? "" : res.in_library ? `<p class="text-sm text-emerald-300">✓ In your library: ${esc(res.catalogs.join(", "))}</p>`
     : `<p class="text-sm text-slate-400">Not in your library. It's saved under <b>Looked up</b>, so checking it again is instant.</p>`;
   if (b.status === "error" || b.spice_level === null || b.spice_level === undefined) {
     const why = b.status === "error" ? `Rating failed: ${esc(b.analysis_error)}` : b.status === "processing" ? "The AI is still working on it." : "It hasn't been rated yet.";
@@ -217,6 +217,7 @@ function resultCard(b, res) {
 // Owned books go straight to your Nightstand; others can be wished for or queued
 // as "to get". Nothing here ever offers deleting or removing.
 function actions(res) {
+  if (res.friend) return `<button data-act="queue" class="btn-primary">＋ Add to your Nightstand</button>`; // no family wishlist
   if (res.in_library) return `<button data-act="queue" class="btn-primary">＋ Add to your Nightstand</button>`;
   const wish = res.my_wish
     ? `<button data-act="unwish" class="btn-secondary" title="Remove it from your wishlist">On your wishlist${res.my_wish.status === "approved" ? " (to get)" : ""}</button>`

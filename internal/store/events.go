@@ -152,7 +152,7 @@ func (s *Store) EventBooks(id int64, u *User) ([]EventBook, error) {
 		}
 		mine := s.FriendOwns(u, ids)
 		for i := range out {
-			out[i].Owned, out[i].Queued = mine[out[i].ID], false
+			out[i].Owned = mine[out[i].ID]
 			HideFamily(u, &out[i].Book)
 		}
 	}

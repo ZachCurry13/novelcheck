@@ -247,9 +247,9 @@ func (s *Server) Router() http.Handler {
 			// Editors and admins: day-to-day management. Handlers further
 			// restrict editors to kid accounts (see users_handlers.go).
 			r.Group(func(r chi.Router) {
+				r.With(managerOrFriend).Post("/check", s.handleCheck)
+				r.With(managerOrFriend).Get("/check/jobs/{id}", s.handleCheckJob)
 				r.Use(auth.RequireManager)
-				r.Post("/check", s.handleCheck)
-				r.Get("/check/jobs/{id}", s.handleCheckJob)
 				r.Get("/admin/deep-scans/{id}/passage", s.handleDeepPassage) // parents read a scanned part
 				r.Get("/activity", s.handleActivity)
 				r.Post("/collections", s.handleCreateCollection)

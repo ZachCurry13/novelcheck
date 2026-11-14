@@ -174,7 +174,7 @@ function card(b, kid, queueOn, wishOn = true) { // wishOn: a friend's account ha
   const q = encodeURIComponent(`${b.title} ${b.author || ""}`.trim());
   const olLink = b.link || (b.isbn ? `https://openlibrary.org/isbn/${encodeURIComponent(b.isbn)}` : `https://openlibrary.org/search?q=${q}`);
   let action = "";
-  if (b.owned && queueOn) {
+  if ((b.owned || !wishOn) && queueOn) { // a friend (no wishlist) puts any book on her own Nightstand
     action = b.queued ? `<span class="text-xs text-slate-400">✓ On your Nightstand</span>` : `<button data-act="queue" class="btn-secondary px-2 py-1 text-xs">＋ Nightstand</button>`;
   } else if (!b.owned && wishOn) {
     action = b.wished ? `<span class="text-xs text-slate-400">On wishlist</span>` : `<button data-act="wish" class="btn-secondary px-2 py-1 text-xs">Wishlist</button>`;

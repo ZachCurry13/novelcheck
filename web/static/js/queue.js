@@ -12,10 +12,11 @@ import { renderListening } from "./listening.js";
 import { renderTwins } from "./queuetwins.js";
 
 export async function renderQueue(view, state) {
+  const friend = state.user.role === "friend"; // her own list: nothing is delivered, no audiobooks
   view.innerHTML = `
     <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
       <h1 class="page-title">Nightstand</h1>
-      <p class="text-sm text-slate-400">Delivery: <span id="delivery-mode"></span> · <a href="#/settings" class="underline">change</a></p>
+      ${friend ? "" : `<p class="text-sm text-slate-400">Delivery: <span id="delivery-mode"></span> · <a href="#/settings" class="underline">change</a></p>`}
     </div>
     <p id="nightstand-intro" class="mb-4 hidden rounded-lg bg-slate-800/60 p-3 text-sm text-slate-300"><b>Your Nightstand</b> (it used to be called Up Next): what you're reading now,
       then the pile you plan to read next. Books you open on your e-reader show up here by themselves.
@@ -33,7 +34,7 @@ export async function renderQueue(view, state) {
     </section>
     <section id="koreader-books"></section>
     <div id="suggestions"></div>`;
-  $("#delivery-mode", view).textContent = {
+  if (!friend) $("#delivery-mode", view).textContent = {
     email: `Send-to-Kindle (${state.user.kindle_email})`,
     koreader: "KOReader catalog",
   }[state.user.delivery_method] || "None";
@@ -57,7 +58,7 @@ export async function renderQueue(view, state) {
       /* private mode: it comes back next time */
     }
   };
-  renderListening($("#listening", view));
+  if (!friend) renderListening($("#listening", view));
   const reading = $("#reading", view);
   const hiddenEl = $("#hidden", view);
   const queued = $("#queued", view);
@@ -70,9 +71,9 @@ export async function renderQueue(view, state) {
     reading.innerHTML = cur.length ? cur.map(readingCard).join("")
       : `<p class="text-sm text-slate-500">Nothing in progress. Press Start reading on a book from the pile.</p>`;
     queued.innerHTML = next.length ? next.map((i, idx) => queueRow(i, idx, state.user)).join("")
-      : `<li class="text-sm text-slate-500">Your pile is empty. Add books from the Library with ＋.</li>`;
+      : `<li class="text-sm text-slate-500">Your pile is empty. Add books ${friend ? "from Discover, an event or Check a book" : "from the Library"} with ＋.</li>`;
     setBars(reading);
-    renderTwins($("#twins", view), items, state, load);
+    if (!friend) renderTwins($("#twins", view), items, state, load);
     const hid = (await attempt(() => get("/api/queue?hidden=1"))) || [];
     hiddenEl.innerHTML = hid.length ? `<details class="rounded-lg bg-slate-800/40 p-2"><summary class="cursor-pointer text-slate-400">Hidden (${hid.length})</summary>
       <ul class="mt-2 space-y-1">${hid.map((i) => `<li data-item="${i.id}" data-book="${i.book_id}" class="flex items-center justify-between gap-2">
@@ -155,6 +156,7 @@ function noFile(i, user) {
 // On phones the row is the cover, two lines of title and small ▶ / ✕
 // buttons; tapping the cover or title opens the book's window.
 function queueRow(i, idx, user) {
+  const mine = i.owned || user.role === "friend"; // a friend reads her own copy: ▶ only marks it
   return `
     <li data-item="${i.id}" data-book="${i.book_id}" data-file="${esc(i.file || "none")}" class="card flex items-center gap-2 p-2 sm:gap-3 sm:p-3">
       <span class="drag-handle px-1" title="Drag to reorder" aria-label="Drag to reorder">⠿</span>
@@ -165,12 +167,12 @@ function queueRow(i, idx, user) {
           <span class="block truncate text-xs text-slate-400"><span data-pos>${idx + 1}</span> · ${esc(i.author || "Unknown author")}</span>
           ${deepBanner(i)}
           ${i.progress ? `<span class="block text-xs text-indigo-300">${pct(i.progress)}% read · ${ago(i.progress.at)}</span>` : ""}
-          ${i.owned ? noFile(i, user) : `<span class="block text-xs text-sky-300">Not in your library yet</span>`}
+          ${mine ? noFile(i, user) : `<span class="block text-xs text-sky-300">Not in your library yet</span>`}
         </span>
       </button>
       <span class="hidden shrink-0 md:block">${classChip(i)}</span>
       <span class="flex shrink-0 flex-col items-center gap-1 sm:flex-row sm:gap-2">
-        ${i.owned ? `<button data-act="start" class="btn-primary h-10 w-10 p-0 sm:w-auto sm:px-4" title="Start reading" aria-label="Start reading">▶&#xFE0E;<span class="hidden sm:inline"> Start Reading</span></button>`
+        ${mine ? `<button data-act="start" class="btn-primary h-10 w-10 p-0 sm:w-auto sm:px-4" title="Start reading" aria-label="Start reading">▶&#xFE0E;<span class="hidden sm:inline"> Start Reading</span></button>`
           : `<a href="#/wishlist" class="btn-ghost h-10 w-10 p-0 sm:w-auto sm:px-3" title="Get a copy first" aria-label="Wishlist">⭐<span class="hidden sm:inline"> Wishlist</span></a>`}
         <button data-act="hide" class="btn-ghost h-9 w-10 p-0" title="Hide from your Nightstand (stays in your library)" aria-label="Hide from your Nightstand">🙈</button>
         <button data-act="remove" class="btn-ghost h-9 w-10 p-0" title="Remove from your Nightstand" aria-label="Remove from your Nightstand">✕</button>

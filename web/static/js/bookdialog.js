@@ -125,7 +125,7 @@ export async function openBook(id, state, onChange) {
       </div>
       <div class="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap gap-2 border-t border-slate-800 bg-slate-900/95 px-6 py-3 backdrop-blur">
         ${readable ? `<a href="/reader.html?id=${b.id}" class="btn-primary"><span class="ms" aria-hidden="true">local_library</span>Read</a>` : ""}
-        ${on(state.user, "queue") && !friend ? `<button data-act="queue" class="${readable ? "btn-secondary" : "btn-primary"}">${owned ? "＋ Nightstand" : "＋ Nightstand (to get)"}</button>` : ""}
+        ${on(state.user, "queue") ? `<button data-act="queue" class="${readable ? "btn-secondary" : "btn-primary"}">${owned || friend ? "＋ Nightstand" : "＋ Nightstand (to get)"}</button>` : ""}
         ${!owned && !friend ? (data.my_wish ? `<button data-act="unwish" class="btn-ghost" title="Remove it from your wishlist">On your wishlist · Remove</button>` : `<button data-act="wish" class="btn-secondary">Add to Wishlist</button>`) : ""}
         ${manager ? `<button data-act="edit-verdict" class="btn-secondary">Edit rating</button>` : ""}
       </div>

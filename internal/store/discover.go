@@ -119,7 +119,7 @@ func (s *Store) DiscoverItems(u *User) ([]DiscoverBook, error) {
 		}
 		mine := s.FriendOwns(u, ids)
 		for i := range out {
-			out[i].Owned, out[i].Queued = mine[out[i].ID], false
+			out[i].Owned = mine[out[i].ID]
 			HideFamily(u, &out[i].Book)
 		}
 	}
@@ -149,7 +149,7 @@ func (s *Store) FamilyFavorites(u *User, limit int) ([]DiscoverBook, error) {
 	out := []DiscoverBook{}
 	err := s.DB.Select(&out, `SELECT `+discoverCols+`, 'family' AS list, 0 AS rank, 0 AS weeks_on_list, '' AS link
 		FROM books b JOIN (SELECT book_id, COUNT(DISTINCT user_id) AS n, MAX(updated_at) AS last FROM queue_items
-			WHERE updated_at >= datetime('now', '-90 days') GROUP BY book_id) p ON p.book_id = b.id
+			WHERE updated_at >= datetime('now', '-90 days') AND user_id NOT IN (SELECT id FROM users WHERE role = 'friend') GROUP BY book_id) p ON p.book_id = b.id
 		WHERE `+ownedCond+where+` ORDER BY p.n DESC, p.last DESC LIMIT ?`,
 		append(append([]any{viewerID(u), viewerID(u)}, args...), limit)...)
 	return out, err

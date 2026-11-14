@@ -28,6 +28,18 @@ func (s *Server) handleListQueue(w http.ResponseWriter, r *http.Request) {
 	if items == nil {
 		items = []store.QueueItem{}
 	}
+	if u.IsFriend() { // "owned" is her own library, and nothing is delivered from the family's files
+		ids := make([]int64, len(items))
+		for i := range items {
+			ids[i] = items[i].BookID
+		}
+		mine := s.Store.FriendOwns(u, ids)
+		for i := range items {
+			items[i].Owned = mine[items[i].BookID]
+		}
+		writeJSON(w, http.StatusOK, items)
+		return
+	}
 	progress := s.Store.ReadingProgress(u.ID)
 	for i := range items {
 		if p, ok := progress[items[i].BookID]; ok {
@@ -144,6 +156,14 @@ func (s *Server) handleStartReading(w http.ResponseWriter, r *http.Request) {
 	b, err := s.Store.BookByID(item.BookID, u)
 	if err != nil {
 		writeStoreErr(w, err) // profile rules changed since it was queued
+		return
+	}
+	if u.IsFriend() { // she reads her own copy: nothing is sent, and the family isn't told
+		if err := s.Store.SetQueueStatus(u.ID, id, "reading", "Marked as reading"); err != nil {
+			writeStoreErr(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"status": "reading", "delivery_note": "Marked as reading"})
 		return
 	}
 	note := "📕 Paper book: marked as reading"

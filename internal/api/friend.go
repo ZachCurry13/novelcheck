@@ -33,6 +33,13 @@ var friendRoutes = []struct {
 	{"GET", regexp.MustCompile(`^/api/(catalogs|collections|age-groups|updates|flags|content|discover)$`)}, // collections: always none
 	{"", regexp.MustCompile(`^/api/push(/(subscribe|unsubscribe|test))?$`)},
 	{"POST", regexp.MustCompile(`^/api/problems$`)},
+	// Her own Nightstand (nothing is ever sent from the family's files) and Check a book.
+	{"GET", regexp.MustCompile(`^/api/queue$`)},
+	{"POST", regexp.MustCompile(`^/api/queue(/\d+/(hide|start|finish|pause))?$`)},
+	{"PUT", regexp.MustCompile(`^/api/queue/order$`)},
+	{"DELETE", regexp.MustCompile(`^/api/queue/\d+$`)},
+	{"POST", regexp.MustCompile(`^/api/check$`)},
+	{"GET", regexp.MustCompile(`^/api/check/jobs/[0-9a-f]+$`)},
 }
 
 // friendGuard refuses a friend everything outside friendRoutes.
@@ -65,6 +72,18 @@ func friendOnly(h http.HandlerFunc) http.HandlerFunc {
 		}
 		h(w, r)
 	}
+}
+
+// managerOrFriend lets parents, admins and friends in: Check a book, which
+// a friend has in her own version (handleCheck).
+func managerOrFriend(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if u := auth.UserFrom(r); u.IsFriend() {
+			next.ServeHTTP(w, r)
+			return
+		}
+		auth.RequireManager(next).ServeHTTP(w, r)
+	})
 }
 
 // friendCopies keeps the copies in a friend's own libraries.

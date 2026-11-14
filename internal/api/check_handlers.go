@@ -61,6 +61,13 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 			catalogs = append(catalogs, c.CatalogName)
 		}
 	}
+	if u := auth.UserFrom(r); u.IsFriend() { // her check: nothing about the family's copies or wishes
+		s.Store.NoteFriendCheck(u, id)
+		store.HideFamily(u, b)
+		writeJSON(w, http.StatusOK, map[string]any{"book": b, "rating": b.Status == "processing", "in_library": false,
+			"catalogs": []string{}, "found": look.found, "source": look.source, "friend": true})
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"book": b, "rating": b.Status == "processing",
 		"in_library": len(catalogs) > 0, "catalogs": catalogs, "found": look.found, "source": look.source,
 		"my_wish": s.Store.MyWish(id, auth.UserFrom(r).ID)})

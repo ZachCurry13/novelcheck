@@ -29,6 +29,7 @@ var bookMoves = []string{
 	`UPDATE OR IGNORE shelf_rejects SET book_id = ? WHERE book_id = ?`,
 	`UPDATE kindle_overrides SET book_id = ? WHERE book_id = ?`,
 	`UPDATE OR IGNORE kosync_docs SET book_id = ? WHERE book_id = ?`,
+	`UPDATE OR IGNORE friend_checks SET book_id = ? WHERE book_id = ?`,
 }
 
 // ratingRank puts a parent's rating first, then a Deep Scan, then any AI

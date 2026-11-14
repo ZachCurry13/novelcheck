@@ -98,7 +98,7 @@ func (s *Store) FamilyReads(userID int64) map[int64]int {
 		N    int   `db:"n"`
 	}
 	_ = s.DB.Select(&rows, `SELECT book_id, COUNT(*) AS n FROM queue_items
-		WHERE user_id != ? AND status IN ('reading', 'finished') GROUP BY book_id`, userID)
+		WHERE user_id != ? AND status IN ('reading', 'finished') AND user_id NOT IN (SELECT id FROM users WHERE role = 'friend') GROUP BY book_id`, userID)
 	out := make(map[int64]int, len(rows))
 	for _, r := range rows {
 		out[r.Book] = r.N

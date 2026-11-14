@@ -20,7 +20,10 @@ func friendClause(u *User, listed bool) (string, []any) {
 		OR (NOT EXISTS (SELECT 1 ` + copies + ` AND fk.name NOT IN (?, ?) AND COALESCE(fk.owner_id, 0) != ?)
 			AND (EXISTS (SELECT 1 ` + copies + `) OR EXISTS (SELECT 1 FROM imported_reads fr WHERE fr.book_id = b.id AND fr.user_id = ?)))`
 	if listed {
-		clause += ` OR EXISTS (SELECT 1 FROM discover_items fd WHERE fd.book_id = b.id) OR EXISTS (SELECT 1 FROM event_books fe WHERE fe.book_id = b.id)`
+		clause += ` OR EXISTS (SELECT 1 FROM discover_items fd WHERE fd.book_id = b.id) OR EXISTS (SELECT 1 FROM event_books fe WHERE fe.book_id = b.id)
+			OR EXISTS (SELECT 1 FROM friend_checks fk2 WHERE fk2.book_id = b.id AND fk2.user_id = ?)
+			OR EXISTS (SELECT 1 FROM queue_items fq WHERE fq.book_id = b.id AND fq.user_id = ?)`
+		return clause + `)`, []any{u.ID, DiscoverCatalog, EventsCatalog, u.ID, u.ID, u.ID, u.ID}
 	}
 	return clause + `)`, []any{u.ID, DiscoverCatalog, EventsCatalog, u.ID, u.ID}
 }
@@ -51,6 +54,13 @@ func (s *Store) FriendOwns(u *User, ids []int64) map[int64]bool {
 		out[id] = true
 	}
 	return out
+}
+
+// NoteFriendCheck remembers a book a friend checked, so its page opens for
+// her (as Discover's and the events' books do) even when the family has it.
+func (s *Store) NoteFriendCheck(u *User, bookID int64) {
+	_, _ = s.DB.Exec(`INSERT INTO friend_checks (user_id, book_id) VALUES (?, ?)
+		ON CONFLICT (user_id, book_id) DO UPDATE SET checked_at = CURRENT_TIMESTAMP`, u.ID, bookID)
 }
 
 // FriendLibrary is a friend's own library (private, hers), made the first

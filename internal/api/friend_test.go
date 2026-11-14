@@ -70,7 +70,7 @@ func TestAFriendNeverSeesTheFamilyLibrary(t *testing.T) {
 	if res, _ := pal.do("GET", sprintf("/api/books/%d", hot), nil, false); res.StatusCode != 200 {
 		t.Fatalf("a Discover book: %d", res.StatusCode)
 	}
-	for _, p := range []string{"/api/readers", "/api/series", "/api/wishlist", "/api/queue", "/api/listening", "/api/me/opds", "/api/me/kosync", "/api/notifications"} {
+	for _, p := range []string{"/api/readers", "/api/series", "/api/wishlist", "/api/listening", "/api/me/opds", "/api/me/kosync", "/api/notifications"} {
 		if res, _ := pal.do("GET", p, nil, false); res.StatusCode != http.StatusForbidden {
 			t.Fatalf("%s: %d", p, res.StatusCode)
 		}
