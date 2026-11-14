@@ -30,7 +30,8 @@ func (s *Server) handleDiscover(w http.ResponseWriter, r *http.Request) {
 		newIn, _ = s.Store.NewInLibraries(u, 20)
 		family, _ = s.Store.FamilyFavorites(u, 20)
 	}
-	rows, owned := discover.Compose(items, newIn, family, u, r.URL.Query().Get("owned") == "1")
+	// A friend sees every listed book: none of them is left out as "the family has it".
+	rows, owned := discover.Compose(items, newIn, family, u, u.IsFriend() || r.URL.Query().Get("owned") == "1")
 	if rows == nil {
 		rows = []discover.Row{}
 	}

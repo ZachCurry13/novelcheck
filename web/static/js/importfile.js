@@ -47,9 +47,9 @@ export function detect(headers) {
     author: pick(headers, ["author", "authors", "author s", "primary author", "author l f", "author last first", "contributors", "creator"]),
     isbn: pick(headers, ["isbn13", "isbn 13", "isbn", "isbn/uid", "isbn10", "isbn 10", "isbns"]),
     asin: pick(headers, ["asin"]),
-    shelf: pick(headers, ["exclusive shelf", "read status", "status", "shelf", "collections"]),
+    shelf: pick(headers, ["exclusive shelf", "read status", "reading status", "status", "state", "shelf", "collections"]),
     // For books on the "read" shelf: the day finished, the pages and your own stars, which Reading stats counts.
-    finished: pick(headers, ["date read", "last date read", "dates read", "date finished", "finished"]),
+    finished: pick(headers, ["date read", "last date read", "dates read", "date finished", "finish date", "finished date", "end date", "date completed", "completed", "finished"]),
     pages: pick(headers, ["number of pages", "pages", "page count"]),
     rating: pick(headers, ["my rating", "star rating", "rating"]),
     binding: pick(headers, ["binding", "format"]),
@@ -110,7 +110,9 @@ export function rowsToBooks(rows, cols, shelves) {
       isbn: cols.isbn >= 0 ? cleanISBN(r[cols.isbn]) : "",
       asin: cols.asin >= 0 ? (r[cols.asin] || "").trim() : "",
       // On the "read" shelf (Goodreads) or read (StoryGraph): counts as finished.
-      read: cols.shelf >= 0 && /^read$/i.test((r[cols.shelf] || "").trim()),
+      // Other apps (Bookly) say finished or completed, or give only the day finished.
+      read: cols.shelf >= 0 ? /^(read|finished|completed|done)$/i.test((r[cols.shelf] || "").trim())
+        : cols.finished >= 0 && lastDay(r[cols.finished]) !== "",
       finished: cols.finished >= 0 ? lastDay(r[cols.finished]) : "",
       pages: cols.pages >= 0 ? Math.max(0, parseInt(r[cols.pages], 10) || 0) : 0,
       rating: cols.rating >= 0 ? Math.min(5, Math.max(0, parseFloat(r[cols.rating]) || 0)) : 0,

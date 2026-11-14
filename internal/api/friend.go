@@ -9,6 +9,7 @@ import (
 	"regexp"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
+	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
 var friendRoutes = []struct {
@@ -64,4 +65,15 @@ func friendOnly(h http.HandlerFunc) http.HandlerFunc {
 		}
 		h(w, r)
 	}
+}
+
+// friendCopies keeps the copies in a friend's own libraries.
+func (s *Server) friendCopies(u *store.User, copies []store.BookCopy) []store.BookCopy {
+	mine := []store.BookCopy{}
+	for _, c := range copies {
+		if cat, err := s.Store.CatalogByID(c.CatalogID); err == nil && cat.OwnerID != nil && *cat.OwnerID == u.ID {
+			mine = append(mine, c)
+		}
+	}
+	return mine
 }

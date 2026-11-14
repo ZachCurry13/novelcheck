@@ -9,6 +9,10 @@ becomes the release notes for that version and is shown in the app under
 ### 🐛 Fixed
 - **Discover was empty on a Friend's account**: the page stopped at "Loading…" because it expected the family's seasonal shelves, which a friend doesn't get. Discover's books now show, and tapping one opens its page. The seasonal shelf buttons are left off her Discover and Library.
 
+### 🤝 Friends' accounts
+- **She sees the whole best-seller list.** Discover and events used to leave out every book the family owns, which left holes in the New York Times lists. Now she sees every listed book and can open its page, rate it and check Libby. Nothing about the family's copy shows: no formats, files, downloads or "Yours" (that now means her own library), and "Wrong cover?" is left off.
+- **StoryGraph and Bookly.** Stats → Choose the file now explains the export for StoryGraph, Goodreads and Bookly. A file whose status says Finished, Completed or Done (or that only gives the day finished) counts those books as read. This also applies to Import a list.
+
 ## [1.75.0]
 
 ### 🤝 Friends' accounts

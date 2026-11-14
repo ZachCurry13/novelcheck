@@ -68,7 +68,11 @@ func ValidClassification(c string) bool { return classifications[c] }
 // visibilityClause enforces a user's profile content rules at the SQL level so
 // hidden titles can never be listed, searched, fetched or queued. Books a
 // parent marked "OK" (approved) are exempt, e.g. Harry Potter's fantasy magic.
-func visibilityClause(u *User) (string, []any) {
+func visibilityClause(u *User) (string, []any) { return visibility(u, false) }
+
+// visibility is visibilityClause; listed is for the lists everyone shares
+// (Discover, events) and a book's page, which a friend sees whole.
+func visibility(u *User, listed bool) (string, []any) {
 	if u == nil {
 		return "", nil
 	}
@@ -114,10 +118,9 @@ func visibilityClause(u *User) (string, []any) {
 		clause += " AND EXISTS (SELECT 1 FROM collection_books kb JOIN user_collections kc ON kc.collection_id = kb.collection_id WHERE kb.book_id = b.id AND kc.user_id = ?)"
 		args = append(args, u.ID)
 	}
-	// A friend sees only books on Discover, in an event, in her own library or
-	// on her own reading list, and never one any family library holds.
+	// A friend sees her own library and the shared lists, never the family's (friend.go).
 	if u.Role == RoleFriend {
-		fc, fa := friendClause(u)
+		fc, fa := friendClause(u, listed)
 		clause += fc
 		args = append(args, fa...)
 	}

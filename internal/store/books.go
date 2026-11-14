@@ -93,13 +93,14 @@ func (s *Store) PruneCatalog(catalogID int64, keepExternalIDs map[string]bool) (
 // BookByID returns a book, or ErrNotFound if it doesn't exist or is hidden by
 // the viewer's content rules (viewer may be nil for internal callers).
 func (s *Store) BookByID(id int64, viewer *User) (*Book, error) {
-	where, args := visibilityClause(viewer)
+	where, args := visibility(viewer, true)
 	q := `SELECT ` + bookCols + derivedCols + `, '' AS catalogs FROM books b WHERE b.id = ?` + where
 	var b Book
 	err := s.DB.Get(&b, q, append([]any{id}, args...)...)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
+	HideFamily(viewer, &b)
 	return &b, err
 }
 

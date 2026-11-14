@@ -75,7 +75,7 @@ export async function openBook(id, state, onChange) {
       <div class="flex items-start justify-between gap-4">
         <div class="flex shrink-0 flex-col items-center gap-1">
           ${coverImg(b.id, "h-36 w-24 sm:h-44 sm:w-28", true)}
-          ${data.my_cover_report ? `<span class="text-xs text-slate-500">Cover reported</span>`
+          ${friend ? "" : data.my_cover_report ? `<span class="text-xs text-slate-500">Cover reported</span>`
             : `<button type="button" data-act="wrong-cover" class="text-xs text-slate-500 underline">Wrong cover?</button>`}
         </div>
         <div class="min-w-0 flex-1 pr-8">

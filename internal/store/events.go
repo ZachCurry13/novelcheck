@@ -145,6 +145,17 @@ func (s *Store) EventBooks(id int64, u *User) ([]EventBook, error) {
 	err := s.DB.Select(&out, `SELECT `+discoverCols+`, eb.position, eb.asin, eb.link
 		FROM event_books eb JOIN books b ON b.id = eb.book_id WHERE eb.event_id = ?`+where+` ORDER BY eb.position`,
 		append([]any{viewerID(u), viewerID(u), id}, args...)...)
+	if u.IsFriend() { // as on Discover: "Yours" is her own library
+		ids := make([]int64, len(out))
+		for i := range out {
+			ids[i] = out[i].ID
+		}
+		mine := s.FriendOwns(u, ids)
+		for i := range out {
+			out[i].Owned, out[i].Queued = mine[out[i].ID], false
+			HideFamily(u, &out[i].Book)
+		}
+	}
 	return out, err
 }
 

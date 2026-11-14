@@ -91,7 +91,7 @@ const discoverCols = bookCols + derivedCols + `, '' AS catalogs, ` + ownedCond +
 // discoverWhere is the viewer's content rules; kids also never see books the
 // AI hasn't rated yet (a parent's age group counts as rated).
 func discoverWhere(u *User) (string, []any) {
-	where, args := visibilityClause(u)
+	where, args := visibility(u, true)
 	if u != nil && u.Role == RoleRestricted {
 		where += " AND (b.status = 'analyzed' OR b.age_level > 0)"
 	}
@@ -112,6 +112,17 @@ func (s *Store) DiscoverItems(u *User) ([]DiscoverBook, error) {
 	err := s.DB.Select(&out, `SELECT `+discoverCols+`, d.list, d.rank, d.weeks_on_list, d.link
 		FROM discover_items d JOIN books b ON b.id = d.book_id WHERE 1=1`+where+` ORDER BY d.list, d.rank`,
 		append([]any{viewerID(u), viewerID(u)}, args...)...)
+	if u.IsFriend() { // "Yours" is her own library; the family's copies are not hers to see
+		ids := make([]int64, len(out))
+		for i := range out {
+			ids[i] = out[i].ID
+		}
+		mine := s.FriendOwns(u, ids)
+		for i := range out {
+			out[i].Owned, out[i].Queued = mine[out[i].ID], false
+			HideFamily(u, &out[i].Book)
+		}
+	}
 	return out, err
 }
 

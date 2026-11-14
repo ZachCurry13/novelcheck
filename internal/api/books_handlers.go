@@ -64,6 +64,9 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 	if books == nil {
 		books = []store.Book{}
 	}
+	for i := range books {
+		store.HideFamily(auth.UserFrom(r), &books[i]) // a friend's own book may have family copies too
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"books": books, "total": total})
 }
 
@@ -89,6 +92,9 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 			copies[i].Path = "" // don't expose server paths to restricted users
 		}
 	}
+	if u.IsFriend() {
+		copies = s.friendCopies(u, copies) // her own copies only, never the family's
+	}
 	_, downloadable := delivery.BestFile(copies, false)
 	notes, err := s.Store.BookNotes(id, u)
 	if err != nil {
@@ -102,6 +108,10 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		"my_cover_report": s.Store.MyCoverReport(id, u.ID), "editable_catalogs": s.editableCatalogs(copies, u),
 		"collections": s.Store.BookCollections(id, u), "my_rating": s.Store.RatingOf(u.ID, id),
 		"finished_on": s.Store.FinishedOn(u.ID, id)}
+	if u.IsFriend() { // nothing about the family's copies, shelves or wishes
+		out["downloadable"], out["has_audio"], out["has_ebook"], out["collections"] = false, false, false, []any{}
+		out["owned"] = len(copies) > 0
+	}
 	if p, ok := s.Store.ReadingProgress(u.ID)[id]; ok {
 		out["my_progress"] = p // from their e-reader's sync
 	}

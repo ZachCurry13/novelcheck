@@ -6,8 +6,8 @@ import { attempt } from "./ui.js";
 import { parseCSV, detect, rowsToBooks } from "./importfile.js";
 
 export const friendImportHTML = (again) => `<div class="card space-y-2 text-sm text-slate-300" data-friend-import>
-  <p>${again ? "Read more since? Bring in your list again: books already there are kept." : "Bring in your reading from Goodreads and NovelCheck fills in your stats, Wrapped and trophies."}</p>
-  ${again ? "" : `<p class="text-xs text-slate-400">On Goodreads: My Books → Import and export → Export library, then pick the file it gives you. A StoryGraph export works too.</p>`}
+  <p>${again ? "Read more since? Bring in your list again: books already there are kept." : "Bring in your reading from StoryGraph, Goodreads or Bookly and NovelCheck fills in your stats, Wrapped and trophies."}</p>
+  ${again ? "" : `<p class="text-xs text-slate-400">StoryGraph: Manage account → Export StoryGraph library. Goodreads: My Books → Import and export → Export library. Bookly: Settings → Backup &amp; Sync → Export. Then pick the file it gives you.</p>`}
   <label class="btn-secondary inline-flex cursor-pointer">Choose the file<input type="file" accept=".csv,text/csv" class="hidden" data-friend-file></label>
   <p data-friend-msg class="text-xs text-slate-400"></p></div>`;
 
@@ -21,9 +21,9 @@ export function bindFriendImport(host, onDone) {
     const rows = parseCSV(await file.text());
     if (rows.length < 2) return (msg.textContent = "That file has no books in it.");
     const { cols } = detect(rows[0]);
-    if (cols.title < 0) return (msg.textContent = "That doesn't look like a Goodreads or StoryGraph export.");
+    if (cols.title < 0) return (msg.textContent = "That doesn't look like a StoryGraph, Goodreads or Bookly export. Ask whoever runs your NovelCheck to look at the file.");
     const books = rowsToBooks(rows.slice(1), cols, null).filter((b) => b.read);
-    if (!books.length) return (msg.textContent = "No books on the \"read\" shelf in that file.");
+    if (!books.length) return (msg.textContent = "No finished books in that file.");
     msg.textContent = `Bringing in ${books.length} books…`;
     const r = await attempt(() => post("/api/me/import", { books }));
     msg.textContent = r ? `Brought in ${r.imported} books.` : "";
