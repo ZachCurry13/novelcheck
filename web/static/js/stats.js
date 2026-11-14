@@ -47,7 +47,7 @@ export async function renderStats(view, state, source = {}) {
     view.innerHTML = `${back()}<h1 class="mb-2 text-[1.375rem] leading-7">${esc(name)}'s reading</h1><div class="card text-sm text-slate-300">Nothing to show yet.</div>`;
     return;
   }
-  const friend = !other && state.user.role === "friend"; // her reading comes from her Goodreads list
+  const friend = !other && state.user.role === "friend"; // her reading comes from her StoryGraph, Goodreads or Bookly list
   if (friend && !m.rows.length && !listOnly) {
     view.innerHTML = `${heading()}${friendImportHTML(false)}`;
     bindFriendImport(view, () => renderStats(view, state, source));

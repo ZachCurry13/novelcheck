@@ -12,10 +12,10 @@ export async function renderReadingSummary(host, friend = false) {
   const data = await get("/api/me/reading-stats").catch(() => null);
   const m = data && addElsewhere(prepare(data), data.hardcover_read || [], data.imported_read || []);
   if (!m || (!m.rows.length && !m.done.length)) {
-    host.innerHTML = friend // a friend's reading comes from her Goodreads list
+    host.innerHTML = friend // a friend's reading comes from her StoryGraph, Goodreads or Bookly list
       ? `<h2 class="text-lg font-semibold">My reading</h2>
-      <p class="text-sm text-slate-400">Bring in your reading from Goodreads and your books this year, Wrapped and trophies show up here.</p>
-      <a href="#/stats" class="btn-secondary inline-flex">Bring in my Goodreads list</a>`
+      <p class="text-sm text-slate-400">Bring in your reading from StoryGraph, Goodreads or Bookly and your books this year, Wrapped and trophies show up here.</p>
+      <a href="#/stats" class="btn-secondary inline-flex">Bring in my reading list</a>`
       : `<h2 class="text-lg font-semibold">My reading</h2>
       <p class="text-sm text-slate-400">Your reading time, streaks and calendar show up here once your Kindle's reading statistics sync.</p>
       <a href="#/settings?s=kindle" class="btn-secondary inline-flex">Set up my Kindle</a>`;
