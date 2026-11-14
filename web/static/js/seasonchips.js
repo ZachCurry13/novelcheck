@@ -22,7 +22,7 @@ export function seasonChipsHTML(seasons, active = "") {
 
 // bindSeasonChips makes "More seasons" show the rest.
 export function bindSeasonChips(host) {
-  host.addEventListener("click", (e) => {
+  host?.addEventListener("click", (e) => { // (no chips, so no host, on a friend's account)
     const more = e.target.closest("[data-more-seasons]");
     if (!more) return;
     host.querySelectorAll("[data-more-season]").forEach((a) => a.classList.remove("hidden"));

@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.75.1]
+
+### 🐛 Fixed
+- **Discover was empty on a Friend's account**: the page stopped at "Loading…" because it expected the family's seasonal shelves, which a friend doesn't get. Discover's books now show, and tapping one opens its page. The seasonal shelf buttons are left off her Discover and Library.
+
 ## [1.75.0]
 
 ### 🤝 Friends' accounts

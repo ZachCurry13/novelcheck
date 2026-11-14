@@ -78,7 +78,9 @@ func TestAFriendNeverSeesTheFamilyLibrary(t *testing.T) {
 	if res, _ := pal.do("POST", sprintf("/api/books/%d/wish", hot), map[string]string{}, true); res.StatusCode != http.StatusForbidden {
 		t.Fatalf("a wish (a request to buy): %d", res.StatusCode)
 	}
-	if res, cols := pal.doList("GET", "/api/collections"); res.StatusCode != 200 || len(cols) != 0 {
+	// The same shape as everyone's (Discover and the Library read its seasons), with nothing in it.
+	if res, cols := pal.do("GET", "/api/collections", nil, false); res.StatusCode != 200 || cols["seasons"] == nil ||
+		len(cols["collections"].([]any)) != 0 || len(cols["seasons"].([]any)) != 0 {
 		t.Fatalf("collections: %d %v", res.StatusCode, cols)
 	}
 	if res, _ := pal.do("GET", "/api/discover", nil, false); res.StatusCode != 200 {

@@ -38,7 +38,7 @@ export async function renderLibrary(view, state) {
   const catOpts = catalogs.map((c) => `<option value="${c.id}">${esc(c.name)} (${c.book_count})</option>`).join("");
   view.innerHTML = `
     ${event || collection || season ? "" : `<div id="year-banner"></div>`}
-    ${event ? "" : seasonChipsHTML(shelves.seasons || [], season)}
+    ${event || !shelves.seasons?.length ? "" : seasonChipsHTML(shelves.seasons || [], season)}
     <div id="shelf-banner"></div>
     ${filtersHTML({ facets, catOpts, event, state })}
     <div class="mb-3 flex items-center justify-between gap-2"><p id="result-count" class="text-sm text-slate-400"></p>

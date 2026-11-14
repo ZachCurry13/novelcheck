@@ -142,7 +142,7 @@ export async function renderDiscover(view, state) {
   const old = cached(state.user);
   if (old) paint(old);
   const [data, shelves] = await fresh;
-  if (shelves) {
+  if (shelves?.seasons?.length) { // a friend's account has no family shelves
     $("#discover-seasons", view).innerHTML = seasonChipsHTML(shelves.seasons);
     bindSeasonChips($("#discover-seasons", view));
   }
