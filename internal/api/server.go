@@ -122,6 +122,11 @@ func (s *Server) Router() http.Handler {
 		r.Post("/auth/login", s.handleLogin)
 		r.Post("/auth/logout", s.handleLogout)
 		r.Get("/setup", s.handleSetupStatus)
+		// The app's version, for the "new version ready" bar. (index.html's ETag says the same, but Cloudflare's
+		// tunnel drops ETags, so phones reached through it never saw an update.)
+		r.Get("/build", func(w http.ResponseWriter, _ *http.Request) {
+			writeJSON(w, http.StatusOK, map[string]string{"build": s.buildID()})
+		})
 		r.Post("/setup", s.handleSetup)
 		// "Who's reading?": only answers on a device a parent marked.
 		r.Get("/family", s.handleFamily)

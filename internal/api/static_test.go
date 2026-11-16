@@ -51,6 +51,10 @@ func TestStaticFilesAreVersioned(t *testing.T) {
 		t.Fatalf("index: %d %q %q", res.StatusCode, res.Header.Get("Cache-Control"), index)
 	}
 	build := m[1]
+	// The app asks for the version here (Cloudflare's tunnel drops index.html's ETag): the same build, for anyone.
+	if res, body := get("/api/build", ""); res.StatusCode != 200 || !strings.Contains(body, `"build":"`+build+`"`) {
+		t.Fatalf("/api/build: %d %s", res.StatusCode, body)
+	}
 
 	res, body := get("/v/"+build+"/js/app.js", "")
 	if res.StatusCode != 200 || body != `import "./api.js";` || !strings.Contains(res.Header.Get("Cache-Control"), "immutable") {

@@ -11,6 +11,7 @@ import (
 type BookFilter struct {
 	Query          string   // matches title or author
 	CatalogID      int64    // only books in this catalog
+	Catalogs       []int64  // only books in any of these libraries (several ticked)
 	OverlapWith    int64    // ...that are also in this catalog
 	MultiCatalog   bool     // only books present in 2+ catalogs
 	DeepOnly       bool     // only books rated by a Deep Scan (full text)
@@ -140,7 +141,7 @@ func visibility(u *User, listed bool) (string, []any) {
 // filterCond turns f (plus the viewer's content rules) into a WHERE clause.
 func filterCond(f BookFilter, viewer *User) (string, []any) {
 	where := []string{"1=1"}
-	if f.CatalogID == 0 && f.Event == 0 && len(f.Events) == 0 {
+	if f.CatalogID == 0 && len(f.Catalogs) == 0 && f.Event == 0 && len(f.Events) == 0 {
 		where = append(where, "NOT "+discoverOnlyCond) // Discover books show on the Discover tab
 	}
 	where = append(where, "NOT "+splitBoxCond) // its books show instead
@@ -184,6 +185,9 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	if f.CatalogID > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM catalog_books x WHERE x.book_id = b.id AND x.catalog_id = ?)")
 		args = append(args, f.CatalogID)
+	}
+	if len(f.Catalogs) > 1 {
+		where = append(where, "EXISTS (SELECT 1 FROM catalog_books x WHERE x.book_id = b.id AND x.catalog_id IN ("+idList(f.Catalogs)+"))")
 	}
 	if f.Collection > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM collection_books fc WHERE fc.book_id = b.id AND fc.collection_id = ?)")
@@ -298,6 +302,8 @@ func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
 		order = "b.created_at DESC, b.id DESC"
 	case "mild":
 		order = "COALESCE(b.spice_level, 9), sort_title(b.title)"
+	case "spicy": // most peppers first; books not rated yet last
+		order = "COALESCE(b.spice_level, -1) DESC, sort_title(b.title)"
 	case "long":
 		order = "b.duration_sec DESC, sort_title(b.title)"
 	case "short":

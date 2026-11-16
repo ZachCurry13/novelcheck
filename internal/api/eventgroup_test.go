@@ -92,3 +92,36 @@ func TestClaimLibraryDefault(t *testing.T) {
 		t.Fatalf("kept on the account: %v", me["claim_catalog"])
 	}
 }
+
+// Several genres and several libraries at once: books in any of them.
+func TestSeveralGenresAndLibraries(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	a, _ := st.EnsureCatalog("Calibre", "calibre")
+	b, _ := st.CreateOwnedCatalog("Kindle", "drive", 1, false)
+	c, _ := st.CreateOwnedCatalog("Paper", "drive", 1, false)
+	add := func(title, genres string, cat int64) {
+		id, _ := st.UpsertBook(title, "Ann Author", "", "")
+		_ = st.AddCopy(cat, id, "/x/"+title+".epub", "epub", title)
+		st.DB.MustExec(`UPDATE books SET genres = ? WHERE id = ?`, genres, id)
+	}
+	add("Dragons", ",fantasy,", a)
+	add("Kisses", ",romance,", b)
+	add("Ghosts", ",horror,", c)
+	count := func(q string) int {
+		_, out := admin.do("GET", "/api/books?"+q, nil, false)
+		return len(out["books"].([]any))
+	}
+	if n := count("genre=fantasy,romance"); n != 2 {
+		t.Fatalf("fantasy or romance: %d", n)
+	}
+	if n := count("genre=horror"); n != 1 {
+		t.Fatalf("one genre still works: %d", n)
+	}
+	if n := count("catalog=" + itoa(a) + "," + itoa(b)); n != 2 {
+		t.Fatalf("two libraries: %d", n)
+	}
+	if n := count("catalog=" + itoa(c)); n != 1 {
+		t.Fatalf("one library still works: %d", n)
+	}
+}

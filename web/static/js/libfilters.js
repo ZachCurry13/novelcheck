@@ -3,13 +3,17 @@
 // from the bottom behind "Filters". Above the books: the search box, Sort, a chip for every filter that is on
 // (tap × to remove it), and a "⋯" menu for the rare actions.
 import { esc, HIDE_LABELS, FILTER_IDEA_URL, AGE_GROUPS, canManage, can } from "./ui.js";
-import { peppersHTML, pickHTML, pepperLabel } from "./libfacets.js";
+import { peppersHTML, checksHTML, pillsHTML, sortPillsHTML, pepperLabel } from "./libfacets.js";
 import { on } from "./modules.js";
 import { hideBoxes } from "./customflags.js";
 import { hidePicker } from "./content.js";
 import { audioFilterHTML, audioSortHTML } from "./libaudio.js";
 
 const field = (label, control, extra = "") => `<label class="field ${extra}"><span>${esc(label)}</span>${control}</label>`;
+
+// SORTS are the orders a list can have (the event's own order first, on an event).
+export const SORTS = (event) => [...(event ? [["list", "Event order"]] : []), ["title", "Title"], ["author", "Author"],
+  ["recent", "Recently added"], ["mild", "Fewest peppers"], ["spicy", "Most peppers"]];
 
 export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
   const manager = canManage(state.user);
@@ -20,28 +24,27 @@ export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
     can(state.user, "calibre") ? `<a href="#/deletions">Delete requests</a>` : "",
     manager ? `<button type="button" id="batch-btn">Analyze the next batch of books</button>` : "",
   ].filter(Boolean).join("");
-  return `<form id="filters" class="card mb-4 grid gap-3">
+  return `<form id="filters" class="mb-4 grid gap-3">
     <div class="fbar">
-      <input name="q" type="search" placeholder="Search title, author, series or tag" class="input min-w-0 flex-1" aria-label="Search">
-      <select name="sort" class="input fsort" aria-label="Sort">
-        ${event ? `<option value="list">The event's order</option>` : ""}
-        <option value="title">Title</option><option value="author">Author (last name)</option>
-        <option value="recent">Recently added</option><option value="mild">Fewest peppers</option>
+      <input name="q" type="search" placeholder="${event ? "Search this event" : "Search title, author, series or tag"}" class="fsearch" aria-label="Search">
+      <select name="sort" class="fsort" aria-label="Sort">
+        ${SORTS(event).map(([v, l]) => `<option value="${v}">Sort: ${l}</option>`).join("")}
         ${audioSortHTML(facets)}
       </select>
-      <button type="button" id="filters-toggle" class="btn-secondary" aria-expanded="false">Filters</button>
+      <button type="button" id="filters-toggle" class="fbtn" aria-expanded="false">Filters</button>
       ${admin ? `<details class="fmenu"><summary class="btn-secondary" aria-label="More actions" title="More actions">⋯</summary><div class="fmenu-list">${admin}</div></details>` : ""}
     </div>
     <div id="filter-chips" class="fchips" aria-live="polite"></div>
     <aside class="fpanel filter-more" aria-label="Filters">
       <div class="fhead"><b>Filters</b><button type="button" data-clear-all class="facet-link">Clear all</button></div>
       ${peppersHTML()}
-      ${pickHTML("Genre", "genre", "Any genre", (facets.genres || []).map((g) => ({ value: g.key, label: g.label, count: g.count })))}
-      ${pickHTML("Library", "catalog", "All libraries", (catalogs || []).map((c) => ({ value: String(c.id), label: c.name, count: c.book_count })), 5)}
-      ${on(state.user, "parents") ? pickHTML("Age group", "age", "Any age group",
-        [...AGE_GROUPS.map(([l, n]) => ({ value: String(l), label: `For ${n}` })), { value: "unset", label: "Age group not set yet" }], 7) : ""}
-      <details class="facet fmore"><summary>More filters</summary><div class="fmore-body">
-        ${field("Fiction or nonfiction", `<select name="kind" class="input"><option value="">Both</option>${(facets.kinds || []).filter((k) => k.count).map((k) => opt(k.key, k.label, k.count)).join("")}</select>`)}
+      ${checksHTML("Genre", "genre", (facets.genres || []).filter((g) => g.count).map((g) => ({ value: g.key, label: g.label, count: g.count })))}
+      ${checksHTML("Library", "catalog", (catalogs || []).map((c) => ({ value: String(c.id), label: c.name, count: c.book_count })))}
+      ${on(state.user, "parents") ? pillsHTML("Age group", "age", [["", "Any"], ...AGE_GROUPS.map(([l, n]) => [String(l), n]), ["unset", "Not set"]]) : ""}
+      ${sortPillsHTML(event)}
+      <details class="facet fmore"><summary><span>More</span><span class="fmore-arrow" aria-hidden="true">▸</span>
+        <span class="fmore-sum">Format, series, author, Libby, hide content…</span></summary><div class="fmore-body">
+        ${pillsHTML("Fiction or nonfiction", "kind", [["", "Both"], ...(facets.kinds || []).filter((k) => k.count).map((k) => [k.key, k.label])], "facet-sub")}
         ${field("Author", `<input name="author" placeholder="Any author" class="input">`, "combo-field")}
         ${field("Series", `<input name="series" placeholder="Any series" class="input">`, "combo-field")}
         ${field("Also in", `<select name="overlap_with" class="input" title="Only books also in this library"><option value="">Any other library</option>${catOpts}</select>`)}
@@ -70,7 +73,7 @@ export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
   </form>`;
 }
 
-const LABELS = { genre: "Genre", kind: "Type", author: "Author", series: "Series", catalog: "Library", overlap_with: "Also in", spice: "Peppers", age: "Age",
+const LABELS = { genre: "Genre", kind: "Type", author: "Author", series: "Series", catalog: "Library", overlap_with: "Also in", spice: "Peppers", age: "Age", rating: "Rating", lf: "At my library",
   format: "Format", libby_audio: "Libby", narrator: "Narrator", min_hours: "At least (hours)", max_hours: "At most (hours)" };
 
 // bindChips keeps a chip for each filter that is on, under the search bar; × clears it.
@@ -82,9 +85,10 @@ export function bindChips(form, onChange) {
     for (const el of form.elements) {
       if (!el.name || el.name === "q" || el.name === "sort" || el.type === "button") continue;
       if (el.type === "checkbox") {
-        if (el.checked) chips.push({ el, text: `${el.name === "hide" ? "Hide: " : ""}${el.closest("label")?.textContent.trim() || el.value}` });
+        const what = el.closest("label")?.querySelector("[data-l]")?.textContent.trim() || el.closest("label")?.textContent.trim() || el.value;
+        if (el.checked) chips.push({ el, text: `${el.name === "hide" ? "Hide: " : ""}${what}` });
       } else if (el.type === "radio") {
-        if (el.checked && el.value !== "") chips.push({ el, text: `${LABELS[el.name] || el.name}: ${el.closest("label")?.querySelector("span")?.textContent.trim() || el.value}` });
+        if (el.name !== "sortp" && el.checked && el.value !== "") chips.push({ el, text: `${LABELS[el.name] || el.name}: ${el.closest("label")?.textContent.trim() || el.value}` });
       } else if (el.name === "spice") {
         if (el.value) chips.push({ el, text: pepperLabel(el.value) });
       } else if (el.value !== "") {

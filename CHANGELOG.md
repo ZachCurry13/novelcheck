@@ -4,6 +4,19 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.80.0]
+
+### 🔎 Filters as designed, everywhere
+- **The Library now matches the design the family picked.** Tick boxes with counts for genres and libraries (pick as many as you like), the six pepper squares in one row with shortcuts (Clean, Up to romantic, Steamy, Spicy, Any), Age group as pills, and More with the rarer filters. Above the books: the search and Sort pills, an orange chip for each filter that is on, and "43 of 88 books".
+- **Books show as covers**, like a bookshop: the cover with its pepper level and ＋ for the Nightstand, then the title, author and a few chips. The blurb, formats and libraries are on the book's page.
+- **Sort: Most peppers** joins the orders.
+- **On a phone**, "Filters · 3" opens the sheet: the genres and libraries as chips, Sort as pills, and "Show 43 books".
+- **Discover has the same panel**: pepper squares and genres narrow every list at once, together with what your Libby library lends and "Also show books we already have".
+- Events, collections, seasons, series and author pages all use the Library, so they have all of this too.
+
+### 🔄 The "new version" bar works through Cloudflare
+- **The Reload bar now shows on phones** when NovelCheck is updated. It compared the app's version with one the server sent in a header that Cloudflare's tunnel removes, so through the tunnel it never saw an update. It now asks the server at its own address.
+
 ## [1.79.0]
 
 ### 🎉 Where your claimed books go, saved once

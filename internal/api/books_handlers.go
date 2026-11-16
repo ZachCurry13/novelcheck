@@ -30,7 +30,7 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	f := store.BookFilter{
 		Query:          q.Get("q"),
-		CatalogID:      queryID(r, "catalog"),
+		Catalogs:       queryIDs(r, "catalog"), // one library, or several ticked ("3,7")
 		OverlapWith:    queryID(r, "overlap_with"),
 		MultiCatalog:   q.Get("multi") == "1",
 		DeepOnly:       q.Get("deep") == "1",
@@ -55,6 +55,9 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		Events:         queryIDs(r, "event"), // one event, or a day's lists together ("21,22,23")
 		NotOwned:       q.Get("not_owned") == "1",
 		LibbyAudio:     q.Get("libby_audio"),
+	}
+	if len(f.Catalogs) == 1 {
+		f.CatalogID, f.Catalogs = f.Catalogs[0], nil
 	}
 	if len(f.Events) == 1 { // one event: its own filter and order
 		f.Event, f.Events = f.Events[0], nil

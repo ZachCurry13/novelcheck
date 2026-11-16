@@ -2,17 +2,17 @@
 // which version it has: when it comes back to the screen (at most every couple of minutes) and now and then
 // while it is open. If the server's is newer, a small bar at the bottom says so with a Reload button: nothing
 // reloads by itself, so nobody loses what they were typing.
-// The version is the build in this file's own address (/v/<build>/js/…); the server sends the same build as
-// index.html's ETag.
+// The version is the build in this file's own address (/v/<build>/js/…); the server says its own at /api/build.
 const running = (import.meta.url.match(/\/v\/([^/]+)\//) || [])[1];
 const CHECK_EVERY = 2 * 60 * 1000;
 
 async function newerOnServer() {
   if (!running) return false; // not loaded from a versioned address (development)
   try {
-    const res = await fetch("/", { method: "HEAD", cache: "no-store" });
-    const build = (res.headers.get("ETag") || "").replace(/"/g, "");
-    return res.ok && build !== "" && build !== running;
+    // Asked from its own address: Cloudflare's tunnel drops the ETag that index.html carries.
+    const res = await fetch("/api/build", { cache: "no-store", headers: { "X-NovelCheck": "1" } });
+    const build = res.ok ? (await res.json()).build || "" : "";
+    return build !== "" && build !== running;
   } catch {
     return false; // offline: keep going
   }

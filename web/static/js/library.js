@@ -46,7 +46,7 @@ export async function renderLibrary(view, state) {
     <div class="lib-main">
     <div class="mb-3 flex items-center justify-between gap-2"><p id="result-count" class="text-sm text-slate-400"></p>
       <button type="button" id="select-toggle" class="btn-ghost py-1 text-sm" title="Pick several books to add to your Nightstand, Deep Scan or delete">Select</button></div>
-    <div id="grid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+    <div id="grid" class="lib-grid"></div>
     <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>
     </div></div>`;
 
@@ -72,14 +72,14 @@ export async function renderLibrary(view, state) {
     const fd = new FormData(form);
     return {
       q: fd.get("q"),
-      catalog: fd.get("catalog"),
+      catalog: fd.getAll("catalog").join(","),
       overlap_with: fd.get("overlap_with"),
       spice: ["review", "old"].includes(fd.get("rating")) ? fd.get("rating") : fd.get("spice"), // the squares: "0,1,2"
       status: fd.get("rating") === "failed" ? "error" : "",
       classification: fd.get("rating") === "Pending" ? "Pending" : "",
       age: fd.get("age"),
       format: fd.get("format"),
-      genre: fd.get("genre"),
+      genre: fd.getAll("genre").join(","),
       kind: fd.get("kind"),
       author: fd.get("author"),
       series: fd.get("series"),
@@ -97,6 +97,16 @@ export async function renderLibrary(view, state) {
     };
   }
 
+  // scopeTotal is how many books the page holds with no filters on (this event, collection or the Library).
+  let scope = null;
+  async function scopeTotal() {
+    const p = params();
+    const filtered = Object.entries(p).some(([k, v]) => !["q", "sort", "limit", "event", "collection", "season"].includes(k) && v && v !== false);
+    if (!filtered) return 0;
+    if (scope === null) scope = (await get("/api/books" + qs({ event, collection, season, limit: 1 })).catch(() => null))?.total || 0;
+    return scope;
+  }
+
   async function load(reset) {
     if (reset) offset = 0;
     const data = await attempt(() => get("/api/books" + qs({ ...params(), offset })));
@@ -105,7 +115,8 @@ export async function renderLibrary(view, state) {
     grid.insertAdjacentHTML("beforeend", data.books.map(cardFor).join(""));
     offset += data.books.length;
     if (reset && data.total) recent.remember(form.q.value);
-    $("#result-count", view).textContent = `${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}`;
+    const all = await scopeTotal(); // "43 of 88 books" while filters are on
+    $("#result-count", view).textContent = all && all !== data.total ? `${data.total.toLocaleString()} of ${all.toLocaleString()} books` : `${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}`;
     const done = view.querySelector("[data-filters-done]"); // the phone panel's button says what it will show
     if (done) done.textContent = data.total ? `Show ${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}` : "No books match: change a filter";
     $("#more-btn", view).classList.toggle("hidden", offset >= data.total);
@@ -123,8 +134,8 @@ export async function renderLibrary(view, state) {
   const toggle = $("#filters-toggle", view);
   const countFilters = () => {
     const fd = new FormData(form);
-    const n = [...fd.entries()].filter(([k, v]) => k !== "q" && k !== "sort" && v !== "").length;
-    toggle.textContent = n ? `Filters (${n})` : "Filters";
+    const n = [...fd.entries()].filter(([k, v]) => k !== "q" && k !== "sort" && k !== "sortp" && v !== "").length;
+    toggle.textContent = n ? `Filters · ${n}` : "Filters";
   };
   const setOpen = (open) => {
     form.classList.toggle("filters-open", open);
@@ -158,7 +169,7 @@ export async function renderLibrary(view, state) {
     if (q) {
       e.stopPropagation();
       if (await attempt(() => post("/api/queue", { book_id: Number(q.dataset.queue) }))) {
-        q.outerHTML = IN_QUEUE;
+        q.outerHTML = `<span class="tile-add">${IN_QUEUE}</span>`;
         toast("Added to your Nightstand", false, { label: "View Nightstand", href: "#/queue" });
       }
       return;
@@ -192,7 +203,12 @@ export async function renderLibrary(view, state) {
   // Links such as #/library?author=… (from a book's window) open with that filter set.
   const preset = new URLSearchParams(location.hash.split("?")[1] || "");
   for (const k of ["q", "author", "series", "genre", "kind", "catalog", "spice", "narrator", "format", "sort", "rating"]) {
-    if (preset.get(k) && form.elements[k]) form.elements[k].value = preset.get(k);
+    const v = preset.get(k), el = form.elements[k];
+    if (!v || !el) continue;
+    if (el instanceof RadioNodeList && el[0]?.type === "checkbox") { // tick boxes: tick each value named
+      for (const box of el) box.checked = v.split(",").includes(box.value);
+    } else if (el.type === "checkbox") el.checked = v.split(",").includes(el.value);
+    else el.value = v;
   }
   // Back from a book's series, an author's page and so on: the search and filters are as you left them
   // (the chips under the search box show which are on; the panel stays closed).

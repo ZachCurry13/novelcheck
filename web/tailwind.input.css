@@ -193,12 +193,6 @@ html.font-dyslexic .leading-tight, html.font-dyslexic .leading-snug { line-heigh
 /* Library filters: one search bar, a Filters panel (grouped, full-width fields), a chip for each filter that is
    on, a menu for the rare actions, and a styled type-ahead in place of the browser's own list. */
 #filters:not(.filters-open) .filter-more { display: none; }
-#filters .fbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
-#filters .fsort { width: auto; min-width: 11rem; }
-#filters .fchips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-#filters .fchips:empty { display: none; }
-.fchip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 9999px; border: 1px solid rgb(var(--indigo-800)); background: rgb(var(--indigo-950)); color: rgb(var(--indigo-200)); padding: 0.15rem 0.65rem; font-size: 0.78rem; cursor: pointer; }
-.fchip:hover { border-color: rgb(var(--indigo-400)); }
 #filters .fgroup { display: flex; flex-direction: column; gap: 0.65rem; min-width: 0; }
 #filters .fgroup.fwide { grid-column: 1 / -1; }
 #filters .fgroup > h3 { font-size: 0.8125rem; font-weight: 500; color: rgb(var(--slate-400)); }
@@ -278,41 +272,97 @@ dialog.dialog.search-view[open] { animation: none; }
    wraps instead of stretching the card and the whole page sideways. :where()
    keeps it weaker than any grid-cols-* class. */
 :where(.grid) { grid-template-columns: minmax(0, 1fr); }
-/* The Library's filters, like a bookshop website: a panel beside the books on a computer (always open), a
-   sheet that slides up from the bottom on a phone (behind "Filters"). See js/libfilters.js and js/libfacets.js. */
+/* The Library's filters, like a bookshop website (the family's pick, "B"): a panel beside the books on a
+   computer, always open; a sheet from the bottom on a phone. Then the search and Sort pills, a chip for each
+   filter that is on, and the books as covers. See js/libfilters.js, js/libfacets.js, js/librarycard.js. */
 #filters { position: relative; }
+#filters .fbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+#filters .fsearch { flex: 1 1 14rem; min-width: 0; height: 2.75rem; border: 0; border-radius: 9999px; padding: 0 1.1rem; background: rgb(var(--slate-800)); color: rgb(var(--slate-100)); font: inherit; }
+#filters .fsearch::placeholder { color: rgb(var(--slate-400)); }
+#filters .fsearch:focus { outline: 2px solid rgb(var(--nc-chip-on)); outline-offset: 1px; }
+#filters .fsort, #filters .fbtn { height: 2.75rem; border-radius: 9999px; border: 1px solid rgb(var(--slate-700)); background: transparent; color: rgb(var(--slate-100)); padding: 0 1rem; font: 500 0.875rem var(--nc-font-body); cursor: pointer; }
+#filters .fsort { padding-right: 2rem; }
+#filters .fsort option { background: rgb(var(--slate-900)); }
+#filters .fchips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+#filters .fchips:empty { display: none; }
+.fchip { display: inline-flex; align-items: center; gap: 0.4rem; height: 2.1rem; border: 0; border-radius: 0.5rem; padding: 0 0.75rem; background: rgb(var(--nc-chip-on)); color: rgb(var(--nc-on-chip-on)); font: 500 0.8125rem var(--nc-font-body); cursor: pointer; }
+.fchip span { opacity: 0.75; }
 #filters .fpanel { display: flex; flex-direction: column; padding: 1rem; border-radius: 1rem; background: rgb(var(--slate-900)); }
-#filters .fhead { display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.5rem; }
-#filters .facet { padding: 0.75rem 0; border-top: 1px solid rgb(var(--slate-800)); }
-#filters .facet > h3, #filters .facet-h { display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.8125rem; font-weight: 500; color: rgb(var(--slate-300)); }
-#filters .facet-sum { font-weight: 400; color: rgb(var(--slate-400)); }
-#filters .pep-squares { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-#filters .pep-sq { padding: 0; border: 0; background: none; border-radius: 0.6rem; cursor: pointer; opacity: 0.45; outline: 2px solid transparent; outline-offset: 2px; }
+#filters .fhead { display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.75rem; }
+#filters .facet { padding: 0.85rem 0; border-top: 1px solid rgb(var(--slate-800)); }
+#filters .facet > h3, #filters .facet-h { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; margin-bottom: 0.6rem; font-size: 0.875rem; font-weight: 500; color: rgb(var(--slate-100)); }
+#filters .facet-sum { font-size: 0.75rem; font-weight: 400; color: rgb(var(--slate-400)); }
+#filters .pep-squares { display: grid; grid-template-columns: repeat(6, 1.9rem); gap: 0.35rem; }
+#filters .pep-sq { padding: 0; border: 0; background: none; border-radius: 0.55rem; cursor: pointer; opacity: 0.5; outline: 2px solid transparent; outline-offset: 1px; }
+#filters .pep-sq .lvl { height: 1.75rem; width: 1.75rem; font-size: 0.875rem; border-radius: 0.5rem; }
 #filters .pep-sq[aria-pressed="true"] { opacity: 1; outline-color: rgb(var(--slate-100)); }
 #filters .pep-squares:not(:has([aria-pressed="true"])) .pep-sq { opacity: 1; }
-#filters .pep-presets { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.6rem; }
-#filters .facet-row { display: flex; align-items: center; gap: 0.55rem; padding: 0.3rem 0; font-size: 0.875rem; cursor: pointer; }
-#filters .facet-row input { accent-color: rgb(var(--nc-chip-on)); }
+#filters .pep-presets { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
+#filters .pep-presets .chip-filter { height: 2.1rem; padding: 0 0.75rem; border-radius: 0.5rem; font-size: 0.8125rem; }
+#filters .facet-checks { display: flex; flex-direction: column; }
+#filters .facet-row { position: relative; display: flex; align-items: center; gap: 0.6rem; padding: 0.35rem 0; font-size: 0.875rem; cursor: pointer; color: rgb(var(--slate-200)); }
+#filters .facet-row input, #filters .pill input { position: absolute; opacity: 0; pointer-events: none; }
+#filters .facet-box { flex: none; width: 1.15rem; height: 1.15rem; border-radius: 0.3rem; border: 2px solid rgb(var(--slate-500)); display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; line-height: 1; }
+#filters .facet-row:has(input:checked) .facet-box { background: rgb(var(--nc-chip-on)); border-color: transparent; color: rgb(var(--nc-on-chip-on)); }
+#filters .facet-row:has(input:checked) .facet-box::after { content: "✓"; font-weight: 700; }
+#filters .facet-row:has(input:focus-visible) .facet-box, #filters .pill:has(input:focus-visible) { outline: 2px solid rgb(var(--nc-chip-on)); outline-offset: 2px; }
+#filters .facet-l { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #filters .facet-n { font-size: 0.75rem; color: rgb(var(--slate-500)); font-variant-numeric: tabular-nums; }
-#filters .facet-link { margin-top: 0.35rem; padding: 0; border: 0; background: none; font-size: 0.8rem; color: rgb(var(--indigo-300)); text-decoration: underline; cursor: pointer; align-self: flex-start; }
-#filters .fmore > summary { cursor: pointer; font-size: 0.875rem; font-weight: 500; color: rgb(var(--slate-300)); }
+#filters .facet-link { margin-top: 0.4rem; padding: 0; border: 0; background: none; font: 500 0.875rem var(--nc-font-body); color: rgb(var(--nc-chip-on)); cursor: pointer; align-self: flex-start; text-align: left; }
+#filters .pills { display: inline-flex; flex-wrap: wrap; border: 1px solid rgb(var(--slate-700)); border-radius: 1rem; overflow: hidden; }
+#filters .pill { position: relative; cursor: pointer; }
+#filters .pill span { display: block; padding: 0.4rem 0.7rem; font: 500 0.75rem var(--nc-font-body); color: rgb(var(--slate-200)); }
+#filters .pill:has(input:checked) span { background: rgb(var(--nc-chip-on)); color: rgb(var(--nc-on-chip-on)); }
+#filters .fmore > summary { display: grid; grid-template-columns: 1fr auto; cursor: pointer; list-style: none; font-size: 0.875rem; font-weight: 500; color: rgb(var(--slate-100)); }
+#filters .fmore > summary::-webkit-details-marker { display: none; }
+#filters .fmore-arrow { font-size: 0.75rem; color: rgb(var(--slate-400)); transition: transform 0.2s; }
+#filters .fmore[open] .fmore-arrow { transform: rotate(90deg); }
+#filters .fmore-sum { grid-column: 1 / -1; margin-top: 0.35rem; font-size: 0.75rem; font-weight: 400; color: rgb(var(--slate-400)); }
+#filters .fmore[open] .fmore-sum { display: none; }
 #filters .fmore-body { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem; }
+#filters .facet-sub { padding: 0; border-top: 0; }
 #filters .fdone { position: sticky; bottom: -1rem; padding: 0.75rem 0 0; background: rgb(var(--slate-900)); }
-#filters .fdone .btn-primary { width: 100%; }
+#filters .fdone .btn-primary { width: 100%; height: 2.75rem; }
+@media (prefers-reduced-motion: reduce) { #filters .fmore-arrow { transition: none; } }
+/* A card a filter leaves out (Discover's lists are filtered on the page). */
+[data-out] { display: none !important; }
+/* The books as covers. */
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 1.25rem 1rem; }
+.lib-tile { display: flex; flex-direction: column; min-width: 0; cursor: pointer; }
+.lib-tile .tile-cover { position: relative; aspect-ratio: 2 / 3; border-radius: 0.4rem; overflow: hidden; background: rgb(var(--slate-800)); }
+.lib-tile .tile-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.lib-tile:hover .tile-img { filter: brightness(1.06); }
+.lib-tile .tile-lvl { position: absolute; left: 0.4rem; bottom: 0.4rem; height: 1.4rem; width: 1.4rem; font-size: 0.75rem; border-radius: 0.35rem; }
+.lib-tile .tile-add { position: absolute; right: 0.35rem; top: 0.35rem; display: inline-flex; align-items: center; justify-content: center; min-width: 2.25rem; height: 2.25rem; border-radius: 9999px; background: rgb(var(--slate-950) / 0.8); color: rgb(var(--slate-100)); border: 0; font-size: 1.15rem; cursor: pointer; }
+.lib-tile .tile-title { margin-top: 0.55rem; font-family: var(--nc-font-head); font-size: 0.9375rem; font-weight: 600; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lib-tile .tile-author { margin-top: 0.15rem; font-size: 0.8125rem; color: rgb(var(--slate-400)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-tile .tile-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.4rem; }
+.lib-tile .tile-chips:empty, .lib-tile .tile-meta:empty { display: none; }
+.lib-tile .tile-meta { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.3rem; }
+.lib-tile [data-ev] { margin-top: 0.5rem; }
 @media (max-width: 1023px) {
-  #filters .fpanel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-height: 85vh; overflow: auto; border-radius: 1.25rem 1.25rem 0 0;
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -16px 40px rgb(0 0 0 / 0.55); }
+  #filters .fpanel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-height: 85vh; overflow: auto; border-radius: 1.5rem 1.5rem 0 0;
+    padding-top: 0.6rem; padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -16px 40px rgb(0 0 0 / 0.55); }
+  #filters .fpanel::before { content: ""; align-self: center; width: 2.25rem; height: 0.25rem; margin-bottom: 0.75rem; border-radius: 9999px; background: rgb(var(--slate-600)); }
+  /* On a phone the tick lists are chips, as in the design. */
+  #filters .facet-checks { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; }
+  #filters .facet-row { padding: 0.4rem 0.8rem; border: 1px solid rgb(var(--slate-700)); border-radius: 0.5rem; }
+  #filters .facet-row .facet-box, #filters .facet-row .facet-n { display: none; }
+  #filters .facet-row:has(input:checked) { background: rgb(var(--nc-chip-on)); border-color: transparent; color: rgb(var(--nc-on-chip-on)); }
+  #filters .facet-all { margin-top: 0; padding: 0.4rem 0.8rem; border: 1px solid rgb(var(--slate-700)); border-radius: 0.5rem; color: rgb(var(--slate-200)); }
+  #filters .fbar .fsort { display: none; } /* the order is in the sheet */
+  .lib-grid { grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 1rem 0.75rem; }
 }
 @media (min-width: 1024px) {
   .lib-layout { display: grid; grid-template-columns: 16.5rem minmax(0, 1fr); column-gap: 1.5rem; align-items: start; }
   .lib-layout > #filters { display: contents; }
   .lib-layout > #filters > .fbar { grid-column: 2; grid-row: 1; }
-  .lib-layout > #filters > .fchips { grid-column: 2; grid-row: 2; margin-top: 0.75rem; }
-  .lib-layout > .lib-main { grid-column: 2; grid-row: 3; margin-top: 1rem; }
+  .lib-layout > #filters > .fchips { grid-column: 2; grid-row: 2; margin-top: 0.85rem; }
+  .lib-layout > .lib-main { grid-column: 2; grid-row: 3; margin-top: 0.85rem; }
   #filters:not(.filters-open) .fpanel.filter-more { display: flex; }
   #filters:not(.filters-open) .fpanel .filter-more { display: block; }
   .lib-layout > #filters > .fpanel { grid-column: 1; grid-row: 1 / span 3; position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow: auto; }
-  #filters-toggle, #filters .fdone { display: none; }
+  #filters-toggle, #filters .fdone, #filters .facet-phone { display: none; }
 }
 
 /* An event with several lists (js/events.js, js/eventshelf.js): ▾ opens its categories; inside, a chip per category. */

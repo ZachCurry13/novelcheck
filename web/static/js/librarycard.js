@@ -7,14 +7,10 @@ import { contentIcons } from "./content.js";
 import { deepChip } from "./deepscan.js";
 import { seriesText } from "./titlefix.js";
 import { coverImg } from "./covers.js";
-import { blurbHTML } from "./blurb.js";
 import { audioChip } from "./audioui.js";
 
 // A book already in your Nightstand.
 export const IN_QUEUE = `<span class="px-2 py-1 text-lg text-emerald-300" title="In your Nightstand" aria-label="In your Nightstand">✓</span>`;
-
-// Lists that aren't libraries (Discover's and the events').
-const LISTS = ["Discover", "Events"];
 
 // reviewChip marks a rating the AI wasn't sure of, until a parent looks.
 export function reviewChip(b) {
@@ -22,25 +18,22 @@ export function reviewChip(b) {
     ? `<span class="chip-dup" title="The AI wasn't sure of this rating: worth a look, or a re-rate on the big model">Not sure</span>` : "";
 }
 
-// card is one book; extra is more to show above its libraries (an event's
-// Claim buttons).
+// card is one book, as a bookshop shows it: the cover (with its pepper level, and ＋ for the Nightstand),
+// the title and author, a few chips, and an event's Claim buttons (extra). The blurb, formats and libraries
+// are on the book's own page.
 export function card(b, queueOn, extra = "") {
-  const cats = b.catalogs ? b.catalogs.split(", ").filter((c) => !LISTS.includes(c)).map((c) => `<span class="chip-cat">${esc(c)}</span>`).join(" ") : "";
+  const rated = b.spice_level !== null && b.spice_level !== undefined;
   return `
-    <article data-book="${b.id}" data-state="${esc(b.status || "")}" class="card cursor-pointer transition hover:ring-indigo-600 flex flex-col gap-2">
-      <div class="flex items-start justify-between gap-3">
-        ${coverImg(b.id, "h-24 w-16")}
-        <div class="min-w-0 flex-1">
-          <h3 class="font-semibold leading-tight line-clamp-2">${esc(b.title)}</h3>
-          <p class="text-sm text-slate-400 truncate">${esc(b.author || "Unknown author")}${seriesText(b) ? ` · <span class="text-sky-300">${esc(seriesText(b))}</span>` : ""}</p>
-          ${b.narrator ? `<p class="truncate text-xs text-slate-500">${esc(b.narrator)}</p>` : ""}
-        </div>
-        ${!queueOn ? "" : b.in_queue ? IN_QUEUE : `<button data-queue="${b.id}" title="Add to your Nightstand" aria-label="Add to your Nightstand" class="btn-ghost px-2 py-1 text-lg">＋</button>`}
+    <article data-book="${b.id}" data-state="${esc(b.status || "")}" class="lib-tile">
+      <div class="tile-cover">${coverImg(b.id, "tile-img")}
+        ${rated ? `<span class="lvl lvl-${b.spice_level} tile-lvl" title="Level ${b.spice_level}">${b.spice_level}</span>` : ""}
+        ${!queueOn ? "" : b.in_queue ? `<span class="tile-add">${IN_QUEUE}</span>` : `<button data-queue="${b.id}" title="Add to your Nightstand" aria-label="Add to your Nightstand" class="tile-add tile-add-btn">＋</button>`}
       </div>
-      <div data-chips class="flex flex-wrap gap-1">${classChip(b)} ${reviewChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
-      ${blurbHTML(b)}
+      <h3 class="tile-title">${esc(b.title)}</h3>
+      <p class="tile-author">${esc(b.author || "Unknown author")}${seriesText(b) ? ` · <span class="text-sky-300">${esc(seriesText(b))}</span>` : ""}</p>
+      <div data-chips class="tile-chips">${rated ? "" : classChip(b)} ${reviewChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
       ${extra}
-      <div class="mt-auto flex flex-wrap items-center gap-1">${cats} ${formatChips(b)}</div>
+      <div class="tile-meta">${audioChip(b)} ${b.formats && /AUDIO/.test(b.formats) ? "" : `<span data-libaudio="${b.id}"></span>`}${b.delete_requests ? ` <span class="chip-dup">Delete requested</span>` : ""}</div>
     </article>`;
 }
 

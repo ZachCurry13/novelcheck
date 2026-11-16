@@ -1,6 +1,7 @@
 // 🧭 Discover: best sellers, classics and the family's own new and popular
 // books, in rows to swipe through. Everyone's content rules apply; kids never
 // see books the AI hasn't rated yet (the server leaves them out).
+import { discoverFiltersHTML, bindDiscoverFilters, cardData } from "./discoverfilters.js";
 import { get, post } from "./api.js";
 import { $, esc, attempt, toast, canManage } from "./ui.js";
 import { openBook } from "./bookdialog.js";
@@ -60,15 +61,9 @@ export async function renderDiscover(view, state) {
     <p class="mb-2 text-sm text-slate-400">Popular and classic books with their peppers and content. Tap a book for details.</p>
     <details id="libby-search" class="card mb-4 ${state.user.role === "restricted" ? "hidden" : ""}"><summary class="cursor-pointer font-semibold">Search my libraries (Libby)</summary><div id="ls-host" class="mt-3"></div></details>
     <div id="discover-seasons"></div>
-    <label class="toggle mb-4 min-h-[2.5rem]"><input type="checkbox" id="show-owned" ${showOwned() ? "checked" : ""}> Also show books we already have <span id="owned-count" class="text-slate-500"></span></label>
-    <div id="libby-filters" class="mb-4 hidden flex-wrap items-center gap-2" role="group" aria-label="Filter by what your library lends">
-      <span class="text-sm text-slate-400">At my library:</span>
-      <button type="button" data-lf="" class="btn-primary py-1 text-sm">All books</button>
-      <button type="button" data-lf="here" class="btn-secondary py-1 text-sm">Lends it</button>
-      <button type="button" data-lf="audio" class="btn-secondary py-1 text-sm">Audiobook</button>
-      <button type="button" data-lf="now" class="btn-secondary py-1 text-sm">✓ Available now</button>
-      <span id="lf-status" class="text-xs text-slate-500"></span></div>
-    <div id="rows" class="space-y-6"><p class="text-slate-400">Loading…</p></div>
+    <div class="lib-layout">${discoverFiltersHTML(showOwned())}
+      <div class="lib-main"><p id="result-count" class="mb-3 text-sm text-slate-400"></p>
+        <div id="rows" class="space-y-6"><p class="text-slate-400">Loading…</p></div></div></div>
     <div id="credit" class="mt-8 space-y-1 text-xs text-slate-500"></div>`;
   $("#libby-search", view).addEventListener("toggle", (e) => {
     const host = $("#ls-host", view);
@@ -87,26 +82,23 @@ export async function renderDiscover(view, state) {
   const rows = $("#rows", view);
   let shown = "";
   let mode = ""; // the library filter: "", here, audio or now
-  const lf = $("#libby-filters", view);
+  const form = $("#filters", view);
+  const filters = bindDiscoverFilters(form, rows, $("#result-count", view));
   hasLibraries().then((ok) => {
-    if (ok) lf.classList.remove("hidden"), lf.classList.add("flex");
+    if (ok) filters.libbyHost.classList.remove("hidden");
   });
   const applyMode = async () => {
     const status = $("#lf-status", view);
-    if (mode) await checkAll(rows, (done, total) => (status.textContent = done < total ? `Checking your libraries… ${done} of ${total}` : ""));
+    if (mode) await checkAll(rows, (done, total) => (status.textContent = done < total ? `Checking… ${done} of ${total}` : ""));
     filterCards(rows, mode);
-    status.textContent = mode ? `${rows.querySelectorAll("[data-book]:not(.hidden)").length} books` : "";
+    status.textContent = "";
+    filters.apply(); // the panel's other filters on top
   };
-  lf.onclick = (e) => {
-    const b = e.target.closest("[data-lf]");
-    if (!b) return;
-    mode = b.dataset.lf;
-    lf.querySelectorAll("[data-lf]").forEach((x) => {
-      x.classList.toggle("btn-primary", x === b);
-      x.classList.toggle("btn-secondary", x !== b);
-    });
+  form.addEventListener("change", (e) => {
+    if (e.target.name !== "lf") return;
+    mode = e.target.value;
     applyMode();
-  };
+  });
   const paint = (data) => {
     const json = JSON.stringify(data);
     if (json === shown) return; // unchanged: keep where each row was scrolled to
@@ -120,6 +112,7 @@ export async function renderDiscover(view, state) {
       <div data-row="${esc(r.key)}" class="flex snap-x gap-3 overflow-x-auto px-px pt-1 pb-2">${r.books.map((b) => card(b, kid, queueOn, state.user.role !== "friend")).join("")}</div>
     </section>`).join("") : `<p class="text-slate-400">${emptyText(data, state.user)}</p>`;
     rows.querySelectorAll("[data-row]").forEach((r) => (r.scrollLeft = scrolled[r.dataset.row] || 0));
+    filters.refill(); // the genres of these books, and the filters applied to them
     credit(data);
     markLibby(rows).then(() => mode && applyMode()); // 📚 chips: does the person's library lend it?
   };
@@ -179,7 +172,7 @@ function card(b, kid, queueOn, wishOn = true) { // wishOn: a friend's account ha
   } else if (!b.owned && wishOn) {
     action = b.wished ? `<span class="text-xs text-slate-400">On wishlist</span>` : `<button data-act="wish" class="btn-secondary px-2 py-1 text-xs">Wishlist</button>`;
   }
-  return `<article data-book="${b.id}" class="card flex w-44 shrink-0 snap-start cursor-pointer flex-col gap-2 p-3">
+  return `<article data-book="${b.id}" ${cardData(b)} class="card flex w-44 shrink-0 snap-start cursor-pointer flex-col gap-2 p-3">
     <div class="relative">${coverImg(b.id, "h-56 w-full")}
       ${b.list?.startsWith("nyt:") && b.rank ? `<span class="absolute left-1 top-1 rounded bg-slate-950/80 px-1.5 text-xs font-semibold">#${b.rank}</span>` : ""}</div>
     <h3 class="line-clamp-2 text-sm font-semibold leading-tight">${esc(b.title)}</h3>

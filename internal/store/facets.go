@@ -32,9 +32,15 @@ func browseConds(f BookFilter, where []string, args []any) ([]string, []any) {
 		where = append(where, "b.duration_sec > 0 AND b.duration_sec <= ?")
 		args = append(args, int(f.MaxHours*3600))
 	}
-	if genres.Valid(f.Genre) {
-		where = append(where, "b.genres LIKE ?")
-		args = append(args, "%,"+f.Genre+",%")
+	var anyGenre []string // one genre, or any of several ticked ("fantasy,romance")
+	for _, g := range strings.Split(f.Genre, ",") {
+		if g = strings.TrimSpace(g); genres.Valid(g) {
+			anyGenre = append(anyGenre, "b.genres LIKE ?")
+			args = append(args, "%,"+g+",%")
+		}
+	}
+	if len(anyGenre) > 0 {
+		where = append(where, "("+strings.Join(anyGenre, " OR ")+")")
 	}
 	switch f.Kind {
 	case "fiction", "nonfiction":
