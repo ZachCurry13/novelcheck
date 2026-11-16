@@ -55,7 +55,7 @@ func TestRenameBook(t *testing.T) {
 	}
 }
 
-// The name finder looks at books not from Calibre, once each, and never at a name a parent typed.
+// The name finder looks at every book once, says which come from Calibre, and never at a name a parent typed.
 func TestNamesToCheck(t *testing.T) {
 	s := newStore(t)
 	looked, _ := s.EnsureCatalog(store.LookedUpCatalog, "custom")
@@ -68,10 +68,11 @@ func TestNamesToCheck(t *testing.T) {
 	_ = s.AddCopy(looked, typed, "lookup:t", "list", "")
 	s.MarkName(typed, 2)
 	got, err := s.NamesToCheck(10)
-	if err != nil || len(got) != 1 || got[0].ID != a {
-		t.Fatalf("to check: %+v %v", got, err)
+	if err != nil || len(got) != 2 || got[0].ID != c || !got[0].Calibre || got[1].ID != a || got[1].Calibre {
+		t.Fatalf("to check (Calibre books too, marked as such): %+v %v", got, err)
 	}
 	s.MarkName(a, 1)
+	s.MarkName(c, 1)
 	if got, _ := s.NamesToCheck(10); len(got) != 0 {
 		t.Fatalf("checked twice: %+v", got)
 	}

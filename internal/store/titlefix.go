@@ -26,17 +26,18 @@ const inCalibre = `EXISTS (SELECT 1 FROM catalog_books cb JOIN catalogs c ON c.i
 // TitleFixes lists books in Calibre whose title there could be tidied.
 func (s *Store) TitleFixes() ([]TitleFix, error) {
 	out := []TitleFix{}
-	err := s.DB.Select(&out, `SELECT b.id, b.title, b.author, b.title_fix, b.series, b.series_index,
+	err := s.DB.Select(&out, `SELECT b.id, CASE WHEN b.title_suggest != '' THEN b.title_suggest ELSE b.title END AS title, b.author,
+		CASE WHEN b.title_fix != '' THEN b.title_fix ELSE b.title END AS title_fix, b.series, b.series_index,
 		(SELECT COALESCE(MIN(CAST(cb.external_id AS INTEGER)), 0) FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
 			WHERE cb.book_id = b.id AND c.source = 'calibre') AS calibre_id
-		FROM books b WHERE b.title_fix != '' AND `+inCalibre+` ORDER BY b.author, b.series, b.series_index, b.title`)
+		FROM books b WHERE (b.title_fix != '' OR b.title_suggest != '') AND `+inCalibre+` ORDER BY b.author, b.series, b.series_index, b.title`)
 	return out, err
 }
 
 // CountTitleFixes is how many titles could be tidied in Calibre.
 func (s *Store) CountTitleFixes() int {
 	var n int
-	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM books b WHERE b.title_fix != '' AND `+inCalibre)
+	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM books b WHERE (b.title_fix != '' OR b.title_suggest != '') AND `+inCalibre)
 	return n
 }
 
@@ -67,7 +68,7 @@ func (s *Store) SavedToCalibre(bookID int64, title, series string, index float64
 		return err
 	}
 	key := NormKey(title, author) // kept as it was if another book already has the new name
-	_, err := s.DB.Exec(`UPDATE books SET title = ?, series = ?, series_index = ?, title_fix = '',
+	_, err := s.DB.Exec(`UPDATE books SET title = ?, series = ?, series_index = ?, title_fix = '', title_suggest = '',
 		norm_key = CASE WHEN EXISTS (SELECT 1 FROM books o WHERE o.norm_key = ? AND o.id != books.id)
 			THEN norm_key ELSE ? END
 		WHERE id = ?`, title, series, index, key, key, bookID)

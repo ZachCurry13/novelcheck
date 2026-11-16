@@ -26,12 +26,24 @@ func (s *Server) handleCoverSuggest(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 25*time.Second)
 	defer cancel()
 	titles := covers.Titles(b.Title)
-	clean := ""
-	if len(titles) > 0 && titles[0] != strings.TrimSpace(b.Title) {
+	clean := s.Store.TitleSuggestion(b.ID)
+	if clean == "" {
+		clean = s.closestTitle(ctx, b.Title, b.Author) // "Unnatural.Exprosure" is Unnatural Exposure
+	}
+	if clean == "" && len(titles) > 0 && titles[0] != strings.TrimSpace(b.Title) {
 		clean = titles[0]
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"id": b.ID, "title": b.Title, "author": b.Author, "clean_title": clean,
-		"candidates": s.Covers.Candidates(ctx, b.Title, b.Author, r.URL.Query().Get("q"), 8)})
+		"in_calibre": len(s.Store.CalibreIDs(b.ID)) > 0,
+		"candidates": s.Covers.Candidates(ctx, searchUnder(b.Title, clean), b.Author, r.URL.Query().Get("q"), 8)})
+}
+
+// searchUnder is the title to look for covers under: the true title when one was found.
+func searchUnder(title, clean string) string {
+	if clean != "" {
+		return clean
+	}
+	return title
 }
 
 // handleCoverPreview: GET /api/admin/covers/preview?u=… shows a candidate image through NovelCheck (the page may

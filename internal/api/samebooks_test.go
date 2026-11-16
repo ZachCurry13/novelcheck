@@ -87,7 +87,7 @@ func TestSameBooksNotSpinoffs(t *testing.T) {
 		ids[b[0]] = id
 	}
 	pairs := func() []any {
-		_, out := admin.do("GET", "/api/admin/same-books", nil, false)
+		_, out := admin.do("GET", "/api/admin/same-books?fresh=1", nil, false)
 		p, _ := out["pairs"].([]any)
 		return p
 	}

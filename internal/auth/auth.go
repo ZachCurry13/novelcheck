@@ -126,6 +126,15 @@ func IsHTTPS(r *http.Request) bool {
 // current resolves the session cookie and, for active users, rolls the
 // expiry forward (at most once a day) so regular users stay signed in.
 func (m *Manager) current(w http.ResponseWriter, r *http.Request) *store.User {
+	sess := m.session(w, r)
+	if sess == nil {
+		return nil
+	}
+	return sess.User
+}
+
+// session is current with the whole session (who, and who is viewing as them).
+func (m *Manager) session(w http.ResponseWriter, r *http.Request) *store.Session {
 	c, err := r.Cookie(CookieName)
 	if err != nil || c.Value == "" {
 		return nil
@@ -133,6 +142,9 @@ func (m *Manager) current(w http.ResponseWriter, r *http.Request) *store.User {
 	sess, err := m.Store.SessionByToken(hashToken(c.Value))
 	if err != nil {
 		return nil
+	}
+	if sess.ViewedBy != 0 {
+		return sess // a View as session is never extended
 	}
 	life := shortSession
 	if sess.Remember {
@@ -143,19 +155,28 @@ func (m *Manager) current(w http.ResponseWriter, r *http.Request) *store.User {
 			m.setCookie(w, r, c.Value, true)
 		}
 	}
-	return sess.User
+	return sess
 }
 
 // RequireUser rejects unauthenticated requests with 401 and stores the user
 // in the request context.
 func (m *Manager) RequireUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		u := m.current(w, r)
-		if u == nil {
+		sess := m.session(w, r)
+		if sess == nil {
 			http.Error(w, `{"error":"authentication required"}`, http.StatusUnauthorized)
 			return
 		}
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, u)))
+		ctx := context.WithValue(r.Context(), ctxKey{}, sess.User)
+		if sess.ViewedBy != 0 {
+			// View as: an admin looking at the app as this person. Looking only: nothing is changed in their name.
+			if r.Method != http.MethodGet && r.Method != http.MethodHead && !viewAllowed[r.URL.Path] {
+				http.Error(w, `{"error":"You're viewing the app as `+jsonText(sess.User.Username)+`, so changes are off. Go back to your own account to change things."}`, http.StatusForbidden)
+				return
+			}
+			ctx = context.WithValue(ctx, viewerKey{}, sess.ViewedBy)
+		}
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -179,6 +200,11 @@ func RequireManager(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// WithUser is ctx as if u had signed in (background work done for a person, like keeping admin pages ready).
+func WithUser(ctx context.Context, u *store.User) context.Context {
+	return context.WithValue(ctx, ctxKey{}, u)
 }
 
 func UserFrom(r *http.Request) *store.User {

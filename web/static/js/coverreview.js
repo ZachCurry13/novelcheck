@@ -1,7 +1,8 @@
-// Review covers (Admin → Library cleanup → Books with no cover): one book at a time, the title and author it has,
-// a cleaner title to save to Calibre when its title carries series numbers or brackets, and cover candidates from
-// Open Library and Google Books to tap. A search box tries other words; Skip moves on.
-import { get, post } from "./api.js";
+// Review covers (Admin → Library cleanup → Books with no cover): one book at a time, its title in a box to fix
+// (filled with the true title when NovelCheck found one among the author's books: "Unnatural.Exprosure" is
+// Unnatural Exposure), saved to Calibre and searched again; then cover candidates from Open Library and Google
+// Books to tap. A search box tries other words; Skip moves on.
+import { get, post, put } from "./api.js";
 import { esc, attempt, toast } from "./ui.js";
 
 export async function openCoverReview(onDone) {
@@ -32,8 +33,11 @@ export async function openCoverReview(onDone) {
       <div class="flex items-center justify-between gap-3"><p class="text-sm text-slate-400">Book ${i + 1} of ${books.length} with no cover</p>
         <button type="button" data-close class="icon-btn" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button></div>
       <div><p class="book-title text-xl font-semibold leading-snug">${esc(b.title)}</p><p class="text-slate-400">${esc(b.author || "Unknown author")}</p></div>
-      ${data?.clean_title ? `<div class="card-outlined space-y-2 p-3"><p class="text-sm">A cleaner title: <b>${esc(data.clean_title)}</b></p>
-        <button type="button" data-title class="btn-tonal">Use this title in Calibre</button></div>` : ""}
+      ${data ? `<form data-rename class="card-outlined space-y-2 p-3">
+        <label class="block text-sm" for="cr-title">${data.clean_title ? "Its true title, found on Open Library. Check it, then save:" : "Title wrong? Fix it here and save:"}</label>
+        <div class="flex flex-wrap gap-2"><input id="cr-title" name="t" class="input min-w-0 flex-1" value="${esc(data.clean_title || b.title)}">
+          <button class="${data.clean_title ? "btn-primary" : "btn-secondary"} shrink-0">${data.in_calibre ? "Save in Calibre" : "Save"}</button></div>
+        <p class="text-xs text-slate-400">Saving fixes the title${data.in_calibre ? " in Calibre" : ""} and looks for covers under it.</p></form>` : ""}
       <div class="space-y-2"><p class="text-sm font-medium">Tap the right cover</p>
         ${!data ? `<p class="text-sm text-slate-400">Looking…</p>`
           : cands.length ? `<div class="grid grid-cols-3 gap-3 sm:grid-cols-4">${cands.map((c, k) => `<button type="button" data-pick="${k}" class="space-y-1 text-left">
@@ -73,18 +77,23 @@ export async function openCoverReview(onDone) {
       } else pick.disabled = false;
       return;
     }
-    if (e.target.closest("[data-title]")) {
-      const t = data.clean_title;
-      if (await attempt(() => post(`/api/books/${books[i].id}/calibre-title`, { title: t }), "Title saved in Calibre")) {
-        books[i].title = t;
-        data.clean_title = "";
+  };
+  d.onsubmit = async (e) => {
+    e.preventDefault();
+    if (e.target.matches("[data-rename]")) { // fix the title, then search covers under it
+      const t = e.target.t.value.trim();
+      if (!t || t === books[i].title) return;
+      const b = books[i];
+      const ok = data.in_calibre
+        ? await attempt(() => post(`/api/books/${b.id}/calibre-title`, { title: t }), "Title saved in Calibre")
+        : await attempt(() => put(`/api/books/${b.id}/name`, { title: t, author: b.author || "" }), "Title saved");
+      if (ok) {
+        b.title = t;
         q = "";
         load();
       }
+      return;
     }
-  };
-  d.onsubmit = (e) => {
-    e.preventDefault();
     q = e.target.q.value.trim();
     load();
   };

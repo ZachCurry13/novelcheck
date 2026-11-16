@@ -100,6 +100,13 @@ export async function renderUsers(host, viewer) {
     if (!act) return;
     const cardEl = e.target.closest("[data-user]");
     const id = cardEl.dataset.user;
+    if (act === "view-as") { // the app as they see it, read-only, until "Back to my account"
+      if (await attempt(() => post(`/api/admin/users/${id}/view-as`))) {
+        location.hash = "#/";
+        location.reload(); // the whole app again, as them
+      }
+      return;
+    }
     const preset = PRESETS[act];
     if (preset) {
       if (preset.type) $("[name=type]", cardEl).value = preset.type;
@@ -172,6 +179,7 @@ function userCard(u, parents, viewer) {
         <button data-uact="password" class="btn-secondary">Reset password</button>
         ${parents || u.role === "restricted" ? `<button data-uact="pin" class="btn-ghost" title="A 4-digit PIN for family devices">PIN</button>` : ""}
         ${(parents || u.role === "restricted") && u.role !== "friend" && on(viewer, "koreader") ? `<button data-uact="koreader" class="btn-ghost" title="Set up this reader's KOReader">KOReader</button>` : ""}
+        ${u.role !== "admin" && can(viewer, "users") ? `<button data-uact="view-as" class="btn-ghost" title="See the app as ${esc(u.username)} does, without changing anything">View as ${esc(u.username)}</button>` : ""}
         ${u.owner ? "" : `<button data-uact="delete" class="btn-danger">Delete</button>`}
       </div>
     </div>`;

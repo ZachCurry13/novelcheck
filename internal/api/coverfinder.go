@@ -104,7 +104,13 @@ func (s *Server) findCovers(again bool) {
 			j.mu.Unlock()
 			continue
 		}
-		_, _, ok := s.Covers.OpenLibrary(ctx, b.ISBN) // the ISBN's cover, when it has one
+		_, _, ok := s.Covers.OpenLibrary(ctx, b.ISBN)               // the ISBN's cover, when it has one
+		if sug := s.Store.TitleSuggestion(b.ID); !ok && sug != "" { // the true title the name finder found
+			_, _, ok = s.Covers.Search(ctx, s.coverName(b.ID), sug, b.Author)
+			if !ok {
+				s.Covers.Forget(s.coverName(b.ID)) // the miss is for the true title; the old one gets its own try
+			}
+		}
 		if !ok {
 			_, _, ok = s.Covers.Search(ctx, s.coverName(b.ID), b.Title, b.Author)
 		}

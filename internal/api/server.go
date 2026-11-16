@@ -131,6 +131,7 @@ func (s *Server) Router() http.Handler {
 			r.Use(s.Auth.RequireUser)
 			r.Use(friendGuard) // friends' accounts: only the parts listed in friend.go
 			r.Get("/me", s.handleMe)
+			r.Delete("/me/view-as", s.handleStopViewing)                                     // back to the admin's own account
 			r.Post("/me/events/{id}/books/{book}/claim", friendOnly(s.handleClaimEventBook)) // into her own library
 			r.Post("/me/import", friendOnly(s.handleImportDrive))                            // her Goodreads list, into her library
 			r.Get("/activity/status", s.handleActivityStatus)
@@ -309,7 +310,7 @@ func (s *Server) Router() http.Handler {
 				r.With(s.cached).Get("/admin/status", s.handleAdminStatus)
 				r.Get("/admin/calibre/duplicates", s.handleDuplicates)
 				r.Get("/admin/calibre/duplicates/details", s.handleDuplicateDetails)
-				r.Get("/admin/same-books", s.handleSamePairs)
+				r.With(s.cached).Get("/admin/same-books", s.handleSamePairs)
 				r.Post("/admin/same-books/merge", s.handleSameAction(true))
 				r.Post("/admin/same-books/not", s.handleSameAction(false))
 				r.Post("/admin/rerate", s.handleRerate)

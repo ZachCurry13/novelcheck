@@ -15,7 +15,8 @@ type meJSON struct {
 	SafeMode     string          `json:"safe_mode,omitempty"` // admins: why background work is off (env, flag, crash)
 	FamilyDevice bool            `json:"family_device"`       // this device shows "Who's reading?"
 	HasPin       bool            `json:"has_pin"`
-	Areas        []string        `json:"areas"` // admins: the areas they may reach (all for the main admin)
+	Areas        []string        `json:"areas"`               // admins: the areas they may reach (all for the main admin)
+	ViewedBy     string          `json:"viewed_by,omitempty"` // View as: the admin looking at the app as this person (read-only)
 }
 
 func (s *Server) me(u *store.User) meJSON {

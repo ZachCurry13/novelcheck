@@ -39,6 +39,8 @@ func migrate(d *sqlx.DB) error {
 		{"books", "series_index", "REAL NOT NULL DEFAULT 0"},
 		{"books", "title_fix", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "name_checked", "INTEGER NOT NULL DEFAULT 0"},
+		{"books", "title_suggest", "TEXT NOT NULL DEFAULT ''"},
+		{"sessions", "viewed_by", "INTEGER NOT NULL DEFAULT 0"},
 		{"books", "tags", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "genres", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "kind", "TEXT NOT NULL DEFAULT ''"},

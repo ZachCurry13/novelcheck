@@ -20,19 +20,21 @@ type cleanupCache struct {
 // a removal, a title tidied, a pair set aside, a conversion that failed.
 func (s *Server) libraryPrint() string {
 	var p struct {
-		Books  int64  `db:"books"`
-		MaxB   int64  `db:"maxb"`
-		Copies int64  `db:"copies"`
-		Fixes  int64  `db:"fixes"`
-		Ign    int64  `db:"ign"`
-		Fail   int64  `db:"fail"`
-		Mod    string `db:"mod"`
+		Books  int64   `db:"books"`
+		MaxB   int64   `db:"maxb"`
+		Copies int64   `db:"copies"`
+		Fixes  int64   `db:"fixes"`
+		Ign    int64   `db:"ign"`
+		Fail   int64   `db:"fail"`
+		Mod    string  `db:"mod"`
+		Series float64 `db:"series"`
 	}
 	_ = s.Store.DB.Get(&p, `SELECT (SELECT COUNT(*) FROM books) AS books, (SELECT COALESCE(MAX(id), 0) FROM books) AS maxb,
 		(SELECT COUNT(*) FROM catalog_books) AS copies, (SELECT COUNT(*) FROM books WHERE title_fix != '') AS fixes,
 		(SELECT COUNT(*) FROM dup_ignores) AS ign, (SELECT COUNT(*) + 1000 * COALESCE(SUM(as_is), 0) FROM convert_failures) AS fail,
-		(SELECT COALESCE(MAX(modified), '') FROM catalog_books) AS mod`)
-	return fmt.Sprintf("%d|%d|%d|%d|%d|%d|%s|%s|%s", p.Books, p.MaxB, p.Copies, p.Fixes, p.Ign, p.Fail, p.Mod,
+		(SELECT COALESCE(MAX(modified), '') FROM catalog_books) AS mod,
+		(SELECT TOTAL(series_index) + COUNT(NULLIF(series, '')) + COUNT(NULLIF(title_suggest, '')) FROM books) AS series`)
+	return fmt.Sprintf("%d|%d|%d|%d|%d|%d|%s|%g|%s|%s", p.Books, p.MaxB, p.Copies, p.Fixes, p.Ign, p.Fail, p.Mod, p.Series,
 		s.Store.Setting("calibre_last_sync"), s.Store.Setting("calibre_server_url"))
 }
 

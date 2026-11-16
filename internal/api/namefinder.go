@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/enrich"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/titles"
 )
 
 // The name finder gives books that did not come from Calibre (Check a book,
@@ -17,6 +19,17 @@ import (
 // it is sure it is the same book (enrich.BetterName), looks at each book
 // once, and never touches a name a parent typed or a Calibre book (Calibre's
 // titles are tidied through Library cleanup instead).
+
+// closestTitle finds a messy title among the author's own books on Open Library ("Unnatural.Exprosure" is
+// Unnatural Exposure); "" when no single book is clearly meant or the title is already right.
+func (s *Server) closestTitle(ctx context.Context, title, author string) string {
+	bare := titles.WithoutAuthor(title, author)
+	f, ok := enrich.ClosestTitle(bare, author, s.Worker.Enricher().AuthorTitles(ctx, author))
+	if !ok || f.Title == strings.TrimSpace(title) {
+		return ""
+	}
+	return f.Title
+}
 
 // trueName looks a book up and says what to call it, if anything else.
 func (s *Server) trueName(ctx context.Context, title, author, isbn string) (enrich.Found, bool) {
@@ -33,6 +46,9 @@ func (s *Server) trueName(ctx context.Context, title, author, isbn string) (enri
 			return better, true
 		}
 	}
+	if t := s.closestTitle(ctx, title, author); t != "" { // a typo or dots: among the author's books
+		return enrich.Found{Title: t, Author: author}, true
+	}
 	return enrich.Found{}, false
 }
 
@@ -48,7 +64,15 @@ func (s *Server) fixNames(ctx context.Context, limit int) int {
 		if ctx.Err() != nil {
 			break
 		}
-		if f, ok := s.trueName(ctx, b.Title, b.Author, b.ISBN); ok {
+		if b.Calibre {
+			// Calibre's title would come back at the next sync, so the true title is a suggestion to save in
+			// Calibre (Tidy titles). Only a title that is off (a typo, dots, odd capitals) gets one, so a
+			// title Open Library merely writes longer is left alone.
+			if t := s.closestTitle(ctx, b.Title, b.Author); t != "" {
+				s.Store.SuggestTitle(b.ID, t)
+				fixed++
+			}
+		} else if f, ok := s.trueName(ctx, b.Title, b.Author, b.ISBN); ok {
 			if kept, err := s.Store.RenameBook(b.ID, f.Title, f.Author); err == nil {
 				fixed++
 				b.ID = kept
@@ -62,6 +86,8 @@ func (s *Server) fixNames(ctx context.Context, limit int) int {
 	return fixed
 }
 
+const namesVersionKey, namesVersion = "names_finder_version", "2"
+
 // NameLoop runs the name finder a little after start and then once a day.
 func (s *Server) NameLoop(ctx context.Context) {
 	wait := 5 * time.Minute // before the cover finder (10 minutes), which then searches by the true title
@@ -72,8 +98,12 @@ func (s *Server) NameLoop(ctx context.Context) {
 		case <-time.After(wait):
 		}
 		wait = 24 * time.Hour
-		if n := s.fixNames(ctx, 500); n > 0 {
-			s.Store.NotifyRoutine("names-fixed", fmt.Sprintf("Book names: %d books now have their true title and author from Open Library.", n), "")
+		if s.Store.Setting(namesVersionKey) != namesVersion { // the finder learned more (Calibre books, typos): look again
+			s.Store.RecheckNames()
+			_ = s.Store.SetSetting(namesVersionKey, namesVersion)
+		}
+		if n := s.fixNames(ctx, 2000); n > 0 {
+			s.Store.NotifyRoutine("names-fixed", fmt.Sprintf("Book names: %d books have their true title from Open Library. Calibre books are waiting under Library cleanup → Tidy titles in Calibre.", n), "#/admin?tab=cleanup")
 		}
 	}
 }

@@ -40,6 +40,7 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 	out := s.me(auth.UserFrom(r))
 	out.FamilyDevice = s.Auth.FamilyDevice(nil, r) != nil
+	out.ViewedBy = s.viewedBy(r)
 	writeJSON(w, http.StatusOK, out)
 }
 

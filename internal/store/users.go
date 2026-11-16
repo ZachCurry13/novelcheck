@@ -174,6 +174,14 @@ type Session struct {
 	User        *User
 	SecondsLeft int
 	Remember    bool
+	ViewedBy    int64 // the admin viewing the app as User (read-only), or 0
+}
+
+// CreateViewSession starts a read-only session as userID for the admin byID ("View as").
+func (s *Store) CreateViewSession(tokenHash string, userID, byID int64, lifetime int) error {
+	_, err := s.DB.Exec(`INSERT INTO sessions (token_hash, user_id, expires_at, remember, viewed_by)
+		VALUES (?, ?, datetime('now', ?), 0, ?)`, tokenHash, userID, fmt.Sprintf("+%d seconds", lifetime), byID)
+	return err
 }
 
 // SessionByToken resolves a live (unexpired) session.
@@ -182,8 +190,9 @@ func (s *Store) SessionByToken(tokenHash string) (*Session, error) {
 		UserID   int64 `db:"user_id"`
 		Left     int   `db:"secs_left"`
 		Remember bool  `db:"remember"`
+		ViewedBy int64 `db:"viewed_by"`
 	}
-	err := s.DB.Get(&row, `SELECT user_id, remember,
+	err := s.DB.Get(&row, `SELECT user_id, remember, viewed_by,
 		CAST(strftime('%s', expires_at) - strftime('%s', 'now') AS INTEGER) AS secs_left
 		FROM sessions WHERE token_hash = ? AND expires_at > datetime('now')`, tokenHash)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -196,7 +205,7 @@ func (s *Store) SessionByToken(tokenHash string) (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Session{User: u, SecondsLeft: row.Left, Remember: row.Remember}, nil
+	return &Session{User: u, SecondsLeft: row.Left, Remember: row.Remember, ViewedBy: row.ViewedBy}, nil
 }
 
 // ExtendSession pushes a session's expiry to lifetime seconds from now.

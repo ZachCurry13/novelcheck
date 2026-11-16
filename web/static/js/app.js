@@ -15,6 +15,7 @@ import { renderWhatsNew } from "./whatsnew.js";
 import { openGuide } from "./guide.js";
 import { checkForUpdates } from "./updatebanner.js";
 import { showSafeMode } from "./safemodebanner.js";
+import { showViewAs } from "./viewasbanner.js";
 import { applyAppearance } from "./appearance.js";
 import { renderSystem } from "./system.js";
 import { renderUsage } from "./usage.js";
@@ -129,6 +130,7 @@ function showApp() {
   if (!state.user.guide_seen && state.user.role !== "friend") openGuide(state); // the guide is about the family's library
   checkForUpdates(state);
   showSafeMode(state.user);
+  showViewAs(state.user);
 }
 
 let currentCleanup = null;

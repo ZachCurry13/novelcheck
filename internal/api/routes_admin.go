@@ -20,6 +20,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 	r.Put("/admin/activity", s.handleActivityStart)
 	r.Delete("/admin/activity", s.handleActivityClear)
 	r.Post("/admin/users/{id}/owner", s.handleMakeOwner)
+	r.Post("/admin/users/{id}/view-as", s.handleViewAs) // see the app as them, read-only (needs the people area)
 
 	r.Group(func(r chi.Router) { // 🤖 AI settings
 		r.Use(area(store.AreaAI))
@@ -78,13 +79,13 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/calibre/server", s.handleCalibreServerGet)
 		r.Put("/admin/calibre/server", s.handleCalibreServerSave)
 		r.Put("/admin/calibre/library", s.handleSetCalibreLibrary)
-		r.Get("/admin/covers/missing", s.handleMissingCovers)
+		r.With(s.cached).Get("/admin/covers/missing", s.handleMissingCovers)
 		r.Get("/admin/covers/suggest", s.handleCoverSuggest)
 		r.Get("/admin/covers/preview", s.handleCoverPreview)
 		r.Post("/admin/covers/choose", s.handleCoverChoose)
 		r.Post("/admin/covers/find", s.handleFindCovers)
 		r.Post("/admin/covers/stop", s.handleStopCovers)
-		r.Get("/admin/cleanup", s.handleCleanup)
+		r.With(s.cached).Get("/admin/cleanup", s.handleCleanup)
 		r.Post("/admin/cleanup/refresh", s.handleCleanupRefresh)
 		r.Get("/admin/formats", s.handleFormats)
 		r.Post("/admin/formats/remove", s.handleRemoveFormats)
