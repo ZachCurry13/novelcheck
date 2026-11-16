@@ -29,6 +29,10 @@ func TestRecycleBinAgainstLibrary(t *testing.T) {
 	}
 	entry("901", "Dune", "Frank Herbert")
 	entry("77", "Emma", "Jane Austen")
+	// Removed under its old file-name title: the library has it as "Point of Origin" (Calibre #500).
+	poo, _ := st.UpsertBook("Point of Origin", "Patricia Cornwell", "", "")
+	_ = st.AddCopy(cal, poo, filepath.Join(lib, "Patricia Cornwell", "Point of Origin (500)", "Point of Origin.epub"), "epub", "500")
+	entry("12", "Cornwell, Patricia - Point of Origin", "Patricia Cornwell")
 
 	out := readBin(t, admin, true)
 	state := map[string]map[string]any{}
@@ -38,6 +42,9 @@ func TestRecycleBinAgainstLibrary(t *testing.T) {
 	}
 	if state["901"]["in_library"] != true || state["901"]["library_at"] != "900" {
 		t.Fatalf("Dune still has Calibre #900: %v", state["901"])
+	}
+	if state["12"]["in_library"] != true || state["12"]["library_at"] != "500" {
+		t.Fatalf("the author on the title hid the copy that is there: %v", state["12"])
 	}
 	if state["77"]["in_library"] != false {
 		t.Fatalf("Emma's only copy was the one removed, so it is missing: %v", state["77"])

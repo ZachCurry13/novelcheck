@@ -109,6 +109,9 @@ func (c *Client) SetFields(ctx context.Context, id int, fields [][]any) (found b
 	return len(raw) > 0 && string(raw) != "null", nil
 }
 
+// ErrDuplicate is calibre refusing a book it already has (same title and author).
+var ErrDuplicate = errors.New("calibre already has a book with this title and author, so it was not added again")
+
 // AddBook uploads a book file to calibre (like Add books in calibre): duplicates are refused, not added twice.
 // It returns the new book's number. UNVERIFIED against a real calibre: see Admin → Check my servers.
 func (c *Client) AddBook(ctx context.Context, filename string, data []byte) (int, error) {
@@ -126,7 +129,11 @@ func (c *Client) AddBook(ctx context.Context, filename string, data []byte) (int
 		return 0, err
 	}
 	var out struct {
-		BookID int `json:"book_id"`
+		BookID     int             `json:"book_id"`
+		Duplicates json.RawMessage `json:"duplicates"`
+	}
+	if json.Unmarshal(raw, &out) == nil && out.BookID == 0 && len(out.Duplicates) > 0 && string(out.Duplicates) != "null" {
+		return 0, ErrDuplicate
 	}
 	if json.Unmarshal(raw, &out) != nil || out.BookID == 0 {
 		return 0, errors.New("calibre didn't say which book it made (it may have refused a duplicate)")

@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.76.1]
+
+### 🐛 Fixed
+- **Calibre's recycle bin no longer lists books you still have as missing.** A book removed under a file-name title like "Cornwell, Patricia - Point of Origin" is now matched to the copy in your library ("Point of Origin"), so it shows as "Still in your library" and isn't offered for Put back. If Calibre does refuse a book it already has, the bin says so plainly ("Calibre already has this book") instead of an error, and reads itself again. Checking a book by such a title also finds the book you have.
+- **No more "Sortable" error when you leave the Nightstand quickly.** Switching pages before the last one finished loading ran that page's cleanup twice; each page now cleans up exactly once.
+- **Guided cleanup** no longer stops with an error when the server reports a count of formats to convert or remove without the list.
+
 ## [1.76.0]
 
 ### ✏️ True titles and authors

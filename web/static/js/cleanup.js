@@ -49,14 +49,14 @@ const reviews = {
     if (!r) return null;
     return { title: "Convert to EPUB", intro: "Calibre converts each book on this list, one at a time; this can take a while. The original file stays until the last step. A book that fails keeps its file. Untick a book to leave it.", confirm: "Convert the ticked books",
       items: (r.convert || []).map((f) => ({ id: f.book_id, label: f.title, detail: `${f.author || ""} · ${String(f.format).toUpperCase()} → EPUB` })),
-      more: r.convert_count > (r.convert || []).length ? `…and ${r.convert_count - r.convert.length} more, left for another run.` : "" };
+      more: r.convert_count > (r.convert || []).length ? `…and ${r.convert_count - (r.convert || []).length} more, left for another run.` : "" };
   },
   formats: async () => {
     const r = await attempt(() => get("/api/admin/formats"));
     if (!r) return null;
     return { title: "Remove other formats", fixed: true, intro: "Each book here has an EPUB, and only its other e-book files (MOBI, AZW3 and the like) are removed, into Calibre's recycle bin; you can undo for 7 days under Formats…. PDFs, comics and audiobooks always stay. A book with no EPUB is never touched, and a book whose EPUB is missing or empty is skipped. All or nothing: to keep a file, tick more formats under Formats….", confirm: `Remove ${plural(r.file_count, "file")}`,
-      items: (r.groups || []).map((g) => ({ id: g.book_id, label: g.title, detail: `keeps ${g.keep.concat(g.stays || []).join(", ")} · removes ${g.remove.map((f) => `${f.format.toUpperCase()}${f.size ? ` ${gb(f.size)}` : ""}`).join(", ")}` })),
-      more: r.group_count > (r.groups || []).length ? `…and ${r.group_count - r.groups.length} more books, not listed here.` : "" };
+      items: (r.groups || []).map((g) => ({ id: g.book_id, label: g.title, detail: `keeps ${(g.keep || []).concat(g.stays || []).join(", ")} · removes ${(g.remove || []).map((f) => `${f.format.toUpperCase()}${f.size ? ` ${gb(f.size)}` : ""}`).join(", ")}` })),
+      more: r.group_count > (r.groups || []).length ? `…and ${r.group_count - (r.groups || []).length} more books, not listed here.` : "" };
   },
 };
 

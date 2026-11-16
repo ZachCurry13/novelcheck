@@ -32,6 +32,7 @@ func (s *Store) Owned(bookID int64) bool {
 // MatchBook finds a book NovelCheck already knows: same title and author
 // surname, or else the only book with that title. 0 means none.
 func (s *Store) MatchBook(title, author string) int64 {
+	title = titles.WithoutAuthor(title, author) // "Cornwell, Patricia - Point of Origin" is "Point of Origin"
 	var id int64
 	if s.DB.Get(&id, `SELECT id FROM books WHERE norm_key = ?`, s.aliasKey(NormKey(title, author))) == nil {
 		return id

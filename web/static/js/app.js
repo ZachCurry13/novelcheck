@@ -132,6 +132,7 @@ function showApp() {
 }
 
 let currentCleanup = null;
+let routeTurn = 0; // which page change is the latest
 async function route() {
   if (!state.user) return;
   beginRoute(); // was this Back or Forward? (decided before the page takes time to draw)
@@ -146,11 +147,22 @@ async function route() {
   const menu = NAV_OF[name] || name;
   $$("#nav .nav-link").forEach((a) => a.classList.toggle("active", a.dataset.route === menu));
   markMobileNav(menu);
-  if (typeof currentCleanup === "function") currentCleanup();
+  // Each page's cleanup runs once. A page left before it finished loading cleans up when it does (its
+  // cleanup used to stay as the current one and run again on the next page change: the Nightstand's
+  // "Sortable" error).
+  const done = currentCleanup;
+  currentCleanup = null;
+  if (typeof done === "function") done();
+  const turn = ++routeTurn;
   // Fresh container per route so listeners never leak between views.
   const view = document.createElement("div");
   $("#view").replaceChildren(view);
-  currentCleanup = await routes[name](view, state);
+  const cleanup = await routes[name](view, state);
+  if (turn !== routeTurn) {
+    if (typeof cleanup === "function") cleanup();
+    return;
+  }
+  currentCleanup = cleanup;
   restoreScroll(); // after Back, where the page was left; otherwise the top
 }
 

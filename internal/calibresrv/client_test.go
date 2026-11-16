@@ -2,6 +2,7 @@ package calibresrv
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -109,5 +110,20 @@ func TestSetMetadataRequest(t *testing.T) {
 	}
 	if found, err := c.SetMetadata(context.Background(), 99, "Dune", "", 0); err != nil || found || strings.Contains(got, "series") {
 		t.Fatalf("title only, missing book: %q %v %v", got, found, err)
+	}
+}
+
+// Calibre answers an add of a book it already has with the duplicates instead of a new book number.
+func TestAddBookDuplicate(t *testing.T) {
+	answer := `{"title":"Point of Origin","authors":["Patricia Cornwell"],"duplicates":[{"id":500,"title":"Point of Origin"}]}`
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.Write([]byte(answer)) }))
+	defer srv.Close()
+	c := &Client{URL: srv.URL, Library: "Books"}
+	if _, err := c.AddBook(context.Background(), "poo.epub", []byte("x")); !errors.Is(err, ErrDuplicate) {
+		t.Fatalf("duplicate: %v", err)
+	}
+	answer = `{"title":"Point of Origin","book_id":501}`
+	if id, err := c.AddBook(context.Background(), "poo.epub", []byte("x")); err != nil || id != 501 {
+		t.Fatalf("added: %d %v", id, err)
 	}
 }
