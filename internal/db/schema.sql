@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
     max_spice        INTEGER NOT NULL DEFAULT -1,  -- kid accounts: hide books above this many peppers (0-5); -1 = no limit
     only_collections INTEGER NOT NULL DEFAULT 0,   -- kid accounts: see only books in their collections (user_collections)
     ai_features      INTEGER NOT NULL DEFAULT 0,   -- kid accounts: a parent allowed AI features (AI suggestions, Deep Scan requests)
-    start_page       TEXT NOT NULL DEFAULT '',     -- the page NovelCheck opens on ('' = Check a book for parents, Library for kids)
+    start_page       TEXT NOT NULL DEFAULT '',
+    claim_catalog    INTEGER NOT NULL DEFAULT 0,   -- the library event books this person claims go to (0 = ask on the event)     -- the page NovelCheck opens on ('' = Check a book for parents, Library for kids)
     theme            TEXT NOT NULL DEFAULT '',     -- '' = match the device, 'dark', 'light'
     font             TEXT NOT NULL DEFAULT '',     -- '' or 'dyslexic'
     motion           TEXT NOT NULL DEFAULT '',     -- '' = match the device, 'reduce'

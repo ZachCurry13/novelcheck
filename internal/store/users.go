@@ -9,7 +9,7 @@ import (
 var ErrNotFound = errors.New("not found")
 
 const userCols = `id, username, password_hash, role, hide_open_door, hide_nudity, hide_solo_acts,
-	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, only_collections, ai_features, start_page, theme, font, motion, owner, admin_areas, created_at`
+	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, only_collections, ai_features, start_page, claim_catalog, theme, font, motion, owner, admin_areas, created_at`
 
 func (s *Store) CountUsers() (int, error) {
 	var n int
@@ -247,6 +247,12 @@ func (s *Store) SetAppearance(id int64, theme, font, motion string) error {
 }
 
 // SetStartPage saves the page a user wants NovelCheck to open on ("" = the default).
+// SetClaimCatalog saves the library a person's event claims go to by default (0: none).
+func (s *Store) SetClaimCatalog(id, catalogID int64) error {
+	_, err := s.DB.Exec(`UPDATE users SET claim_catalog = ? WHERE id = ?`, catalogID, id)
+	return err
+}
+
 func (s *Store) SetStartPage(id int64, page string) error {
 	_, err := s.DB.Exec(`UPDATE users SET start_page = ? WHERE id = ?`, page, id)
 	return err

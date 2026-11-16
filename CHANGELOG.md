@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.79.0]
+
+### 🎉 Where your claimed books go, saved once
+- **Settings → General → Free-book events → Books I claim go to.** Pick your library once (say "Kindle (Amazon)") and every event page uses it, on every device. You can still pick another one on an event page for a single claim. Each parent picks their own.
+- The library lists no longer offer NovelCheck's own "Looked up" list, which can't hold claimed books.
+
 ## [1.78.0]
 
 ### 🔎 Library filters, like a bookshop website

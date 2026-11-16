@@ -125,6 +125,30 @@ func validateDelivery(method, email string) string {
 	return ""
 }
 
+// handleClaimLibrary saves the library the books someone claims from free-book events go to
+// ({"catalog_id": 12}, 0 to pick on each event): one of their own e-book libraries, as for a claim.
+func (s *Server) handleClaimLibrary(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		CatalogID int64 `json:"catalog_id"`
+	}
+	if !readJSON(w, r, &body, 1<<10) {
+		return
+	}
+	u := auth.UserFrom(r)
+	if body.CatalogID != 0 {
+		c, err := s.Store.CatalogByID(body.CatalogID)
+		if err != nil || c.Source == "calibre" || c.Physical || store.ReservedCatalogName(c.Name) || !c.CanEdit(u) {
+			writeErr(w, http.StatusBadRequest, store.ErrNotLibrary.Error())
+			return
+		}
+	}
+	if err := s.Store.SetClaimCatalog(u.ID, body.CatalogID); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]int64{"claim_catalog": body.CatalogID})
+}
+
 // handleStartPage saves the page NovelCheck opens on ({"page": "library"},
 // "" for the default).
 func (s *Server) handleStartPage(w http.ResponseWriter, r *http.Request) {

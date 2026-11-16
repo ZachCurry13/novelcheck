@@ -75,3 +75,20 @@ func TestEventGroupName(t *testing.T) {
 		t.Fatalf("renamed together: %v", n)
 	}
 }
+
+// A parent's default library for event claims: one of their own e-book libraries, never Calibre.
+func TestClaimLibraryDefault(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	_, kindle := admin.do("POST", "/api/catalogs", map[string]string{"name": "Kindle (Amazon)", "source": "drive"}, true)
+	if res, _ := admin.do("PUT", "/api/me/claim-library", map[string]int64{"catalog_id": cal}, true); res.StatusCode != 400 {
+		t.Fatalf("Calibre as the claim library: %d", res.StatusCode)
+	}
+	if res, out := admin.do("PUT", "/api/me/claim-library", map[string]any{"catalog_id": kindle["id"]}, true); res.StatusCode != 200 {
+		t.Fatalf("Kindle library: %d %v", res.StatusCode, out)
+	}
+	if _, me := admin.do("GET", "/api/me", nil, false); me["claim_catalog"] != kindle["id"] {
+		t.Fatalf("kept on the account: %v", me["claim_catalog"])
+	}
+}

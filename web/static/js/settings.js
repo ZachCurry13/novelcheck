@@ -88,7 +88,7 @@ export async function renderSettings(view, state) {
         }), "Delivery settings saved");
         if (ok) await refreshUser();
       });
-      bindProfileExtras(view);
+      bindProfileExtras(view, u);
       renderPushCard($("#push-card", view), u);
     } else if (section === "account") {
       if (u.role !== "friend") {

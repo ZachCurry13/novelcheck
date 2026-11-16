@@ -71,6 +71,7 @@ type User struct {
 	Collections     []int64  `db:"-" json:"collections"`                     // the collections they may see then
 	AIFeatures      bool     `db:"ai_features" json:"ai_features"`           // kid accounts: a parent allowed AI features
 	StartPage       string   `db:"start_page" json:"start_page"`             // the page NovelCheck opens on
+	ClaimCatalog    int64    `db:"claim_catalog" json:"claim_catalog"`       // where event books they claim go, 0 = pick on the event
 	Theme           string   `db:"theme" json:"theme"`                       // "" = match the device, "dark", "light"
 	Font            string   `db:"font" json:"font"`                         // "" or "dyslexic"
 	Motion          string   `db:"motion" json:"motion"`                     // "" = match the device, "reduce"

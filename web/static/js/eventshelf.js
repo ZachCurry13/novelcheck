@@ -7,6 +7,8 @@ import { esc, attempt, toast, canManage } from "./ui.js";
 import { openEditEvent } from "./eventnew.js";
 
 const CLAIM_LIB = "nc:event-claim-lib";
+// NovelCheck's own lists, which are not libraries a claimed book can go to (store.ReservedCatalogName).
+export const NOT_LIBRARIES = ["Looked up", "Discover", "Events"];
 const store = (v) => {
   try {
     if (v === undefined) return localStorage.getItem(CLAIM_LIB) || "";
@@ -65,8 +67,10 @@ export async function eventShelf(host, id, state, reload, groupIDs = "") {
   const gids = members.map((e) => e.id).join(",");
   const marks = new Map();
   for (const d of found) for (const b of d.books) if (!marks.has(b.id)) marks.set(b.id, { ...b, event: d.event.id }); // claimed through its own list
-  const libs = (cats || []).filter((c) => c.source !== "calibre" && !c.physical);
-  const pick = () => (libs.some((c) => String(c.id) === store()) ? store() : libs[0] ? String(libs[0].id) : "new");
+  const libs = (cats || []).filter((c) => c.source !== "calibre" && !c.physical && !NOT_LIBRARIES.includes(c.name));
+  // Your library from Settings first (on every device), then the last one picked on this device, then the first.
+  const mine = String(state.user.claim_catalog || "");
+  const pick = () => (libs.some((c) => String(c.id) === mine) ? mine : libs.some((c) => String(c.id) === store()) ? store() : libs[0] ? String(libs[0].id) : "new");
   const btn = (b, label, title = "") => `<button data-e="${b}" class="btn-ghost py-1.5 text-sm"${title ? ` title="${title}"` : ""}>${label}</button>`;
   host.innerHTML = `<div class="card mb-3 space-y-2">
     <div class="flex items-start gap-2">

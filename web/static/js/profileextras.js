@@ -1,10 +1,11 @@
 // Profile: how NovelCheck looks, the page it opens on, and (parents) where
 // books are added: Import books (Kindle, drive, lists) and Paper books.
-import { put } from "./api.js";
-import { $, attempt, canManage } from "./ui.js";
+import { get, put } from "./api.js";
+import { $, esc, attempt, canManage } from "./ui.js";
 import { on } from "./modules.js";
 import { refreshUser } from "./app.js";
 import { applyAppearance } from "./appearance.js";
+import { NOT_LIBRARIES } from "./eventshelf.js";
 
 const LOOKS = [
   ["theme", "Theme", [["", "Paperback and Ember · match my device"], ["dark", "Ember (dark)"], ["light", "Paperback (light)"],
@@ -44,15 +45,32 @@ export function profileExtrasHTML(u) {
       <select id="start-page" class="input">
         <option value="">Default (${def})</option>
         ${PAGES.filter(([, , ok]) => ok(u)).map(([k, l]) => `<option value="${k}" ${u.start_page === k ? "selected" : ""}>${l}</option>`).join("")}
-      </select></div>`;
+      </select></div>
+    ${canManage(u) ? `<div class="card space-y-2">
+      <h2 class="text-lg font-semibold">Free-book events</h2>
+      <label class="label" for="claim-lib">Books I claim go to</label>
+      <select id="claim-lib" class="input"><option value="0">Ask on each event</option></select>
+      <p class="text-xs text-slate-400">Your own library for books you get from Stuff Your Kindle and other events, on every device. You can still pick another one on an event page.</p></div>` : ""}`;
 }
 
-export function bindProfileExtras(view) {
+export function bindProfileExtras(view, u = {}) {
   view.querySelectorAll("[data-look]").forEach((sel) => sel.addEventListener("change", async () => {
     const looks = Object.fromEntries([...view.querySelectorAll("[data-look]")].map((x) => [x.dataset.look, x.value]));
     applyAppearance(looks); // right away; saved with the account below
     if (await attempt(() => put("/api/me/appearance", looks), "Appearance saved")) await refreshUser();
   }));
+  const claim = $("#claim-lib", view);
+  if (claim) {
+    get("/api/catalogs").then((cats) => { // the libraries a claim can go to, as on an event page
+      const libs = (cats || []).filter((c) => c.source !== "calibre" && !c.physical && !NOT_LIBRARIES.includes(c.name));
+      claim.insertAdjacentHTML("beforeend", libs.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join(""));
+      claim.value = String(libs.some((c) => c.id === u.claim_catalog) ? u.claim_catalog : 0);
+    }).catch(() => {});
+    claim.addEventListener("change", async () => {
+      if (await attempt(() => put("/api/me/claim-library", { catalog_id: Number(claim.value) }),
+        claim.value === "0" ? "You'll pick a library on each event" : "Claimed books go there now, on every device")) await refreshUser();
+    });
+  }
   $("#start-page", view)?.addEventListener("change", async (e) => {
     if (await attempt(() => put("/api/me/start-page", { page: e.target.value }), "Start page saved: NovelCheck opens there next time")) await refreshUser();
   });

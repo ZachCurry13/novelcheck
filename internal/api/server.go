@@ -141,6 +141,7 @@ func (s *Server) Router() http.Handler {
 			r.Put("/me/delivery", s.handleUpdateDelivery)
 			r.Put("/me/guide-seen", s.handleGuideSeen)
 			r.Put("/me/start-page", s.handleStartPage)
+			r.With(auth.RequireManager).Put("/me/claim-library", s.handleClaimLibrary) // where my event claims go
 			r.Put("/me/appearance", s.handleAppearance)
 			r.Get("/me/searches", s.handleSearches)
 			r.Post("/me/searches", s.handleAddSearch)
