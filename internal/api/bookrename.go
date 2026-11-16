@@ -32,5 +32,6 @@ func (s *Server) handleRenameBook(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	s.Store.MarkName(kept, 2) // a parent typed it: the name finder leaves it alone
 	writeJSON(w, http.StatusOK, map[string]any{"id": kept, "joined": kept != id})
 }

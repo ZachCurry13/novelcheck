@@ -6,7 +6,8 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.76.0]
 
-### ✏️ Fix a book's title and author
+### ✏️ True titles and authors
+- **NovelCheck fixes book names by itself.** Books that didn't come from Calibre (Check a book, lists, events, Discover, Kindle and audiobook imports) get their true title and author from Open Library: "Abby jiminez a married little Christmas" becomes "A Married Little Christmas" by Abby Jimenez. It only renames a book when it's sure: found by the book's own ISBN, or the catalog title's every word is in the name NovelCheck has and the author agrees. It runs a few minutes after NovelCheck starts (before the cover finder, so covers are searched by the true title) and then once a day, looking at each book once. A new Check a book is saved by its true name straight away. Calibre books are left to Library cleanup, as before.
 - **Edit title and author** on a book's page (parents and admins), for books from Check a book, a list, an event or Discover. "Abby jiminez a married little Christmas" becomes "A Married Little Christmas" by Abby Jimenez. The old name is remembered, so checking the book again by it finds the same book, and if NovelCheck already has a book by the new name the two become one. A Calibre book's title is still changed in Calibre.
 
 ### 🤝 Friends' accounts

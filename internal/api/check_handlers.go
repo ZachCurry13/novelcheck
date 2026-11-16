@@ -38,9 +38,19 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := look.id
+	f := look.best()
+	if id == 0 {
+		if better, ok := s.trueName(r.Context(), f.Title, f.Author, f.ISBN); ok { // typed as-is: save it by its true name
+			f.Title, f.Author = better.Title, better.Author
+			if f.ISBN == "" {
+				f.ISBN = better.ISBN
+			}
+			id = s.Store.MatchBook(f.Title, f.Author)
+		}
+	}
 	if id == 0 {
 		var err error
-		if id, err = s.saveLookup(look.best()); err != nil {
+		if id, err = s.saveLookup(f); err != nil {
 			writeStoreErr(w, err)
 			return
 		}

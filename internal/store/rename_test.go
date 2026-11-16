@@ -54,3 +54,25 @@ func TestRenameBook(t *testing.T) {
 		t.Fatal("an empty title was saved")
 	}
 }
+
+// The name finder looks at books not from Calibre, once each, and never at a name a parent typed.
+func TestNamesToCheck(t *testing.T) {
+	s := newStore(t)
+	looked, _ := s.EnsureCatalog(store.LookedUpCatalog, "custom")
+	cal, _ := s.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	a, _ := s.UpsertBook("abby jiminez a married little christmas", "Abby Jimenez", "", "")
+	_ = s.AddCopy(looked, a, "lookup:a", "list", "")
+	c, _ := s.UpsertBook("Beach Read", "Emily Henry", "", "")
+	_ = s.AddCopy(cal, c, "/c/b.epub", "epub", "1")
+	typed, _ := s.UpsertBook("Yours Truly", "Abby Jimenez", "", "")
+	_ = s.AddCopy(looked, typed, "lookup:t", "list", "")
+	s.MarkName(typed, 2)
+	got, err := s.NamesToCheck(10)
+	if err != nil || len(got) != 1 || got[0].ID != a {
+		t.Fatalf("to check: %+v %v", got, err)
+	}
+	s.MarkName(a, 1)
+	if got, _ := s.NamesToCheck(10); len(got) != 0 {
+		t.Fatalf("checked twice: %+v", got)
+	}
+}
