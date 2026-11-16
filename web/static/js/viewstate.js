@@ -79,6 +79,8 @@ export function saveForm(key, form) {
       if (el.type === "checkbox") {
         out[el.name] = out[el.name] || [];
         if (el.checked) out[el.name].push(el.value);
+      } else if (el.type === "radio") {
+        if (el.checked) out[el.name] = el.value;
       } else out[el.name] = el.value;
     }
     sessionStorage.setItem(FORM + key, JSON.stringify(out));
@@ -99,6 +101,7 @@ export function restoreForm(key, form) {
   for (const el of form.elements) {
     if (!el.name || !(el.name in saved) || el.type === "button" || el.type === "submit") continue;
     if (el.type === "checkbox") el.checked = Array.isArray(saved[el.name]) && saved[el.name].includes(el.value);
+    else if (el.type === "radio") el.checked = saved[el.name] === el.value;
     else el.value = saved[el.name];
   }
   return true;

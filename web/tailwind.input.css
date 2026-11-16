@@ -199,7 +199,6 @@ html.font-dyslexic .leading-tight, html.font-dyslexic .leading-snug { line-heigh
 #filters .fchips:empty { display: none; }
 .fchip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 9999px; border: 1px solid rgb(var(--indigo-800)); background: rgb(var(--indigo-950)); color: rgb(var(--indigo-200)); padding: 0.15rem 0.65rem; font-size: 0.78rem; cursor: pointer; }
 .fchip:hover { border-color: rgb(var(--indigo-400)); }
-#filters .fpanel { display: grid; gap: 1.25rem 1.75rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); padding-top: 0.9rem; border-top: 1px solid rgb(var(--slate-800)); }
 #filters .fgroup { display: flex; flex-direction: column; gap: 0.65rem; min-width: 0; }
 #filters .fgroup.fwide { grid-column: 1 / -1; }
 #filters .fgroup > h3 { font-size: 0.8125rem; font-weight: 500; color: rgb(var(--slate-400)); }
@@ -279,17 +278,41 @@ dialog.dialog.search-view[open] { animation: none; }
    wraps instead of stretching the card and the whole page sideways. :where()
    keeps it weaker than any grid-cols-* class. */
 :where(.grid) { grid-template-columns: minmax(0, 1fr); }
-/* The Filters panel floats over the results (a popover; a sheet on a phone) instead of pushing them down. */
+/* The Library's filters, like a bookshop website: a panel beside the books on a computer (always open), a
+   sheet that slides up from the bottom on a phone (behind "Filters"). See js/libfilters.js and js/libfacets.js. */
 #filters { position: relative; }
-#filters .fpanel { position: absolute; left: 0; right: 0; top: calc(100% + 0.4rem); z-index: 40; max-height: min(70vh, 34rem); overflow: auto; gap: 0.6rem 1rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); padding: 0.9rem; border: 1px solid rgb(var(--slate-700)); border-radius: 0.8rem; background: rgb(var(--slate-900)); box-shadow: 0 16px 40px rgb(0 0 0 / 0.55); }
-#filters .fgroup { gap: 0.4rem; }
-#filters .fmore > summary { cursor: pointer; font-size: 0.8rem; color: rgb(var(--slate-400)); }
-#filters .fmore[open] > summary { margin-bottom: 0.6rem; }
-#filters .fdone { position: sticky; bottom: -0.9rem; background: rgb(var(--slate-900)); padding: 0.5rem 0 0; }
+#filters .fpanel { display: flex; flex-direction: column; padding: 1rem; border-radius: 1rem; background: rgb(var(--slate-900)); }
+#filters .fhead { display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.5rem; }
+#filters .facet { padding: 0.75rem 0; border-top: 1px solid rgb(var(--slate-800)); }
+#filters .facet > h3, #filters .facet-h { display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.8125rem; font-weight: 500; color: rgb(var(--slate-300)); }
+#filters .facet-sum { font-weight: 400; color: rgb(var(--slate-400)); }
+#filters .pep-squares { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+#filters .pep-sq { padding: 0; border: 0; background: none; border-radius: 0.6rem; cursor: pointer; opacity: 0.45; outline: 2px solid transparent; outline-offset: 2px; }
+#filters .pep-sq[aria-pressed="true"] { opacity: 1; outline-color: rgb(var(--slate-100)); }
+#filters .pep-squares:not(:has([aria-pressed="true"])) .pep-sq { opacity: 1; }
+#filters .pep-presets { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.6rem; }
+#filters .facet-row { display: flex; align-items: center; gap: 0.55rem; padding: 0.3rem 0; font-size: 0.875rem; cursor: pointer; }
+#filters .facet-row input { accent-color: rgb(var(--nc-chip-on)); }
+#filters .facet-n { font-size: 0.75rem; color: rgb(var(--slate-500)); font-variant-numeric: tabular-nums; }
+#filters .facet-link { margin-top: 0.35rem; padding: 0; border: 0; background: none; font-size: 0.8rem; color: rgb(var(--indigo-300)); text-decoration: underline; cursor: pointer; align-self: flex-start; }
+#filters .fmore > summary { cursor: pointer; font-size: 0.875rem; font-weight: 500; color: rgb(var(--slate-300)); }
+#filters .fmore-body { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem; }
+#filters .fdone { position: sticky; bottom: -1rem; padding: 0.75rem 0 0; background: rgb(var(--slate-900)); }
 #filters .fdone .btn-primary { width: 100%; }
-@media (max-width: 640px) {
-  #filters .fpanel { position: fixed; left: 0.5rem; right: 0.5rem; top: 4.5rem; bottom: 0.5rem; max-height: none; grid-template-columns: 1fr 1fr; }
-  #filters .fgroup { grid-column: 1 / -1; }
+@media (max-width: 1023px) {
+  #filters .fpanel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-height: 85vh; overflow: auto; border-radius: 1.25rem 1.25rem 0 0;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -16px 40px rgb(0 0 0 / 0.55); }
+}
+@media (min-width: 1024px) {
+  .lib-layout { display: grid; grid-template-columns: 16.5rem minmax(0, 1fr); column-gap: 1.5rem; align-items: start; }
+  .lib-layout > #filters { display: contents; }
+  .lib-layout > #filters > .fbar { grid-column: 2; grid-row: 1; }
+  .lib-layout > #filters > .fchips { grid-column: 2; grid-row: 2; margin-top: 0.75rem; }
+  .lib-layout > .lib-main { grid-column: 2; grid-row: 3; margin-top: 1rem; }
+  #filters:not(.filters-open) .fpanel.filter-more { display: flex; }
+  #filters:not(.filters-open) .fpanel .filter-more { display: block; }
+  .lib-layout > #filters > .fpanel { grid-column: 1; grid-row: 1 / span 3; position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow: auto; }
+  #filters-toggle, #filters .fdone { display: none; }
 }
 
 /* Wrapped, full screen: see js/wrappedstory.js. */

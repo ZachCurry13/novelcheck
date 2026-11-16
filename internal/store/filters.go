@@ -251,6 +251,16 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	case len(f.Spice) == 1 && f.Spice >= "0" && f.Spice <= "5":
 		where = append(where, "b.spice_level = ?")
 		args = append(args, int(f.Spice[0]-'0'))
+	case strings.Contains(f.Spice, ","): // any of several levels: "0,1,2", "3,4"
+		var levels []string
+		for _, p := range strings.Split(f.Spice, ",") {
+			if p = strings.TrimSpace(p); len(p) == 1 && p >= "0" && p <= "5" {
+				levels = append(levels, p)
+			}
+		}
+		if len(levels) > 0 {
+			where = append(where, "b.spice_level IN ("+strings.Join(levels, ",")+")")
+		}
 	}
 	if c, ok := formatConds[f.Format]; ok {
 		where = append(where, c)

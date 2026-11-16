@@ -19,6 +19,7 @@ import { seasonChipsHTML, bindSeasonChips } from "./seasonchips.js";
 import { shelfBanner } from "./collections.js";
 import { audioParams } from "./libaudio.js";
 import { filtersHTML, bindChips } from "./libfilters.js";
+import { bindFacets } from "./libfacets.js";
 import { combo } from "./combo.js";
 import { isBack, saveForm, restoreForm } from "./viewstate.js";
 import { markKeptAudio } from "./libby.js";
@@ -40,16 +41,20 @@ export async function renderLibrary(view, state) {
     ${event || collection || season ? "" : `<div id="year-banner"></div>`}
     ${event || !shelves.seasons?.length ? "" : seasonChipsHTML(shelves.seasons || [], season)}
     <div id="shelf-banner"></div>
-    ${filtersHTML({ facets, catOpts, event, state })}
+    <div class="lib-layout">
+    ${filtersHTML({ facets, catOpts, catalogs, event, state })}
+    <div class="lib-main">
     <div class="mb-3 flex items-center justify-between gap-2"><p id="result-count" class="text-sm text-slate-400"></p>
       <button type="button" id="select-toggle" class="btn-ghost py-1 text-sm" title="Pick several books to add to your Nightstand, Deep Scan or delete">Select</button></div>
-    <div id="grid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
-    <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>`;
+    <div id="grid" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+    <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>
+    </div></div>`;
 
   const form = $("#filters", view);
   combo(form.author, () => facets.authors);
   combo(form.series, () => facets.series);
   const redrawChips = bindChips(form);
+  bindFacets(form);
   form.addEventListener("click", (e) => {
     if (e.target.closest(".fmenu-list")) e.target.closest("details").open = false; // pick an action, the menu closes
   });
@@ -69,9 +74,9 @@ export async function renderLibrary(view, state) {
       q: fd.get("q"),
       catalog: fd.get("catalog"),
       overlap_with: fd.get("overlap_with"),
-      spice: ["Pending", "failed"].includes(fd.get("spice")) ? "" : fd.get("spice"),
-      status: fd.get("spice") === "failed" ? "error" : "",
-      classification: fd.get("spice") === "Pending" ? "Pending" : "",
+      spice: ["review", "old"].includes(fd.get("rating")) ? fd.get("rating") : fd.get("spice"), // the squares: "0,1,2"
+      status: fd.get("rating") === "failed" ? "error" : "",
+      classification: fd.get("rating") === "Pending" ? "Pending" : "",
       age: fd.get("age"),
       format: fd.get("format"),
       genre: fd.get("genre"),
@@ -101,6 +106,8 @@ export async function renderLibrary(view, state) {
     offset += data.books.length;
     if (reset && data.total) recent.remember(form.q.value);
     $("#result-count", view).textContent = `${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}`;
+    const done = view.querySelector("[data-filters-done]"); // the phone panel's button says what it will show
+    if (done) done.textContent = data.total ? `Show ${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}` : "No books match: change a filter";
     $("#more-btn", view).classList.toggle("hidden", offset >= data.total);
     if (!data.total) {
       grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>${form.q.value.trim() && state.user.role !== "restricted" ? `<div class="card mt-3"><p class="mb-2 font-semibold">Look in your Libby libraries</p><div data-lsbox></div></div>` : ""}`;
@@ -162,7 +169,7 @@ export async function renderLibrary(view, state) {
   $("#pepper-help", view).addEventListener("click", openPepperGuide);
   $("#remove-btn", view)?.addEventListener("click", () => {
     const fd = new FormData(form);
-    openCalibreRemoval({ hide: fd.getAll("hide").join(","), q: fd.get("q"), classification: fd.get("spice") === "Pending" ? "Pending" : "" },
+    openCalibreRemoval({ hide: fd.getAll("hide").join(","), q: fd.get("q"), classification: fd.get("rating") === "Pending" ? "Pending" : "" },
       () => setTimeout(() => load(true), 1500));
   });
   const batch = $("#batch-btn", view);
@@ -177,14 +184,14 @@ export async function renderLibrary(view, state) {
   }
   // "Show in Library" from Rating errors opens this page filtered to failures.
   try {
-    if (sessionStorage.getItem("nc:libfilter") === "failed") form.spice.value = "failed";
+    if (sessionStorage.getItem("nc:libfilter") === "failed") form.rating.value = "failed";
     sessionStorage.removeItem("nc:libfilter");
   } catch {
     /* private mode */
   }
   // Links such as #/library?author=… (from a book's window) open with that filter set.
   const preset = new URLSearchParams(location.hash.split("?")[1] || "");
-  for (const k of ["q", "author", "series", "genre", "kind", "catalog", "spice", "narrator", "format", "sort"]) {
+  for (const k of ["q", "author", "series", "genre", "kind", "catalog", "spice", "narrator", "format", "sort", "rating"]) {
     if (preset.get(k) && form.elements[k]) form.elements[k].value = preset.get(k);
   }
   // Back from a book's series, an author's page and so on: the search and filters are as you left them

@@ -1,8 +1,9 @@
-// The Library's filter bar: one search box with Sort, a Filters button that opens a panel (grouped and
-// labelled, full-width fields), a chip for every filter that is on (tap × to remove it), and a "⋯" menu
-// for the rare actions. The common case is a clean single row.
+// The Library's filters, laid out like a bookshop website: on a computer a panel beside the books, always open
+// (pepper squares, then short pick lists with counts, then More filters); on a phone the same panel slides up
+// from the bottom behind "Filters". Above the books: the search box, Sort, a chip for every filter that is on
+// (tap × to remove it), and a "⋯" menu for the rare actions.
 import { esc, HIDE_LABELS, FILTER_IDEA_URL, AGE_GROUPS, canManage, can } from "./ui.js";
-import { pepperOptions } from "./peppers.js";
+import { peppersHTML, pickHTML, pepperLabel } from "./libfacets.js";
 import { on } from "./modules.js";
 import { hideBoxes } from "./customflags.js";
 import { hidePicker } from "./content.js";
@@ -10,7 +11,7 @@ import { audioFilterHTML, audioSortHTML } from "./libaudio.js";
 
 const field = (label, control, extra = "") => `<label class="field ${extra}"><span>${esc(label)}</span>${control}</label>`;
 
-export function filtersHTML({ facets, catOpts, event, state }) {
+export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
   const manager = canManage(state.user);
   const opt = (v, label, n) => `<option value="${esc(v)}">${esc(label)}${n === undefined ? "" : ` (${n.toLocaleString()})`}</option>`;
   const admin = [
@@ -32,15 +33,17 @@ export function filtersHTML({ facets, catOpts, event, state }) {
       ${admin ? `<details class="fmenu"><summary class="btn-secondary" aria-label="More actions" title="More actions">⋯</summary><div class="fmenu-list">${admin}</div></details>` : ""}
     </div>
     <div id="filter-chips" class="fchips" aria-live="polite"></div>
-    <div class="fpanel filter-more">
-      <div class="fgroup"><h3>Find</h3>
-        ${field("Genre", `<select name="genre" class="input"><option value="">Any genre</option>${(facets.genres || []).map((g) => opt(g.key, g.label, g.count)).join("")}</select>`)}
+    <aside class="fpanel filter-more" aria-label="Filters">
+      <div class="fhead"><b>Filters</b><button type="button" data-clear-all class="facet-link">Clear all</button></div>
+      ${peppersHTML()}
+      ${pickHTML("Genre", "genre", "Any genre", (facets.genres || []).map((g) => ({ value: g.key, label: g.label, count: g.count })))}
+      ${pickHTML("Library", "catalog", "All libraries", (catalogs || []).map((c) => ({ value: String(c.id), label: c.name, count: c.book_count })), 5)}
+      ${on(state.user, "parents") ? pickHTML("Age group", "age", "Any age group",
+        [...AGE_GROUPS.map(([l, n]) => ({ value: String(l), label: `For ${n}` })), { value: "unset", label: "Age group not set yet" }], 7) : ""}
+      <details class="facet fmore"><summary>More filters</summary><div class="fmore-body">
         ${field("Fiction or nonfiction", `<select name="kind" class="input"><option value="">Both</option>${(facets.kinds || []).filter((k) => k.count).map((k) => opt(k.key, k.label, k.count)).join("")}</select>`)}
         ${field("Author", `<input name="author" placeholder="Any author" class="input">`, "combo-field")}
         ${field("Series", `<input name="series" placeholder="Any series" class="input">`, "combo-field")}
-      </div>
-      <div class="fgroup"><h3>Where it is</h3>
-        ${field("Library", `<select name="catalog" class="input"><option value="">All libraries</option>${catOpts}</select>`)}
         ${field("Also in", `<select name="overlap_with" class="input" title="Only books also in this library"><option value="">Any other library</option>${catOpts}</select>`)}
         ${field("File format", `<select name="format" class="input" title="File format">
           <option value="">Any format</option>
@@ -50,35 +53,20 @@ export function filtersHTML({ facets, catOpts, event, state }) {
           <option value="multi">2+ formats</option><option value="dupes">Duplicates</option><option value="none">No file</option></select>`)}
         ${audioFilterHTML(facets)}
         ${field("At my Libby library", `<select name="libby_audio" class="input" title="Books you don't have as an audiobook, checked against your libraries in the background"><option value="">Any</option><option value="1">The audiobook is there</option><option value="now">The audiobook is available now</option></select>`)}
-      </div>
-      <div class="fgroup"><h3>Content</h3>
-        ${field("Peppers", `<select name="spice" class="input" title="Peppers: how much romance and sexual content">
-          <option value="">Any peppers</option>${pepperOptions(null)}
-          <option value="review">Needs review (the AI wasn't sure)</option>
-          <option value="old">Older rating (not on pepper scale)</option><option value="Pending">Not rated yet</option><option value="failed">Rating failed</option></select>`)}
-        ${field("Age group", `<select name="age" class="input" title="Books a parent rated for this age group or younger">
-          <option value="">Any age group</option>
-          ${AGE_GROUPS.map(([l, n, r]) => `<option value="${l}">Suitable for ${n} (${r})</option>`).join("")}
-          <option value="unset">Age group not set yet</option></select>`, on(state.user, "parents") ? "" : "module-off")}
-      </div>
-      <details class="fgroup fwide fmore"><summary>More: hide content and other options</summary>
-      <div class="fgroup"><h3 title="Books with these are hidden (unless a parent marked them OK)">Hide content</h3>
-        ${hidePicker()}
-      </div>
-      <div class="fgroup"><h3>Hide books that have…</h3>
-        <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+        ${field("Rating", `<select name="rating" class="input"><option value="">Any</option>
+          <option value="review">Needs review (the AI wasn't sure)</option><option value="old">Older rating (not on pepper scale)</option>
+          <option value="Pending">Not rated yet</option><option value="failed">Rating failed</option></select>`)}
+        <div class="space-y-2"><h3 class="facet-h" title="Books with these are hidden (unless a parent marked them OK)">Hide content</h3>${hidePicker()}</div>
+        <div class="space-y-2"><h3 class="facet-h">Hide books that have…</h3>
           ${Object.entries(HIDE_LABELS).map(([k, v]) => `<label class="toggle"><input type="checkbox" name="hide" value="${k}"> ${esc(v)}</label>`).join("")}
           ${hideBoxes()}
           ${event ? `<label class="toggle"><input type="checkbox" name="not_owned"> Hide books we have</label>` : ""}
           <label class="toggle"><input type="checkbox" name="multi"> Only books in 2+ libraries</label>
-          <label class="toggle" title="Books whose whole text was read by the AI"><input type="checkbox" name="deep"> Deep Scanned only</label>
-        </div>
-        <div class="flex flex-wrap gap-4 text-xs"><button type="button" id="pepper-help" class="text-slate-400 underline">What do the peppers mean?</button>
-          <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="text-slate-500 underline">Missing a filter? Suggest one</a></div>
-      </div>
-      </details>
-      <div class="fgroup fwide fdone"><button type="button" class="btn-primary" data-filters-done>Done</button></div>
-    </div>
+          <label class="toggle" title="Books whose whole text was read by the AI"><input type="checkbox" name="deep"> Deep Scanned only</label></div>
+        <a href="${FILTER_IDEA_URL}" target="_blank" rel="noopener noreferrer" class="facet-link">Missing a filter? Suggest one</a>
+      </div></details>
+      <div class="fdone"><button type="button" class="btn-primary" data-filters-done>Show the books</button></div>
+    </aside>
   </form>`;
 }
 
@@ -95,6 +83,10 @@ export function bindChips(form, onChange) {
       if (!el.name || el.name === "q" || el.name === "sort" || el.type === "button") continue;
       if (el.type === "checkbox") {
         if (el.checked) chips.push({ el, text: `${el.name === "hide" ? "Hide: " : ""}${el.closest("label")?.textContent.trim() || el.value}` });
+      } else if (el.type === "radio") {
+        if (el.checked && el.value !== "") chips.push({ el, text: `${LABELS[el.name] || el.name}: ${el.closest("label")?.querySelector("span")?.textContent.trim() || el.value}` });
+      } else if (el.name === "spice") {
+        if (el.value) chips.push({ el, text: pepperLabel(el.value) });
       } else if (el.value !== "") {
         const shown = el.tagName === "SELECT" ? el.selectedOptions[0]?.textContent.replace(/\s*\([\d,]+\)$/, "").trim() : el.value;
         chips.push({ el, text: `${LABELS[el.name] || el.name}: ${shown}` });
@@ -106,6 +98,7 @@ export function bindChips(form, onChange) {
     const c = chips[Number(e.target.closest("[data-chip]")?.dataset.chip)];
     if (!c) return;
     if (c.el.type === "checkbox") c.el.checked = false;
+    else if (c.el.type === "radio") c.el.form.querySelector(`[name="${c.el.name}"][value=""]`).checked = true;
     else c.el.value = "";
     c.el.dispatchEvent(new Event("input", { bubbles: true }));
   });

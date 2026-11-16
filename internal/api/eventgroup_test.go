@@ -28,3 +28,24 @@ func TestEventsTogether(t *testing.T) {
 		t.Fatalf("one list still works: %v", one)
 	}
 }
+
+// Several pepper levels at once: ?spice=0,2 gives the books at either level.
+func TestSeveralPepperLevels(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	for i, lvl := range []int{0, 1, 2, 4} {
+		id, _ := st.UpsertBook("Book "+itoa(int64(i)), "Ann Author", "", "")
+		_ = st.AddCopy(cal, id, "/c/"+itoa(int64(i))+".epub", "epub", itoa(int64(10+i)))
+		l := lvl
+		_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &l, Model: "gpt"})
+	}
+	_, out := admin.do("GET", "/api/books?spice=0,2", nil, false)
+	if n := len(out["books"].([]any)); n != 2 {
+		t.Fatalf("levels 0 and 2: %d books", n)
+	}
+	_, out = admin.do("GET", "/api/books?spice=1", nil, false)
+	if n := len(out["books"].([]any)); n != 1 {
+		t.Fatalf("one level still works: %d", n)
+	}
+}

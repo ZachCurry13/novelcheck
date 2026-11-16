@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.78.0]
+
+### 🔎 Library filters, like a bookshop website
+- **On a computer, the filters sit in a panel beside the books**, always open, instead of a wall of drop-downs. Picked by the family from three mock-ups.
+- **Pick any mix of pepper levels** with the coloured level squares: 0, 1 and 2; just 3 and 4; or 0 and 5. Shortcuts: Clean (0–1), Up to romantic (0–2), Steamy (3–4), Spicy (4–5).
+- **Genre, library and age group are short lists with counts** you tap, the longer ones behind "Show all". The rarer filters (fiction or nonfiction, author, series, format, Libby, rating status, hide content) are under More filters.
+- **Clear all** at the top of the panel; every filter that is on still shows as a chip above the books, with × to remove it.
+- **On a phone, Filters slides the same panel up from the bottom**, with a button that says how many books you'll see.
+
 ## [1.77.0]
 
 ### 📚 Wrong titles fixed by themselves
