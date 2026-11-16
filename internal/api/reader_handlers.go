@@ -54,6 +54,10 @@ func (s *Server) handleReaderPosition(w http.ResponseWriter, r *http.Request) {
 	}
 	if k, ok := s.Store.KOReaderPositionOf(u.ID, id); ok {
 		out["koreader"] = map[string]any{"fraction": k.Percentage, "device": k.Device, "at": k.Timestamp}
+	} else if p, ok := s.Store.ReadingProgress(u.ID)[id]; ok && p.Percent > 0 && !strings.Contains(p.Device, "NovelCheck") { // not this reader's own place
+		// Progress sync knows no file like this one (the e-reader has another copy), but its reading
+		// statistics or Hardcover say how far in you are: that place, by percentage.
+		out["koreader"] = map[string]any{"fraction": p.Percent, "device": p.Device, "at": p.At}
 	}
 	writeJSON(w, http.StatusOK, out)
 }

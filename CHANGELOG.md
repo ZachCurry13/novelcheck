@@ -10,6 +10,10 @@ becomes the release notes for that version and is shown in the app under
 - **Settings → General → Free-book events → Books I claim go to.** Pick your library once (say "Kindle (Amazon)") and every event page uses it, on every device. You can still pick another one on an event page for a single claim. Each parent picks their own.
 - The library lists no longer offer NovelCheck's own "Looked up" list, which can't hold claimed books.
 
+### 📖 The reader opens where you are on your Kindle
+- **It opens at your e-reader's place**, not at the start: when you read on your Kindle (KOReader) more recently than in NovelCheck's reader, or never opened the book here, the book opens there, with a note saying so and a button back to your place in the reader.
+- **It knows your place even when your Kindle has another copy of the book** (one sent by email, say): when progress sync can't match the file, it uses KOReader's reading statistics (or Hardcover) instead.
+
 ## [1.78.0]
 
 ### 🔎 Library filters, like a bookshop website

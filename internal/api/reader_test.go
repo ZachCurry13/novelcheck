@@ -47,3 +47,17 @@ func contains(s, sub string) bool {
 	}
 	return false
 }
+
+// When progress sync knows no file like this one (the Kindle has another copy), the place from KOReader's
+// reading statistics is given instead, so the reader opens there and not at the start.
+func TestReaderPlaceFromReadingStatistics(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	id, _ := st.UpsertBook("Stats Book", "A. Writer", "", "")
+	st.DB.MustExec(`INSERT INTO koreader_books (user_id, title, authors, md5, book_id, percent, last_open) VALUES (1, 'Stats Book', 'A. Writer', 'abc', ?, 0.43, ?)`, id, time.Now().Unix())
+	_, out := admin.do("GET", "/api/books/"+itoa(id)+"/position", nil, false)
+	ko, _ := out["koreader"].(map[string]any)
+	if ko == nil || ko["fraction"] != 0.43 {
+		t.Fatalf("the e-reader's place from its statistics: %v", out)
+	}
+}

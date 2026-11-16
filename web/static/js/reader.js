@@ -140,12 +140,20 @@ async function start() {
   applySettings(view, readerSettings());
   note("");
   const here = info?.here;
-  await view.init({ lastLocation: here?.cfi || undefined, showTextStart: !here?.cfi });
-  // KOReader's progress sync has you further on (or you have never read it here): offer to go there.
+  // Where your e-reader is (KOReader's progress sync, or its reading statistics): when you read there more
+  // recently than here, or never read it here, the book opens there (by percentage, so to about a page).
   const ko = info?.koreader;
-  if (ko && ko.fraction > 0 && (!here || (ko.at > here.updated_at && Math.abs(ko.fraction - (here.fraction || 0)) > 0.005))) {
+  const useKo = ko && ko.fraction > 0.001 && (!here?.cfi || (ko.at > here.updated_at && Math.abs(ko.fraction - (here.fraction || 0)) > 0.005));
+  await view.init({ lastLocation: useKo ? undefined : here?.cfi || undefined, showTextStart: !useKo && !here?.cfi });
+  if (useKo) {
+    await view.goToFraction(ko.fraction);
     const pct = Math.round(ko.fraction * 100);
-    note(`Your ${ko.device || "e-reader"} is at ${pct}%.`, { label: `Go to ${pct}%`, run: () => view.goToFraction(ko.fraction) });
+    const where = `Opened at ${pct}%, where your ${ko.device || "e-reader"} is.`;
+    if (here?.cfi) note(where, { label: `Back to ${Math.round((here.fraction || 0) * 100)}% (your place here)`, run: () => view.goTo(here.cfi) });
+    else {
+      note(where);
+      setTimeout(() => note(""), 8000);
+    }
   }
   document.addEventListener("keydown", onKey);
   $("#reader-toc-btn").onclick = () => openContents(view);
