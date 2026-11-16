@@ -127,10 +127,26 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 					info, how = found, "exact title and author"
 				}
 			}
+			closeTitle := ""
+			if info.ID == 0 && len(d.Authors) > 0 { // a typo or dots: the true title from the author's books, then Hardcover
+				if t := s.closestTitle(ctx, d.Title, d.Authors[0]); t != "" {
+					if found, ok, err := hc.InfoByTitle(ctx, t, d.Authors[0]); err == nil && ok {
+						info, how, closeTitle = found, "title with a typo, matched to the author's book", t
+					}
+				}
+			}
 			if info.ID == 0 {
 				continue
 			}
-			for _, c := range hcChanges(d, info) {
+			changes := hcChanges(d, info)
+			if closeTitle != "" && !hasField(changes, "title") { // the typo itself is the fix
+				fixed := closeTitle
+				if info.Title != "" && store.NormKey(info.Title, "") == store.NormKey(closeTitle, "") {
+					fixed = info.Title
+				}
+				changes = append(changes, hcChange{Field: "title", Current: d.Title, Shown: fixed, Payload: fixed})
+			}
+			for _, c := range changes {
 				payload, _ := json.Marshal(c.Payload)
 				s.Store.AddHCSuggestion(store.HCSuggestion{BookID: r.BookID, CalibreID: r.CalibreID, Title: d.Title, Field: c.Field,
 					Current: c.Current, Shown: c.Shown, Payload: string(payload), Confidence: how})
@@ -281,4 +297,13 @@ func fetchCover(ctx context.Context, src string) ([]byte, error) {
 		return nil, fmt.Errorf("the picture is too large or empty")
 	}
 	return data, nil
+}
+
+func hasField(cs []hcChange, field string) bool {
+	for _, c := range cs {
+		if c.Field == field {
+			return true
+		}
+	}
+	return false
 }

@@ -104,8 +104,19 @@ func (s *Server) findCovers(again bool) {
 			j.mu.Unlock()
 			continue
 		}
-		_, _, ok := s.Covers.OpenLibrary(ctx, b.ISBN)               // the ISBN's cover, when it has one
-		if sug := s.Store.TitleSuggestion(b.ID); !ok && sug != "" { // the true title the name finder found
+		_, _, ok := s.Covers.OpenLibrary(ctx, b.ISBN) // the ISBN's cover, when it has one
+		sug := s.Store.TitleSuggestion(b.ID)
+		if !ok && sug == "" { // a wrong title is the usual reason for no cover: find the true one now
+			if sug = s.closestTitle(ctx, b.Title, b.Author); sug != "" {
+				s.Store.SuggestTitle(b.ID, sug)
+				if len(s.Store.CalibreIDs(b.ID)) > 0 {
+					s.saveTitleInCalibre(ctx, b.ID, sug)
+				} else if _, err := s.Store.RenameBook(b.ID, sug, b.Author); err == nil {
+					s.Store.MarkName(b.ID, 1)
+				}
+			}
+		}
+		if !ok && sug != "" { // search under the true title first
 			_, _, ok = s.Covers.Search(ctx, s.coverName(b.ID), sug, b.Author)
 			if !ok {
 				s.Covers.Forget(s.coverName(b.ID)) // the miss is for the true title; the old one gets its own try

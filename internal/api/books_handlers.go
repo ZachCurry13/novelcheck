@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
@@ -51,9 +52,12 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		Limit:          queryInt(r, "limit"),
 		Offset:         queryInt(r, "offset"),
 		Collection:     int64(queryInt(r, "collection")),
-		Event:          int64(queryInt(r, "event")),
+		Events:         queryIDs(r, "event"), // one event, or a day's lists together ("21,22,23")
 		NotOwned:       q.Get("not_owned") == "1",
 		LibbyAudio:     q.Get("libby_audio"),
+	}
+	if len(f.Events) == 1 { // one event: its own filter and order
+		f.Event, f.Events = f.Events[0], nil
 	}
 	s.seasonFilter(&f, q.Get("season"))
 	books, total, err := s.Store.ListBooks(f, auth.UserFrom(r))
@@ -208,4 +212,15 @@ func (s *Server) handleBookFacets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, f)
+}
+
+// queryIDs reads a comma-separated list of ids (at most 50).
+func queryIDs(r *http.Request, key string) []int64 {
+	var out []int64
+	for _, p := range strings.Split(r.URL.Query().Get(key), ",") {
+		if n, err := strconv.ParseInt(strings.TrimSpace(p), 10, 64); err == nil && n > 0 && len(out) < 50 {
+			out = append(out, n)
+		}
+	}
+	return out
 }

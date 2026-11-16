@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"time"
 
@@ -59,7 +61,12 @@ func (s *Server) fixNames(ctx context.Context, limit int) int {
 		log.Printf("name finder: %v", err)
 		return 0
 	}
-	fixed := 0
+	fixed, saved := 0, 0
+	defer func() {
+		if saved > 0 {
+			log.Printf("name finder: saved %d true titles in Calibre", saved)
+		}
+	}()
 	for _, b := range books {
 		if ctx.Err() != nil {
 			break
@@ -70,6 +77,9 @@ func (s *Server) fixNames(ctx context.Context, limit int) int {
 			// title Open Library merely writes longer is left alone.
 			if t := s.closestTitle(ctx, b.Title, b.Author); t != "" {
 				s.Store.SuggestTitle(b.ID, t)
+				if s.saveTitleInCalibre(ctx, b.ID, t) {
+					saved++
+				}
 				fixed++
 			}
 		} else if f, ok := s.trueName(ctx, b.Title, b.Author, b.ISBN); ok {
@@ -106,4 +116,29 @@ func (s *Server) NameLoop(ctx context.Context) {
 			s.Store.NotifyRoutine("names-fixed", fmt.Sprintf("Book names: %d books have their true title from Open Library. Calibre books are waiting under Library cleanup → Tidy titles in Calibre.", n), "#/admin?tab=cleanup")
 		}
 	}
+}
+
+// KeyNamesToCalibre turns off saving the name finder's titles in Calibre by itself ("off"); they are then only
+// listed under Tidy titles in Calibre.
+const KeyNamesToCalibre = "calibre_names_auto"
+
+// saveTitleInCalibre saves a true title the name finder is sure of in Calibre (through the Content server, the
+// same way Tidy titles does, checking the book first), unless that is turned off or not set up. It says
+// whether Calibre took it.
+func (s *Server) saveTitleInCalibre(ctx context.Context, bookID int64, title string) bool {
+	if s.Store.Setting(KeyNamesToCalibre) == "off" || s.Store.Setting(store.KeyCalibreSrvURL) == "" {
+		return false
+	}
+	b, err := s.Store.BookByID(bookID, nil)
+	if err != nil {
+		return false
+	}
+	rec := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodPost, "/", nil).WithContext(ctx)
+	fixed, skipped, ok := s.pushTitles(rec, r, []titlePush{{Book: bookID, Title: title, Series: b.Series, Index: b.SeriesIndex}})
+	if !ok || fixed == 0 {
+		log.Printf("name finder: “%s” → “%s” not saved in Calibre: %s%s", b.Title, title, strings.TrimSpace(rec.Body.String()), strings.Join(skipped, "; "))
+		return false
+	}
+	return true
 }

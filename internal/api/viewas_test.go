@@ -48,3 +48,19 @@ func TestViewAs(t *testing.T) {
 		t.Fatalf("back to the admin: %v", me)
 	}
 }
+
+// Viewing as a friend (whose account refuses most of the app) still lets the admin go back.
+func TestViewAsAFriendAndBack(t *testing.T) {
+	srv, _ := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	_, made := admin.do("POST", "/api/admin/users", map[string]string{"username": "pal", "password": "palpass123", "role": "friend"}, true)
+	if res, out := admin.do("POST", sprintf("/api/admin/users/%d/view-as", int(made["id"].(float64))), nil, true); res.StatusCode != 200 {
+		t.Fatalf("view as: %d %v", res.StatusCode, out)
+	}
+	if res, out := admin.do("DELETE", "/api/me/view-as", nil, true); res.StatusCode != 200 {
+		t.Fatalf("back from a friend's view: %d %v", res.StatusCode, out)
+	}
+	if _, me := admin.do("GET", "/api/me", nil, false); me["username"] != "admin" {
+		t.Fatalf("still viewing: %v", me)
+	}
+}

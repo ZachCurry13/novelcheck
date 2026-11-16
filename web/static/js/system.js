@@ -38,7 +38,7 @@ function rowHTML(r) {
     </div>
     <div class="flex shrink-0 flex-col items-end gap-1">
       ${r.action ? `<button type="button" data-do="${esc(r.action)}" class="${r.badge === "update" ? "btn-primary" : "btn-secondary"} py-1 text-sm">${esc(r.do)}</button>` : ""}
-      ${r.link ? `<a href="${esc(r.link)}" class="text-xs text-slate-400 underline">Set up</a>` : ""}
+      ${r.link ? `<a href="${esc(r.link)}" class="text-xs text-slate-400 underline">${r.badge === "warn" || r.badge === "off" ? "Set up" : "Edit"}</a>` : ""}
     </div></li>`;
 }
 

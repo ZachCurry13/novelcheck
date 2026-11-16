@@ -28,6 +28,21 @@ function tile(title, value, sub, pct, progress) {
     <p class="text-xs text-slate-400">${esc(sub)}</p>${pct === undefined ? "" : meter(pct, title, progress)}</div>`;
 }
 
+const PERIODS = [[14, "2 weeks"], [30, "Month"], [90, "3 months"], [365, "Year"]];
+
+// byWeek adds days up into weeks (from the oldest day) when weekly.
+function byWeek(days, weekly) {
+  if (!weekly) return days;
+  const out = [];
+  days.forEach((d, i) => {
+    if (i % 7 === 0) out.push({ day: d.day, tokens: 0, calls: 0 });
+    const w = out[out.length - 1];
+    w.tokens += d.tokens;
+    w.calls += d.calls;
+  });
+  return out;
+}
+
 function uptime(s) {
   const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
   return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`;
@@ -37,7 +52,7 @@ function ollamaCard(o) {
   if (!o) {
     return `<p class="text-sm text-slate-400">Not using Ollama. Pick it as the AI provider in Admin to see its usage here.</p>`;
   }
-  if (o.error && !o.version) return `<p class="text-sm text-rose-300">${esc(o.error)}</p>`;
+  if (o.error && !o.version) return `${o.name ? `<h3 class="font-semibold">${esc(o.name)}</h3>` : ""}<p class="text-sm text-rose-300">${esc(o.error)}</p>`;
   const loaded = o.loaded || [];
   const rows = loaded.map((m) => {
     const gpu = m.vram_bytes, ram = Math.max(0, m.size_bytes - m.vram_bytes), total = m.size_bytes || 1;
@@ -51,6 +66,7 @@ function ollamaCard(o) {
       </div></li>`;
   }).join("");
   return `
+    ${o.name ? `<h3 class="font-semibold">${esc(o.name)}</h3>` : ""}
     <p class="text-sm text-slate-300">Ollama ${esc(o.version || "")} at <code>${esc(o.url)}</code> · ${(o.downloaded || []).length} models downloaded</p>
     <div class="flex gap-4 text-xs text-slate-400">
       <span class="flex items-center gap-1"><span class="inline-block h-2 w-3 rounded-sm bg-indigo-500"></span> GPU memory</span>
@@ -89,11 +105,21 @@ export async function renderUsage(view) {
     <h2 class="mb-2 text-lg font-semibold">Library &amp; AI</h2>
     <div id="lib-tiles" class="mb-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>
     <div id="errors"></div>
-    <section class="card mb-6"><h2 class="label">AI tokens per day (last 14 days)</h2><div id="token-chart"></div></section>
-    <section class="card space-y-3"><h2 class="text-lg font-semibold">Ollama</h2><div id="ollama"></div></section>`;
+    <section class="card mb-6"><div class="flex flex-wrap items-center justify-between gap-2"><h2 class="label" id="token-title">AI tokens per day</h2>
+      <div class="flex flex-wrap gap-2" role="group" aria-label="How far back">${PERIODS.map(([n, l]) => `<button type="button" data-days="${n}" class="chip-filter" aria-pressed="${n === 14}">${l}</button>`).join("")}</div></div>
+      <div id="token-chart"></div></section>
+    <section class="card space-y-3"><h2 class="text-lg font-semibold">Ollama</h2><div id="ollama" class="space-y-6"></div></section>`;
+  let days = 14;
+  view.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-days]");
+    if (!b) return;
+    days = Number(b.dataset.days);
+    view.querySelectorAll("[data-days]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    refresh();
+  });
 
   async function refresh() {
-    const s = await get("/api/admin/system").catch(() => null);
+    const s = await get(`/api/admin/system?days=${days}`).catch(() => null);
     if (!s) return;
     const n = s.novelcheck;
     const memPct = n.mem_limit ? (n.mem_used / n.mem_limit) * 100 : 0;
@@ -118,12 +144,14 @@ export async function renderUsage(view) {
       ],
     });
     $("#lib-tiles", view).innerHTML = libraryTiles(s);
-    const days = s.daily_tokens || [];
-    columnChart($("#token-chart", view), days.map((d) => {
+    const weekly = days > 60; // a long stretch reads better a week to a bar
+    $("#token-title", view).textContent = weekly ? `AI tokens per week (last ${days} days)` : `AI tokens per day (last ${days} days)`;
+    columnChart($("#token-chart", view), byWeek(s.daily_tokens || [], weekly).map((d) => {
       const label = new Date(`${d.day}T12:00:00Z`).toLocaleDateString([], { month: "short", day: "numeric" });
-      return { label, value: d.tokens, tip: `${label}: ${fmtNum(d.tokens)} tokens · ${fmtNum(d.calls)} AI calls` };
+      return { label, value: d.tokens, tip: `${weekly ? "Week of " : ""}${label}: ${fmtNum(d.tokens)} tokens · ${fmtNum(d.calls)} AI calls` };
     }));
-    $("#ollama", view).innerHTML = ollamaCard(s.ollama);
+    const machines = s.ollamas || (s.ollama ? [s.ollama] : []);
+    $("#ollama", view).innerHTML = machines.length ? machines.map(ollamaCard).join("") : ollamaCard(null);
     // Widths are set through the DOM (the page's security policy blocks inline styles).
     view.querySelectorAll("[data-w]").forEach((el) => (el.style.width = `${el.dataset.w}%`));
   }

@@ -4,6 +4,28 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.77.0]
+
+### 📚 Wrong titles fixed by themselves
+- **Calibre books get their true titles.** A title with a typo, dots or odd capitals ("Unnatural.Exprosure") is matched against the author's own books on Open Library and fixed ("Unnatural Exposure"). The name finder now looks at Calibre books too, and saves the titles it is sure of in Calibre by itself, once a day (switch it off in Library cleanup → Tidy titles in Calibre; the fixes are then only listed there).
+- **The cover finder fixes the title first.** For a book with no cover, it finds the true title, saves it, and searches covers under it, so pressing Find covers now does both.
+- **Review covers** has a title box at the top, filled with the true title when one was found: Save puts it in Calibre and searches the covers again.
+- **Fix Calibre details from Hardcover** finds books whose Calibre title has a typo (it used to need the ISBN or the exact title), and offers the corrected title among its fixes.
+
+### 👀 View as
+- **See the app as someone else does.** Users & Rules → a person's card → **View as …** shows their Library, rules and pages exactly as they see them, without their password. Nothing can be changed while viewing, it ends after two hours, and the bar at the top takes you back to your own account. Admins who manage people only, and not for other admins.
+
+### ⚡ Faster pages
+- **Library cleanup opens at once.** Its lists (books listed twice, books with no cover, the cleanup summary) are worked out in the background and kept ready. A change you make, or a change to the library, has them worked out again.
+- **Pages show their last answer straight away** and update it in the background.
+
+### 🎉 A day's lists together
+- **All Nov 13 lists.** When several events come from the same day (a Linktree turned into one event per list), Events shows one more entry above them that searches all of their books at once, with a chip for each list. Claiming a book still files it through its own list.
+
+### 🔧 Smaller things
+- **Integrations** says **Edit** for what is already connected, and Set up only for what is not.
+- **Usage** shows every Ollama machine you set up (your AI, the backup, Deep Scan), and the AI tokens chart goes back 2 weeks, a month, 3 months or a year (by week for the longer ones).
+
 ## [1.76.1]
 
 ### 🐛 Fixed

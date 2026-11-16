@@ -25,19 +25,37 @@ export function eventWhen(ev) {
   return ev.pinned ? "pinned" : `archived in ${ev.days_left} day${ev.days_left === 1 ? "" : "s"}`;
 }
 
+// groupEvent stands for a day's lists seen together: their shared name, their books, ending with the first.
+export function groupEvent(evs) {
+  const sum = (k) => evs.reduce((n, e) => n + (e[k] || 0), 0);
+  return { name: `All ${dayOf(evs[0].name) || "these"} lists`, books: sum("books"), rated: sum("rated"),
+    archived_at: evs.every((e) => e.archived_at) ? evs[0].archived_at : "", pinned: evs.some((e) => e.pinned),
+    days_left: Math.min(...evs.map((e) => e.days_left ?? 30)), ends_at: "", source_url: "" };
+}
+
+// dayOf is the part of an event's name after its last " · " ("Thrillers · Nov 13" → "Nov 13"), or "".
+export function dayOf(name) {
+  const i = String(name).lastIndexOf(" · ");
+  return i > 0 ? name.slice(i + 3).trim() : "";
+}
+
 // eventShelf fills host with the event's banner and returns what the
 // Library's cards need: extra(book) and click(e) (true when it was ours).
 export async function eventShelf(host, id, state, reload) {
   const manager = canManage(state.user);
   const kid = state.user.role === "restricted";
   const friend = state.user.role === "friend"; // her claims go to her own library
-  const [data, cats] = await Promise.all([get(`/api/events/${id}`).catch(() => null), manager ? get("/api/catalogs").catch(() => []) : []]);
-  if (!data) {
+  const ids = String(id).split(",").filter(Boolean); // several: a day's lists seen together
+  const [all, cats] = await Promise.all([Promise.all(ids.map((i) => get(`/api/events/${i}`).catch(() => null))), manager ? get("/api/catalogs").catch(() => []) : []]);
+  const found = all.filter(Boolean);
+  if (!found.length) {
     host.innerHTML = `<div class="card mb-3 text-sm text-slate-400">That event is gone. <a href="#/events" class="underline">All events</a></div>`;
     return null;
   }
-  const ev = data.event;
-  const marks = new Map(data.books.map((b) => [b.id, b]));
+  const group = found.length > 1;
+  const ev = group ? groupEvent(found.map((d) => d.event)) : found[0].event;
+  const marks = new Map();
+  for (const d of found) for (const b of d.books) if (!marks.has(b.id)) marks.set(b.id, { ...b, event: d.event.id }); // claimed through its own list
   const libs = (cats || []).filter((c) => c.source !== "calibre" && !c.physical);
   const pick = () => (libs.some((c) => String(c.id) === store()) ? store() : libs[0] ? String(libs[0].id) : "new");
   const btn = (b, label, title = "") => `<button data-e="${b}" class="btn-ghost py-1.5 text-sm"${title ? ` title="${title}"` : ""}>${label}</button>`;
@@ -49,7 +67,8 @@ export async function eventShelf(host, id, state, reload) {
           ${ev.source_url && !kid ? ` · <a href="${esc(ev.source_url)}" target="_blank" rel="noopener noreferrer" class="underline">event page ↗</a>` : ""}</p></div>
       <a href="#/events" class="btn-ghost shrink-0 py-1.5 text-sm" title="All events">✕<span class="hidden sm:inline"> All events</span></a>
     </div>
-    ${manager ? `<div class="flex flex-wrap gap-1">${btn("edit", "Edit", "Rename it or change when it ends")}
+    ${group ? `<div class="flex flex-wrap gap-2">${found.map((d) => `<a href="#/library?event=${d.event.id}" class="chip">${esc(d.event.name)} · ${d.event.books}</a>`).join("")}</div>` : ""}
+    ${manager && !group ? `<div class="flex flex-wrap gap-1">${btn("edit", "Edit", "Rename it or change when it ends")}
       ${ev.archived_at ? btn("restore", "↩ Restore") : `${btn("pin", ev.pinned ? "Unpin" : "Pin", "Pinned events without an end stay out of the archive")}${btn("archive", "Archive")}`}
       ${btn("delete", "Delete", "Delete this event (books you claimed stay)")}</div>` : ""}
     ${ev.archived_at ? `<p class="text-xs text-amber-300">This event is over. Its books and ratings are kept here; Amazon's prices may have changed.</p>` : ""}
@@ -106,11 +125,11 @@ export async function eventShelf(host, id, state, reload) {
     e.stopPropagation();
     if (act === "wish" && (await attempt(() => post(`/api/books/${bookID}/wish`, {}), "Added to the wishlist"))) m.wished = true;
     else if (act === "claimed" && friend) {
-      if (await attempt(() => post(`/api/me/events/${id}/books/${bookID}/claim`, {}), `${m.title} is in your library now`)) m.owned = true;
+      if (await attempt(() => post(`/api/me/events/${m.event}/books/${bookID}/claim`, {}), `${m.title} is in your library now`)) m.owned = true;
     } else if (act === "claimed") {
       const lib = host.querySelector("[data-claim-lib]")?.value;
       if (!lib || lib === "new") return toast("Pick the library claimed books go to (at the top)", true), true;
-      if (await attempt(() => post(`/api/events/${id}/books/${bookID}/claim`, { catalog_id: Number(lib) }), `${m.title} is in your library now`)) m.owned = true;
+      if (await attempt(() => post(`/api/events/${m.event}/books/${bookID}/claim`, { catalog_id: Number(lib) }), `${m.title} is in your library now`)) m.owned = true;
     }
     box.outerHTML = extra(m);
     return true;

@@ -1,7 +1,7 @@
 // Tidy titles in Calibre. NovelCheck shows "01 - Dune" as "Dune" (book 1)
 // by itself; these dialogs let an admin make Calibre match, through its
 // Content server, or open the book in Calibre-Web to change it there.
-import { get, post } from "./api.js";
+import { get, post, put } from "./api.js";
 import { esc, attempt, toast } from "./ui.js";
 
 const num = (n) => String(Number(n)); // 2, 2.5
@@ -77,11 +77,13 @@ export async function openTitleFixes(onDone) {
   const load = async () => {
     const data = await attempt(() => get("/api/admin/title-fixes"));
     if (!data) return false;
-    const { fixes, server, calibre_web_url: cw } = data;
+    const { fixes, server, calibre_web_url: cw, auto } = data;
     d.innerHTML = `<form class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
       <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">Tidy titles in Calibre</h2>
         <button type="button" data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
-      <p class="text-sm text-slate-400">${fixes.length ? `These titles carry track or series numbers in Calibre. NovelCheck already shows them tidied${server ? "; tick the ones to change in Calibre too." : "."}` : "Every title in Calibre is tidy."}</p>
+      <p class="text-sm text-slate-400">${fixes.length ? `These titles are wrong in Calibre: track or series numbers, the author stuck on, dots, or a typo (the true title comes from the author's books on Open Library)${server ? ". Tick the ones to change in Calibre." : "."}` : "Every title in Calibre is tidy."}</p>
+      ${server ? `<label class="flex items-start gap-2 rounded-lg bg-slate-800/60 p-2 text-sm"><input type="checkbox" data-auto ${auto ? "checked" : ""} class="mt-1">
+        <span>Fix wrong titles in Calibre by themselves, once a day, when NovelCheck is sure (the title matches one of the author's own books)</span></label>` : ""}
       ${!server && fixes.length ? noServer(cw) : ""}
       ${note ? `<div class="rounded-lg bg-amber-950/40 p-3 text-sm text-amber-200">${note}</div>` : ""}
       ${server && fixes.length > 1 ? `<label class="flex items-center gap-2 text-sm"><input type="checkbox" data-all checked> All ${fixes.length}</label>` : ""}
@@ -93,7 +95,12 @@ export async function openTitleFixes(onDone) {
         <p class="text-xs text-slate-500">Series numbers found in a title are kept in NovelCheck; to store them in Calibre too, add the series name from the book's own page.</p>` : ""}
     </form>`;
     const form = d.querySelector("form");
-    form.onchange = (e) => {
+    form.onchange = async (e) => {
+      if (e.target.matches("[data-auto]")) {
+        await attempt(() => put("/api/admin/settings", { calibre_names_auto: e.target.checked ? "on" : "off" }),
+          e.target.checked ? "Wrong titles are fixed by themselves" : "Wrong titles are only listed here");
+        return;
+      }
       if (e.target.matches("[data-all]")) form.querySelectorAll("[name=id]").forEach((c) => (c.checked = e.target.checked));
     };
     form.onsubmit = async (e) => {

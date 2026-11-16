@@ -17,6 +17,7 @@ var friendRoutes = []struct {
 	path    *regexp.Regexp
 }{
 	{"GET", regexp.MustCompile(`^/api/me$`)},
+	{"DELETE", regexp.MustCompile(`^/api/me/view-as$`)}, // an admin viewing as her goes back to their own account
 	{"PUT", regexp.MustCompile(`^/api/me/(password|pin|guide-seen|start-page|appearance)$`)},
 	{"", regexp.MustCompile(`^/api/me/searches$`)},
 	{"POST", regexp.MustCompile(`^/api/me/bug-report$`)},

@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"net/http"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/ollama"
@@ -18,7 +20,11 @@ func (s *Server) handleSystem(w http.ResponseWriter, r *http.Request) {
 		"history":    s.SysInfo.History(),
 		"worker":     s.Worker.Status(),
 	}
-	if days, err := s.Store.DailyTokens(14); err == nil {
+	days := 14 // the token history: 14 days, or up to a year when asked (?days=90)
+	if n, err := strconv.Atoi(r.URL.Query().Get("days")); err == nil && n >= 7 && n <= 366 {
+		days = n
+	}
+	if days, err := s.Store.DailyTokens(days); err == nil {
 		out["daily_tokens"] = days
 	}
 	if counts, err := s.Store.StatusCounts(); err == nil {
@@ -28,22 +34,54 @@ func (s *Server) handleSystem(w http.ResponseWriter, r *http.Request) {
 		out["usage"] = u
 		out["cost_spent"] = s.Store.SpentUSD()
 	}
-	if base := ollamaBase(s.Store.Setting(store.KeyLLMBaseURL)); base != "" {
-		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-		defer cancel()
-		info := map[string]any{"url": base}
-		if srv, err := ollama.Probe(ctx, base); err != nil {
-			info["error"] = "can't reach Ollama at " + base
-		} else {
-			info["version"] = srv.Version
-			info["downloaded"] = srv.Models
-			loaded, err := ollama.PS(ctx, base)
-			if err != nil {
-				info["error"] = err.Error()
-			}
-			info["loaded"] = loaded
+	// Every Ollama machine set up (your AI, the backup, Deep Scan), each once, asked side by side.
+	type machine struct{ name, base string }
+	var machines []machine
+	seen := map[string]bool{}
+	add := func(name, raw string) {
+		if base := ollamaBase(raw); base != "" && !seen[base] {
+			seen[base] = true
+			machines = append(machines, machine{name, base})
 		}
-		out["ollama"] = info
+	}
+	add("Your AI", s.Store.Setting(store.KeyLLMBaseURL))
+	for _, ai := range s.Store.AIConfigs() {
+		name := map[string]string{"main": "Your AI", "backup": "Backup AI"}[ai.Name]
+		if name == "" {
+			name = ai.Name + " AI"
+		}
+		add(name, ai.BaseURL)
+	}
+	if deep, ok := s.Store.DeepAI(); ok {
+		add("Deep Scan", deep.BaseURL)
+	}
+	infos := make([]map[string]any, len(machines))
+	var wg sync.WaitGroup
+	for i, m := range machines {
+		wg.Add(1)
+		go func(i int, m machine) {
+			defer wg.Done()
+			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+			defer cancel()
+			info := map[string]any{"url": m.base, "name": m.name}
+			if srv, err := ollama.Probe(ctx, m.base); err != nil {
+				info["error"] = "can't reach Ollama at " + m.base
+			} else {
+				info["version"] = srv.Version
+				info["downloaded"] = srv.Models
+				loaded, err := ollama.PS(ctx, m.base)
+				if err != nil {
+					info["error"] = err.Error()
+				}
+				info["loaded"] = loaded
+			}
+			infos[i] = info
+		}(i, m)
+	}
+	wg.Wait()
+	if len(infos) > 0 {
+		out["ollama"] = infos[0] // older pages read one
+		out["ollamas"] = infos
 	}
 	writeJSON(w, http.StatusOK, out)
 }

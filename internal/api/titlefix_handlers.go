@@ -29,7 +29,7 @@ func (s *Server) handleTitleFixes(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"fixes": fixes,
+	writeJSON(w, http.StatusOK, map[string]any{"fixes": fixes, "auto": s.Store.Setting(KeyNamesToCalibre) != "off",
 		"server": s.Store.Setting(store.KeyCalibreSrvURL) != "", "calibre_web_url": s.Store.Setting(store.KeyCalibreWebURL)})
 }
 

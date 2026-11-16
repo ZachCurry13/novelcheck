@@ -31,6 +31,7 @@ type BookFilter struct {
 	Kind           string  // "fiction", "nonfiction" or "unknown"
 	Collection     int64   // only books in this collection
 	Event          int64   // only books an event lists (kids: rated ones)
+	Events         []int64 // only books any of these events lists (a day's lists seen together)
 	NotOwned       bool    // hide books the family has
 	LibbyAudio     string  // "1": the audiobook is at one of the viewer's Libby libraries; "now": and available now
 	Season         string  // a seasonal shelf's key (package seasons), matched by its words
@@ -139,11 +140,17 @@ func visibility(u *User, listed bool) (string, []any) {
 // filterCond turns f (plus the viewer's content rules) into a WHERE clause.
 func filterCond(f BookFilter, viewer *User) (string, []any) {
 	where := []string{"1=1"}
-	if f.CatalogID == 0 && f.Event == 0 {
+	if f.CatalogID == 0 && f.Event == 0 && len(f.Events) == 0 {
 		where = append(where, "NOT "+discoverOnlyCond) // Discover books show on the Discover tab
 	}
 	where = append(where, "NOT "+splitBoxCond) // its books show instead
 	var args []any
+	if len(f.Events) > 1 {
+		where = append(where, "EXISTS (SELECT 1 FROM event_books fe WHERE fe.book_id = b.id AND fe.event_id IN ("+idList(f.Events)+"))")
+		if viewer != nil && viewer.Role == RoleRestricted {
+			where = append(where, "(b.status = 'analyzed' OR b.age_level > 0)")
+		}
+	}
 	if f.Event > 0 {
 		where = append(where, "EXISTS (SELECT 1 FROM event_books fe WHERE fe.book_id = b.id AND fe.event_id = ?)")
 		args = append(args, f.Event)
@@ -288,6 +295,8 @@ func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
 	case "list":
 		if f.Event > 0 {
 			order = "(SELECT MIN(lo.position) FROM event_books lo WHERE lo.book_id = b.id AND lo.event_id = " + strconv.FormatInt(f.Event, 10) + "), b.id"
+		} else if len(f.Events) > 1 { // list by list, each in its own order
+			order = "(SELECT MIN(lo.event_id * 100000 + lo.position) FROM event_books lo WHERE lo.book_id = b.id AND lo.event_id IN (" + idList(f.Events) + ")), b.id"
 		}
 	}
 	limit := f.Limit
@@ -322,4 +331,13 @@ func (s *Store) CalibreMatches(f BookFilter) ([]CalibreMatch, error) {
 		WHERE b.approved = 0 AND `+cond+`
 		GROUP BY cb.external_id ORDER BY title COLLATE NOCASE`, args...)
 	return out, err
+}
+
+// idList writes ids for an SQL IN list (numbers only, so nothing can be slipped in).
+func idList(ids []int64) string {
+	parts := make([]string, len(ids))
+	for i, id := range ids {
+		parts[i] = strconv.FormatInt(id, 10)
+	}
+	return strings.Join(parts, ",")
 }

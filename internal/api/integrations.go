@@ -154,7 +154,7 @@ func (s *Server) integrations(ctx context.Context) []IntegGroup {
 		if name == "" {
 			name = ai.Name + " AI"
 		}
-		r := row("ai-"+ai.Name, name, "ok", "Set up", strings.Join(ai.Models, ", ")+" · "+where, "#/admin?tab=ai")
+		r := row("ai-"+ai.Name, name, "ok", "Connected", strings.Join(ai.Models, ", ")+" · "+where, "#/admin?tab=ai")
 		for _, model := range ai.Models { // a service that said its daily quota is used up is left alone until it resets
 			if until, resting := llm.Resting()[model]; resting {
 				r.Badge, r.Label = "update", "Daily limit used"
@@ -215,7 +215,7 @@ func (s *Server) integrations(ctx context.Context) []IntegGroup {
 	hc := row("hardcover", "Hardcover", b, l, "Each person connects their own account under Settings → Connections: shelves, ratings, goals.", "#/settings?s=connections")
 	b, l = onOff(libbyUsers > 0, fmt.Sprintf("%d with a library", libbyUsers), "No library chosen")
 	lib := row("libby", "Libby (public library)", b, l, "Shows whether your library has a book. Each person picks their library under Settings → Connections.", "#/settings?s=connections")
-	b, l = onOff(set(store.KeySMTPHost) != "", "Set up", "Not set up")
+	b, l = onOff(set(store.KeySMTPHost) != "", "Connected", "Not set up")
 	mail := row("smtp", "Email (Send-to-Kindle)", b, l, strings.TrimSpace(set(store.KeySMTPHost)), "#/admin?tab=delivery")
 	groups = append(groups, IntegGroup{"Your library and accounts", "The servers and accounts NovelCheck reads from and writes to.", []IntegRow{cal, srv, web, abs, hc, lib, mail}})
 
