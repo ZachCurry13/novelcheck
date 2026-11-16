@@ -6,6 +6,9 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.76.0]
 
+### ✏️ Fix a book's title and author
+- **Edit title and author** on a book's page (parents and admins), for books from Check a book, a list, an event or Discover. "Abby jiminez a married little Christmas" becomes "A Married Little Christmas" by Abby Jimenez. The old name is remembered, so checking the book again by it finds the same book, and if NovelCheck already has a book by the new name the two become one. A Calibre book's title is still changed in Calibre.
+
 ### 🤝 Friends' accounts
 - **Check a book.** A friend can scan a barcode, snap a cover or type a title to see a book's peppers and content, like a parent can. Her result never says whether the family has the book, and its page opens for her afterwards. A book nobody has rated yet is rated by the AI, as for anyone's check.
 - **Her own Nightstand.** She can put any book from Discover, an event, Check a book or her own library on her Nightstand, reorder it and mark books as reading or finished. Nothing is ever sent from the family's files, and the family isn't told what she starts reading. Her picks don't count toward "Popular in the family" or anyone's suggestions.

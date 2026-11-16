@@ -84,6 +84,7 @@ export async function openBook(id, state, onChange) {
           <p class="text-slate-400">${authorLinks(b.author)}${b.isbn ? " · ISBN " + esc(b.isbn) : ""}</p>
           ${data.my_progress ? `<p class="mt-1 text-sm text-indigo-300" title="From your e-reader's sync">Your progress: ${progressText(data.my_progress)}</p>` : ""}
           ${can(state.user, "calibre") && calibreIds.length ? `<p class="mt-1 text-xs ${b.title_fix ? "text-amber-300" : "text-slate-500"}">${b.title_fix ? `In Calibre: “${esc(b.title_fix)}” · ` : ""}<button type="button" data-act="calibre-title" class="underline">${b.title_fix ? "Tidy it in Calibre" : "Edit title in Calibre"}</button></p>` : ""}
+          ${manager && !(data.copies || []).some((c) => c.source === "calibre") ? `<p class="mt-1 text-xs text-slate-500"><button type="button" data-act="rename" class="underline">Edit title and author</button></p>` : ""}
         </div>
       </div>
       <div class="flex flex-wrap gap-1">${classChip(b)} ${reviewChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
@@ -153,6 +154,12 @@ export async function openBook(id, state, onChange) {
       import("./sameas.js").then((m) => m.openSameAs(b, (kept) => {
         dlg.close();
         openBook(kept, state, onChange);
+        onChange?.();
+      }));
+    } else if (act === "rename") {
+      import("./bookrename.js").then((m) => m.openRename(b, (id) => {
+        dlg.close();
+        openBook(id, state, onChange);
         onChange?.();
       }));
     } else if (act === "calibre-title") {

@@ -252,6 +252,7 @@ func (s *Server) Router() http.Handler {
 				r.Use(auth.RequireManager)
 				r.Get("/admin/deep-scans/{id}/passage", s.handleDeepPassage) // parents read a scanned part
 				r.Get("/activity", s.handleActivity)
+				r.Put("/books/{id}/name", s.handleRenameBook) // fix a looked-up or listed book's title and author
 				r.Post("/collections", s.handleCreateCollection)
 				r.Patch("/collections/{id}", s.handleUpdateCollection)
 				r.Delete("/collections/{id}", s.handleDeleteCollection)
