@@ -61,7 +61,9 @@ export function openNewEvent() {
         <input type="checkbox" data-list value="${esc(l.url)}" data-name="${esc(l.name)}" ${l.picked ? "checked" : ""} class="h-5 w-5">
         <span>${esc(l.name)}</span></label>`).join("")}</div>
       <label class="flex items-start gap-3 rounded-lg bg-slate-800 p-3 text-sm"><input type="checkbox" data-each checked class="mt-0.5 h-5 w-5">
-        <span>Make each list its own event<span class="block text-xs text-slate-400">Kids' lists stay apart from the 18+ ones, and no event gets too big. Untick to put them all in one event.</span></span></label>
+        <span>Keep each list as its own category<span class="block text-xs text-slate-400">They are saved as one event with the lists inside: open it to see every book, or one category. Kids' lists stay apart from the 18+ ones. Untick to mix all the books in one list.</span></span></label>
+      <label class="block text-sm"><span class="label">Name of the event</span>
+        <input data-group-name maxlength="100" class="input" value="${esc(`Stuff Your Kindle · ${new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}`)}"></label>
       ${endsField()}
       <button type="button" data-read-lists class="btn-primary w-full">Read the chosen lists</button>`;
   };
@@ -101,8 +103,9 @@ export function openNewEvent() {
       if (!picked.length) return;
       btn.disabled = true;
       if (found.querySelector("[data-each]")?.checked) {
-        const { made, failed } = await saveEachList(picked, fromBox(form.ends.value), (msg) => (btn.textContent = msg));
-        found.innerHTML = `<p class="rounded-lg bg-slate-800 p-3 text-sm">Made <b>${made.length} event${made.length === 1 ? "" : "s"}</b>:
+        const group = found.querySelector("[data-group-name]")?.value.trim() || "";
+        const { made, failed } = await saveEachList(picked, fromBox(form.ends.value), (msg) => (btn.textContent = msg), group);
+        found.innerHTML = `<p class="rounded-lg bg-slate-800 p-3 text-sm">Made <b>${esc(group || "the event")}</b> with ${made.length} list${made.length === 1 ? "" : "s"}:
           <span class="mt-1 block">${made.map((m) => `<a class="text-indigo-300" href="#/library?event=${m.id}">${esc(m.name)}</a> (${m.books})`).join(" · ")}</span>
           ${failed.length ? `<span class="mt-2 block text-slate-400">Not read: ${failed.map(esc).join(", ")}. Try those again in a minute.</span>` : ""}</p>
           <p class="text-xs text-slate-400">Books NovelCheck hasn't rated yet are rated first in line, within your hourly AI limit.</p>

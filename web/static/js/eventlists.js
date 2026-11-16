@@ -7,7 +7,7 @@ const today = () => new Date().toLocaleDateString(undefined, { month: "short", d
 
 // saveEachList reads and saves the picked lists one after another; progress
 // is told each step. It returns the events made and the lists that failed.
-export async function saveEachList(picked, endsAt, progress) {
+export async function saveEachList(picked, endsAt, progress, group = "") {
   const made = [];
   const failed = [];
   for (const [i, l] of picked.entries()) {
@@ -18,7 +18,7 @@ export async function saveEachList(picked, endsAt, progress) {
         failed.push(l.name);
         continue;
       }
-      const ev = await post("/api/events", { name: `${l.name} · ${today()}`.slice(0, 100), source_url: l.url, ends_at: endsAt, books: r.books });
+      const ev = await post("/api/events", { name: `${l.name} · ${today()}`.slice(0, 100), source_url: l.url, ends_at: endsAt, books: r.books, group });
       made.push({ id: ev.id, name: l.name, books: r.books.length });
     } catch {
       failed.push(l.name);

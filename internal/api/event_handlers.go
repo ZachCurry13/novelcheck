@@ -92,6 +92,7 @@ func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		Name      string `json:"name"`
 		SourceURL string `json:"source_url"`
 		EndsAt    string `json:"ends_at"`
+		Group     string `json:"group"` // one list of a bigger event (a Linktree's lists), shown together
 		Books     []struct {
 			Title  string `json:"title"`
 			Author string `json:"author"`
@@ -124,6 +125,9 @@ func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeStoreErr(w, err)
 		return
+	}
+	if g := strings.TrimSpace(body.Group); g != "" && len([]rune(g)) <= 100 {
+		_ = s.Store.SetEventGroup([]int64{id}, g)
 	}
 	if len(unrated) > 0 {
 		s.Worker.Enqueue(true, unrated...) // rated first in line, within the hourly limit
@@ -167,4 +171,25 @@ func (s *Server) handleClaimEventBook(w http.ResponseWriter, r *http.Request) {
 	default:
 		writeJSON(w, http.StatusOK, map[string]bool{"owned": s.Store.Owned(book)})
 	}
+}
+
+// handleGroupEvents: PUT /api/events/group {"ids": [...], "name": "..."} puts events together as the lists of
+// one event (or renames that event; "" takes them apart again). Parents and admins.
+func (s *Server) handleGroupEvents(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		IDs  []int64 `json:"ids"`
+		Name string  `json:"name"`
+	}
+	if !readJSON(w, r, &body, 16<<10) {
+		return
+	}
+	if len(body.IDs) == 0 || len(body.IDs) > 50 || len([]rune(strings.TrimSpace(body.Name))) > 100 {
+		writeErr(w, http.StatusBadRequest, "pick the lists, and a name up to 100 characters")
+		return
+	}
+	if err := s.Store.SetEventGroup(body.IDs, body.Name); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }

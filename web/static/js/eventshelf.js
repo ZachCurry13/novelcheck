@@ -2,7 +2,7 @@
 // sorts on the event's books, a banner saying when it ends (parents can edit,
 // pin, archive or restore, and delete it), and on each card Claim on Amazon
 // and "✓ I claimed it", which files the book in the library parents pick.
-import { get, post, del } from "./api.js";
+import { get, post, put, del } from "./api.js";
 import { esc, attempt, toast, canManage } from "./ui.js";
 import { openEditEvent } from "./eventnew.js";
 
@@ -28,9 +28,15 @@ export function eventWhen(ev) {
 // groupEvent stands for a day's lists seen together: their shared name, their books, ending with the first.
 export function groupEvent(evs) {
   const sum = (k) => evs.reduce((n, e) => n + (e[k] || 0), 0);
-  return { name: `All ${dayOf(evs[0].name) || "these"} lists`, books: sum("books"), rated: sum("rated"),
+  return { name: evs[0].group_name || `Lists from ${dayOf(evs[0].name) || "one day"}`, books: sum("books"), rated: sum("rated"),
     archived_at: evs.every((e) => e.archived_at) ? evs[0].archived_at : "", pinned: evs.some((e) => e.pinned),
     days_left: Math.min(...evs.map((e) => e.days_left ?? 30)), ends_at: "", source_url: "" };
+}
+
+// listName is a list's name inside its event, without the day ("Thrillers · Nov 13" → "Thrillers").
+export function listName(e) {
+  const d = dayOf(e.name);
+  return d ? e.name.slice(0, e.name.length - d.length - 3) : e.name;
 }
 
 // dayOf is the part of an event's name after its last " · " ("Thrillers · Nov 13" → "Nov 13"), or "".
@@ -41,7 +47,7 @@ export function dayOf(name) {
 
 // eventShelf fills host with the event's banner and returns what the
 // Library's cards need: extra(book) and click(e) (true when it was ours).
-export async function eventShelf(host, id, state, reload) {
+export async function eventShelf(host, id, state, reload, groupIDs = "") {
   const manager = canManage(state.user);
   const kid = state.user.role === "restricted";
   const friend = state.user.role === "friend"; // her claims go to her own library
@@ -52,8 +58,11 @@ export async function eventShelf(host, id, state, reload) {
     host.innerHTML = `<div class="card mb-3 text-sm text-slate-400">That event is gone. <a href="#/events" class="underline">All events</a></div>`;
     return null;
   }
-  const group = found.length > 1;
-  const ev = group ? groupEvent(found.map((d) => d.event)) : found[0].event;
+  // Inside an event with several lists: its name, and a chip for every book or each category.
+  const members = groupIDs && groupIDs !== String(id) ? (await Promise.all(groupIDs.split(",").map((i) => get(`/api/events/${i}`).catch(() => null)))).filter(Boolean).map((d) => d.event) : found.map((d) => d.event);
+  const group = members.length > 1;
+  const ev = group ? groupEvent(members) : found[0].event;
+  const gids = members.map((e) => e.id).join(",");
   const marks = new Map();
   for (const d of found) for (const b of d.books) if (!marks.has(b.id)) marks.set(b.id, { ...b, event: d.event.id }); // claimed through its own list
   const libs = (cats || []).filter((c) => c.source !== "calibre" && !c.physical);
@@ -67,7 +76,9 @@ export async function eventShelf(host, id, state, reload) {
           ${ev.source_url && !kid ? ` · <a href="${esc(ev.source_url)}" target="_blank" rel="noopener noreferrer" class="underline">event page ↗</a>` : ""}</p></div>
       <a href="#/events" class="btn-ghost shrink-0 py-1.5 text-sm" title="All events">✕<span class="hidden sm:inline"> All events</span></a>
     </div>
-    ${group ? `<div class="flex flex-wrap gap-2">${found.map((d) => `<a href="#/library?event=${d.event.id}" class="chip">${esc(d.event.name)} · ${d.event.books}</a>`).join("")}</div>` : ""}
+    ${group ? `<div class="ev-chips">${[{ id: gids, name: "All", books: ev.books }, ...members.map((e) => ({ id: String(e.id), name: listName(e), books: e.books }))].map((c) =>
+      `<a href="#/library?event=${c.id}&group=${gids}" class="chip-filter" aria-pressed="${c.id === String(id)}">${esc(c.name)} · ${c.books}</a>`).join("")}</div>
+      ${manager ? `<button type="button" data-e="rename-group" class="btn-ghost py-1 text-sm">Rename</button>` : ""}` : ""}
     ${manager && !group ? `<div class="flex flex-wrap gap-1">${btn("edit", "Edit", "Rename it or change when it ends")}
       ${ev.archived_at ? btn("restore", "↩ Restore") : `${btn("pin", ev.pinned ? "Unpin" : "Pin", "Pinned events without an end stay out of the archive")}${btn("archive", "Archive")}`}
       ${btn("delete", "Delete", "Delete this event (books you claimed stay)")}</div>` : ""}
@@ -93,7 +104,12 @@ export async function eventShelf(host, id, state, reload) {
   };
   host.onclick = async (e) => {
     const b = e.target.closest("[data-e]")?.dataset.e;
-    const again = () => eventShelf(host, id, state, reload).then(() => reload());
+    const again = () => eventShelf(host, id, state, reload, groupIDs).then(() => reload());
+    if (b === "rename-group") {
+      const name = prompt("Name of the event:", ev.name);
+      if (name?.trim() && (await attempt(() => put("/api/events/group", { ids: gids.split(",").map(Number), name: name.trim() }), "Renamed"))) again();
+      return;
+    }
     if (b === "edit") openEditEvent(ev, again);
     else if (b === "pin" && (await attempt(() => post(`/api/events/${id}/pin`, { pinned: !ev.pinned }), ev.pinned ? "Unpinned" : "Pinned"))) again();
     else if (b === "archive" && (await attempt(() => post(`/api/events/${id}/archive`, { archived: true }), "Archived: find it under All events"))) location.hash = "#/events";

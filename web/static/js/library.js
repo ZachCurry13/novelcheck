@@ -62,7 +62,7 @@ export async function renderLibrary(view, state) {
   if (!event) bindSeasonChips(view.querySelector("[data-season-chips]"));
   if (!event && !collection && !season) renderYearBanner($("#year-banner", view));
   if (collection || season) shelfBanner($("#shelf-banner", view), { collection, season, seasons: shelves.seasons }, state, () => load(true));
-  const evShelf = event ? await eventShelf($("#shelf-banner", view), event, state, () => load(true)) : null;
+  const evShelf = event ? await eventShelf($("#shelf-banner", view), event, state, () => load(true), shelf.get("group") || "") : null;
   const cardFor = (b) => card(b, on(state.user, "queue"), evShelf?.extra(b) || "");
   const grid = $("#grid", view);
   const sel = setupSelect(view, grid, state, () => load(true), collection || season ? { collection_id: Number(collection) || 0, season } : null);

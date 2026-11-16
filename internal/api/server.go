@@ -265,6 +265,7 @@ func (s *Server) Router() http.Handler {
 				r.Post("/shelves/check", s.handleCheckShelf)
 				r.Post("/events/preview", s.handlePreviewEvent)
 				r.Post("/events", s.handleCreateEvent)
+				r.Put("/events/group", s.handleGroupEvents) // a Linktree's lists as one event, or renamed
 				r.Patch("/events/{id}", s.handleUpdateEvent)
 				r.Post("/events/{id}/pin", s.handlePinEvent)
 				r.Post("/events/{id}/archive", s.handleArchiveEvent)

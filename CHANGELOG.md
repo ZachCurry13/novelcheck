@@ -13,6 +13,10 @@ becomes the release notes for that version and is shown in the app under
 - **Clear all** at the top of the panel; every filter that is on still shows as a chip above the books, with × to remove it.
 - **On a phone, Filters slides the same panel up from the bottom**, with a button that says how many books you'll see.
 
+### 🎉 An event with its lists inside
+- **A Linktree's lists are one event now** ("Stuff Your Kindle · Nov 13", named when you make it). On Events it's one entry: tap it for every book, or tap **▾** to see its categories underneath and open one. Lists made separately on the same day are shown together the same way.
+- **Inside the event, a chip for each category** ("All · 403", "Thrillers · 88", "Mystery · 71"…) narrows the books without going back. Each category keeps its own order and its own Claim buttons. Parents can rename the event from there.
+
 ## [1.77.0]
 
 ### 📚 Wrong titles fixed by themselves

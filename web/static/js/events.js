@@ -5,7 +5,7 @@ import { get } from "./api.js";
 import { $, esc, attempt, canManage } from "./ui.js";
 import { discoverTabsHTML } from "./discovertabs.js";
 import { openNewEvent } from "./eventnew.js";
-import { eventWhen, groupEvent, dayOf } from "./eventshelf.js";
+import { eventWhen, groupEvent, dayOf, listName } from "./eventshelf.js";
 
 export async function renderEvents(view, state) {
   const id = new URLSearchParams(location.hash.split("?")[1] || "").get("id");
@@ -28,28 +28,40 @@ export async function renderEvents(view, state) {
       <span class="min-w-0 flex-1"><span class="block font-semibold">${esc(e.name)}</span>
         <span class="block text-xs text-slate-400">${e.books} book${e.books === 1 ? "" : "s"} · ${e.rated} rated · ${eventWhen(e)}</span></span>
       <span aria-hidden="true">›</span></a></li>`;
-  // Lists from the same day ("Thrillers · Nov 13", "Mystery · Nov 13") also get one entry for all of them.
-  const days = new Map();
-  for (const e of on) {
-    const d = dayOf(e.name);
-    if (d) days.set(d, [...(days.get(d) || []), e]);
-  }
+  // An event with several lists (a Linktree's categories, or lists made the same day) is one entry: tap it for
+  // every book, or ▾ for its categories underneath.
+  const keyOf = (e) => (e.group_name ? `g:${e.group_name}` : dayOf(e.name) ? `d:${dayOf(e.name)}` : "");
+  const groups = new Map();
+  for (const e of on) if (keyOf(e)) groups.set(keyOf(e), [...(groups.get(keyOf(e)) || []), e]);
   const groupRow = (evs) => {
-    const g = groupEvent(evs);
-    return `<li><a href="#/library?event=${evs.map((e) => e.id).join(",")}" class="card-outlined flex items-center gap-3 hover:ring-indigo-600">
-      <span class="text-2xl" aria-hidden="true">📚</span>
-      <span class="min-w-0 flex-1"><span class="block font-semibold">${esc(g.name)}</span>
-        <span class="block text-xs text-slate-400">${evs.length} lists · ${g.books} books · search them all at once</span></span>
-      <span aria-hidden="true">›</span></a></li>`;
+    const g = groupEvent(evs), ids = evs.map((e) => e.id).join(",");
+    return `<li class="ev-group card-outlined p-0"><div class="flex items-center gap-3 p-3">
+        <a href="#/library?event=${ids}&group=${ids}" class="flex min-w-0 flex-1 items-center gap-3" title="Every book in it">
+          <span class="text-2xl" aria-hidden="true">${evs.some((e) => e.pinned) ? "📌" : "🎉"}</span>
+          <span class="min-w-0 flex-1"><span class="block font-semibold">${esc(g.name)}</span>
+            <span class="block text-xs text-slate-400">${g.books} books · ${evs.length} lists · ${eventWhen(g)}</span></span></a>
+        <button type="button" data-caret aria-expanded="false" class="icon-btn shrink-0" aria-label="Show its lists"><span class="ev-caret" aria-hidden="true">▾</span></button></div>
+      <ul class="ev-lists hidden">${evs.map((e) => `<li><a href="#/library?event=${e.id}&group=${ids}" class="flex items-center gap-3 border-t py-2.5 pl-14 pr-4 text-sm">
+        <span class="min-w-0 flex-1">${esc(listName(e))}</span><span class="text-xs text-slate-400">${e.books}</span><span aria-hidden="true">›</span></a></li>`).join("")}</ul></li>`;
   };
   const shown = new Set();
   const rows = on.map((e) => {
-    const d = dayOf(e.name), evs = days.get(d) || [];
-    const head = evs.length > 1 && !shown.has(d) ? (shown.add(d), groupRow(evs)) : "";
-    return head + row(e);
+    const k = keyOf(e), evs = groups.get(k) || [];
+    if (evs.length < 2) return row(e);
+    if (shown.has(k)) return "";
+    shown.add(k);
+    return groupRow(evs);
   });
   $("#events", view).innerHTML = rows.join("")
     || `<li class="card text-sm text-slate-400">No events on now.${manager ? " When a free-book day comes up, press ＋ New event and paste its list or its page's address." : ""}</li>`;
+  $("#events", view).onclick = (e) => { // ▾ opens an event's lists
+    const c = e.target.closest("[data-caret]");
+    if (!c) return;
+    const open = c.getAttribute("aria-expanded") !== "true";
+    c.setAttribute("aria-expanded", String(open));
+    c.setAttribute("aria-label", open ? "Hide its lists" : "Show its lists");
+    c.closest(".ev-group").querySelector(".ev-lists").classList.toggle("hidden", !open);
+  };
   const archive = $("#archive", view);
   archive.classList.toggle("hidden", !old.length);
   archive.querySelector("summary").textContent = `Archive (${old.length})`;

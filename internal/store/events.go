@@ -35,6 +35,17 @@ type Event struct {
 	Books      int    `db:"books" json:"books"`             // listed books the viewer may see
 	Rated      int    `db:"rated" json:"rated"`             // of those, rated
 	DaysLeft   int    `db:"days_left" json:"days_left"`     // before an unpinned event without an end is archived
+	GroupName  string `db:"group_name" json:"group_name"`   // the event it is one list of ("Stuff Your Kindle · Nov 13"), or ""
+}
+
+// SetEventGroup puts events together under one name (or takes them apart with "").
+func (s *Store) SetEventGroup(ids []int64, name string) error {
+	for _, id := range ids {
+		if _, err := s.DB.Exec(`UPDATE events SET group_name = ? WHERE id = ?`, strings.TrimSpace(name), id); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // EventEntry is one book as an event lists it.
@@ -56,7 +67,7 @@ type EventBook struct {
 	Queued   bool   `db:"queued" json:"queued"`
 }
 
-const eventCols = `e.id, e.name, e.source_url, e.created_by, e.created_at, e.pinned, e.ends_at, e.archived_at,
+const eventCols = `e.id, e.name, e.source_url, e.created_by, e.created_at, e.pinned, e.ends_at, e.archived_at, e.group_name,
 	CAST(MAX(0, ` + eventDaysSQL + ` - (julianday('now') - julianday(e.created_at))) AS INTEGER) AS days_left`
 
 // CreateEvent saves an event with its books (matched to books NovelCheck

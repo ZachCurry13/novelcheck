@@ -315,6 +315,15 @@ dialog.dialog.search-view[open] { animation: none; }
   #filters-toggle, #filters .fdone { display: none; }
 }
 
+/* An event with several lists (js/events.js, js/eventshelf.js): ▾ opens its categories; inside, a chip per category. */
+.ev-group .ev-lists a { border-top: 1px solid rgb(var(--slate-800)); }
+.ev-group .ev-lists a:hover { background: rgb(var(--slate-800) / 0.5); }
+.ev-caret { display: inline-block; font-size: 1.1rem; transition: transform 0.2s; }
+[data-caret][aria-expanded="true"] .ev-caret { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .ev-caret { transition: none; } }
+.ev-chips { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem; }
+.ev-chips .chip-filter { flex: none; white-space: nowrap; }
+
 /* Wrapped, full screen: see js/wrappedstory.js. */
 body.story-open { overflow: hidden; }
 .story-full { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; color: #fff; outline: none; }

@@ -49,3 +49,29 @@ func TestSeveralPepperLevels(t *testing.T) {
 		t.Fatalf("one level still works: %d", n)
 	}
 }
+
+// Lists saved from one page share the event's name; it can be renamed for all of them at once.
+func TestEventGroupName(t *testing.T) {
+	srv, _ := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	book := []map[string]string{{"title": "Gone Girl", "author": "Gillian Flynn"}}
+	_, a := admin.do("POST", "/api/events", map[string]any{"name": "Thrillers · Nov 13", "group": "Stuff Your Kindle · Nov 13", "books": book}, true)
+	_, b := admin.do("POST", "/api/events", map[string]any{"name": "Mystery · Nov 13", "group": "Stuff Your Kindle · Nov 13", "books": book}, true)
+	names := func() map[float64]string {
+		_, evs := admin.doList("GET", "/api/events")
+		out := map[float64]string{}
+		for _, e := range evs {
+			out[e["id"].(float64)] = e["group_name"].(string)
+		}
+		return out
+	}
+	if n := names(); n[a["id"].(float64)] != "Stuff Your Kindle · Nov 13" || n[b["id"].(float64)] != "Stuff Your Kindle · Nov 13" {
+		t.Fatalf("saved together: %v", n)
+	}
+	if res, _ := admin.do("PUT", "/api/events/group", map[string]any{"ids": []float64{a["id"].(float64), b["id"].(float64)}, "name": "SYK Fall"}, true); res.StatusCode != 200 {
+		t.Fatalf("rename: %d", res.StatusCode)
+	}
+	if n := names(); n[a["id"].(float64)] != "SYK Fall" || n[b["id"].(float64)] != "SYK Fall" {
+		t.Fatalf("renamed together: %v", n)
+	}
+}

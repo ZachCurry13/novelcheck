@@ -226,7 +226,8 @@ CREATE TABLE IF NOT EXISTS events (
     pinned      INTEGER NOT NULL DEFAULT 0,
     created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ends_at     TEXT NOT NULL DEFAULT '',
-    archived_at TEXT NOT NULL DEFAULT ''
+    archived_at TEXT NOT NULL DEFAULT '',
+    group_name  TEXT NOT NULL DEFAULT '' -- lists saved together from one page share it ("Stuff Your Kindle · Nov 13")
 );
 CREATE TABLE IF NOT EXISTS event_books (
     event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
