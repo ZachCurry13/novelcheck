@@ -15,7 +15,7 @@ export const isOpen = (d) => ["requested", "queued", "reading"].includes(d.statu
 function evidence(d) {
   let notes = [];
   try {
-    notes = JSON.parse(d.notes || "[]").filter((n) => n.level >= 1); // every part with romance, not only Level 3 and up
+    notes = (JSON.parse(d.notes || "[]") || []).filter((n) => n.level >= 1); // every part with romance, not only Level 3 and up
   } catch {
     /* no notes */
   }

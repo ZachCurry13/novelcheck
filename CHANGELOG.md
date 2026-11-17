@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.81.1]
+
+### 🐞 Fixes
+- **A book's page could stop opening** after a Deep Scan that found nothing to note (the Nightstand and the Library showed an error and the page stayed shut). The scan now keeps an empty list, and the page reads the older ones too.
+- **Authors with a comma in Calibre** (Calibre writes "Cornwell, Patricia" as "Cornwell| Patricia") are read with the comma, so the book is recognised as Patricia Cornwell's: her name comes off the front of the title, and Calibre's recycle bin shows the copy as still in the library instead of offering to put it back (Calibre then refused it as a duplicate).
+
 ## [1.81.0]
 
 ### 📖 The reader, like an e-reader

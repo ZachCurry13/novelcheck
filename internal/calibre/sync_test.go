@@ -144,3 +144,29 @@ func TestEmptyEntriesStayDistinct(t *testing.T) {
 		t.Fatalf("book: %+v", books[0])
 	}
 }
+
+// Calibre keeps a comma inside an author's name as "|" ("Cornwell| Patricia"). It is read back as a comma, so
+// the book is Patricia Cornwell's: the author's name comes off the title, and the same book found elsewhere (the
+// recycle bin, a list) matches it.
+func TestCalibreCommaInAuthorName(t *testing.T) {
+	lib := makeLibrary(t)
+	c, _ := sqlx.Open("sqlite", filepath.Join(lib, "metadata.db"))
+	c.MustExec(`INSERT INTO books VALUES (9, 'Cornwell, Patricia - Cruel and Unusual', 'Cornwell| Patricia/Cruel (9)')`)
+	c.MustExec(`INSERT INTO authors VALUES (9, 'Cornwell| Patricia')`)
+	c.MustExec(`INSERT INTO books_authors_link VALUES (9, 9, 9)`)
+	c.Close()
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	if _, err := calibre.Sync(st, lib); err != nil {
+		t.Fatal(err)
+	}
+	id := st.MatchBook("Cruel and Unusual", "Patricia Cornwell")
+	b, err := st.BookByID(id, nil)
+	if id == 0 || err != nil || b.Title != "Cruel and Unusual" || b.Author != "Cornwell, Patricia" {
+		t.Fatalf("matched %d: %+v %v", id, b, err)
+	}
+}

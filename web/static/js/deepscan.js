@@ -78,7 +78,7 @@ export async function renderDeepSection(host, bookId, user, title = "") {
   if (d?.status === "reading") {
     body = `<p class="text-sm">Reading part ${d.parts_done + 1} of ${d.parts_total}…</p>`;
   } else if (d?.status === "done") {
-    const notes = JSON.parse(d.notes || "[]");
+    const notes = JSON.parse(d.notes || "[]") || []; // older scans saved "null"
     body = `<p class="text-sm text-emerald-300">Deep Scanned: the whole book was read${d.model ? ` by ${esc(d.model)}` : ""} (${esc(when(d.updated_at).toLocaleDateString())}).</p>
       ${deepChangeLine(d)}
       ${notes.length ? foundHTML(notes, canManage(user), d.held ? d.proposed_level : d.new_level)

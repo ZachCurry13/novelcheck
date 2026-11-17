@@ -95,6 +95,9 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 	if a.SummaryVerdict == "" {
 		a.SummaryVerdict = book.SummaryVerdict
 	}
+	if notes == nil {
+		notes = []Note{} // saved as [] (a nil list would be saved as null, which the book page can't read)
+	}
 	raw, _ := json.Marshal(notes)
 	if bigJump(prev, *a.SpiceLevel) || onePassage(prev, *a.SpiceLevel, results) {
 		// A big raise waits for an admin, with the evidence, instead of applying.
