@@ -29,6 +29,13 @@ becomes the release notes for that version and is shown in the app under
 - **Audiobook exists:** when the family has only the e-book, its length and narrator from Hardcover's audiobook edition.
 - Asked for when a book's page opens (with the same Hardcover connection as the ratings) and kept for a day; the Hardcover id found for each book is kept so it isn't searched for again.
 
+### 🎧 Audiobookshelf cleaned up from Hardcover
+- **Every audiobook is matched with Hardcover**, the source of truth: by ISBN, then by Audible ASIN, then by exact title and author.
+- **A certain match is fixed in Audiobookshelf by itself:** the title, author and series (with its number) as Hardcover has them, and whatever the audiobook is missing: ISBN, ASIN, narrator, genres, description and cover.
+- **Anything less certain waits for you** in Library cleanup → Fix Audiobookshelf details from Hardcover, showing what would change, with **Apply** and **Skip** (a skipped one isn't offered again for months). That covers a title that had to be corrected for a typo, or an ISBN that leads to a different book.
+- It runs every 6 hours with the Hardcover ratings, and each audiobook is looked at again after a month. **Look now** runs it straight away, and a switch turns off fixing by itself.
+- It needs the Audiobookshelf account NovelCheck uses to be allowed to edit books; if it isn't, the cleanup stops and says so.
+
 ### 🔢 An ISBN for every book
 - **Books with no ISBN get one**, found the same way: Hardcover's (by title and author, with typos and dots fixed), or Open Library's when Hardcover doesn't know the book and Open Library's is clearly the same book (the same author and title). The cover finder then looks the cover up by it, and Hardcover's cleanup matches it by it.
 - **Calibre gets it too**: the ISBN is added to the book's identifiers in Calibre (its other identifiers are kept), under the same switch as fixing titles (Library cleanup → Tidy titles in Calibre). Integrations → Hardcover says how many library books still have no ISBN.

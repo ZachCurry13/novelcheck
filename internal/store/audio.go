@@ -35,6 +35,9 @@ type AudioItem struct {
 	ISBN        string
 	Genres      []string
 	DurationSec int
+	ASIN        string // read for the Audiobookshelf cleanup, not kept
+	HasCover    bool
+	SeriesName  string // as Audiobookshelf has it ("Dune #1")
 }
 
 // SaveAudioItem adds (or refreshes) an audiobook: the same title as an e-book

@@ -108,6 +108,7 @@ func (s *Server) RatingLoop(ctx context.Context) {
 		if n := s.FillRatings(ctx, 400); n > 0 {
 			log.Printf("hardcover ratings: %d books rated", n)
 		}
+		s.cleanAudiobooksNow(300) // the Audiobookshelf cleanup (absclean.go), with the same Hardcover connection
 	}
 }
 

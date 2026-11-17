@@ -121,3 +121,34 @@ func sortBy(b []BookInfo, key func(BookInfo) int) {
 		}
 	}
 }
+
+// InfoByASIN looks up to 25 Audible ASINs in one call and returns each one's book, keyed by the ASIN.
+func (c *Client) InfoByASIN(ctx context.Context, asins []string) (map[string]BookInfo, error) {
+	var clean []string
+	for _, a := range asins {
+		a = strings.ToUpper(strings.TrimSpace(a))
+		if len(a) == 10 && strings.Trim(a, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") == "" && len(clean) < 25 {
+			clean = append(clean, `"`+a+`"`)
+		}
+	}
+	out := map[string]BookInfo{}
+	if len(clean) == 0 {
+		return out, nil
+	}
+	var d struct {
+		Editions []struct {
+			ASIN string  `json:"asin"`
+			Book rawBook `json:"book"`
+		} `json:"editions"`
+	}
+	q := fmt.Sprintf(`query { editions(where: {asin: {_in: [%s]}}, limit: 50) { asin book { %s } } }`, strings.Join(clean, ", "), bookFields)
+	if err := c.do(ctx, q, &d); err != nil {
+		return nil, err
+	}
+	for _, e := range d.Editions {
+		if k := strings.ToUpper(strings.TrimSpace(e.ASIN)); k != "" {
+			out[k] = e.Book.info()
+		}
+	}
+	return out, nil
+}

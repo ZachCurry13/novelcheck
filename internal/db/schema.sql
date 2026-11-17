@@ -759,3 +759,19 @@ CREATE TABLE IF NOT EXISTS friend_checks (
     checked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, book_id)
 );
+
+-- The Audiobookshelf cleanup (api/absclean.go): when each audiobook was last
+-- matched against Hardcover, and the fixes waiting for a parent because the
+-- match was not certain.
+CREATE TABLE IF NOT EXISTS abs_checked (
+    item_id    TEXT PRIMARY KEY,
+    checked_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS abs_fixes (
+    item_id    TEXT PRIMARY KEY,
+    title      TEXT NOT NULL,              -- as Audiobookshelf has it
+    author     TEXT NOT NULL DEFAULT '',
+    fix        TEXT NOT NULL,              -- audiobookshelf.Fix as JSON
+    why        TEXT NOT NULL DEFAULT '',   -- why it isn't certain
+    created_at INTEGER NOT NULL
+);

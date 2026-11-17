@@ -21,7 +21,7 @@ export function hcTagsHTML(b) {
 // renderHCMore fills host with the audiobook line and "More like this"; open(id) shows a family book.
 export async function renderHCMore(host, b, { hasAudio, open }) {
   if (!host) return;
-  const m = await get(`/api/books/${b.id}/hardcover`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const m = await get(`/api/books/${b.id}/hardcover`).catch(() => null);
   if (!m || !host.isConnected) return;
   const audio = !hasAudio && m.audio_seconds > 0
     ? `<p class="text-xs text-slate-400"><b class="text-slate-300">Audiobook exists:</b> ${fmtLen(m.audio_seconds)}${m.narrators?.length ? `, read by ${m.narrators.map(esc).join(", ")}` : ""}</p>` : "";

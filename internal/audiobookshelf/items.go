@@ -34,8 +34,9 @@ var (
 type rawItem struct {
 	ID    string `json:"id"`
 	Media struct {
-		Duration float64 `json:"duration"`
-		Metadata struct {
+		Duration  float64 `json:"duration"`
+		CoverPath string  `json:"coverPath"`
+		Metadata  struct {
 			Title       string   `json:"title"`
 			Subtitle    string   `json:"subtitle"`
 			AuthorName  string   `json:"authorName"`
@@ -43,6 +44,7 @@ type rawItem struct {
 			SeriesName  string   `json:"seriesName"`
 			Genres      []string `json:"genres"`
 			ISBN        string   `json:"isbn"`
+			ASIN        string   `json:"asin"`
 			Description string   `json:"description"`
 		} `json:"metadata"`
 	} `json:"media"`
@@ -52,6 +54,7 @@ func (r rawItem) item() store.AudioItem {
 	m := r.Media.Metadata
 	it := store.AudioItem{ID: r.ID, Title: strings.TrimSpace(m.Title), Author: strings.TrimSpace(m.AuthorName), Narrator: strings.TrimSpace(m.Narrator),
 		Genres: m.Genres, ISBN: strings.TrimSpace(m.ISBN), DurationSec: int(r.Media.Duration),
+		ASIN: strings.TrimSpace(m.ASIN), HasCover: r.Media.CoverPath != "", SeriesName: strings.TrimSpace(m.SeriesName),
 		Description: strings.TrimSpace(tagRE.ReplaceAllString(m.Description, " "))}
 	if g := seriesRE.FindStringSubmatch(m.SeriesName); g != nil {
 		it.Series = g[1]

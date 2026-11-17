@@ -25,6 +25,8 @@ export async function renderCleanupTab(host, state) {
       <div id="cu-twice-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-hc"><summary class="cursor-pointer font-semibold">Fix Calibre details from Hardcover (series, titles, authors, ISBN, descriptions, genres)</summary>
       <div id="cu-hc-body" class="mt-2"></div></details></div>
+    <div class="card space-y-2"><details id="cu-abs"><summary class="cursor-pointer font-semibold">Fix Audiobookshelf details from Hardcover (titles, authors, series, ISBN, ASIN, narrators, covers)</summary>
+      <div id="cu-abs-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-up"><summary class="cursor-pointer font-semibold">⬆️ Upload e-books to Calibre and audiobooks to Audiobookshelf (experimental)</summary>
       <div id="cu-up-body" class="mt-2"></div></details></div></div>`;
   mountCleanup(host.querySelector("#cu-guided"));
@@ -79,6 +81,9 @@ export async function renderCleanupTab(host, state) {
       body.dataset.done = "1";
       renderHCClean(body);
     }
+  });
+  host.querySelector("#cu-abs").addEventListener("toggle", (e) => {
+    if (e.target.open) import("./absclean.js").then((m) => m.renderABSClean(host.querySelector("#cu-abs-body"))); // fresh each time
   });
   host.querySelector("#cu-twice").addEventListener("toggle", (e) => {
     if (e.target.open && !host.querySelector("#cu-twice-body").dataset.done) {
