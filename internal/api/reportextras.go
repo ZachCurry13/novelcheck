@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -69,4 +71,63 @@ func (s *Server) readLibrary() string {
 		return p
 	}
 	return "the Calibre folder"
+}
+
+// calibreCompareSection puts NovelCheck's view of Calibre next to the Content server's: is it the same library?
+// A sample of ids NovelCheck holds (the newest and every 40th) is asked of the Content server, and each id it
+// lacks is checked on disk: a book whose files are gone is a leftover, one whose files exist is a book in the
+// folder NovelCheck reads that the Content server doesn't serve (another library, or an older copy).
+func (s *Server) calibreCompareSection(line func(string, ...any)) {
+	line("\n== Calibre: NovelCheck's folder against the Content server ==")
+	ids, total, maxID := s.Store.CalibreSample(80)
+	dir := ""
+	if s.Syncer != nil {
+		dir = s.Syncer.LibraryDir()
+	}
+	line("NovelCheck holds %d Calibre books, the highest id #%d, from the folder %s", total, maxID, orNone(dir))
+	if dir != "" {
+		if fi, err := os.Stat(filepath.Join(dir, "metadata.db")); err == nil {
+			line("its metadata.db was last written %s UTC (%d KB)", fi.ModTime().UTC().Format("2006-01-02 15:04:05"), fi.Size()/1024)
+		} else {
+			line("its metadata.db: %v", err)
+		}
+	}
+	if s.Store.Setting("calibre_server_url") == "" || len(ids) == 0 {
+		line("(no Content server set up, or no books)")
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	have, err := s.calibreClient().Titles(ctx, ids)
+	if err != nil {
+		line("the Content server: %v", err)
+		return
+	}
+	missing, gone, onDisk := 0, 0, 0
+	var examples []string
+	for _, id := range ids {
+		if _, ok := have[id]; ok {
+			continue
+		}
+		missing++
+		files := s.Store.CalibreEntryFiles(id)
+		exist := 0
+		for _, p := range files {
+			if _, err := os.Stat(p); err == nil {
+				exist++
+			}
+		}
+		if exist == 0 {
+			gone++
+		} else {
+			onDisk++
+		}
+		if len(examples) < 6 {
+			examples = append(examples, "#"+strconv.Itoa(id)+" ("+strconv.Itoa(exist)+" of "+strconv.Itoa(len(files))+" files on disk)")
+		}
+	}
+	line("of %d sampled ids the Content server has %d and lacks %d: %d with their files gone (leftovers NovelCheck should forget), %d still with files on disk (a different or older library?)", len(ids), len(have), missing, gone, onDisk)
+	if len(examples) > 0 {
+		line("e.g. %s", strings.Join(examples, ", "))
+	}
 }

@@ -93,6 +93,7 @@ func (s *Server) diagnosticsText() string {
 	s.slowSection(line)
 	s.formatJobSection(line)
 	s.tidyWaitingSection(line)
+	s.calibreCompareSection(line)
 	s.activitySection(line)
 	s.serverChecksSection(line)
 

@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.89.3]
+
+### 🩺 The bug report compares NovelCheck's Calibre with the Content server's
+- **A new section in the bug report** asks the Content server about a sample of the Calibre books NovelCheck holds (the newest and every 40th) and says how many it really has, how many of the ones it lacks are leftovers whose files are gone, and how many still have files on disk (a different or older library). It also shows how many Calibre books NovelCheck holds, the newest id, and when `metadata.db` was last written. This is for the cleanup tools that refuse with "the other one is already gone" or tidy 0 titles.
+
 ## [1.89.2]
 
 ### 🧹 Delete the Kindle's crash logs (plugin 1.57.2)

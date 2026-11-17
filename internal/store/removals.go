@@ -59,3 +59,38 @@ func (s *Store) DropCalibreEntries(calibreIDs []int) {
 		}
 	}
 }
+
+// CalibreSample is the highest few Calibre ids NovelCheck holds and every 40th below them (up to n in all), with the
+// total and the highest id: to compare with what the Content server really has.
+func (s *Store) CalibreSample(n int) (ids []int, total, maxID int) {
+	cat, err := s.EnsureCatalog(CalibreCatalogName, "calibre")
+	if err != nil {
+		return nil, 0, 0
+	}
+	var all []int
+	_ = s.DB.Select(&all, `SELECT DISTINCT CAST(external_id AS INTEGER) FROM catalog_books WHERE catalog_id = ? ORDER BY 1 DESC`, cat)
+	total = len(all)
+	if total > 0 {
+		maxID = all[0]
+	}
+	for i, id := range all {
+		if i < n/2 || i%40 == 0 {
+			ids = append(ids, id)
+		}
+		if len(ids) >= n {
+			break
+		}
+	}
+	return ids, total, maxID
+}
+
+// CalibreEntryFiles are the file paths NovelCheck holds for one Calibre entry.
+func (s *Store) CalibreEntryFiles(calibreID int) []string {
+	cat, err := s.EnsureCatalog(CalibreCatalogName, "calibre")
+	if err != nil {
+		return nil
+	}
+	var out []string
+	_ = s.DB.Select(&out, `SELECT path FROM catalog_books WHERE catalog_id = ? AND external_id = ?`, cat, strconv.Itoa(calibreID))
+	return out
+}
