@@ -115,6 +115,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/audiobookshelf/cleanup", s.handleABSClean)
 		r.Put("/admin/audiobookshelf/cleanup", s.handleABSCleanAuto)
 		r.Post("/admin/audiobookshelf/cleanup/run", s.handleABSCleanRun)
+		r.Post("/admin/audiobookshelf/fixes/all", s.handleABSFixAll)
 		r.Post("/admin/audiobookshelf/fixes/{id}", s.handleABSFix)
 	})
 

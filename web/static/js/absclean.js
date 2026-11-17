@@ -26,6 +26,7 @@ export async function renderABSClean(host) {
       <p class="mt-2 text-xs text-slate-400">${esc(r.result || "Not run yet: it runs with the Hardcover ratings, every 6 hours.")}</p>
       <button type="button" data-abs-run class="btn-secondary mt-2 py-1 text-sm" ${r.busy ? "disabled" : ""}>${r.busy ? "Looking now…" : "Look now"}</button>
       <h3 class="mt-4 font-semibold">Waiting for you (${r.fixes.length})</h3>
+      ${r.fixes.length > 1 ? `<button type="button" data-abs-all class="btn-secondary mt-2 py-1 text-sm">Apply all ${r.fixes.length}</button>` : ""}
       ${r.fixes.length ? `<ul class="mt-2 space-y-2">${r.fixes.map((x) => `<li class="rounded-lg bg-slate-800/60 p-3 text-sm">
         <p class="font-semibold">${esc(x.title)} <span class="font-normal text-slate-400">${esc(x.author)}</span></p>
         <p class="text-xs text-amber-200">${esc(x.why)}</p><ul class="mt-1 text-xs">${change(x.fix)}</ul>
@@ -42,6 +43,12 @@ export async function renderABSClean(host) {
       if (await attempt(() => post("/api/admin/audiobookshelf/cleanup/run"), "Looking at the audiobooks in the background")) {
         setTimeout(async () => paint(await attempt(() => get("/api/admin/audiobookshelf/cleanup"))), 1500);
       }
+      return;
+    }
+    if (e.target.closest("[data-abs-all]")) {
+      if (!confirm("Apply every change listed here to Audiobookshelf?")) return;
+      const r = await attempt(() => post("/api/admin/audiobookshelf/fixes/all"), "Fixed in Audiobookshelf");
+      if (r) paint(r);
       return;
     }
     const b = e.target.closest("[data-abs-fix]");

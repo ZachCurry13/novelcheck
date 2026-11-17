@@ -1,4 +1,5 @@
 // Unified dashboard: browse and filter books across every catalog.
+import { bindMoreMenu } from "./libmenu.js";
 import { get, post, qs } from "./api.js";
 import { $, esc, attempt, toast, canManage, can } from "./ui.js";
 import { openCalibreRemoval } from "./calibreremove.js";
@@ -55,9 +56,7 @@ export async function renderLibrary(view, state) {
   combo(form.series, () => facets.series);
   const redrawChips = bindChips(form);
   bindFacets(form);
-  form.addEventListener("click", (e) => {
-    if (e.target.closest(".fmenu-list")) e.target.closest("details").open = false; // pick an action, the menu closes
-  });
+  bindMoreMenu(form);
   const recent = recentSearches(form.q, () => load(true));
   if (!event) bindSeasonChips(view.querySelector("[data-season-chips]"));
   if (!event && !collection && !season) renderYearBanner($("#year-banner", view));

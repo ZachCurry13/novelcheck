@@ -11,6 +11,13 @@ becomes the release notes for that version and is shown in the app under
 - **Finishing a book.** At the end of a book a small window asks **how many stars** (1 to 5, or finished without stars). The stars go to your NovelCheck (and from there to Hardcover), the book is marked finished in NovelCheck and in KOReader, and if the book is part of a series you're offered the **next book to download** straight away (or told the family doesn't have a file of it yet). **NovelCheck > Finish this book...** does the same by hand, and **Automatic > Ask for stars at the end of a book** turns the automatic window off.
 - Update the plugin on your e-reader with **NovelCheck > Update plugin** (it asks for a restart of KOReader).
 
+### 🎧 Audiobookshelf cleanup, less waiting
+- **An exact ISBN by the same author is the same book**, whatever the audiobook's edition calls it (a film tie-in title like "Blade Runner", a UK title, "Dark Tower II" for "The Drawing of the Three"). Those are now fixed by themselves. Only an ISBN that leads to a different book by a **different author** still waits for you, since the number may be wrong on the audiobook.
+- **Apply all** above the waiting list applies every listed change in one go (it asks first). The ones already waiting are not re-checked by themselves, so use it for those.
+
+### 📚 Library
+- **The ⋯ menu stays on the screen.** On a phone it opened to the left of its button and its words were cut off at the edge of the screen.
+
 ## [1.82.0]
 
 ### ✏️ One look for everything you type into

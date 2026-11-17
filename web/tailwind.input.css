@@ -206,7 +206,7 @@ html.font-dyslexic .leading-tight, html.font-dyslexic .leading-snug { line-heigh
 .fmenu { position: relative; }
 .fmenu > summary { list-style: none; cursor: pointer; }
 .fmenu > summary::-webkit-details-marker { display: none; }
-.fmenu-list { position: absolute; right: 0; top: calc(100% + 0.3rem); z-index: 30; min-width: 16rem; border: 1px solid rgb(var(--slate-700)); border-radius: 0.6rem; background: rgb(var(--slate-900)); padding: 0.3rem; box-shadow: 0 12px 30px rgb(0 0 0 / 0.45); }
+.fmenu-list { position: absolute; right: 0; top: calc(100% + 0.3rem); z-index: 30; min-width: min(16rem, calc(100vw - 1rem)); max-width: calc(100vw - 1rem); border: 1px solid rgb(var(--slate-700)); border-radius: 0.6rem; background: rgb(var(--slate-900)); padding: 0.3rem; box-shadow: 0 12px 30px rgb(0 0 0 / 0.45); }
 .fmenu-list a, .fmenu-list button { display: block; width: 100%; border-radius: 0.4rem; padding: 0.5rem 0.7rem; text-align: left; font-size: 0.85rem; color: rgb(var(--slate-200)); background: none; }
 .fmenu-list a:hover, .fmenu-list button:hover { background: rgb(var(--slate-800)); }
 .combo { position: relative; }

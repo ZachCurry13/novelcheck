@@ -84,6 +84,39 @@ func (s *Server) cleanAudiobooksNow(limit int) {
 	}
 }
 
+// handleABSFixAll: POST /api/admin/audiobookshelf/fixes/all applies every waiting fix (the page asks first). It
+// stops at the first refusal for rights, and says how many it applied.
+func (s *Server) handleABSFixAll(w http.ResponseWriter, r *http.Request) {
+	c, ok := audiobookshelf.FromSettings(s.Store)
+	list, err := s.Store.ABSFixes()
+	if !ok || err != nil {
+		writeErr(w, http.StatusBadRequest, "Audiobookshelf isn't set up")
+		return
+	}
+	applied := 0
+	for _, f := range list {
+		var fix audiobookshelf.Fix
+		if json.Unmarshal([]byte(f.Fix), &fix) != nil {
+			continue
+		}
+		if err := c.ApplyFix(r.Context(), f.ItemID, fix); err != nil {
+			if errors.Is(err, audiobookshelf.ErrNoEditRights) {
+				writeErr(w, http.StatusForbidden, err.Error())
+				return
+			}
+			log.Printf("audiobookshelf apply all %q: %v", f.Title, err)
+			continue
+		}
+		s.Store.DropABSFix(f.ItemID, false)
+		applied++
+	}
+	if applied > 0 { // NovelCheck's own copy of the details
+		res, err := audiobookshelf.Sync(r.Context(), s.Store, c)
+		audiobookshelf.Record(s.Store, res, err)
+	}
+	s.handleABSClean(w, r)
+}
+
 // handleABSFix: POST /api/admin/audiobookshelf/fixes/{id} {"action": "apply" | "skip"}.
 func (s *Server) handleABSFix(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")

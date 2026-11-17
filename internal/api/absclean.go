@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/zachcurry13/novelcheck/internal/audiobookshelf"
 	"github.com/zachcurry13/novelcheck/internal/hardcover"
@@ -145,9 +146,12 @@ func (s *Server) matchAudiobooks(ctx context.Context, hc *hardcover.Client, item
 				rest = append(rest, it)
 				continue
 			}
-			m := absMatch{it: it, info: info, certain: absSameTitle(it.Title, info.Title)}
+			// An exact ISBN or ASIN by the same author is the same book, whatever the edition calls it (a film
+			// tie-in title, a UK title, "Dark Tower II" for "The Drawing of the Three"). Only a different title
+			// by a different author is doubtful: the number may be wrong on the audiobook.
+			m := absMatch{it: it, info: info, certain: absSameTitle(it.Title, info.Title) || sameAuthor(it.Author, info.Authors)}
 			if !m.certain {
-				m.why = fmt.Sprintf("The %s leads to “%s” on Hardcover, a different title", how, info.Title)
+				m.why = fmt.Sprintf("The %s leads to “%s” by %s on Hardcover, a different book", how, info.Title, strings.Join(info.Authors, " & "))
 			}
 			out = append(out, m)
 		}
@@ -171,6 +175,21 @@ func (s *Server) matchAudiobooks(ctx context.Context, hc *hardcover.Client, item
 		time.Sleep(time.Second)
 	}
 	return out, unknown
+}
+
+// sameAuthor: one of Hardcover's authors is among the audiobook's (by last name, "King" in "Stephen King").
+func sameAuthor(item string, hcAuthors []string) bool {
+	norm := func(s string) string {
+		return strings.Join(strings.FieldsFunc(strings.ToLower(s), func(r rune) bool { return !unicode.IsLetter(r) && r != '\'' }), " ")
+	}
+	have := " " + norm(item) + " "
+	for _, a := range hcAuthors {
+		f := strings.Fields(norm(strings.ReplaceAll(a, ",", " ")))
+		if len(f) > 0 && strings.Contains(have, " "+f[len(f)-1]+" ") {
+			return true
+		}
+	}
+	return false
 }
 
 // absSameTitle: the same title, or one holds the other ("Dune" and "Dune: Deluxe Edition").

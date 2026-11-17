@@ -29,7 +29,8 @@ func TestAudiobookshelfCleanup(t *testing.T) {
 			io.WriteString(w, `{"data": {"editions": [
 				{"isbn_13": "9780000000011", "book": {"id": 10, "title": "Dune", "cached_image": {"url": "https://assets.hardcover.app/dune.jpg"},
 				  "contributions": [{"author": {"name": "Frank Herbert"}}], "book_series": [{"position": 1, "series": {"name": "Dune"}}]}},
-				{"isbn_13": "9780000000099", "book": {"id": 11, "title": "Other Book", "contributions": [{"author": {"name": "Someone Else"}}]}}]}}`)
+				{"isbn_13": "9780000000099", "book": {"id": 11, "title": "Other Book", "contributions": [{"author": {"name": "Someone Else"}}]}},
+				{"isbn_13": "9780000000077", "book": {"id": 13, "title": "The Drawing of the Three", "contributions": [{"author": {"name": "Stephen King"}}]}}]}}`)
 		case strings.Contains(q.Query, "asin: {_in"):
 			io.WriteString(w, `{"data": {"editions": [{"asin": "B003P2WO5E", "book": {"id": 12, "title": "The Way of Kings",
 				"contributions": [{"author": {"name": "Brandon Sanderson"}}], "cached_tags": {"Genre": [{"tag": "Fantasy"}]}}}]}}`)
@@ -52,7 +53,9 @@ func TestAudiobookshelfCleanup(t *testing.T) {
 		case r.URL.Path == "/api/libraries":
 			fmt.Fprint(w, `{"libraries": [{"id": "lib1", "name": "Audiobooks", "mediaType": "book"}]}`)
 		case r.URL.Path == "/api/libraries/lib1/items":
-			fmt.Fprint(w, `{"total": 4, "results": [
+			fmt.Fprint(w, `{"total": 5, "results": [
+			 {"id": "li_tie", "media": {"duration": 100, "coverPath": "/c.jpg", "metadata": {"title": "Dark Tower II", "authorName": "Stephen King", "isbn": "9780000000077",
+			   "narratorName": "N", "asin": "B000000002", "genres": ["G"], "description": "z"}}},
 			 {"id": "li_dune", "media": {"duration": 100, "metadata": {"title": "Dune", "authorName": "Frank Herbert", "isbn": "9780000000011", "genres": ["SF"], "description": "x"}}},
 			 {"id": "li_wok", "media": {"duration": 100, "coverPath": "/c.jpg", "metadata": {"title": "The Way of Kings (Unabridged)", "authorName": "Brandon Sanderson",
 			   "narratorName": "Michael Kramer", "asin": "B003P2WO5E", "description": "y"}}},
@@ -87,7 +90,7 @@ func TestAudiobookshelfCleanup(t *testing.T) {
 	admin.do("PUT", "/api/me/hardcover", map[string]string{"token": "good-token"}, true)
 
 	msg, err := server.CleanAudiobooks(context.Background(), 50)
-	if err != nil || !strings.Contains(msg, "looked at 4 audiobooks, fixed 2, 1 waiting for you, 1 Hardcover doesn't know") {
+	if err != nil || !strings.Contains(msg, "looked at 5 audiobooks, fixed 3, 1 waiting for you, 1 Hardcover doesn't know") {
 		t.Fatalf("the round: %q %v", msg, err)
 	}
 	mu.Lock()
@@ -106,7 +109,13 @@ func TestAudiobookshelfCleanup(t *testing.T) {
 		t.Fatalf("by ASIN: the true title and missing genres, the narrator kept: %s", wok)
 	}
 	if bad {
-		t.Fatal("an ISBN leading to another title must wait for a parent")
+		t.Fatal("an ISBN leading to another book by another author must wait for a parent")
+	}
+	mu.Lock()
+	tie := writes["/api/items/li_tie/media"]
+	mu.Unlock()
+	if !strings.Contains(tie, `"title":"The Drawing of the Three"`) {
+		t.Fatalf("an exact ISBN by the same author is the same book under another title: %s", tie)
 	}
 	_, out := admin.do("GET", "/api/admin/audiobookshelf/cleanup", nil, false)
 	fixes := out["fixes"].([]any)
@@ -119,6 +128,9 @@ func TestAudiobookshelfCleanup(t *testing.T) {
 	mu.Unlock()
 	if res.StatusCode != 200 || len(out["fixes"].([]any)) != 0 || !strings.Contains(applied, `"title":"Other Book"`) {
 		t.Fatalf("applied by a parent: %d %v %s", res.StatusCode, out, applied)
+	}
+	if res, _ := admin.do("POST", "/api/admin/audiobookshelf/fixes/all", map[string]string{}, true); res.StatusCode != 200 {
+		t.Fatalf("apply all with nothing waiting: %d", res.StatusCode)
 	}
 	if msg, _ := server.CleanAudiobooks(context.Background(), 50); msg != "" {
 		t.Fatalf("nothing again within a month: %q", msg)
