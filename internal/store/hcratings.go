@@ -42,3 +42,23 @@ func (s *Store) CountHCRatings() int {
 	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM books WHERE hc_rating > 0`)
 	return n
 }
+
+// SetMissingISBN gives a book the ISBN found for it, when it has none; it says whether it did.
+func (s *Store) SetMissingISBN(id int64, isbn string) bool {
+	if isbn == "" {
+		return false
+	}
+	res, err := s.DB.Exec(`UPDATE books SET isbn = ? WHERE id = ? AND isbn = ''`, isbn, id)
+	if err != nil {
+		return false
+	}
+	n, _ := res.RowsAffected()
+	return n > 0
+}
+
+// CountNoISBN is how many books in a library have no ISBN.
+func (s *Store) CountNoISBN() int {
+	var n int
+	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM books b WHERE b.isbn = '' AND `+ownedCond)
+	return n
+}

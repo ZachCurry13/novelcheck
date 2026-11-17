@@ -212,7 +212,7 @@ func (s *Server) integrations(ctx context.Context) []IntegGroup {
 	_ = s.Store.DB.Get(&hcUsers, `SELECT COUNT(*) FROM users WHERE hardcover_token != ''`)
 	_ = s.Store.DB.Get(&libbyUsers, `SELECT COUNT(*) FROM users WHERE libby_library != ''`)
 	b, l = onOff(hcUsers > 0, fmt.Sprintf("%d connected", hcUsers), "Nobody connected")
-	hc := row("hardcover", "Hardcover", b, l, fmt.Sprintf("Each person connects their own account under Settings → Connections: shelves, ratings, goals. Readers' ratings found for %d books (for Sort: Highest rated; filled in the background).", s.Store.CountHCRatings()), "#/settings?s=connections")
+	hc := row("hardcover", "Hardcover", b, l, fmt.Sprintf("Each person connects their own account under Settings → Connections: shelves, ratings, goals. Readers' ratings found for %d books (for Sort: Highest rated), and ISBNs filled in for books without one (%d library books still have none). Both run in the background.", s.Store.CountHCRatings(), s.Store.CountNoISBN()), "#/settings?s=connections")
 	b, l = onOff(libbyUsers > 0, fmt.Sprintf("%d with a library", libbyUsers), "No library chosen")
 	lib := row("libby", "Libby (public library)", b, l, "Shows whether your library has a book. Each person picks their library under Settings → Connections.", "#/settings?s=connections")
 	b, l = onOff(set(store.KeySMTPHost) != "", "Connected", "Not set up")

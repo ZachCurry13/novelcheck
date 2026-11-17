@@ -47,6 +47,7 @@ func (s *Server) handleBugLink(w http.ResponseWriter, r *http.Request) {
 	for _, p := range problems {
 		fmt.Fprintf(&b, "\n--- P%d · %s · version %s · page %s · %s UTC ---\n%s\n(device: %s)\n", p.ID, p.Username, p.Version, orNone(p.Page), p.CreatedAt, p.Text, orNone(p.Device))
 	}
+	s.writeNoCovers(&b)
 	b.WriteString(`
 == Handled? ==
 Delete what is dealt with: POST <this link's address>/resolve?ids=<numbers> with any of these, joined by &:
@@ -166,4 +167,37 @@ func (s *Server) handleBrowserReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+// writeNoCovers lists the library's books that still have no cover, so the reason can be seen at a glance:
+// no ISBN, a wrong title (the true one when found), or neither found anywhere.
+func (s *Server) writeNoCovers(b *strings.Builder) {
+	missing := s.MissingCovers()
+	noISBN := 0
+	for _, m := range missing {
+		if strings.TrimSpace(m.ISBN) == "" {
+			noISBN++
+		}
+	}
+	fmt.Fprintf(b, "\n== Books with no cover (%d; %d of them with no ISBN) ==\n", len(missing), noISBN)
+	b.WriteString("id · title · author · ISBN · Calibre · true title found · searched in the last week with nothing found\n")
+	for i, m := range missing {
+		if i == 400 {
+			fmt.Fprintf(b, "(and %d more)\n", len(missing)-i)
+			break
+		}
+		isbn := m.ISBN
+		if isbn == "" {
+			isbn = "no ISBN"
+		}
+		inCalibre := "no"
+		if len(s.Store.CalibreIDs(m.ID)) > 0 {
+			inCalibre = "yes"
+		}
+		missed := ""
+		if s.Covers.Missed(s.coverName(m.ID)) {
+			missed = "searched, nothing found"
+		}
+		fmt.Fprintf(b, "#%d · %s · %s · %s · %s · %s · %s\n", m.ID, m.Title, orNone(m.Author), isbn, inCalibre, orNone(s.Store.TitleSuggestion(m.ID)), missed)
+	}
 }

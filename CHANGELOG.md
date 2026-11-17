@@ -19,6 +19,13 @@ becomes the release notes for that version and is shown in the app under
 - **Sort: Highest rated on Hardcover** in the Library (and **Rating** in the phone's Sort), with the books nobody rated yet at the end.
 - Integrations → Hardcover says how many books have a rating so far.
 
+### 🔢 An ISBN for every book
+- **Books with no ISBN get one**, found the same way: Hardcover's (by title and author, with typos and dots fixed), or Open Library's when Hardcover doesn't know the book and Open Library's is clearly the same book (the same author and title). The cover finder then looks the cover up by it, and Hardcover's cleanup matches it by it.
+- **Calibre gets it too**: the ISBN is added to the book's identifiers in Calibre (its other identifiers are kept), under the same switch as fixing titles (Library cleanup → Tidy titles in Calibre). Integrations → Hardcover says how many library books still have no ISBN.
+
+### 🐞 The bug link lists the books with no cover
+- The bug report now ends with **every book that still has no cover**: its title, author, ISBN (or "no ISBN"), whether it's in Calibre, the true title when one was found, and whether the last search found nothing. It shows at a glance why a cover is missing.
+
 ## [1.80.0]
 
 ### 🔎 Filters as designed, everywhere

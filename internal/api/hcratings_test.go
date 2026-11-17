@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/zachcurry13/novelcheck/internal/api"
+	"github.com/zachcurry13/novelcheck/internal/enrich"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -30,7 +31,7 @@ func TestHardcoverReaderRatings(t *testing.T) {
 			io.WriteString(w, `{"data": {"search": {"ids": []}}}`)
 		case strings.Contains(q.Query, "_in: [2]"):
 			io.WriteString(w, `{"data": {"books": [{"id": 2, "title": "Great Book", "rating": 4.6, "ratings_count": 900,
-				"contributions": [{"author": {"name": "Ann Author"}}], "editions": []}]}}`)
+				"contributions": [{"author": {"name": "Ann Author"}}], "editions": [{"pages": 300, "isbn_13": "9780000000028", "isbn_10": ""}]}]}}`)
 		default:
 			io.WriteString(w, `{"data": {"me": [{"id": 7, "username": "reader7"}]}}`)
 		}
@@ -39,7 +40,14 @@ func TestHardcoverReaderRatings(t *testing.T) {
 	api.SetHardcoverURL(hc.URL)
 	t.Cleanup(func() { api.SetHardcoverURL("") })
 	var server *api.Server
-	srv, st := setupWith(t, func(s *api.Server) { server = s })
+	srv, st := setupWith(t, func(s *api.Server) {
+		server = s
+		s.Worker.NewEnricher = func() *enrich.Client { // Open Library, asked for the book Hardcover doesn't know: nothing
+			c := enrich.New("")
+			c.OpenLibraryURL, c.GoogleBooksURL = hc.URL, hc.URL
+			return c
+		}
+	})
 	admin := login(t, srv, "admin", "adminpass1")
 	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
 	for i, b := range [][2]string{{"Good Book", "9780000000011"}, {"Great Book", ""}, {"Unknown Book", ""}} {
@@ -67,5 +75,48 @@ func TestHardcoverReaderRatings(t *testing.T) {
 	}
 	if n := server.FillRatings(context.Background(), 10); n != 0 {
 		t.Fatalf("looked again only after a month: %d", n)
+	}
+	// The book with no ISBN got Hardcover's; the one nobody knows still has none.
+	var isbns []string
+	_ = st.DB.Select(&isbns, `SELECT isbn FROM books WHERE title IN ('Great Book', 'Unknown Book') ORDER BY title`)
+	if strings.Join(isbns, ",") != "9780000000028," {
+		t.Fatalf("ISBNs: %q", isbns)
+	}
+}
+
+// An ISBN found for a Calibre book is written into Calibre's identifiers, keeping the ones it has.
+func TestFoundISBNGoesToCalibre(t *testing.T) {
+	hc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		var q struct{ Query string }
+		_ = json.Unmarshal(raw, &q)
+		switch {
+		case strings.Contains(q.Query, "search("):
+			io.WriteString(w, `{"data": {"search": {"ids": [3]}}}`)
+		case strings.Contains(q.Query, "_in: [3]"):
+			io.WriteString(w, `{"data": {"books": [{"id": 3, "title": "Cinder", "rating": 4.1, "ratings_count": 50,
+				"contributions": [{"author": {"name": "Marissa Meyer"}}], "editions": [{"pages": 400, "isbn_13": "9780312641894", "isbn_10": ""}]}]}}`)
+		default:
+			io.WriteString(w, `{"data": {"me": [{"id": 7, "username": "reader7"}]}}`)
+		}
+	}))
+	defer hc.Close()
+	api.SetHardcoverURL(hc.URL)
+	t.Cleanup(func() { api.SetHardcoverURL("") })
+	cal := &fakeCalibreDetails{book: map[string]any{"title": "Cinder", "authors": "Marissa Meyer", "series": "", "series_index": 1.0,
+		"tags": []string{}, "comments": "", "identifiers": map[string]string{"goodreads": "123"}, "cover": ""}}
+	cs := cal.serve(t)
+	var server *api.Server
+	srv, st := setupWith(t, func(s *api.Server) { server = s })
+	admin := login(t, srv, "admin", "adminpass1")
+	catalog, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	id, _ := st.UpsertBook("Cinder", "Marissa Meyer", "", "")
+	_ = st.AddCopy(catalog, id, "/c/cinder.epub", "epub", "5")
+	admin.do("PUT", "/api/me/hardcover", map[string]string{"token": "good-token"}, true)
+	admin.do("PUT", "/api/admin/calibre/server", map[string]string{"url": cs.URL}, true)
+	server.FillRatings(context.Background(), 10)
+	ids, _ := cal.book["identifiers"].(map[string]any)
+	if ids["isbn"] != "9780312641894" || ids["goodreads"] != "123" {
+		t.Fatalf("Calibre's identifiers: %v", cal.book["identifiers"])
 	}
 }

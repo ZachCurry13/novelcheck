@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"github.com/zachcurry13/novelcheck/internal/store"
 	"io"
 	"net/http"
 	"strings"
@@ -11,7 +12,7 @@ import (
 // holding the secret reads the reports as text, a new secret replaces the old
 // one, and turning it off closes it. Browsers can send their own report.
 func TestBugLink(t *testing.T) {
-	srv, _ := setup(t)
+	srv, st := setup(t)
 	admin := login(t, srv, "admin", "adminpass1")
 	read := func(path string) (int, string) {
 		res, err := http.Get(srv.URL + path)
@@ -34,7 +35,13 @@ func TestBugLink(t *testing.T) {
 		t.Fatalf("turned on: %v", out)
 	}
 	path := url[strings.Index(url, "/bugs/"):]
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre") // a library book with no cover and no ISBN
+	nc, _ := st.UpsertBook("Unnatural.Exprosure", "Patricia Cornwell", "", "")
+	_ = st.AddCopy(cal, nc, "/c/u.epub", "epub", "41")
 	code, text := read(path)
+	if !strings.Contains(text, "== Books with no cover (1; 1 of them with no ISBN) ==") || !strings.Contains(text, "Unnatural.Exprosure · Patricia Cornwell · no ISBN · yes") {
+		t.Fatalf("the books with no cover are listed: %q", text[strings.Index(text, "== Problems"):])
+	}
 	if code != 200 || !strings.Contains(text, "NovelCheck diagnostics") || !strings.Contains(text, "tapped Save, got a 500") {
 		t.Fatalf("the link shows the server report and the browser report: %d %q", code, text)
 	}
