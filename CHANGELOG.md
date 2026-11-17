@@ -4,6 +4,23 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.86.0]
+
+### 🎬 Wrapped is one tap from the Library
+- **"▶ Play your year's Wrapped"** sits under the "Read this year" banner on the Library.
+
+### 🔔 New books on your phone
+- **New e-books and new audiobooks in the family libraries are announced on everyone's phone** (with notifications on), at most every half hour: "3 new books", "1 new audiobook". Nothing is announced for a big first sync. Turn it off with the setting `new_book_notices` = `false`.
+
+### 👋 A guide for friends
+- **A friend's account gets its own, shorter guide:** no admin or delivery steps, with Check a book, importing what they read, Wrapped and the bookshelf.
+
+### 🤖 Backup AI from Google
+- **"Use Google as the backup AI"** (Admin → AI & Scans → Backup AI): paste a Google AI Studio key (or reuse a Google key you saved) and the backup becomes the fast Gemini 2.5 Flash-Lite model, with Flash as the second try, at no cost. The free tier allows a few hundred calls a day, and Google may use free-tier prompts to improve its products.
+
+### 📥 See what was copied from your Kindles
+- **Library cleanup → Books copied from Kindles** shows, per Kindle, how many books were copied, their size and the newest ones, and where the files are.
+
 ## [1.85.0]
 
 ### 📚 Your bookshelf (Nightstand)

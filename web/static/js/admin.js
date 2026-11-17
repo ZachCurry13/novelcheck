@@ -145,6 +145,9 @@ export async function renderAdmin(view, state) {
       if (!confirm("Replace the backup AI with your Deep Scan machine? The backup's current address, key and models are replaced (the main AI is not touched).")) return;
       const r = await attempt(() => post("/api/admin/backup-ai/use-deep"));
       if (r) toast("The backup AI is now your Deep Scan machine. Reload this page to see it in the fields.");
+    } else if (act === "backup-use-google") {
+      const r = await attempt(() => post("/api/admin/backup-ai/use-google", { key: $("#google-key", view)?.value || "" }));
+      if (r) toast("The backup AI is now Google's Gemini. Reload this page to see it in the fields.");
     } else if (act === "mail-use-smtp") {
       const r = await attempt(() => post("/api/admin/events-mail/use-smtp"));
       if (r) { // show what was saved (the password stays on the server)

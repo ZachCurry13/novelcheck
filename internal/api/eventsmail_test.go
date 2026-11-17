@@ -63,3 +63,23 @@ func TestDeepMachineBecomesTheBackupAI(t *testing.T) {
 		t.Fatalf("the backup is the Deep Scan machine now: %+v", ais)
 	}
 }
+
+// One press makes Google's free Gemini the backup AI, with the key pasted or one already saved for Google.
+func TestGoogleBecomesTheBackupAI(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	if res, _ := admin.do("POST", "/api/admin/backup-ai/use-google", map[string]string{}, true); res.StatusCode != 400 {
+		t.Fatalf("no key yet: %d", res.StatusCode)
+	}
+	res, out := admin.do("POST", "/api/admin/backup-ai/use-google", map[string]string{"key": "test-key-123"}, true)
+	if res.StatusCode != 200 || out["models"] != "gemini-2.5-flash-lite,gemini-2.5-flash" {
+		t.Fatalf("use google: %d %v", res.StatusCode, out)
+	}
+	ais := st.AIConfigs()
+	if len(ais) != 2 || ais[1].APIKey != "test-key-123" || len(ais[1].Models) != 2 || ais[1].PriceIn != 0 {
+		t.Fatalf("the backup is Google now: %+v", ais)
+	}
+	if res, _ := admin.do("POST", "/api/admin/backup-ai/use-google", map[string]string{"key": "********"}, true); res.StatusCode != 200 {
+		t.Fatal("a saved Google key is reused when the box shows stars")
+	}
+}

@@ -29,6 +29,8 @@ export async function renderCleanupTab(host, state) {
       <div id="cu-abs-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-mem"><summary class="cursor-pointer font-semibold">Remembered ratings and covers (and how to forget them)</summary>
       <div id="cu-mem-body" class="mt-2"></div></details></div>
+    <div class="card space-y-2"><details id="cu-kb"><summary class="cursor-pointer font-semibold">Books copied from Kindles</summary>
+      <div id="cu-kb-body" class="mt-2 text-sm text-slate-300"></div></details></div>
     <div class="card space-y-2"><details id="cu-up"><summary class="cursor-pointer font-semibold">⬆️ Upload e-books to Calibre and audiobooks to Audiobookshelf (experimental)</summary>
       <div id="cu-up-body" class="mt-2"></div></details></div></div>`;
   mountCleanup(host.querySelector("#cu-guided"));
@@ -83,6 +85,15 @@ export async function renderCleanupTab(host, state) {
       body.dataset.done = "1";
       renderHCClean(body);
     }
+  });
+  host.querySelector("#cu-kb").addEventListener("toggle", async (e) => {
+    if (!e.target.open) return;
+    const body = host.querySelector("#cu-kb-body");
+    const r = await get("/api/admin/kindle-backup").catch(() => null);
+    const mb = (b) => (b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(b / 1e6))} MB`);
+    body.innerHTML = !r ? "Couldn't load that just now." : !r.devices.length ? "Nothing copied yet. The KOReader plugin copies every book on a Kindle here when it goes online (NovelCheck &gt; Copy my Kindle to NovelCheck now)."
+      : `${r.devices.map((d) => `<p><b>${esc(d.name)}</b>: ${d.files} book${d.files === 1 ? "" : "s"}, ${mb(d.bytes)}. Newest: ${d.newest.map(esc).join(", ")}</p>`).join("")}
+        <p class="mt-2 text-xs text-slate-400">The files are in the <b>${esc(r.folder)}</b>, exactly as they were on the Kindle (protected ones too).</p>`;
   });
   host.querySelector("#cu-mem").addEventListener("toggle", (e) => {
     if (e.target.open) import("./memorycard.js").then((m) => m.renderMemory(host.querySelector("#cu-mem-body"))); // fresh each time

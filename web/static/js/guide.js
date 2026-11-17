@@ -76,7 +76,18 @@ const DONE = [["You're all set", "You can reopen this guide any time from the <b
 const CHECK = ["Check a book",
   "At a shop, or deciding what to buy? Open <b>Check a book</b> (it's the first tab), tap <b>Take a photo of the cover</b> or type the title, and you'll see its peppers, why, and a short summary. Books you already have answer at once; new ones take a few seconds and are kept under <b>Looked up</b>."];
 
+// A friend's account has no admin side, no delivery and no sharing with a family: a shorter guide, with their reading.
+const FRIEND_SKIP = new Set(["Readers and sharing", "Collections & seasons"]);
+const READING = ["Your reading and bookshelf",
+  "Bring in what you've read from <b>StoryGraph</b>, <b>Goodreads</b> or <b>Bookly</b> under <b>Settings → Import books</b> (it's yours alone). <b>Stats</b> then shows your year, and <b>Wrapped</b> plays it as a story: tap <b>▶ Play your year's Wrapped</b> on the Library banner. At the bottom of your <b>Nightstand</b> stands your <b>bookshelf</b> of the books you finished this year: show covers or spines, and it changes with the season (winter, Halloween, autumn, spring, summer), or pick one yourself."];
+
 function stepsFor(user) {
+  if (user.role === "friend") {
+    const f = EVERYONE.filter((e) => !FRIEND_SKIP.has(e[0]));
+    f.splice(1, 0, CHECK);
+    f.splice(f.findIndex((e) => e[0] === "Your profile"), 0, READING);
+    return [...f, ...DONE];
+  }
   const s = [...EVERYONE];
   if (user.role === "admin" || user.role === "editor") {
     s.splice(1, 0, CHECK);

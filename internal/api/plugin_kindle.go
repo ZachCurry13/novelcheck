@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -215,4 +216,46 @@ func kindleLocked(file string) bool {
 		return binary.BigEndian.Uint16(enc[:]) != 0
 	}
 	return false
+}
+
+// handleKindleBackup: GET /api/admin/kindle-backup lists what the Kindle copies hold: per person and device, the
+// number of files, their size and the newest ones, and the folder they are in (so it can be opened on the NAS).
+func (s *Server) handleKindleBackup(w http.ResponseWriter, r *http.Request) {
+	root := filepath.Join(s.Cfg.DataDir, "kindle-backup")
+	type dev struct {
+		Name   string   `json:"name"`
+		Files  int      `json:"files"`
+		Bytes  int64    `json:"bytes"`
+		Newest []string `json:"newest"`
+	}
+	out := []dev{}
+	users, _ := os.ReadDir(root)
+	for _, u := range users {
+		devs, _ := os.ReadDir(filepath.Join(root, u.Name()))
+		for _, d := range devs {
+			one := dev{Name: d.Name()}
+			type seen struct {
+				name string
+				mod  int64
+			}
+			var all []seen
+			_ = filepath.WalkDir(filepath.Join(root, u.Name(), d.Name()), func(p string, e os.DirEntry, err error) error {
+				if err != nil || e.IsDir() || strings.HasSuffix(p, ".part") {
+					return nil
+				}
+				if fi, err := e.Info(); err == nil {
+					one.Files++
+					one.Bytes += fi.Size()
+					all = append(all, seen{e.Name(), fi.ModTime().Unix()})
+				}
+				return nil
+			})
+			sort.Slice(all, func(i, j int) bool { return all[i].mod > all[j].mod })
+			for i := 0; i < len(all) && i < 8; i++ {
+				one.Newest = append(one.Newest, all[i].name)
+			}
+			out = append(out, one)
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"devices": out, "folder": "kindle-backup (in NovelCheck's data folder)"})
 }

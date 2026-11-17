@@ -29,6 +29,7 @@ export async function renderYearBanner(host) {
     <span class="text-sm opacity-90">Read this year</span>
     <b>${plural(now, "book")}</b>
     <span class="text-sm opacity-90">${line}</span>
-    <span class="bar" aria-hidden="true"><i data-pct="${Math.min(100, Math.round((now / goal) * 100))}"></i></span></a>`;
+    <span class="bar" aria-hidden="true"><i data-pct="${Math.min(100, Math.round((now / goal) * 100))}"></i></span></a>
+    ${now ? `<p class="-mt-2 mb-4 text-right"><a href="#/stats?play=year:0" class="btn-ghost inline-flex px-3 py-1 text-sm">▶ Play your ${new Date().getFullYear()} Wrapped</a></p>` : ""}`;
   host.querySelectorAll("[data-pct]").forEach((el) => (el.style.width = `${el.dataset.pct}%`));
 }

@@ -72,4 +72,8 @@ func TestKindleCopy(t *testing.T) {
 	if out := check(); len(out["send"].([]any)) != 0 || out["have"] != 2.0 {
 		t.Fatalf("nothing is sent twice: %v", out)
 	}
+	_, kb := admin.do("GET", "/api/admin/kindle-backup", nil, false)
+	if devs, _ := kb["devices"].([]any); len(devs) != 1 || devs[0].(map[string]any)["files"] != 2.0 {
+		t.Fatalf("the copied books are listed: %v", kb)
+	}
 }
