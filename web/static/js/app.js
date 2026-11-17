@@ -37,6 +37,7 @@ import { on, applyModules } from "./modules.js";
 import { buildMobileNav, markMobileNav } from "./mobilenav.js";
 import { initSearch, setSearchUser } from "./search.js";
 import { keepUpToDate } from "./appupdate.js";
+import "./pulltorefresh.js"; // pull down from the top to refresh, on purpose
 import { initActivity } from "./activity.js";
 import { showFamily } from "./family.js";
 

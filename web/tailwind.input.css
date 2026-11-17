@@ -525,3 +525,17 @@ html.light .card { box-shadow: 0 1px 2px rgb(60 40 10 / 0.08), 0 8px 18px rgb(60
 .hc-sim-a, .hc-sim-m { font-size: 0.7rem; color: rgb(var(--slate-400)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hc-sim-item:focus-visible { outline: 2px solid rgb(var(--nc-chip-on)); outline-offset: 2px; border-radius: 0.375rem; }
 .hc-warn summary { cursor: pointer; }
+
+/* Pull down to refresh (js/pulltorefresh.js): a small pill that follows the pull, under the top bar. Colours come
+   from the theme (--slate-800 fill, --nc-chip-on when armed). */
+.ptr { position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 4rem); z-index: 40; display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 1rem 0.5rem 0.6rem; border-radius: 9999px; background: rgb(var(--slate-800)); color: rgb(var(--slate-100)); box-shadow: 0 6px 18px rgb(0 0 0 / 0.35);
+  font: 500 0.8125rem var(--nc-font-body); pointer-events: none; opacity: 0; transform: translate(-50%, -1rem); }
+.ptr.show { opacity: 1; transform: translate(-50%, 0); transition: opacity 0.15s, transform 0.15s; }
+.ptr-ring { width: 1.4rem; height: 1.4rem; border-radius: 9999px; border: 2px solid rgb(var(--slate-600)); border-top-color: rgb(var(--nc-chip-on));
+  transform: rotate(calc(var(--p, 0) * 270deg)); }
+.ptr[data-state="armed"] { background: rgb(var(--nc-chip-on)); color: rgb(var(--nc-on-chip-on)); }
+.ptr[data-state="armed"] .ptr-ring { border-color: rgb(var(--nc-on-chip-on) / 0.4); border-top-color: rgb(var(--nc-on-chip-on)); }
+.ptr[data-state="busy"] .ptr-ring { animation: ptr-spin 0.8s linear infinite; }
+@keyframes ptr-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ptr.show { transition: none; } .ptr[data-state="busy"] .ptr-ring { animation: none; } }

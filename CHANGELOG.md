@@ -15,6 +15,10 @@ becomes the release notes for that version and is shown in the app under
 - **An exact ISBN by the same author is the same book**, whatever the audiobook's edition calls it (a film tie-in title like "Blade Runner", a UK title, "Dark Tower II" for "The Drawing of the Three"). Those are now fixed by themselves. Only an ISBN that leads to a different book by a **different author** still waits for you, since the number may be wrong on the audiobook.
 - **Apply all** above the waiting list applies every listed change in one go (it asks first). The ones already waiting are not re-checked by themselves, so use it for those.
 
+### ⬇️ Pull down to refresh, on purpose
+- **From the very top of a page, pull straight down and hold, then let go, and the page is drawn again with fresh data** (or the app reloads when a newer NovelCheck is ready). A small pill follows your finger: "Pull to refresh", then "Keep holding…", then, after about a third of a second at about 150 px, "Release to refresh" with a short buzz. Only letting go from that last state refreshes.
+- **It is meant to be hard to do by accident:** a flick, an ordinary scroll that reaches the top, a sideways swipe, or a touch that starts in a menu, a dialog, a text box or a row that scrolls sideways does nothing. (The browser's own pull-to-refresh stays off: it reloaded the whole app by accident while scrolling.)
+
 ### 🐞 Fewer false alarms
 - **"Put back all" in Calibre's recycle bin** no longer treats a book Calibre already has as a failure. It says how many were put back and how many were already there (each refusal used to file its own bug report).
 - **A stale pair in "Books listed twice"** (tapping Join quickly, so the next pair was already joined) refreshes the list with a plain note instead of an error.

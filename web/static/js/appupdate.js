@@ -30,6 +30,13 @@ function showBar() {
   document.body.append(bar);
 }
 
+// pullRefresh is what the pull-down gesture does (pulltorefresh.js): when a newer NovelCheck is ready the app
+// reloads at once (it was asked for); otherwise the page is drawn again, with fresh data.
+export async function pullRefresh() {
+  if (await newerOnServer()) return location.reload();
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+}
+
 // showUpdateBar is for testing: it draws the bar at once.
 export const showUpdateBar = showBar;
 
