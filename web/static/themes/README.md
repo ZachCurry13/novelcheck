@@ -25,6 +25,7 @@ What each name changes:
 | `--nc-button`, `--nc-on-button` | the main button on each screen, and its text |
 | `--nc-chip-on`, `--nc-on-chip-on` | a selected filter chip |
 | `--nc-banner`, `--nc-on-banner`, `--nc-banner-bar` | the "Read this year" banner on the Library |
+| `--nc-wrap-base`, `--nc-on-wrap`, `--nc-wrap-a`, `--nc-wrap-b` | the Wrapped cards on Reading stats: the dark card, its text, and the two colours that glow in it |
 | `--nc-font-head`, `--nc-font-body` | heading font, and the font for everything else |
 
 The other ramps (`slate` and `indigo` here are names kept from the first design; they are now the warm

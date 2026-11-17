@@ -8,6 +8,7 @@ import { $, esc, attempt } from "./ui.js";
 import { refreshUser } from "./app.js";
 import { on, deliveryOptions } from "./modules.js";
 import { renderPushCard } from "./push.js";
+import { renderSummaryPrefs } from "./summaryprefs.js";
 import { amazonStepsHTML, openKOReaderSetup } from "./delivery.js";
 import { profileExtrasHTML, bindProfileExtras } from "./profileextras.js";
 import { familyCardHTML, bindFamilyCard } from "./familysettings.js";
@@ -43,7 +44,8 @@ function generalHTML(u) {
         <div class="mt-2">${amazonStepsHTML(u.delivery_from)}</div></details>
       <button class="btn-primary">Save delivery settings</button>
     </form>
-    <div id="push-card" class="card space-y-3 lg:col-span-2"></div>`;
+    <div id="push-card" class="card space-y-3 lg:col-span-2"></div>
+    <div id="summary-card" class="card space-y-3 lg:col-span-2"></div>`;
 }
 
 const accountHTML = (u) => `<form id="password" class="card space-y-3">
@@ -90,6 +92,7 @@ export async function renderSettings(view, state) {
       });
       bindProfileExtras(view, u);
       renderPushCard($("#push-card", view), u);
+      renderSummaryPrefs($("#summary-card", view));
     } else if (section === "account") {
       if (u.role !== "friend") {
         renderSharingCard($("#sharing-card", view), u);

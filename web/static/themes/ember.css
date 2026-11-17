@@ -41,6 +41,11 @@
   --nc-banner: linear-gradient(135deg, #9a3412, #431407);
   --nc-on-banner: 255 243 223;
   --nc-banner-bar: 253 186 116;
+  /* The Wrapped cards on Reading stats: the dark card, its text, and the two colours that glow in it. */
+  --nc-wrap-base: 33 26 20;
+  --nc-on-wrap: 255 243 223;
+  --nc-wrap-a: 240 138 75;
+  --nc-wrap-b: 154 52 18;
 
   /* Fonts: headings and book titles, then everything else. */
   --nc-font-head: "Literata", Georgia, "Times New Roman", serif;

@@ -11,7 +11,18 @@ becomes the release notes for that version and is shown in the app under
 - **A free book listed with its Amazon number is found on Hardcover by that exact number**, which is the surest match. A print book's number is also tried as its ISBN.
 - **Every three hours** a quick pass gives the newest free books a cover while they are still free (250 at a time, newest first), and the daily run and **Find covers now** include them too. The quick pass only says something when it found a cover. Books on an event that has ended or been archived are left alone.
 
-## [1.83.0]
+## [1.84.0 continued]
+
+### 🎁 Wrapped up front, and summaries on your phone
+- **Two big Wrapped cards at the top of Stats → Highlights:** last month ("Wrapped · October 2026", with its hours and books) and the year so far, glowing in your theme's colours (Ember, Paperback and Classic blue each have their own). A **New** tag shows until you've played that one. **Another month…** under them plays any earlier month or year you read in. Nothing shows for someone with no timed reading yet.
+- **Reading summaries on your phone:** at 9 in the morning your phone says "Your week in reading" (Mondays, with your hours and days; it opens that week), "Your October Wrapped is ready" (on the 1st) and "Your 2026 Wrapped is ready" (1 January); the last two play the story when tapped. Nothing is sent for a period you didn't read, or to a phone without notifications on. A notice missed because the server was off still goes out for two days after. Turn any of the three off under **Settings → Reading summaries**. Your sister's friend gets them too (she has Stats).
+
+### 🧠 Ratings and covers are remembered
+- **A rating isn't thrown away with its book.** When a book leaves every library, list and event (an old Stuff Your Kindle day, a book removed from Calibre) its rating, content items, a parent's OK and Hardcover details are kept, and they come back if the same book does, so it isn't rated again. A rating made under older rules is still offered for re-rating, as any other.
+- **A found cover comes back too:** a returning free book takes the cover found for it before instead of searching the web again. Covers found for a book are stored on the server, not fetched each time.
+- **"Not sure" ratings get a second opinion by themselves** from the bigger model on the Deep Scan machine: three books every five minutes, while that machine is on and inside your automatic-rating hours, and only when it is on your home network (so it costs nothing). One second opinion per book per rules version; one that stays unsure keeps its "Not sure" chip.
+
+## [1.84.0]
 
 ### 📚 Your Kindle: highlights, and finishing a book (plugin 1.54.0)
 - **Highlights and notes reach NovelCheck.** What you highlight or write a note on in KOReader is sent to your NovelCheck (when the e-reader gets online, or **NovelCheck > Send highlights now**) and shown on the book's page under **My highlights**, folded away because a quote can give the story away. **Copy all** copies them. Each book is sent again only when its highlights change, and none is added twice. Delete a highlight in KOReader, not in NovelCheck. Both of KOReader's ways of keeping highlights (the new one and the older one) are read.

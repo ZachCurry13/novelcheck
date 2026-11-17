@@ -34,6 +34,10 @@ html.theme-blue {
   --nc-banner: linear-gradient(135deg, #4f46e5, #1e1b4b);
   --nc-on-banner: 238 242 255;
   --nc-banner-bar: 165 180 252;
+  --nc-wrap-base: 15 23 42;
+  --nc-on-wrap: 238 242 255;
+  --nc-wrap-a: 99 102 241;
+  --nc-wrap-b: 56 189 248;
 }
 
 /* Its light side: the original light theme (white cards on a pale grey-blue page, indigo ink). */
@@ -70,4 +74,8 @@ html.theme-blue.light {
   --nc-banner: linear-gradient(135deg, #4f46e5, #312e81);
   --nc-on-banner: 238 242 255;
   --nc-banner-bar: 199 210 254;
+  --nc-wrap-base: 30 27 75;
+  --nc-on-wrap: 238 242 255;
+  --nc-wrap-a: 99 102 241;
+  --nc-wrap-b: 56 189 248;
 }

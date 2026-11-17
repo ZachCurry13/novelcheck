@@ -17,6 +17,7 @@ import { listReport } from "./statslist.js";
 import { undatedHTML, saveUndated } from "./statsundated.js";
 import { trophiesTab } from "./trophyview.js";
 import { slides } from "./wrappedslides.js";
+import { wrappedCardsHTML, markWrappedSeen } from "./wrappedcards.js";
 import { openStory } from "./wrappedstory.js";
 import { friendImportHTML, bindFriendImport } from "./friendimport.js";
 
@@ -86,7 +87,7 @@ export async function renderStats(view, state, source = {}) {
     if (s.tab === "calendar") return calendarTab(m, s.month);
     if (s.tab === "records") return `${other ? "" : undatedHTML(undated)}${recordsTab(m, s)}`;
     if (s.tab === "trophies") return trophiesTab(m);
-    return `<div class="mb-3 flex items-start justify-between gap-2"><h2 class="min-w-0 break-words text-2xl font-semibold">${esc(title())}</h2>${other || listOnly ? "" : `<button type="button" data-share class="btn-tonal shrink-0 px-4 py-1.5">Share</button>`}</div>${picker()}${listOnly ? undatedHTML(undated) : ""}<div class="space-y-4">${listOnly ? listReport(m, s) : reportHTML(m, s)}${friend ? friendImportHTML(true) : ""}</div>`;
+    return `${other || listOnly ? "" : wrappedCardsHTML(m)}<div class="mb-3 flex items-start justify-between gap-2"><h2 class="min-w-0 break-words text-2xl font-semibold">${esc(title())}</h2>${other || listOnly ? "" : `<button type="button" data-share class="btn-tonal shrink-0 px-4 py-1.5">Share</button>`}</div>${picker()}${listOnly ? undatedHTML(undated) : ""}<div class="space-y-4">${listOnly ? listReport(m, s) : reportHTML(m, s)}${friend ? friendImportHTML(true) : ""}</div>`;
   };
 
   const draw = (top = false) => {
@@ -105,9 +106,20 @@ export async function renderStats(view, state, source = {}) {
     draw(true);
   };
 
-  const play = (period, offset) => openStory(slides(m, { period, offset }, name), {
-    onShare: () => openShareCard(m, { period, offset }, bounds(period, offset).title, name),
-  });
+  const play = (period, offset) => {
+    markWrappedSeen(period, offset);
+    view.querySelector(`[data-play="${period}:${offset}"] .wcard-new`)?.remove(); // played: no longer new
+    openStory(slides(m, { period, offset }, name), {
+      onShare: () => openShareCard(m, { period, offset }, bounds(period, offset).title, name),
+    });
+  };
+  view.onchange = (e) => { // the "Another month…" picker under the Wrapped cards
+    const pick = e.target.closest("[data-wrapped-pick]");
+    if (!pick || !pick.value) return;
+    const [period, offset] = pick.value.split(":");
+    pick.value = "";
+    play(period, Number(offset));
+  };
   view.onclick = (e) => {
     const dated = e.target.closest("[data-undated-save]");
     if (dated) {
@@ -153,4 +165,11 @@ export async function renderStats(view, state, source = {}) {
     draw();
   };
   draw();
+  // A summary notice opens here with ?play=month:-1 (or year:-1): play that Wrapped, once.
+  const want = other ? "" : new URLSearchParams(location.hash.split("?")[1] || "").get("play");
+  if (want) {
+    const [period, offset] = want.split(":");
+    history.replaceState(history.state, "", `${location.pathname}${location.search}#/stats`);
+    if (["week", "month", "year", "all"].includes(period)) play(period, Number(offset) || 0);
+  }
 }

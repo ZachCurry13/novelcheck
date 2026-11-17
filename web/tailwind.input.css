@@ -539,3 +539,20 @@ html.light .card { box-shadow: 0 1px 2px rgb(60 40 10 / 0.08), 0 8px 18px rgb(60
 .ptr[data-state="busy"] .ptr-ring { animation: ptr-spin 0.8s linear infinite; }
 @keyframes ptr-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .ptr.show { transition: none; } .ptr[data-state="busy"] .ptr-ring { animation: none; } }
+
+/* Wrapped up front (js/wrappedcards.js): two big cards at the top of Reading stats → Highlights, glowing in the
+   theme's own colours (--nc-wrap-* in web/static/themes). */
+.wcards { margin-bottom: 1.25rem; }
+.wcards-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+@media (max-width: 359px) { .wcards-row { grid-template-columns: 1fr; } }
+.wcard { position: relative; overflow: hidden; min-height: 11rem; display: flex; flex-direction: column; justify-content: flex-end; gap: 0.125rem; padding: 0.9rem; border: 0; border-radius: 1.25rem; text-align: left; cursor: pointer;
+  color: rgb(var(--nc-on-wrap));
+  background: radial-gradient(120% 90% at 90% -5%, rgb(var(--nc-wrap-a) / 0.95), transparent 62%), radial-gradient(110% 85% at 0% 105%, rgb(var(--nc-wrap-b) / 0.85), transparent 58%), rgb(var(--nc-wrap-base)); }
+.wcard + .wcard { background: radial-gradient(120% 90% at 90% -5%, rgb(var(--nc-wrap-b) / 0.95), transparent 62%), radial-gradient(110% 85% at 0% 105%, rgb(var(--nc-wrap-a) / 0.8), transparent 58%), rgb(var(--nc-wrap-base)); }
+.wcard small { font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.9; }
+.wcard b { font: 500 1.5625rem/1.1 var(--nc-font-head); }
+.wcard-stat { margin-top: 0.25rem; font-size: 0.8125rem; opacity: 0.95; }
+.wcard-play { margin-top: 0.5rem; font-size: 0.8125rem; font-weight: 600; }
+.wcard-new { position: absolute; top: 0.75rem; right: 0.75rem; padding: 0.1rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; background: rgb(var(--nc-on-wrap)); color: rgb(var(--nc-wrap-base)); }
+.wcard:focus-visible { outline: 2px solid rgb(var(--nc-chip-on)); outline-offset: 2px; }
+.wcards-pick { margin-top: 0.75rem; }
