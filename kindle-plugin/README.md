@@ -76,7 +76,7 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 - **NovelCheck > Send highlights now** sends what you highlighted and the notes you wrote; **Automatic > Send highlights when online** does it by itself. They appear on the book's page in NovelCheck under **My highlights**. Only books NovelCheck knows are sent for; a book it doesn't have yet is tried again next time.
 - At the end of a book a window asks for **stars**, marks the book finished (in NovelCheck and KOReader) and offers the **next book of the series** to download. **NovelCheck > Finish this book...** does it by hand while a book is open; **Automatic > Ask for stars at the end of a book** switches the window off.
 
-## Copy my Kindle (NovelCheck 1.85 or newer, plugin 1.55.1)
+## Copy my Kindle (NovelCheck 1.85 or newer, plugin 1.55.2)
 
 - **NovelCheck > Copy my Kindle to NovelCheck now** looks through the whole Kindle (every folder, not only what KOReader opened) for e-book files (EPUB, PDF, MOBI, AZW, AZW3, KFX and more) and sends the ones NovelCheck doesn't have yet. **Automatic > Copy my Kindle's books when online** does it by itself.
 - Files are copied exactly as they are, protected ones too; nothing is unlocked or changed. NovelCheck keeps every file in its `kindle-backup` folder and adds the ones that are not locked to Calibre (unless Calibre already has that title). Logs and other files that only look like books are left out.

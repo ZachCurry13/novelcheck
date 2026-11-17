@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.86.2]
+
+### 🩺 The Kindle self-test really sends its result
+- **Developer tools > Run self-test** sends its result to NovelCheck by itself, as it always meant to, but the send failed when Wi-Fi had no address yet and nothing said why. Now a failed send is tried again after a few seconds, and the log says "result NOT sent" with the reason (plugin 1.55.2).
+
 ## [1.86.1]
 
 ### 🤖 Google as the backup AI picks models Google really offers

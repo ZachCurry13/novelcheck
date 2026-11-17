@@ -13,6 +13,7 @@ local NetworkMgr = require("ui/network/manager")
 local UIManager = require("ui/uimanager")
 local _ = require("gettext")
 local json = require("json")
+local socket = require("socket")
 local lfs = require("libs/libkoreader-lfs")
 
 local MAX_BYTES = 120 * 1024
@@ -190,12 +191,20 @@ return function(NovelCheck, ctx)
         return { text = _("Developer tools"), sub_item_table = {
             { text = _("Run self-test"), callback = function()
                 NetworkMgr:runWhenOnline(function()
-                    -- The result is sent to NovelCheck by itself, then shown here.
-                    local sent = self:isConnected() and self:uploadLog()
-                    if not self:isConnected() then
+                    -- The result is sent to NovelCheck by itself, then shown here. Wi-Fi often has no address for a few
+                    -- seconds after it comes up ("cannot assign requested address"), so a failed send is tried
+                    -- again once, and the reason is written to the log.
+                    local sent, err = false, nil
+                    if self:isConnected() then
+                        sent, err = self:uploadLog()
+                        if not sent then
+                            socket.sleep(8)
+                            sent, err = self:uploadLog()
+                        end
+                    else
                         self:selfTest()
                     end
-                    self:dlog("test", sent and "result sent to NovelCheck" or "result not sent")
+                    self:dlog("test", sent and "result sent to NovelCheck" or ("result NOT sent to NovelCheck: " .. tostring(err or "not connected to NovelCheck")))
                     self:showLog()
                 end)
             end },
