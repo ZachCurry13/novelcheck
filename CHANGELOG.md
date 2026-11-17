@@ -18,6 +18,9 @@ becomes the release notes for that version and is shown in the app under
 ### 🤖 Backup AI from Google
 - **"Use Google as the backup AI"** (Admin → AI & Scans → Backup AI): paste a Google AI Studio key (or reuse a Google key you saved) and the backup becomes the fast Gemini 2.5 Flash-Lite model, with Flash as the second try, at no cost. The free tier allows a few hundred calls a day, and Google may use free-tier prompts to improve its products.
 
+### 🌙 Re-rate overnight only
+- **"Re-rate overnight only"** (next to the re-rate buttons): the books wait for your automatic-rating hours (Admin → AI & Scans) and go in batches of 50 then, so re-rating a whole library doesn't run flat out all day. With no hours set they go at once.
+
 ### 📥 See what was copied from your Kindles
 - **Library cleanup → Books copied from Kindles** shows, per Kindle, how many books were copied, their size and the newest ones, and where the files are.
 

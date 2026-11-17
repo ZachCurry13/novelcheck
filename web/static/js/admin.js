@@ -126,6 +126,9 @@ export async function renderAdmin(view, state) {
       if (r) toast(`Re-rating ${r.queued} books so their summaries are in English`);
     } else if (act === "rerate-trial") {
       (await import("./trialrate.js")).tryNewRules(20);
+    } else if (act === "rerate-night") {
+      const r = await attempt(() => post("/api/admin/rerate", { which: "library", overnight: true }));
+      if (r) toast(`${r.queued} books will be re-rated during your automatic-rating hours (Admin → AI & Scans), 50 at a time`);
     } else if (act === "rerate-library") {
       const r = await attempt(() => post("/api/admin/rerate", { which: "library" }));
       if (r) toast(`Re-rating ${r.queued} books in your libraries with the current pepper rules`);

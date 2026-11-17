@@ -32,6 +32,7 @@ type Worker struct {
 	mu     sync.Mutex
 	queue  []int64
 	rerate map[int64]bool // analyzed books being re-rated in place (stay visible meanwhile)
+	night  []int64        // re-rates waiting for the quiet hours (RerateOvernight)
 	status Status
 	wake   chan struct{}
 	cur    *run // the current pass through the queue (Run's goroutine only)
@@ -98,6 +99,46 @@ func (w *Worker) Rerate(ids ...int64) int {
 	return added
 }
 
+// RerateOvernight is Rerate, but the books wait for the automatic-rating hours (Admin → AI & Scans) and go in
+// batches then, so a whole library is not rated in the middle of the day. With no hours set they go at once.
+func (w *Worker) RerateOvernight(ids ...int64) int {
+	w.mu.Lock()
+	seen := map[int64]bool{}
+	for _, id := range w.night {
+		seen[id] = true
+	}
+	added := 0
+	for _, id := range ids {
+		if !seen[id] && !w.rerate[id] {
+			w.night = append(w.night, id)
+			seen[id] = true
+			added++
+		}
+	}
+	w.mu.Unlock()
+	select {
+	case w.wake <- struct{}{}:
+	default:
+	}
+	return added
+}
+
+// feedNight moves the next overnight re-rates into the queue when the hours are open.
+func (w *Worker) feedNight(now time.Time) int {
+	if !RateHoursOpen(w.Store, now) {
+		return 0
+	}
+	w.mu.Lock()
+	n := min(len(w.night), maxFeed)
+	batch := append([]int64{}, w.night[:n]...)
+	w.night = w.night[n:]
+	w.mu.Unlock()
+	if n > 0 {
+		w.Rerate(batch...)
+	}
+	return n
+}
+
 // takeRerate reports (and clears) whether id was queued by Rerate.
 func (w *Worker) takeRerate(id int64) bool {
 	w.mu.Lock()
@@ -112,6 +153,7 @@ func (w *Worker) Wipe() (int64, error) {
 	w.mu.Lock()
 	w.queue = nil
 	w.rerate = nil
+	w.night = nil
 	w.status.QueueLength = 0
 	w.mu.Unlock()
 	return w.Store.ResetQueued()
@@ -146,7 +188,7 @@ func (w *Worker) Run(ctx context.Context) {
 	for {
 		id, ok := w.pop()
 		if !ok {
-			if w.feed(time.Now()) > 0 { // automatic rating: the next waiting books
+			if w.feed(time.Now()) > 0 || w.feedNight(time.Now()) > 0 { // automatic rating: the next waiting books
 				continue
 			}
 			w.runDone()

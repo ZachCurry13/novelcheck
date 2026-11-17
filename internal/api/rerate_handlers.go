@@ -16,7 +16,8 @@ import (
 //	which "all"      every AI-rated book ("Re-rate whole library")
 func (s *Server) handleRerate(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Which string `json:"which"`
+		Which     string `json:"which"`
+		Overnight bool   `json:"overnight"` // wait for the automatic-rating hours
 	}
 	if r.ContentLength > 0 && !readJSON(w, r, &body, 1<<10) {
 		return
@@ -38,6 +39,10 @@ func (s *Server) handleRerate(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		writeStoreErr(w, err)
+		return
+	}
+	if body.Overnight {
+		writeJSON(w, http.StatusOK, map[string]int{"queued": s.Worker.RerateOvernight(ids...)})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]int{"queued": s.Worker.Rerate(ids...)})

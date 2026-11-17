@@ -95,3 +95,21 @@ func TestFeedTakesWantedBooksFirst(t *testing.T) {
 		t.Fatalf("waiting %d", st.WaitingToRate())
 	}
 }
+
+// Overnight re-rates wait for the quiet hours and then go in batches.
+func TestRerateOvernightWaitsForTheHours(t *testing.T) {
+	st := autoStore(t)
+	w := New(st)
+	_ = st.SetSetting(store.KeyAutoRateHours, "23-7")
+	day := time.Date(2026, 9, 28, 12, 0, 0, 0, time.UTC)
+	night := time.Date(2026, 9, 28, 2, 0, 0, 0, time.UTC)
+	if w.RerateOvernight(1, 2, 3, 2) != 3 {
+		t.Fatal("three different books are waiting for the night")
+	}
+	if w.feedNight(day) != 0 || len(w.queue) != 0 {
+		t.Fatal("nothing is queued in the middle of the day")
+	}
+	if w.feedNight(night) != 3 || len(w.queue) != 3 || !w.rerate[1] {
+		t.Fatalf("at night they go in: queue %v", w.queue)
+	}
+}
