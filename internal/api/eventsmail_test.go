@@ -75,7 +75,7 @@ func TestGoogleBecomesTheBackupAI(t *testing.T) {
 			http.Error(w, "no", http.StatusForbidden)
 			return
 		}
-		_, _ = w.Write([]byte(`{"data":[{"id":"models/gemini-2.5-flash"},{"id":"models/gemini-3.8-flash"},{"id":"models/gemini-3.8-flash-lite"},{"id":"models/gemini-3.8-flash-preview-tts"},{"id":"models/gemini-3.5-flash-lite"},{"id":"models/text-embedding-9"}]}`))
+		_, _ = w.Write([]byte(`{"data":[{"id":"models/gemini-2.5-flash"},{"id":"models/gemini-3.8-flash"},{"id":"models/gemini-3.8-flash-lite"},{"id":"models/gemini-3.8-flash-preview-tts"},{"id":"models/gemini-3.5-flash-lite"},{"id":"models/text-embedding-9"},{"id":"models/gemma-4-26b-it"},{"id":"models/gemma-4-31b-it"},{"id":"models/gemma-3-27b-it"}]}`))
 	}))
 	defer google.Close()
 	srv, st := setupWith(t, func(s *api.Server) { s.GoogleBase = google.URL })
@@ -87,15 +87,47 @@ func TestGoogleBecomesTheBackupAI(t *testing.T) {
 		t.Fatalf("a wrong key is said plainly: %d", res.StatusCode)
 	}
 	res, out := admin.do("POST", "/api/admin/backup-ai/use-google", map[string]string{"key": "test-key-123"}, true)
-	if res.StatusCode != 200 || out["models"] != "gemini-3.8-flash-lite,gemini-3.8-flash" {
+	if res.StatusCode != 200 || out["models"] != "gemini-3.8-flash-lite,gemini-3.5-flash-lite,gemma-4-31b-it" {
 		t.Fatalf("use google: %d %v", res.StatusCode, out)
 	}
 	ais := st.AIConfigs()
-	if len(ais) != 2 || ais[1].APIKey != "test-key-123" || len(ais[1].Models) != 2 || ais[1].PriceIn != 0 {
+	if len(ais) != 2 || ais[1].APIKey != "test-key-123" || len(ais[1].Models) != 3 || ais[1].PriceIn != 0 {
 		t.Fatalf("the backup is Google now: %+v", ais)
 	}
 	_ = st.SetSetting(store.KeyBackupBaseURL, "https://generativelanguage.googleapis.com/v1beta/openai")
 	if res, _ := admin.do("POST", "/api/admin/backup-ai/use-google", map[string]string{"key": "********"}, true); res.StatusCode != 200 {
 		t.Fatal("a saved Google key is reused when the box shows stars")
+	}
+}
+
+// One press makes Google the main AI and the AI that was the main one the backup; the pause between books becomes 4
+// seconds; the free Gemini models are the ones Google lists, two flash-lite first and the biggest Gemma 4 last.
+func TestGoogleBecomesTheMainAIAndLocalTheBackup(t *testing.T) {
+	google := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"data":[{"id":"models/gemini-3.5-flash-lite"},{"id":"models/gemini-3.1-flash-lite"},{"id":"models/gemma-4-31b-it"},{"id":"models/gemini-3.8-flash"}]}`))
+	}))
+	defer google.Close()
+	srv, st := setupWith(t, func(s *api.Server) { s.GoogleBase = google.URL })
+	admin := login(t, srv, "admin", "adminpass1")
+	_ = st.SetSettings(map[string]string{store.KeyLLMProvider: "openai", store.KeyLLMBaseURL: "http://192.168.1.50:11434/v1", store.KeyLLMModel: "llama3.2",
+		store.KeyLLMFallbackModel: "qwen2.5:3b", store.KeyMainWatts: "150", store.KeyScanDelaySeconds: "2"})
+	res, out := admin.do("POST", "/api/admin/main-ai/use-google", map[string]string{"key": "k-1"}, true)
+	if res.StatusCode != 200 || out["models"] != "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemma-4-31b-it" {
+		t.Fatalf("use google first: %d %v", res.StatusCode, out)
+	}
+	ais := st.AIConfigs()
+	if len(ais) != 2 || ais[0].BaseURL != google.URL || ais[0].Models[0] != "gemini-3.5-flash-lite" || len(ais[0].Models) != 3 || ais[0].Watts != 0 {
+		t.Fatalf("Google is the main AI now: %+v", ais)
+	}
+	if ais[1].BaseURL != "http://192.168.1.50:11434/v1" || len(ais[1].Models) != 2 || ais[1].Models[0] != "llama3.2" || ais[1].Watts != 150 {
+		t.Fatalf("the home AI is the backup now: %+v", ais[1])
+	}
+	if st.Setting(store.KeyScanDelaySeconds) != "4" {
+		t.Fatal("4 seconds between books")
+	}
+	// pressed again, Google is already the main one: the backup stays what it was
+	admin.do("POST", "/api/admin/main-ai/use-google", map[string]string{"key": "k-1"}, true)
+	if ais = st.AIConfigs(); len(ais) != 2 || ais[1].BaseURL != "http://192.168.1.50:11434/v1" {
+		t.Fatalf("the backup is not overwritten by Google: %+v", ais)
 	}
 }

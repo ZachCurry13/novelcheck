@@ -35,6 +35,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Post("/admin/wipe-queue", s.handleWipeQueue)
 		r.Post("/admin/backup-ai/use-deep", s.handleBackupUseDeep)
 		r.Post("/admin/backup-ai/use-google", s.handleBackupUseGoogle)
+		r.Post("/admin/main-ai/use-google", s.handleMainUseGoogle)
 		r.Get("/admin/rerate/trial", s.handleTrial)
 		r.Post("/admin/rerate/trial", s.handleTrial)
 		r.Get("/admin/genres", s.handleGenreStatus)

@@ -282,7 +282,7 @@ func (w *Worker) RateWith(ctx context.Context, id int64, ai store.AIConfig) erro
 // TrialRate rates a book with the main AI only and returns the answer without saving anything: "Try the new rules on
 // 20 books" shows it beside the rating the book has, so a new set of rules can be judged before the whole library is
 // re-rated.
-func (w *Worker) TrialRate(ctx context.Context, id int64) (*store.Analysis, error) {
+func (w *Worker) TrialRate(ctx context.Context, id int64, backup bool) (*store.Analysis, error) {
 	b, err := w.Store.BookByID(id, nil)
 	if err != nil {
 		return nil, err
@@ -291,7 +291,14 @@ func (w *Worker) TrialRate(ctx context.Context, id int64) (*store.Analysis, erro
 	if len(ais) == 0 {
 		return nil, errors.New("no AI is set up")
 	}
-	a, err := w.askWith(ctx, ais[:1], id, llm.UserPromptWith(b.Title, b.Author, b.Blurb, b.HCWarnings, b.HCMoods))
+	use := ais[:1]
+	if backup { // the backup AI alone (Admin → AI & Scans → Backup AI), to see how it rates before it takes over
+		if len(ais) < 2 {
+			return nil, errors.New("no backup AI is set up")
+		}
+		use = ais[1:2]
+	}
+	a, err := w.askWith(ctx, use, id, llm.UserPromptWith(b.Title, b.Author, b.Blurb, b.HCWarnings, b.HCMoods))
 	if err != nil {
 		return nil, err
 	}

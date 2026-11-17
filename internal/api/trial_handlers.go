@@ -47,7 +47,8 @@ func (s *Server) handleTrial(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		Count int `json:"count"`
+		Count int    `json:"count"`
+		AI    string `json:"ai"` // "backup": rate with the backup AI instead of the main one
 	}
 	if r.ContentLength > 0 && !readJSON(w, r, &body, 1<<10) {
 		return
@@ -75,7 +76,7 @@ func (s *Server) handleTrial(w http.ResponseWriter, r *http.Request) {
 		for _, b := range books {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			row := trialRow{ID: b.ID, Title: b.Title, Author: b.Author, OldLevel: b.Level, OldSure: b.Confidence, Warnings: b.Warnings, Difference: "same"}
-			a, err := s.Worker.TrialRate(ctx, b.ID)
+			a, err := s.Worker.TrialRate(ctx, b.ID, body.AI == "backup")
 			cancel()
 			switch {
 			case err != nil:

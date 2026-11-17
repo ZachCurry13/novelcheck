@@ -151,6 +151,12 @@ export async function renderAdmin(view, state) {
     } else if (act === "backup-use-google") {
       const r = await attempt(() => post("/api/admin/backup-ai/use-google", { key: $("#google-key", view)?.value || "" }));
       if (r) toast("The backup AI is now Google's Gemini. Reload this page to see it in the fields.");
+    } else if (act === "rerate-trial-backup") {
+      (await import("./trialrate.js")).tryNewRules(20, "backup");
+    } else if (act === "main-use-google") {
+      if (!confirm("Make Google's free Gemini the main AI? Your current AI becomes the backup, and the pause between books becomes 4 seconds. Books already rated keep their ratings.")) return;
+      const r = await attempt(() => post("/api/admin/main-ai/use-google", { key: $("#google-key", view)?.value || "" }));
+      if (r) toast(`Google is now the main AI (${r.models}). Reload this page to see it in the fields.`);
     } else if (act === "mail-use-smtp") {
       const r = await attempt(() => post("/api/admin/events-mail/use-smtp"));
       if (r) { // show what was saved (the password stays on the server)

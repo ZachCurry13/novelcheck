@@ -131,7 +131,10 @@ export const EXTRA = {
       <p class="mt-1 text-xs text-slate-400">Replaces the backup AI's address, key and models. Needs the Deep Scan machine set up below.</p>
       <hr class="my-3 border-slate-700"><p class="text-slate-300">Or use <b>Google's free Gemini</b> (free to use; Google sets the daily limits per account, shown at aistudio.google.com/rate-limit, and may use free-tier prompts to improve its products). Paste a key from aistudio.google.com:</p>
       <span class="mt-2 flex flex-wrap gap-2"><input id="google-key" type="password" class="field min-w-0 flex-1" placeholder="Google AI Studio key (blank = reuse a Google key you already saved)" autocomplete="off">
-      <button type="button" data-act="backup-use-google" class="btn-secondary">Use Google as the backup AI</button></span></div>`,
+      <button type="button" data-act="backup-use-google" class="btn-secondary">Use Google as the backup AI</button></span>
+      <p class="mt-3 text-slate-300">Google's free models cost nothing and answer in seconds. To try them: <b>compare the backup AI on 20 books</b> (nothing is saved), and if the levels match your current ones, <b>make Google the main AI</b>: your current AI becomes the backup, and the pause between books becomes 4 seconds (Google allows 15 requests a minute). Books already rated keep their ratings. Don't use Google for Deep Scans: they send the whole book.</p>
+      <span class="mt-2 flex flex-wrap gap-2"><button type="button" data-act="rerate-trial-backup" class="btn-ghost">Compare the backup AI on 20 books</button>
+      <button type="button" data-act="main-use-google" class="btn-secondary">Make Google the main AI (current AI becomes the backup)</button></span></div>`,
   "Deep Scans": note("deep_llm_enabled", "Deep Scans read whole books, so a bigger model on a stronger machine rates them better. Ratings stay on the main AI. While this machine is off or asleep, Deep Scans wait (🧬⏸) and carry on when it answers.") + `<div id="deep-preset-host" data-when="deep_llm_enabled"></div><div id="deep-status-host"></div>`,
   "Extras": `<div id="ideas-host"></div><div id="custom-flags"></div>`,
   "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,

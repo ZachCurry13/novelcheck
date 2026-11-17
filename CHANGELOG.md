@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.89.0]
+
+### 🤖 Try Google's free models, then make them the main AI
+- **Compare the backup AI on 20 books** (Admin → AI & Scans → Backup AI): rates a small sample with the backup AI alone and shows its level next to the current one (same, higher, lower). Nothing is saved.
+- **Make Google the main AI (current AI becomes the backup):** one press sets Google's free Gemini as the main AI, keeps the AI that ran before (usually the home machine) as the backup, and sets the pause between books to 4 seconds (Google's free tier allows 15 requests a minute). Books already rated keep their ratings. Not for Deep Scans: they send the whole book.
+- **Which free models it picks** (it asks Google which your key can use): the two newest flash-lite models (each has its own 500-a-day allowance), then the biggest Gemma 4 (a much larger daily allowance, 14,400 a day, but 16,000 tokens a minute, so it slows down when busy). The slow regular "flash" models (20 a day) are used only when no flash-lite exists. "Use Google as the backup AI" picks the same list.
+
 ## [1.88.1]
 
 ### 🤖 Backup AI wording
