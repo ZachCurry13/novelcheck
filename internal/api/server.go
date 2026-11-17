@@ -59,6 +59,7 @@ type Server struct {
 	cleanup     cleanupCache    // the Library cleanup summary, kept while the library is unchanged
 	trial       trialJob        // "try the new rules on 20 books" (trial_handlers.go)
 	missing     missingCache    // the books with no cover, kept a minute (coverfinder.go)
+	GoogleBase  string          // Google's OpenAI-compatible address; blank = the real one (tests point it at a fake)
 	slowStat    slowStatusCache // the slow part of the Admin status, kept in memory (statusslow.go)
 	integ       integState      // Integrations: the last connection checks
 	hcjob       hcJob           // Hardcover cleanup: the scan or apply running in the background

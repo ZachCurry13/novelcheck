@@ -1,8 +1,14 @@
 package api
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -34,11 +40,72 @@ func (s *Server) handleBackupUseDeep(w http.ResponseWriter, r *http.Request) {
 }
 
 // "Use Google's free Gemini as the backup AI": Google's free tier allows a few hundred calls a day on its small
-// models. The fast "flash-lite" model comes first (it answers in seconds; the bigger Flash models think for a minute
-// and can run out the health check's time), the bigger one is the second try. Prompts sent to the free tier may be
-// used by Google to improve its products. The key is Google AI Studio's; it is taken from the box, else from the
-// backup or main AI when that already points at Google.
+// models. Google retires model names for new accounts (gemini-2.5-flash was one), so the models are not guessed: the
+// key is used to ask Google which models this account can use, and the newest "flash-lite" one (a fast model that
+// answers in seconds) goes first, the newest "flash" second. Prompts sent to the free tier may be used by Google to
+// improve its products. The key is Google AI Studio's; it is taken from the box, else from the backup or main AI
+// when that already points at Google.
 const googleBase = "https://generativelanguage.googleapis.com/v1beta/openai"
+
+// googleModels lists the usable models of a key, newest first, as bare names.
+func googleModels(ctx context.Context, base, key string) ([]string, error) {
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(base, "/")+"/models", nil)
+	req.Header.Set("Authorization", "Bearer "+key)
+	res, err := (&http.Client{Timeout: 20 * time.Second}).Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("Google answered %d: check the key", res.StatusCode)
+	}
+	var body struct {
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(io.LimitReader(res.Body, 4<<20)).Decode(&body); err != nil {
+		return nil, err
+	}
+	var out []string
+	for _, m := range body.Data {
+		out = append(out, strings.TrimPrefix(m.ID, "models/"))
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(out)))
+	return out, nil
+}
+
+// pickGemini chooses the fast model first and the bigger one second from a list (newest first).
+func pickGemini(all []string) []string {
+	bad := []string{"preview", "image", "tts", "embed", "live", "audio", "exp", "thinking", "robotics", "computer"}
+	ok := func(n string) bool {
+		if !strings.HasPrefix(n, "gemini-") {
+			return false
+		}
+		for _, b := range bad {
+			if strings.Contains(n, b) {
+				return false
+			}
+		}
+		return true
+	}
+	var lite, flash string
+	for _, n := range all {
+		switch {
+		case ok(n) && strings.Contains(n, "flash-lite") && lite == "":
+			lite = n
+		case ok(n) && strings.Contains(n, "flash") && !strings.Contains(n, "lite") && flash == "":
+			flash = n
+		}
+	}
+	var out []string
+	for _, n := range []string{lite, flash} {
+		if n != "" {
+			out = append(out, n)
+		}
+	}
+	return out
+}
 
 // handleBackupUseGoogle: POST /api/admin/backup-ai/use-google {"key"}.
 func (s *Server) handleBackupUseGoogle(w http.ResponseWriter, r *http.Request) {
@@ -61,13 +128,28 @@ func (s *Server) handleBackupUseGoogle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	base := googleBase
+	if s.GoogleBase != "" {
+		base = s.GoogleBase
+	}
+	all, err := googleModels(r.Context(), base, key)
+	if err != nil {
+		writeErr(w, http.StatusBadGateway, "Couldn't ask Google which models this key can use: "+err.Error())
+		return
+	}
+	models := pickGemini(all)
+	if len(models) == 0 {
+		writeErr(w, http.StatusBadGateway, "Google lists no fast Gemini model for this key")
+		return
+	}
+	list := strings.Join(models, ",")
 	if err := s.Store.SetSettings(map[string]string{
-		store.KeyBackupEnabled: "true", store.KeyBackupProvider: "openai", store.KeyBackupBaseURL: googleBase,
-		store.KeyBackupAPIKey: key, store.KeyBackupModel: "gemini-2.5-flash-lite,gemini-2.5-flash", store.KeyBackupJSONMode: "false",
+		store.KeyBackupEnabled: "true", store.KeyBackupProvider: "openai", store.KeyBackupBaseURL: base,
+		store.KeyBackupAPIKey: key, store.KeyBackupModel: list, store.KeyBackupJSONMode: "false",
 		store.KeyBackupPriceIn: "0", store.KeyBackupPriceOut: "0", store.KeyBackupWatts: "0",
 	}); err != nil {
 		writeStoreErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"base_url": googleBase, "models": "gemini-2.5-flash-lite,gemini-2.5-flash"})
+	writeJSON(w, http.StatusOK, map[string]string{"base_url": base, "models": list})
 }

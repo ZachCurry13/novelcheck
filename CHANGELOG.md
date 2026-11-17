@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.86.1]
+
+### 🤖 Google as the backup AI picks models Google really offers
+- **"Use Google as the backup AI" now asks Google which models your key can use** and picks the newest fast "flash-lite" one first and the newest "flash" second. Version 1.86.0 guessed `gemini-2.5-flash`, which Google no longer gives to new accounts (it answers "404 Not Found"). A wrong key now says so plainly.
+
 ## [1.86.0]
 
 ### 🎬 Wrapped is one tap from the Library

@@ -1,8 +1,11 @@
 package api_test
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/zachcurry13/novelcheck/internal/api"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -64,21 +67,34 @@ func TestDeepMachineBecomesTheBackupAI(t *testing.T) {
 	}
 }
 
-// One press makes Google's free Gemini the backup AI, with the key pasted or one already saved for Google.
+// One press makes Google's free Gemini the backup AI: the models are what Google lists for the key (the newest
+// fast one first), not a guess, with the key pasted or one already saved for Google.
 func TestGoogleBecomesTheBackupAI(t *testing.T) {
-	srv, st := setup(t)
+	google := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer test-key-123" {
+			http.Error(w, "no", http.StatusForbidden)
+			return
+		}
+		_, _ = w.Write([]byte(`{"data":[{"id":"models/gemini-2.5-flash"},{"id":"models/gemini-3.8-flash"},{"id":"models/gemini-3.8-flash-lite"},{"id":"models/gemini-3.8-flash-preview-tts"},{"id":"models/gemini-3.5-flash-lite"},{"id":"models/text-embedding-9"}]}`))
+	}))
+	defer google.Close()
+	srv, st := setupWith(t, func(s *api.Server) { s.GoogleBase = google.URL })
 	admin := login(t, srv, "admin", "adminpass1")
 	if res, _ := admin.do("POST", "/api/admin/backup-ai/use-google", map[string]string{}, true); res.StatusCode != 400 {
 		t.Fatalf("no key yet: %d", res.StatusCode)
 	}
+	if res, _ := admin.do("POST", "/api/admin/backup-ai/use-google", map[string]string{"key": "wrong"}, true); res.StatusCode != 502 {
+		t.Fatalf("a wrong key is said plainly: %d", res.StatusCode)
+	}
 	res, out := admin.do("POST", "/api/admin/backup-ai/use-google", map[string]string{"key": "test-key-123"}, true)
-	if res.StatusCode != 200 || out["models"] != "gemini-2.5-flash-lite,gemini-2.5-flash" {
+	if res.StatusCode != 200 || out["models"] != "gemini-3.8-flash-lite,gemini-3.8-flash" {
 		t.Fatalf("use google: %d %v", res.StatusCode, out)
 	}
 	ais := st.AIConfigs()
 	if len(ais) != 2 || ais[1].APIKey != "test-key-123" || len(ais[1].Models) != 2 || ais[1].PriceIn != 0 {
 		t.Fatalf("the backup is Google now: %+v", ais)
 	}
+	_ = st.SetSetting(store.KeyBackupBaseURL, "https://generativelanguage.googleapis.com/v1beta/openai")
 	if res, _ := admin.do("POST", "/api/admin/backup-ai/use-google", map[string]string{"key": "********"}, true); res.StatusCode != 200 {
 		t.Fatal("a saved Google key is reused when the box shows stars")
 	}
