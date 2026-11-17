@@ -246,10 +246,10 @@ html.font-dyslexic .leading-tight, html.font-dyslexic .leading-snug { line-heigh
 /* Content hide picker (js/content.js): rows big enough to tap on phones. */
 @media (max-width: 767px) {
   .content-picker .toggle, .content-picker [data-expand] { min-height: 2.75rem; }
-  /* in the Library's narrow filter panel the groups stand one under the other (three columns made the words overlap) */
-  #filters .content-picker { grid-template-columns: minmax(0, 1fr); }
-  #filters .content-picker .toggle { min-width: 0; }
 }
+/* in the Library's narrow filter panel the groups stand one under the other (three columns made the words overlap) */
+#filters .content-picker { grid-template-columns: minmax(0, 1fr); }
+#filters .content-picker .toggle { min-width: 0; }
 
 /* Phones: nothing may widen the page. A drop-down grows to its longest option
    (a long library name), so it's capped at the screen, and anything else too
