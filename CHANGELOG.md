@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.88.0]
+
+### 🗂️ Tidy my Kindle's books (KOReader plugin 1.57.0)
+- **NovelCheck > Tidy my Kindle's books...** moves books that lie around (the Kindle's own documents folder, loose in Books, anywhere) into **Books/Author Name/** ("Unknown author" when a book doesn't say). It shows what it will do and asks first.
+- **Safe:** only a book NovelCheck already has a backup of is moved (back up first); nothing is overwritten or deleted; each book's reading data (its `.sdr` folder) moves with it; NovelCheck's own download folder, KOReader and system folders, and books already in an author folder are left alone. NovelCheck's backup copy moves the same way, so the next backup doesn't send the books again.
+- **Undo:** **NovelCheck > Undo the last tidy** puts everything back.
+- Kindle-store books moved out of the Kindle's documents folder no longer show in Amazon's own Kindle reader (use KOReader).
+
 ## [1.87.0]
 
 ### 💾 Back up the whole Kindle (KOReader plugin 1.56.0)

@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.56.0"
+local VERSION = "1.57.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -121,6 +121,8 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("Delete finished books..."), callback = function() DeviceBooks.removeFinished(self) end },
             { text = _("Finish this book..."), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
             { text = _("Back up my Kindle now (apps, plugins, settings, books)"), callback = function() if self.backupKindle then self:backupKindle(false) end end },
+            { text = _("Tidy my Kindle's books (into Books/<author>)..."), callback = function() if self.tidyBooks then self:tidyBooks() end end },
+            { text = _("Undo the last tidy"), callback = function() if self.undoTidy then self:undoTidy() end end },
             { text = _("Copy my Kindle to NovelCheck now"), callback = function() if self.copyKindle then self:copyKindle(false) end end },
             { text = _("Send highlights now"), callback = function() if self.sendHighlights then self:sendHighlights(false) end end },
             { text = _("Tidy book names"), callback = function() self:tidyNames() end },
@@ -484,7 +486,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

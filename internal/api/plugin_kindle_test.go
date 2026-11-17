@@ -149,3 +149,46 @@ func TestKindleBackupKeepsSettingsAndPlugins(t *testing.T) {
 		t.Fatalf("a file changed since is sent again: %v", out)
 	}
 }
+
+// Tidy my Kindle's books: the copy on the server moves the same way, never overwrites, and an unknown file is ignored.
+func TestKindleMovedFollowsTheDevice(t *testing.T) {
+	dir := t.TempDir()
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = dir })
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+	key := hex.EncodeToString(sum[:])
+	root := filepath.Join(dir, "kindle-backup", "1", "Test Kindle")
+	_ = os.MkdirAll(filepath.Join(root, "documents", "Dune.sdr"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "documents", "Dune.epub"), []byte("book"), 0o644)
+	_ = os.WriteFile(filepath.Join(root, "documents", "Dune.sdr", "metadata.epub.lua"), []byte("x"), 0o644)
+	_ = os.MkdirAll(filepath.Join(root, "Books", "Frank Herbert"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "Books", "Frank Herbert", "Taken.epub"), []byte("other"), 0o644)
+	_ = os.WriteFile(filepath.Join(root, "documents", "Taken.epub"), []byte("mine"), 0o644)
+	b, _ := json.Marshal(map[string]any{"device": "Test Kindle", "moves": []map[string]string{
+		{"from": "/mnt/us/documents/Dune.epub", "to": "/mnt/us/Books/Frank Herbert/Dune.epub"},
+		{"from": "/mnt/us/documents/Dune.sdr", "to": "/mnt/us/Books/Frank Herbert/Dune.sdr"},
+		{"from": "/mnt/us/documents/Taken.epub", "to": "/mnt/us/Books/Frank Herbert/Taken.epub"},
+		{"from": "/mnt/us/documents/Nothing.epub", "to": "/mnt/us/Books/x/Nothing.epub"},
+		{"from": "/mnt/us/documents/../../etc/passwd", "to": "/mnt/us/Books/x/p"},
+	}})
+	req, _ := http.NewRequest("POST", srv.URL+"/kosync/plugin/kindle/moved", bytes.NewReader(b))
+	req.Header.Set("x-auth-user", "admin")
+	req.Header.Set("x-auth-key", key)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil || res.StatusCode != 200 {
+		t.Fatalf("moved: %v %v", err, res)
+	}
+	var out map[string]int
+	_ = json.NewDecoder(res.Body).Decode(&out)
+	if out["moved"] != 2 {
+		t.Fatalf("the book and its folder moved, the taken name and the missing file did not: %v", out)
+	}
+	if _, err := os.Stat(filepath.Join(root, "Books", "Frank Herbert", "Dune.sdr", "metadata.epub.lua")); err != nil {
+		t.Fatalf("the sidecar folder came along: %v", err)
+	}
+	if got, _ := os.ReadFile(filepath.Join(root, "Books", "Frank Herbert", "Taken.epub")); string(got) != "other" {
+		t.Fatal("nothing is overwritten")
+	}
+}

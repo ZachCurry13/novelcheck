@@ -292,3 +292,43 @@ func (s *Server) handleKindleBackup(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"devices": out, "folder": "kindle-backup (in NovelCheck's data folder)"})
 }
+
+// handlePluginKindleMoved: POST /kosync/plugin/kindle/moved {"device", "moves": [{"from", "to"}]}. The plugin moved
+// files on the Kindle (Tidy my Kindle's books), so the copy on the server moves the same way and the next backup
+// does not send them again. Folders (a book's .sdr) move too. Nothing is overwritten or deleted.
+func (s *Server) handlePluginKindleMoved(w http.ResponseWriter, r *http.Request) {
+	u := s.kosyncUser(w, r)
+	if u == nil {
+		return
+	}
+	var body struct {
+		Device string `json:"device"`
+		Moves  []struct {
+			From string `json:"from"`
+			To   string `json:"to"`
+		} `json:"moves"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<20)).Decode(&body); err != nil || len(body.Moves) > 5000 {
+		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "bad request"})
+		return
+	}
+	root := s.kindleDir(u.ID, body.Device)
+	moved := 0
+	for _, m := range body.Moves {
+		from, to := kindleRel(m.From), kindleRel(m.To)
+		if from == "" || to == "" {
+			continue
+		}
+		src, dst := filepath.Join(root, filepath.FromSlash(from)), filepath.Join(root, filepath.FromSlash(to))
+		if _, err := os.Stat(src); err != nil {
+			continue
+		}
+		if _, err := os.Stat(dst); err == nil {
+			continue // never overwrite
+		}
+		if os.MkdirAll(filepath.Dir(dst), 0o755) == nil && os.Rename(src, dst) == nil {
+			moved++
+		}
+	}
+	kosyncJSON(w, http.StatusOK, map[string]int{"moved": moved})
+}
