@@ -28,14 +28,21 @@ export function setAutoSend(on) {
   }
 }
 
-// An error, or a request the server failed on (5xx), sends this record to NovelCheck by
-// itself (when allowed): at most once every five minutes, never what was typed.
-let lastSent = 0;
+// Any error (a script error, a request the server failed on, or an error the app showed you) sends this record to
+// NovelCheck by itself (when allowed), never what was typed: each different error once every ten minutes, and
+// at most a dozen reports an hour, so one fault repeating can't flood the bug report.
+const sentAt = new Map();
+let sentThisHour = [];
 let sending = false;
 function autoSend(why) {
-  if (!autoSendOn() || sending || Date.now() - lastSent < 5 * 60 * 1000) return;
+  if (!autoSendOn() || sending) return;
+  const key = why.replace(/\d+/g, "#");
+  const now = Date.now();
+  sentThisHour = sentThisHour.filter((t) => now - t < 60 * 60 * 1000);
+  if (now - (sentAt.get(key) || 0) < 10 * 60 * 1000 || sentThisHour.length >= 12) return;
+  sentAt.set(key, now);
+  sentThisHour.push(now);
   sending = true;
-  lastSent = Date.now();
   setTimeout(async () => {
     try {
       const v = document.querySelector("[data-app-version]")?.textContent?.trim() || "";
@@ -59,7 +66,7 @@ export const setSink = (f) => {
 
 export function note(kind, msg) {
   sink?.(kind, String(msg));
-  if (kind === "error" || (kind === "net" && /-> 5\d\d/.test(String(msg)))) autoSend(String(msg).slice(0, 80));
+  if (kind === "error" || kind === "shown-error" || (kind === "net" && /-> 5\d\d/.test(String(msg)))) autoSend(String(msg).slice(0, 80));
   lines.push(`${stamp()} [${kind}] ${String(msg).replace(/\s+/g, " ").slice(0, 300)}`);
   if (lines.length > MAX) lines = lines.slice(-MAX);
   try {

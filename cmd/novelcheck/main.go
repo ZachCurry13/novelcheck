@@ -156,6 +156,7 @@ func main() {
 		go srv.CoverLoop(ctx)         // a real cover for books Calibre has none for, once a day
 		go srv.LibbyScanLoop(ctx)     // do the libraries lend the audiobook of books without one
 	}
+	log.SetOutput(srv.LogWriter(os.Stderr)) // every background failure also goes into the bug report
 	srv.Pulls.OnError = func(model string, err error) {
 		st.Notify("warning", "ollama", "Downloading "+model+" in Ollama failed: "+err.Error(), "#/admin")
 	}

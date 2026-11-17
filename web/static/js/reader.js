@@ -8,6 +8,9 @@
 import "/vendor/foliate/view.js";
 import { readerSettings, applySettings, openContents, openSettings, closePanel } from "./readermenu.js";
 import { bindBars } from "./readerbars.js";
+import { startRecording, note as record } from "./debugrec.js";
+
+startRecording(); // the reader's errors reach the bug report like the app's
 
 const $ = (s) => document.querySelector(s);
 const id = Number(new URLSearchParams(location.search).get("id"));
@@ -134,7 +137,10 @@ async function start() {
       return new File([await r.blob()], name);
     }),
   ]).catch(() => [null, null]);
-  if (!file) return note("This book has no file NovelCheck can open here (it reads EPUB, MOBI, AZW3 and FB2).");
+  if (!file) {
+    record("shown-error", `reader: no file for book ${id}`);
+    return note("This book has no file NovelCheck can open here (it reads EPUB, MOBI, AZW3 and FB2).");
+  }
   $("#reader-title").textContent = info?.title || "";
   document.title = `${info?.title || "Reading"} · NovelCheck`;
   $("#reader-close").href = `/#/library?book=${id}`;
@@ -146,6 +152,7 @@ async function start() {
   try {
     await view.open(file);
   } catch (err) {
+    record("shown-error", `reader: book ${id} couldn't be opened: ${err.message || err}`);
     return note(`This book couldn't be opened: ${err.message || err}`);
   }
   applySettings(view, readerSettings());

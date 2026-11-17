@@ -23,6 +23,10 @@ becomes the release notes for that version and is shown in the app under
 - **Books with no ISBN get one**, found the same way: Hardcover's (by title and author, with typos and dots fixed), or Open Library's when Hardcover doesn't know the book and Open Library's is clearly the same book (the same author and title). The cover finder then looks the cover up by it, and Hardcover's cleanup matches it by it.
 - **Calibre gets it too**: the ISBN is added to the book's identifiers in Calibre (its other identifiers are kept), under the same switch as fixing titles (Library cleanup → Tidy titles in Calibre). Integrations → Hardcover says how many library books still have no ISBN.
 
+### 🐞 Every error reaches the bug report by itself
+- **Background problems are kept too.** Anything that goes wrong while NovelCheck works on its own (a Calibre sync, rating, a Deep Scan, Hardcover, covers, titles, events, Audiobookshelf) used to be written only to the server's log. It now also lands in the bug report's error list (code BG-xxxx), the same failure once every ten minutes.
+- **Errors the app shows you are sent as well**, not only crashes and server failures, each different error once every ten minutes (a dozen reports an hour at most). The reader's errors are included.
+
 ### 🐞 The bug link lists the books with no cover
 - The bug report now ends with **every book that still has no cover**: its title, author, ISBN (or "no ISBN"), whether it's in Calibre, the true title when one was found, and whether the last search found nothing. It shows at a glance why a cover is missing.
 

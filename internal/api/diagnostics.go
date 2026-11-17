@@ -83,6 +83,10 @@ func (s *Server) diagnosticsText() string {
 		if e.Username != "" {
 			user = " user=" + e.Username
 		}
+		if e.Method == "background" { // from the server's own work, not a request
+			line("%s %s UTC background (%s): %s", e.Code, e.At, e.Path, e.Detail)
+			continue
+		}
 		line("%s %s UTC %s %s -> %d%s: %s", e.Code, e.At, e.Method, e.Path, e.Status, user, e.Detail)
 	}
 
