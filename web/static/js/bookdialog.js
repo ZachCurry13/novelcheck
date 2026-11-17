@@ -22,6 +22,7 @@ import { renderBookLibby } from "./libby.js";
 import { starsHTML, bindStars } from "./stars.js";
 import { finishedHTML, bindFinished } from "./finished.js";
 import { renderAudioSection } from "./bookaudio.js";
+import { hcTagsHTML, renderHCMore } from "./hcextras.js";
 
 // Lists that aren't the family's libraries: books only looked up (Check a
 // book) or on a Discover list.
@@ -90,6 +91,7 @@ export async function openBook(id, state, onChange) {
       </div>
       <div class="flex flex-wrap gap-1">${classChip(b)} ${reviewChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
       ${b.genres || b.kind ? `<div class="flex flex-wrap gap-1">${genreChips(b)}</div>` : ""}
+      ${hcTagsHTML(b)}
       ${b.spice_level !== null && b.spice_level !== undefined
         ? `<p class="text-xs text-slate-400">${b.spice_reason ? `<b class="text-slate-200">Why ${b.spice_level} 🌶️:</b> ${esc(b.spice_reason)}. ` : ""}${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
       ${blurbHTML(b, "rounded-lg bg-slate-800 p-3 text-slate-200")}
@@ -112,6 +114,7 @@ export async function openBook(id, state, onChange) {
       ${friend ? "" : `<div id="deep-section"></div>
       <div id="audio-section"></div>`}
       <div id="libby-section"></div>
+      <div id="hc-more" class="space-y-2"></div>
       ${state.user.role === "restricted" ? "" : starsHTML(data.my_rating || 0)}
       ${finishedHTML(data.finished_on || "")}
       ${manager ? verdictFormHTML(b) : ""}
@@ -216,6 +219,7 @@ export async function openBook(id, state, onChange) {
     bindBookCollections(dlg, b.id, manager, data.collections || []);
   }
   renderBookLibby($("#libby-section", dlg), b.id);
+  renderHCMore($("#hc-more", dlg), b, { hasAudio: data.has_audio, open: (other) => (dlg.close(), openBook(other, state, onChange)) });
   bindStars(dlg, b.id);
   bindFinished(dlg, b.id);
 }

@@ -67,3 +67,18 @@ func (s *Store) CountNoISBN() int {
 func (s *Store) SaveHCTags(id int64, warnings, moods string) {
 	_, _ = s.DB.Exec(`UPDATE books SET hc_warnings = ?, hc_moods = ? WHERE id = ?`, warnings, moods, id)
 }
+
+// SaveHCID keeps the book's id on Hardcover (0 is ignored).
+func (s *Store) SaveHCID(id int64, hcID int) {
+	if hcID > 0 {
+		_, _ = s.DB.Exec(`UPDATE books SET hc_id = ? WHERE id = ?`, hcID, id)
+	}
+}
+
+// LibraryBookByKey is the book in a library, list or event with this title and author (NormKey), or 0.
+func (s *Store) LibraryBookByKey(key string) int64 {
+	var id int64
+	_ = s.DB.Get(&id, `SELECT b.id FROM books b WHERE (b.norm_key = ? OR b.id IN (SELECT book_id FROM book_aliases WHERE norm_key = ?))
+		AND EXISTS (SELECT 1 FROM catalog_books cb WHERE cb.book_id = b.id) ORDER BY b.id LIMIT 1`, key, key)
+	return id
+}

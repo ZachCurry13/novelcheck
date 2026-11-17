@@ -27,7 +27,7 @@ type BookInfo struct {
 	Warnings    []string // the content warnings Hardcover's readers gave it, most used first
 	Moods       []string // and the moods ("dark", "funny")
 	Rating      float64  // Hardcover readers' average, 0 to 5 (0 when nobody rated it)
-	Ratings     int     // how many rated it
+	Ratings     int      // how many rated it
 }
 
 // bookFields is what is asked about a book (the same in every lookup).

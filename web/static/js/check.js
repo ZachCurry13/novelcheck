@@ -135,6 +135,11 @@ export async function renderCheck(view, state) {
     const q = form.q.value.trim();
     if (q) check({ query: q }, "Looking it up…");
   });
+  const asked = new URLSearchParams(location.hash.split("?")[1] || "").get("q"); // from "More like this"
+  if (asked) {
+    form.q.value = asked.slice(0, 200);
+    form.requestSubmit();
+  }
   out.addEventListener("click", (e) => {
     const slot = e.target.closest("[data-slot]");
     const act = e.target.closest("[data-act]")?.dataset.act;

@@ -153,6 +153,7 @@ type Book struct {
 	HCRatings       int     `db:"hc_ratings" json:"hc_ratings"`           // how many rated it there
 	HCWarnings      string  `db:"hc_warnings" json:"hc_warnings"`         // Hardcover readers' content warnings ("Sexual content, Violence")
 	HCMoods         string  `db:"hc_moods" json:"hc_moods"`
+	HCID            int     `db:"hc_id" json:"-"`
 }
 
 // BookCopy is one physical copy of a book inside a catalog.

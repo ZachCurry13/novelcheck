@@ -61,14 +61,15 @@ func rankFound(query string, books []libby.Found) []libby.Found {
 }
 
 // handleLibbyCover: GET /api/libby/cover?u=<cover address>: a library's cover picture, passed along because the
-// page may only show pictures from NovelCheck itself. Only OverDrive's own picture hosts are fetched.
+// page may only show pictures from NovelCheck itself. Only OverDrive's and Hardcover's picture hosts are fetched
+// (Hardcover's for "More like this" on the book page).
 func (s *Server) handleLibbyCover(w http.ResponseWriter, r *http.Request) {
 	u, err := url.Parse(r.URL.Query().Get("u"))
 	host := ""
 	if err == nil {
 		host = strings.ToLower(u.Hostname())
 	}
-	if err != nil || u.Scheme != "https" || !(strings.HasSuffix(host, ".od-cdn.com") || strings.HasSuffix(host, ".overdrive.com")) {
+	if err != nil || u.Scheme != "https" || !(strings.HasSuffix(host, ".od-cdn.com") || strings.HasSuffix(host, ".overdrive.com") || strings.HasSuffix(host, ".hardcover.app")) {
 		http.NotFound(w, r)
 		return
 	}

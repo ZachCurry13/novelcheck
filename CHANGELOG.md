@@ -23,6 +23,12 @@ becomes the release notes for that version and is shown in the app under
 - **Hardcover's content warnings help the AI rate.** The background Hardcover pass now also keeps each book's content warnings and moods from Hardcover's readers, and the AI reads them along with the description when it rates a book (a "sexual content" warning points to Level 3 or higher).
 - **A kiss on the forehead, cheek or head is tender affection, not a romance level of its own**: Level 1 at most between a couple, Level 0 within a family or between friends. Only kissing on the lips, and more of it, reaches Level 2.
 
+### 📚 More from Hardcover on the book's page
+- **Content warnings from Hardcover's readers**, folded away under a line that says how many (a warning can give part of the story away), and the book's **mood** ("adventurous, emotional").
+- **More like this:** the books Hardcover's readers find similar, as a row of covers. **✓ We have it** marks the family's books, which open in NovelCheck; the others open in **Check a book**. A kid's account shows only the family's books it may open.
+- **Audiobook exists:** when the family has only the e-book, its length and narrator from Hardcover's audiobook edition.
+- Asked for when a book's page opens (with the same Hardcover connection as the ratings) and kept for a day; the Hardcover id found for each book is kept so it isn't searched for again.
+
 ### 🔢 An ISBN for every book
 - **Books with no ISBN get one**, found the same way: Hardcover's (by title and author, with typos and dots fixed), or Open Library's when Hardcover doesn't know the book and Open Library's is clearly the same book (the same author and title). The cover finder then looks the cover up by it, and Hardcover's cleanup matches it by it.
 - **Calibre gets it too**: the ISBN is added to the book's identifiers in Calibre (its other identifiers are kept), under the same switch as fixing titles (Library cleanup → Tidy titles in Calibre). Integrations → Hardcover says how many library books still have no ISBN.

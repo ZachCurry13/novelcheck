@@ -82,7 +82,9 @@ const ContentGuide = `2. Content Elements:
 const maxBlurbChars = 2500
 
 // UserPrompt formats the book metadata handed to the model.
-func UserPrompt(title, author, blurb string) string { return UserPromptWith(title, author, blurb, "", "") }
+func UserPrompt(title, author, blurb string) string {
+	return UserPromptWith(title, author, blurb, "", "")
+}
 
 // UserPromptWith adds what Hardcover's readers tagged the book with: content warnings and moods, as evidence.
 func UserPromptWith(title, author, blurb, warnings, moods string) string {
