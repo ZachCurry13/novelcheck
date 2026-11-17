@@ -38,3 +38,29 @@ func (s *Store) AddDeviceBook(ref MatchRef) (int64, error) {
 	}
 	return id, s.AddCopy(cat, id, "lookup:"+title, "list", "")
 }
+
+// MatchDeviceBook finds the book NovelCheck already knows for a file on an e-reader, trying every reading of the
+// file name ("Author - Title" and "Title - Author"), without making anything up. 0 means it does not know it.
+func (s *Store) MatchDeviceBook(ref MatchRef) int64 {
+	title, author := strings.TrimSpace(ref.Title), strings.TrimSpace(ref.Authors)
+	var tries [][2]string
+	if title != "" {
+		tries = append(tries, [2]string{title, author})
+	}
+	for _, g := range titles.FromFilename(ref.Filename) {
+		tries = append(tries, [2]string{g.Title, g.Author})
+	}
+	for _, t := range tries {
+		ti, au := titles.Clean(t[0]), t[1]
+		if junkAuthors[strings.ToLower(au)] {
+			au = ""
+		}
+		if ti == "" {
+			continue
+		}
+		if id := s.MatchBook(ti, au); id > 0 {
+			return id
+		}
+	}
+	return 0
+}

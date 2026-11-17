@@ -119,6 +119,7 @@ func (s *Server) Router() http.Handler {
 		r.Post("/plugin/finish", s.handlePluginFinish)
 		r.Post("/plugin/kindle/check", s.handlePluginKindleCheck)
 		r.Put("/plugin/kindle/file", s.handlePluginKindleFile)
+		r.Put("/plugin/kindle/chunk", s.handlePluginKindleChunk)
 		r.Post("/plugin/kindle/moved", s.handlePluginKindleMoved)
 		r.Get("/plugin/file/{name}", s.handlePluginFile)
 	})

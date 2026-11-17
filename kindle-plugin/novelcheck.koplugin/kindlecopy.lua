@@ -27,6 +27,7 @@ local EXTS = { epub = true, pdf = true, mobi = true, azw = true, azw3 = true, az
 local MAX_FILES = 5000
 local MAX_BYTES = 1024 * 1024 * 1024
 local RUN_SECONDS = 20 * 60
+local PIECE = 384 * 1024 -- one piece of a file: about a second on Wi-Fi, so the screen keeps answering
 
 local function skipDir(name)
     local l = name:lower()
@@ -128,15 +129,49 @@ return function(NovelCheck)
         return code, table.concat(chunks)
     end
 
-    function NovelCheck:putBook(path, file, size, backup, mtime)
-        local q = "/kosync/plugin/kindle/file?device=" .. encode(self:deviceName()) .. "&path=" .. encode(path)
-            .. (backup and ("&mode=backup&mtime=" .. tostring(mtime or 0)) or "")
-        local code, body = put(self, self.settings:readSetting("server"), q, file, size)
+    -- putPiece sends one piece of a file (a string) to the server; a Kindle answers the screen between pieces.
+    local function putPiece(self, base, q, data)
+        local url = base .. q
+        local fetch = url:match("^https") and https.request or http.request
+        socketutil:set_timeout(15, 60)
+        local chunks = {}
+        local ok, code = pcall(function()
+            return socket.skip(1, fetch{
+                url = url, method = "PUT",
+                headers = {
+                    ["x-auth-user"] = trim(self.settings:readSetting("user")),
+                    ["x-auth-key"] = md5(trim(self.settings:readSetting("code"))),
+                    ["content-length"] = tostring(#data),
+                    ["content-type"] = "application/octet-stream",
+                },
+                source = ltn12.source.string(data),
+                sink = ltn12.sink.table(chunks),
+            })
+        end)
+        socketutil:reset_timeout()
+        if not ok then
+            return nil, tostring(code)
+        end
+        return code, table.concat(chunks)
+    end
+
+    -- sendPiece asks with the main address, then the backup address when the main one could not be reached.
+    function NovelCheck:sendPiece(q, data)
+        local code, body = putPiece(self, self.settings:readSetting("server"), q, data)
         local alt = trim(self.settings:readSetting("server_alt"))
         if type(code) ~= "number" and alt ~= "" then
-            code, body = put(self, alt, q, file, size)
+            code, body = putPiece(self, alt, q, data)
         end
         return code, body
+    end
+
+    function NovelCheck:stopKindleCopy()
+        if self.kindle_copy_running then
+            self.kindle_stop = true
+            UIManager:show(InfoMessage:new{ text = _("Stopping after the file in progress..."), timeout = 3 })
+        else
+            UIManager:show(InfoMessage:new{ text = _("No backup is running."), timeout = 3 })
+        end
     end
 
     function NovelCheck:kindleRoot()
@@ -200,39 +235,103 @@ return function(NovelCheck)
             return
         end
         self.kindle_copy_running = true
-        local started, sent, failed, n = os.time(), 0, 0, 0
+        self.kindle_stop = false
+        pcall(function() UIManager:preventStandby() end) -- the Kindle must not fall asleep (and drop Wi-Fi) halfway
+        local started, sent, failed, skippedBig, n = os.time(), 0, 0, 0, 0
+        local failures = 0
+        local cur -- the file being sent: {path, fh, size, offset, mtime, tries}
+        local lastShown = 0
+        local function closeCur()
+            if cur and cur.fh then
+                pcall(function() cur.fh:close() end)
+            end
+            cur = nil
+        end
         local function finish(more)
+            closeCur()
             self.kindle_copy_running = false
-            if backup and more == 0 and failed == 0 then
+            pcall(function() UIManager:allowStandby() end)
+            if backup and more == 0 and failed == 0 and not self.kindle_stop then
                 self.settings:saveSetting("last_backup", os.time())
                 self.settings:flush()
             end
-            self:dlog("info", (backup and "kindle backup" or "kindle copy") .. ": sent " .. sent .. ", failed " .. failed .. ", left " .. tostring(more))
-            if not quiet or sent > 0 then
+            self:dlog("info", (backup and "kindle backup" or "kindle copy") .. ": sent " .. sent .. ", failed " .. failed .. ", too big " .. skippedBig .. ", left " .. tostring(more))
+            if not quiet or sent > 0 or failed > 0 then
                 UIManager:show(InfoMessage:new{ text = (backup and _("Backed up to NovelCheck:") or _("Copied to NovelCheck:")) .. " " .. sent .. " " .. _("files")
-                    .. ((failed > 0) and (", " .. failed .. " " .. _("failed")) or "")
+                    .. ((failed > 0) and (", " .. failed .. " " .. _("failed (see the log)")) or "")
                     .. ((more > 0) and ("\n" .. more .. " " .. _("left for next time.")) or "") })
             end
         end
+        local function fail(path, why)
+            failed = failed + 1
+            if failures < 30 then
+                failures = failures + 1
+                self:dlog("error", "backup of " .. path .. " failed: " .. tostring(why))
+            end
+            closeCur()
+        end
         local function step()
-            n = n + 1
-            if n > #todo then
-                return finish(0)
+            if self.kindle_stop then
+                return finish(#todo - n + (cur and 1 or 0))
             end
-            if os.time() - started > RUN_SECONDS or not self:isConnected() then
-                return finish(#todo - n + 1)
-            end
-            local path = todo[n]
-            local c = self:putBook(path, path, lfs.attributes(path, "size") or sizes[path] or 0, backup, lfs.attributes(path, "modification") or mtimes[path])
-            if c == 200 then
-                sent = sent + 1
-            else
-                failed = failed + 1
-                if c == 401 then
-                    return finish(#todo - n)
+            if not cur then
+                n = n + 1
+                if n > #todo then
+                    return finish(0)
+                end
+                if os.time() - started > RUN_SECONDS * 3 or not self:isConnected() then
+                    return finish(#todo - n + 1)
+                end
+                local path = todo[n]
+                local fh = io.open(path, "rb")
+                if not fh then
+                    fail(path, "can't open")
+                    return UIManager:scheduleIn(0.02, step)
+                end
+                cur = { path = path, fh = fh, size = lfs.attributes(path, "size") or sizes[path] or 0,
+                        mtime = lfs.attributes(path, "modification") or mtimes[path] or 0, offset = 0, tries = 0 }
+                if os.time() - lastShown >= 8 then
+                    lastShown = os.time()
+                    UIManager:show(InfoMessage:new{ text = (backup and _("Backing up") or _("Copying")) .. " " .. n .. " / " .. #todo
+                        .. "\n" .. tostring(path:match("[^/]+$")) .. "\n" .. _("NovelCheck > Stop the backup to stop."), timeout = 4 })
                 end
             end
-            UIManager:scheduleIn(0.1, step)
+            local data = cur.fh:read(PIECE) or ""
+            local q = "/kosync/plugin/kindle/chunk?device=" .. encode(self:deviceName()) .. "&path=" .. encode(cur.path)
+                .. "&total=" .. cur.size .. "&offset=" .. cur.offset
+                .. (backup and ("&mode=backup&mtime=" .. tostring(cur.mtime)) or "")
+            if #data == 0 and cur.offset < cur.size then
+                -- the file got shorter while it was being read: start it over next time
+                fail(cur.path, "the file changed while it was sent")
+                return UIManager:scheduleIn(0.02, step)
+            end
+            local code, body = self:sendPiece(q, data)
+            if code == 200 then
+                cur.offset = cur.offset + #data
+                cur.tries = 0
+                if cur.offset >= cur.size then
+                    sent = sent + 1
+                    closeCur()
+                end
+            elseif code == 409 then -- the server lost its place: start this file again
+                cur.fh:seek("set", 0)
+                cur.offset = 0
+                cur.tries = cur.tries + 1
+                if cur.tries > 2 then
+                    fail(cur.path, "the server kept losing its place")
+                end
+            elseif code == 401 then
+                closeCur()
+                return finish(#todo - n)
+            else
+                cur.tries = cur.tries + 1
+                if cur.tries > 2 then
+                    fail(cur.path, tostring(code or body))
+                else
+                    cur.fh:seek("set", cur.offset) -- the piece did not arrive: send it again
+                end
+            end
+            UIManager:scheduleIn(0.02, step)
         end
         UIManager:scheduleIn(0.1, step)
     end

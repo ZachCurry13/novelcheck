@@ -29,6 +29,8 @@ export async function renderCleanupTab(host, state) {
       <div id="cu-abs-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-mem"><summary class="cursor-pointer font-semibold">Remembered ratings and covers (and how to forget them)</summary>
       <div id="cu-mem-body" class="mt-2"></div></details></div>
+    <div class="card space-y-2"><details id="cu-ku"><summary class="cursor-pointer font-semibold">Books on your Kindle NovelCheck doesn't know</summary>
+      <div id="cu-ku-body" class="mt-2 text-sm text-slate-300"></div></details></div>
     <div class="card space-y-2"><details id="cu-kb"><summary class="cursor-pointer font-semibold">Books copied from Kindles</summary>
       <div id="cu-kb-body" class="mt-2 text-sm text-slate-300"></div></details></div>
     <div class="card space-y-2"><details id="cu-up"><summary class="cursor-pointer font-semibold">⬆️ Upload e-books to Calibre and audiobooks to Audiobookshelf (experimental)</summary>
@@ -85,6 +87,30 @@ export async function renderCleanupTab(host, state) {
       body.dataset.done = "1";
       renderHCClean(body);
     }
+  });
+  host.querySelector("#cu-ku").addEventListener("toggle", async (e) => {
+    if (!e.target.open) return;
+    const body = host.querySelector("#cu-ku-body");
+    const load = async () => {
+      const r = await get("/api/admin/kindle-unknown").catch(() => null);
+      if (!r) { body.textContent = "Couldn't load that just now."; return; }
+      if (!r.books.length) { body.textContent = "Nothing waiting. Book files the Kindle backup finds that NovelCheck has no book for show up here: tick the ones to add. Nothing is added by itself."; return; }
+      body.innerHTML = `<p class="mb-2">The Kindle backup found these book files, and NovelCheck has no book with that title. Tick the ones to <b>add</b> (they join NovelCheck under the title and author shown and go on your Nightstand). Many are probably books you already have under another name: leave those out.</p>
+        <ul class="max-h-96 divide-y divide-slate-800 overflow-auto">${r.books.map((b) => `<li class="flex items-center gap-2 py-1.5"><input type="checkbox" data-ku="${b.id}">
+          <span class="min-w-0"><span class="block break-words">${esc(b.title || b.filename)}${b.author ? ` <span class="text-slate-400">· ${esc(b.author)}</span>` : ""}</span>
+          <span class="block break-words text-xs text-slate-500">${esc(b.path)}</span></span></li>`).join("")}</ul>
+        <p class="mt-2 flex flex-wrap gap-2"><button type="button" data-ku-add class="btn-secondary py-1 text-sm">Add the ticked books</button>
+        <button type="button" data-ku-drop class="btn-ghost py-1 text-sm">Leave the ticked ones out (don't ask again)</button></p>`;
+      body.onclick = async (ev) => {
+        const add = ev.target.closest("[data-ku-add]"), drop = ev.target.closest("[data-ku-drop]");
+        if (!add && !drop) return;
+        const ids = [...body.querySelectorAll("[data-ku]:checked")].map((c) => Number(c.dataset.ku));
+        if (!ids.length) return;
+        await attempt(() => post("/api/admin/kindle-unknown", add ? { add: ids } : { drop: ids }), add ? "Added" : "Left out");
+        load();
+      };
+    };
+    load();
   });
   host.querySelector("#cu-kb").addEventListener("toggle", async (e) => {
     if (!e.target.open) return;

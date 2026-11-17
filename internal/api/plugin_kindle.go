@@ -170,6 +170,12 @@ func (s *Server) handlePluginKindleFile(w http.ResponseWriter, r *http.Request) 
 		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "can't save the file"})
 		return
 	}
+	kosyncJSON(w, http.StatusOK, s.finishKindleFile(r, u.ID, r.URL.Query().Get("device"), dest, rel, backup))
+}
+
+// finishKindleFile is what happens once a file is whole on the server: its change time is set (a backup), it is
+// marked locked or not, and a book is put on the Nightstand when NovelCheck knows it (or noted for review).
+func (s *Server) finishKindleFile(r *http.Request, userID int64, device, dest, rel string, backup bool) map[string]any {
 	if m, _ := strconv.ParseInt(r.URL.Query().Get("mtime"), 10, 64); backup && m > 0 {
 		_ = os.Chtimes(dest, time.Unix(m, 0), time.Unix(m, 0)) // so the next check sees the file as unchanged
 	}
@@ -178,8 +184,82 @@ func (s *Server) handlePluginKindleFile(w http.ResponseWriter, r *http.Request) 
 	if !locked && !backup {
 		added = s.addKindleToCalibre(r, dest, path.Base(rel))
 	}
-	onShelf := s.kindleBookOnNightstand(u.ID, rel)
-	kosyncJSON(w, http.StatusOK, map[string]any{"stored": true, "locked": locked, "added_to_calibre": added, "on_nightstand": onShelf})
+	size := int64(0)
+	if fi, err := os.Stat(dest); err == nil {
+		size = fi.Size()
+	}
+	onShelf := s.kindleBookOnNightstand(userID, device, rel, size)
+	return map[string]any{"stored": true, "locked": locked, "added_to_calibre": added, "on_nightstand": onShelf}
+}
+
+// handlePluginKindleChunk: PUT /kosync/plugin/kindle/chunk?device=&path=&mode=&mtime=&offset=&total= with the next
+// piece of a file as the body (about half a megabyte). The plugin sends a file in pieces so the Kindle's screen keeps
+// answering between them; offset 0 starts the file again, any other offset must be where the last piece ended
+// (409 with "have" says where to carry on). The last piece (offset + length = total) completes the file.
+func (s *Server) handlePluginKindleChunk(w http.ResponseWriter, r *http.Request) {
+	u := s.kosyncUser(w, r)
+	if u == nil {
+		return
+	}
+	q := r.URL.Query()
+	rel := kindleRel(q.Get("path"))
+	backup := q.Get("mode") == "backup"
+	if rel == "" || (backup && backupSkip(rel)) || (!backup && kindleSkip(rel)) {
+		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "not a book file"})
+		return
+	}
+	offset, _ := strconv.ParseInt(q.Get("offset"), 10, 64)
+	total, _ := strconv.ParseInt(q.Get("total"), 10, 64)
+	if offset < 0 || total < 0 || total > maxKindleFile {
+		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "bad sizes"})
+		return
+	}
+	dest := filepath.Join(s.kindleDir(u.ID, q.Get("device")), filepath.FromSlash(rel))
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "can't make the folder"})
+		return
+	}
+	tmp := dest + ".part"
+	flags := os.O_WRONLY | os.O_CREATE
+	if offset == 0 {
+		flags |= os.O_TRUNC
+	}
+	f, err := os.OpenFile(tmp, flags, 0o644)
+	if err != nil {
+		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "can't save the file"})
+		return
+	}
+	if fi, err := f.Stat(); err != nil || fi.Size() != offset {
+		have := int64(0)
+		if err == nil {
+			have = fi.Size()
+		}
+		_ = f.Close()
+		kosyncJSON(w, http.StatusConflict, map[string]any{"message": "restart", "have": have})
+		return
+	}
+	if _, err := f.Seek(offset, io.SeekStart); err != nil {
+		_ = f.Close()
+		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "can't save the file"})
+		return
+	}
+	n, err := io.Copy(f, http.MaxBytesReader(w, r.Body, 8<<20))
+	_ = f.Close()
+	if err != nil {
+		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "the piece didn't arrive"})
+		return
+	}
+	if offset+n < total {
+		kosyncJSON(w, http.StatusOK, map[string]any{"received": offset + n, "done": false})
+		return
+	}
+	if err := os.Rename(tmp, dest); err != nil {
+		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "can't save the file"})
+		return
+	}
+	out := s.finishKindleFile(r, u.ID, q.Get("device"), dest, rel, backup)
+	out["received"], out["done"] = offset+n, true
+	kosyncJSON(w, http.StatusOK, out)
 }
 
 // KeyKindleToCalibre switches on adding unprotected Kindle books to Calibre by "Copy my Kindle" (off unless "true").
@@ -349,16 +429,18 @@ func (s *Server) handlePluginKindleMoved(w http.ResponseWriter, r *http.Request)
 	kosyncJSON(w, http.StatusOK, map[string]int{"moved": moved})
 }
 
-// kindleBookOnNightstand makes a book file from the Kindle a book NovelCheck knows (a book it already has is reused;
-// else it joins the Looked up list under its tidy title and author, like "Add to NovelCheck" on an e-reader entry)
-// and, when this person lets their e-reader's books go onto their Nightstand (Settings), puts it there. A book they
-// removed or hid from the Nightstand is not put back. It says whether the book was added to the Nightstand.
-func (s *Server) kindleBookOnNightstand(userID int64, rel string) bool {
+// kindleBookOnNightstand puts a book file from the Kindle on the Nightstand when NovelCheck already knows the book
+// (by its file name, either way round: "Author - Title" or "Title - Author") and this person lets their e-reader's
+// books go there (Settings). A book NovelCheck does not know is not made up: it is noted for review (Library
+// cleanup → Books on your Kindle NovelCheck doesn't know), so no second copy appears by itself. A book they removed
+// or hid from the Nightstand is not put back. It says whether the book was added to the Nightstand.
+func (s *Server) kindleBookOnNightstand(userID int64, device, rel string, size int64) bool {
 	if !kindleExts[ext(rel)] || ext(rel) == ".pdf" || strings.Contains(strings.ToLower("/"+rel), "/novelcheck/") || kindleStoreName.MatchString(path.Base(rel)) {
 		return false // not a book, a PDF (manuals and papers stay in the backup only), one NovelCheck put there itself, or a name made of a store code
 	}
-	id, err := s.Store.AddDeviceBook(store.MatchRef{Filename: path.Base(rel)})
-	if err != nil || id <= 0 {
+	id := s.Store.MatchDeviceBook(store.MatchRef{Filename: path.Base(rel)})
+	if id <= 0 {
+		s.Store.NoteKindleUnknown(userID, device, rel, path.Base(rel), size)
 		return false
 	}
 	if !s.Store.KindleAutoAdd(userID) {

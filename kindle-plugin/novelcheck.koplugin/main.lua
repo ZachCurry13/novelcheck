@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.57.2"
+local VERSION = "1.58.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -124,6 +124,7 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("Tidy my Kindle's books (into Books/NovelCheck)..."), callback = function() if self.tidyBooks then self:tidyBooks() end end },
             { text = _("Delete the Kindle's crash logs..."), callback = function() if self.cleanCrashLogs then self:cleanCrashLogs() end end },
             { text = _("Undo the last tidy"), callback = function() if self.undoTidy then self:undoTidy() end end },
+            { text = _("Stop the backup"), callback = function() if self.stopKindleCopy then self:stopKindleCopy() end end },
             { text = _("Copy my Kindle to NovelCheck now"), callback = function() if self.copyKindle then self:copyKindle(false) end end },
             { text = _("Send highlights now"), callback = function() if self.sendHighlights then self:sendHighlights(false) end end },
             { text = _("Tidy book names"), callback = function() self:tidyNames() end },
@@ -252,8 +253,14 @@ function NovelCheck:autoRun()
         self:deleteCrashLogsQuietly()
     end
     local day = 22 * 3600
-    if self.backupKindle and self:autoEnabled("auto_backup", true) and os.time() - (tonumber(self.settings:readSetting("last_backup")) or 0) > day then
-        self:backupKindle(true) -- everything, books included, at most once a day
+    local charging = true -- the automatic backup only runs on the charger (a long job, the screen is slow meanwhile)
+    pcall(function()
+        if Device.powerd and Device.powerd.isCharging then
+            charging = Device.powerd:isCharging() and true or false
+        end
+    end)
+    if self.backupKindle and self:autoEnabled("auto_backup", true) and charging and os.time() - (tonumber(self.settings:readSetting("last_backup")) or 0) > day then
+        self:backupKindle(true) -- everything, books included, at most once a day, while charging
     elseif self.copyKindle and self:autoEnabled("auto_kindle", true) then
         self:copyKindle(true)
     end

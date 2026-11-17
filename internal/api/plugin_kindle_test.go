@@ -67,10 +67,31 @@ func TestKindleCopy(t *testing.T) {
 	if o := call("PUT", "file?device=Test+Kindle&path=/mnt/us/documents/Store%20Book.azw", fakeMobi(2)); o["locked"] != true {
 		t.Fatalf("a Kindle store book is kept, as locked: %v", o)
 	}
-	// the books are on the Nightstand (a book from a store code name or a PDF is not)
+	// books NovelCheck does not know are noted for review, not made up and not put on the Nightstand
 	call("PUT", "file?device=Test+Kindle&path=/mnt/us/documents/B07ABCDEF1_EBOK.azw", fakeMobi(2))
-	if _, items := admin.doList("GET", "/api/queue"); len(items) != 2 {
-		t.Fatalf("the two books from the Kindle are on the Nightstand, the store-code file is not: %v", items)
+	if _, items := admin.doList("GET", "/api/queue"); len(items) != 0 {
+		t.Fatalf("nothing unknown goes on the Nightstand by itself: %v", items)
+	}
+	_, unk := admin.do("GET", "/api/admin/kindle-unknown", nil, false)
+	if bks, _ := unk["books"].([]any); len(bks) != 2 {
+		t.Fatalf("the two unknown books wait for review, the store-code file is not one: %v", unk)
+	}
+	// a book NovelCheck has goes on the Nightstand, by "Title - Author" or "Author - Title" alike
+	id, _ := st.UpsertBook("Mine", "Some Author", "", "")
+	cat, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	_ = st.AddCopy(cat, id, "/c/mine.epub", "epub", "9")
+	call("PUT", "file?device=Test+Kindle&path=/mnt/us/documents/Mine%20-%20Some%20Author.azw3", fakeMobi(0))
+	if _, items := admin.doList("GET", "/api/queue"); len(items) != 1 {
+		t.Fatalf("a known book goes on the Nightstand: %v", items)
+	}
+	// ticking an unknown one adds it and puts it on the Nightstand
+	var first float64
+	for _, b := range unk["books"].([]any) {
+		first = b.(map[string]any)["id"].(float64)
+		break
+	}
+	if res, out := admin.do("POST", "/api/admin/kindle-unknown", map[string]any{"add": []int64{int64(first)}}, true); res.StatusCode != 200 || out["added"] != 1.0 {
+		t.Fatalf("add the ticked one: %d %v", res.StatusCode, out)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "kindle-backup", "1", "Test Kindle", "documents", "Store Book.azw")); err != nil {
 		t.Fatalf("the locked book is on disk: %v", err)
@@ -79,12 +100,12 @@ func TestKindleCopy(t *testing.T) {
 		t.Fatalf("nothing is sent twice: %v", out)
 	}
 	_, kb := admin.do("GET", "/api/admin/kindle-backup", nil, false)
-	if devs, _ := kb["devices"].([]any); len(devs) != 1 || devs[0].(map[string]any)["files"] != 3.0 {
+	if devs, _ := kb["devices"].([]any); len(devs) != 1 || devs[0].(map[string]any)["files"] != 4.0 {
 		t.Fatalf("the copied books are listed: %v", kb)
 	}
 	_, lf := admin.do("GET", "/api/admin/kindle-backup/files?user=1&device=Test+Kindle", nil, false)
 	files, _ := lf["files"].([]any)
-	if len(files) != 3 {
+	if len(files) != 4 {
 		t.Fatalf("the files are listed: %v", lf)
 	}
 	locked := 0
@@ -196,5 +217,49 @@ func TestKindleMovedFollowsTheDevice(t *testing.T) {
 	}
 	if got, _ := os.ReadFile(filepath.Join(root, "Books", "Frank Herbert", "Taken.epub")); string(got) != "other" {
 		t.Fatal("nothing is overwritten")
+	}
+}
+
+// A file sent in pieces: the pieces must follow each other, a wrong offset says where to carry on, the last piece
+// completes the file and a file sent whole in one go is still accepted.
+func TestKindleChunks(t *testing.T) {
+	dir := t.TempDir()
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = dir })
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+	key := hex.EncodeToString(sum[:])
+	put := func(q string, body []byte) (int, map[string]any) {
+		req, _ := http.NewRequest("PUT", srv.URL+"/kosync/plugin/kindle/chunk?"+q, bytes.NewReader(body))
+		req.Header.Set("x-auth-user", "admin")
+		req.Header.Set("x-auth-key", key)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var out map[string]any
+		_ = json.NewDecoder(res.Body).Decode(&out)
+		return res.StatusCode, out
+	}
+	base := "device=Test+Kindle&mode=backup&mtime=50&path=/mnt/us/koreader/settings/big.lua&total=10"
+	if c, out := put(base+"&offset=0", []byte("01234")); c != 200 || out["done"] != false || out["received"] != 5.0 {
+		t.Fatalf("first piece: %d %v", c, out)
+	}
+	if c, out := put(base+"&offset=2", []byte("xx")); c != 409 || out["have"] != 5.0 {
+		t.Fatalf("a wrong offset says where to carry on: %d %v", c, out)
+	}
+	if c, out := put(base+"&offset=5", []byte("56789")); c != 200 || out["done"] != true {
+		t.Fatalf("last piece: %d %v", c, out)
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "kindle-backup", "1", "Test Kindle", "koreader", "settings", "big.lua"))
+	if err != nil || string(got) != "0123456789" {
+		t.Fatalf("the file is whole: %q %v", got, err)
+	}
+	if fi, _ := os.Stat(filepath.Join(dir, "kindle-backup", "1", "Test Kindle", "koreader", "settings", "big.lua")); fi == nil || fi.ModTime().Unix() != 50 {
+		t.Fatal("the change time is the Kindle's")
+	}
+	if c, _ := put("device=Test+Kindle&mode=backup&path=/mnt/us/koreader/cache/x.lua&total=1&offset=0", []byte("x")); c != 400 {
+		t.Fatalf("a path the backup leaves out is refused: %d", c)
 	}
 }

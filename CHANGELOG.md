@@ -4,6 +4,17 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.90.0]
+
+### 🐢 The Kindle backup no longer freezes the Kindle (plugin 1.58.0)
+- **Files are sent in small pieces** (about 384 KB), so the Kindle's screen and power button keep answering between pieces. Before, one file went in one blocking request, which could freeze the Kindle for seconds or minutes.
+- **Progress and a stop button:** the screen says "Backing up 120 / 1500" and the file name now and then, and **NovelCheck > Stop the backup** stops after the piece in progress. The Kindle is kept awake while it runs.
+- **The automatic daily backup only runs while the Kindle is charging.**
+- **When a file fails, the log says why** (the first 30), and a piece that didn't arrive is sent again.
+
+### 📚 No more second copies from the Kindle backup
+- **A Kindle book NovelCheck already has** (the file name matches by title, either "Author - Title" or "Title - Author") goes on your Nightstand. **A book NovelCheck doesn't know is not made up by itself:** it appears under Library cleanup → **Books on your Kindle NovelCheck doesn't know**, where you tick the ones to add (or leave out). Before, it created a new entry beside the Calibre one whenever the names differed.
+
 ## [1.89.3]
 
 ### 🩺 The bug report compares NovelCheck's Calibre with the Content server's

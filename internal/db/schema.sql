@@ -866,3 +866,18 @@ CREATE TABLE IF NOT EXISTS hc_more_cache (
     data  TEXT NOT NULL,
     at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Book files found on a Kindle that NovelCheck has no book for: shown for review (Library cleanup), never added by
+-- themselves, so no second copy of a book appears under a different name.
+CREATE TABLE IF NOT EXISTS kindle_unknown (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    device   TEXT NOT NULL DEFAULT '',
+    path     TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    title    TEXT NOT NULL DEFAULT '',
+    author   TEXT NOT NULL DEFAULT '',
+    size     INTEGER NOT NULL DEFAULT 0,
+    seen_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, path)
+);

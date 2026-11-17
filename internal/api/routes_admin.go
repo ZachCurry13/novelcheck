@@ -92,6 +92,8 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Post("/admin/covers/stop", s.handleStopCovers)
 		r.Get("/admin/memory", s.handleMemory)
 		r.Get("/admin/kindle-backup", s.handleKindleBackup)
+		r.Get("/admin/kindle-unknown", s.handleKindleUnknown)
+		r.Post("/admin/kindle-unknown", s.handleKindleUnknown)
 		r.Get("/admin/kindle-backup/files", s.handleKindleFiles)
 		r.Get("/admin/kindle-backup/file", s.handleKindleFile)
 		r.Get("/admin/kindle-backup/zip", s.handleKindleZip)
