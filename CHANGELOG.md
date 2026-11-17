@@ -9,6 +9,10 @@ becomes the release notes for that version and is shown in the app under
 ### 📥 Copy my Kindle no longer adds books to Calibre by itself
 - **"Copy my Kindle" keeps every file in NovelCheck's `kindle-backup` folder but does not add books to Calibre unless you turn that on** (setting `kindle_add_to_calibre` = `true`). Adding made second copies of books Calibre already had under a slightly different name ("Wide Window - Snicket, Lemony"), which then showed up under Duplicates in Calibre and as titles waiting in Tidy titles. When it is on, it now also matches a file named "Title - Author" as well as "Author - Title".
 
+### 📚 Kindle books land on your Nightstand and in one folder
+- **Books the Kindle backup finds are added to NovelCheck and to your Nightstand** (a book NovelCheck already has is reused; the rest join the Looked up list under their tidy title and author, not Calibre). A book you removed or hid from the Nightstand is not put back, PDFs and files named by an Amazon code are skipped, and the switch is Settings → "e-reader books go onto my Nightstand" (on by default).
+- **Tidy my Kindle's books** (plugin 1.57.1) now moves every book into **Books/NovelCheck**, the same folder NovelCheck downloads its books into, so every book is in one place (it used to make author folders). Same safety: only books NovelCheck has a copy of, nothing overwritten or deleted, asks first, Undo.
+
 ## [1.89.0]
 
 ### 🤖 Try Google's free models, then make them the main AI

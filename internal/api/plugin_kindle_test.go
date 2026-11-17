@@ -67,6 +67,11 @@ func TestKindleCopy(t *testing.T) {
 	if o := call("PUT", "file?device=Test+Kindle&path=/mnt/us/documents/Store%20Book.azw", fakeMobi(2)); o["locked"] != true {
 		t.Fatalf("a Kindle store book is kept, as locked: %v", o)
 	}
+	// the books are on the Nightstand (a book from a store code name or a PDF is not)
+	call("PUT", "file?device=Test+Kindle&path=/mnt/us/documents/B07ABCDEF1_EBOK.azw", fakeMobi(2))
+	if _, items := admin.doList("GET", "/api/queue"); len(items) != 2 {
+		t.Fatalf("the two books from the Kindle are on the Nightstand, the store-code file is not: %v", items)
+	}
 	if _, err := os.Stat(filepath.Join(dir, "kindle-backup", "1", "Test Kindle", "documents", "Store Book.azw")); err != nil {
 		t.Fatalf("the locked book is on disk: %v", err)
 	}
@@ -74,12 +79,12 @@ func TestKindleCopy(t *testing.T) {
 		t.Fatalf("nothing is sent twice: %v", out)
 	}
 	_, kb := admin.do("GET", "/api/admin/kindle-backup", nil, false)
-	if devs, _ := kb["devices"].([]any); len(devs) != 1 || devs[0].(map[string]any)["files"] != 2.0 {
+	if devs, _ := kb["devices"].([]any); len(devs) != 1 || devs[0].(map[string]any)["files"] != 3.0 {
 		t.Fatalf("the copied books are listed: %v", kb)
 	}
 	_, lf := admin.do("GET", "/api/admin/kindle-backup/files?user=1&device=Test+Kindle", nil, false)
 	files, _ := lf["files"].([]any)
-	if len(files) != 2 {
+	if len(files) != 3 {
 		t.Fatalf("the files are listed: %v", lf)
 	}
 	locked := 0
@@ -88,8 +93,8 @@ func TestKindleCopy(t *testing.T) {
 			locked++
 		}
 	}
-	if locked != 1 {
-		t.Fatalf("the store book is marked locked: %v", lf)
+	if locked != 2 {
+		t.Fatalf("the two store books are marked locked: %v", lf)
 	}
 	for _, u := range []string{"/api/admin/kindle-backup/file?user=1&device=Test+Kindle&path=documents/Store%20Book.azw", "/api/admin/kindle-backup/zip?user=1&device=Test+Kindle"} {
 		res, err := admin.http.Get(srv.URL + u)

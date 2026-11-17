@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,6 +24,10 @@ import (
 // added to Calibre unless the library already has that title.
 
 const maxKindleFile = 1 << 30
+
+// kindleStoreName is a file named by Amazon's code instead of the title (B07XYZ1234_EBOK.azw, Title_B07XYZ1234.azw3).
+var kindleStoreName = regexp.MustCompile(`(?i)(^|[_ -])B[0-9A-Z]{9}([_. -]|$)|_EBOK|_PDOC|_SAMPLE`)
+
 const maxKindleList = 20000
 
 var kindleExts = map[string]bool{".epub": true, ".pdf": true, ".mobi": true, ".azw": true, ".azw3": true, ".azw1": true,
@@ -169,7 +174,8 @@ func (s *Server) handlePluginKindleFile(w http.ResponseWriter, r *http.Request) 
 	if !locked && !backup {
 		added = s.addKindleToCalibre(r, dest, path.Base(rel))
 	}
-	kosyncJSON(w, http.StatusOK, map[string]any{"stored": true, "locked": locked, "added_to_calibre": added})
+	onShelf := s.kindleBookOnNightstand(u.ID, rel)
+	kosyncJSON(w, http.StatusOK, map[string]any{"stored": true, "locked": locked, "added_to_calibre": added, "on_nightstand": onShelf})
 }
 
 // KeyKindleToCalibre switches on adding unprotected Kindle books to Calibre by "Copy my Kindle" (off unless "true").
@@ -337,4 +343,22 @@ func (s *Server) handlePluginKindleMoved(w http.ResponseWriter, r *http.Request)
 		}
 	}
 	kosyncJSON(w, http.StatusOK, map[string]int{"moved": moved})
+}
+
+// kindleBookOnNightstand makes a book file from the Kindle a book NovelCheck knows (a book it already has is reused;
+// else it joins the Looked up list under its tidy title and author, like "Add to NovelCheck" on an e-reader entry)
+// and, when this person lets their e-reader's books go onto their Nightstand (Settings), puts it there. A book they
+// removed or hid from the Nightstand is not put back. It says whether the book was added to the Nightstand.
+func (s *Server) kindleBookOnNightstand(userID int64, rel string) bool {
+	if !kindleExts[ext(rel)] || ext(rel) == ".pdf" || strings.Contains(strings.ToLower("/"+rel), "/novelcheck/") || kindleStoreName.MatchString(path.Base(rel)) {
+		return false // not a book, a PDF (manuals and papers stay in the backup only), one NovelCheck put there itself, or a name made of a store code
+	}
+	id, err := s.Store.AddDeviceBook(store.MatchRef{Filename: path.Base(rel)})
+	if err != nil || id <= 0 {
+		return false
+	}
+	if !s.Store.KindleAutoAdd(userID) {
+		return false
+	}
+	return s.Store.EnqueueAuto(userID, id, "queued")
 }

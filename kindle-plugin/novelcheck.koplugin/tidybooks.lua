@@ -1,13 +1,12 @@
 --[[
 NovelCheck plugin: "Tidy my Kindle's books". Books that lie around in other folders (the Kindle's own documents
-folder, loose in Books, anywhere on the user storage) are moved into the Books folder, one folder per author
-(Books/Author Name/Book.epub; "Unknown author" when the book doesn't say). Rules that keep it safe:
+folder, loose in Books, in author folders, anywhere on the user storage) are moved into one folder: Books/NovelCheck,
+the same place NovelCheck puts the books it downloads, so every book is in one place. Rules that keep it safe:
   - only a book NovelCheck already has a backup copy of (same path and size) is moved: back up first;
   - nothing is overwritten and nothing is deleted;
   - the book's reading data (its .sdr folder) moves with it;
   - it asks first, showing what it will do, and "Undo the last tidy" puts everything back;
-  - NovelCheck's own download folder, KOReader, system and hidden folders are left alone, and so is a book already
-    inside a folder of Books.
+  - KOReader, system and hidden folders and the extensions folder are left alone.
 NovelCheck is told about each move so its backup copy moves too (the next backup doesn't send the books again).
 Kindle-store books moved out of documents no longer show in Amazon's own Kindle reader: use KOReader.
 It adds its functions to the NovelCheck plugin class (see main.lua).
@@ -19,17 +18,8 @@ local UIManager = require("ui/uimanager")
 local _ = require("gettext")
 local json = require("json")
 local lfs = require("libs/libkoreader-lfs")
-local util = require("util")
 
 local EXTS = { epub = true, pdf = true, mobi = true, azw = true, azw3 = true, azw1 = true, kfx = true, kepub = true, fb2 = true, cbz = true, prc = true }
-
-local function safeName(s)
-    s = tostring(s or ""):gsub('[/\\:*?"<>|%c]', " "):gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""):gsub("%.+$", "")
-    if s == "" then
-        return "Unknown author"
-    end
-    return s:sub(1, 80)
-end
 
 local function exists(p)
     return lfs.attributes(p, "mode") ~= nil
@@ -54,10 +44,7 @@ return function(NovelCheck)
                     local path = dir .. "/" .. name
                     local attr = lfs.attributes(path)
                     if attr and attr.mode == "directory" then
-                        -- a folder inside Books is already tidy (an author folder); look at it only outside Books
-                        if path ~= booksDir then
-                            walk(path, depth + 1)
-                        end
+                        walk(path, depth + 1)
                     elseif attr and attr.mode == "file" and EXTS[(name:match("%.([^.]+)$") or ""):lower()] and attr.size >= 2048 then
                         table.insert(out, { path = path, size = attr.size, name = name })
                     end
@@ -65,17 +52,6 @@ return function(NovelCheck)
             end
         end
         walk(root, 0)
-        -- loose files directly in Books count (the walk skipped Books itself, so look at its top level)
-        local ok, iter, state = pcall(lfs.dir, booksDir)
-        if ok then
-            for name in iter, state do
-                local path = booksDir .. "/" .. name
-                local attr = lfs.attributes(path)
-                if name:sub(1, 1) ~= "." and attr and attr.mode == "file" and EXTS[(name:match("%.([^.]+)$") or ""):lower()] and attr.size >= 2048 then
-                    table.insert(out, { path = path, size = attr.size, name = name })
-                end
-            end
-        end
         return out
     end
 
@@ -119,13 +95,7 @@ return function(NovelCheck)
             if missing[f.path] then
                 skipped = skipped + 1
             else
-                local author = ""
-                local ok, sum = pcall(util.partialMD5, f.path)
-                if ok and sum and self.bookProps then
-                    local okp, _t, a = pcall(self.bookProps, self, f.path, sum)
-                    author = (okp and a) or ""
-                end
-                local target = booksDir .. "/" .. safeName(author) .. "/" .. f.name
+                local target = booksDir .. "/NovelCheck/" .. f.name
                 if target ~= f.path and not exists(target) and not used[target] then
                     used[target] = true
                     plan[#plan + 1] = { from = f.path, to = target }
@@ -139,7 +109,7 @@ return function(NovelCheck)
             return
         end
         UIManager:show(ConfirmBox:new{
-            text = _("Move") .. " " .. #plan .. " " .. _("books into Books/<author> folders?") .. "\n\n"
+            text = _("Move") .. " " .. #plan .. " " .. _("books into Books/NovelCheck, where the other NovelCheck books are?") .. "\n\n"
                 .. _("Example:") .. "\n" .. plan[1].from:gsub("^.*/", "") .. "\n> " .. plan[1].to:gsub("^/mnt/us/", "") .. "\n\n"
                 .. (skipped > 0 and (tostring(skipped) .. " " .. _("are left where they are (not backed up yet, or the name is taken).") .. "\n") or "")
                 .. _("Nothing is deleted. Undo the last tidy any time."),
