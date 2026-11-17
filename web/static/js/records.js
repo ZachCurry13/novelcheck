@@ -136,7 +136,7 @@ export function awards(m, year) {
   const book = by((a, b) => b.sec - a.sec);
   put("📕", "Book of the year", book?.sec ? book.b.title : "", book && `${fmtDur(book.sec)} with it${book.b.author ? ` · ${book.b.author}` : ""}`);
   const fav = f.fin.filter((x) => x.b.rating > 0).sort((a, b) => b.b.rating - a.b.rating || b.sec - a.sec)[0];
-  put("⭐", "Your favourite", fav?.b.title, fav && `you gave it ${fav.b.rating} star${fav.b.rating === 1 ? "" : "s"}`);
+  put("⭐", "Your favorite", fav?.b.title, fav && `you gave it ${fav.b.rating} star${fav.b.rating === 1 ? "" : "s"}`);
   const fast = real.slice().sort((a, b) => a.days - b.days)[0];
   put("⚡", "Couldn't put it down", fast?.b.title, fast && `finished in ${plural(fast.days, "day")}`);
   const big = by((a, b) => (b.b.pages || 0) - (a.b.pages || 0));

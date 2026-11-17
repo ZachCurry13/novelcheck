@@ -69,7 +69,7 @@ func lastNames(s string) []string {
 }
 
 // realBook says whether what an AI read off a photo is a book that exists under that title by that author:
-// one the family already has, or one the book catalogue finds. It is how a misread cover is caught.
+// one the family already has, or one the book catalog finds. It is how a misread cover is caught.
 func (s *Server) realBook(ctx context.Context, f enrich.Found) bool {
 	if id := s.Store.MatchBook(f.Title, f.Author); id != 0 && !s.otherAuthor(id, f.Author) {
 		return true

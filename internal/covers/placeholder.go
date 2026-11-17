@@ -9,7 +9,7 @@ import (
 )
 
 // Placeholder draws a plain cover (SVG) with the title and author, in a
-// colour picked from the title so books don't all look alike.
+// color picked from the title so books don't all look alike.
 func Placeholder(title, author string) []byte {
 	h := fnv.New32a()
 	h.Write([]byte(title))

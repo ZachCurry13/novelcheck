@@ -85,7 +85,7 @@ func TestCheckABook(t *testing.T) {
 	}
 	b := out["book"].(map[string]any)
 	if b["title"] != "Fourth Wing" || b["author"] != "Rebecca Yarros" || b["isbn"] != "9781649374042" {
-		t.Fatalf("catalogued spelling expected: %v", b)
+		t.Fatalf("catalogd spelling expected: %v", b)
 	}
 	id := int64(b["id"].(float64))
 	for deadline := time.Now().Add(5 * time.Second); ; time.Sleep(20 * time.Millisecond) {

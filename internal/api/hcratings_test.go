@@ -15,7 +15,7 @@ import (
 )
 
 // Hardcover ratings: found by ISBN and by title, kept on the book, shown in the list, and "Highest rated" puts
-// the favourite first and the unrated last.
+// the favorite first and the unrated last.
 func TestHardcoverReaderRatings(t *testing.T) {
 	hc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, _ := io.ReadAll(r.Body)

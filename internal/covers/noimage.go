@@ -7,7 +7,7 @@ import (
 )
 
 // NoImage says whether a downloaded "cover" is really a shop's "No image available" picture: a white or
-// pale card with grey words and no colour. Catalogues pass these along as if they were covers.
+// pale card with gray words and no color. Catalogs pass these along as if they were covers.
 func NoImage(data []byte) bool {
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
@@ -15,21 +15,21 @@ func NoImage(data []byte) bool {
 	}
 	b := img.Bounds()
 	step := max(1, max(b.Dx(), b.Dy())/64)
-	var n, pale, colour int
+	var n, pale, color int
 	for y := b.Min.Y; y < b.Max.Y; y += step {
 		for x := b.Min.X; x < b.Max.X; x += step {
 			r, g, bl, _ := img.At(x, y).RGBA()
 			hi, lo := max(r, g, bl)>>8, min(r, g, bl)>>8
 			n++
 			if hi-lo > 40 {
-				colour++
+				color++
 			}
 			if lo > 225 {
 				pale++
 			}
 		}
 	}
-	return n > 0 && colour*100 < n*2 && pale*100 >= n*70
+	return n > 0 && color*100 < n*2 && pale*100 >= n*70
 }
 
 // have returns a cover already kept at path. A small one that turns out to be a "No image available"

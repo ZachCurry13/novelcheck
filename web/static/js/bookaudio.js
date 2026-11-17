@@ -41,7 +41,7 @@ export function renderAudioSection(host, data, b, state) {
       const r = await attempt(() => post(`/api/books/${b.id}/wish`, { format: ask }), "Requested: it's on the family wishlist");
       if (r) wishes[ask] = r.wish;
     } else if (undo) {
-      if (await attempt(() => del(`/api/books/${b.id}/wish?format=${undo}`), "Request cancelled")) wishes[undo] = null;
+      if (await attempt(() => del(`/api/books/${b.id}/wish?format=${undo}`), "Request canceled")) wishes[undo] = null;
     } else return;
     draw();
   };

@@ -1,5 +1,5 @@
 /* Ember: NovelCheck's dark theme (a warm reading room at night, a burnt-orange glow).
-   Everything a theme decides is here; see README.md beside this file. Colours are "R G B" (0 to 255), so
+   Everything a theme decides is here; see README.md beside this file. Colors are "R G B" (0 to 255), so
    "241 231 214" is #f1e7d6. Change a value, and the whole app follows: no build step for the styles. */
 :root {
   color-scheme: dark;
@@ -41,7 +41,7 @@
   --nc-banner: linear-gradient(135deg, #9a3412, #431407);
   --nc-on-banner: 255 243 223;
   --nc-banner-bar: 253 186 116;
-  /* The Wrapped cards on Reading stats: the dark card, its text, and the two colours that glow in it. */
+  /* The Wrapped cards on Reading stats: the dark card, its text, and the two colors that glow in it. */
   --nc-wrap-base: 33 26 20;
   --nc-on-wrap: 255 243 223;
   --nc-wrap-a: 240 138 75;

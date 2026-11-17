@@ -17,7 +17,7 @@ html.light {
   --slate-100: 29 36 51;
   --slate-50: 15 20 32;
 
-  /* Accent, the red-orange. Runs the other way too: 300 is the strong colour for links and highlights,
+  /* Accent, the red-orange. Runs the other way too: 300 is the strong color for links and highlights,
      800/900 the pale tints. */
   --indigo-50: 69 20 8;
   --indigo-100: 110 32 12;

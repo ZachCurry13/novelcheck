@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// UsageStats summarises LLM token consumption for the cost dashboard.
+// UsageStats summarizes LLM token consumption for the cost dashboard.
 type UsageStats struct {
 	LastHourTokens  int     `json:"last_hour_tokens"`
 	TodayTokens     int     `json:"today_tokens"`

@@ -9,6 +9,9 @@ becomes the release notes for that version and is shown in the app under
 ### ⚡ Library cleanup opens fast
 - **The cleanup page, the missing-covers list and the Admin figures are kept in memory and refreshed by themselves** (every minute, in the background), so opening the page shows them at once. Routine actions (checking for new Libby audiobooks, marking notifications read) no longer throw the kept answers away.
 
+### 🇺🇸 American English
+- Spellings in the app and notes now follow American English (color, favorite, gray, canceled).
+
 ### 🧠 Memory you can switch off and purge
 - **Settings, Library cleanup, Memory:** shows how many ratings and covers are remembered and how much room they take; a switch turns remembering off; buttons forget old ratings or old covers (older than a number of days) without touching books you have.
 
@@ -28,7 +31,7 @@ becomes the release notes for that version and is shown in the app under
 ## [1.84.0 continued]
 
 ### 🎁 Wrapped up front, and summaries on your phone
-- **Two big Wrapped cards at the top of Stats → Highlights:** last month ("Wrapped · October 2026", with its hours and books) and the year so far, glowing in your theme's colours (Ember, Paperback and Classic blue each have their own). A **New** tag shows until you've played that one. **Another month…** under them plays any earlier month or year you read in. Nothing shows for someone with no timed reading yet.
+- **Two big Wrapped cards at the top of Stats → Highlights:** last month ("Wrapped · October 2026", with its hours and books) and the year so far, glowing in your theme's colors (Ember, Paperback and Classic blue each have their own). A **New** tag shows until you've played that one. **Another month…** under them plays any earlier month or year you read in. Nothing shows for someone with no timed reading yet.
 - **Reading summaries on your phone:** at 9 in the morning your phone says "Your week in reading" (Mondays, with your hours and days; it opens that week), "Your October Wrapped is ready" (on the 1st) and "Your 2026 Wrapped is ready" (1 January); the last two play the story when tapped. Nothing is sent for a period you didn't read, or to a phone without notifications on. A notice missed because the server was off still goes out for two days after. Turn any of the three off under **Settings → Reading summaries**. Your sister's friend gets them too (she has Stats).
 
 ### 🧠 Ratings and covers are remembered
@@ -68,7 +71,7 @@ becomes the release notes for that version and is shown in the app under
 ## [1.82.0]
 
 ### ✏️ One look for everything you type into
-- **Every search box, settings field, dropdown and note box is now rounded and filled**, like the Library's search: Check a book, Series, Libby search, search in the book, Same book as…, the recycle bin, Review covers, a photo of a shelf, the top bar's search, and every form in Settings and Admin. The field lights up in the accent colour while you type. In every theme, light and dark.
+- **Every search box, settings field, dropdown and note box is now rounded and filled**, like the Library's search: Check a book, Series, Libby search, search in the book, Same book as…, the recycle bin, Review covers, a photo of a shelf, the top bar's search, and every form in Settings and Admin. The field lights up in the accent color while you type. In every theme, light and dark.
 - **Check a book's "Check" button** is the main (filled) button beside its search box.
 
 ### 📚 Hardcover fixes the titles and finds the covers
@@ -79,14 +82,14 @@ becomes the release notes for that version and is shown in the app under
 
 ### 🐞 Fixes
 - **A book's page could stop opening** after a Deep Scan that found nothing to note (the Nightstand and the Library showed an error and the page stayed shut). The scan now keeps an empty list, and the page reads the older ones too.
-- **Authors with a comma in Calibre** (Calibre writes "Cornwell, Patricia" as "Cornwell| Patricia") are read with the comma, so the book is recognised as Patricia Cornwell's: her name comes off the front of the title, and Calibre's recycle bin shows the copy as still in the library instead of offering to put it back (Calibre then refused it as a duplicate).
+- **Authors with a comma in Calibre** (Calibre writes "Cornwell, Patricia" as "Cornwell| Patricia") are read with the comma, so the book is recognized as Patricia Cornwell's: her name comes off the front of the title, and Calibre's recycle bin shows the copy as still in the library instead of offering to put it back (Calibre then refused it as a duplicate).
 
 ## [1.81.0]
 
 ### 📖 The reader, like an e-reader
 - **Tap the middle of the page for the menu.** A bar at the top has a clear **← Exit** (back to the book's page), the title, **search in the book** and a **bookmark** for the page you're on. A bar at the bottom shows where you are on a **slider** (drag to anywhere) with the time left in the book, and **Contents**, **Aa**, a one-tap **Day · Sepia · Night** switch, your **Bookmarks** and a jump to where your **Kindle** is.
 - **The menu shows by itself for a moment when a book opens**, so the way out is never hidden.
-- **Aa:** text size, page colour, font (with OpenDyslexic), line spacing, margins, even or ragged text edges, and turning pages by **tapping or scrolling**.
+- **Aa:** text size, page color, font (with OpenDyslexic), line spacing, margins, even or ragged text edges, and turning pages by **tapping or scrolling**.
 - **Bookmarks are kept with your account**, so they're there on every device.
 - **Taps work on every phone.** The left and right edges turn pages; a tap anywhere else is for the menu. (The reader used to work out where you tapped from inside the book's page, which some phones scale and move, so a tap could land in the wrong place, or do nothing.)
 - **Contents opens for every book.** It stopped with an error on books whose chapters have no parts listed.
@@ -160,7 +163,7 @@ becomes the release notes for that version and is shown in the app under
 
 ### 🔎 Library filters, like a bookshop website
 - **On a computer, the filters sit in a panel beside the books**, always open, instead of a wall of drop-downs. Picked by the family from three mock-ups.
-- **Pick any mix of pepper levels** with the coloured level squares: 0, 1 and 2; just 3 and 4; or 0 and 5. Shortcuts: Clean (0–1), Up to romantic (0–2), Steamy (3–4), Spicy (4–5).
+- **Pick any mix of pepper levels** with the colored level squares: 0, 1 and 2; just 3 and 4; or 0 and 5. Shortcuts: Clean (0–1), Up to romantic (0–2), Steamy (3–4), Spicy (4–5).
 - **Genre, library and age group are short lists with counts** you tap, the longer ones behind "Show all". The rarer filters (fiction or nonfiction, author, series, format, Libby, rating status, hide content) are under More filters.
 - **Clear all** at the top of the panel; every filter that is on still shows as a chip above the books, with × to remove it.
 - **On a phone, Filters slides the same panel up from the bottom**, with a button that says how many books you'll see.
@@ -292,7 +295,7 @@ becomes the release notes for that version and is shown in the app under
 ### 🎨 Warmer: Paperback by day, Ember by night
 - **A new look, chosen by the family.** The light theme is Paperback: a cream page, dark-blue ink and red-orange buttons. The dark theme is Ember: a warm near-black with a burnt-orange glow. Headings and book titles are in Literata, a bookish serif; everything else in Instrument Sans. Both fonts are stored with the app.
 - **"Read this year" on the Library.** A banner at the top shows how many books you finished this year (KOReader, imported lists, Hardcover and "I read this" all count) and how that compares with last year. Tap it for Reading stats.
-- **Themes have their own folder.** Every colour and font a theme decides is in `web/static/themes` (`paperback.css`, `ember.css`), with a guide to what each setting changes, so the look can be adjusted without touching the rest of the app.
+- **Themes have their own folder.** Every color and font a theme decides is in `web/static/themes` (`paperback.css`, `ember.css`), with a guide to what each setting changes, so the look can be adjusted without touching the rest of the app.
 
 ## [1.72.1]
 
@@ -306,15 +309,15 @@ becomes the release notes for that version and is shown in the app under
 ## [1.72.0]
 
 ### 🎨 Calmer screens, everywhere
-- **Grey, not navy.** The dark theme's surfaces are a neutral graphite, and the light theme a neutral white and grey, so book covers and the 0 to 5 level colours are what stand out.
-- **One main button per screen.** The main action is an off-white button (dark on the light theme); the next one is a quiet grey button. The indigo accent now only marks the page you are on, links and the odd key figure.
+- **Gray, not navy.** The dark theme's surfaces are a neutral graphite, and the light theme a neutral white and gray, so book covers and the 0 to 5 level colors are what stand out.
+- **One main button per screen.** The main action is an off-white button (dark on the light theme); the next one is a quiet gray button. The indigo accent now only marks the page you are on, links and the odd key figure.
 - **No emoji as decoration.** Headings, buttons, tabs, status chips and messages lost about 480 decorative emoji. They stay where they are the content: trophies, awards, Wrapped, content flags and seasonal shelves.
 - **Lighter headings and sentence case.** Page titles get their weight from size, labels are no longer in capitals, and messages lost their exclamation marks.
 - **The Wrapped card** lost its purple glow.
 - **Admin → Rating errors** shows each error in full, in plain text, with its buttons under it (it was squeezed into a narrow column, one word per line).
 - **Collections and Series** switch with the same tabs as every other page.
 - **Nightstand** labels are in sentence case and its notes lost their emoji.
-- **Library cleanup and Reading sync** show a small coloured mark for done, to do and needs a look, in place of ✅ ⬜ ⚠️.
+- **Library cleanup and Reading sync** show a small colored mark for done, to do and needs a look, in place of ✅ ⬜ ⚠️.
 - **Suggested Reads** use proper thumbs-up and thumbs-down icons.
 - **Users and content rules** are written in sentence case ("Hide open door").
 - The design guide (`docs/DESIGN.md`) records the direction, from a review with the [unslop](https://github.com/heydamir/unslop) skill by Damir Sokolovsky.
@@ -366,13 +369,13 @@ becomes the release notes for that version and is shown in the app under
 - **If you imported a list before this version, import the same file once more**: the earlier import did not keep the dates.
 
 ### 📷 Check a book
-- **A photo or screenshot is no longer taken at the AI's word.** What the AI reads has to be a real book by that author (one you have, or one the book catalogue knows). If it is not, the next AI reads the picture too, and the answer is accepted when one is confirmed or two agree. When nothing can be confirmed, you pick from the closest real books.
+- **A photo or screenshot is no longer taken at the AI's word.** What the AI reads has to be a real book by that author (one you have, or one the book catalog knows). If it is not, the next AI reads the picture too, and the answer is accepted when one is confirmed or two agree. When nothing can be confirmed, you pick from the closest real books.
 - **Screenshots are read better:** the AI is told to ignore series names, slogans, review quotes and a shop's buttons, and never to guess from the cover art.
 
 ### 🧬 Deep Scan
 - **Why a book got its level, at the top.** A Deep Scanned book's window now starts with "Why Level 4": what that level means, how many of the noted parts reached it, and those parts by name with **Read it** beside each. A book gets the highest level found anywhere in it, so those parts are the reason. 
 - **No spoilers in the lists.** Each part says what kind of content it is ("Kissing and romantic affection", "Sex on the page, described") with no names and nothing about the story. What actually happens is shown only when you open that part in the book.
-- **Each part's level is easy to see while scrolling.** In "What the AI found", every part now starts with a coloured square holding its level (grey 0, green 1, teal 2, amber 3, red 4, deep red 5), with the part's name beside it and the level's name under it. A line at the top counts the parts at each level, highest first.
+- **Each part's level is easy to see while scrolling.** In "What the AI found", every part now starts with a colored square holding its level (gray 0, green 1, teal 2, amber 3, red 4, deep red 5), with the part's name beside it and the level's name under it. A line at the top counts the parts at each level, highest first.
 
 ### 📦 Box sets
 - **"Ask the AI what's inside" asks once.** The buttons could come back to life while an answer was on its way, so a set was asked two or three times and ended with "not found" after a long wait. Now each set is asked once, only its own card changes when the answer comes (titles you are typing elsewhere stay), and a set you already decided answers at once.
@@ -400,7 +403,7 @@ becomes the release notes for that version and is shown in the app under
 ## [1.69.0]
 
 ### 🏅 Records & awards (a new tab in Wrapped)
-- **Your yearly awards**, for any year you have reading in: Book of the year, Your favourite (from your star ratings), Couldn't put it down, The doorstop, Author, Genre, Series and Month of the year, and a Night owl or Early bird award.
+- **Your yearly awards**, for any year you have reading in: Book of the year, Your favorite (from your star ratings), Couldn't put it down, The doorstop, Author, Genre, Series and Month of the year, and a Night owl or Early bird award.
 - **About twenty records, for all time or one year:** time read, longest day, most pages in a day, longest sitting, longest streak (and the one you are on), biggest week and month, most books finished in a month, fastest pace, fastest finish and longest haul, longest book, the book you spent the most time on, latest night and earliest start, your reading hour and weekday, most-read author, genre and series, and the day your statistics begin.
 - **The year story now plays your awards and records too** (about 18 slides for a year with reading in it).
 - Wrapped now has three tabs: 🎁 Wrapped (the story), 🏅 Records & awards, 🏆 Trophies.
@@ -483,7 +486,7 @@ becomes the release notes for that version and is shown in the app under
 ### 📷 Check a book
 - **The right book when two share a title.** A photo of *Part of Your World* by Liz Braswell showed the book of the same name by Abby Jimenez, because a lone title match ignored the author. A book by a clearly different author is no longer used.
 - **Sideways and upside-down photos.** The photo is turned the way the phone was held before it is sent, and when the AI can see the photo but reads no title, it tries the photo turned each way.
-- **"No image available" is not a cover.** Catalogues sometimes pass along a shop's placeholder picture as the cover. It is now recognized and dropped (ones already kept too), so the book gets a real or drawn cover.
+- **"No image available" is not a cover.** Catalogs sometimes pass along a shop's placeholder picture as the cover. It is now recognized and dropped (ones already kept too), so the book gets a real or drawn cover.
 
 ### 🛡️ Library cleanup: safer about what it removes
 - **Extra Calibre copies are checked before they are offered for removal.** Calibre duplicates are found by title and author, which can't tell a second copy from another edition or an omnibus. Each extra entry's files are now compared with the copy that stays. One that differs a lot in size, has a PDF or audiobook of its own, or can't be compared is marked with the reason and **left unticked**; "Tick all" skips those too. File sizes are shown for both copies.
@@ -766,7 +769,7 @@ becomes the release notes for that version and is shown in the app under
 
 ### 📤 Share your reading as a picture
 - **A Share button on 📊 Stats** (next to the title) makes an image of the period you're looking at, like a year-in-review: your name and the period, **books, pages and reading time** in big numbers, your top genre and most read author, your streak, and a row of the **covers** you read.
-- **Pick the look:** **Story** (1080 × 1920, for phone stories) or **Square** (1080 × 1080), three colour themes (Midnight, Sunrise, Forest), and a switch for the covers. The preview redraws as you choose.
+- **Pick the look:** **Story** (1080 × 1920, for phone stories) or **Square** (1080 × 1080), three color themes (Midnight, Sunrise, Forest), and a switch for the covers. The preview redraws as you choose.
 - **Save image** downloads the PNG; **Share…** opens your phone's share sheet (on a browser that can't share files it saves the image instead).
 - **It's drawn on your own device** from your stats and goes nowhere until you save or share it, so you decide what leaves. It's for your own stats only (not other people's profiles).
 
@@ -839,7 +842,7 @@ becomes the release notes for that version and is shown in the app under
 ## [1.41.0]
 
 ### 🔎 Books on your Kindle find their match, and you can fix the rest
-- **Every file in your library is fingerprinted** (KOReader's own file fingerprint), slowly in the background, so a book copied to the Kindle is recognised by its file whatever it is called. This is the exact way, and should catch most of your books.
+- **Every file in your library is fingerprinted** (KOReader's own file fingerprint), slowly in the background, so a book copied to the Kindle is recognized by its file whatever it is called. This is the exact way, and should catch most of your books.
 - **The plugin sends each book's real title and author** (read from the book itself, a few more each time and remembered), instead of guessing from the file name. NovelCheck also reads file names better: `Author - Title`, `Title - Author`, underscores, ID suffixes and "(z-lib.org)" tags.
 - **🔗 Match books on my e-readers** (Profile → KOReader plugin, and the "Match the unmatched" link under On your KOReader in Up Next): for each book NovelCheck couldn't match, search your library and pick it, or mark it **🚫 Not a book** (thumbnails, KOReader's own guide). Your choice is remembered by the file, so every later sync keeps it. A book you match joins Up Next like the others.
 - Books still unmatched after all that are looked up in Open Library (a cover and real title), now for the files on your devices as well as the statistics.
@@ -864,7 +867,7 @@ becomes the release notes for that version and is shown in the app under
 ## [1.39.0]
 
 ### 📖 Your Kindle's books in Up Next
-- **Books on your e-reader join Up Next by themselves.** Each time the plugin reports the device, the ones NovelCheck recognises in your library are added: ones you've started as **Currently reading**, the rest queued at the end, finished ones skipped. A switch in Profile → 📱 KOReader plugin turns it off. (Books NovelCheck can't match to your library can't be added.)
+- **Books on your e-reader join Up Next by themselves.** Each time the plugin reports the device, the ones NovelCheck recognizes in your library are added: ones you've started as **Currently reading**, the rest queued at the end, finished ones skipped. A switch in Profile → 📱 KOReader plugin turns it off. (Books NovelCheck can't match to your library can't be added.)
 - **Currently Reading** (top of Up Next) now says **▶ Currently reading** with how far you are, which device and when.
 - **🙈 Hide** on any Up Next row or Currently Reading card takes it off the list without touching your library. **Hidden (n)** under the section brings any back. A hidden book is never re-added by the Kindle.
 
@@ -1187,7 +1190,7 @@ becomes the release notes for that version and is shown in the app under
 - After a Calibre sync or an import, the notice says the new books will be rated automatically, with a **Watch progress** link.
 
 ### 👀 See what's happening
-- **Clear status on every unrated book:** ⏳ Waiting, ⏳ In line, ⚡ Rating now… and ⚠ Rating failed, instead of a grey "Pending Analysis".
+- **Clear status on every unrated book:** ⏳ Waiting, ⏳ In line, ⚡ Rating now… and ⚠ Rating failed, instead of a gray "Pending Analysis".
 - **The Library updates as you watch:** the book being rated shows ⚡, a Deep Scan shows 🧬 Part 4 of 12, and each rating appears on its card as soon as it's saved, without reloading the page.
 - **Activity in the header** for parents: ⚡ 38 while books are being rated (38 waiting), ⏸ while paused for the hourly limit, 🌙 while waiting for the rating hours, and 🧬 4/12 during a Deep Scan. Tap it for the waiting books or the Deep Scan page.
 - **＋ turns into ✓** on Library cards once a book is in your Up Next (and books already there show ✓), with a **View Up Next** link.
@@ -1428,7 +1431,7 @@ becomes the release notes for that version and is shown in the app under
 
 ### Fixed
 - **No way to confirm duplicates were removed**: after **Remove selected copies**, NovelCheck now re-reads your Calibre library before answering, reloads the list, and says what happened (for example "✓ Removed 12 copies. Calibre now has no duplicates"). A new **🔄 Check again** button re-reads Calibre and refreshes the list any time, with the time it last read Calibre.
-- **Duplicates missed for entries without files**: two Calibre entries of the same book that had no book files weren't recognised as duplicates. They are now (after the next Calibre read, or **Check again**).
+- **Duplicates missed for entries without files**: two Calibre entries of the same book that had no book files weren't recognized as duplicates. They are now (after the next Calibre read, or **Check again**).
 
 ## [1.14.1]
 

@@ -15,7 +15,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// Result summarises one sync run.
+// Result summarizes one sync run.
 type Result struct {
 	Books   int `json:"books"`
 	Copies  int `json:"copies"`

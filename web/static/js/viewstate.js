@@ -29,7 +29,7 @@ export function startViewState() {
   try {
     history.scrollRestoration = "manual"; // the app draws pages itself, so it restores the place itself
   } catch {
-    /* an old browser: it keeps its own behaviour */
+    /* an old browser: it keeps its own behavior */
   }
   // A tapped link to another #/page also fires popstate in some browsers (iPhone Safari): that is not Back.
   let interactAt = 0;

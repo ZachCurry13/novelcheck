@@ -9,7 +9,7 @@ const STATUS = {
   requested: "Deep Scan requested; waiting for an admin to approve it.",
   queued: "Waiting to be Deep Scanned.",
   declined: "An admin declined the Deep Scan request.",
-  cancelled: "The Deep Scan was cancelled.",
+  cancelled: "The Deep Scan was canceled.",
 };
 
 // deepChip marks a book whose rating comes from reading the whole text.

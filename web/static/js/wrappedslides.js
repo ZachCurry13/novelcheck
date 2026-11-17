@@ -36,7 +36,7 @@ export function awards(m, sum, period) {
 const slide = (kicker, big, small, extra = "", cls = "s-big") => `${kicker ? `<p class="s-kicker">${kicker}</p>` : ""}<p class="${cls}">${big}</p>${small ? `<p class="s-small">${small}</p>` : ""}${extra}`;
 const clock = (h) => new Date(2000, 0, 1, h).toLocaleTimeString(undefined, { hour: "numeric" });
 
-// daySlide: a donut of the 24 hours, coloured by how much you read in each.
+// daySlide: a donut of the 24 hours, colored by how much you read in each.
 function daySlide(hours, peak) {
   const max = Math.max(...hours) || 1;
   const stops = hours.map((v, i) => `hsl(${265 - Math.round((v / max) * 60)} ${30 + Math.round((v / max) * 60)}% ${22 + Math.round((v / max) * 40)}%) ${(i / 24) * 100}% ${((i + 1) / 24) * 100}%`).join(",");
@@ -87,7 +87,7 @@ export function slides(m, s, name) {
     out.push(slide(`Your ${year} reading goal`, `${n(Math.round(goal.progress))} of ${n(goal.goal)}`, `${unit} on Hardcover: ${Math.min(100, Math.round((goal.progress / goal.goal) * 100))}% of the way there.${differs ? ` NovelCheck counts ${n(finCount)}: Hardcover only counts the books marked read there.` : ""}`));
   }
   if (top) out.push(slide("Your most-read book", esc(top.title), `${fmtDur(top.sec)}${top.author ? ` · ${esc(top.author)}` : ""}`, top.book_id ? `<div>${coverImg(top.book_id, "h-44 w-28", true)}</div>` : "", "s-title"));
-  if (authors[0]?.label) out.push(slide("Your top author", esc(authors[0].label), `${n(authors[0].n)} book${authors[0].n === 1 ? "" : "s"}${genres[0] ? `. Favourite genre: ${esc(GENRES[genres[0].label] || genres[0].label)}` : ""}${authors[1]?.label ? `. Runner-up: ${esc(authors[1].label)}` : ""}.`, "", "s-title"));
+  if (authors[0]?.label) out.push(slide("Your top author", esc(authors[0].label), `${n(authors[0].n)} book${authors[0].n === 1 ? "" : "s"}${genres[0] ? `. Favorite genre: ${esc(GENRES[genres[0].label] || genres[0].label)}` : ""}${authors[1]?.label ? `. Runner-up: ${esc(authors[1].label)}` : ""}.`, "", "s-title"));
   if (rated.length) {
     const star = (lo, hi) => rated.filter((x) => x.rating >= lo && x.rating < hi).length;
     const rows = [["⭐ 5 stars", star(5, 6)], ["4¼ to 4¾", star(4.25, 5)], ["4 stars", star(4, 4.25)], ["3 to 3¾", star(3, 4)], ["Under 3", star(0, 3)]].filter((r) => r[1]);

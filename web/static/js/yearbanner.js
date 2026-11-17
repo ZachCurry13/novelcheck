@@ -1,6 +1,6 @@
 // The "Read this year" banner at the top of the Library: books finished this year (KOReader, an imported list,
 // Hardcover and "I read this" all count), against last year by this date. Hidden for someone with no reading
-// recorded. Its colours come from the theme (web/static/themes).
+// recorded. Its colors come from the theme (web/static/themes).
 import { get } from "./api.js";
 import { prepare } from "./statscalc.js";
 import { addElsewhere } from "./statselsewhere.js";

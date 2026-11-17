@@ -66,7 +66,7 @@ export function listReport(m, s) {
 
   if (rated.length) {
     const rows = [5, 4, 3, 2, 1].map((k) => ({ k, v: rated.filter((x) => Math.round(x.rating) === k).length }));
-    parts.push(card("Your ratings", `You gave ${plural(rows[0].v, "book")} five stars`, barRows(rows.map((r) => ({ label: stars(r.k), value: r.v, text: plural(r.v, "book") })), { colour: false })));
+    parts.push(card("Your ratings", `You gave ${plural(rows[0].v, "book")} five stars`, barRows(rows.map((r) => ({ label: stars(r.k), value: r.v, text: plural(r.v, "book") })), { color: false })));
   }
 
   const formats = count(books.filter((x) => x.format), (x) => x.format);

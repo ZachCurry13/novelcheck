@@ -11,23 +11,23 @@ The owner asked for the [unslop](../.claude/skills/unslop/SKILL.md) skill (by Da
 - **Product.** Tells a family how much romance and what content is in each book before someone reads it, and keeps track of what everyone reads.
 - **Character.** Careful, warm, bookish.
 - **World.** A home library in the evening: paper, cloth spines, a reading lamp.
-- **Moments.** The book covers, and the 0 to 5 level colours, which carry meaning. Everything else is quiet.
-- **Signature.** The coloured level square (`levelBadge` in `js/peppers.js`), used wherever a level shows, like a library spine label.
+- **Moments.** The book covers, and the 0 to 5 level colors, which carry meaning. Everything else is quiet.
+- **Signature.** The colored level square (`levelBadge` in `js/peppers.js`), used wherever a level shows, like a library spine label.
 
 What that means in practice: surfaces are a neutral graphite ramp (not navy), the main button is an off-white fill (dark fill on the light theme), the indigo accent marks only the selection, links and a key figure, emoji never decorate headings, buttons, tabs or status (they stay only where they are the content: trophies, awards, Wrapped, content flags), headings get their weight from size (page titles 28px at 500, `.page-title`), labels are sentence case, interface text has no exclamation marks, and no text is smaller than 11px. Material's fully round buttons are kept (the owner's choice of Material Design 3); unslop's smaller corners apply to cards and fields.
 
-**Update (v1.73, chosen by the owner and his wife from mock-ups):** the 1.72 graphite look was "clean but sad". The themes are now **Paperback** (light: cream, dark-blue ink, red-orange) and **Ember** (dark: warm near-black, burnt orange), with Literata for headings and book titles and Instrument Sans for text, and a "Read this year" banner on the Library. All theme values live in `web/static/themes/` (one file per theme, plain CSS, with a README listing what each variable colours); the meaning colours stay shared.
+**Update (v1.73, chosen by the owner and his wife from mock-ups):** the 1.72 graphite look was "clean but sad". The themes are now **Paperback** (light: cream, dark-blue ink, red-orange) and **Ember** (dark: warm near-black, burnt orange), with Literata for headings and book titles and Instrument Sans for text, and a "Read this year" banner on the Library. All theme values live in `web/static/themes/` (one file per theme, plain CSS, with a README listing what each variable colors); the meaning colors stay shared.
 
 ## 1. How it is wired
 
 - Styles live in `web/tailwind.input.css` and compile to `web/static/css/app.css` with `make css`.
-- Pages never choose colours, corners or sizes themselves. They use the shared classes in section 5 (`btn-filled`, `card`, `chip`, ...). A page that needs raw Tailwind colour or radius classes is a sign a shared piece is missing.
-- Colours are CSS variables, so the light and dark themes, and any later accent colour, change in one place.
+- Pages never choose colors, corners or sizes themselves. They use the shared classes in section 5 (`btn-filled`, `card`, `chip`, ...). A page that needs raw Tailwind color or radius classes is a sign a shared piece is missing.
+- Colors are CSS variables, so the light and dark themes, and any later accent color, change in one place.
 - The old class names (`btn-primary`, `btn-secondary`, `btn-ghost`, `nav-link`) stay as aliases of the new ones while screens are moved over, and are removed at the end of v1.71.
 
-## 2. Colour
+## 2. Color
 
-Material 3 names colours by **role**, not by shade. Each role has an "on" colour for text and icons placed on it.
+Material 3 names colors by **role**, not by shade. Each role has an "on" color for text and icons placed on it.
 
 | Role | Used for | Dark | Light |
 |---|---|---|---|
@@ -40,9 +40,9 @@ Material 3 names colours by **role**, not by shade. Each role has an "on" colour
 | `outline` / `outline-variant` | Field borders / dividers | slate 500 / slate 800 | slate 400 / slate 200 |
 | `error` / `error-container` | Destructive actions, failures | rose 300 / rose 900 | rose 700 / rose 100 |
 
-- The seed colour stays **indigo**, so the app keeps its identity.
+- The seed color stays **indigo**, so the app keeps its identity.
 - Depth is shown by the surface-container steps, not by shadows. Shadows are kept for things that float: menus, the search results list, snackbars.
-- **Meaning colours stay outside the theme**: pepper levels and content chips keep emerald (none), amber (closed door), rose (open door), teal (Deep Scan), violet (flags), sky (categories). They are information, not decoration, and must read the same on every screen.
+- **Meaning colors stay outside the theme**: pepper levels and content chips keep emerald (none), amber (closed door), rose (open door), teal (Deep Scan), violet (flags), sky (categories). They are information, not decoration, and must read the same on every screen.
 - Text contrast is at least 4.5:1 on its surface; large text and icons at least 3:1.
 
 ## 3. Type
@@ -68,7 +68,7 @@ Sentence case everywhere. No all-capitals labels (the old `.label` style goes).
 - **Corners:** 8 (chips, menus), 12 (cards), 16 (large cards, navigation drawer), 28 (dialogs, sheets, search view), full (buttons, search bar, badges, text fields and dropdowns); 16 for note boxes (textarea).
 - **Spacing:** a 4-point grid. 16 at the screen edge on phones, 24 on wide screens; 8 between related things, 16 between groups, 24 between sections.
 - **Touch targets:** at least 48 by 48, even when the visible control is smaller.
-- **State layers:** hover adds 8% of the content colour, focus and press 10%. Focus always shows a visible ring for keyboard users.
+- **State layers:** hover adds 8% of the content color, focus and press 10%. Focus always shows a visible ring for keyboard users.
 - **Motion:** 200 ms standard easing for small changes, 300 ms emphasised easing for sheets and dialogs. All of it is off under Reduce motion.
 - **Breakpoints:** compact (under 600), medium (600 to 839), expanded (840 and up).
 
@@ -84,7 +84,7 @@ Sentence case everywhere. No all-capitals labels (the old `.label` style goes).
 | **Icon button** | `icon-btn` | 40 round with a 48 target and an `aria-label`. |
 | **FAB** | `fab` | 56, corner 16, `primary-container`. Only where a screen has one constructive action (Check a book: take a photo). |
 | **Cards** | `card` (filled), `card-outlined`, `card-elevated` | Corner 12, padding 16. Filled (`surface-container-low`) is the default; outlined for cards inside cards; elevated only for things that float. |
-| **Chips** | `chip-assist`, `chip-filter`, `chip-input`, `chip-info` | 32 high (24 for `chip-info` inside rows), corner 8. Filter chips show a tick when on. `chip-info` carries the meaning colours of section 2. |
+| **Chips** | `chip-assist`, `chip-filter`, `chip-input`, `chip-info` | 32 high (24 for `chip-info` inside rows), corner 8. Filter chips show a tick when on. `chip-info` carries the meaning colors of section 2. |
 | **Lists** | `list`, `list-row` | Rows 56 (one line) or 72 (two lines): leading icon or cover, title medium, supporting text in body medium, trailing action. Dividers in `outline-variant`. |
 | **Text fields** | `input`, `field` | Filled and fully round like the Library's search (the family's pick "C", 2026-11-17, mock-up https://claude.ai/artifact/16QY8GqExMTb1Ukefapb3P): `--slate-800` fill, no outline until hover, a 2 px `--nc-chip-on` ring on focus; note boxes corner 16. The label above the field, supporting or error text below. 16 px text so phones don't zoom. Every search box, settings field, dropdown and note box uses it; the top bar's search view uses `.search-field` (the same look around its icon and input). |
 | **Switch, checkbox, radio** | `switch`, `check`, `radio` | Switch for settings that apply at once; checkbox for picking several things from a list. |
@@ -115,4 +115,4 @@ A full-round search bar, 56 high on the page, opening a search view (full screen
 1. Every screen at 360 wide, 768 wide and 1280 wide, in dark and light.
 2. Keyboard only: every control reachable, focus visible.
 3. OpenDyslexic and Reduce motion on.
-4. No raw colour or radius classes left in page code (search `web/static/js` for `bg-slate-`, `rounded-xl`, `ring-slate-`).
+4. No raw color or radius classes left in page code (search `web/static/js` for `bg-slate-`, `rounded-xl`, `ring-slate-`).

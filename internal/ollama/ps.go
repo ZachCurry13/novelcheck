@@ -14,7 +14,7 @@ type Loaded struct {
 }
 
 // PS lists loaded models (Ollama's /api/ps, same data as `ollama ps`).
-// Ollama doesn't expose CPU/GPU utilisation percentages.
+// Ollama doesn't expose CPU/GPU utilization percentages.
 func PS(ctx context.Context, base string) ([]Loaded, error) {
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
 	defer cancel()

@@ -13,7 +13,7 @@ const STATS = [["report", "Highlights", "report week month year"], ["books", "Bo
 // [section, name, extra words, managers only]
 const SETTINGS = [
   ["general", "Add books", "import kindle drive goodreads amazon paper barcode", true],
-  ["general", "Appearance: theme", "dark light mode colours"],
+  ["general", "Appearance: theme", "dark light mode colors"],
   ["general", "Appearance: font", "opendyslexic dyslexia text"],
   ["general", "Appearance: motion", "reduce animation"],
   ["general", "Start page", "home first page opens"],

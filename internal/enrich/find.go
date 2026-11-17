@@ -44,7 +44,7 @@ func (c *Client) Find(ctx context.Context, query string) (Found, bool) {
 	return c.search(ctx, q)
 }
 
-// FindTitle looks up a title and author read off a cover, for the catalogued
+// FindTitle looks up a title and author read off a cover, for the catalogd
 // spelling (and an ISBN).
 func (c *Client) FindTitle(ctx context.Context, title, author string) (Found, bool) {
 	q := url.Values{"title": {title}}

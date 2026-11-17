@@ -13,7 +13,7 @@ Drop this file into a project as `CLAUDE.md` (or add it to an existing one) and 
 List what can move independently of the app itself and check each against its upstream: dependencies, pinned images, vendored files, plugins. An update can ship on its own when it touches only that component and changes no interface the rest of the app relies on. Anything that changes an interface is written up for the owner, not applied.
 
 ## 2. Auto-patch boundary
-Apply, on a branch and without asking, only **patch or minor releases that fix a known vulnerability**. Everything else (feature releases, major versions, base-image or runtime jumps, anything that changes behaviour) is reported with a plain explanation of what changed and why it matters. Never merge to the main branch or release; that is the owner's call.
+Apply, on a branch and without asking, only **patch or minor releases that fix a known vulnerability**. Everything else (feature releases, major versions, base-image or runtime jumps, anything that changes behavior) is reported with a plain explanation of what changed and why it matters. Never merge to the main branch or release; that is the owner's call.
 
 ## 3. Security audit
 Scan the code and its dependencies for known vulnerabilities and propose a targeted patch for each finding that applies, highest severity first. Findings in the language's standard library depend on the toolchain version doing the scanning, so check which version the real build uses before treating them as real.

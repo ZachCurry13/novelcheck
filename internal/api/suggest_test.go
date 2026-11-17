@@ -26,7 +26,7 @@ func TestSuggestedReads(t *testing.T) {
 			if strings.Contains(string(raw), "You recommend books") {
 				aiCalls.Add(1)
 				answer = fmt.Sprintf(`{"picks": [{"id": %d, "reason": "Witty fantasy like Guards! Guards!"}],
-					"outside": [{"title": "The Colour of Magic", "author": "Terry Pratchett", "reason": "Where Discworld began"}]}`, pickID.Load())
+					"outside": [{"title": "The Color of Magic", "author": "Terry Pratchett", "reason": "Where Discworld began"}]}`, pickID.Load())
 			}
 		} else if r.URL.Path != "/search.json" {
 			http.NotFound(w, r)
@@ -113,7 +113,7 @@ func TestSuggestedReads(t *testing.T) {
 		t.Fatalf("AI pick first: %v", out)
 	}
 	outside := out["outside"].([]any)
-	if len(outside) != 1 || outside[0].(map[string]any)["title"] != "The Colour of Magic" || aiCalls.Load() != 1 {
+	if len(outside) != 1 || outside[0].(map[string]any)["title"] != "The Color of Magic" || aiCalls.Load() != 1 {
 		t.Fatalf("book the family doesn't own: %v", out)
 	}
 	get(admin)
@@ -122,7 +122,7 @@ func TestSuggestedReads(t *testing.T) {
 	}
 
 	// Wishing for it looks it up and takes it off the outside list.
-	res, w := admin.do("POST", "/api/suggestions/wish", map[string]string{"title": "The Colour of Magic", "author": "Terry Pratchett", "reason": "Where Discworld began"}, true)
+	res, w := admin.do("POST", "/api/suggestions/wish", map[string]string{"title": "The Color of Magic", "author": "Terry Pratchett", "reason": "Where Discworld began"}, true)
 	if res.StatusCode != 200 || w["book_id"] == nil || len(get(admin)["outside"].([]any)) != 0 {
 		t.Fatalf("wish: %d %v", res.StatusCode, w)
 	}

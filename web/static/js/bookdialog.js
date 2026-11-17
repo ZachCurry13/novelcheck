@@ -198,7 +198,7 @@ export async function openBook(id, state, onChange) {
     } else if (act === "unwish") {
       if (await attempt(() => del(`/api/books/${b.id}/wish`), "Removed from your wishlist")) refresh();
     } else if (act === "cancel-delete") {
-      const ok = await attempt(() => del(`/api/books/${b.id}/delete-request`), "Delete request cancelled");
+      const ok = await attempt(() => del(`/api/books/${b.id}/delete-request`), "Delete request canceled");
       if (ok) refresh();
     } else if (act === "queue") {
       const btn = e.target.closest("[data-act]");

@@ -90,7 +90,7 @@ func (s *Server) resolveUnmatched(userID int64) {
 		ec := s.Worker.Enricher()
 		left := resolvePerRun
 		link := func(f enrich.Found) (int64, bool) {
-			id := s.Store.MatchBook(f.Title, f.Author) // in the library under its catalogued name?
+			id := s.Store.MatchBook(f.Title, f.Author) // in the library under its catalogd name?
 			if id == 0 {
 				var err error
 				if id, err = s.saveLookup(f); err != nil {

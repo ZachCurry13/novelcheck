@@ -116,7 +116,7 @@ export async function renderImport(view, state) {
   });
   $("#list-use", view).addEventListener("click", () => {
     const text = $("#list-text", view).value;
-    // Text copied from Amazon's Content Library is recognised and cleaned up.
+    // Text copied from Amazon's Content Library is recognized and cleaned up.
     const amazon = looksLikeAmazonPaste(text);
     const list = amazon ? parseAmazonPaste(text) : parseTitleList(text);
     if (amazon) suggestName("Amazon Kindle library");

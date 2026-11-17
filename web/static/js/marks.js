@@ -1,4 +1,4 @@
-// Small status marks in place of emoji (✅ ⬜ ⚠️ ⏳): a glyph in a muted or meaning colour, the same size as the
+// Small status marks in place of emoji (✅ ⬜ ⚠️ ⏳): a glyph in a muted or meaning color, the same size as the
 // text around it. kind: done, todo, warn, busy, background.
 const MARKS = {
   done: ["✓", "text-emerald-400", "Done"],

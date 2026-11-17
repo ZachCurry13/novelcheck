@@ -15,12 +15,12 @@ const FILLS = ["bg-indigo-500", "bg-sky-500", "bg-pink-500", "bg-amber-500", "bg
 const TEXTS = ["text-indigo-400", "text-sky-400", "text-pink-400", "text-amber-400", "text-emerald-400", "text-violet-400", "text-rose-400", "text-orange-400"];
 
 // barRows: a label, a bar and a value on each row. rows: [{ label, value, text, attrs }]; attrs makes the row a button.
-export function barRows(rows, { colour = true } = {}) {
+export function barRows(rows, { color = true } = {}) {
   const top = Math.max(...rows.map((r) => r.value), 1);
   return `<ul class="space-y-2">${rows.map((r, i) => {
-    const inner = `<span class="flex items-baseline justify-between gap-2 text-sm"><span class="min-w-0 break-words ${colour ? TEXTS[i % TEXTS.length] : ""}">${esc(r.label)}</span>
+    const inner = `<span class="flex items-baseline justify-between gap-2 text-sm"><span class="min-w-0 break-words ${color ? TEXTS[i % TEXTS.length] : ""}">${esc(r.label)}</span>
       <span class="shrink-0 tabular-nums text-slate-300">${esc(r.text)}</span></span>
-      <span class="mt-1 block h-2.5 overflow-hidden rounded-full bg-slate-800"><span class="block h-full rounded-full ${colour ? FILLS[i % FILLS.length] : "bg-indigo-500"}" data-pct="${Math.round((r.value / top) * 100)}"></span></span>`;
+      <span class="mt-1 block h-2.5 overflow-hidden rounded-full bg-slate-800"><span class="block h-full rounded-full ${color ? FILLS[i % FILLS.length] : "bg-indigo-500"}" data-pct="${Math.round((r.value / top) * 100)}"></span></span>`;
     return `<li>${r.attrs ? `<button type="button" ${r.attrs} class="block w-full text-left">${inner}</button>` : inner}</li>`;
   }).join("")}</ul>`;
 }

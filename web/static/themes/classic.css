@@ -40,7 +40,7 @@ html.theme-blue {
   --nc-wrap-b: 56 189 248;
 }
 
-/* Its light side: the original light theme (white cards on a pale grey-blue page, indigo ink). */
+/* Its light side: the original light theme (white cards on a pale gray-blue page, indigo ink). */
 html.theme-blue.light {
   color-scheme: light;
   --slate-950: 241 245 249;

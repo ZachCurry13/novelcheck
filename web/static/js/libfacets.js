@@ -1,4 +1,4 @@
-// The Library's side panel pieces (the bookshop layout the owner's family picked): pepper levels as the coloured
+// The Library's side panel pieces (the bookshop layout the owner's family picked): pepper levels as the colored
 // squares (any mix, with shortcuts), and short pick lists with counts in place of drop-downs. They keep the
 // form's own field names (spice, genre, catalog, age), so links, Back and the chips under the search box work
 // as before.

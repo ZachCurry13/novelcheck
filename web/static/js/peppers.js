@@ -20,7 +20,7 @@ export const PEPPERS = [
     ex: "Fourth Wing (Rebecca Yarros); A Court of Thorns and Roses (Sarah J. Maas)" },
   { n: 5, name: "Very Explicit / Erotica-Level", cls: "chip-open",
     desc: "Sex in most chapters, long or very graphic scenes: the physical relationship is a main part of the book (erotica). Also any rape or sexual assault scene that is described in detail, however little else the book has.",
-    ex: "Fifty Shades of Grey (E. L. James)" },
+    ex: "Fifty Shades of Gray (E. L. James)" },
 ];
 
 // "🌶️🌶️" for 2; 0 peppers shows a single faded pepper so the scale reads.
@@ -81,8 +81,8 @@ export const KIND = ["No romance", "Crushes, flirting or a sweet kiss", "Kissing
   "Sexual desire or making out; any sex stays off the page", "Sex on the page, described", "Long, graphic sex scenes"];
 export const kindOf = (level) => KIND[Math.max(0, Math.min(5, Number(level) || 0))];
 
-// levelBadge is a part's level as a coloured square with the number in it, so a long list of parts (Deep Scan)
-// can be read at a glance: grey 0, green 1, teal 2, amber 3, red 4, deep red 5.
+// levelBadge is a part's level as a colored square with the number in it, so a long list of parts (Deep Scan)
+// can be read at a glance: gray 0, green 1, teal 2, amber 3, red 4, deep red 5.
 export const levelBadge = (level) => `<span class="lvl lvl-${Math.max(0, Math.min(5, Number(level) || 0))}" aria-hidden="true">${Number(level) || 0}</span>`;
 
 // levelTally counts the parts at each level, highest first: "Level 3 × 1 · Level 2 × 5 …" as badges.

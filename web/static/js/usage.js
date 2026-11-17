@@ -13,7 +13,7 @@ const MB = 1 << 20;
 const fmtGB = (b) => (b < GB ? `${Math.round(b / MB)} MB` : `${(b / GB).toFixed(b >= 10 * GB ? 0 : 1)} GB`);
 
 // Meter fill turns amber then red as usage climbs; the label repeats the
-// state in words so colour is never the only signal.
+// state in words so color is never the only signal.
 function meter(pct, label, progress) {
   const level = progress ? ["bg-indigo-500", "bg-indigo-950", `${Math.round(pct)}% done`] : pct >= 90 ? ["bg-rose-500", "bg-rose-950", "Very high"]
     : pct >= 75 ? ["bg-amber-400", "bg-amber-950", "High"] : ["bg-indigo-500", "bg-indigo-950", "OK"];

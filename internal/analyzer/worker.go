@@ -1,4 +1,4 @@
-// Package analyzer runs queued book analyses one at a time, honouring the
+// Package analyzer runs queued book analyses one at a time, honoring the
 // admin's token-per-hour cap and scan delay.
 package analyzer
 

@@ -17,7 +17,7 @@ func TestSeriesPage(t *testing.T) {
 	for _, b := range []struct {
 		title string
 		n     float64
-	}{{"The Colour of Magic", 1}, {"The Light Fantastic", 2}, {"Mort", 4}, {"Sourcery", 5}, {"Guards! Guards!", 8}} {
+	}{{"The Color of Magic", 1}, {"The Light Fantastic", 2}, {"Mort", 4}, {"Sourcery", 5}, {"Guards! Guards!", 8}} {
 		id, _ := st.UpsertBook(b.title, "Terry Pratchett", "", "")
 		_ = st.AddCopy(cal, id, "/c/"+b.title+".epub", "epub", b.title)
 		_, _ = st.DB.Exec(`UPDATE books SET series = 'Discworld', series_index = ? WHERE id = ?`, b.n, id)
@@ -29,8 +29,8 @@ func TestSeriesPage(t *testing.T) {
 	_ = st.AddCopy(disc, listed, "discover:1", "list", "")
 	_, _ = st.DB.Exec(`UPDATE books SET series = 'Discworld', series_index = 3 WHERE id = ?`, listed)
 
-	_ = st.Enqueue(u.ID, ids["The Colour of Magic"])
-	_, _ = st.DB.Exec(`UPDATE queue_items SET status = 'finished' WHERE book_id = ?`, ids["The Colour of Magic"])
+	_ = st.Enqueue(u.ID, ids["The Color of Magic"])
+	_, _ = st.DB.Exec(`UPDATE queue_items SET status = 'finished' WHERE book_id = ?`, ids["The Color of Magic"])
 	_ = st.Enqueue(u.ID, ids["The Light Fantastic"])
 	_, _ = st.DB.Exec(`UPDATE queue_items SET status = 'finished' WHERE book_id = ?`, ids["The Light Fantastic"])
 

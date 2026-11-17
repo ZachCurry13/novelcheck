@@ -43,7 +43,7 @@ export function reportHTML(m, s) {
   } else {
     parts.push(card("Reading time by day", `${fmtDur(sum.sec)} over ${plural(sum.days, "day")}`, barRows(pts.map((p) => ({
       label: new Date(p.ms).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }), value: p.sec, text: p.sec ? fmtDur(p.sec) : "-", attrs: p.sec ? `data-day="${new Date(p.ms).getTime()}"` : "",
-    })), { colour: false })));
+    })), { color: false })));
   }
 
   parts.push(pace(m, sum, s));
@@ -67,7 +67,7 @@ export function reportHTML(m, s) {
   if (peppers.length) {
     const top = peppers[0];
     parts.push(card("Content", `Most of what you read is level ${top.label}: ${esc(PEPPERS[top.label]?.name || "")}`,
-      barRows(peppers.sort((a, b) => a.label - b.label).map((p) => ({ label: `Level ${p.label} · ${PEPPERS[p.label]?.name || ""}`, value: p.n, text: plural(p.n, "book") })), { colour: false })));
+      barRows(peppers.sort((a, b) => a.label - b.label).map((p) => ({ label: `Level ${p.label} · ${PEPPERS[p.label]?.name || ""}`, value: p.n, text: plural(p.n, "book") })), { color: false })));
   }
 
   const buckets = pageBuckets(books);

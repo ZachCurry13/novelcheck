@@ -53,7 +53,7 @@ func TestFindAndThumb(t *testing.T) {
 		t.Fatalf("thumb: %v %v", img.Bounds(), err)
 	}
 	if r, _, _, _ := img.At(10, 10).RGBA(); r>>8 < 180 {
-		t.Fatalf("colour kept: %d", r>>8)
+		t.Fatalf("color kept: %d", r>>8)
 	}
 	if again, _ := c.Thumb(src, info, Small); again != p {
 		t.Fatal("made once")
@@ -162,7 +162,7 @@ func TestMissedAndForget(t *testing.T) {
 	}
 }
 
-// Review covers only shows and saves images from the two catalogues it searches, and suggests the tidied title.
+// Review covers only shows and saves images from the two catalogs it searches, and suggests the tidied title.
 func TestReviewCoversRules(t *testing.T) {
 	for u, ok := range map[string]bool{
 		"https://covers.openlibrary.org/b/id/1-M.jpg":   true,

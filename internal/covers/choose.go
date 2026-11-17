@@ -123,7 +123,7 @@ func (c Cache) googleAll(ctx context.Context, title, author string) []Candidate 
 	return out
 }
 
-// AllowedImage says whether u is an image address Review covers or the cover finder may save: the catalogues
+// AllowedImage says whether u is an image address Review covers or the cover finder may save: the catalogs
 // NovelCheck searches (Open Library, Google Books, Hardcover), over https.
 func AllowedImage(u string) bool {
 	p, err := url.Parse(u)

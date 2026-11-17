@@ -9,7 +9,7 @@ import (
 )
 
 // Every file in the Calibre library is fingerprinted the way KOReader does it,
-// slowly in the background, so a book copied to an e-reader is recognised by
+// slowly in the background, so a book copied to an e-reader is recognized by
 // its file, whatever the file is called there. Books are matched by title as
 // well, but a fingerprint is exact.
 

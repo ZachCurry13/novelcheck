@@ -47,7 +47,7 @@ func searchUnder(title, clean string) string {
 }
 
 // handleCoverPreview: GET /api/admin/covers/preview?u=… shows a candidate image through NovelCheck (the page may
-// only load its own images), for the two catalogues Review covers searches.
+// only load its own images), for the two catalogs Review covers searches.
 func (s *Server) handleCoverPreview(w http.ResponseWriter, r *http.Request) {
 	u := r.URL.Query().Get("u")
 	if !covers.AllowedImage(u) {

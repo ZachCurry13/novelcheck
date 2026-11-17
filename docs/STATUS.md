@@ -1,6 +1,6 @@
 # Status
 
-- **2026-11-09:** added to `feature/v1.48`: plugin Developer tools + safe module loading (plugin 1.48.0), device logs and Settings → Developer, same-book detection with automatic joining after syncs, and Calibre change detection. Next: owner tries the plugin on the Kindle (`LOAD_ERROR.txt` / crash.log if still unrecognised), then the 1.47.0 and 1.48.0 releases.
+- **2026-11-09:** added to `feature/v1.48`: plugin Developer tools + safe module loading (plugin 1.48.0), device logs and Settings → Developer, same-book detection with automatic joining after syncs, and Calibre change detection. Next: owner tries the plugin on the Kindle (`LOAD_ERROR.txt` / crash.log if still unrecognized), then the 1.47.0 and 1.48.0 releases.
 
 - **2026-11-02:** v1.48 audiobooks built on `feature/v1.48` (Audiobookshelf import, length sort/filter, browser download and player, other-format requests, Libby audiobooks); tests added in `abs_test.go`. Next: owner's OK, then release 1.47.0 and 1.48.0 (1.48 branches from 1.47). The real server isn't tried yet: only a fake Audiobookshelf.
 

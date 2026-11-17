@@ -1,4 +1,4 @@
-// The reader's panels (js/reader.js, js/readerbars.js): the book's contents, and the Aa settings: text size, page colour, font, line
+// The reader's panels (js/reader.js, js/readerbars.js): the book's contents, and the Aa settings: text size, page color, font, line
 // spacing, margins, text edges and turning pages by tapping or scrolling. Settings are kept on this device (they suit its screen) and apply
 // to every book.
 const KEY = "nc:reader";
@@ -24,7 +24,7 @@ function keep(s) {
   } catch { /* private window: the settings last until the page closes */ }
 }
 
-// css is what goes into the book's pages: colours, the chosen font, size and spacing.
+// css is what goes into the book's pages: colors, the chosen font, size and spacing.
 function css(s) {
   const [, bg, fg] = THEMES[s.theme] || THEMES.night;
   const family = FONTS[s.font]?.[1];

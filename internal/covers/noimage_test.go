@@ -21,18 +21,18 @@ func picture(fill func(x, y int) color.Color) []byte {
 }
 
 func TestNoImage(t *testing.T) {
-	card := picture(func(x, y int) color.Color { // white with a band of grey words
+	card := picture(func(x, y int) color.Color { // white with a band of gray words
 		if y > 80 && y < 100 && x%3 == 0 {
 			return color.Gray{Y: 150}
 		}
 		return color.White
 	})
 	if !NoImage(card) {
-		t.Fatal("a white card with grey words is not a cover")
+		t.Fatal("a white card with gray words is not a cover")
 	}
 	cover := picture(func(x, y int) color.Color { return color.RGBA{R: uint8(x * 2), G: 90, B: uint8(y), A: 255} })
 	if NoImage(cover) {
-		t.Fatal("a coloured cover is a cover")
+		t.Fatal("a colored cover is a cover")
 	}
 	if NoImage([]byte("not a picture")) {
 		t.Fatal("something unreadable is left alone")

@@ -1,6 +1,6 @@
 // Wrapped, up front: two big cards at the top of Reading stats → Highlights, one for last month and one for the
 // year so far, and a picker for any other month or year. A tap plays the story (the page's own data-play). A
-// "New" tag shows until that Wrapped has been played on this device. The colours come from the theme
+// "New" tag shows until that Wrapped has been played on this device. The colors come from the theme
 // (--nc-wrap-* in web/static/themes), the look from .wcard in tailwind.input.css.
 import { esc } from "./ui.js";
 import { fmtDur } from "./statscalc.js";

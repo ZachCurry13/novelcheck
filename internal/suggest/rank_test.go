@@ -57,7 +57,7 @@ func TestRank(t *testing.T) {
 func TestRankWithNothingToGoOn(t *testing.T) {
 	picks := Rank(pool, nil, map[int64]int{5: 2}, 10)
 	if len(picks) != 1 || picks[0].Book.Title != "Pride and Prejudice" || picks[0].Reason != "Popular in your family" {
-		t.Fatalf("family favourites: %+v", picks)
+		t.Fatalf("family favorites: %+v", picks)
 	}
 	if len(Rank(pool, nil, nil, 10)) != 0 {
 		t.Fatal("nothing to suggest yet")

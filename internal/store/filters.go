@@ -302,7 +302,7 @@ func (s *Store) ListBooks(f BookFilter, viewer *User) ([]Book, int, error) {
 		order = "b.created_at DESC, b.id DESC"
 	case "mild":
 		order = "COALESCE(b.spice_level, 9), sort_title(b.title)"
-	case "rating": // Hardcover readers' favourites first (ties: the one more people rated); unrated last
+	case "rating": // Hardcover readers' favorites first (ties: the one more people rated); unrated last
 		order = "b.hc_rating = 0, b.hc_rating DESC, b.hc_ratings DESC, sort_title(b.title)"
 	case "spicy": // most peppers first; books not rated yet last
 		order = "COALESCE(b.spice_level, -1) DESC, sort_title(b.title)"

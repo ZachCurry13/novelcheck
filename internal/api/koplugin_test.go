@@ -211,7 +211,7 @@ func TestKOReaderPluginUpdate(t *testing.T) {
 	}
 }
 
-// A book on the Kindle is recognised by its file even when the file name
+// A book on the Kindle is recognized by its file even when the file name
 // says nothing about the title.
 func TestDeviceBooksMatchByFingerprint(t *testing.T) {
 	lib := t.TempDir()
