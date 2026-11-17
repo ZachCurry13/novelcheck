@@ -20,7 +20,8 @@ func TestBookBubMailboxFromSMTPAccount(t *testing.T) {
 		"smtp.example.org:587": "imap.example.org:993",
 		"mail.weird.example":   store.Defaults[store.KeyEventsMailHost], // can't be told: what was there stays
 	} {
-		_ = st.SetSettings(map[string]string{store.KeySMTPHost: host, store.KeySMTPUser: "mum@example.org", store.KeySMTPPassword: "app-password-123", store.KeyEventsAutoBookBub: "false"})
+		_ = st.SetSettings(map[string]string{store.KeySMTPHost: host, store.KeySMTPUser: "mum@example.org", store.KeySMTPPassword: "app-password-123", store.KeyEventsAutoBookBub: "false",
+			store.KeyEventsMailHost: store.Defaults[store.KeyEventsMailHost]}) // each case starts from the default server
 		res, out := admin.do("POST", "/api/admin/events-mail/use-smtp", map[string]string{}, true)
 		if res.StatusCode != 200 || out["user"] != "mum@example.org" || out["host"] != want {
 			t.Fatalf("%s: %d %v (want %s)", host, res.StatusCode, out, want)
