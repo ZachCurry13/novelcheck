@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.53.0"
+local VERSION = "1.54.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -72,6 +72,8 @@ function NovelCheck:init()
     self.ui.menu:registerToMainMenu(self)
     -- A shelf for the Bookshelf plugin, if it is installed (bookshelfsrc.lua); never allowed to stop the plugin.
     pcall(function() if self.offerBookshelf then self:offerBookshelf() end end)
+    -- The stars window at the end of a book (finishbook.lua); never allowed to stop the plugin either.
+    pcall(function() if self.hookEndOfBook then self:hookEndOfBook() end end)
     if self.settings:readSetting("offer_setup") and self:isConnected() then
         -- First start after installing the downloaded plugin: offer the one-tap setup once.
         self.settings:saveSetting("offer_setup", nil)
@@ -117,6 +119,8 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("Sync reading statistics now"), callback = function() self:syncStatsNow() end },
             { text = _("On this device"), callback = function() DeviceBooks.show(self) end },
             { text = _("Delete finished books..."), callback = function() DeviceBooks.removeFinished(self) end },
+            { text = _("Finish this book..."), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
+            { text = _("Send highlights now"), callback = function() if self.sendHighlights then self:sendHighlights(false) end end },
             { text = _("Tidy book names"), callback = function() self:tidyNames() end },
             { text = _("Report books on this device"), callback = function() self:reportDevice() end },
             { text = _("Automatic"), sub_item_table = {
@@ -129,6 +133,12 @@ function NovelCheck:addToMainMenu(menu_items)
                 { text = _("Sync reading statistics when online"), keep_menu_open = true,
                   checked_func = function() return self:autoEnabled("auto_stats", false) end,
                   callback = function() self:toggleAuto("auto_stats", false) end },
+                { text = _("Send highlights when online"), keep_menu_open = true,
+                  checked_func = function() return self:autoEnabled("auto_highlights", true) end,
+                  callback = function() self:toggleAuto("auto_highlights", true) end },
+                { text = _("Ask for stars at the end of a book"), keep_menu_open = true,
+                  checked_func = function() return self:autoEnabled("auto_finish", true) end,
+                  callback = function() self:toggleAuto("auto_finish", true) end },
             } },
             { text = _("Device name..."), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
             { text = _("Connect to NovelCheck..."), keep_menu_open = true, callback = function() self:connectDialog() end },
@@ -197,7 +207,8 @@ function NovelCheck:onNetworkConnected()
     if not self:isConnected() then
         return
     end
-    if not (self:autoEnabled("auto_report", true) or self:autoEnabled("auto_download", false) or self:autoEnabled("auto_stats", false)) then
+    if not (self:autoEnabled("auto_report", true) or self:autoEnabled("auto_download", false) or self:autoEnabled("auto_stats", false)
+        or self:autoEnabled("auto_highlights", true)) then
         return
     end
     local now = os.time()
@@ -219,6 +230,9 @@ function NovelCheck:autoRun()
     end
     if self:autoEnabled("auto_stats", false) then
         self:syncStats()
+    end
+    if self.sendHighlights and self:autoEnabled("auto_highlights", true) then
+        self:sendHighlights(true)
     end
     self:checkUpdate(true)
 end
@@ -450,7 +464,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

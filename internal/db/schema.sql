@@ -775,3 +775,19 @@ CREATE TABLE IF NOT EXISTS abs_fixes (
     why        TEXT NOT NULL DEFAULT '',   -- why it isn't certain
     created_at INTEGER NOT NULL
 );
+
+-- Highlights and notes a person made in a book on an e-reader (KOReader), sent by the plugin and shown on the
+-- book's page. key is a hash of the device, the moment and the words, so sending the same ones again adds nothing.
+CREATE TABLE IF NOT EXISTS book_highlights (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    key        TEXT NOT NULL,
+    text       TEXT NOT NULL,
+    note       TEXT NOT NULL DEFAULT '',
+    chapter    TEXT NOT NULL DEFAULT '',
+    page       TEXT NOT NULL DEFAULT '',
+    taken_at   TEXT NOT NULL DEFAULT '',   -- when it was made on the device ("2026-11-12 21:04:11")
+    device     TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, book_id, key)
+);

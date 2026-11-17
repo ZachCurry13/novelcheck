@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.83.0]
+
+### 📚 Your Kindle: highlights, and finishing a book (plugin 1.54.0)
+- **Highlights and notes reach NovelCheck.** What you highlight or write a note on in KOReader is sent to your NovelCheck (when the e-reader gets online, or **NovelCheck > Send highlights now**) and shown on the book's page under **My highlights**, folded away because a quote can give the story away. **Copy all** copies them. Each book is sent again only when its highlights change, and none is added twice. Delete a highlight in KOReader, not in NovelCheck. Both of KOReader's ways of keeping highlights (the new one and the older one) are read.
+- **Finishing a book.** At the end of a book a small window asks **how many stars** (1 to 5, or finished without stars). The stars go to your NovelCheck (and from there to Hardcover), the book is marked finished in NovelCheck and in KOReader, and if the book is part of a series you're offered the **next book to download** straight away (or told the family doesn't have a file of it yet). **NovelCheck > Finish this book...** does the same by hand, and **Automatic > Ask for stars at the end of a book** turns the automatic window off.
+- Update the plugin on your e-reader with **NovelCheck > Update plugin** (it asks for a restart of KOReader).
+
 ## [1.82.0]
 
 ### ✏️ One look for everything you type into

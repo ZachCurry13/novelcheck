@@ -23,6 +23,7 @@ import { starsHTML, bindStars } from "./stars.js";
 import { finishedHTML, bindFinished } from "./finished.js";
 import { renderAudioSection } from "./bookaudio.js";
 import { hcTagsHTML, renderHCMore } from "./hcextras.js";
+import { renderHighlights } from "./highlights.js";
 
 // Lists that aren't the family's libraries: books only looked up (Check a
 // book) or on a Discover list.
@@ -115,6 +116,7 @@ export async function openBook(id, state, onChange) {
       <div id="audio-section"></div>`}
       <div id="libby-section"></div>
       <div id="hc-more" class="space-y-2"></div>
+      ${friend ? "" : `<div id="hl-section"></div>`}
       ${state.user.role === "restricted" ? "" : starsHTML(data.my_rating || 0)}
       ${finishedHTML(data.finished_on || "")}
       ${manager ? verdictFormHTML(b) : ""}
@@ -219,6 +221,7 @@ export async function openBook(id, state, onChange) {
     bindBookCollections(dlg, b.id, manager, data.collections || []);
   }
   renderBookLibby($("#libby-section", dlg), b.id);
+  if (!friend) renderHighlights($("#hl-section", dlg), b);
   renderHCMore($("#hc-more", dlg), b, { hasAudio: data.has_audio, open: (other) => (dlg.close(), openBook(other, state, onChange)) });
   bindStars(dlg, b.id);
   bindFinished(dlg, b.id);
