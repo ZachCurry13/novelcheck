@@ -46,3 +46,10 @@ func (s *Store) RecheckNames() {
 func (s *Store) MarkName(id int64, how int) {
 	_, _ = s.DB.Exec(`UPDATE books SET name_checked = ? WHERE id = ?`, how, id)
 }
+
+// NameTyped says whether a parent typed this book's name (it is then never changed by itself).
+func (s *Store) NameTyped(id int64) bool {
+	var n int
+	_ = s.DB.Get(&n, `SELECT name_checked FROM books WHERE id = ?`, id)
+	return n == 2
+}

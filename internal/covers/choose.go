@@ -123,15 +123,15 @@ func (c Cache) googleAll(ctx context.Context, title, author string) []Candidate 
 	return out
 }
 
-// AllowedImage says whether u is an image address Review covers may show or save: only the two catalogues it
-// searches, over https.
+// AllowedImage says whether u is an image address Review covers or the cover finder may save: the catalogues
+// NovelCheck searches (Open Library, Google Books, Hardcover), over https.
 func AllowedImage(u string) bool {
 	p, err := url.Parse(u)
 	if err != nil || p.Scheme != "https" {
 		return false
 	}
 	h := strings.ToLower(p.Hostname())
-	return h == "covers.openlibrary.org" || h == "books.google.com" || strings.HasSuffix(h, ".googleusercontent.com")
+	return h == "covers.openlibrary.org" || h == "books.google.com" || strings.HasSuffix(h, ".googleusercontent.com") || h == "assets.hardcover.app"
 }
 
 // Choose saves the image at u as the book's cover (name.jpg), replacing any cover found before, and forgets an

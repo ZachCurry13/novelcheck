@@ -152,3 +152,14 @@ func (c *Client) InfoByASIN(ctx context.Context, asins []string) (map[string]Boo
 	}
 	return out, nil
 }
+
+// ImageByID is the cover picture address of the Hardcover book id ("" when it has none).
+func (c *Client) ImageByID(ctx context.Context, id int) (string, error) {
+	var d struct {
+		Books []rawBook `json:"books"`
+	}
+	if err := c.do(ctx, fmt.Sprintf(`query { books(where: {id: {_eq: %d}}, limit: 1) { %s } }`, id, bookFields), &d); err != nil || len(d.Books) == 0 {
+		return "", err
+	}
+	return d.Books[0].info().Image, nil
+}

@@ -124,6 +124,9 @@ export async function renderAdmin(view, state) {
     } else if (act === "rerate-language") {
       const r = await attempt(() => post("/api/admin/rerate", { which: "language" }));
       if (r) toast(`Re-rating ${r.queued} books so their summaries are in English`);
+    } else if (act === "rerate-library") {
+      const r = await attempt(() => post("/api/admin/rerate", { which: "library" }));
+      if (r) toast(`Re-rating ${r.queued} books in your libraries with the current pepper rules`);
     } else if (act === "rerate") {
       const r = await attempt(() => post("/api/admin/rerate"));
       if (r) toast(`Re-rating ${r.queued} books with the current pepper rules`);

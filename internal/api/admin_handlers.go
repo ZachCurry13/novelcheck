@@ -41,12 +41,14 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 	// Prompts dominate: assume ~80% input / 20% output tokens per call.
 	projected := float64(remaining) * perBook * (0.8*pin + 0.2*pout) / 1e6
 	rerate, _ := s.Store.RerateCandidates()
+	rerateLib, _ := s.Store.RerateCandidatesLibrary()
 	aiRated, _ := s.Store.AIRatedIDs()
 	var lastSync any
 	_ = json.Unmarshal([]byte(s.Store.Setting(store.KeyCalibreLastResult)), &lastSync)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"counts":            counts,
 		"rerate_candidates": len(rerate),
+		"rerate_library":    len(rerateLib), // the same, without books only on Discover lists and events
 		"ai_rated":          len(aiRated),
 		"changed_books":     s.Store.ChangedSinceRated(),
 		"title_fixes":       s.Store.CountTitleFixes(),

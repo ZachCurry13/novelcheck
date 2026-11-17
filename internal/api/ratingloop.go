@@ -28,10 +28,18 @@ func (s *Server) FillRatings(ctx context.Context, limit int) int {
 		return 0
 	}
 	hc := &hardcover.Client{Token: token, URL: hardcoverURL}
-	found := 0
+	found, renamed := 0, 0
+	defer func() {
+		if renamed > 0 {
+			log.Printf("hardcover: %d books got their true title", renamed)
+		}
+	}()
 	keep := func(b store.RatingToCheck, info hardcover.BookInfo) {
 		s.Store.SaveHCRating(b.ID, info.Rating, info.Ratings)
 		s.Store.SaveHCID(b.ID, info.ID)
+		if t := hcTrueTitle(b.Title, b.Author, info); t != "" && s.applyTrueTitle(ctx, b.ID, b.Author, t) {
+			renamed++
+		}
 		s.Store.SaveHCTags(b.ID, strings.Join(info.Warnings, ", "), strings.Join(info.Moods, ", "))
 		if info.Rating > 0 {
 			found++
@@ -76,7 +84,7 @@ func (s *Server) FillRatings(ctx context.Context, limit int) int {
 		if ctx.Err() != nil {
 			break
 		}
-		info, ok, err := hc.InfoByTitle(ctx, b.Title, b.Author)
+		info, ok, err := hcInfoByTitle(ctx, hc, b.Title, b.Author)
 		if err == nil && !ok {
 			if t := s.closestTitle(ctx, b.Title, b.Author); t != "" { // a typo or dots in the title
 				info, ok, err = hc.InfoByTitle(ctx, t, b.Author)
@@ -95,7 +103,9 @@ func (s *Server) FillRatings(ctx context.Context, limit int) int {
 	return found
 }
 
-// RatingLoop fills ratings 12 minutes after start, then every 6 hours, 400 books a round.
+const hcTitlesKey = "hc_titles_pass"
+
+// RatingLoop fills ratings 12 minutes after start, then every 6 hours, 800 books a round.
 func (s *Server) RatingLoop(ctx context.Context) {
 	wait := 12 * time.Minute
 	for {
@@ -105,7 +115,11 @@ func (s *Server) RatingLoop(ctx context.Context) {
 		case <-time.After(wait):
 		}
 		wait = 6 * time.Hour
-		if n := s.FillRatings(ctx, 400); n > 0 {
+		if s.Store.Setting(hcTitlesKey) != "1" { // the pass learned the true titles: look at every book again
+			s.Store.RecheckHardcover()
+			_ = s.Store.SetSetting(hcTitlesKey, "1")
+		}
+		if n := s.FillRatings(ctx, 800); n > 0 {
 			log.Printf("hardcover ratings: %d books rated", n)
 		}
 		s.cleanAudiobooksNow(300) // the Audiobookshelf cleanup (absclean.go), with the same Hardcover connection

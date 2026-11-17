@@ -52,8 +52,8 @@ func (c Cache) fetch(ctx context.Context, url, out, miss string) (string, os.Fil
 		return "", nil, false // offline: try again next time
 	}
 	defer res.Body.Close()
-	body, err := io.ReadAll(io.LimitReader(res.Body, 2<<20))
-	if res.StatusCode != http.StatusOK || err != nil || len(body) < 200 || !strings.HasPrefix(res.Header.Get("Content-Type"), "image/") {
+	body, err := io.ReadAll(io.LimitReader(res.Body, 8<<20+1))
+	if res.StatusCode != http.StatusOK || err != nil || len(body) < 200 || len(body) > 8<<20 || !strings.HasPrefix(res.Header.Get("Content-Type"), "image/") {
 		if res.StatusCode == http.StatusNotFound {
 			_ = os.MkdirAll(c.Dir, 0o755)
 			_ = os.WriteFile(miss, nil, 0o644)

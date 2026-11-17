@@ -26,12 +26,14 @@ func (s *Server) handleRerate(w http.ResponseWriter, r *http.Request) {
 	switch body.Which {
 	case "":
 		ids, err = s.Store.RerateCandidates()
+	case "library":
+		ids, err = s.Store.RerateCandidatesLibrary()
 	case "language":
 		ids, err = s.nonEnglishSummaries()
 	case "all":
 		ids, err = s.Store.AIRatedIDs()
 	default:
-		writeErr(w, http.StatusBadRequest, `which must be "", "language" or "all"`)
+		writeErr(w, http.StatusBadRequest, `which must be "", "library", "language" or "all"`)
 		return
 	}
 	if err != nil {

@@ -9,12 +9,13 @@ import (
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/covers"
+	"github.com/zachcurry13/novelcheck/internal/hardcover"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
 // Books whose cover Calibre does not have (no cover.jpg, and nothing from Open Library by ISBN) show a drawn
-// placeholder. The cover finder looks for a real one in the background (Open Library by ISBN, then a title and
-// author search there and in Google Books), slowly and politely, and keeps what it finds. Only a result whose
+// placeholder. The cover finder looks for a real one in the background (Open Library by ISBN, then Hardcover
+// (hccover.go), then a title and author search in Open Library and Google Books), slowly and politely, and keeps what it finds. Only a result whose
 // title really matches the book is used.
 
 type coverJob struct {
@@ -84,6 +85,10 @@ func (s *Server) findCovers(again bool) {
 		}
 	}()
 	ctx := context.Background()
+	var hc *hardcover.Client // Hardcover as a cover source, when someone in the family connected it
+	if token := s.Store.RatingsToken(); token != "" {
+		hc = &hardcover.Client{Token: token, URL: hardcoverURL}
+	}
 	for _, b := range missing {
 		j.mu.Lock()
 		stop := j.stop
@@ -114,6 +119,11 @@ func (s *Server) findCovers(again bool) {
 				} else if _, err := s.Store.RenameBook(b.ID, sug, b.Author); err == nil {
 					s.Store.MarkName(b.ID, 1)
 				}
+			}
+		}
+		if !ok { // Hardcover has many books the other two don't (self-published, Kindle Unlimited)
+			if u := s.hardcoverCover(ctx, hc, b, firstNonEmpty(sug, b.Title)); u != "" {
+				ok = s.Covers.Choose(ctx, s.coverName(b.ID), u)
 			}
 		}
 		if !ok && sug != "" { // search under the true title first

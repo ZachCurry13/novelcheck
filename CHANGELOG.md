@@ -10,6 +10,12 @@ becomes the release notes for that version and is shown in the app under
 - **Every search box, settings field, dropdown and note box is now rounded and filled**, like the Library's search: Check a book, Series, Libby search, search in the book, Same book as…, the recycle bin, Review covers, a photo of a shelf, the top bar's search, and every form in Settings and Admin. The field lights up in the accent colour while you type. In every theme, light and dark.
 - **Check a book's "Check" button** is the main (filled) button beside its search box.
 
+### 📚 Hardcover fixes the titles and finds the covers
+- **Hardcover is now a source of true titles.** The name finder only asked Open Library, which doesn't have self-published and Kindle Unlimited books, and only fixed typos, so a title like "Descent into the Void (An action packed science fiction adventure)" was never touched. When Hardcover knows the book under a tidier title (without the subtitle, the series in brackets, a series prefix or the author's name in front), that title is used: a Calibre book gets it saved in Calibre by itself (the same switch as before), any other book is renamed. A name a parent typed is never changed, and an ISBN that leads to a different book changes nothing. Hardcover's search now also tries the tidied forms of a messy title.
+- **Every book is looked at on Hardcover once more** after updating (about 800 books every 6 hours), so the titles already in the library get fixed too.
+- **The cover finder asks Hardcover** when Open Library and Google Books have nothing, and larger covers (up to 8 MB) are no longer cut short.
+- **The re-rate count is honest:** "Re-rate with the current rules" counted books that are only on Discover lists and events (about a thousand of them, kept out of your Library and the other counts). It now says how many are in your libraries, how many are only on lists, and has a button for each.
+
 ### 🐞 Fixes
 - **A book's page could stop opening** after a Deep Scan that found nothing to note (the Nightstand and the Library showed an error and the page stayed shut). The scan now keeps an empty list, and the page reads the older ones too.
 - **Authors with a comma in Calibre** (Calibre writes "Cornwell, Patricia" as "Cornwell| Patricia") are read with the comma, so the book is recognised as Patricia Cornwell's: her name comes off the front of the title, and Calibre's recycle bin shows the copy as still in the library instead of offering to put it back (Calibre then refused it as a duplicate).

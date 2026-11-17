@@ -82,3 +82,16 @@ func (s *Store) LibraryBookByKey(key string) int64 {
 		AND EXISTS (SELECT 1 FROM catalog_books cb WHERE cb.book_id = b.id) ORDER BY b.id LIMIT 1`, key, key)
 	return id
 }
+
+// HCIDOf is the book's Hardcover id, 0 when not known yet.
+func (s *Store) HCIDOf(id int64) int {
+	var n int
+	_ = s.DB.Get(&n, `SELECT hc_id FROM books WHERE id = ?`, id)
+	return n
+}
+
+// RecheckHardcover has the background pass look at every book on Hardcover again (once, when the pass learned
+// something new, like the true titles).
+func (s *Store) RecheckHardcover() {
+	_, _ = s.DB.Exec(`UPDATE books SET hc_rated_at = 0 WHERE hc_rated_at > 0`)
+}

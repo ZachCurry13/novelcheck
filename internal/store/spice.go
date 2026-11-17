@@ -60,9 +60,19 @@ func (s *Store) AISummaries() ([]AISummary, error) {
 // Calibre since, plus any book not yet checked for the current content items.
 // Hand-rated and Deep Scanned books keep their rating: they only get the
 // content check (see KeepsRating).
-func (s *Store) RerateCandidates() ([]int64, error) {
+func (s *Store) RerateCandidates() ([]int64, error) { return s.rerateIDs(false) }
+
+// RerateCandidatesLibrary is RerateCandidates without the books that are only on Discover lists and events (the
+// family's own libraries, Check a book lookups and wishlists still count): the same books the Library shows.
+func (s *Store) RerateCandidatesLibrary() ([]int64, error) { return s.rerateIDs(true) }
+
+func (s *Store) rerateIDs(libraryOnly bool) ([]int64, error) {
 	var ids []int64
-	err := s.DB.Select(&ids, `SELECT b.id FROM books b WHERE b.status = 'analyzed'
+	only := ""
+	if libraryOnly {
+		only = ` AND NOT ` + discoverOnlyCond
+	}
+	err := s.DB.Select(&ids, `SELECT b.id FROM books b WHERE b.status = 'analyzed'`+only+`
 		AND (b.content_version < ? OR ((b.spice_level IS NULL OR b.rules_version < ? OR b.flags_version < ? OR `+changedCond+`)
 			AND b.analysis_model NOT LIKE 'manual:%' AND b.analysis_model NOT LIKE 'deep:%'))
 		ORDER BY b.id`, content.Version, RulesVersion, s.FlagsVersion())

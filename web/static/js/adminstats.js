@@ -43,8 +43,9 @@ export function renderStats(view, s) {
   }
   if (s.rerate_candidates) {
     const est = perBookCost(s) * s.rerate_candidates;
-    rerate += `${s.non_english ? `<hr class="my-2 border-slate-700">` : ""}🌶️ <b>${fmtNum(s.rerate_candidates)}</b> book${s.rerate_candidates === 1 ? " was" : "s were"} ${s.changed_books ? `changed in Calibre since they were rated (${fmtNum(s.changed_books)}), or were ` : ""}rated before your latest rule changes (pepper wording, custom filters or the new content details).
-      <button data-act="rerate" class="btn-secondary ml-2 py-1">Re-rate with the current rules</button>
+    const lib = s.rerate_library ?? s.rerate_candidates, other = s.rerate_candidates - lib; // other = only on Discover lists and events
+    rerate += `${s.non_english ? `<hr class="my-2 border-slate-700">` : ""}🌶️ <b>${fmtNum(lib)}</b> book${lib === 1 ? " in your libraries was" : "s in your libraries were"} ${s.changed_books ? `changed in Calibre since they were rated (${fmtNum(s.changed_books)}), or were ` : ""}rated before your latest rule changes (pepper wording, custom filters or the new content details).${other > 0 ? ` Another <b>${fmtNum(other)}</b> are only on Discover lists and events (the Library doesn't show them).` : ""}
+      <span class="mt-2 flex flex-wrap gap-2"><button data-act="rerate-library" class="btn-secondary py-1">Re-rate my libraries${other > 0 ? ` (${fmtNum(lib)})` : ""}</button>${other > 0 ? `<button data-act="rerate" class="btn-ghost py-1">Re-rate all ${fmtNum(s.rerate_candidates)}</button>` : ""}</span>
       <span class="block text-xs text-slate-400">They stay in the library with their old rating until the new one arrives. Books you rated yourself and Deep Scanned books keep their rating; the AI only adds their content details.${est ? ` Estimated cost ≈ ${fmtMoney(est)}.` : ""}</span>`;
   }
   banner($("#rerate", view), rerate !== "", rerate);
