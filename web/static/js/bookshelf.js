@@ -49,10 +49,12 @@ function bookHTML(b, mode, i) {
   const vars = `--bs-b1:${c1};--bs-b2:${c2};--bs-t:${tc};`;
   const tip = esc(`${b.title}${b.author ? ` · ${b.author}` : ""}`);
   if (mode === "covers") {
-    return `<div class="bs-cover" style="${vars}--bs-art:${ART[h % ART.length](tc)}" title="${tip}"><b>${esc(b.title)}</b><small>${esc(b.author || "")}</small>${b.book_id ? `<img src="/api/books/${Number(b.book_id)}/cover" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">` : ""}</div>`;
+    const plain = `<b>${esc(b.title)}</b><small>${esc(b.author || "")}</small>`;
+    return `<div class="bs-cover" data-plain="${esc(plain)}" style="${vars}--bs-art:${ART[h % ART.length](tc)}" title="${tip}">${b.book_id
+      ? `<img src="/api/books/${Number(b.book_id)}/cover" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">` : plain}</div>`;
   }
   const last = (b.author || "").trim().split(/\s+/).pop();
-  return `<div class="bs-spine${i % 11 === 7 ? " bs-lean" : ""}" style="${vars}width:${WIDTHS[h % WIDTHS.length]}px;height:${HEIGHTS[(h >> 3) % HEIGHTS.length]}px" title="${tip}"><i>${esc(b.title)}</i><em>${esc(last)}</em></div>`;
+  return `<div class="bs-spine${i % 11 === 7 ? " bs-lean" : ""}" style="${vars}width:${WIDTHS[h % WIDTHS.length]}px;height:${HEIGHTS[(h >>> 3) % HEIGHTS.length]}px" title="${tip}"><i>${esc(b.title)}</i><em>${esc(last)}</em></div>`;
 }
 
 export async function renderBookshelf(host, state) {
@@ -116,7 +118,11 @@ export async function renderBookshelf(host, state) {
     if (pref.fall) stopFalling = startFalling(sceneHost.querySelector(".bs-fall"), sceneHost.querySelector(".bs-scene"), T);
   }
 
-  sceneHost.addEventListener("error", (e) => { if (e.target.tagName === "IMG") e.target.remove(); }, true); // no cover: the plain one underneath shows
+  sceneHost.addEventListener("error", (e) => { // no cover image: the plain generated cover (title and author) takes its place
+    const img = e.target;
+    if (img.tagName !== "IMG" || !img.parentElement?.dataset.plain) return;
+    img.parentElement.innerHTML = img.parentElement.dataset.plain;
+  }, true);
   ctl.addEventListener("click", (e) => {
     const b = e.target.closest("[data-set]");
     if (!b) return;

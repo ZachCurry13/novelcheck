@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.86.3]
+
+### 📚 Bookshelf fixes (from your screenshots)
+- **Spines:** a book with a long title no longer grows into a tower. Its spine keeps its height and the title is cut off with "…" (a counting slip gave many books no height at all). The title and the author no longer run into each other.
+- **Covers:** a book with a real cover shows only that cover. The title and author are written only on the plain cover made for a book with no picture (or whose picture can't be loaded). They used to be written over the real cover.
+- **Phones:** the sun or moon is smaller and no longer covers the heading.
+
 ## [1.86.2]
 
 ### 🩺 The Kindle self-test really sends its result
