@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.88.1]
+
+### 🤖 Backup AI wording
+- **The Google backup button no longer promises "a few hundred free calls a day".** Google doesn't publish fixed free-tier numbers; each account's limits are shown at aistudio.google.com/rate-limit. The button still picks the newest fast "flash-lite" model your key can use (today that is `gemini-3.5-flash-lite`) first.
+
 ## [1.88.0]
 
 ### 🗂️ Tidy my Kindle's books (KOReader plugin 1.57.0)

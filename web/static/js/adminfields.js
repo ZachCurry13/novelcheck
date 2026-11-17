@@ -129,7 +129,7 @@ export const EXTRA = {
     <div class="rounded-lg bg-slate-800/60 p-3 text-sm"><p class="text-slate-300">Trouble with the backup AI? Your Deep Scan machine already runs Ollama at home, so it can be the backup: free, no key and no daily limit.</p>
       <button type="button" data-act="backup-use-deep" class="btn-secondary mt-2">Use my Deep Scan machine as the backup AI</button>
       <p class="mt-1 text-xs text-slate-400">Replaces the backup AI's address, key and models. Needs the Deep Scan machine set up below.</p>
-      <hr class="my-3 border-slate-700"><p class="text-slate-300">Or use <b>Google's free Gemini</b> (a few hundred free calls a day on its fast model; Google may use free-tier prompts to improve its products). Paste a key from aistudio.google.com:</p>
+      <hr class="my-3 border-slate-700"><p class="text-slate-300">Or use <b>Google's free Gemini</b> (free to use; Google sets the daily limits per account, shown at aistudio.google.com/rate-limit, and may use free-tier prompts to improve its products). Paste a key from aistudio.google.com:</p>
       <span class="mt-2 flex flex-wrap gap-2"><input id="google-key" type="password" class="field min-w-0 flex-1" placeholder="Google AI Studio key (blank = reuse a Google key you already saved)" autocomplete="off">
       <button type="button" data-act="backup-use-google" class="btn-secondary">Use Google as the backup AI</button></span></div>`,
   "Deep Scans": note("deep_llm_enabled", "Deep Scans read whole books, so a bigger model on a stronger machine rates them better. Ratings stay on the main AI. While this machine is off or asleep, Deep Scans wait (🧬⏸) and carry on when it answers.") + `<div id="deep-preset-host" data-when="deep_llm_enabled"></div><div id="deep-status-host"></div>`,

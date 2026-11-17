@@ -39,8 +39,8 @@ func (s *Server) handleBackupUseDeep(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"base_url": ai.BaseURL, "models": s.Store.Setting(store.KeyDeepModels)})
 }
 
-// "Use Google's free Gemini as the backup AI": Google's free tier allows a few hundred calls a day on its small
-// models. Google retires model names for new accounts (gemini-2.5-flash was one), so the models are not guessed: the
+// "Use Google's free Gemini as the backup AI": Google's free tier has limits that differ by account and model (shown
+// in AI Studio, not published as fixed numbers). Google retires model names for new accounts (gemini-2.5-flash was one), so the models are not guessed: the
 // key is used to ask Google which models this account can use, and the newest "flash-lite" one (a fast model that
 // answers in seconds) goes first, the newest "flash" second. Prompts sent to the free tier may be used by Google to
 // improve its products. The key is Google AI Studio's; it is taken from the box, else from the backup or main AI
