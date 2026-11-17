@@ -17,13 +17,30 @@
      security rules (internal/api/middleware.go): a book's styles and fonts load, its scripts never run. -->
 <body class="reader">
   <div id="reader-book" class="reader-book"></div>
-  <!-- KOReader's tap zones: the top band opens the menu, the left third goes back, the rest goes forward. -->
+  <!-- The edges turn pages (their own strips, so a tap is never mistaken: the book's pages are scaled and moved
+       inside it); a tap anywhere on the book itself opens or closes the menu. -->
+  <button type="button" id="reader-prev" class="reader-zone reader-zone-prev" aria-label="Previous page"></button>
+  <button type="button" id="reader-next" class="reader-zone reader-zone-next" aria-label="Next page"></button>
+  <!-- Tap the middle of the page for the menu (a bar at the top with Exit, a bar at the bottom with where you are and
+       the tools); the left edge turns back, the right edge forward. -->
   <header id="reader-top" class="reader-top" hidden>
-    <a href="/#/library" id="reader-close" class="icon-btn" aria-label="Back to NovelCheck"><span class="ms" aria-hidden="true">arrow_back</span></a>
+    <a href="/#/library" id="reader-close" class="reader-exit">← Exit</a>
     <p id="reader-title" class="reader-title"></p>
-    <button type="button" id="reader-toc-btn" class="icon-btn" aria-label="Contents"><span class="ms" aria-hidden="true">menu</span></button>
-    <button type="button" id="reader-settings-btn" class="icon-btn" aria-label="Reading settings"><span class="ms" aria-hidden="true">settings</span></button>
+    <button type="button" id="reader-search-btn" class="icon-btn" aria-label="Search in the book"><span aria-hidden="true">⌕</span></button>
+    <button type="button" id="reader-mark-btn" class="icon-btn" aria-label="Bookmark this page" aria-pressed="false"><span aria-hidden="true">🔖</span></button>
   </header>
+  <footer id="reader-bottom" class="reader-bottom" hidden>
+    <div class="reader-prog"><span id="reader-pct">0%</span>
+      <input id="reader-slider" type="range" min="0" max="1000" value="0" aria-label="Where you are in the book">
+      <span id="reader-left"></span></div>
+    <div class="reader-tools">
+      <button type="button" id="reader-toc-btn" class="reader-tool"><b aria-hidden="true">☰</b>Contents</button>
+      <button type="button" id="reader-settings-btn" class="reader-tool"><b aria-hidden="true">Aa</b>Text</button>
+      <button type="button" id="reader-theme-btn" class="reader-tool"><b id="reader-theme-ic" aria-hidden="true">☀</b><span id="reader-theme-l">Day</span></button>
+      <button type="button" id="reader-marks-btn" class="reader-tool"><b aria-hidden="true">🔖</b>Bookmarks</button>
+      <button type="button" id="reader-ko-btn" class="reader-tool" hidden><b aria-hidden="true">⇄</b><span id="reader-ko-l">Kindle</span></button>
+    </div>
+  </footer>
   <div id="reader-panel" class="reader-panel" hidden></div>
   <footer id="reader-status" class="reader-status" aria-live="polite"></footer>
   <p id="reader-note" class="reader-note" hidden></p>

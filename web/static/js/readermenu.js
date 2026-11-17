@@ -1,12 +1,12 @@
-// The reader's menu (js/reader.js): the book's contents, and KOReader's main reading settings: font, size, line
-// spacing, margins and day, sepia or night. Settings are kept on this device (they suit its screen) and apply
+// The reader's panels (js/reader.js, js/readerbars.js): the book's contents, and the Aa settings: text size, page colour, font, line
+// spacing, margins, text edges and turning pages by tapping or scrolling. Settings are kept on this device (they suit its screen) and apply
 // to every book.
 const KEY = "nc:reader";
-const DEFAULTS = { font: "book", size: 100, spacing: 1.5, margin: "medium", theme: "night", justify: true };
+const DEFAULTS = { font: "book", size: 100, spacing: 1.5, margin: "medium", theme: "night", justify: true, flow: "paginated" };
 const FONTS = { book: ["The book's own", ""], serif: ["Serif", "Georgia, 'Iowan Old Style', 'Palatino Linotype', serif"],
   sans: ["Sans", "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"], dyslexic: ["OpenDyslexic", "'OpenDyslexic', sans-serif"] };
 const MARGINS = { small: 16, medium: 40, large: 72 };
-const THEMES = { day: ["Day", "#ffffff", "#1a1a1a"], sepia: ["Sepia", "#f4ecd8", "#3b2f22"], night: ["Night", "#141415", "#d6d6d6"] };
+export const THEMES = { day: ["Day", "#ffffff", "#1a1a1a"], sepia: ["Sepia", "#f4ecd8", "#3b2f22"], night: ["Night", "#141415", "#d6d6d6"] };
 
 export function readerSettings() {
   try {
@@ -15,6 +15,8 @@ export function readerSettings() {
     return { ...DEFAULTS };
   }
 }
+
+export const keepSettings = (s) => keep(s);
 
 function keep(s) {
   try {
@@ -39,7 +41,7 @@ function css(s) {
 
 export function applySettings(view, s) {
   const r = view.renderer;
-  r.setAttribute("flow", "paginated");
+  r.setAttribute("flow", s.flow === "scrolled" ? "scrolled" : "paginated"); // turn pages, or scroll
   r.setAttribute("margin", `${MARGINS[s.margin] ?? 40}px`);
   r.setAttribute("gap", "6%");
   r.setAttribute("max-inline-size", "720px");
@@ -54,7 +56,7 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 
 export function openContents(view) {
   const items = [];
-  const walk = (list = [], depth = 0) => list.forEach((t) => {
+  const walk = (list, depth = 0) => (list || []).forEach((t) => { // a chapter with no parts has subitems null
     items.push(`<li><button type="button" data-href="${esc(t.href || "")}" class="reader-toc-item depth-${Math.min(depth, 3)}">${esc((t.label || "").trim())}</button></li>`);
     walk(t.subitems, depth + 1);
   });
@@ -74,17 +76,22 @@ export function openContents(view) {
 
 export function openSettings(view) {
   const s = readerSettings();
-  const choice = (name, value, label, on) => `<button type="button" data-set="${name}" data-value="${value}" aria-pressed="${on}" class="chip-filter">${label}</button>`;
-  const row = (title, inner) => `<div class="space-y-2"><p class="text-sm text-slate-400">${title}</p><div class="flex flex-wrap gap-2">${inner}</div></div>`;
+  const seg = (name, opts, cur) => `<div class="reader-seg" role="group">${opts.map(([v, l]) =>
+    `<button type="button" data-set="${name}" data-value="${v}" aria-pressed="${String(cur) === String(v)}">${l}</button>`).join("")}</div>`;
+  const row = (title, inner) => `<div class="reader-row"><span>${title}</span>${inner}</div>`;
   const paint = () => {
-    panel().innerHTML = `<h2 class="text-base font-medium">Reading settings</h2><div class="mt-3 space-y-4">
-      ${row("Font", Object.entries(FONTS).map(([k, [l]]) => choice("font", k, l, s.font === k)).join(""))}
-      ${row(`Size · ${s.size}%`, `${choice("size", s.size - 10, "A−", false)}${choice("size", 100, "Reset", s.size === 100)}${choice("size", s.size + 10, "A+", false)}`)}
-      ${row("Line spacing", [[1.2, "Tight"], [1.5, "Normal"], [1.8, "Loose"]].map(([v, l]) => choice("spacing", v, l, s.spacing === v)).join(""))}
-      ${row("Margins", Object.keys(MARGINS).map((k) => choice("margin", k, k[0].toUpperCase() + k.slice(1), s.margin === k)).join(""))}
-      ${row("Page", Object.entries(THEMES).map(([k, [l]]) => choice("theme", k, l, s.theme === k)).join(""))}
-      ${row("Text", `${choice("justify", "true", "Justified", s.justify)}${choice("justify", "false", "Ragged right", !s.justify)}`)}
-      <p class="text-xs text-slate-500">Kept on this device for every book.</p></div>`;
+    panel().innerHTML = `<div class="reader-grab" aria-hidden="true"></div>
+      ${row("Text size", `<div class="reader-seg"><button type="button" data-set="size" data-value="${s.size - 10}" aria-label="Smaller text">A−</button>
+        <button type="button" data-set="size" data-value="100" aria-pressed="${s.size === 100}" title="Back to 100%">${s.size}%</button>
+        <button type="button" data-set="size" data-value="${s.size + 10}" aria-label="Bigger text">A+</button></div>`)}
+      ${row("Page", `<div class="reader-swatches">${Object.entries(THEMES).map(([k, [l, bg, fg]]) =>
+        `<button type="button" data-set="theme" data-value="${k}" aria-pressed="${s.theme === k}" class="reader-swatch reader-swatch-${k}">${l}</button>`).join("")}</div>`)}
+      ${row("Font", seg("font", Object.entries(FONTS).map(([k, [l]]) => [k, k === "book" ? "Book" : k === "dyslexic" ? "Dyslexic" : l]), s.font))}
+      ${row("Line spacing", seg("spacing", [[1.2, "Tight"], [1.5, "Normal"], [1.8, "Loose"]], s.spacing))}
+      ${row("Margins", seg("margin", Object.keys(MARGINS).map((k) => [k, k[0].toUpperCase() + k.slice(1)]), s.margin))}
+      ${row("Text edges", seg("justify", [["true", "Even"], ["false", "Ragged"]], s.justify))}
+      ${row("Turn pages", seg("flow", [["paginated", "Tap"], ["scrolled", "Scroll"]], s.flow))}
+      <p class="mt-2 text-xs opacity-60">Kept on this device for every book.</p>`;
   };
   paint();
   panel().hidden = false;
@@ -99,5 +106,6 @@ export function openSettings(view) {
     keep(s);
     applySettings(view, s);
     paint();
+    document.dispatchEvent(new CustomEvent("nc:reader-settings")); // the bar's Day · Sepia · Night follows
   };
 }

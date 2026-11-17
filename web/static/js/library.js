@@ -218,6 +218,9 @@ export async function renderLibrary(view, state) {
   countFilters();
   redrawChips();
   await load(true);
+  // Back from the reader (#/library?book=5): the book you were reading, open.
+  const reading = Number(shelf.get("book"));
+  if (reading) openBook(reading, state, () => load(true));
   // Parents see ratings arrive on the cards as the AI works.
   const stopLive = manager ? liveCards(grid, cardFor, () => sel.repaint()) : null;
   if (stopLive) refreshActivity();

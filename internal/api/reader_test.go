@@ -61,3 +61,25 @@ func TestReaderPlaceFromReadingStatistics(t *testing.T) {
 		t.Fatalf("the e-reader's place from its statistics: %v", out)
 	}
 }
+
+// Bookmarks: added, listed from the start of the book, taken away; a bad place is refused.
+func TestReaderBookmarks(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	id, _ := st.UpsertBook("Marked Book", "A. Writer", "", "")
+	path := "/api/books/" + itoa(id) + "/bookmarks"
+	if res, _ := admin.do("POST", path, map[string]any{"cfi": "nope", "fraction": 0.1}, true); res.StatusCode != 400 {
+		t.Fatalf("bad place: %d", res.StatusCode)
+	}
+	admin.do("POST", path, map[string]any{"cfi": "epubcfi(/6/8!/4/2)", "fraction": 0.6, "label": "Chapter 9"}, true)
+	admin.do("POST", path, map[string]any{"cfi": "epubcfi(/6/4!/4/2)", "fraction": 0.2, "label": "Chapter 2"}, true)
+	_, out := admin.do("GET", path, nil, false)
+	list := out["bookmarks"].([]any)
+	if len(list) != 2 || list[0].(map[string]any)["label"] != "Chapter 2" {
+		t.Fatalf("listed in book order: %v", list)
+	}
+	_, out = admin.do("DELETE", path, map[string]any{"cfi": "epubcfi(/6/4!/4/2)"}, true)
+	if len(out["bookmarks"].([]any)) != 1 {
+		t.Fatalf("taken away: %v", out)
+	}
+}

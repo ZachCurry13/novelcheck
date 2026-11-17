@@ -526,6 +526,17 @@ CREATE TABLE IF NOT EXISTS hardcover_pushed (
     pages   INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, book_id)
 );
+
+-- Bookmarks in NovelCheck's reader: a place in a book someone wants to come back to.
+CREATE TABLE IF NOT EXISTS reader_bookmarks (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    cfi        TEXT NOT NULL,
+    fraction   REAL NOT NULL DEFAULT 0,
+    label      TEXT NOT NULL DEFAULT '',  -- the chapter it is in
+    created_at INTEGER NOT NULL DEFAULT 0, -- Unix seconds
+    PRIMARY KEY (user_id, book_id, cfi)
+);
 -- Books on a reader's e-reader, as the KOReader plugin reports them (the
 -- device's whole list is replaced on each report).
 CREATE TABLE IF NOT EXISTS device_books (

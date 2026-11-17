@@ -1,16 +1,20 @@
-// NovelCheck's reader, laid out like KOReader: the book fills the screen, tap the left third to go back and
-// the rest to go forward, tap the top band for the menu (contents and reading settings, js/readermenu.js), and
-// a slim status line shows the chapter and how far you are. The book engine is foliate-js (vendor/foliate).
+// NovelCheck's reader, laid out like an e-reader: the book fills the screen, tap the left edge to go back and the
+// right edge to go forward, and tap the middle for the menu (Exit, search and a bookmark at the top; where you are
+// and the tools at the bottom: js/readerbars.js, js/readermenu.js). A slim status line shows the chapter and how
+// far you are. It opens with the menu showing for a moment, so the way out is never hidden. The book engine is
+// foliate-js (vendor/foliate).
 // Your place is saved to NovelCheck as you read; when KOReader's progress sync has you further on, the reader
 // offers to jump there (by percentage, so to about a page).
 import "/vendor/foliate/view.js";
 import { readerSettings, applySettings, openContents, openSettings, closePanel } from "./readermenu.js";
+import { bindBars } from "./readerbars.js";
 
 const $ = (s) => document.querySelector(s);
 const id = Number(new URLSearchParams(location.search).get("id"));
 const api = (path, opts = {}) => fetch(path, { credentials: "same-origin", ...opts, headers: { "X-NovelCheck": "1", ...(opts.headers || {}) } });
 
 let view;
+let moved = () => {}; // the bottom bar's slider and labels, once the book is open
 let saveTimer;
 let lastSaved = "";
 const status = { chapter: "", fraction: 0, left: null };
@@ -74,23 +78,29 @@ function save(cfi, fraction, xpointer) {
 
 function toggleMenu(show = $("#reader-top").hidden) {
   $("#reader-top").hidden = !show;
+  $("#reader-bottom").hidden = !show;
+  $("#reader-status").hidden = show;
   if (!show) closePanel();
 }
 
-// tap decides what a tap at screen position x, y does (KOReader's zones).
-function tap(x, y) {
+// A tap on the book itself (between the edge strips) opens the menu, or closes it (and any panel) when open.
+function tap() {
+  const open = !$("#reader-top").hidden || !$("#reader-panel").hidden;
+  toggleMenu(!open);
+}
+
+// The edge strips turn pages; with the menu open, a tap there closes it first.
+function edge(forward) {
   if (!$("#reader-top").hidden || !$("#reader-panel").hidden) return toggleMenu(false);
-  if (y < window.innerHeight * 0.15) return toggleMenu(true);
-  if (x < window.innerWidth / 3) view.prev();
-  else view.next();
+  if (forward) view.next();
+  else view.prev();
 }
 
 function onLoad({ detail: { doc } }) {
-  // Taps land inside the book's frame: turn the frame's position into a position on the screen.
+  // A tap on the book (not a link, not choosing words) is for the menu; the edges have their own strips.
   doc.addEventListener("click", (e) => {
     if (e.target.closest?.("a[href]") || doc.getSelection()?.toString()) return;
-    const frame = doc.defaultView.frameElement?.getBoundingClientRect() || { left: 0, top: 0 };
-    tap(frame.left + e.clientX, frame.top + e.clientY);
+    tap();
   });
   doc.addEventListener("keydown", onKey);
 }
@@ -108,6 +118,7 @@ function onRelocate({ detail }) {
   status.fraction = detail.fraction || 0;
   status.left = detail.time?.section != null ? Math.max(1, Math.round(detail.time.section)) : null;
   paintStatus();
+  moved(detail);
   save(detail.cfi, status.fraction, readerXPointer(detail));
 }
 
@@ -156,8 +167,16 @@ async function start() {
     }
   }
   document.addEventListener("keydown", onKey);
+  $("#reader-prev").onclick = () => edge(false);
+  $("#reader-next").onclick = () => edge(true);
   $("#reader-toc-btn").onclick = () => openContents(view);
   $("#reader-settings-btn").onclick = () => openSettings(view);
+  moved = bindBars(view, { id, api, info, here, closeMenu: () => toggleMenu(false) });
+  // The menu shows for a moment when the book opens, so nobody has to guess where the way out is.
+  toggleMenu(true);
+  setTimeout(() => {
+    if ($("#reader-panel").hidden && !$("#reader-top").hidden) toggleMenu(false);
+  }, 3500);
 }
 
 start();

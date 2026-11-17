@@ -4,6 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.81.0]
+
+### 📖 The reader, like an e-reader
+- **Tap the middle of the page for the menu.** A bar at the top has a clear **← Exit** (back to the book's page), the title, **search in the book** and a **bookmark** for the page you're on. A bar at the bottom shows where you are on a **slider** (drag to anywhere) with the time left in the book, and **Contents**, **Aa**, a one-tap **Day · Sepia · Night** switch, your **Bookmarks** and a jump to where your **Kindle** is.
+- **The menu shows by itself for a moment when a book opens**, so the way out is never hidden.
+- **Aa:** text size, page colour, font (with OpenDyslexic), line spacing, margins, even or ragged text edges, and turning pages by **tapping or scrolling**.
+- **Bookmarks are kept with your account**, so they're there on every device.
+- **Taps work on every phone.** The left and right edges turn pages; a tap anywhere else is for the menu. (The reader used to work out where you tapped from inside the book's page, which some phones scale and move, so a tap could land in the wrong place, or do nothing.)
+- **Contents opens for every book.** It stopped with an error on books whose chapters have no parts listed.
+
 ## [1.80.0]
 
 ### 🔎 Filters as designed, everywhere
