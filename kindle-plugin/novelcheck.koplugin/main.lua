@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.55.0"
+local VERSION = "1.55.1"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -282,6 +282,12 @@ end
 -- otherwise it is returned as text. It returns the HTTP code and the body.
 function NovelCheck:request(path, file, post_body)
     local code, body = self:requestAt(self.settings:readSetting("server"), path, file, post_body)
+    -- "cannot assign requested address" and "network is unreachable" mean Wi-Fi had no address yet (the Kindle just
+    -- woke or is still joining): wait a moment and try once more before giving up.
+    if type(code) ~= "number" and (tostring(body):find("assign requested address", 1, true) or tostring(body):find("unreachable", 1, true)) then
+        socket.sleep(4)
+        code, body = self:requestAt(self.settings:readSetting("server"), path, file, post_body)
+    end
     local alt = trim(self.settings:readSetting("server_alt"))
     if type(code) ~= "number" and alt ~= "" then
         -- The main address could not be reached (away from home, say): try the backup address.

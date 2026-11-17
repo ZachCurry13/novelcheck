@@ -21,6 +21,9 @@ becomes the release notes for that version and is shown in the app under
 ### 🌙 Re-rate overnight only
 - **"Re-rate overnight only"** (next to the re-rate buttons): the books wait for your automatic-rating hours (Admin → AI & Scans) and go in batches of 50 then, so re-rating a whole library doesn't run flat out all day. With no hours set they go at once.
 
+### 📶 Kindle plugin 1.55.1
+- **"Cannot assign requested address" when the Kindle has just woken up:** the plugin now waits a few seconds and tries once more before it says it could not reach NovelCheck. (That message means Wi-Fi had no address yet.)
+
 ### 📥 See what was copied from your Kindles
 - **Library cleanup → Books copied from Kindles** shows, per Kindle, how many books were copied, their size and the newest ones, and where the files are.
 
