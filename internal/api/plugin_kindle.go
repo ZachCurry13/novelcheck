@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -22,6 +23,7 @@ import (
 // added to Calibre unless the library already has that title.
 
 const maxKindleFile = 1 << 30
+const maxKindleList = 20000
 
 var kindleExts = map[string]bool{".epub": true, ".pdf": true, ".mobi": true, ".azw": true, ".azw3": true, ".azw1": true,
 	".kfx": true, ".kepub": true, ".fb2": true, ".cbz": true, ".prc": true}
@@ -46,6 +48,19 @@ func kindleSkip(rel string) bool {
 		return true
 	}
 	return !kindleExts[path.Ext(l)]
+}
+
+// backupSkip is a path a whole-Kindle backup leaves out: hidden and system folders, KOReader's caches and its
+// update downloads, the Trash, and half-finished files. Everything else (the app, plugins, settings, books) is kept.
+func backupSkip(rel string) bool {
+	l := strings.ToLower(rel)
+	for _, part := range strings.Split(l, "/") {
+		if strings.HasPrefix(part, ".") || part == "system" || part == "trash" || part == "lost+found" {
+			return true
+		}
+	}
+	return strings.HasPrefix(l, "koreader/cache/") || strings.HasPrefix(l, "koreader/ota/") || strings.HasPrefix(l, "koreader/crash.log") ||
+		strings.HasSuffix(l, ".part") || strings.HasSuffix(l, ".new")
 }
 
 // kindleRel makes a safe relative path from what the device sent ("" when it is not usable).
@@ -82,12 +97,14 @@ func (s *Server) handlePluginKindleCheck(w http.ResponseWriter, r *http.Request)
 	}
 	var body struct {
 		Device string `json:"device"`
+		Mode   string `json:"mode"` // "backup": every file of the Kindle, not only the books
 		Files  []struct {
-			Path string `json:"path"`
-			Size int64  `json:"size"`
+			Path  string `json:"path"`
+			Size  int64  `json:"size"`
+			Mtime int64  `json:"mtime"`
 		} `json:"files"`
 	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<20)).Decode(&body); err != nil || len(body.Files) > 5000 {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 8<<20)).Decode(&body); err != nil || len(body.Files) > maxKindleList {
 		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "bad request"})
 		return
 	}
@@ -95,11 +112,13 @@ func (s *Server) handlePluginKindleCheck(w http.ResponseWriter, r *http.Request)
 	send, have, skipped := []string{}, 0, 0
 	for _, f := range body.Files {
 		rel := kindleRel(f.Path)
-		if rel == "" || kindleSkip(rel) || f.Size < 2048 || f.Size > maxKindleFile {
+		backup := body.Mode == "backup"
+		if rel == "" || f.Size > maxKindleFile || (backup && (backupSkip(rel) || f.Size < 0)) || (!backup && (kindleSkip(rel) || f.Size < 2048)) {
 			skipped++
 			continue
 		}
-		if fi, err := os.Stat(filepath.Join(root, filepath.FromSlash(rel))); err == nil && fi.Size() == f.Size {
+		// the same size and, for a backup, the same change time: settings change without changing size
+		if fi, err := os.Stat(filepath.Join(root, filepath.FromSlash(rel))); err == nil && fi.Size() == f.Size && (!backup || f.Mtime == 0 || fi.ModTime().Unix() == f.Mtime) {
 			have++
 			continue
 		}
@@ -115,7 +134,8 @@ func (s *Server) handlePluginKindleFile(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	rel := kindleRel(r.URL.Query().Get("path"))
-	if rel == "" || kindleSkip(rel) {
+	backup := r.URL.Query().Get("mode") == "backup"
+	if rel == "" || (backup && backupSkip(rel)) || (!backup && kindleSkip(rel)) {
 		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "not a book file"})
 		return
 	}
@@ -132,7 +152,7 @@ func (s *Server) handlePluginKindleFile(w http.ResponseWriter, r *http.Request) 
 	}
 	n, err := io.Copy(f, http.MaxBytesReader(w, r.Body, maxKindleFile))
 	_ = f.Close()
-	if err != nil || n < 2048 {
+	if err != nil || n < 0 || (!backup && n < 2048) {
 		_ = os.Remove(tmp)
 		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "the upload didn't finish"})
 		return
@@ -141,9 +161,12 @@ func (s *Server) handlePluginKindleFile(w http.ResponseWriter, r *http.Request) 
 		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "can't save the file"})
 		return
 	}
+	if m, _ := strconv.ParseInt(r.URL.Query().Get("mtime"), 10, 64); backup && m > 0 {
+		_ = os.Chtimes(dest, time.Unix(m, 0), time.Unix(m, 0)) // so the next check sees the file as unchanged
+	}
 	locked := kindleLocked(dest)
 	added := false
-	if !locked {
+	if !locked && !backup {
 		added = s.addKindleToCalibre(r, dest, path.Base(rel))
 	}
 	kosyncJSON(w, http.StatusOK, map[string]any{"stored": true, "locked": locked, "added_to_calibre": added})

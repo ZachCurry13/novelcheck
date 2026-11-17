@@ -101,3 +101,51 @@ func TestKindleCopy(t *testing.T) {
 		t.Fatalf("no way out of the folder: %d", res.StatusCode)
 	}
 }
+
+// "Back up my Kindle": every file of the user storage except hidden and system folders and caches; a file is sent
+// again when its change time differs (settings change without changing size); a small file counts.
+func TestKindleBackupKeepsSettingsAndPlugins(t *testing.T) {
+	dir := t.TempDir()
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = dir })
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+	key := hex.EncodeToString(sum[:])
+	call := func(method, path string, body []byte) map[string]any {
+		req, _ := http.NewRequest(method, srv.URL+"/kosync/plugin/kindle/"+path, bytes.NewReader(body))
+		req.Header.Set("x-auth-user", "admin")
+		req.Header.Set("x-auth-key", key)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil || res.StatusCode != 200 {
+			t.Fatalf("%s %s: %v %v", method, path, err, res)
+		}
+		var out map[string]any
+		_ = json.NewDecoder(res.Body).Decode(&out)
+		return out
+	}
+	check := func(mtime int64) map[string]any {
+		b, _ := json.Marshal(map[string]any{"device": "Test Kindle", "mode": "backup", "files": []map[string]any{
+			{"path": "/mnt/us/koreader/settings/reader.lua", "size": 120, "mtime": mtime},
+			{"path": "/mnt/us/koreader/plugins/novelcheck.koplugin/main.lua", "size": 500, "mtime": 5},
+			{"path": "/mnt/us/extensions/kual/menu.json", "size": 80, "mtime": 5},
+			{"path": "/mnt/us/koreader/cache/thumb.png", "size": 900, "mtime": 5},
+			{"path": "/mnt/us/.active_content_sandbox/x.db", "size": 900, "mtime": 5},
+			{"path": "/mnt/us/system/version.txt", "size": 20, "mtime": 5},
+		}})
+		return call("POST", "check", b)
+	}
+	out := check(100)
+	if send, _ := out["send"].([]any); len(send) != 3 {
+		t.Fatalf("three files are asked for, not the cache, the hidden folder or system: %v", out)
+	}
+	call("PUT", "file?device=Test+Kindle&mode=backup&mtime=100&path=/mnt/us/koreader/settings/reader.lua", bytes.Repeat([]byte("x"), 120))
+	out = check(100)
+	if send, _ := out["send"].([]any); len(send) != 2 || out["have"] != 1.0 {
+		t.Fatalf("a saved file is not sent again: %v", out)
+	}
+	out = check(200)
+	if send, _ := out["send"].([]any); len(send) != 3 {
+		t.Fatalf("a file changed since is sent again: %v", out)
+	}
+}

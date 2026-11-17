@@ -82,6 +82,11 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 - Files are copied exactly as they are, protected ones too; nothing is unlocked or changed. NovelCheck keeps every file in its `kindle-backup` folder and adds the ones that are not locked to Calibre (unless Calibre already has that title). Logs and other files that only look like books are left out.
 - One book at a time; if the connection drops it carries on next time.
 
+## Back up the whole Kindle (NovelCheck 1.87 or newer, plugin 1.56.0)
+
+- **NovelCheck > Back up my Kindle now** copies the Kindle's user storage to NovelCheck: KOReader and its plugins and settings (your reading progress, highlights and statistics too), KUAL and other launchers, fonts, dictionaries and your books. Hidden and system folders, caches and update downloads are left out. **Automatic > Back up my whole Kindle when online** does it once a day.
+- To restore on a new or reset Kindle (jailbroken, KOReader not needed first): in NovelCheck open **Library cleanup → Books copied from Kindles → Download everything (ZIP)**, plug the Kindle into a computer and unzip the ZIP into its top folder. The Kindle's own system and your Amazon account are not part of the backup.
+
 ## Developer tools (NovelCheck 1.50 or newer, plugin 1.50.0)
 
 **NovelCheck > Developer tools** helps when something doesn't work: **Run self-test** checks the connection, sign-in and the plugin's files; **View log** shows every menu tap, request and error; **Send log to NovelCheck** sends the log to Settings > Developer > Bug reports (your sync code is removed), **Send log with a note...** adds what you were doing, and **Send errors automatically** (on by default) sends the log by itself, at most every ten minutes, after an error. **Run self-test** sends its result too. Times in the log are UTC. If the plugin doesn't appear in KOReader at all, look for `LOAD_ERROR.txt` in the plugin's folder, or send KOReader's `crash.log`.

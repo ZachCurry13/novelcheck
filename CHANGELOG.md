@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.87.0]
+
+### 💾 Back up the whole Kindle (KOReader plugin 1.56.0)
+- **NovelCheck > Back up my Kindle now** copies everything on the Kindle's user storage to your server: **KOReader itself, its plugins and settings, your reading progress and highlights, statistics, KUAL and other launchers, fonts, dictionaries, and the books**. Hidden and system folders, KOReader's caches and its update downloads are left out.
+- **Automatic:** **Automatic > Back up my whole Kindle when online (once a day)**. A file is sent again when its size or change time differs, so settings changes are kept; it carries on where it stopped if the connection drops.
+- **Restoring:** Library cleanup → Books copied from Kindles → **Download everything (ZIP)**, then (on a new or reset Kindle that is jailbroken and has been plugged into a computer) unzip it into the Kindle's top folder. The Kindle's own system and your Amazon sign-in can't be backed up this way; they are set up again on a new Kindle.
+
 ## [1.86.3]
 
 ### 📚 Bookshelf fixes (from your screenshots)

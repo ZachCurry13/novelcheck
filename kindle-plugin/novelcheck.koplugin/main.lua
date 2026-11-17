@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.55.2"
+local VERSION = "1.56.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -120,6 +120,7 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("On this device"), callback = function() DeviceBooks.show(self) end },
             { text = _("Delete finished books..."), callback = function() DeviceBooks.removeFinished(self) end },
             { text = _("Finish this book..."), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
+            { text = _("Back up my Kindle now (apps, plugins, settings, books)"), callback = function() if self.backupKindle then self:backupKindle(false) end end },
             { text = _("Copy my Kindle to NovelCheck now"), callback = function() if self.copyKindle then self:copyKindle(false) end end },
             { text = _("Send highlights now"), callback = function() if self.sendHighlights then self:sendHighlights(false) end end },
             { text = _("Tidy book names"), callback = function() self:tidyNames() end },
@@ -134,6 +135,9 @@ function NovelCheck:addToMainMenu(menu_items)
                 { text = _("Sync reading statistics when online"), keep_menu_open = true,
                   checked_func = function() return self:autoEnabled("auto_stats", false) end,
                   callback = function() self:toggleAuto("auto_stats", false) end },
+                { text = _("Back up my whole Kindle when online (once a day)"), keep_menu_open = true,
+                  checked_func = function() return self:autoEnabled("auto_backup", true) end,
+                  callback = function() self:toggleAuto("auto_backup", true) end },
                 { text = _("Copy my Kindle's books when online"), keep_menu_open = true,
                   checked_func = function() return self:autoEnabled("auto_kindle", true) end,
                   callback = function() self:toggleAuto("auto_kindle", true) end },
@@ -212,7 +216,7 @@ function NovelCheck:onNetworkConnected()
         return
     end
     if not (self:autoEnabled("auto_report", true) or self:autoEnabled("auto_download", false) or self:autoEnabled("auto_stats", false)
-        or self:autoEnabled("auto_highlights", true) or self:autoEnabled("auto_kindle", true)) then
+        or self:autoEnabled("auto_highlights", true) or self:autoEnabled("auto_kindle", true) or self:autoEnabled("auto_backup", true)) then
         return
     end
     local now = os.time()
@@ -238,7 +242,10 @@ function NovelCheck:autoRun()
     if self.sendHighlights and self:autoEnabled("auto_highlights", true) then
         self:sendHighlights(true)
     end
-    if self.copyKindle and self:autoEnabled("auto_kindle", true) then
+    local day = 22 * 3600
+    if self.backupKindle and self:autoEnabled("auto_backup", true) and os.time() - (tonumber(self.settings:readSetting("last_backup")) or 0) > day then
+        self:backupKindle(true) -- everything, books included, at most once a day
+    elseif self.copyKindle and self:autoEnabled("auto_kindle", true) then
         self:copyKindle(true)
     end
     self:checkUpdate(true)

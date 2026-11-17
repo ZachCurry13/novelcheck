@@ -42,7 +42,7 @@ func (s *Server) handleKindleFiles(w http.ResponseWriter, r *http.Request) {
 	}
 	out := []file{}
 	_ = filepath.WalkDir(root, func(p string, e os.DirEntry, err error) error {
-		if err != nil || e.IsDir() || strings.HasSuffix(p, ".part") || len(out) >= 5000 {
+		if err != nil || e.IsDir() || strings.HasSuffix(p, ".part") || len(out) >= 20000 {
 			return nil
 		}
 		fi, err := e.Info()
