@@ -19,6 +19,9 @@ becomes the release notes for that version and is shown in the app under
 - **From the very top of a page, pull straight down and hold, then let go, and the page is drawn again with fresh data** (or the app reloads when a newer NovelCheck is ready). A small pill follows your finger: "Pull to refresh", then "Keep holding…", then, after about a third of a second at about 150 px, "Release to refresh" with a short buzz. Only letting go from that last state refreshes.
 - **It is meant to be hard to do by accident:** a flick, an ordinary scroll that reaches the top, a sideways swipe, or a touch that starts in a menu, a dialog, a text box or a row that scrolls sideways does nothing. (The browser's own pull-to-refresh stays off: it reloaded the whole app by accident while scrolling.)
 
+### 📬 BookBub's emails from the email account you already set up
+- **A button under Free book events: "Use my SMTP email account for BookBub".** If BookBub's emails arrive in the same account as Send-to-Kindle, one press copies that account's address and app password (they stay on the server) into the BookBub mailbox, picks the matching mail server (Gmail, Outlook, Yahoo and iCloud are known; others are worked out from the SMTP name, or left as they were) and switches the BookBub event on. It asks you to Save the SMTP details first if you haven't. Nothing in the mailbox is marked, moved or deleted.
+
 ### 🆕 The release notes come up after an update
 - **After NovelCheck updates, a "What's new" window opens once** with the release notes of the versions that phone hasn't seen yet (the newest three; the rest are under More → What's new). **Got it** closes it, **All release notes** opens the full page. It shows once per device and version, and not for kids' accounts or for someone's very first visit (they get the guide). Until now the notes were only on the What's new page, and a phone doesn't even show the version number in the top bar.
 

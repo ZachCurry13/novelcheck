@@ -139,6 +139,17 @@ export async function renderAdmin(view, state) {
       if (r) toast(`Re-rating ${r.queued} books`);
     } else if (act === "sync") {
       await attempt(() => post("/api/admin/calibre-sync"), "Calibre sync started");
+    } else if (act === "mail-use-smtp") {
+      const r = await attempt(() => post("/api/admin/events-mail/use-smtp"));
+      if (r) { // show what was saved (the password stays on the server)
+        const set = (k, v) => { const f = $(`[data-key="${k}"]`, view); if (f) f.value = v; };
+        set("events_mail_user", r.user);
+        set("events_mail_host", r.host);
+        set("events_mail_password", "********");
+        const on = $(`[data-key="events_auto_bookbub"]`, view);
+        if (on) on.checked = true;
+        toast(`BookBub's emails will be read from ${r.user} (saved)`);
+      }
     } else if (act === "smtp-test") {
       const to = prompt("Send test email to:");
       const val = (k) => $(`[data-key="${k}"]`, view)?.value ?? ""; // test what's on screen, even before Save

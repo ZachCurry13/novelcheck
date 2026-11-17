@@ -129,6 +129,9 @@ export const EXTRA = {
   "Deep Scans": note("deep_llm_enabled", "Deep Scans read whole books, so a bigger model on a stronger machine rates them better. Ratings stay on the main AI. While this machine is off or asleep, Deep Scans wait (🧬⏸) and carry on when it answers.") + `<div id="deep-preset-host" data-when="deep_llm_enabled"></div><div id="deep-status-host"></div>`,
   "Extras": `<div id="ideas-host"></div><div id="custom-flags"></div>`,
   "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,
+  "Free book events": `<div class="rounded-lg bg-slate-800/60 p-3 text-sm"><p class="text-slate-300">Do BookBub's emails arrive in the same email account as Send-to-Kindle above?</p>
+    <button type="button" data-act="mail-use-smtp" class="btn-secondary mt-2">Use my SMTP email account for BookBub</button>
+    <p class="mt-1 text-xs text-slate-400">Copies its address and app password (they stay on the server) into the mailbox fields and turns the BookBub event on. Read-only: nothing is marked, moved or deleted.</p></div>`,
   "Calibre Library": `<div id="calibre-picker"></div><div id="calibre-server"></div>`,
   Discover: `<div id="discover-admin" class="space-y-2"></div>`,
   Audiobookshelf: `<div id="abs-admin" class="space-y-2"></div>`,

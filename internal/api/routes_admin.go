@@ -106,6 +106,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 	r.Group(func(r chi.Router) { // ✉️ Email & Discover
 		r.Use(area(store.AreaServices))
 		r.Post("/admin/smtp-test", s.handleSMTPTest)
+		r.Post("/admin/events-mail/use-smtp", s.handleEventsMailUseSMTP)
 		r.Get("/admin/discover", s.handleDiscoverStatus)
 		r.Post("/admin/discover/refresh", s.handleDiscoverRefresh)
 		r.Post("/admin/discover/test", s.handleDiscoverTest)
