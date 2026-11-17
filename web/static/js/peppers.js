@@ -16,10 +16,10 @@ export const PEPPERS = [
     desc: "Sexual desire and tension: characters wanting each other physically, with sex only implied off the page (a door closes, a fade to black, the morning after, \"they made love\" with no description). Also a brief, non-sexual description of a naked body, or undressing that stops before anything graphic.",
     ex: "A romance that is clearly sexually charged but remains true closed-door" },
   { n: 4, name: "Explicit / Open Door", cls: "chip-open",
-    desc: "Anything sexual shown on the page, even briefly: a sex scene of any length; touching private parts, even over clothes; explicit talk or jokes that describe sex acts; describing a character's body in a sexual way; a sexual assault shown on the page, even if not graphic; graphic undressing and touching before a door closes.",
+    desc: "Anything sexual shown on the page, even briefly: a sex scene of any length; touching private parts, even over clothes; explicit talk or jokes that describe sex acts; describing a character's body in a sexual way; a sexual assault shown briefly on the page, even if not graphic; graphic undressing and touching before a door closes.",
     ex: "Fourth Wing (Rebecca Yarros); A Court of Thorns and Roses (Sarah J. Maas)" },
   { n: 5, name: "Very Explicit / Erotica-Level", cls: "chip-open",
-    desc: "Sex in most chapters, long or very graphic scenes: the physical relationship is a main part of the book (erotica).",
+    desc: "Sex in most chapters, long or very graphic scenes: the physical relationship is a main part of the book (erotica). Also any rape or sexual assault scene that is described in detail, however little else the book has.",
     ex: "Fifty Shades of Grey (E. L. James)" },
 ];
 

@@ -26,8 +26,8 @@ becomes the release notes for that version and is shown in the app under
   - **1:** sweet or brief kisses, including a couple's kiss on the forehead or head.
   - **2:** passionate kissing, even once, or a lot of kissing and cuddling.
   - **3:** sexual desire and tension, with sex only implied (a door closes, a fade to black, "made love" in one line), or a brief description of a naked body.
-  - **4:** anything sexual on the page, even briefly: a sex scene of any length, touching private parts even over clothes, explicit sex talk or jokes, describing a body in a sexual way, an assault that is shown.
-  - **5:** erotica.
+  - **4:** anything sexual on the page, even briefly: a sex scene of any length, touching private parts even over clothes, explicit sex talk or jokes, describing a body in a sexual way, an assault shown briefly.
+  - **5:** erotica, and any rape or sexual assault scene described in detail (it is open door).
 - **The strongest scene sets the level** for the whole book. Married couples are rated like any couple.
 - **When the AI can't decide between two levels, it picks the higher one** and marks the book "AI wasn't sure" for a parent to check.
 - The pepper guide in the app says the same. Books the AI rated under the old rules are offered for re-rating (Admin → AI); nothing is re-rated until you start it.
