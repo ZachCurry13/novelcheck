@@ -32,6 +32,7 @@ func TestSameBooksJoin(t *testing.T) {
 		t.Fatalf("one pair is offered: %v", out)
 	}
 	st.TidySame()
+	admin.do("PUT", "/api/admin/settings", map[string]string{"scan_delay_seconds": "2"}, true) // any change request, as the app's own tidy is one
 	_, out = admin.do("GET", "/api/admin/same-books", nil, false)
 	if pairs, _ := out["pairs"].([]any); len(pairs) != 0 {
 		t.Fatalf("the clear case is joined: %v", out)
@@ -51,6 +52,7 @@ func TestSameBooksJoin(t *testing.T) {
 	_ = st.AddCopy(look, a, "lookup:a", "list", "")
 	_ = st.AddCopy(look, b, "lookup:b", "list", "")
 	st.TidySame()
+	admin.do("PUT", "/api/admin/settings", map[string]string{"scan_delay_seconds": "3"}, true)
 	_, out = admin.do("GET", "/api/admin/same-books", nil, false)
 	if pairs, _ := out["pairs"].([]any); len(pairs) != 1 {
 		t.Fatalf("unowned pairs wait for a person: %v", out)

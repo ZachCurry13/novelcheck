@@ -26,53 +26,36 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	usage, err := s.Store.Usage()
-	if err != nil {
-		writeStoreErr(w, err)
-		return
-	}
+	slow := s.slowStatus() // the slow parts come from memory (statusslow.go)
 	pin, pout := s.Store.SettingFloat(store.KeyPriceInputPerM), s.Store.SettingFloat(store.KeyPriceOutputPerM)
-	spent := s.Store.SpentUSD()
-	perBook := usage.AvgPerBook
-	if perBook == 0 {
-		perBook = defaultTokensPerBook
-	}
 	remaining := counts["pending"] + counts["queued"] + counts["error"]
 	// Prompts dominate: assume ~80% input / 20% output tokens per call.
-	projected := float64(remaining) * perBook * (0.8*pin + 0.2*pout) / 1e6
-	rerate, _ := s.Store.RerateCandidates()
-	rerateLib, _ := s.Store.RerateCandidatesLibrary()
-	aiRated, _ := s.Store.AIRatedIDs()
+	projected := float64(remaining) * slow.perBook * (0.8*pin + 0.2*pout) / 1e6
 	var lastSync any
 	_ = json.Unmarshal([]byte(s.Store.Setting(store.KeyCalibreLastResult)), &lastSync)
-	writeJSON(w, http.StatusOK, map[string]any{
+	out := map[string]any{
 		"counts":            counts,
-		"rerate_candidates": len(rerate),
-		"rerate_library":    len(rerateLib), // the same, without books only on Discover lists and events
-		"ai_rated":          len(aiRated),
-		"changed_books":     s.Store.ChangedSinceRated(),
 		"title_fixes":       s.Store.CountTitleFixes(),
 		"cover_reports":     s.Store.CountCoverReports(),
 		"box_sets":          s.Store.BoxSetsWaiting(),
 		"problem_reports":   s.Store.CountProblemReports(),
 		"genres":            s.Genres.Status(),
-		"non_english":       s.nonEnglishCount(),
 		"pending_deletes":   s.Store.PendingDeleteCount(),
 		"pending_deep":      s.Store.PendingDeepRequests(),
 		"deep_review":       s.Store.HeldDeepReads(),
-		"usage":             usage,
 		"tokens_per_hour":   s.Store.SettingInt(store.KeyTokensPerHour),
-		"cost_spent":        spent,
-		"cost_spent_30d":    s.Store.SpentSinceUSD("-30 days"),
 		"main_free":         s.Store.SettingFloat(store.KeyPriceInputPerM) == 0 && s.Store.SettingFloat(store.KeyPriceOutputPerM) == 0 && s.Store.SettingFloat(store.KeyMainWatts) == 0,
-		"cost_power":        s.Store.ElectricityUSD(),
 		"cost_projected":    projected,
-		"tokens_projected":  int(float64(remaining) * perBook),
+		"tokens_projected":  int(float64(remaining) * slow.perBook),
 		"worker":            s.Worker.Status(),
 		"calibre_available": s.Syncer.Available(),
 		"calibre_library":   s.Syncer.LibraryDir(),
 		"calibre_last_sync": lastSync,
-	})
+	}
+	for k, v := range slow.out {
+		out[k] = v
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 // maxBatch caps one batch, even when the batch size is 0 ("all waiting").

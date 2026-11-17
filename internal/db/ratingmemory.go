@@ -20,7 +20,9 @@ func ratingMemory(d *sqlx.DB) error {
 		confidence, premise, approved, approved_by, age_level, age_set_by, spice_level, spice_reason, rules_version, flags_version,
 		content_version, content_amounts, genres, kind, genre_source, hc_rating, hc_ratings, hc_rated_at, hc_warnings, hc_moods, hc_id,
 		big_rules, analysis_model, analyzed_at`
-	remember := `CREATE TRIGGER IF NOT EXISTS books_remember_rating BEFORE DELETE ON books WHEN OLD.status = 'analyzed'
+	// Both triggers do nothing when the admin turned remembering off (Library cleanup → Remembered ratings and covers).
+	const on = `COALESCE((SELECT value FROM settings WHERE key = 'remember_ratings'), 'true') != 'false'`
+	remember := `CREATE TRIGGER books_remember_rating BEFORE DELETE ON books WHEN OLD.status = 'analyzed' AND ` + on + `
 BEGIN
   INSERT OR REPLACE INTO rating_memory (norm_key, last_id, ` + cols + `, saved_at)
   VALUES (OLD.norm_key, OLD.id, OLD.classification, OLD.nudity, OLD.solo_acts, OLD.heavy_innuendo, OLD.playful_fantasy, OLD.dark_occult,
@@ -33,8 +35,8 @@ BEGIN
   DELETE FROM flag_memory WHERE norm_key = OLD.norm_key;
   INSERT OR IGNORE INTO flag_memory (norm_key, flag_id) SELECT OLD.norm_key, flag_id FROM book_flags WHERE book_id = OLD.id;
 END`
-	recall := `CREATE TRIGGER IF NOT EXISTS books_recall_rating AFTER INSERT ON books
-WHEN NEW.status = 'pending' AND EXISTS (SELECT 1 FROM rating_memory m WHERE m.norm_key = NEW.norm_key)
+	recall := `CREATE TRIGGER books_recall_rating AFTER INSERT ON books
+WHEN NEW.status = 'pending' AND ` + on + ` AND EXISTS (SELECT 1 FROM rating_memory m WHERE m.norm_key = NEW.norm_key)
 BEGIN
   UPDATE books SET status = 'analyzed',
     classification = m.classification, nudity = m.nudity, solo_acts = m.solo_acts, heavy_innuendo = m.heavy_innuendo,
@@ -51,7 +53,7 @@ BEGIN
   INSERT OR IGNORE INTO book_flags (book_id, flag_id) SELECT NEW.id, flag_id FROM flag_memory
     WHERE norm_key = NEW.norm_key AND flag_id IN (SELECT id FROM custom_flags);
 END`
-	for _, stmt := range []string{remember, recall} {
+	for _, stmt := range []string{`DROP TRIGGER IF EXISTS books_remember_rating`, remember, `DROP TRIGGER IF EXISTS books_recall_rating`, recall} {
 		if _, err := d.Exec(stmt); err != nil {
 			return err
 		}

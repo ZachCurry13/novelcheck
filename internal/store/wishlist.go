@@ -122,3 +122,6 @@ func (s *Store) PendingWishes() int {
 	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM wishlist WHERE status = 'wanted'`)
 	return n
 }
+
+// OwnedCond is ownedCond for other packages: the SQL test for "the book (alias b) is in a real library".
+const OwnedCond = ownedCond

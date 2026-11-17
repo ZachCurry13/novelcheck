@@ -43,3 +43,23 @@ func TestBookBubMailboxFromSMTPAccount(t *testing.T) {
 		t.Fatal("not for kids")
 	}
 }
+
+// One press makes the Deep Scan machine the backup AI (free, on the home network), and says so plainly when no Deep
+// Scan machine is set up.
+func TestDeepMachineBecomesTheBackupAI(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	if res, _ := admin.do("POST", "/api/admin/backup-ai/use-deep", map[string]string{}, true); res.StatusCode != 400 {
+		t.Fatalf("no Deep Scan machine yet: %d", res.StatusCode)
+	}
+	_ = st.SetSettings(map[string]string{store.KeyDeepEnabled: "true", store.KeyDeepProvider: "openai", store.KeyDeepBaseURL: "http://192.168.1.50:11434/v1",
+		store.KeyDeepModels: "llama3.1:8b,qwen2.5:7b", store.KeyBackupEnabled: "false", store.KeyBackupBaseURL: "https://generativelanguage.googleapis.com/v1beta/openai", store.KeyBackupModel: "gemini-flash"})
+	res, out := admin.do("POST", "/api/admin/backup-ai/use-deep", map[string]string{}, true)
+	if res.StatusCode != 200 || out["models"] != "llama3.1:8b,qwen2.5:7b" {
+		t.Fatalf("use deep: %d %v", res.StatusCode, out)
+	}
+	ais := st.AIConfigs()
+	if len(ais) != 2 || ais[1].Name != "backup" || ais[1].BaseURL != "http://192.168.1.50:11434/v1" || len(ais[1].Models) != 2 || ais[1].PriceIn != 0 {
+		t.Fatalf("the backup is the Deep Scan machine now: %+v", ais)
+	}
+}

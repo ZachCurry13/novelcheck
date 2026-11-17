@@ -95,6 +95,7 @@ func isbn10(asin string) string {
 // last week; the daily run skips them and says how many it skipped.
 func (s *Server) findCovers(again, freeOnly bool) {
 	j := &s.covers
+	defer func() { s.missing.mu.Lock(); s.missing.ok = false; s.missing.mu.Unlock() }() // covers were found: the missing list is new
 	var missing []store.BriefBook
 	if !freeOnly {
 		missing = s.MissingCovers()
@@ -226,8 +227,28 @@ func (s *Server) CoverLoop(ctx context.Context) {
 	}
 }
 
+// missingCache keeps the books-with-no-cover list for a minute: working it out looks at every book's files, and
+// the page asks for it again and again while the cover finder runs.
+type missingCache struct {
+	mu   sync.Mutex
+	list []store.BriefBook
+	at   time.Time
+	ok   bool
+	ver  uint64
+}
+
+func (s *Server) missingForPage() []store.BriefBook {
+	c := &s.missing
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if v := s.rcache.ver.Load(); !c.ok || c.ver != v || time.Since(c.at) > time.Minute {
+		c.list, c.at, c.ok, c.ver = s.MissingCovers(), time.Now(), true, v
+	}
+	return c.list
+}
+
 func (s *Server) handleMissingCovers(w http.ResponseWriter, r *http.Request) {
-	missing := s.MissingCovers()
+	missing := s.missingForPage()
 	limit := 50
 	if n, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && n > 0 && n <= 2000 {
 		limit = n // Review covers goes through them all

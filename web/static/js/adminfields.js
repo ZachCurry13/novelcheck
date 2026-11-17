@@ -125,7 +125,10 @@ export const TOP = {
   Features: note("", "Turn off what your family doesn't use. It disappears for everyone; kids' content rules always keep applying."),
 };
 export const EXTRA = {
-  "Backup AI": note("backup_llm_enabled", "Tried only when the main AI fails on a book. If the main server is switched off, NovelCheck goes straight to the backup. You'll get a 🔔 notice when the backup is used.") + `<div id="backup-preset-host" data-when="backup_llm_enabled"></div>`,
+  "Backup AI": note("backup_llm_enabled", "Tried only when the main AI fails on a book. If the main server is switched off, NovelCheck goes straight to the backup. You'll get a 🔔 notice when the backup is used.") + `<div id="backup-preset-host" data-when="backup_llm_enabled"></div>
+    <div class="rounded-lg bg-slate-800/60 p-3 text-sm"><p class="text-slate-300">Trouble with the backup AI? Your Deep Scan machine already runs Ollama at home, so it can be the backup: free, no key and no daily limit.</p>
+      <button type="button" data-act="backup-use-deep" class="btn-secondary mt-2">Use my Deep Scan machine as the backup AI</button>
+      <p class="mt-1 text-xs text-slate-400">Replaces the backup AI's address, key and models. Needs the Deep Scan machine set up below.</p></div>`,
   "Deep Scans": note("deep_llm_enabled", "Deep Scans read whole books, so a bigger model on a stronger machine rates them better. Ratings stay on the main AI. While this machine is off or asleep, Deep Scans wait (🧬⏸) and carry on when it answers.") + `<div id="deep-preset-host" data-when="deep_llm_enabled"></div><div id="deep-status-host"></div>`,
   "Extras": `<div id="ideas-host"></div><div id="custom-flags"></div>`,
   "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,

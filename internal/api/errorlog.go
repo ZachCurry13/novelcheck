@@ -73,7 +73,9 @@ func changesData(method, path string) bool {
 	if method == http.MethodGet || method == http.MethodHead || method == http.MethodOptions {
 		return false
 	}
-	for _, p := range []string{"/kosync/syncs/", "/bug-report", "/plugin/debug", "/bugs/", "/api/auth/"} {
+	// Not changes to anything the kept pages show: a reading sync, a report, a sign-in, and what the app does by itself
+	// whenever a page opens (a Libby availability check, marking notices read, the activity ping).
+	for _, p := range []string{"/kosync/syncs/", "/bug-report", "/plugin/debug", "/bugs/", "/api/auth/", "/api/libby/audio", "/api/libby/check", "/api/notifications/read", "/api/activity"} {
 		if strings.Contains(path, p) {
 			return false
 		}

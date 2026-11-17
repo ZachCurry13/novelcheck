@@ -2,6 +2,7 @@ package store_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -59,5 +60,49 @@ func TestRatingComesBackWithTheBook(t *testing.T) {
 	third, _ := st.UpsertBook("Quick Free Read", "Pat Free", "", "A blurb")
 	if b, _ := st.BookByID(third, nil); b == nil || b.Status != "analyzed" {
 		t.Fatalf("remembered more than once: %+v", b)
+	}
+}
+
+// Remembering can be turned off (nothing is kept, nothing comes back), and remembered ratings can be forgotten, all
+// of them or only the old ones.
+func TestRememberingCanBeTurnedOffAndForgotten(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	one := 1
+	rate := func(title string) int64 {
+		id, _ := st.UpsertBook(title, "Pat Free", "", "")
+		_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &one, Confidence: "high", Model: "llama3.2"})
+		return id
+	}
+	_ = st.SetSetting(store.KeyRememberRatings, "false")
+	id := rate("Off Book")
+	_, _ = d.Exec(`DELETE FROM books WHERE id = ?`, id)
+	if n, _ := st.MemoryStats(); n != 0 {
+		t.Fatalf("nothing is kept while it is off: %d", n)
+	}
+	if b, _ := st.BookByID(func() int64 { x, _ := st.UpsertBook("Off Book", "Pat Free", "", ""); return x }(), nil); b.Status != "pending" {
+		t.Fatalf("and nothing comes back: %q", b.Status)
+	}
+	_ = st.SetSetting(store.KeyRememberRatings, "true")
+	for _, title := range []string{"Old One", "Recent One"} {
+		id := rate(title)
+		_, _ = d.Exec(`DELETE FROM books WHERE id = ?`, id)
+	}
+	_, _ = d.Exec(`UPDATE rating_memory SET saved_at = ? WHERE norm_key LIKE 'oldone%'`, time.Now().AddDate(0, 0, -400).Unix())
+	if n, _ := st.MemoryStats(); n != 2 {
+		t.Fatalf("two remembered: %d", n)
+	}
+	if got := st.ForgetRatings(time.Now().AddDate(0, 0, -365)); got != 1 {
+		t.Fatalf("only the old one is forgotten: %d", got)
+	}
+	if n, _ := st.MemoryStats(); n != 1 {
+		t.Fatalf("one left: %d", n)
+	}
+	if got := st.ForgetRatings(time.Time{}); got != 1 {
+		t.Fatalf("then all: %d", got)
 	}
 }

@@ -50,25 +50,28 @@ type Server struct {
 	Safe        *safemode.State      // safe mode: background work off until an admin leaves it
 	Web         fs.FS                // embedded static assets
 	logins      *loginLimiter
-	hoursSeen   sync.Map      // user id -> the stored statistics file was read once this run
-	hoursTried  sync.Map      // user id -> when the stored statistics file was last read for hours (readingstats_handlers.go)
-	resolvedAt  sync.Map      // user id -> when their unmatched KOReader books were last looked up (koresolve.go)
-	codeGuesses *loginLimiter // wrong sync codes (KOReader, WebDAV, plugin)
-	formats     formatJob     // format cleanup's background job
-	refreshMu   sync.Mutex    // one Calibre re-read from Library cleanup at a time
-	cleanup     cleanupCache  // the Library cleanup summary, kept while the library is unchanged
-	integ       integState    // Integrations: the last connection checks
-	hcjob       hcJob         // Hardcover cleanup: the scan or apply running in the background
-	rcache      respCache     // short-lived copies of the heavy list pages (respcache.go)
-	later       laterSync     // Calibre re-reads after a save, in the background (synclater.go)
-	covers      coverJob      // the cover finder (coverfinder.go)
-	trash       trashCache    // Calibre's recycle bin, read in the background (caltrash_cache.go)
-	titleMu     sync.Mutex    // one title save at a time
-	dav         davState      // KOReader statistics folders
-	pins        pinTries      // wrong PINs on family devices
-	Libby       libby.Client  // library availability (kept a few hours)
-	etags       sync.Map      // static file name → ETag
-	buildOnce   sync.Once     // buildID, computed once
+	hoursSeen   sync.Map        // user id -> the stored statistics file was read once this run
+	hoursTried  sync.Map        // user id -> when the stored statistics file was last read for hours (readingstats_handlers.go)
+	resolvedAt  sync.Map        // user id -> when their unmatched KOReader books were last looked up (koresolve.go)
+	codeGuesses *loginLimiter   // wrong sync codes (KOReader, WebDAV, plugin)
+	formats     formatJob       // format cleanup's background job
+	refreshMu   sync.Mutex      // one Calibre re-read from Library cleanup at a time
+	cleanup     cleanupCache    // the Library cleanup summary, kept while the library is unchanged
+	trial       trialJob        // "try the new rules on 20 books" (trial_handlers.go)
+	missing     missingCache    // the books with no cover, kept a minute (coverfinder.go)
+	slowStat    slowStatusCache // the slow part of the Admin status, kept in memory (statusslow.go)
+	integ       integState      // Integrations: the last connection checks
+	hcjob       hcJob           // Hardcover cleanup: the scan or apply running in the background
+	rcache      respCache       // short-lived copies of the heavy list pages (respcache.go)
+	later       laterSync       // Calibre re-reads after a save, in the background (synclater.go)
+	covers      coverJob        // the cover finder (coverfinder.go)
+	trash       trashCache      // Calibre's recycle bin, read in the background (caltrash_cache.go)
+	titleMu     sync.Mutex      // one title save at a time
+	dav         davState        // KOReader statistics folders
+	pins        pinTries        // wrong PINs on family devices
+	Libby       libby.Client    // library availability (kept a few hours)
+	etags       sync.Map        // static file name → ETag
+	buildOnce   sync.Once       // buildID, computed once
 	build       string
 	indexOnce   sync.Once // index.html with versioned addresses
 	index       []byte

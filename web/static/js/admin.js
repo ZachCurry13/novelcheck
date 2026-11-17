@@ -124,6 +124,8 @@ export async function renderAdmin(view, state) {
     } else if (act === "rerate-language") {
       const r = await attempt(() => post("/api/admin/rerate", { which: "language" }));
       if (r) toast(`Re-rating ${r.queued} books so their summaries are in English`);
+    } else if (act === "rerate-trial") {
+      (await import("./trialrate.js")).tryNewRules(20);
     } else if (act === "rerate-library") {
       const r = await attempt(() => post("/api/admin/rerate", { which: "library" }));
       if (r) toast(`Re-rating ${r.queued} books in your libraries with the current pepper rules`);
@@ -139,6 +141,10 @@ export async function renderAdmin(view, state) {
       if (r) toast(`Re-rating ${r.queued} books`);
     } else if (act === "sync") {
       await attempt(() => post("/api/admin/calibre-sync"), "Calibre sync started");
+    } else if (act === "backup-use-deep") {
+      if (!confirm("Replace the backup AI with your Deep Scan machine? The backup's current address, key and models are replaced (the main AI is not touched).")) return;
+      const r = await attempt(() => post("/api/admin/backup-ai/use-deep"));
+      if (r) toast("The backup AI is now your Deep Scan machine. Reload this page to see it in the fields.");
     } else if (act === "mail-use-smtp") {
       const r = await attempt(() => post("/api/admin/events-mail/use-smtp"));
       if (r) { // show what was saved (the password stays on the server)

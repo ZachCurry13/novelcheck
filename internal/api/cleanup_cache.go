@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
 // The Library cleanup summary takes a second or two to work out (it compares every book with every other
@@ -29,7 +31,7 @@ func (s *Server) libraryPrint() string {
 		Mod    string  `db:"mod"`
 		Series float64 `db:"series"`
 	}
-	_ = s.Store.DB.Get(&p, `SELECT (SELECT COUNT(*) FROM books) AS books, (SELECT COALESCE(MAX(id), 0) FROM books) AS maxb,
+	_ = s.Store.DB.Get(&p, `SELECT (SELECT COUNT(*) FROM books b WHERE `+store.OwnedCond+`) AS books, (SELECT COALESCE(MAX(b.id), 0) FROM books b WHERE `+store.OwnedCond+`) AS maxb,
 		(SELECT COUNT(*) FROM catalog_books) AS copies, (SELECT COUNT(*) FROM books WHERE title_fix != '') AS fixes,
 		(SELECT COUNT(*) FROM dup_ignores) AS ign, (SELECT COUNT(*) + 1000 * COALESCE(SUM(as_is), 0) FROM convert_failures) AS fail,
 		(SELECT COALESCE(MAX(modified), '') FROM catalog_books) AS mod,

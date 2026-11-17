@@ -119,3 +119,50 @@ func (s *Store) NotSureToRecheck(limit int) ([]int64, error) {
 func (s *Store) MarkBigChecked(id int64) {
 	_, _ = s.DB.Exec(`UPDATE books SET big_rules = ? WHERE id = ?`, RulesVersion, id)
 }
+
+// TrialBook is a book picked to try the rating rules on, with the rating it has now.
+type TrialBook struct {
+	ID         int64  `db:"id" json:"id"`
+	Title      string `db:"title" json:"title"`
+	Author     string `db:"author" json:"author"`
+	Level      *int   `db:"spice_level" json:"level"`
+	Confidence string `db:"confidence" json:"confidence"`
+	Reason     string `db:"spice_reason" json:"reason"`
+	Warnings   string `db:"hc_warnings" json:"warnings"`
+}
+
+// TrialSample picks up to n AI-rated books of the family's libraries to try the rating rules on: a few with content
+// warnings from Hardcover, and the rest spread over the levels 0 to 5 (the rarer levels are not left out).
+func (s *Store) TrialSample(n int) ([]TrialBook, error) {
+	const cols = `b.id, b.title, b.author, b.spice_level, b.confidence, b.spice_reason, b.hc_warnings`
+	const base = ` FROM books b WHERE b.status = 'analyzed' AND b.spice_level IS NOT NULL AND b.analysis_model NOT LIKE 'manual:%' AND b.analysis_model NOT LIKE 'deep:%'
+		AND ` + ownedCond + ` AND NOT ` + discoverOnlyCond
+	var out []TrialBook
+	taken := map[int64]bool{}
+	add := func(rows []TrialBook) {
+		for _, r := range rows {
+			if !taken[r.ID] && len(out) < n {
+				taken[r.ID], out = true, append(out, r)
+			}
+		}
+	}
+	var warned []TrialBook
+	if err := s.DB.Select(&warned, `SELECT `+cols+base+` AND b.hc_warnings != '' ORDER BY RANDOM() LIMIT ?`, max(n/4, 1)); err != nil {
+		return nil, err
+	}
+	add(warned)
+	per := (n + 5) / 6
+	for level := 0; level <= 5; level++ {
+		var rows []TrialBook
+		if err := s.DB.Select(&rows, `SELECT `+cols+base+` AND b.spice_level = ? ORDER BY RANDOM() LIMIT ?`, level, per); err != nil {
+			return nil, err
+		}
+		add(rows)
+	}
+	if len(out) < n {
+		var rest []TrialBook
+		_ = s.DB.Select(&rest, `SELECT `+cols+base+` ORDER BY RANDOM() LIMIT ?`, n*2)
+		add(rest)
+	}
+	return out, nil
+}

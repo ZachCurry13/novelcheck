@@ -24,6 +24,7 @@ const (
 	cacheTTL      = 45 * time.Second
 	discoverTTL   = 15 * time.Minute // Discover's lists change once a day
 	maxCacheBytes = 256 << 20
+	staleOK       = 15 * time.Minute // a cleanup list the library has changed under is still shown this long
 )
 
 type cacheEntry struct {
@@ -139,8 +140,11 @@ func (s *Server) cached(next http.Handler) http.Handler {
 		if sharedAnswer(r.URL.Path) {
 			key = "admins|" + r.URL.RequestURI() // the same for every admin, so one kept answer serves them all
 		}
-		if e, ok, fresh := s.rcache.get(key, ttlFor(r.URL.Path)); ok && (e.print == "" || e.print == s.libraryPrint()) {
-			if !fresh && s.rcache.refreshing(key, true) { // shown now, worked out again behind it
+		// The cleanup lists: when only a background pass changed the library since (a title suggested, a book
+		// added), the kept answer is still shown at once (up to 15 minutes old) and worked out again behind it,
+		// instead of making whoever opens the page wait for it.
+		if e, ok, fresh := s.rcache.get(key, ttlFor(r.URL.Path)); ok && (e.print == "" || e.print == s.libraryPrint() || time.Since(e.at) < staleOK) {
+			if (!fresh || (e.print != "" && e.print != s.libraryPrint())) && s.rcache.refreshing(key, true) { // shown now, worked out again behind it
 				go s.refreshAnswer(key, r.Clone(context.WithoutCancel(r.Context())), next)
 			}
 			for k, v := range e.header {

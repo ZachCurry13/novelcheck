@@ -4,6 +4,20 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.84.0 speed and safety]
+
+### ⚡ Library cleanup opens fast
+- **The cleanup page, the missing-covers list and the Admin figures are kept in memory and refreshed by themselves** (every minute, in the background), so opening the page shows them at once. Routine actions (checking for new Libby audiobooks, marking notifications read) no longer throw the kept answers away.
+
+### 🧠 Memory you can switch off and purge
+- **Settings, Library cleanup, Memory:** shows how many ratings and covers are remembered and how much room they take; a switch turns remembering off; buttons forget old ratings or old covers (older than a number of days) without touching books you have.
+
+### 🤖 Backup AI
+- **One button makes your Deep Scan machine the backup AI** (it is faster than the cloud backup, which took about 85 seconds per book against a 90 second check limit, and costs nothing).
+
+### 🌶️ Try before you re-rate
+- **"Try the new rules on 20 books first"** in the re-rate notice rates a small sample with the main AI and shows old against new level (same, higher, lower). Nothing is saved.
+
 ## [1.84.0]
 
 ### 🖼️ Covers for free books too

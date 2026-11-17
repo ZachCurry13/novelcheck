@@ -27,6 +27,8 @@ export async function renderCleanupTab(host, state) {
       <div id="cu-hc-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-abs"><summary class="cursor-pointer font-semibold">Fix Audiobookshelf details from Hardcover (titles, authors, series, ISBN, ASIN, narrators, covers)</summary>
       <div id="cu-abs-body" class="mt-2"></div></details></div>
+    <div class="card space-y-2"><details id="cu-mem"><summary class="cursor-pointer font-semibold">Remembered ratings and covers (and how to forget them)</summary>
+      <div id="cu-mem-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-up"><summary class="cursor-pointer font-semibold">⬆️ Upload e-books to Calibre and audiobooks to Audiobookshelf (experimental)</summary>
       <div id="cu-up-body" class="mt-2"></div></details></div></div>`;
   mountCleanup(host.querySelector("#cu-guided"));
@@ -81,6 +83,9 @@ export async function renderCleanupTab(host, state) {
       body.dataset.done = "1";
       renderHCClean(body);
     }
+  });
+  host.querySelector("#cu-mem").addEventListener("toggle", (e) => {
+    if (e.target.open) import("./memorycard.js").then((m) => m.renderMemory(host.querySelector("#cu-mem-body"))); // fresh each time
   });
   host.querySelector("#cu-abs").addEventListener("toggle", (e) => {
     if (e.target.open) import("./absclean.js").then((m) => m.renderABSClean(host.querySelector("#cu-abs-body"))); // fresh each time

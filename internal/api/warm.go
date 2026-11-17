@@ -45,6 +45,7 @@ func (s *Server) WarmLoop(ctx context.Context) {
 		case <-time.After(wait):
 		}
 		wait = time.Minute
+		s.slowStatus() // the Admin status' slow part is kept up to date too
 		admin := s.ownerAdmin()
 		if admin == nil {
 			continue
