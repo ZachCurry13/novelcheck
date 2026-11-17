@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.89.2]
+
+### 🧹 Delete the Kindle's crash logs (plugin 1.57.2)
+- **NovelCheck > Delete the Kindle's crash logs...** finds the error reports the Kindle's own software leaves in its top folder (files like `pillowd_2264_001-juno_..._crash_...`, which pile up by the hundred), says how many and how big, asks, and deletes them. Nothing else is touched. The backup now leaves them out too.
+
 ## [1.89.1]
 
 ### 📥 Copy my Kindle no longer adds books to Calibre by itself

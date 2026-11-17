@@ -137,6 +137,7 @@ func TestKindleBackupKeepsSettingsAndPlugins(t *testing.T) {
 			{"path": "/mnt/us/koreader/cache/thumb.png", "size": 900, "mtime": 5},
 			{"path": "/mnt/us/.active_content_sandbox/x.db", "size": 900, "mtime": 5},
 			{"path": "/mnt/us/system/version.txt", "size": 20, "mtime": 5},
+			{"path": "/mnt/us/pillowd_2264_001-juno_18050001_sangria_bellatrix4-455680_crash_Jun_1.zip", "size": 9000, "mtime": 5},
 		}})
 		return call("POST", "check", b)
 	}

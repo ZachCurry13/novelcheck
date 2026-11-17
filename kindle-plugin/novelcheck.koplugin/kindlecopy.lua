@@ -91,7 +91,7 @@ return function(NovelCheck)
                     if not skipBackupDir(name, rel) then
                         self:findAll(path, rel .. "/" .. name, out, depth + 1)
                     end
-                elseif attr and attr.mode == "file" and attr.size <= MAX_BYTES and name:sub(1, 1) ~= "." and not name:match("%.part$") and not name:match("%.new$") then
+                elseif attr and attr.mode == "file" and attr.size <= MAX_BYTES and name:sub(1, 1) ~= "." and not name:match("%.part$") and not name:match("%.new$") and not name:find("_crash_", 1, true) then
                     table.insert(out, { path = path, size = attr.size, mtime = attr.modification or 0 })
                 end
             end

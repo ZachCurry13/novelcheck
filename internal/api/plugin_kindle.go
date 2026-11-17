@@ -64,6 +64,10 @@ func backupSkip(rel string) bool {
 			return true
 		}
 	}
+	// the Kindle's own crash reports (pillowd_..._crash_..., mesquite_..._crash_...): junk, not worth a backup
+	if strings.Contains(path.Base(l), "_crash_") {
+		return true
+	}
 	return strings.HasPrefix(l, "koreader/cache/") || strings.HasPrefix(l, "koreader/ota/") || strings.HasPrefix(l, "koreader/crash.log") ||
 		strings.HasSuffix(l, ".part") || strings.HasSuffix(l, ".new")
 }
