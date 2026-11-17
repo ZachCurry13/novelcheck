@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.84.0]
+
+### 🖼️ Covers for free books too
+- **The cover finder now looks for the covers of free books** (Stuff Your Kindle, BookBub, Free right now and pasted lists), not only books in your libraries. They had no covers because the finder only looked at books you own.
+- **A free book listed with its Amazon number is found on Hardcover by that exact number**, which is the surest match. A print book's number is also tried as its ISBN.
+- **Every three hours** a quick pass gives the newest free books a cover while they are still free (250 at a time, newest first), and the daily run and **Find covers now** include them too. The quick pass only says something when it found a cover. Books on an event that has ended or been archived are left alone.
+
 ## [1.83.0]
 
 ### 📚 Your Kindle: highlights, and finishing a book (plugin 1.54.0)

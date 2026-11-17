@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"strings"
 
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/hardcover"
@@ -16,6 +17,19 @@ import (
 func (s *Server) hardcoverCover(ctx context.Context, hc *hardcover.Client, b store.BriefBook, title string) string {
 	if hc == nil {
 		return ""
+	}
+	if a := strings.ToUpper(strings.TrimSpace(b.ASIN)); a != "" { // a free book's list gave its Amazon ASIN: an exact match
+		if m, err := hc.InfoByASIN(ctx, []string{a}); err == nil {
+			if info, ok := m[a]; ok && info.ID > 0 {
+				s.Store.SaveHCID(b.ID, info.ID)
+				if t := hcTrueTitle(b.Title, b.Author, info); t != "" {
+					s.applyTrueTitle(ctx, b.ID, b.Author, t)
+				}
+				if covers.AllowedImage(info.Image) {
+					return info.Image
+				}
+			}
+		}
 	}
 	if id := s.Store.HCIDOf(b.ID); id > 0 {
 		if u, err := hc.ImageByID(ctx, id); err == nil && covers.AllowedImage(u) {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,12 +29,13 @@ type coverJob struct {
 	Current string `json:"current"`
 	Note    string `json:"note"`
 	Skipped int    `json:"skipped"` // searched in the last week with nothing found, left out this time
+	Free    int    `json:"free"`    // how many of Total are free books (events), looked for after the library's
 }
 
 func (j *coverJob) state() coverJob {
 	j.mu.Lock()
 	defer j.mu.Unlock()
-	return coverJob{Running: j.Running, Checked: j.Checked, Found: j.Found, Total: j.Total, Current: j.Current, Note: j.Note}
+	return coverJob{Running: j.Running, Checked: j.Checked, Found: j.Found, Total: j.Total, Current: j.Current, Note: j.Note, Free: j.Free}
 }
 
 func (s *Server) coverName(id int64) string { return "book-" + strconv.FormatInt(id, 10) }
@@ -62,22 +64,56 @@ func (s *Server) MissingCovers() []store.BriefBook {
 	return out
 }
 
-// findCovers goes through the books with no cover, one every second or so, until done or stopped.
-// again (Find covers now, pressed by a person) looks again at books searched in the last week; the daily run
-// skips them and says how many it skipped.
-func (s *Server) findCovers(again bool) {
+// freeCoverLimit is how many free books one run looks at, newest first (a Stuff Your Kindle day lists up to a
+// thousand); the next run takes the following ones.
+const freeCoverLimit = 250
+
+// MissingFreeCovers lists the free books (on a running event, not in a library) with no cover, newest first.
+func (s *Server) MissingFreeCovers(limit int) []store.BriefBook {
+	books, _ := s.Store.FreeBooks()
+	var out []store.BriefBook
+	for _, b := range books {
+		if len(out) < limit && !s.hasCover(b) {
+			out = append(out, b)
+		}
+	}
+	return out
+}
+
+// isbn10 is an ASIN that is really a print book's ISBN-10 ("" for a Kindle ASIN like B00ABC1234).
+func isbn10(asin string) string {
+	a := strings.ToUpper(strings.TrimSpace(asin))
+	if len(a) != 10 || strings.Trim(a[:9], "0123456789") != "" || strings.Trim(a[9:], "0123456789X") != "" {
+		return ""
+	}
+	return a
+}
+
+// findCovers goes through the books with no cover, one every second or so, until done or stopped: the
+// library's, then the free books of the running events (freeOnly: only those, for the quick pass that gives new
+// free books a cover soon). again (Find covers now, pressed by a person) looks again at books searched in the
+// last week; the daily run skips them and says how many it skipped.
+func (s *Server) findCovers(again, freeOnly bool) {
 	j := &s.covers
-	missing := s.MissingCovers()
+	var missing []store.BriefBook
+	if !freeOnly {
+		missing = s.MissingCovers()
+	}
+	free := s.MissingFreeCovers(freeCoverLimit)
+	missing = append(missing, free...)
 	j.mu.Lock()
-	j.Running, j.stop, j.Checked, j.Found, j.Total, j.Note, j.Skipped = true, false, 0, 0, len(missing), "", 0
+	j.Running, j.stop, j.Checked, j.Found, j.Total, j.Note, j.Skipped, j.Free = true, false, 0, 0, len(missing), "", 0, len(free)
 	j.mu.Unlock()
 	defer func() {
 		j.mu.Lock()
 		j.Running, j.Current = false, ""
-		found, total, note, skipped := j.Found, j.Total, j.Note, j.Skipped
+		found, total, note, skipped, nfree := j.Found, j.Total, j.Note, j.Skipped, j.Free
 		j.mu.Unlock()
-		if total > 0 {
+		if total > 0 && (!freeOnly || found > 0) { // the quick pass only says something when it found one
 			msg := fmt.Sprintf("Cover finder: found covers for %d of %d books that had none.%s", found, total, note)
+			if nfree > 0 {
+				msg += fmt.Sprintf(" %d of them were free books.", nfree)
+			}
 			if skipped > 0 {
 				msg += fmt.Sprintf(" %d were searched in the last week with nothing found, so they were skipped; Find covers now looks at them again.", skipped)
 			}
@@ -109,7 +145,7 @@ func (s *Server) findCovers(again bool) {
 			j.mu.Unlock()
 			continue
 		}
-		_, _, ok := s.Covers.OpenLibrary(ctx, b.ISBN) // the ISBN's cover, when it has one
+		_, _, ok := s.Covers.OpenLibrary(ctx, firstNonEmpty(b.ISBN, isbn10(b.ASIN))) // the ISBN's cover, when it has one
 		sug := s.Store.TitleSuggestion(b.ID)
 		if !ok && sug == "" { // a wrong title is the usual reason for no cover: find the true one now
 			if sug = s.closestTitle(ctx, b.Title, b.Author); sug != "" {
@@ -146,7 +182,9 @@ func (s *Server) findCovers(again bool) {
 }
 
 // StartCoverFinder runs the finder unless it already runs; it says whether it started one.
-func (s *Server) StartCoverFinder(again bool) bool {
+func (s *Server) StartCoverFinder(again bool) bool { return s.startCovers(again, false) }
+
+func (s *Server) startCovers(again, freeOnly bool) bool {
 	j := &s.covers
 	j.mu.Lock()
 	if j.Running {
@@ -155,21 +193,29 @@ func (s *Server) StartCoverFinder(again bool) bool {
 	}
 	j.Running = true // claimed here, so two clicks do not start two
 	j.mu.Unlock()
-	go s.findCovers(again)
+	go s.findCovers(again, freeOnly)
 	return true
 }
 
-// CoverLoop looks for missing covers once a day (and a little after start), so new books get one.
+// CoverLoop looks for missing covers once a day (and a little after start), so new books get one, and for the
+// free books of the running events every three hours (the events are checked at that pace), so a free book has a
+// cover while it is still free.
 func (s *Server) CoverLoop(ctx context.Context) {
 	wait := 10 * time.Minute
+	daily := time.Now().Add(wait)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-time.After(wait):
 		}
-		wait = 24 * time.Hour
-		s.StartCoverFinder(false)
+		if time.Now().Before(daily) { // a three-hourly pass
+			s.startCovers(false, true)
+		} else {
+			daily = time.Now().Add(24 * time.Hour)
+			s.StartCoverFinder(false)
+		}
+		wait = 3 * time.Hour
 	}
 }
 
