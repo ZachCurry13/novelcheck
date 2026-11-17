@@ -24,10 +24,12 @@ type BookInfo struct {
 	ISBN13      string
 	ISBN10      string
 	Pages       int
+	Rating      float64 // Hardcover readers' average, 0 to 5 (0 when nobody rated it)
+	Ratings     int     // how many rated it
 }
 
 // bookFields is what is asked about a book (the same in every lookup).
-const bookFields = `id title release_year description cached_tags cached_image
+const bookFields = `id title release_year description cached_tags cached_image rating ratings_count
   contributions(limit: 3) { author { name } }
   book_series(order_by: {position: asc}, limit: 1, where: {position: {_is_null: false}}) { position series { name } }`
 
@@ -38,6 +40,8 @@ type rawBook struct {
 	Description   string          `json:"description"`
 	Tags          json.RawMessage `json:"cached_tags"`
 	Image         json.RawMessage `json:"cached_image"`
+	Rating        float64         `json:"rating"`
+	RatingsCount  int             `json:"ratings_count"`
 	Contributions []struct {
 		Author struct {
 			Name string `json:"name"`
@@ -57,7 +61,7 @@ type rawBook struct {
 }
 
 func (r rawBook) info() BookInfo {
-	b := BookInfo{ID: r.ID, Title: strings.TrimSpace(r.Title), Year: r.Year, Description: strings.TrimSpace(r.Description)}
+	b := BookInfo{ID: r.ID, Title: strings.TrimSpace(r.Title), Year: r.Year, Description: strings.TrimSpace(r.Description), Rating: r.Rating, Ratings: r.RatingsCount}
 	for _, c := range r.Contributions {
 		if n := strings.TrimSpace(c.Author.Name); n != "" {
 			b.Authors = append(b.Authors, n)

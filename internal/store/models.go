@@ -149,6 +149,8 @@ type Book struct {
 	Content         string  `db:"content" json:"content"`                 // content items as "key:source", comma-separated (source ai, deep or parent)
 	ContentVersion  int     `db:"content_version" json:"content_version"` // content.Version it was checked with; 0 = not checked yet
 	ContentAmounts  string  `db:"content_amounts" json:"content_amounts"` // Deep Scan amount per group, e.g. "violence:3,gore:1"
+	HCRating        float64 `db:"hc_rating" json:"hc_rating"`             // Hardcover readers' average, 0 to 5 (0 = none yet)
+	HCRatings       int     `db:"hc_ratings" json:"hc_ratings"`           // how many rated it there
 }
 
 // BookCopy is one physical copy of a book inside a catalog.

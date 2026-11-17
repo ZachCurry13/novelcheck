@@ -13,7 +13,7 @@ const field = (label, control, extra = "") => `<label class="field ${extra}"><sp
 
 // SORTS are the orders a list can have (the event's own order first, on an event).
 export const SORTS = (event) => [...(event ? [["list", "Event order"]] : []), ["title", "Title"], ["author", "Author"],
-  ["recent", "Recently added"], ["mild", "Fewest peppers"], ["spicy", "Most peppers"]];
+  ["rating", "Highest rated on Hardcover"], ["recent", "Recently added"], ["mild", "Fewest peppers"], ["spicy", "Most peppers"]];
 
 export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
   const manager = canManage(state.user);

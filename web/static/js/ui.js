@@ -168,3 +168,7 @@ export function fmtMoney(n) {
 export function fmtMinutes(m) {
   return m >= 90 ? `about ${(m / 60).toFixed(1)} hours` : `about ${Math.max(1, Math.round(m))} min`;
 }
+
+// hcStars is a book's Hardcover readers' rating as "★ 4.2" (with how many rated it on hover), or "".
+export const hcStars = (b) => (b.hc_rating > 0
+  ? `<span class="chip-hc" title="Hardcover readers: ${b.hc_rating.toFixed(2)} out of 5 from ${Number(b.hc_ratings || 0).toLocaleString()} ratings">★ ${b.hc_rating.toFixed(1)}</span>` : "");

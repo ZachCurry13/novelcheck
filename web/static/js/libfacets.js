@@ -39,7 +39,7 @@ export function pillsHTML(title, name, options, cls = "") {
 
 // sortPillsHTML is the order as pills, for the phone's sheet (the computer has the Sort box beside the search).
 export function sortPillsHTML(event) {
-  const opts = [...(event ? [["list", "Event"]] : []), ["title", "Title"], ["author", "Author"], ["mild", "Peppers"], ["recent", "Newest"]];
+  const opts = [...(event ? [["list", "Event"]] : []), ["title", "Title"], ["author", "Author"], ["rating", "Rating"], ["mild", "Peppers"], ["recent", "Newest"]];
   return `<section class="facet facet-phone"><h3>Sort</h3><div class="pills">${opts.map(([v, l]) =>
     `<label class="pill"><input type="radio" name="sortp" value="${v}"><span>${l}</span></label>`).join("")}</div></section>`;
 }

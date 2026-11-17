@@ -14,6 +14,11 @@ becomes the release notes for that version and is shown in the app under
 - **Taps work on every phone.** The left and right edges turn pages; a tap anywhere else is for the menu. (The reader used to work out where you tapped from inside the book's page, which some phones scale and move, so a tap could land in the wrong place, or do nothing.)
 - **Contents opens for every book.** It stopped with an error on books whose chapters have no parts listed.
 
+### ★ Hardcover readers' ratings
+- **Every book gets its Hardcover rating**: the average from Hardcover's readers, shown as **★ 4.2** on the book's cover tile, on Discover and on the book's page (with how many rated it). NovelCheck looks them up in the background with a family member's Hardcover connection (the main admin's first), by ISBN and then by title and author, and checks each book again after a month.
+- **Sort: Highest rated on Hardcover** in the Library (and **Rating** in the phone's Sort), with the books nobody rated yet at the end.
+- Integrations → Hardcover says how many books have a rating so far.
+
 ## [1.80.0]
 
 ### 🔎 Filters as designed, everywhere

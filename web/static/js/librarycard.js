@@ -1,6 +1,6 @@
 // A book's card in the Library: cover, title, chips, blurb, and where the
 // family has it.
-import { esc, classChip, flagChips, ageChip } from "./ui.js";
+import { esc, classChip, flagChips, ageChip, hcStars } from "./ui.js";
 import { whyChip } from "./peppers.js";
 import { customChips } from "./customflags.js";
 import { contentIcons } from "./content.js";
@@ -33,7 +33,7 @@ export function card(b, queueOn, extra = "") {
       <p class="tile-author">${esc(b.author || "Unknown author")}${seriesText(b) ? ` · <span class="text-sky-300">${esc(seriesText(b))}</span>` : ""}</p>
       <div data-chips class="tile-chips">${rated ? "" : classChip(b)} ${reviewChip(b)} ${deepChip(b)} ${whyChip(b)} ${ageChip(b)} ${flagChips(b)} ${customChips(b)} ${contentIcons(b)}</div>
       ${extra}
-      <div class="tile-meta">${audioChip(b)} ${b.formats && /AUDIO/.test(b.formats) ? "" : `<span data-libaudio="${b.id}"></span>`}${b.delete_requests ? ` <span class="chip-dup">Delete requested</span>` : ""}</div>
+      <div class="tile-meta">${hcStars(b)} ${audioChip(b)} ${b.formats && /AUDIO/.test(b.formats) ? "" : `<span data-libaudio="${b.id}"></span>`}${b.delete_requests ? ` <span class="chip-dup">Delete requested</span>` : ""}</div>
     </article>`;
 }
 

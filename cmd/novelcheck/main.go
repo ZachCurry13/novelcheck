@@ -152,6 +152,7 @@ func main() {
 		go srv.IndexFingerprints(ctx) // a book on an e-reader is found by its file
 		go srv.NameLoop(ctx)          // true titles and authors for books not from Calibre, once a day
 		go srv.WarmLoop(ctx)          // the library cleanup lists worked out ahead of time
+		go srv.RatingLoop(ctx)        // Hardcover readers' ratings for every book, for "Highest rated"
 		go srv.CoverLoop(ctx)         // a real cover for books Calibre has none for, once a day
 		go srv.LibbyScanLoop(ctx)     // do the libraries lend the audiobook of books without one
 	}

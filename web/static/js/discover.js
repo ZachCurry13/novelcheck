@@ -3,7 +3,7 @@
 // see books the AI hasn't rated yet (the server leaves them out).
 import { discoverFiltersHTML, bindDiscoverFilters, cardData } from "./discoverfilters.js";
 import { get, post } from "./api.js";
-import { $, esc, attempt, toast, canManage } from "./ui.js";
+import { $, esc, attempt, toast, canManage, hcStars } from "./ui.js";
 import { openBook } from "./bookdialog.js";
 import { libbySearchBox } from "./libbysearch.js";
 import { coverImg } from "./covers.js";
@@ -177,7 +177,7 @@ function card(b, kid, queueOn, wishOn = true) { // wishOn: a friend's account ha
       ${b.list?.startsWith("nyt:") && b.rank ? `<span class="absolute left-1 top-1 rounded bg-slate-950/80 px-1.5 text-xs font-semibold">#${b.rank}</span>` : ""}</div>
     <h3 class="line-clamp-2 text-sm font-semibold leading-tight">${esc(b.title)}</h3>
     <p class="truncate text-xs text-slate-400">${esc(b.author || "")}</p>
-    <div class="flex flex-wrap gap-1 text-xs">${pepper} ${contentIcons(b)}
+    <div class="flex flex-wrap gap-1 text-xs">${pepper} ${hcStars(b)} ${contentIcons(b)}
       ${b.owned ? `<span class="chip-cat">Yours</span>` : ""}<span data-libby="${b.id}"></span>${nytChip(b)}${b.weeks_on_list === 1 ? ` <span class="chip-open">New</span>` : ""}</div>
     <p class="line-clamp-4 text-xs text-slate-300">${esc(cardBlurb(b, 200))}</p>
     <div class="mt-auto space-y-1">${action}

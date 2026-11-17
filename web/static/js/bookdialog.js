@@ -82,6 +82,7 @@ export async function openBook(id, state, onChange) {
           <h2 class="text-xl font-semibold">${esc(b.title)}</h2>
           ${b.series ? `<p>${seriesLink(b, seriesText(b))}</p>` : seriesLine(b)}
           <p class="text-slate-400">${authorLinks(b.author)}${b.isbn ? " · ISBN " + esc(b.isbn) : ""}</p>
+          ${b.hc_rating > 0 ? `<p class="text-sm text-slate-300">★ ${b.hc_rating.toFixed(2)} from ${Number(b.hc_ratings).toLocaleString()} Hardcover readers</p>` : ""}
           ${data.my_progress ? `<p class="mt-1 text-sm text-indigo-300" title="From your e-reader's sync">Your progress: ${progressText(data.my_progress)}</p>` : ""}
           ${can(state.user, "calibre") && calibreIds.length ? `<p class="mt-1 text-xs ${b.title_fix ? "text-amber-300" : "text-slate-500"}">${b.title_fix ? `In Calibre: “${esc(b.title_fix)}” · ` : ""}<button type="button" data-act="calibre-title" class="underline">${b.title_fix ? "Tidy it in Calibre" : "Edit title in Calibre"}</button></p>` : ""}
           ${manager && !(data.copies || []).some((c) => c.source === "calibre") ? `<p class="mt-1 text-xs text-slate-500"><button type="button" data-act="rename" class="underline">Edit title and author</button></p>` : ""}

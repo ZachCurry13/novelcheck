@@ -101,7 +101,10 @@ CREATE TABLE IF NOT EXISTS books (
     series_index     REAL NOT NULL DEFAULT 0,      -- number in the series; 0 = none
     title_fix        TEXT NOT NULL DEFAULT '',     -- Calibre's title when NovelCheck tidied it ("01 - Dune"); '' = already tidy
     name_checked     INTEGER NOT NULL DEFAULT 0,
-    title_suggest    TEXT NOT NULL DEFAULT '',     -- the true title the name finder found for a Calibre book, to save in Calibre   -- the name finder: 1 = checked against Open Library, 2 = a parent typed it
+    title_suggest    TEXT NOT NULL DEFAULT '',
+    hc_rating        REAL NOT NULL DEFAULT 0,      -- Hardcover readers' average rating, 0 to 5 (0 = none)
+    hc_ratings       INTEGER NOT NULL DEFAULT 0,   -- how many Hardcover readers rated it
+    hc_rated_at      INTEGER NOT NULL DEFAULT 0,   -- when it was last looked up (Unix seconds)     -- the true title the name finder found for a Calibre book, to save in Calibre   -- the name finder: 1 = checked against Open Library, 2 = a parent typed it
     tags             TEXT NOT NULL DEFAULT '',     -- Calibre's tags, comma-separated
     genres           TEXT NOT NULL DEFAULT '',     -- categories (package genres) as ",fantasy,romance,"
     kind             TEXT NOT NULL DEFAULT '',     -- fiction, nonfiction or '' (unknown)
