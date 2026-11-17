@@ -10,6 +10,7 @@ import { progressBar, progressText, pct, ago, setBars } from "./progress.js";
 import { renderKOReaderBooks } from "./koreaderbooks.js";
 import { renderListening } from "./listening.js";
 import { renderTwins } from "./queuetwins.js";
+import { renderBookshelf } from "./bookshelf.js";
 
 export async function renderQueue(view, state) {
   const friend = state.user.role === "friend"; // her own list: nothing is delivered, no audiobooks
@@ -33,6 +34,7 @@ export async function renderQueue(view, state) {
       <ol id="queued" class="space-y-2"></ol>
     </section>
     <section id="koreader-books"></section>
+    <section id="bookshelf" class="mt-8"></section>
     <div id="suggestions"></div>`;
   if (!friend) $("#delivery-mode", view).textContent = {
     email: `Send-to-Kindle (${state.user.kindle_email})`,
@@ -120,6 +122,8 @@ export async function renderQueue(view, state) {
   });
 
   await load();
+  let stopShelf = () => {};
+  renderBookshelf($("#bookshelf", view), state).then((stop) => { if (stop) stopShelf = stop; });
   if (on(state.user, "koreader")) renderKOReaderBooks($("#koreader-books", view), state, load);
   if (on(state.user, "suggestions")) {
     // A suggestion added to your Nightstand grows the list above; keep the suggestions
@@ -140,7 +144,10 @@ export async function renderQueue(view, state) {
       onEnd: saveOrder,
     });
   }
-  return () => sortable?.destroy();
+  return () => {
+    sortable?.destroy();
+    stopShelf();
+  };
 }
 
 // noFile says, before ▶ is pressed, that a book has nothing to deliver (a

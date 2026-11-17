@@ -76,6 +76,12 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 - **NovelCheck > Send highlights now** sends what you highlighted and the notes you wrote; **Automatic > Send highlights when online** does it by itself. They appear on the book's page in NovelCheck under **My highlights**. Only books NovelCheck knows are sent for; a book it doesn't have yet is tried again next time.
 - At the end of a book a window asks for **stars**, marks the book finished (in NovelCheck and KOReader) and offers the **next book of the series** to download. **NovelCheck > Finish this book...** does it by hand while a book is open; **Automatic > Ask for stars at the end of a book** switches the window off.
 
+## Copy my Kindle (NovelCheck 1.85 or newer, plugin 1.55.0)
+
+- **NovelCheck > Copy my Kindle to NovelCheck now** looks through the whole Kindle (every folder, not only what KOReader opened) for e-book files (EPUB, PDF, MOBI, AZW, AZW3, KFX and more) and sends the ones NovelCheck doesn't have yet. **Automatic > Copy my Kindle's books when online** does it by itself.
+- Files are copied exactly as they are, protected ones too; nothing is unlocked or changed. NovelCheck keeps every file in its `kindle-backup` folder and adds the ones that are not locked to Calibre (unless Calibre already has that title). Logs and other files that only look like books are left out.
+- One book at a time; if the connection drops it carries on next time.
+
 ## Developer tools (NovelCheck 1.50 or newer, plugin 1.50.0)
 
 **NovelCheck > Developer tools** helps when something doesn't work: **Run self-test** checks the connection, sign-in and the plugin's files; **View log** shows every menu tap, request and error; **Send log to NovelCheck** sends the log to Settings > Developer > Bug reports (your sync code is removed), **Send log with a note...** adds what you were doing, and **Send errors automatically** (on by default) sends the log by itself, at most every ten minutes, after an error. **Run self-test** sends its result too. Times in the log are UTC. If the plugin doesn't appear in KOReader at all, look for `LOAD_ERROR.txt` in the plugin's folder, or send KOReader's `crash.log`.

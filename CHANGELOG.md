@@ -4,6 +4,18 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.85.0]
+
+### 📚 Your bookshelf (Nightstand)
+- **A bookshelf of the books you finished this year** now stands at the bottom of the **Nightstand** page, on wooden shelves. Show **covers or spines**; a book with no cover gets a plain one made for it.
+- **Five seasons, each its own scene:** winter (pine garland, string lights, snow, gifts and a little tree), Halloween (cobwebs, bats, a spider, a glowing jack-o'-lantern, rising embers), autumn (a garland of leaves, falling leaves, pumpkins, wheat, cocoa), spring (hanging ivy, butterflies, blossom petals, tulips) and summer (bunting, fireflies, lemonade, a cactus, shells).
+- **The season follows the date by itself** (Automatic); tap another season any time. Lights, falling things, hanging decorations and the little things on the shelf each switch off on their own. Pick an earlier year to see that year's shelf.
+
+### 📥 Copy my Kindle (KOReader plugin 1.55.0)
+- **The plugin now looks through the whole Kindle**, every folder and not only the books KOReader opened, and sends every book file NovelCheck doesn't have yet to your server (**NovelCheck > Copy my Kindle to NovelCheck now**, or automatically when the Kindle goes online; **Automatic > Copy my Kindle's books when online** turns it off).
+- **Files are copied exactly as they are**, protected ones too; nothing is unlocked. They are kept in the `kindle-backup` folder in NovelCheck's data folder. Books that are not protected are also added to Calibre unless Calibre already has that title. Logs and other files that only look like books are left out.
+- One book at a time, and it carries on where it stopped if the connection drops.
+
 ## [1.84.0 speed and safety]
 
 ### ⚡ Library cleanup opens fast

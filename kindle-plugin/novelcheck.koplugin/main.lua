@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.54.0"
+local VERSION = "1.55.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -120,6 +120,7 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("On this device"), callback = function() DeviceBooks.show(self) end },
             { text = _("Delete finished books..."), callback = function() DeviceBooks.removeFinished(self) end },
             { text = _("Finish this book..."), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
+            { text = _("Copy my Kindle to NovelCheck now"), callback = function() if self.copyKindle then self:copyKindle(false) end end },
             { text = _("Send highlights now"), callback = function() if self.sendHighlights then self:sendHighlights(false) end end },
             { text = _("Tidy book names"), callback = function() self:tidyNames() end },
             { text = _("Report books on this device"), callback = function() self:reportDevice() end },
@@ -133,6 +134,9 @@ function NovelCheck:addToMainMenu(menu_items)
                 { text = _("Sync reading statistics when online"), keep_menu_open = true,
                   checked_func = function() return self:autoEnabled("auto_stats", false) end,
                   callback = function() self:toggleAuto("auto_stats", false) end },
+                { text = _("Copy my Kindle's books when online"), keep_menu_open = true,
+                  checked_func = function() return self:autoEnabled("auto_kindle", true) end,
+                  callback = function() self:toggleAuto("auto_kindle", true) end },
                 { text = _("Send highlights when online"), keep_menu_open = true,
                   checked_func = function() return self:autoEnabled("auto_highlights", true) end,
                   callback = function() self:toggleAuto("auto_highlights", true) end },
@@ -208,7 +212,7 @@ function NovelCheck:onNetworkConnected()
         return
     end
     if not (self:autoEnabled("auto_report", true) or self:autoEnabled("auto_download", false) or self:autoEnabled("auto_stats", false)
-        or self:autoEnabled("auto_highlights", true)) then
+        or self:autoEnabled("auto_highlights", true) or self:autoEnabled("auto_kindle", true)) then
         return
     end
     local now = os.time()
@@ -233,6 +237,9 @@ function NovelCheck:autoRun()
     end
     if self.sendHighlights and self:autoEnabled("auto_highlights", true) then
         self:sendHighlights(true)
+    end
+    if self.copyKindle and self:autoEnabled("auto_kindle", true) then
+        self:copyKindle(true)
     end
     self:checkUpdate(true)
 end
@@ -464,7 +471,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"
