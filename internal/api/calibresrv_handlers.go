@@ -184,6 +184,7 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 		log.Printf("calibre: logging removals failed: %v", err)
 	}
 	log.Printf("calibre: removed %d books via Content server (requested by %s)", len(toRemove), by)
+	s.Store.DropCalibreEntries(toRemove) // the lists are right at once, before Calibre is read again
 	// One book at a time from the Duplicates page: answer now and read Calibre again behind it (one read at a
 	// time; several removals in a row share the next one).
 	if later, _ := r.Context().Value(syncLaterKey{}).(bool); later {

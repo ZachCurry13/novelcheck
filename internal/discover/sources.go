@@ -111,7 +111,7 @@ func (c *Client) olEntry(w olWork) store.DiscoverEntry {
 		e.Author = w.AuthorName[0]
 	}
 	if id := max(w.CoverID, w.CoverI); id > 0 {
-		e.CoverURL = "https://covers.openlibrary.org/b/id/" + strconv.Itoa(id) + "-M.jpg"
+		e.CoverURL = "https://covers.openlibrary.org/b/id/" + strconv.Itoa(id) + "-L.jpg"
 	}
 	if strings.HasPrefix(w.Key, "/works/") {
 		e.Link = "https://openlibrary.org" + w.Key

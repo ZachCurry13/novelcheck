@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -32,6 +33,8 @@ type hcMore struct {
 	Similar []similarBook `json:"similar"`
 	at      time.Time
 }
+
+var hcMoreBusy = map[int]bool{} // answers being fetched again in the background (guarded by hcMoreCache)
 
 var hcMoreCache = struct {
 	sync.Mutex
@@ -90,6 +93,47 @@ func (s *Server) hardcoverMore(ctx context.Context, b *store.Book) (hcMore, erro
 	if ok && time.Since(c.at) < 24*time.Hour {
 		return c, nil
 	}
+	// kept in the database too, so a restart or a week later is not a wait: an answer under a week old is used
+	// as it is, one under three months old is shown at once and fetched again behind it
+	if data, at, found := s.Store.HCMoreGet(hcID); found {
+		var kept hcMore
+		if json.Unmarshal([]byte(data), &kept) == nil {
+			kept.at = at
+			age := time.Since(at)
+			if age < 90*24*time.Hour {
+				if age >= 7*24*time.Hour {
+					s.refreshHCMore(hc, b, hcID)
+				}
+				hcMoreCache.Lock()
+				hcMoreCache.m[hcID] = kept
+				hcMoreCache.Unlock()
+				return kept, nil
+			}
+		}
+	}
+	return s.fetchHCMore(ctx, hc, b, hcID)
+}
+
+// refreshHCMore fetches a kept answer again in the background (once at a time per book).
+func (s *Server) refreshHCMore(hc *hardcover.Client, b *store.Book, hcID int) {
+	hcMoreCache.Lock()
+	if hcMoreBusy[hcID] {
+		hcMoreCache.Unlock()
+		return
+	}
+	hcMoreBusy[hcID] = true
+	hcMoreCache.Unlock()
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		_, _ = s.fetchHCMore(ctx, hc, b, hcID)
+		hcMoreCache.Lock()
+		delete(hcMoreBusy, hcID)
+		hcMoreCache.Unlock()
+	}()
+}
+
+func (s *Server) fetchHCMore(ctx context.Context, hc *hardcover.Client, b *store.Book, hcID int) (hcMore, error) {
 	m, err := hc.MoreAbout(ctx, hcID, 12)
 	if err != nil {
 		return hcMore{}, err
@@ -113,6 +157,9 @@ func (s *Server) hardcoverMore(ctx context.Context, b *store.Book) (hcMore, erro
 			sb.Cover = ""
 		}
 		out.Similar = append(out.Similar, sb)
+	}
+	if raw, err := json.Marshal(out); err == nil {
+		s.Store.HCMoreSave(hcID, string(raw))
 	}
 	hcMoreCache.Lock()
 	hcMoreCache.m[hcID] = out

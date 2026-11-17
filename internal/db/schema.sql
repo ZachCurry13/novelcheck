@@ -859,3 +859,10 @@ CREATE TABLE IF NOT EXISTS summary_sent (
     sent_at INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, period)
 );
+
+-- The book page's "From Hardcover" answers (api/hcmore.go), kept so a restart or a week later is not a 13 second wait.
+CREATE TABLE IF NOT EXISTS hc_more_cache (
+    hc_id INTEGER PRIMARY KEY,
+    data  TEXT NOT NULL,
+    at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

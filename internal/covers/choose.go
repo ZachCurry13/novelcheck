@@ -78,7 +78,7 @@ func (c Cache) openLibraryAll(ctx context.Context, title, author string) []Candi
 	var out []Candidate
 	for _, d := range res.Docs {
 		if d.Cover > 0 {
-			out = append(out, Candidate{Title: d.Title, Author: strings.Join(d.Author, ", "), URL: cover + "/b/id/" + itoa(d.Cover) + "-M.jpg?default=false", From: "Open Library"})
+			out = append(out, Candidate{Title: d.Title, Author: strings.Join(d.Author, ", "), URL: cover + "/b/id/" + itoa(d.Cover) + "-L.jpg?default=false", From: "Open Library"})
 		}
 	}
 	return out

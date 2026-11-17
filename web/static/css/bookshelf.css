@@ -59,3 +59,5 @@ canvas.bs-fall{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointe
 @media (prefers-reduced-motion:reduce){.bs-bulb{animation:none}}
 
 @media (max-width:520px){.bs-sky{width:54px;height:54px;right:12px;top:8px}.bs-title b{font-size:19px}}
+
+.bs-cover img.cover-fit{background:rgba(0,0,0,.25)}

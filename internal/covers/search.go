@@ -194,7 +194,7 @@ func (c Cache) openLibraryCoverURL(ctx context.Context, title, author string) st
 	}
 	for _, d := range res.Docs {
 		if d.Cover > 0 && sameTitle(d.Title, title) && authorOK(d.Author, author) {
-			return cover + "/b/id/" + url.PathEscape(itoa(d.Cover)) + "-M.jpg?default=false"
+			return cover + "/b/id/" + url.PathEscape(itoa(d.Cover)) + "-L.jpg?default=false"
 		}
 	}
 	return ""
@@ -234,6 +234,7 @@ func (c Cache) googleCoverURL(ctx context.Context, title, author string) string 
 	for _, it := range res.Items {
 		if it.Info.Images.Thumb != "" && sameTitle(it.Info.Title, title) && authorOK(it.Info.Authors, author) {
 			u := strings.Replace(it.Info.Images.Thumb, "http://", "https://", 1)
+			u = strings.Replace(strings.Replace(u, "zoom=1", "zoom=3", 1), "&edge=curl", "", 1) // Google's thumbnail is 128 pixels; zoom=3 is about 600
 			return strings.Replace(u, "&edge=curl", "", 1)
 		}
 	}

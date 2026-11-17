@@ -35,6 +35,8 @@
     width: 100%; border-radius: 9999px; border: 1px solid transparent; background-color: rgb(var(--slate-800));
     padding: 0.625rem 1.1rem; font-size: 1rem; line-height: 1.5rem; color: rgb(var(--slate-100));
   }
+  /* a <label class="field"> only wraps a caption and its box (the Library's filters): the pill belongs to the box inside */
+  label.field { width: auto; border: 0; border-radius: 0; background: none; padding: 0; }
   textarea:is(.input, .field) { border-radius: 1rem; }
   select:is(.input, .field) { padding-right: 2.25rem; }
   :is(.input, .field)::placeholder { color: rgb(var(--slate-400)); }
@@ -244,6 +246,9 @@ html.font-dyslexic .leading-tight, html.font-dyslexic .leading-snug { line-heigh
 /* Content hide picker (js/content.js): rows big enough to tap on phones. */
 @media (max-width: 767px) {
   .content-picker .toggle, .content-picker [data-expand] { min-height: 2.75rem; }
+  /* in the Library's narrow filter panel the groups stand one under the other (three columns made the words overlap) */
+  #filters .content-picker { grid-template-columns: minmax(0, 1fr); }
+  #filters .content-picker .toggle { min-width: 0; }
 }
 
 /* Phones: nothing may widen the page. A drop-down grows to its longest option
@@ -339,6 +344,8 @@ dialog.dialog.search-view[open] { animation: none; }
 .lib-tile { display: flex; flex-direction: column; min-width: 0; cursor: pointer; }
 .lib-tile .tile-cover { position: relative; aspect-ratio: 2 / 3; border-radius: 0.4rem; overflow: hidden; background: rgb(var(--slate-800)); }
 .lib-tile .tile-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* a cover that is not book-shaped (a square audiobook cover, a wide one) is shown whole, not cropped (js/covers.js) */
+img.cover-fit { object-fit: contain !important; }
 .lib-tile:hover .tile-img { filter: brightness(1.06); }
 .lib-tile .tile-lvl { position: absolute; left: 0.4rem; bottom: 0.4rem; height: 1.4rem; width: 1.4rem; font-size: 0.75rem; border-radius: 0.35rem; }
 .lib-tile .tile-add { position: absolute; right: 0.35rem; top: 0.35rem; display: inline-flex; align-items: center; justify-content: center; min-width: 2.25rem; height: 2.25rem; border-radius: 9999px; background: rgb(var(--slate-950) / 0.8); color: rgb(var(--slate-100)); border: 0; font-size: 1.15rem; cursor: pointer; }

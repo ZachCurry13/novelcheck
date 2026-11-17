@@ -13,6 +13,12 @@ becomes the release notes for that version and is shown in the app under
 - **Books the Kindle backup finds are added to NovelCheck and to your Nightstand** (a book NovelCheck already has is reused; the rest join the Looked up list under their tidy title and author, not Calibre). A book you removed or hid from the Nightstand is not put back, PDFs and files named by an Amazon code are skipped, and the switch is Settings → "e-reader books go onto my Nightstand" (on by default).
 - **Tidy my Kindle's books** (plugin 1.57.1) now moves every book into **Books/NovelCheck**, the same folder NovelCheck downloads its books into, so every book is in one place (it used to make author folders). Same safety: only books NovelCheck has a copy of, nothing overwritten or deleted, asks first, Undo.
 
+### 🖼️ Sharper covers, and fixes for the Library layout
+- **Covers are sharper.** Cards used a 240-pixel picture on screens that need about 580, and Open Library's small (180-pixel) pictures were fetched even when a large one exists. Cards now use 360 pixels (720 on sharp screens), the book window 720, JPEG quality is higher, and covers are fetched large first (Open Library's large picture, Google Books at a bigger zoom). Covers already kept stay as they are; Find covers now fetches again the ones searched in the last week.
+- **A cover that is not book-shaped** (a square audiobook cover) is shown whole in its space, not cropped.
+- **The Library's filter panel:** the Author, Series, Also in and File format boxes were wrapped in a second big pill (a styling slip from the rounded fields); they are single boxes again. The Hide content groups stand one under the other and no longer overlap.
+- **Faster:** a book's "From Hardcover" section is kept in the database, so opening a book is instant after the first time, also after a restart (it took about 13 seconds each first time); a Calibre copy removed from the Duplicates page disappears from the lists at once, so the next click can't be refused as "already gone".
+
 ## [1.89.0]
 
 ### 🤖 Try Google's free models, then make them the main AI

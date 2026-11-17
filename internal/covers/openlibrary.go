@@ -36,6 +36,10 @@ func (c Cache) OpenLibrary(ctx context.Context, isbn string) (string, os.FileInf
 	if base == "" {
 		base = openLibrary
 	}
+	// the large picture (about 500 pixels wide) first, the medium one (about 180) when there is no large
+	if p, info, ok := c.fetch(ctx, base+"/b/isbn/"+isbn+"-L.jpg?default=false", out, out+".nolarge"); ok {
+		return p, info, true
+	}
 	return c.fetch(ctx, base+"/b/isbn/"+isbn+"-M.jpg?default=false", out, miss)
 }
 

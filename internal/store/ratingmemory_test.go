@@ -128,3 +128,31 @@ func TestLibraryBookByTitleKey(t *testing.T) {
 		t.Fatal("an unknown title is not found")
 	}
 }
+
+// A Calibre entry removed on the Content server is forgotten at once (its book too, when it has no other copy), and
+// a "From Hardcover" answer is kept in the database.
+func TestDropCalibreEntriesAndKeptHardcoverAnswer(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	a, _ := st.UpsertBook("Two Copies", "Pat", "", "")
+	_ = st.AddCopy(cal, a, "/c/a1.epub", "epub", "11")
+	_ = st.AddCopy(cal, a, "/c/a2.epub", "epub", "12")
+	b, _ := st.UpsertBook("One Copy", "Pat", "", "")
+	_ = st.AddCopy(cal, b, "/c/b.epub", "epub", "13")
+	st.DropCalibreEntries([]int{11, 13})
+	if _, err := st.BookByID(a, nil); err != nil {
+		t.Fatal("a book with another copy stays")
+	}
+	if _, err := st.BookByID(b, nil); err == nil {
+		t.Fatal("a book with no copy left goes")
+	}
+	st.HCMoreSave(77, `{"similar":[]}`)
+	if data, at, ok := st.HCMoreGet(77); !ok || data != `{"similar":[]}` || time.Since(at) > time.Minute {
+		t.Fatalf("the kept answer comes back: %q %v %v", data, at, ok)
+	}
+}

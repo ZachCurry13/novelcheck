@@ -25,7 +25,7 @@ export function card(b, queueOn, extra = "") {
   const rated = b.spice_level !== null && b.spice_level !== undefined;
   return `
     <article data-book="${b.id}" data-state="${esc(b.status || "")}" class="lib-tile">
-      <div class="tile-cover">${coverImg(b.id, "tile-img")}
+      <div class="tile-cover">${coverImg(b.id, "tile-img", (window.devicePixelRatio || 1) > 1.4)}
         ${rated ? `<span class="lvl lvl-${b.spice_level} tile-lvl" title="Level ${b.spice_level}">${b.spice_level}</span>` : ""}
         ${!queueOn ? "" : b.in_queue ? `<span class="tile-add">${IN_QUEUE}</span>` : `<button data-queue="${b.id}" title="Add to your Nightstand" aria-label="Add to your Nightstand" class="tile-add tile-add-btn">＋</button>`}
       </div>

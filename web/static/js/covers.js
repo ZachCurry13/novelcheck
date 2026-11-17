@@ -67,3 +67,15 @@ export async function openCoverReports(onDone) {
   };
   d.showModal();
 }
+
+// A cover that is not book-shaped (a square audiobook cover, a wide one) is shown whole in its space instead of
+// cropped: every cover image reports its shape when it loads, and a near-square or wide one gets .cover-fit.
+if (typeof document !== "undefined" && !window.__coverFit) {
+  window.__coverFit = true;
+  document.addEventListener("load", (e) => {
+    const img = e.target;
+    if (img?.tagName === "IMG" && img.naturalWidth && /\/cover(\?|$)|\/api\/libby\/cover/.test(img.currentSrc || img.src || "")) {
+      img.classList.toggle("cover-fit", img.naturalWidth / img.naturalHeight > 0.8);
+    }
+  }, true);
+}

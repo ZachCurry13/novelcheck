@@ -74,7 +74,7 @@ func TestSearchFindsMatchingCover(t *testing.T) {
 		switch {
 		case r.URL.Path == "/search.json":
 			fmt.Fprint(w, `{"docs":[{"title":"Dune Messiah","author_name":["Frank Herbert"],"cover_i":111},{"title":"Dune","author_name":["Frank Herbert"],"cover_i":222}]}`)
-		case strings.HasPrefix(r.URL.Path, "/b/id/222-M.jpg"):
+		case strings.HasPrefix(r.URL.Path, "/b/id/222-L.jpg"):
 			w.Header().Set("Content-Type", "image/jpeg")
 			w.Write(img)
 		default:

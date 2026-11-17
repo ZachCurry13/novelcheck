@@ -19,8 +19,8 @@ import (
 
 // Widths, in pixels.
 const (
-	Small = 240 // cards and lists
-	Large = 480 // the book window
+	Small = 360 // cards and lists (a card is about 290 pixels wide; 240 looked soft)
+	Large = 720 // the book window and sharp screens
 )
 
 // Cache keeps shrunk covers (and ones from Open Library) in Dir.
@@ -80,7 +80,7 @@ func (c Cache) Thumb(src string, info os.FileInfo, width int) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = jpeg.Encode(tmp, shrink(img, width), &jpeg.Options{Quality: 82})
+	err = jpeg.Encode(tmp, shrink(img, width), &jpeg.Options{Quality: 88})
 	if cerr := tmp.Close(); err == nil {
 		err = cerr
 	}

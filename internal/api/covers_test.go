@@ -93,7 +93,7 @@ func TestOpenLibraryCover(t *testing.T) {
 			t.Fatalf("placeholder when there's none: %v", res.Header)
 		}
 	}
-	if asked != 2 {
+	if asked != 4 { // each book is asked once for the large picture and then the medium one, never again
 		t.Fatalf("each cover (and each miss) is asked for once: %d", asked)
 	}
 }
