@@ -33,6 +33,7 @@ var friendRoutes = []struct {
 	{"POST", regexp.MustCompile(`^/api/me/(events/\d+/books/\d+/claim|import)$`)},
 	{"GET", regexp.MustCompile(`^/api/(catalogs|collections|age-groups|updates|flags|content|discover)$`)}, // collections: always none
 	{"", regexp.MustCompile(`^/api/push(/(subscribe|unsubscribe|test))?$`)},
+	{"", regexp.MustCompile(`^/api/me/summaries$`)}, // her reading summaries (she has Stats)
 	{"POST", regexp.MustCompile(`^/api/problems$`)},
 	// Her own Nightstand (nothing is ever sent from the family's files) and Check a book.
 	{"GET", regexp.MustCompile(`^/api/queue$`)},

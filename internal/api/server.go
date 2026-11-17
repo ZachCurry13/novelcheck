@@ -205,6 +205,8 @@ func (s *Server) Router() http.Handler {
 			r.Get("/books/{id}/bookmarks", s.handleBookmarks)
 			r.Get("/books/{id}/hardcover", s.handleHCMore)
 			r.Get("/books/{id}/highlights", s.handleBookHighlights)
+			r.Get("/me/summaries", s.handleSummaryPrefs)
+			r.Put("/me/summaries", s.handleSummaryPrefs)
 			r.Post("/books/{id}/bookmarks", s.handleBookmarks)
 			r.Delete("/books/{id}/bookmarks", s.handleBookmarks)
 			r.Get("/books/{id}/audio/{ino}", s.handleAudioStream)

@@ -844,3 +844,18 @@ CREATE TABLE IF NOT EXISTS flag_memory (
     flag_id  INTEGER NOT NULL,
     PRIMARY KEY (norm_key, flag_id)
 );
+
+-- Reading summaries (api/summaries.go): which of the weekly, monthly and yearly notices a person wants (no row = all
+-- three), and which period each notice was sent for, so it goes out once.
+CREATE TABLE IF NOT EXISTS summary_prefs (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    week    INTEGER NOT NULL DEFAULT 1,
+    month   INTEGER NOT NULL DEFAULT 1,
+    year    INTEGER NOT NULL DEFAULT 1
+);
+CREATE TABLE IF NOT EXISTS summary_sent (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    period  TEXT NOT NULL,          -- w:2026-11-09 (the Monday), m:2026-10 or y:2026
+    sent_at INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, period)
+);
