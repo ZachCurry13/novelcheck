@@ -95,3 +95,11 @@ func (s *Store) HCIDOf(id int64) int {
 func (s *Store) RecheckHardcover() {
 	_, _ = s.DB.Exec(`UPDATE books SET hc_rated_at = 0 WHERE hc_rated_at > 0`)
 }
+
+// PreviousBookIDs are the ids this book had before its row was deleted and made again (the rating memory knows
+// them): the cover finder looks for a cover stored under one of them before searching the web.
+func (s *Store) PreviousBookIDs(id int64) []int64 {
+	var ids []int64
+	_ = s.DB.Select(&ids, `SELECT m.last_id FROM rating_memory m JOIN books b ON b.norm_key = m.norm_key WHERE b.id = ? AND m.last_id != ?`, id, id)
+	return ids
+}

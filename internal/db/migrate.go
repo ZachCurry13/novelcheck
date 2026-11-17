@@ -103,6 +103,7 @@ func migrate(d *sqlx.DB) error {
 		{"hardcover_books", "finished_at", "TEXT NOT NULL DEFAULT ''"},
 		{"hardcover_books", "pages", "INTEGER NOT NULL DEFAULT 0"},
 		{"hardcover_books", "rating", "REAL NOT NULL DEFAULT 0"},
+		{"books", "big_rules", "INTEGER NOT NULL DEFAULT 0"},
 	} {
 		if err := addColumn(d, c[0], c[1], c[2]); err != nil {
 			return err
@@ -117,7 +118,10 @@ func migrate(d *sqlx.DB) error {
 	if err := moveLGBTQ(d); err != nil {
 		return err
 	}
-	return addFriendRole(d)
+	if err := addFriendRole(d); err != nil {
+		return err
+	}
+	return ratingMemory(d)
 }
 
 // firstOwner runs once, on the first start of a version with a main admin:

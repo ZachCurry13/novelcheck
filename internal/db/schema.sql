@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS books (
     hc_warnings      TEXT NOT NULL DEFAULT '',     -- Hardcover readers' content warnings, comma-separated (evidence for rating)
     hc_moods         TEXT NOT NULL DEFAULT '',     -- and moods
     hc_id            INTEGER NOT NULL DEFAULT 0,   -- the book's id on Hardcover, once found (for similar books and the audiobook)
+    big_rules        INTEGER NOT NULL DEFAULT 0,   -- the rules version at which the bigger (Deep Scan) model re-rated a "not sure" rating
     tags             TEXT NOT NULL DEFAULT '',     -- Calibre's tags, comma-separated
     genres           TEXT NOT NULL DEFAULT '',     -- categories (package genres) as ",fantasy,romance,"
     kind             TEXT NOT NULL DEFAULT '',     -- fiction, nonfiction or '' (unknown)
@@ -790,4 +791,56 @@ CREATE TABLE IF NOT EXISTS book_highlights (
     device     TEXT NOT NULL DEFAULT '',
     created_at INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, book_id, key)
+);
+
+-- What was decided about a book, kept when its row is deleted (it left every library, list and event) and put
+-- back when the same book (the same norm_key) comes again, so it is not rated twice. Filled and read by two
+-- triggers (internal/db/ratingmemory.go), so every way of deleting or adding a book is covered.
+CREATE TABLE IF NOT EXISTS rating_memory (
+    norm_key         TEXT PRIMARY KEY,
+    last_id          INTEGER NOT NULL DEFAULT 0,   -- the id the book had (its found cover is stored under it)
+    classification   TEXT,
+    nudity           INTEGER NOT NULL DEFAULT 0,
+    solo_acts        INTEGER NOT NULL DEFAULT 0,
+    heavy_innuendo   INTEGER NOT NULL DEFAULT 0,
+    playful_fantasy  INTEGER NOT NULL DEFAULT 0,
+    dark_occult      INTEGER NOT NULL DEFAULT 0,
+    demonic_presence INTEGER NOT NULL DEFAULT 0,
+    summary_verdict  TEXT NOT NULL DEFAULT '',
+    confidence       TEXT NOT NULL DEFAULT '',
+    premise          TEXT NOT NULL DEFAULT '',
+    approved         INTEGER NOT NULL DEFAULT 0,
+    approved_by      TEXT NOT NULL DEFAULT '',
+    age_level        INTEGER NOT NULL DEFAULT 0,
+    age_set_by       TEXT NOT NULL DEFAULT '',
+    spice_level      INTEGER,
+    spice_reason     TEXT NOT NULL DEFAULT '',
+    rules_version    INTEGER NOT NULL DEFAULT 0,
+    flags_version    INTEGER NOT NULL DEFAULT 0,
+    content_version  INTEGER NOT NULL DEFAULT 0,
+    content_amounts  TEXT NOT NULL DEFAULT '',
+    genres           TEXT NOT NULL DEFAULT '',
+    kind             TEXT NOT NULL DEFAULT '',
+    genre_source     TEXT NOT NULL DEFAULT '',
+    hc_rating        REAL NOT NULL DEFAULT 0,
+    hc_ratings       INTEGER NOT NULL DEFAULT 0,
+    hc_rated_at      INTEGER NOT NULL DEFAULT 0,
+    hc_warnings      TEXT NOT NULL DEFAULT '',
+    hc_moods         TEXT NOT NULL DEFAULT '',
+    hc_id            INTEGER NOT NULL DEFAULT 0,
+    big_rules        INTEGER NOT NULL DEFAULT 0,
+    analysis_model   TEXT NOT NULL DEFAULT '',
+    analyzed_at      DATETIME,
+    saved_at         INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS content_memory (
+    norm_key TEXT NOT NULL,
+    key      TEXT NOT NULL,
+    source   TEXT NOT NULL DEFAULT 'ai',
+    PRIMARY KEY (norm_key, key)
+);
+CREATE TABLE IF NOT EXISTS flag_memory (
+    norm_key TEXT NOT NULL,
+    flag_id  INTEGER NOT NULL,
+    PRIMARY KEY (norm_key, flag_id)
 );

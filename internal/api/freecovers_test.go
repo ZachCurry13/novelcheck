@@ -112,3 +112,76 @@ func TestCoverFinderFindsFreeBookCovers(t *testing.T) {
 		t.Fatal("the book's ASIN should have been looked up on Hardcover")
 	}
 }
+
+// A free book that comes back on a later event (its row was deleted and made again, so it has a new id) takes the
+// cover that was found for it before, without a search on the web, and is already rated.
+func TestFreeBookKeepsItsCoverAndRatingWhenItComesBack(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 60, 90))
+	for x := 0; x < 60; x++ {
+		for y := 0; y < 90; y++ {
+			img.Set(x, y, color.RGBA{uint8(x * 4), 60, uint8(y * 2), 255})
+		}
+	}
+	var jpg bytes.Buffer
+	_ = jpeg.Encode(&jpg, img, nil)
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, `{"docs": [], "items": []}`) // nothing on the web: a cover can only come from the memory
+	}))
+	defer fake.Close()
+	var server *api.Server
+	srv, st := setupWith(t, func(s *api.Server) {
+		server = s
+		s.Covers.OpenLibraryURL, s.Covers.SearchURL, s.Covers.GoogleURL = fake.URL, fake.URL, fake.URL
+		s.Worker.NewEnricher = func() *enrich.Client {
+			c := enrich.New("")
+			c.OpenLibraryURL, c.GoogleBooksURL = fake.URL, fake.URL
+			return c
+		}
+	})
+	admin := login(t, srv, "admin", "adminpass1")
+	entry := []store.EventEntry{{Title: "Comes Back Free", Author: "Pat Again", ASIN: "B0AGAIN001", Link: "https://example.org/x"}}
+	evt, ids, err := st.CreateEvent("Free Day One", "https://example.org/one", "admin", "", entry)
+	if err != nil || len(ids) != 1 {
+		t.Fatalf("event: %v %v", ids, err)
+	}
+	first := ids[0]
+	two := 2
+	_ = st.SaveAnalysis(first, store.Analysis{SpiceLevel: &two, Classification: "Closed Door", Confidence: "high", Model: "llama3.2"})
+	if _, _, ok := server.Covers.Keep("book-"+itoa(first), jpg.Bytes()); !ok {
+		t.Fatal("setup: the cover could not be stored")
+	}
+	// The event ends and the book leaves everything.
+	if err := st.DeleteEvent(evt); err != nil {
+		t.Fatal(err)
+	}
+	_, _ = st.DB.Exec(`DELETE FROM books WHERE id NOT IN (SELECT book_id FROM catalog_books)`)
+	_, ids, err = st.CreateEvent("Free Day Two", "https://example.org/two", "admin", "", entry)
+	if err != nil || len(ids) != 0 {
+		t.Fatalf("it comes back already rated, so nothing is waiting to be rated: %v %v", ids, err)
+	}
+	free, _ := st.FreeBooks()
+	if len(free) != 1 || free[0].ID == first {
+		t.Fatalf("a new row for the same book: %+v (old id %d)", free, first)
+	}
+	if b, _ := st.BookByID(free[0].ID, nil); b == nil || b.Status != "analyzed" || b.SpiceLevel == nil || *b.SpiceLevel != 2 {
+		t.Fatalf("its rating came back: %+v", b)
+	}
+	if res, _ := admin.do("POST", "/api/admin/covers/find", map[string]string{}, true); res.StatusCode != 202 {
+		t.Fatalf("start: %d", res.StatusCode)
+	}
+	deadline := time.Now().Add(15 * time.Second)
+	for {
+		res, err := admin.http.Get(srv.URL + "/api/books/" + itoa(free[0].ID) + "/cover")
+		if err == nil {
+			ct := res.Header.Get("Content-Type")
+			res.Body.Close()
+			if strings.HasPrefix(ct, "image/jpeg") {
+				return
+			}
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the cover found before was not given back")
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+}

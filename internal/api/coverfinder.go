@@ -136,6 +136,13 @@ func (s *Server) findCovers(again, freeOnly bool) {
 			j.mu.Unlock()
 			return
 		}
+		if s.adoptOldCover(b.ID) { // the book was deleted and came back: its cover was kept
+			j.mu.Lock()
+			j.Checked++
+			j.Found++
+			j.mu.Unlock()
+			continue
+		}
 		if again {
 			s.Covers.Forget(s.coverName(b.ID))
 		} else if s.Covers.Missed(s.coverName(b.ID)) {
