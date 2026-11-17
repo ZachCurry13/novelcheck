@@ -13,8 +13,10 @@ const MaxSpiceLevel = 5
 // RulesVersion identifies the AI's rating rules (pepper descriptions and
 // content flags). Bump it whenever they change: books the AI rated under an
 // older version are then offered for re-rating. 2 = v1.16 pepper wording,
-// 3 = v1.18.2 (level 2 without sexual desire, level 3 closed-door sex).
-const RulesVersion = 3
+// 3 = v1.18.2 (level 2 without sexual desire, level 3 closed-door sex),
+// 4 = v1.81.0 (the family's calibration: crushes and hand-holding 0, passionate kissing 2,
+// anything sexual on the page 4, the strongest scene sets the level, unsure = higher and low confidence).
+const RulesVersion = 4
 
 // ValidSpice reports whether level is on the 0-5 pepper scale.
 func ValidSpice(level int) bool { return level >= 0 && level <= MaxSpiceLevel }

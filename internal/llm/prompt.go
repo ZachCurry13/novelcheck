@@ -19,10 +19,10 @@ CATEGORIES & GUIDELINES:
 
 1. Spice Level (0-5 peppers). Pick the single best fit:
 ` + PepperLevels + `
-If unsure between two levels, choose the higher one.
+If unsure between two levels, choose the higher one and set confidence to "low", so a parent checks it.
 ` + EverydayGuard + `
-When content warnings from Hardcover's readers are given, use them as evidence along with the blurb: a warning about sexual content or explicit sex points to Level 3 or higher, and one about sexual assault or abuse belongs in the content details. No warnings do not mean no romance.
-Vampires, werewolves and other fantasy creatures don't raise the level on their own; rate what happens between the characters. For calibration: Twilight (Stephenie Meyer) is about Level 2; Dead Until Dark (Charlaine Harris) is Level 4.
+When content warnings from Hardcover's readers are given, use them as evidence along with the blurb: a warning about sexual content or explicit sex points to Level 3 or higher; one about sexual assault or abuse belongs in the content details, and is Level 4 when the assault is shown (if you can't tell whether it is shown, set confidence to "low"). No warnings do not mean no romance.
+Vampires, werewolves and other fantasy creatures don't raise the level on their own; rate what happens between the characters. For calibration: Dead Until Dark (Charlaine Harris) is Level 4.
 Also give spice_reason: 3-8 modest words naming what sets the level (e.g. "No romance", "Kissing only", "Fade-to-black intimacy", "Heavy innuendo, on-page foreplay", "Several explicit scenes").
 Also give premise: 1-2 spoiler-free sentences telling a reader what the book is about: the main character(s), the setting and the central problem or goal. Be plain and specific. Never mention praise, awards, best-seller lists, sales, reviewers, age ratings or content, and give nothing away from later in the book.
 
@@ -53,16 +53,17 @@ OUTPUT FORMAT (JSON ONLY):
 }`
 
 // PepperLevels defines the 0-5 pepper scale (shared with Deep read).
-const PepperLevels = `- 0 = No Romance: No meaningful romantic or sexual content. No romantic subplot, kissing, sexual attraction, or romantic physical affection. Examples: Harry Potter and the Sorcerer's Stone; The Hobbit.
-- 1 = Sweet Romance: Romance is present but mild and non-sexual. May include crushes, attraction, flirting, hand-holding, cuddling, and sweet/brief kisses. No sexual desire or sexualized physical intimacy. Examples: Uglies (Scott Westerfeld); Seeking Persephone (Sarah M. Eden).
-- 2 = Romantic: More developed romance with stronger attraction and kissing, including passionate kissing or physical affection. No sexual activity, sexual desire, or implication of sex. The intimacy remains romantic rather than sexual. Example: My Phony Valentine (Courtney Walsh).
-- 3 = Steamy Closed-Door: Strong sexual attraction and desire are present. May include heavy/passionate making out, sexual tension, and characters expressing or acting on sexual desire. Any sexual encounter occurs off-page or fades to black; no explicit sexual activity is described. Example: a romance that is clearly sexually charged but remains true closed-door.
-- 4 = Explicit / Open Door: Sexual encounters occur on-page and include clear descriptions of sexual activity. Scenes contain meaningful sexual detail rather than simply implying what happens. There may be multiple or extended explicit scenes, but sex does not necessarily dominate the entire book. Examples: Fourth Wing (Rebecca Yarros); A Court of Thorns and Roses (Sarah J. Maas).
-- 5 = Very Explicit / Erotica-Level: Frequent, extended, or highly graphic on-page sexual content with extensive detail. Sexual encounters are a major component of the book and may occupy a substantial portion of the story. Example: Fifty Shades of Grey (E. L. James).`
+const PepperLevels = `- 0 = No Romance: No kissing. Crushes, attraction, flirting, holding hands, hugs and noticing that someone is good-looking all stay at 0, as do family affection, suggestive jokes that never get explicit, non-sexual nudity with no description of bodies (skinny-dipping, a bath), a prostitute or an affair only mentioned, and a sexual assault only stated, not shown (list it in the content details). Examples: Harry Potter and the Sorcerer's Stone; The Hobbit.
+- 1 = Sweet Romance: Sweet or brief kisses: one kiss at the end, a couple's quick kisses (married or not), a couple's kiss on the forehead, cheek or head. No passionate kissing, no sexual desire. Examples: Seeking Persephone (Sarah M. Eden).
+- 2 = Romantic: Passionate kissing, even once, or a lot of kissing and cuddling. No sexual desire and no implied sex. Example: My Phony Valentine (Courtney Walsh).
+- 3 = Steamy Closed-Door: Sexual desire and tension: characters wanting each other physically, with sex only implied off the page (a door closes, a fade to black, the morning after, "they made love" with no description). Also a brief, non-sexual description of a naked body, or undressing that stops before anything graphic.
+- 4 = Explicit / Open Door: Anything sexual shown on the page, even briefly: a sex scene of any length; touching private parts, even over clothes; explicit talk or jokes that describe sex acts; describing a character's body in a sexual way; a sexual assault shown on the page, even if not graphic; graphic undressing and touching before a door closes. Examples: Fourth Wing (Rebecca Yarros); A Court of Thorns and Roses (Sarah J. Maas).
+- 5 = Very Explicit / Erotica-Level: Sex in most chapters, long or very graphic scenes: the physical relationship is a main part of the book (erotica). Example: Fifty Shades of Grey (E. L. James).
+The family's rules: the single strongest scene sets the level for the whole book (one open-door scene makes it at least 4, however mild the rest). A married or long-together couple is rated exactly like a new couple doing the same. Teenage characters are rated by the same rules.`
 
 // EverydayGuard keeps ordinary moments from reading as romance (shared with
 // Deep read).
-const EverydayGuard = `Everyday moments are not romance: sharing a meal or a glass of wine, waiting for a taxi, friendship, family affection and ordinary conversation never raise the level on their own. A kiss on the forehead, cheek or top of the head, a hug or holding hands is tender affection: Level 1 at most between a couple, and Level 0 between family or friends. Only kissing on the lips, and more of it, reaches Level 2.`
+const EverydayGuard = `Everyday moments are not romance: sharing a meal or a glass of wine, waiting for a taxi, friendship, family affection and ordinary conversation never raise the level on their own. A hug or holding hands is Level 0. A kiss on the forehead, cheek or top of the head is Level 1 at most between a couple, and Level 0 between family or friends. Passionate kissing, even once, is Level 2.`
 
 // ContentDetails asks for the detailed content items (package content).
 var ContentDetails = `4. Content Details. List the key of every item below that the book clearly contains, going by the blurb and what is well known about this book. Don't guess; use [] if none apply.

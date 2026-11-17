@@ -16,9 +16,9 @@ func TestParsePartGuards(t *testing.T) {
 		{`{"romance": "No romantic or sexual content in this part", "level": 4, "note": "Bowman discovers the airlock doors are open"}`, 0},
 		{`{"romance": "", "level": 3, "note": "Moon-Watcher kills a warthog with a stone hammer"}`, 0},
 		// Pasting the pepper scale back is not evidence.
-		{`{"romance": "More developed romance with stronger attraction and kissing, including passionate kissing", "level": 4}`, 2},
-		{`{"romance": "Strong sexual attraction and desire are present", "level": 3}`, 2},
-		{`{"romance": "Sexual encounters occur on-page and include clear descriptions of sexual activity", "level": 4}`, 2},
+		{`{"romance": "Passionate kissing, even once, or a lot of kissing and cuddling", "level": 4}`, 2},
+		{`{"romance": "Sexual desire and tension: characters wanting each other physically", "level": 3}`, 2},
+		{`{"romance": "Anything sexual shown on the page, even briefly: a sex scene of any length", "level": 4}`, 2},
 		// Real romance keeps its level (the second look checks 3 and up).
 		{`{"romance": "No explicit scenes, but Harry and Ginny kiss", "level": 2}`, 2},
 		{`{"romance": "they spend the night together, off the page", "level": 3}`, 3},

@@ -21,7 +21,16 @@ becomes the release notes for that version and is shown in the app under
 
 ### 🌶️ Better pepper ratings
 - **Hardcover's content warnings help the AI rate.** The background Hardcover pass now also keeps each book's content warnings and moods from Hardcover's readers, and the AI reads them along with the description when it rates a book (a "sexual content" warning points to Level 3 or higher).
-- **A kiss on the forehead, cheek or head is tender affection, not a romance level of its own**: Level 1 at most between a couple, Level 0 within a family or between friends. Only kissing on the lips, and more of it, reaches Level 2.
+- **The pepper levels now follow the family's own answers** (31 calibration cases):
+  - **0:** no kissing. Crushes, holding hands, hugs, noticing someone is good-looking, suggestive jokes that never get explicit, non-sexual nudity, or something only mentioned (a prostitute, an assault in the past).
+  - **1:** sweet or brief kisses, including a couple's kiss on the forehead or head.
+  - **2:** passionate kissing, even once, or a lot of kissing and cuddling.
+  - **3:** sexual desire and tension, with sex only implied (a door closes, a fade to black, "made love" in one line), or a brief description of a naked body.
+  - **4:** anything sexual on the page, even briefly: a sex scene of any length, touching private parts even over clothes, explicit sex talk or jokes, describing a body in a sexual way, an assault that is shown.
+  - **5:** erotica.
+- **The strongest scene sets the level** for the whole book. Married couples are rated like any couple.
+- **When the AI can't decide between two levels, it picks the higher one** and marks the book "AI wasn't sure" for a parent to check.
+- The pepper guide in the app says the same. Books the AI rated under the old rules are offered for re-rating (Admin → AI); nothing is re-rated until you start it.
 
 ### 📚 More from Hardcover on the book's page
 - **Content warnings from Hardcover's readers**, folded away under a line that says how many (a warning can give part of the story away), and the book's **mood** ("adventurous, emotional").
