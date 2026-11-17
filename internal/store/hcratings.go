@@ -103,3 +103,19 @@ func (s *Store) PreviousBookIDs(id int64) []int64 {
 	_ = s.DB.Select(&ids, `SELECT m.last_id FROM rating_memory m JOIN books b ON b.norm_key = m.norm_key WHERE b.id = ? AND m.last_id != ?`, id, id)
 	return ids
 }
+
+// NotSureToRecheck lists up to limit ratings the AI wasn't sure of (the Not sure chip: analyzed, low confidence, no
+// parent OK) that are in a library, list or event, were not made by hand or by a Deep Scan, and have not had a
+// second opinion from the bigger model under the current rules, newest first.
+func (s *Store) NotSureToRecheck(limit int) ([]int64, error) {
+	var ids []int64
+	err := s.DB.Select(&ids, `SELECT b.id FROM books b WHERE b.status = 'analyzed' AND b.confidence = 'low' AND b.approved = 0
+		AND b.big_rules < ? AND b.analysis_model NOT LIKE 'manual:%' AND b.analysis_model NOT LIKE 'deep:%'
+		AND EXISTS (SELECT 1 FROM catalog_books cb WHERE cb.book_id = b.id) ORDER BY b.id DESC LIMIT ?`, RulesVersion, limit)
+	return ids, err
+}
+
+// MarkBigChecked notes that the bigger model looked at this rating under the current rules.
+func (s *Store) MarkBigChecked(id int64) {
+	_, _ = s.DB.Exec(`UPDATE books SET big_rules = ? WHERE id = ?`, RulesVersion, id)
+}
