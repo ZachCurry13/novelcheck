@@ -2,6 +2,7 @@
 // version in the footer for everyone.
 import { get } from "./api.js";
 import { $ } from "./ui.js";
+import { showNotesAfterUpdate } from "./whatsnewpopup.js";
 
 const DISMISS_KEY = "novelcheck.dismissedUpdate";
 
@@ -13,7 +14,7 @@ function dismissed() {
   }
 }
 
-export async function checkForUpdates() {
+export async function checkForUpdates(state) {
   let data;
   try {
     data = await get("/api/updates");
@@ -24,6 +25,7 @@ export async function checkForUpdates() {
   if (!st) return;
   $("#version-label").textContent = `Version ${st.current}`;
   $("#header-version").textContent = /^\d/.test(st.current) ? `v${st.current}` : st.current;
+  showNotesAfterUpdate(st.current, data.changelog, state); // once after an update
   if (!st.update_available || dismissed() === st.latest) return;
   $("#update-text").textContent = `NovelCheck ${st.latest} is available (you have ${st.current}).`;
   $("#update-banner").classList.remove("hidden");
