@@ -51,6 +51,7 @@ func TestKindleCopy(t *testing.T) {
 			{"path": "/mnt/us/documents/Store Book.azw", "size": 4096},
 			{"path": "/mnt/us/documents/novelcheck-bug-log.azw3", "size": 9000},
 			{"path": "/mnt/us/koreader/settings.epub", "size": 9000},
+			{"path": "/mnt/us/Books/NovelCheck/The-Hobbit.epub", "size": 9000},
 			{"path": "/mnt/us/documents/notes.txt", "size": 9000},
 		}})
 		return call("POST", "check", b)

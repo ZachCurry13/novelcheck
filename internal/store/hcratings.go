@@ -83,6 +83,14 @@ func (s *Store) LibraryBookByKey(key string) int64 {
 	return id
 }
 
+// LibraryBookByTitleKey is a library book whose title matches (ignoring case, spaces and punctuation) whoever the
+// author is: titleKey is NormKey(title, "") up to its "|". 0 when there is none.
+func (s *Store) LibraryBookByTitleKey(titleKey string) int64 {
+	var id int64
+	_ = s.DB.Get(&id, `SELECT b.id FROM books b WHERE b.norm_key LIKE ? AND EXISTS (SELECT 1 FROM catalog_books cb WHERE cb.book_id = b.id) ORDER BY b.id LIMIT 1`, titleKey+"|%")
+	return id
+}
+
 // HCIDOf is the book's Hardcover id, 0 when not known yet.
 func (s *Store) HCIDOf(id int64) int {
 	var n int

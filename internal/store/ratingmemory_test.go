@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -104,5 +105,26 @@ func TestRememberingCanBeTurnedOffAndForgotten(t *testing.T) {
 	}
 	if got := st.ForgetRatings(time.Time{}); got != 1 {
 		t.Fatalf("then all: %d", got)
+	}
+}
+
+// A library book is found by its title alone, whatever the author, ignoring punctuation (a Kindle file named
+// Some-Title.epub must not add a second copy).
+func TestLibraryBookByTitleKey(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	id, _ := st.UpsertBook("Harry Potter and the Chamber of Secrets", "J. K. Rowling", "", "")
+	_ = st.AddCopy(cal, id, "/c/hp2.epub", "epub", "1")
+	key, _, _ := strings.Cut(store.NormKey("Harry-Potter-and-the-Chamber-of-Secrets", ""), "|")
+	if st.LibraryBookByTitleKey(key) != id {
+		t.Fatal("found by title alone")
+	}
+	if st.LibraryBookByTitleKey("nosuchbook") != 0 {
+		t.Fatal("an unknown title is not found")
 	}
 }

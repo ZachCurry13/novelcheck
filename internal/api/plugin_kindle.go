@@ -30,7 +30,8 @@ var kindleExts = map[string]bool{".epub": true, ".pdf": true, ".mobi": true, ".a
 func kindleSkip(rel string) bool {
 	l := strings.ToLower(rel)
 	for _, part := range strings.Split(l, "/") {
-		if strings.HasPrefix(part, ".") || strings.HasSuffix(part, ".sdr") || part == "koreader" || part == "system" || part == "novelcheck.koplugin" {
+		// "novelcheck" is the folder the plugin downloads Nightstand books into: they came from this server
+		if strings.HasPrefix(part, ".") || strings.HasSuffix(part, ".sdr") || part == "koreader" || part == "system" || part == "novelcheck.koplugin" || part == "novelcheck" {
 			return true
 		}
 	}
@@ -158,7 +159,15 @@ func (s *Server) addKindleToCalibre(r *http.Request, file, name string) bool {
 	if a, t, ok := strings.Cut(stem, " - "); ok {
 		author, title = a, t
 	}
-	if s.Store.LibraryBookByKey(store.NormKey(title, author)) != 0 || s.Store.LibraryBookByKey(store.NormKey(stem, "")) != 0 {
+	// the title alone, whatever the author: a file named Some-Title.epub (how NovelCheck names its downloads) or
+	// "Author - Title.epub" must not add a second copy of a book the library has
+	for _, t := range []string{title, stem} {
+		key, _, _ := strings.Cut(store.NormKey(t, ""), "|")
+		if key != "" && s.Store.LibraryBookByTitleKey(key) != 0 {
+			return false
+		}
+	}
+	if s.Store.LibraryBookByKey(store.NormKey(title, author)) != 0 {
 		return false
 	}
 	data, err := os.ReadFile(file)
