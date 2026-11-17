@@ -172,19 +172,25 @@ func (s *Server) handlePluginKindleFile(w http.ResponseWriter, r *http.Request) 
 	kosyncJSON(w, http.StatusOK, map[string]any{"stored": true, "locked": locked, "added_to_calibre": added})
 }
 
-// addKindleToCalibre adds an unlocked e-book to Calibre unless the library already has that title.
+// KeyKindleToCalibre switches on adding unprotected Kindle books to Calibre by "Copy my Kindle" (off unless "true").
+// Off by default: the whole-Kindle backup keeps every file anyway, and adding to Calibre made second copies of books
+// the library already had under a slightly different name.
+const KeyKindleToCalibre = "kindle_add_to_calibre"
+
+// addKindleToCalibre adds an unlocked e-book to Calibre (when switched on) unless the library already has that title.
 func (s *Server) addKindleToCalibre(r *http.Request, file, name string) bool {
-	if s.Store.Setting(store.KeyCalibreSrvURL) == "" || !ebookExts[ext(name)] || ext(name) == ".azw" {
+	if s.Store.Setting(KeyKindleToCalibre) != "true" || s.Store.Setting(store.KeyCalibreSrvURL) == "" || !ebookExts[ext(name)] || ext(name) == ".azw" {
 		return false
 	}
 	stem := strings.TrimSuffix(name, path.Ext(name))
 	title, author := stem, ""
-	if a, t, ok := strings.Cut(stem, " - "); ok {
-		author, title = a, t
+	// every way a file can be named: "Author - Title", "Title - Author" (also "Last, First"), or just the title
+	cands := []string{stem}
+	if x, y, ok := strings.Cut(stem, " - "); ok {
+		cands = append(cands, x, y)
+		author, title = x, y
 	}
-	// the title alone, whatever the author: a file named Some-Title.epub (how NovelCheck names its downloads) or
-	// "Author - Title.epub" must not add a second copy of a book the library has
-	for _, t := range []string{title, stem} {
+	for _, t := range cands {
 		key, _, _ := strings.Cut(store.NormKey(t, ""), "|")
 		if key != "" && s.Store.LibraryBookByTitleKey(key) != 0 {
 			return false

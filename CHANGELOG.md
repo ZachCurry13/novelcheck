@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.89.1]
+
+### 📥 Copy my Kindle no longer adds books to Calibre by itself
+- **"Copy my Kindle" keeps every file in NovelCheck's `kindle-backup` folder but does not add books to Calibre unless you turn that on** (setting `kindle_add_to_calibre` = `true`). Adding made second copies of books Calibre already had under a slightly different name ("Wide Window - Snicket, Lemony"), which then showed up under Duplicates in Calibre and as titles waiting in Tidy titles. When it is on, it now also matches a file named "Title - Author" as well as "Author - Title".
+
 ## [1.89.0]
 
 ### 🤖 Try Google's free models, then make them the main AI
