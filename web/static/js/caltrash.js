@@ -103,9 +103,14 @@ export async function renderCalTrash(host, fresh = false) {
     box.setSelectionRange(at, at);
   };
   // restore puts one bin entry back in Calibre; it says whether it worked.
+  let alreadyThere = 0;
   const restore = async (b) => {
     const res = await post("/api/admin/calibre/trash/restore", { id: b.id }).catch((err) => ({ error: err.message || "failed" }));
     if (res.error) return res.error;
+    if (res.already) {
+      alreadyThere++; // Calibre had it: nothing to put back, and the bin reads again to show it as kept
+      return "";
+    }
     back.add(keyOf(b));
     return "";
   };
@@ -119,6 +124,7 @@ export async function renderCalTrash(host, fresh = false) {
       const picks = missingPicks();
       if (!confirm(`Put back ${picks.length} book${picks.length === 1 ? "" : "s"} that have no copy left in your library? Each is added to Calibre again as a new entry.`)) return;
       busy = true;
+      alreadyThere = 0;
       const failed = [];
       for (const [i, b] of picks.entries()) {
         const p = host.querySelector("[data-progress]");
@@ -128,7 +134,7 @@ export async function renderCalTrash(host, fresh = false) {
       }
       busy = false;
       paint();
-      toast(failed.length ? `Put back ${picks.length - failed.length} of ${picks.length}. Not put back: ${failed.slice(0, 3).join("; ")}${failed.length > 3 ? "…" : ""}` : `All ${picks.length} are back in Calibre`, failed.length > 0);
+      toast(failed.length ? `Put back ${picks.length - failed.length} of ${picks.length}. Not put back: ${failed.slice(0, 3).join("; ")}${failed.length > 3 ? "…" : ""}` : `${picks.length - alreadyThere ? `${picks.length - alreadyThere} put back in Calibre` : "Nothing needed putting back"}${alreadyThere ? `; ${alreadyThere} ${alreadyThere === 1 ? "was" : "were"} already there` : ""}`, failed.length > 0);
       return;
     }
     if (e.target.closest("[data-more]")) {
@@ -145,6 +151,10 @@ export async function renderCalTrash(host, fresh = false) {
       btn.disabled = false;
       btn.textContent = "Put back";
       return;
+    }
+    if (res.already) {
+      toast(res.message); // Calibre had it already: nothing to put back
+      return renderCalTrash(host, true); // read the bin again, it then shows the book as still in the library
     }
     toast(`“${res.title}” is back in Calibre${res.notes?.length ? ` (${res.notes.join("; ")})` : ""}`, Boolean(res.notes?.length));
     back.add(keyOf(books.find((b) => b.id === li.dataset.id) || {}));

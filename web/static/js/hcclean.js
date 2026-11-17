@@ -38,8 +38,8 @@ export async function renderHCClean(host) {
     const byBook = new Map();
     for (const x of items.slice(0, SHOW)) byBook.set(x.calibre_id, [...(byBook.get(x.calibre_id) || []), x]);
     list.innerHTML = `<div class="flex flex-wrap items-center gap-2"><label class="toggle"><input type="checkbox" data-hc="all"> Tick all shown</label>
-      <button type="button" data-hc="apply" class="btn-primary py-1 text-sm">Apply ticked to Calibre</button>
-      <button type="button" data-hc="skip" class="btn-ghost py-1 text-sm">Not these (don't suggest again)</button>
+      <button type="button" data-hc="apply" class="btn-primary py-1 text-sm" ${j.running ? "disabled" : ""}>Apply ticked to Calibre</button>
+      <button type="button" data-hc="skip" class="btn-ghost py-1 text-sm" ${j.running ? "disabled" : ""}>Not these (don't suggest again)</button>
       <span class="text-xs text-slate-500">${items.length.toLocaleString()} suggestion${items.length === 1 ? "" : "s"}${items.length > SHOW ? `, the first ${SHOW} shown` : ""}</span></div>
       ${[...byBook.values()].map((g) => `<div class="card space-y-1 p-3"><p class="font-semibold">${esc(g[0].title)} <span class="text-xs font-normal text-slate-500">Calibre #${g[0].calibre_id} · matched by ${esc(g[0].confidence)}</span></p>
         ${g.map((x) => `<label class="flex items-start gap-2 text-sm"><input type="checkbox" data-hc-id="${x.id}">
@@ -50,6 +50,7 @@ export async function renderHCClean(host) {
     if (!s) return;
     const open = host.querySelector("#hc-list [data-hc-id]:checked");
     if (!(s.job || {}).running || !open) draw(s); // don't wipe the ticks while someone is choosing
+    host.querySelectorAll("[data-hc=apply], [data-hc=skip]").forEach((b) => (b.disabled = !!(s.job || {}).running)); // one job at a time
     clearTimeout(timer);
     if ((s.job || {}).running && host.isConnected) timer = setTimeout(refresh, 2500);
   });

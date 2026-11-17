@@ -15,6 +15,11 @@ becomes the release notes for that version and is shown in the app under
 - **An exact ISBN by the same author is the same book**, whatever the audiobook's edition calls it (a film tie-in title like "Blade Runner", a UK title, "Dark Tower II" for "The Drawing of the Three"). Those are now fixed by themselves. Only an ISBN that leads to a different book by a **different author** still waits for you, since the number may be wrong on the audiobook.
 - **Apply all** above the waiting list applies every listed change in one go (it asks first). The ones already waiting are not re-checked by themselves, so use it for those.
 
+### 🐞 Fewer false alarms
+- **"Put back all" in Calibre's recycle bin** no longer treats a book Calibre already has as a failure. It says how many were put back and how many were already there (each refusal used to file its own bug report).
+- **A stale pair in "Books listed twice"** (tapping Join quickly, so the next pair was already joined) refreshes the list with a plain note instead of an error.
+- **"Apply ticked to Calibre"** (Hardcover cleanup) is switched off while a scan is running, instead of being refused with "a Hardcover job is already running".
+
 ### 📚 Library
 - **The ⋯ menu stays on the screen.** On a phone it opened to the left of its button and its words were cut off at the edge of the screen.
 

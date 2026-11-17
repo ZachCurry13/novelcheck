@@ -205,7 +205,8 @@ func (s *Server) handleCalibreTrashRestore(w http.ResponseWriter, r *http.Reques
 			if newID, err = c.AddBook(ctx, sanitizeFilename(f.Name), data); err != nil {
 				if errors.Is(err, calibresrv.ErrDuplicate) {
 					s.forgetTrash() // read again: the bin then shows it as still in the library
-					writeErr(w, http.StatusConflict, "Calibre already has this book, so it wasn't added twice")
+					// Not an error: the book is in Calibre already, so there is nothing to put back.
+					writeJSON(w, http.StatusOK, map[string]any{"already": true, "message": "Calibre already has this book, so it wasn't added twice"})
 					return
 				}
 				writeErr(w, http.StatusBadGateway, "Calibre didn't take the book back: "+err.Error())

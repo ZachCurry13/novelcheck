@@ -70,13 +70,16 @@ export async function renderSameBooks(host, onChange, state) {
     const p = pairs.find((x) => x.a.id === a && x.b.id === b);
     if (act === "merge" && p && !confirmJoin(p)) return;
     const keep = btn.dataset.keep ? (btn.dataset.keep === "a" ? a : b) : 0;
-    if (await attempt(() => post(`/api/admin/same-books/${act}`, { a, b, keep }), act === "merge" ? "Joined" : "Okay, kept apart")) {
+    try {
+      await post(`/api/admin/same-books/${act}`, { a, b, keep });
+      toast(act === "merge" ? "Joined" : "Okay, kept apart");
       li.remove();
       onChange?.();
       if (!host.querySelector("li[data-a]")) renderSameBooks(host, onChange, state);
-    } else {
-      toast("That pair may be out of date: refreshing the list", true);
-      renderSameBooks(host, onChange, state); // a book joined or removed meanwhile drops out of it
+    } catch (err) {
+      // A pair whose book was joined or removed a moment ago (tapping fast) is not a fault: the list is read again.
+      toast(err.status === 404 ? "That pair was already joined or removed: the list is refreshed" : err.message || "That did not work", err.status !== 404);
+      renderSameBooks(host, onChange, state);
     }
   };
 }

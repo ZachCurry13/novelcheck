@@ -1,12 +1,15 @@
 package api_test
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/api"
+	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
 // Calibre's recycle bin is read from the library folder: each removed book with the title and authors it had,
@@ -68,4 +71,26 @@ func readBin(t *testing.T, c *client, fresh bool) map[string]any {
 	}
 	t.Fatal("the bin was never read")
 	return nil
+}
+
+// Calibre already having a book is an answer ("already": true, a 200), not an error: "Put back all" meeting a
+// book that is still in the library reports nothing as a fault.
+func TestRestoreOfABookCalibreHasIsNotAnError(t *testing.T) {
+	calibre := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"title":"Rant","authors":["Chuck Palahniuk"],"duplicates":[{"id":500,"title":"Rant"}]}`))
+	}))
+	defer calibre.Close()
+	lib := t.TempDir()
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.CalibreDir, s.Syncer.Dir = lib, lib })
+	_ = st.SetSetting(store.KeyCalibreSrvURL, calibre.URL)
+	_ = st.SetSetting(store.KeyCalibreSrvLibrary, "Books")
+	admin := login(t, srv, "admin", "adminpass1")
+	book := filepath.Join(lib, ".caltrash", "b", "804", "Rant (804)")
+	_ = os.MkdirAll(book, 0o755)
+	_ = os.WriteFile(filepath.Join(book, "Rant - Chuck Palahniuk.epub"), []byte("PK-epub"), 0o644)
+	readBin(t, admin, true)
+	res, out := admin.do("POST", "/api/admin/calibre/trash/restore", map[string]string{"id": "804"}, true)
+	if res.StatusCode != 200 || out["already"] != true {
+		t.Fatalf("already there: %d %v", res.StatusCode, out)
+	}
 }
