@@ -7,7 +7,7 @@ becomes the release notes for that version and is shown in the app under
 ## [1.89.2]
 
 ### 🧹 Delete the Kindle's crash logs (plugin 1.57.2)
-- **NovelCheck > Delete the Kindle's crash logs...** finds the error reports the Kindle's own software leaves in its top folder (files like `pillowd_2264_001-juno_..._crash_...`, which pile up by the hundred), says how many and how big, asks, and deletes them. Nothing else is touched. The backup now leaves them out too.
+- **NovelCheck > Delete the Kindle's crash logs...** finds the error reports the Kindle's own software leaves in its top folder (files like `pillowd_2264_001-juno_..._crash_...`, which pile up by the hundred), says how many and how big, asks, and deletes them. Nothing else is touched. The backup now leaves them out too. **Automatic > Delete the Kindle's crash logs when online** (on by default) does it by itself each time the Kindle goes online, without asking: they are only error reports.
 
 ## [1.89.1]
 

@@ -33,6 +33,20 @@ return function(NovelCheck)
         return out
     end
 
+    -- deleteCrashLogsQuietly deletes them without asking (the automatic cleanup) and says how many in the log.
+    function NovelCheck:deleteCrashLogsQuietly()
+        local gone = 0
+        for _i, f in ipairs(self:findCrashLogs()) do
+            if os.remove(f.path) then
+                gone = gone + 1
+            end
+        end
+        if gone > 0 then
+            self:dlog("info", "deleted " .. gone .. " crash logs")
+        end
+        return gone
+    end
+
     function NovelCheck:cleanCrashLogs(quiet)
         local list = self:findCrashLogs()
         if #list == 0 then

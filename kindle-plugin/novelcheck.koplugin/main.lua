@@ -138,6 +138,9 @@ function NovelCheck:addToMainMenu(menu_items)
                 { text = _("Sync reading statistics when online"), keep_menu_open = true,
                   checked_func = function() return self:autoEnabled("auto_stats", false) end,
                   callback = function() self:toggleAuto("auto_stats", false) end },
+                { text = _("Delete the Kindle's crash logs when online"), keep_menu_open = true,
+                  checked_func = function() return self:autoEnabled("auto_crashlogs", true) end,
+                  callback = function() self:toggleAuto("auto_crashlogs", true) end },
                 { text = _("Back up my whole Kindle when online (once a day)"), keep_menu_open = true,
                   checked_func = function() return self:autoEnabled("auto_backup", true) end,
                   callback = function() self:toggleAuto("auto_backup", true) end },
@@ -219,7 +222,7 @@ function NovelCheck:onNetworkConnected()
         return
     end
     if not (self:autoEnabled("auto_report", true) or self:autoEnabled("auto_download", false) or self:autoEnabled("auto_stats", false)
-        or self:autoEnabled("auto_highlights", true) or self:autoEnabled("auto_kindle", true) or self:autoEnabled("auto_backup", true)) then
+        or self:autoEnabled("auto_highlights", true) or self:autoEnabled("auto_kindle", true) or self:autoEnabled("auto_backup", true) or self:autoEnabled("auto_crashlogs", true)) then
         return
     end
     local now = os.time()
@@ -244,6 +247,9 @@ function NovelCheck:autoRun()
     end
     if self.sendHighlights and self:autoEnabled("auto_highlights", true) then
         self:sendHighlights(true)
+    end
+    if self.deleteCrashLogsQuietly and self:autoEnabled("auto_crashlogs", true) then
+        self:deleteCrashLogsQuietly()
     end
     local day = 22 * 3600
     if self.backupKindle and self:autoEnabled("auto_backup", true) and os.time() - (tonumber(self.settings:readSetting("last_backup")) or 0) > day then

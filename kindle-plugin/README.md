@@ -89,7 +89,7 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 
 ## Crash logs (plugin 1.57.2)
 
-- **NovelCheck > Delete the Kindle's crash logs...** deletes the error reports the Kindle's own software leaves in its top folder (names with `_crash_` in them, such as `pillowd_..._crash_...`). It asks first and touches nothing else. The backup skips them.
+- **NovelCheck > Delete the Kindle's crash logs...** deletes the error reports the Kindle's own software leaves in its top folder (names with `_crash_` in them, such as `pillowd_..._crash_...`). It asks first and touches nothing else. The backup skips them. **Automatic > Delete the Kindle's crash logs when online** does it by itself, without asking (on by default; the crash logs are only error reports).
 
 ## Developer tools (NovelCheck 1.50 or newer, plugin 1.50.0)
 
