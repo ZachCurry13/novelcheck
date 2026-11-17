@@ -65,7 +65,7 @@ Sentence case everywhere. No all-capitals labels (the old `.label` style goes).
 
 ## 4. Shape, spacing, touch, motion
 
-- **Corners:** 4 (text fields), 8 (chips, menus), 12 (cards), 16 (large cards, navigation drawer), 28 (dialogs, sheets, search view), full (buttons, search bar, badges).
+- **Corners:** 8 (chips, menus), 12 (cards), 16 (large cards, navigation drawer), 28 (dialogs, sheets, search view), full (buttons, search bar, badges, text fields and dropdowns); 16 for note boxes (textarea).
 - **Spacing:** a 4-point grid. 16 at the screen edge on phones, 24 on wide screens; 8 between related things, 16 between groups, 24 between sections.
 - **Touch targets:** at least 48 by 48, even when the visible control is smaller.
 - **State layers:** hover adds 8% of the content colour, focus and press 10%. Focus always shows a visible ring for keyboard users.
@@ -86,7 +86,7 @@ Sentence case everywhere. No all-capitals labels (the old `.label` style goes).
 | **Cards** | `card` (filled), `card-outlined`, `card-elevated` | Corner 12, padding 16. Filled (`surface-container-low`) is the default; outlined for cards inside cards; elevated only for things that float. |
 | **Chips** | `chip-assist`, `chip-filter`, `chip-input`, `chip-info` | 32 high (24 for `chip-info` inside rows), corner 8. Filter chips show a tick when on. `chip-info` carries the meaning colours of section 2. |
 | **Lists** | `list`, `list-row` | Rows 56 (one line) or 72 (two lines): leading icon or cover, title medium, supporting text in body medium, trailing action. Dividers in `outline-variant`. |
-| **Text fields** | `field` | Outlined, 50 high, corner 4, the label above the field. Supporting or error text below. 16 px text so phones don't zoom. |
+| **Text fields** | `input`, `field` | Filled and fully round like the Library's search (the family's pick "C", 2026-11-17, mock-up https://claude.ai/artifact/16QY8GqExMTb1Ukefapb3P): `--slate-800` fill, no outline until hover, a 2 px `--nc-chip-on` ring on focus; note boxes corner 16. The label above the field, supporting or error text below. 16 px text so phones don't zoom. Every search box, settings field, dropdown and note box uses it; the top bar's search view uses `.search-field` (the same look around its icon and input). |
 | **Switch, checkbox, radio** | `switch`, `check`, `radio` | Switch for settings that apply at once; checkbox for picking several things from a list. |
 | **Dialogs** | `dialog` | Corner 28, `surface-container-low`, title large, actions bottom right as text buttons with the confirming one last. Compact screens: a bottom sheet with a drag handle and the same content. |
 | **Menus** | `menu` | Corner 8, `surface-container`, rows 48 high. |

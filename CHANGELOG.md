@@ -4,7 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
-## [1.81.1]
+## [1.82.0]
+
+### ✏️ One look for everything you type into
+- **Every search box, settings field, dropdown and note box is now rounded and filled**, like the Library's search: Check a book, Series, Libby search, search in the book, Same book as…, the recycle bin, Review covers, a photo of a shelf, the top bar's search, and every form in Settings and Admin. The field lights up in the accent colour while you type. In every theme, light and dark.
+- **Check a book's "Check" button** is the main (filled) button beside its search box.
 
 ### 🐞 Fixes
 - **A book's page could stop opening** after a Deep Scan that found nothing to note (the Nightstand and the Library showed an error and the page stayed shut). The scan now keeps an empty list, and the page reads the older ones too.

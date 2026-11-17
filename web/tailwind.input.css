@@ -29,15 +29,18 @@
   .icon-btn:hover { background: rgb(var(--md-on-surface) / 0.08); color: rgb(var(--md-on-surface)); }
   .fab { display: inline-flex; height: 3.5rem; min-width: 3.5rem; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 1rem; padding: 0 1rem; background: rgb(var(--md-primary-container)); color: rgb(var(--md-on-primary-container)); box-shadow: 0 3px 8px rgb(0 0 0 / 0.35); font-weight: 500; }
 
-  /* Text fields: outlined, the label above. */
+  /* Text fields, dropdowns and note boxes: rounded and filled, like the Library's search (the family's pick, "C"),
+     the label above. The colours come from the theme (--slate-800 fill, --nc-chip-on focus ring). */
   .input, .field {
-    width: 100%; border-radius: 0.25rem; border: 1px solid rgb(var(--md-outline)); background: transparent;
-    padding: 0.75rem 1rem; font-size: 1rem; line-height: 1.5rem; color: rgb(var(--md-on-surface));
+    width: 100%; border-radius: 9999px; border: 1px solid transparent; background-color: rgb(var(--slate-800));
+    padding: 0.625rem 1.1rem; font-size: 1rem; line-height: 1.5rem; color: rgb(var(--slate-100));
   }
-  :is(.input, .field)::placeholder { color: rgb(var(--md-on-surface-variant)); }
-  :is(.input, .field):hover { border-color: rgb(var(--md-on-surface)); }
-  :is(.input, .field):focus { border-color: rgb(var(--md-primary)); outline: none; box-shadow: inset 0 0 0 1px rgb(var(--md-primary)); }
-  select:is(.input, .field) { background-color: rgb(var(--md-surface-container-low)); }
+  textarea:is(.input, .field) { border-radius: 1rem; }
+  select:is(.input, .field) { padding-right: 2.25rem; }
+  :is(.input, .field)::placeholder { color: rgb(var(--slate-400)); }
+  :is(.input, .field):hover { border-color: rgb(var(--slate-700)); }
+  :is(.input, .field):focus { border-color: transparent; outline: 2px solid rgb(var(--nc-chip-on)); outline-offset: 1px; box-shadow: none; }
+  :is(.input, .field):disabled { opacity: 0.6; }
   .label { margin-bottom: 0.25rem; display: block; font-size: 0.75rem; line-height: 1rem; font-weight: 500; letter-spacing: 0.03em; color: rgb(var(--md-on-surface-variant)); }
 
   /* Navigation: the drawer on wide screens (#nav) uses nav-link; pages use tabs. */
@@ -138,6 +141,8 @@
 .search-bar:hover { background: rgb(var(--md-on-surface) / 0.08); }
 .search-bar:focus-visible { outline: 2px solid rgb(var(--md-primary)); outline-offset: 2px; }
 .search-hint { display: none; }
+.search-field { display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0.75rem; padding: 0 1rem; border-radius: 9999px; background: rgb(var(--slate-800)); }
+.search-field:focus-within { outline: 2px solid rgb(var(--nc-chip-on)); outline-offset: 1px; }
 .search-input { min-width: 0; flex: 1; background: transparent; padding: 0.75rem 0.25rem; font-size: 1rem; color: rgb(var(--md-on-surface)); outline: none; }
 .search-input::placeholder { color: rgb(var(--md-on-surface-variant)); }
 .search-input::-webkit-search-cancel-button { display: none; }

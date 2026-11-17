@@ -31,7 +31,7 @@ export async function renderCheck(view, state) {
       <input id="library-photo" type="file" accept="image/*" multiple class="hidden">
       <form id="check-form" class="flex gap-2">
         <input name="q" type="search" enterkeyhint="search" placeholder="Title, author or ISBN" class="input min-w-0 flex-1" autocomplete="off">
-        <button class="btn-secondary">Check</button>
+        <button class="btn-primary">Check</button>
       </form>
       <div id="check-result" aria-live="polite"></div>
       <section id="recent"></section>

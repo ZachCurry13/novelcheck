@@ -29,7 +29,7 @@ function build() {
   dialog.id = "search-dialog";
   dialog.className = "dialog search-view";
   dialog.setAttribute("aria-label", "Search");
-  dialog.innerHTML = `<div class="flex items-center gap-2 px-4 py-2"><span class="ms text-slate-400" aria-hidden="true">search</span>
+  dialog.innerHTML = `<div class="search-field"><span class="ms text-slate-400" aria-hidden="true">search</span>
       <input type="search" class="search-input" placeholder="Search settings, tools and pages" aria-label="Search settings, tools and pages" autocomplete="off" enterkeyhint="go">
       <button type="button" data-close class="icon-btn" aria-label="Close search"><span class="ms" aria-hidden="true">close</span></button></div>
     <ul data-results role="listbox" class="list search-results"></ul>`;
