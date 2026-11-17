@@ -11,9 +11,10 @@ import (
 // GET /api/admin/hc-clean: the background job and the suggestions waiting for review.
 func (s *Server) handleHCCleanState(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
+	job := s.hcjob.state() // first: a job that is finished here has finished its changes to the list read next
 	list := s.Store.HCSuggestions("new", 1500)
 	writeJSON(w, http.StatusOK, map[string]any{
-		"job": s.hcjob.state(), "suggestions": list, "count": s.Store.CountHCSuggestions(),
+		"job": job, "suggestions": list, "count": s.Store.CountHCSuggestions(),
 		"hardcover": s.Store.HardcoverToken(auth.UserFrom(r).ID) != "", "server": s.Store.Setting(store.KeyCalibreSrvURL) != "",
 	})
 }
