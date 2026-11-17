@@ -31,6 +31,7 @@ func (s *Server) FillRatings(ctx context.Context, limit int) int {
 	found := 0
 	keep := func(b store.RatingToCheck, info hardcover.BookInfo) {
 		s.Store.SaveHCRating(b.ID, info.Rating, info.Ratings)
+		s.Store.SaveHCTags(b.ID, strings.Join(info.Warnings, ", "), strings.Join(info.Moods, ", "))
 		if info.Rating > 0 {
 			found++
 		}

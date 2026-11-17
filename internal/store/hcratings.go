@@ -62,3 +62,8 @@ func (s *Store) CountNoISBN() int {
 	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM books b WHERE b.isbn = '' AND `+ownedCond)
 	return n
 }
+
+// SaveHCTags keeps a book's Hardcover content warnings and moods (comma-separated).
+func (s *Store) SaveHCTags(id int64, warnings, moods string) {
+	_, _ = s.DB.Exec(`UPDATE books SET hc_warnings = ?, hc_moods = ? WHERE id = ?`, warnings, moods, id)
+}

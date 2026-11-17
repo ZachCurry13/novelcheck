@@ -46,6 +46,8 @@ func migrate(d *sqlx.DB) error {
 		{"books", "hc_rating", "REAL NOT NULL DEFAULT 0"},
 		{"books", "hc_ratings", "INTEGER NOT NULL DEFAULT 0"},
 		{"books", "hc_rated_at", "INTEGER NOT NULL DEFAULT 0"},
+		{"books", "hc_warnings", "TEXT NOT NULL DEFAULT ''"},
+		{"books", "hc_moods", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "tags", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "genres", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "kind", "TEXT NOT NULL DEFAULT ''"},

@@ -21,6 +21,7 @@ CATEGORIES & GUIDELINES:
 ` + PepperLevels + `
 If unsure between two levels, choose the higher one.
 ` + EverydayGuard + `
+When content warnings from Hardcover's readers are given, use them as evidence along with the blurb: a warning about sexual content or explicit sex points to Level 3 or higher, and one about sexual assault or abuse belongs in the content details. No warnings do not mean no romance.
 Vampires, werewolves and other fantasy creatures don't raise the level on their own; rate what happens between the characters. For calibration: Twilight (Stephenie Meyer) is about Level 2; Dead Until Dark (Charlaine Harris) is Level 4.
 Also give spice_reason: 3-8 modest words naming what sets the level (e.g. "No romance", "Kissing only", "Fade-to-black intimacy", "Heavy innuendo, on-page foreplay", "Several explicit scenes").
 Also give premise: 1-2 spoiler-free sentences telling a reader what the book is about: the main character(s), the setting and the central problem or goal. Be plain and specific. Never mention praise, awards, best-seller lists, sales, reviewers, age ratings or content, and give nothing away from later in the book.
@@ -61,7 +62,7 @@ const PepperLevels = `- 0 = No Romance: No meaningful romantic or sexual content
 
 // EverydayGuard keeps ordinary moments from reading as romance (shared with
 // Deep read).
-const EverydayGuard = `Everyday moments are not romance: sharing a meal or a glass of wine, waiting for a taxi, friendship, family affection and ordinary conversation never raise the level on their own.`
+const EverydayGuard = `Everyday moments are not romance: sharing a meal or a glass of wine, waiting for a taxi, friendship, family affection and ordinary conversation never raise the level on their own. A kiss on the forehead, cheek or top of the head, a hug or holding hands is tender affection: Level 1 at most between a couple, and Level 0 between family or friends. Only kissing on the lips, and more of it, reaches Level 2.`
 
 // ContentDetails asks for the detailed content items (package content).
 var ContentDetails = `4. Content Details. List the key of every item below that the book clearly contains, going by the blurb and what is well known about this book. Don't guess; use [] if none apply.
@@ -81,7 +82,10 @@ const ContentGuide = `2. Content Elements:
 const maxBlurbChars = 2500
 
 // UserPrompt formats the book metadata handed to the model.
-func UserPrompt(title, author, blurb string) string {
+func UserPrompt(title, author, blurb string) string { return UserPromptWith(title, author, blurb, "", "") }
+
+// UserPromptWith adds what Hardcover's readers tagged the book with: content warnings and moods, as evidence.
+func UserPromptWith(title, author, blurb, warnings, moods string) string {
 	blurb = strings.TrimSpace(blurb)
 	if r := []rune(blurb); len(r) > maxBlurbChars {
 		blurb = string(r[:maxBlurbChars]) + "…"
@@ -89,7 +93,14 @@ func UserPrompt(title, author, blurb string) string {
 	if blurb == "" {
 		blurb = "(no blurb available — rely on well-known information about this title; if unknown, be conservative)"
 	}
-	return fmt.Sprintf("Title: %s\nAuthor: %s\nBlurb: %s", title, orUnknown(author), blurb)
+	out := fmt.Sprintf("Title: %s\nAuthor: %s\nBlurb: %s", title, orUnknown(author), blurb)
+	if w := strings.TrimSpace(warnings); w != "" {
+		out += "\nContent warnings from Hardcover's readers: " + w
+	}
+	if m := strings.TrimSpace(moods); m != "" {
+		out += "\nMoods from Hardcover's readers: " + m
+	}
+	return out
 }
 
 func orUnknown(s string) string {

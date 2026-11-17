@@ -104,7 +104,9 @@ CREATE TABLE IF NOT EXISTS books (
     title_suggest    TEXT NOT NULL DEFAULT '',
     hc_rating        REAL NOT NULL DEFAULT 0,      -- Hardcover readers' average rating, 0 to 5 (0 = none)
     hc_ratings       INTEGER NOT NULL DEFAULT 0,   -- how many Hardcover readers rated it
-    hc_rated_at      INTEGER NOT NULL DEFAULT 0,   -- when it was last looked up (Unix seconds)     -- the true title the name finder found for a Calibre book, to save in Calibre   -- the name finder: 1 = checked against Open Library, 2 = a parent typed it
+    hc_rated_at      INTEGER NOT NULL DEFAULT 0,   -- when it was last looked up (Unix seconds)
+    hc_warnings      TEXT NOT NULL DEFAULT '',     -- Hardcover readers' content warnings, comma-separated (evidence for rating)
+    hc_moods         TEXT NOT NULL DEFAULT '',     -- and moods     -- the true title the name finder found for a Calibre book, to save in Calibre   -- the name finder: 1 = checked against Open Library, 2 = a parent typed it
     tags             TEXT NOT NULL DEFAULT '',     -- Calibre's tags, comma-separated
     genres           TEXT NOT NULL DEFAULT '',     -- categories (package genres) as ",fantasy,romance,"
     kind             TEXT NOT NULL DEFAULT '',     -- fiction, nonfiction or '' (unknown)

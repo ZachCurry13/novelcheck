@@ -151,6 +151,8 @@ type Book struct {
 	ContentAmounts  string  `db:"content_amounts" json:"content_amounts"` // Deep Scan amount per group, e.g. "violence:3,gore:1"
 	HCRating        float64 `db:"hc_rating" json:"hc_rating"`             // Hardcover readers' average, 0 to 5 (0 = none yet)
 	HCRatings       int     `db:"hc_ratings" json:"hc_ratings"`           // how many rated it there
+	HCWarnings      string  `db:"hc_warnings" json:"hc_warnings"`         // Hardcover readers' content warnings ("Sexual content, Violence")
+	HCMoods         string  `db:"hc_moods" json:"hc_moods"`
 }
 
 // BookCopy is one physical copy of a book inside a catalog.

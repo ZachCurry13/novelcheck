@@ -253,7 +253,7 @@ func (w *Worker) RateNow(ctx context.Context, id int64) error {
 	if b.Blurb == "" {
 		w.fillBlurb(ctx, b)
 	}
-	a, err := w.askAIs(ctx, id, llm.UserPrompt(b.Title, b.Author, b.Blurb))
+	a, err := w.askAIs(ctx, id, llm.UserPromptWith(b.Title, b.Author, b.Blurb, b.HCWarnings, b.HCMoods))
 	if err != nil {
 		_ = w.Store.SetStatus(id, "error", err.Error())
 		return err
@@ -272,7 +272,7 @@ func (w *Worker) RateWith(ctx context.Context, id int64, ai store.AIConfig) erro
 	if b.Blurb == "" {
 		w.fillBlurb(ctx, b)
 	}
-	a, err := w.askWith(ctx, []store.AIConfig{ai}, id, llm.UserPrompt(b.Title, b.Author, b.Blurb))
+	a, err := w.askWith(ctx, []store.AIConfig{ai}, id, llm.UserPromptWith(b.Title, b.Author, b.Blurb, b.HCWarnings, b.HCMoods))
 	if err != nil {
 		return err
 	}

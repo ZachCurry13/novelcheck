@@ -24,7 +24,9 @@ type BookInfo struct {
 	ISBN13      string
 	ISBN10      string
 	Pages       int
-	Rating      float64 // Hardcover readers' average, 0 to 5 (0 when nobody rated it)
+	Warnings    []string // the content warnings Hardcover's readers gave it, most used first
+	Moods       []string // and the moods ("dark", "funny")
+	Rating      float64  // Hardcover readers' average, 0 to 5 (0 when nobody rated it)
 	Ratings     int     // how many rated it
 }
 
@@ -83,6 +85,16 @@ func (r rawBook) info() BookInfo {
 		for _, t := range tags["Genre"] {
 			if len(b.Tags) < 6 && strings.TrimSpace(t.Tag) != "" {
 				b.Tags = append(b.Tags, strings.TrimSpace(t.Tag))
+			}
+		}
+		for _, t := range tags["Content Warning"] {
+			if len(b.Warnings) < 10 && strings.TrimSpace(t.Tag) != "" {
+				b.Warnings = append(b.Warnings, strings.TrimSpace(t.Tag))
+			}
+		}
+		for _, t := range tags["Mood"] {
+			if len(b.Moods) < 5 && strings.TrimSpace(t.Tag) != "" {
+				b.Moods = append(b.Moods, strings.TrimSpace(t.Tag))
 			}
 		}
 	}

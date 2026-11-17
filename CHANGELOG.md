@@ -19,6 +19,10 @@ becomes the release notes for that version and is shown in the app under
 - **Sort: Highest rated on Hardcover** in the Library (and **Rating** in the phone's Sort), with the books nobody rated yet at the end.
 - Integrations → Hardcover says how many books have a rating so far.
 
+### 🌶️ Better pepper ratings
+- **Hardcover's content warnings help the AI rate.** The background Hardcover pass now also keeps each book's content warnings and moods from Hardcover's readers, and the AI reads them along with the description when it rates a book (a "sexual content" warning points to Level 3 or higher).
+- **A kiss on the forehead, cheek or head is tender affection, not a romance level of its own**: Level 1 at most between a couple, Level 0 within a family or between friends. Only kissing on the lips, and more of it, reaches Level 2.
+
 ### 🔢 An ISBN for every book
 - **Books with no ISBN get one**, found the same way: Hardcover's (by title and author, with typos and dots fixed), or Open Library's when Hardcover doesn't know the book and Open Library's is clearly the same book (the same author and title). The cover finder then looks the cover up by it, and Hardcover's cleanup matches it by it.
 - **Calibre gets it too**: the ISBN is added to the book's identifiers in Calibre (its other identifiers are kept), under the same switch as fixing titles (Library cleanup → Tidy titles in Calibre). Integrations → Hardcover says how many library books still have no ISBN.
