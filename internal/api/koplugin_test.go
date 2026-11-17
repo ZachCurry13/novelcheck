@@ -57,7 +57,7 @@ func TestKOReaderPluginDownload(t *testing.T) {
 	if !strings.Contains(cfg, `user = "admin"`) || !strings.Contains(cfg, `code = "`+code+`"`) || !strings.Contains(cfg, "server = ") {
 		t.Fatalf("config.lua: %q", cfg)
 	}
-	for _, name := range []string{"_meta.lua", "main.lua", "devicebooks.lua", "updater.lua", "devicereport.lua", "setup.lua", "tidynames.lua", "search.lua", "highlights.lua", "finishbook.lua", "kindlecopy.lua", "crashlogs.lua"} {
+	for _, name := range []string{"_meta.lua", "main.lua", "devicebooks.lua", "updater.lua", "devicereport.lua", "setup.lua", "tidynames.lua", "search.lua", "highlights.lua", "finishbook.lua", "kindlecopy.lua", "crashlogs.lua", "kindletasks.lua"} {
 		if files["novelcheck.koplugin/"+name] == "" {
 			t.Fatalf("%s missing from the zip", name)
 		}

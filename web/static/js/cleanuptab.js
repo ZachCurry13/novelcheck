@@ -29,6 +29,8 @@ export async function renderCleanupTab(host, state) {
       <div id="cu-abs-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-mem"><summary class="cursor-pointer font-semibold">Remembered ratings and covers (and how to forget them)</summary>
       <div id="cu-mem-body" class="mt-2"></div></details></div>
+    <div class="card space-y-2"><details id="cu-kt"><summary class="cursor-pointer font-semibold">Kindle tasks: ask a Kindle to do something at its next sync</summary>
+      <div id="cu-kt-body" class="mt-2 text-sm text-slate-300"></div></details></div>
     <div class="card space-y-2"><details id="cu-ku"><summary class="cursor-pointer font-semibold">Books on your Kindle NovelCheck doesn't know</summary>
       <div id="cu-ku-body" class="mt-2 text-sm text-slate-300"></div></details></div>
     <div class="card space-y-2"><details id="cu-kb"><summary class="cursor-pointer font-semibold">Books copied from Kindles</summary>
@@ -87,6 +89,9 @@ export async function renderCleanupTab(host, state) {
       body.dataset.done = "1";
       renderHCClean(body);
     }
+  });
+  host.querySelector("#cu-kt").addEventListener("toggle", (e) => {
+    if (e.target.open) import("./kindletasks.js").then((m) => m.renderKindleTasks(host.querySelector("#cu-kt-body")));
   });
   host.querySelector("#cu-ku").addEventListener("toggle", async (e) => {
     if (!e.target.open) return;

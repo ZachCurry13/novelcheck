@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.58.0"
+local VERSION = "1.59.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -124,6 +124,7 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("Tidy my Kindle's books (into Books/NovelCheck)..."), callback = function() if self.tidyBooks then self:tidyBooks() end end },
             { text = _("Delete the Kindle's crash logs..."), callback = function() if self.cleanCrashLogs then self:cleanCrashLogs() end end },
             { text = _("Undo the last tidy"), callback = function() if self.undoTidy then self:undoTidy() end end },
+            { text = _("Do the tasks from NovelCheck now"), callback = function() if self.runKindleTasks then self:runKindleTasks(false) end end },
             { text = _("Stop the backup"), callback = function() if self.stopKindleCopy then self:stopKindleCopy() end end },
             { text = _("Copy my Kindle to NovelCheck now"), callback = function() if self.copyKindle then self:copyKindle(false) end end },
             { text = _("Send highlights now"), callback = function() if self.sendHighlights then self:sendHighlights(false) end end },
@@ -222,6 +223,12 @@ function NovelCheck:onNetworkConnected()
     if not self:isConnected() then
         return
     end
+    -- tasks asked for in NovelCheck are looked at on every connection (at most every 15 minutes): it is one small request
+    local t = os.time()
+    if self.runKindleTasks and t - (self._tasks_last or 0) > 900 then
+        self._tasks_last = t
+        UIManager:scheduleIn(8, function() pcall(self.runKindleTasks, self, true) end)
+    end
     if not (self:autoEnabled("auto_report", true) or self:autoEnabled("auto_download", false) or self:autoEnabled("auto_stats", false)
         or self:autoEnabled("auto_highlights", true) or self:autoEnabled("auto_kindle", true) or self:autoEnabled("auto_backup", true) or self:autoEnabled("auto_crashlogs", true)) then
         return
@@ -237,6 +244,9 @@ function NovelCheck:onNetworkConnected()
 end
 
 function NovelCheck:autoRun()
+    if self.runKindleTasks then
+        pcall(self.runKindleTasks, self, true) -- what was asked for in NovelCheck comes first
+    end
     if self:autoEnabled("auto_download", false) then
         self:downloadAll(true)
     end
@@ -500,7 +510,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

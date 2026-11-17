@@ -263,3 +263,75 @@ func TestKindleChunks(t *testing.T) {
 		t.Fatalf("a path the backup leaves out is refused: %d", c)
 	}
 }
+
+// Kindle tasks: queued in the app, handed to the Kindle at its next check-in, reported back; a delete is refused for
+// a book with no backup copy on the server, and only the fixed kinds exist.
+func TestKindleTasks(t *testing.T) {
+	dir := t.TempDir()
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = dir })
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+	key := hex.EncodeToString(sum[:])
+	plug := func(method, path string, body any) map[string]any {
+		var rd *bytes.Reader
+		if body != nil {
+			b, _ := json.Marshal(body)
+			rd = bytes.NewReader(b)
+		} else {
+			rd = bytes.NewReader(nil)
+		}
+		req, _ := http.NewRequest(method, srv.URL+"/kosync/plugin/"+path, rd)
+		req.Header.Set("x-auth-user", "admin")
+		req.Header.Set("x-auth-key", key)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil || res.StatusCode != 200 {
+			t.Fatalf("%s %s: %v %v", method, path, err, res)
+		}
+		var out map[string]any
+		_ = json.NewDecoder(res.Body).Decode(&out)
+		return out
+	}
+	// the Kindle reports two books; only one has a copy on the server
+	plug("POST", "device", map[string]any{"device": "Test Kindle", "books": []map[string]any{
+		{"filename": "Kept.epub", "title": "Kept", "format": "epub", "size": 5000},
+		{"filename": "Loose.epub", "title": "Loose", "format": "epub", "size": 6000}}})
+	root := filepath.Join(dir, "kindle-backup", "1", "Test Kindle", "Books")
+	_ = os.MkdirAll(root, 0o755)
+	_ = os.WriteFile(filepath.Join(root, "Kept.epub"), bytes.Repeat([]byte("k"), 5000), 0o644)
+
+	if res, _ := admin.do("POST", "/api/admin/kindle-tasks", map[string]any{"kind": "format_disk"}, true); res.StatusCode != 400 {
+		t.Fatalf("only the fixed kinds exist: %d", res.StatusCode)
+	}
+	if res, out := admin.do("POST", "/api/admin/kindle-tasks", map[string]any{"device": "Test Kindle", "kind": "delete_books", "filenames": []string{"Kept.epub", "Loose.epub"}}, true); res.StatusCode != 409 {
+		t.Fatalf("a book with no backup copy is refused: %d %v", res.StatusCode, out)
+	}
+	if res, _ := admin.do("POST", "/api/admin/kindle-tasks", map[string]any{"device": "Test Kindle", "kind": "delete_books", "filenames": []string{"Kept.epub"}}, true); res.StatusCode != 200 {
+		t.Fatalf("a backed-up book can be deleted: %d", res.StatusCode)
+	}
+	admin.do("POST", "/api/admin/kindle-tasks", map[string]any{"kind": "crashlogs"}, true)
+	_, list := admin.do("GET", "/api/admin/kindle-tasks?device=Test+Kindle", nil, false)
+	files, _ := list["files"].([]any)
+	if len(files) != 2 || files[0].(map[string]any)["backed_up"] != true || files[1].(map[string]any)["backed_up"] != false {
+		t.Fatalf("the app shows which books are backed up: %v", list["files"])
+	}
+	got := plug("GET", "tasks?device=Test+Kindle", nil)
+	tasks, _ := got["tasks"].([]any)
+	if len(tasks) != 2 || tasks[0].(map[string]any)["kind"] != "delete_books" {
+		t.Fatalf("the Kindle is handed both tasks: %v", got)
+	}
+	id := tasks[0].(map[string]any)["id"].(float64)
+	plug("POST", "tasks/result", map[string]any{"id": id, "status": "done", "note": "deleted 1"})
+	if again := plug("GET", "tasks?device=Test+Kindle", nil); len(again["tasks"].([]any)) != 1 {
+		t.Fatalf("a done task is not handed out again: %v", again)
+	}
+	// taking one back
+	left := plug("GET", "tasks?device=Test+Kindle", nil)["tasks"].([]any)[0].(map[string]any)["id"].(float64)
+	if res, _ := admin.do("DELETE", "/api/admin/kindle-tasks/"+itoa(int64(left)), nil, true); res.StatusCode != 200 {
+		t.Fatal("a waiting task can be taken back")
+	}
+	if again := plug("GET", "tasks?device=Test+Kindle", nil); len(again["tasks"].([]any)) != 0 {
+		t.Fatalf("a task taken back is not handed out: %v", again)
+	}
+}

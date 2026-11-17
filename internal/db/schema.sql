@@ -881,3 +881,17 @@ CREATE TABLE IF NOT EXISTS kindle_unknown (
     seen_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, path)
 );
+
+-- Things the admin asked for in the app that a Kindle does at its next sync (Library cleanup → Kindle tasks): the
+-- plugin asks for the waiting ones, does them and reports back. Only a fixed list of kinds exists.
+CREATE TABLE IF NOT EXISTS kindle_tasks (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    device     TEXT NOT NULL DEFAULT '',          -- '' = whichever Kindle checks in first
+    kind       TEXT NOT NULL,                     -- backup, tidy, crashlogs, delete_books, download_books, move_books
+    args       TEXT NOT NULL DEFAULT '{}',
+    status     TEXT NOT NULL DEFAULT 'waiting',   -- waiting, done, failed, skipped, canceled
+    note       TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    done_at    DATETIME
+);

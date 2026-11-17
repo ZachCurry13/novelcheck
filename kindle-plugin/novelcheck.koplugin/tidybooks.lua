@@ -55,7 +55,7 @@ return function(NovelCheck)
         return out
     end
 
-    function NovelCheck:tidyBooks()
+    function NovelCheck:tidyBooks(auto)
         if not self:isConnected() then
             self:connectDialog()
             return
@@ -63,6 +63,9 @@ return function(NovelCheck)
         local root, booksDir = self:kindleRoot(), self:libraryDir()
         local found = self:tidyCandidates(root, booksDir)
         if #found == 0 then
+            if auto then
+                return 0, "every book was already in its place"
+            end
             UIManager:show(InfoMessage:new{ text = _("Every book is already in its place.") })
             return
         end
@@ -82,6 +85,9 @@ return function(NovelCheck)
             local code, answer = self:request("/kosync/plugin/kindle/check", nil, json.encode{ device = self:deviceName(), mode = "backup", files = batch })
             local good, data = pcall(json.decode, answer or "")
             if code ~= 200 or not good or type(data) ~= "table" then
+                if auto then
+                    return nil, "could not reach NovelCheck"
+                end
                 UIManager:show(InfoMessage:new{ text = _("Could not reach NovelCheck.") .. "\n" .. tostring(code or answer) })
                 return
             end
@@ -105,8 +111,14 @@ return function(NovelCheck)
             end
         end
         if #plan == 0 then
+            if auto then
+                return 0, tostring(skipped) .. " books left where they are (not backed up yet, or the name is taken)"
+            end
             UIManager:show(InfoMessage:new{ text = skipped > 0 and (tostring(skipped) .. " " .. _("books were left where they are (not backed up yet, or the name is taken). Run Back up my Kindle now first, then tidy again.")) or _("Every book is already in its place.") })
             return
+        end
+        if auto then -- asked for in NovelCheck: no question here
+            return self:doTidy(plan, true), tostring(skipped) .. " left where they are"
         end
         UIManager:show(ConfirmBox:new{
             text = _("Move") .. " " .. #plan .. " " .. _("books into Books/NovelCheck, where the other NovelCheck books are?") .. "\n\n"
@@ -133,7 +145,7 @@ return function(NovelCheck)
     end
 
     -- doTidy moves each book and its .sdr folder, tells NovelCheck, and remembers it for the undo.
-    function NovelCheck:doTidy(plan)
+    function NovelCheck:doTidy(plan, quiet)
         local done, moves = 0, {}
         for _i, m in ipairs(plan) do
             if not exists(m.to) and moveOne(m.from, m.to) then
@@ -148,7 +160,15 @@ return function(NovelCheck)
         self.settings:saveSetting("tidy_last", moves)
         self.settings:flush()
         self:tellMoved(moves)
-        UIManager:show(InfoMessage:new{ text = _("Moved") .. " " .. done .. " " .. _("books.") .. " " .. _("NovelCheck > Undo the last tidy puts them back.") })
+        if not quiet then
+            UIManager:show(InfoMessage:new{ text = _("Moved") .. " " .. done .. " " .. _("books.") .. " " .. _("NovelCheck > Undo the last tidy puts them back.") })
+        end
+        return done
+    end
+
+    -- moveOneFile is for the tasks (kindletasks.lua): make the folder and move a file.
+    function NovelCheck:moveOneFile(from, to)
+        return moveOne(from, to)
     end
 
     function NovelCheck:tellMoved(moves)

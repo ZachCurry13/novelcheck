@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.91.0]
+
+### 📲 Kindle tasks: ask a Kindle to do something, from the app (plugin 1.59.0)
+- **Library cleanup → Kindle tasks.** Pick a Kindle and ask it to **back itself up**, **tidy its books into Books/NovelCheck**, **delete its crash logs**, **delete books** (tick them), **move books** into a folder under Books, or **send library books** (search, then Send). The Kindle does them the next time it is online: the plugin looks for waiting tasks on every connection (at most every 15 minutes), at its other check-ins, and when you press **NovelCheck > Do the tasks from NovelCheck now**. Each task shows done, failed or skipped, with what happened, and a waiting task can be taken back.
+- **Safe by design:** only these six kinds exist. A book is only deleted if NovelCheck holds a backup copy of that exact file (the app refuses otherwise and says which books), and the Kindle only deletes a file that is still the same size as the copy. A deleted book's reading data goes with it. Nothing is overwritten.
+
 ## [1.90.0]
 
 ### 🐢 The Kindle backup no longer freezes the Kindle (plugin 1.58.0)

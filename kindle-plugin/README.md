@@ -87,6 +87,10 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 - **NovelCheck > Back up my Kindle now** copies the Kindle's user storage to NovelCheck: KOReader and its plugins and settings (your reading progress, highlights and statistics too), KUAL and other launchers, fonts, dictionaries and your books. Hidden and system folders, caches and update downloads are left out. **Automatic > Back up my whole Kindle when online** does it once a day.
 - To restore on a new or reset Kindle (jailbroken, KOReader not needed first): in NovelCheck open **Library cleanup → Books copied from Kindles → Download everything (ZIP)**, plug the Kindle into a computer and unzip the ZIP into its top folder. The Kindle's own system and your Amazon account are not part of the backup.
 
+## Tasks from the app (NovelCheck 1.91 or newer, plugin 1.59.0)
+
+- In NovelCheck, **Library cleanup → Kindle tasks** asks this Kindle to back itself up, tidy its books, delete its crash logs, delete books (only ones NovelCheck holds a copy of), move books into a folder, or download library books. The plugin does them when the Kindle next connects (every 15 minutes at most) or when you press **NovelCheck > Do the tasks from NovelCheck now**, and reports each one back.
+
 ## Crash logs (plugin 1.57.2)
 
 - **NovelCheck > Delete the Kindle's crash logs...** deletes the error reports the Kindle's own software leaves in its top folder (names with `_crash_` in them, such as `pillowd_..._crash_...`). It asks first and touches nothing else. The backup skips them. **Automatic > Delete the Kindle's crash logs when online** does it by itself, without asking (on by default; the crash logs are only error reports).
