@@ -77,4 +77,27 @@ func TestKindleCopy(t *testing.T) {
 	if devs, _ := kb["devices"].([]any); len(devs) != 1 || devs[0].(map[string]any)["files"] != 2.0 {
 		t.Fatalf("the copied books are listed: %v", kb)
 	}
+	_, lf := admin.do("GET", "/api/admin/kindle-backup/files?user=1&device=Test+Kindle", nil, false)
+	files, _ := lf["files"].([]any)
+	if len(files) != 2 {
+		t.Fatalf("the files are listed: %v", lf)
+	}
+	locked := 0
+	for _, f := range files {
+		if f.(map[string]any)["locked"] == true {
+			locked++
+		}
+	}
+	if locked != 1 {
+		t.Fatalf("the store book is marked locked: %v", lf)
+	}
+	for _, u := range []string{"/api/admin/kindle-backup/file?user=1&device=Test+Kindle&path=documents/Store%20Book.azw", "/api/admin/kindle-backup/zip?user=1&device=Test+Kindle"} {
+		res, err := admin.http.Get(srv.URL + u)
+		if err != nil || res.StatusCode != 200 {
+			t.Fatalf("download %s: %v %v", u, err, res)
+		}
+	}
+	if res, _ := admin.do("GET", "/api/admin/kindle-backup/file?user=1&device=Test+Kindle&path=../../novelcheck.db", nil, false); res.StatusCode != 404 {
+		t.Fatalf("no way out of the folder: %d", res.StatusCode)
+	}
 }

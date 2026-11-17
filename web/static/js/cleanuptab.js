@@ -91,9 +91,22 @@ export async function renderCleanupTab(host, state) {
     const body = host.querySelector("#cu-kb-body");
     const r = await get("/api/admin/kindle-backup").catch(() => null);
     const mb = (b) => (b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(b / 1e6))} MB`);
+    const q = (d) => `user=${encodeURIComponent(d.user)}&device=${encodeURIComponent(d.name)}`;
     body.innerHTML = !r ? "Couldn't load that just now." : !r.devices.length ? "Nothing copied yet. The KOReader plugin copies every book on a Kindle here when it goes online (NovelCheck &gt; Copy my Kindle to NovelCheck now)."
-      : `${r.devices.map((d) => `<p><b>${esc(d.name)}</b>: ${d.files} book${d.files === 1 ? "" : "s"}, ${mb(d.bytes)}. Newest: ${d.newest.map(esc).join(", ")}</p>`).join("")}
-        <p class="mt-2 text-xs text-slate-400">The files are in the <b>${esc(r.folder)}</b>, exactly as they were on the Kindle (protected ones too).</p>`;
+      : `${r.devices.map((d, i) => `<div class="mb-3"><p><b>${esc(d.name)}</b>: ${d.files} book${d.files === 1 ? "" : "s"}, ${mb(d.bytes)}.</p>
+          <p class="mt-1 flex flex-wrap gap-2"><a class="btn-secondary py-1 text-sm" href="/api/admin/kindle-backup/zip?${q(d)}">⬇ Download everything (ZIP)</a>
+          <button type="button" data-kb-list="${i}" class="btn-ghost py-1 text-sm">Show the files</button></p><div data-kb-files="${i}" class="mt-2"></div></div>`).join("")}
+        <p class="mt-2 text-xs text-slate-400">The files are in the <b>${esc(r.folder)}</b>, exactly as they were on the Kindle (protected ones too, marked 🔒: they only open on a device with your Kindle account). Nothing is converted or unlocked.</p>`;
+    body.onclick = async (ev) => {
+      const b = ev.target.closest("[data-kb-list]");
+      if (!b) return;
+      const d = r.devices[Number(b.dataset.kbList)], box = body.querySelector(`[data-kb-files="${b.dataset.kbList}"]`);
+      box.textContent = "Loading…";
+      const l = await get(`/api/admin/kindle-backup/files?${q(d)}`).catch(() => null);
+      box.innerHTML = !l ? "Couldn't load that just now." : `<ul class="max-h-80 divide-y divide-slate-800 overflow-auto text-xs">${l.files.map((f) =>
+        `<li class="flex items-center justify-between gap-2 py-1"><span class="min-w-0 break-words">${f.locked ? "🔒 " : ""}${esc(f.path)}</span>
+          <a class="shrink-0 underline" href="/api/admin/kindle-backup/file?${q(d)}&path=${encodeURIComponent(f.path)}">${mb(f.size)} ⬇</a></li>`).join("")}</ul>`;
+    };
   });
   host.querySelector("#cu-mem").addEventListener("toggle", (e) => {
     if (e.target.open) import("./memorycard.js").then((m) => m.renderMemory(host.querySelector("#cu-mem-body"))); // fresh each time

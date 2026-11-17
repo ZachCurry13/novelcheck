@@ -232,6 +232,7 @@ func kindleLocked(file string) bool {
 func (s *Server) handleKindleBackup(w http.ResponseWriter, r *http.Request) {
 	root := filepath.Join(s.Cfg.DataDir, "kindle-backup")
 	type dev struct {
+		User   string   `json:"user"`
 		Name   string   `json:"name"`
 		Files  int      `json:"files"`
 		Bytes  int64    `json:"bytes"`
@@ -242,7 +243,7 @@ func (s *Server) handleKindleBackup(w http.ResponseWriter, r *http.Request) {
 	for _, u := range users {
 		devs, _ := os.ReadDir(filepath.Join(root, u.Name()))
 		for _, d := range devs {
-			one := dev{Name: d.Name()}
+			one := dev{User: u.Name(), Name: d.Name()}
 			type seen struct {
 				name string
 				mod  int64

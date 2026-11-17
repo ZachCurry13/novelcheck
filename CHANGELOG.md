@@ -10,6 +10,7 @@ becomes the release notes for that version and is shown in the app under
 - **Spines:** a book with a long title no longer grows into a tower. Its spine keeps its height and the title is cut off with "…" (a counting slip gave many books no height at all). The title and the author no longer run into each other.
 - **Covers:** a book with a real cover shows only that cover. The title and author are written only on the plain cover made for a book with no picture (or whose picture can't be loaded). They used to be written over the real cover.
 - **Copy my Kindle no longer re-sends NovelCheck's own downloads** (the Kindle's NovelCheck folder holds books that came from this server) and **no longer adds a second copy of a book Calibre already has**: a file such as `Some-Title.epub` is matched by its title, whoever the author is. (1.86.0 to 1.86.2 could add copies of books you already had: Library cleanup → Duplicates in Calibre lists them.)
+- **Get the copied books out, as they are:** Library cleanup → Books copied from Kindles has **Download everything (ZIP)** per Kindle and **Show the files** with a download link for each one (protected files marked 🔒; nothing is converted or unlocked).
 - **Phones:** the sun or moon is smaller and no longer covers the heading.
 
 ## [1.86.2]
