@@ -195,6 +195,9 @@ func (s *Server) Router() http.Handler {
 			r.Get("/me/hardcover", s.handleHardcoverStatus)
 			r.Put("/me/hardcover", s.handleHardcoverConnect)
 			r.Post("/me/hardcover/sync", s.handleHardcoverSync)
+			r.Get("/me/kindle-tasks", s.handleKindleTasks) // the Kindle remote (Settings → Kindle & KOReader): your own Kindles
+			r.Post("/me/kindle-tasks", s.handleKindleTasks)
+			r.Delete("/me/kindle-tasks/{id}", s.handleKindleTaskCancel)
 			r.Put("/me/hardcover/push", s.handleHardcoverPush)
 
 			r.With(s.cached).Get("/books", s.handleListBooks)

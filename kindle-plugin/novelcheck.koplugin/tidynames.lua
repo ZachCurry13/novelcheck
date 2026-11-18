@@ -39,7 +39,7 @@ return function(NovelCheck, ctx)
         return out
     end
 
-    function NovelCheck:tidyNames()
+    function NovelCheck:tidyNames(auto)
         if not self:isConnected() then
             self:connectDialog()
             return
@@ -77,8 +77,31 @@ return function(NovelCheck, ctx)
                     end
                 end
                 if #todo == 0 then
-                    UIManager:show(InfoMessage:new{ text = _("The names on this device already match your library.") })
+                    if not auto then
+                        UIManager:show(InfoMessage:new{ text = _("The names on this device already match your library.") })
+                    end
                     return
+                end
+                local function apply()
+                    local changed = 0
+                    self:runSteps(_("Tidying names"), todo, function(t)
+                        local props = shallowCopy(currentProps(info, t.path, true))
+                        local done = pcall(info.setCustomMetadata, info, t.path, props, "title", t.want.title)
+                        if done and t.want.author ~= "" then
+                            pcall(info.setCustomMetadata, info, t.path, shallowCopy(currentProps(info, t.path, true)), "authors", t.want.author)
+                        end
+                        if done then
+                            changed = changed + 1
+                        end
+                    end, { batch = 3, quiet = auto }, function()
+                        pcall(function() UIManager:broadcastEvent(Event:new("BookMetadataChanged")) end)
+                        if not auto then
+                            UIManager:show(InfoMessage:new{ text = tostring(changed) .. " " .. _("book names tidied.") })
+                        end
+                    end)
+                end
+                if auto then -- asked for in NovelCheck: no question here
+                    return apply()
                 end
                 UIManager:show(ConfirmBox:new{
                     text = _("Show your library's title and author for") .. " " .. tostring(#todo) .. " " .. _("books?") .. "\n\n" .. _("Only the displayed name changes, not the files."),

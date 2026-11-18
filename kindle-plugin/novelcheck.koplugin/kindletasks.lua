@@ -103,6 +103,42 @@ return function(NovelCheck)
         return "done", "moved " .. n .. " books into Books/" .. folder
     end
 
+    -- the plugin's own actions, asked for from NovelCheck (Settings → Kindle & KOReader); each starts its job and
+    -- says so (the job then runs a few steps at a time)
+    DO.report = function(self) self:reportQuietly(); return "done", "reporting the books on this Kindle" end
+    DO.highlights = function(self)
+        if not self.sendHighlights then return "skipped", "this plugin can't send highlights" end
+        self:sendHighlights(true)
+        return "done", "sending highlights"
+    end
+    DO.stats = function(self) self:syncStats(); return "done", "syncing the reading statistics" end
+    DO.download_nightstand = function(self) self:downloadAll(true); return "done", "downloading the Nightstand" end
+    DO.tidy_names = function(self)
+        if not self.tidyNames then return "skipped", "this plugin can't tidy names" end
+        self:tidyNames(true)
+        return "done", "tidying book names"
+    end
+    DO.selftest = function(self)
+        local ok, err = self:uploadLog("Asked for from NovelCheck")
+        return ok and "done" or "failed", ok and "the self-test and log were sent" or tostring(err)
+    end
+    DO.update_plugin = function(self)
+        local info = self:latestVersion()
+        if not info then return "failed", "could not ask NovelCheck for the plugin" end
+        self:installUpdate(info) -- asks to restart KOReader on the Kindle
+        return "done", "plugin " .. tostring(info.version) .. " downloaded; it works after KOReader restarts"
+    end
+    DO.stop = function(self) self:stopJob(); return "done", "stopped what was running" end
+    DO.resume_auto = function(self) self:resumeAutomatic(); return "done", "the automatic jobs are on again" end
+    local SWITCHES = { auto_report = true, auto_download = true, auto_stats = true, auto_highlights = true, auto_finish = true,
+        auto_kindle = true, auto_backup = true, auto_crashlogs = true }
+    DO.set_auto = function(self, args)
+        if not SWITCHES[tostring(args.switch)] then return "skipped", "unknown switch" end
+        self.settings:saveSetting(args.switch, args.on == true)
+        self.settings:flush()
+        return "done", tostring(args.switch) .. " is " .. (args.on == true and "on" or "off")
+    end
+
     -- a download goes one book per turn, so the Kindle keeps answering; it reports through report() when it ends
     DO.download_books = function(self, args, report)
         local got, failed = 0, 0

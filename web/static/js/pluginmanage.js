@@ -43,5 +43,5 @@ export async function renderPluginCard(host) {
         <span class="text-xs text-slate-400">${d.books} book${d.books === 1 ? "" : "s"}, ${d.in_library} in your library · reported ${esc(ago(d.reported_at))}</span></li>`).join("")}</ul>`
       : `<p class="text-xs text-slate-500">None yet. After installing, open <b>NovelCheck → Report books on this device</b> in KOReader.</p>`}</div>`;
   host.querySelector("[data-match]").onclick = () => openKindleBooks(() => renderPluginCard(host));
-  host.querySelector("[data-autoadd]").onchange = (e) => attempt(() => put("/api/me/kindle-autoadd", { enabled: e.target.checked }), e.target.checked ? "Books on your e-reader will joon your Nightstand" : "Switched off");
+  host.querySelector("[data-autoadd]").onchange = (e) => attempt(() => put("/api/me/kindle-autoadd", { enabled: e.target.checked }), e.target.checked ? "Books on your e-reader will join your Nightstand" : "Switched off");
 }

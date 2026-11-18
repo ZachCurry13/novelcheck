@@ -15,7 +15,13 @@ type KindleTask struct {
 const kindleTaskCols = `id, device, kind, args, status, note, created_at, COALESCE(done_at, '') AS done_at`
 
 // KindleTaskKinds are the only things a task can ask for.
-var KindleTaskKinds = map[string]bool{"backup": true, "tidy": true, "crashlogs": true, "delete_books": true, "download_books": true, "move_books": true}
+var KindleTaskKinds = map[string]bool{"backup": true, "tidy": true, "crashlogs": true, "delete_books": true, "download_books": true, "move_books": true,
+	"report": true, "highlights": true, "stats": true, "download_nightstand": true, "tidy_names": true, "selftest": true, "update_plugin": true,
+	"stop": true, "resume_auto": true, "set_auto": true}
+
+// KindleAutoSwitches are the plugin's automatic switches a task may turn on or off.
+var KindleAutoSwitches = map[string]bool{"auto_report": true, "auto_download": true, "auto_stats": true, "auto_highlights": true, "auto_finish": true,
+	"auto_kindle": true, "auto_backup": true, "auto_crashlogs": true}
 
 func (s *Store) CreateKindleTask(userID int64, device, kind, args string) int64 {
 	res, err := s.DB.Exec(`INSERT INTO kindle_tasks (user_id, device, kind, args) VALUES (?, ?, ?, ?)`, userID, device, kind, args)

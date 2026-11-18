@@ -310,7 +310,10 @@ func TestKindleTasks(t *testing.T) {
 	if res, _ := admin.do("POST", "/api/admin/kindle-tasks", map[string]any{"device": "Test Kindle", "kind": "delete_books", "filenames": []string{"Kept.epub"}}, true); res.StatusCode != 200 {
 		t.Fatalf("a backed-up book can be deleted: %d", res.StatusCode)
 	}
-	admin.do("POST", "/api/admin/kindle-tasks", map[string]any{"kind": "crashlogs"}, true)
+	admin.do("POST", "/api/me/kindle-tasks", map[string]any{"kind": "crashlogs"}, true) // the Kindle remote in Settings
+	if res, _ := admin.do("POST", "/api/me/kindle-tasks", map[string]any{"kind": "set_auto", "switch": "auto_everything", "on": true}, true); res.StatusCode != 400 {
+		t.Fatalf("only the plugin's own switches: %d", res.StatusCode)
+	}
 	_, list := admin.do("GET", "/api/admin/kindle-tasks?device=Test+Kindle", nil, false)
 	files, _ := list["files"].([]any)
 	if len(files) != 2 || files[0].(map[string]any)["backed_up"] != true || files[1].(map[string]any)["backed_up"] != false {

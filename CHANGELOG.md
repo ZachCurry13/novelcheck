@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.92.0]
+
+### 🎮 Kindle remote in Settings (plugin 1.60.0)
+- **Settings → Kindle & KOReader → Kindle remote** tells your Kindle what to do, from your phone or computer: back up, tidy its books, delete crash logs, **report its books, send highlights, sync reading statistics, download the Nightstand, tidy book names, run the self-test and send the log, update the plugin, stop what it's doing, resume the automatic jobs**, and turn each of its **automatic switches** on or off. Deleting, moving and sending books are there too. It happens the next time the Kindle is online (it looks every 15 minutes at most), and each request shows done, failed or skipped.
+- Everyone can use it for their own Kindles (it was in Library cleanup, for admins only; it is still there too).
+- A plugin update downloads by itself but only works after KOReader restarts, which the Kindle asks for. Stars at the end of a book, searching on the Kindle and the first connection stay on the Kindle.
+
 ## [1.91.1]
 
 ### 🧊 The Kindle no longer freezes after the plugin updates or starts (plugin 1.59.1)

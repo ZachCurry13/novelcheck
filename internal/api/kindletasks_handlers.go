@@ -66,6 +66,8 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 		Filenames []string `json:"filenames"` // delete_books, move_books
 		Folder    string   `json:"folder"`    // move_books
 		BookIDs   []int64  `json:"book_ids"`  // download_books
+		Switch    string   `json:"switch"`    // set_auto: one of store.KindleAutoSwitches
+		On        bool     `json:"on"`        // set_auto
 	}
 	if !readJSON(w, r, &body, 256<<10) {
 		return
@@ -122,6 +124,12 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 			}
 			args["folder"] = folder
 		}
+	case "set_auto":
+		if !store.KindleAutoSwitches[body.Switch] {
+			writeErr(w, http.StatusBadRequest, "that isn't one of the plugin's automatic switches")
+			return
+		}
+		args["switch"], args["on"] = body.Switch, body.On
 	case "download_books":
 		var books []pluginBook
 		for _, id := range body.BookIDs {

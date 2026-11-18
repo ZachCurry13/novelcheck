@@ -64,6 +64,8 @@ function kindleHTML(u) {
       <p class="text-sm text-slate-400">The catalog address, QR code and reading-sync steps for a Kindle or phone. With the plugin below you rarely need them: <b>NovelCheck → Set up everything</b> does it on the Kindle.</p>
       <button type="button" id="ko-setup" class="btn-secondary">Open KOReader setup</button></div>
     <div id="plugin-card" class="card space-y-2${off}"></div>
+    <div class="card space-y-2${off}"><details id="remote-card"><summary class="cursor-pointer text-lg font-semibold">Kindle remote: tell your Kindle what to do</summary>
+      <p class="mt-1 text-sm text-slate-400">Everything the plugin does, from here: it happens the next time the Kindle is online.</p><div id="remote-body" class="mt-2 text-sm text-slate-300"></div></details></div>
     <div id="sync-card" class="card space-y-2${off}"></div>`;
 }
 
@@ -110,6 +112,9 @@ export async function renderSettings(view, state) {
       if (on(u, "koreader")) {
         renderSyncStatus($("#sync-card", view));
         renderPluginCard($("#plugin-card", view));
+        $("#remote-card", view)?.addEventListener("toggle", (e) => {
+          if (e.target.open) import("./kindletasks.js").then((m) => m.renderKindleTasks($("#remote-body", view)));
+        });
       }
     } else {
       renderHardcover($("#hardcover-card", view));
