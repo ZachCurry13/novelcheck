@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.93.2]
+
+### 📶 A dropped Wi-Fi no longer fails the backup (plugin 1.60.6)
+- **Why the backups failed:** your log shows every failed file failed for one reason: the Kindle lost its connection partway ("temporary failure in name resolution", "cannot assign requested address"). The backup then kept going and marked each remaining file as failed within seconds (272 at once).
+- **Now:** when there's no answer at all, the backup waits 20 seconds and sends the same piece again. After three tries in a row it stops, says the Wi-Fi dropped, and leaves the rest for the next run, which carries on where it stopped. Nothing is counted as failed for a dropped connection.
+
 ## [1.93.1]
 
 ### 🔎 The same book under different file names

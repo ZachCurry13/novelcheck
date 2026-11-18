@@ -271,6 +271,7 @@ return function(NovelCheck)
         pcall(function() UIManager:preventStandby() end) -- the Kindle must not fall asleep (and drop Wi-Fi) halfway
         local started, sent, failed, skippedBig, n = os.time(), 0, 0, 0, 0
         local failures = 0
+        local netFails, lostConnection = 0, false
         local cur -- the file being sent: {path, fh, size, offset, mtime, tries}
         local lastShown = 0
         local function closeCur()
@@ -291,7 +292,8 @@ return function(NovelCheck)
             if not quiet or sent > 0 or failed > 0 then
                 UIManager:show(InfoMessage:new{ text = (backup and _("Backed up to NovelCheck:") or _("Copied to NovelCheck:")) .. " " .. sent .. " " .. _("files")
                     .. ((failed > 0) and (", " .. failed .. " " .. _("failed (see the log)")) or "")
-                    .. ((more > 0) and ("\n" .. more .. " " .. _("left for next time.")) or "") })
+                    .. ((more > 0) and ("\n" .. more .. " " .. _("left for next time.")) or "")
+                    .. (lostConnection and ("\n" .. _("The Wi-Fi connection dropped.")) or "") })
             end
         end
         local function fail(path, why)
@@ -339,6 +341,7 @@ return function(NovelCheck)
             end
             local code, body = self:sendPiece(q, data)
             if code == 200 then
+                netFails = 0
                 cur.offset = cur.offset + #data
                 cur.tries = 0
                 if cur.offset >= cur.size then
@@ -355,6 +358,19 @@ return function(NovelCheck)
             elseif code == 401 then
                 closeCur()
                 return finish(#todo - n)
+            elseif type(code) ~= "number" then
+                -- no answer at all: Wi-Fi dropped or the name lookup failed. That is not this file's fault, so it is not
+                -- counted as failed: wait and send the same piece again; after three tries in a row, stop and leave the
+                -- rest for the next run (it carries on where it stopped).
+                netFails = netFails + 1
+                cur.fh:seek("set", cur.offset)
+                if netFails >= 3 then
+                    self:dlog("error", "backup paused: no connection (" .. tostring(body) .. ")")
+                    closeCur()
+                    lostConnection = true
+                    return finish(#todo - n + 1)
+                end
+                return UIManager:scheduleIn(20, step)
             else
                 cur.tries = cur.tries + 1
                 if cur.tries > 2 then
