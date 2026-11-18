@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.59.0"
+local VERSION = "1.59.1"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -125,7 +125,8 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("Delete the Kindle's crash logs..."), callback = function() if self.cleanCrashLogs then self:cleanCrashLogs() end end },
             { text = _("Undo the last tidy"), callback = function() if self.undoTidy then self:undoTidy() end end },
             { text = _("Do the tasks from NovelCheck now"), callback = function() if self.runKindleTasks then self:runKindleTasks(false) end end },
-            { text = _("Stop the backup"), callback = function() if self.stopKindleCopy then self:stopKindleCopy() end end },
+            { text = _("Stop what the plugin is doing"), callback = function() if self.stopJob then self:stopJob() end end },
+            { text = _("Resume the automatic jobs"), callback = function() self:resumeAutomatic() end },
             { text = _("Copy my Kindle to NovelCheck now"), callback = function() if self.copyKindle then self:copyKindle(false) end end },
             { text = _("Send highlights now"), callback = function() if self.sendHighlights then self:sendHighlights(false) end end },
             { text = _("Tidy book names"), callback = function() self:tidyNames() end },
@@ -244,37 +245,65 @@ function NovelCheck:onNetworkConnected()
 end
 
 function NovelCheck:autoRun()
-    if self.runKindleTasks then
-        pcall(self.runKindleTasks, self, true) -- what was asked for in NovelCheck comes first
+    -- A run that never finished (the Kindle froze or was restarted) pauses the automatic jobs until you resume them,
+    -- so a job that freezes the Kindle can never freeze it again by itself at the next start.
+    if self.settings:readSetting("auto_paused") then
+        return
     end
-    if self:autoEnabled("auto_download", false) then
-        self:downloadAll(true)
+    if (tonumber(self.settings:readSetting("auto_inflight")) or 0) > 0 then
+        self.settings:saveSetting("auto_paused", true)
+        self.settings:saveSetting("auto_inflight", 0)
+        self.settings:flush()
+        UIManager:show(InfoMessage:new{ text = _("NovelCheck's automatic jobs did not finish last time, so they are paused.") .. "\n"
+            .. _("NovelCheck > Resume the automatic jobs turns them on again. Report the problem with Developer tools > Send log."), timeout = 15 })
+        return
     end
-    if self:autoEnabled("auto_report", true) then
-        self:reportQuietly()
-    end
-    if self:autoEnabled("auto_stats", false) then
-        self:syncStats()
-    end
-    if self.sendHighlights and self:autoEnabled("auto_highlights", true) then
-        self:sendHighlights(true)
-    end
-    if self.deleteCrashLogsQuietly and self:autoEnabled("auto_crashlogs", true) then
-        self:deleteCrashLogsQuietly()
-    end
+    self.settings:saveSetting("auto_inflight", os.time())
+    self.settings:flush()
     local day = 22 * 3600
-    local charging = true -- the automatic backup only runs on the charger (a long job, the screen is slow meanwhile)
-    pcall(function()
-        if Device.powerd and Device.powerd.isCharging then
-            charging = Device.powerd:isCharging() and true or false
-        end
-    end)
-    if self.backupKindle and self:autoEnabled("auto_backup", true) and charging and os.time() - (tonumber(self.settings:readSetting("last_backup")) or 0) > day then
-        self:backupKindle(true) -- everything, books included, at most once a day, while charging
-    elseif self.copyKindle and self:autoEnabled("auto_kindle", true) then
-        self:copyKindle(true)
+    -- the jobs start a little apart (each one works a few items at a time), the quick ones first
+    local jobs = {
+        { 5, function() if self.runKindleTasks then self:runKindleTasks(true) end end }, -- what was asked for in NovelCheck
+        { 10, function() if self.deleteCrashLogsQuietly and self:autoEnabled("auto_crashlogs", true) then self:deleteCrashLogsQuietly() end end },
+        { 20, function() if self:autoEnabled("auto_report", true) then self:reportQuietly() end end },
+        { 70, function() if self.sendHighlights and self:autoEnabled("auto_highlights", true) then self:sendHighlights(true) end end },
+        { 100, function() if self:autoEnabled("auto_stats", false) then self:syncStats() end end },
+        { 130, function() if self:autoEnabled("auto_download", false) then self:downloadAll(true) end end },
+        { 160, function()
+            local charging = true -- the automatic backup only runs on the charger (a long job)
+            pcall(function()
+                if Device.powerd and Device.powerd.isCharging then
+                    charging = Device.powerd:isCharging() and true or false
+                end
+            end)
+            if self.backupKindle and self:autoEnabled("auto_backup", true) and charging and os.time() - (tonumber(self.settings:readSetting("last_backup")) or 0) > day then
+                self:backupKindle(true)
+            elseif self.copyKindle and self:autoEnabled("auto_kindle", true) and not self:autoEnabled("auto_backup", true) then
+                self:copyKindle(true)
+            end
+        end },
+        { 190, function() self:checkUpdate(true) end },
+    }
+    for _i, j in ipairs(jobs) do
+        UIManager:scheduleIn(j[1], function()
+            local ok, err = pcall(j[2])
+            if not ok then
+                self:dlog("error", "automatic job: " .. tostring(err))
+            end
+        end)
     end
-    self:checkUpdate(true)
+    -- the Kindle answered for five minutes after the jobs began: the run did not freeze it
+    UIManager:scheduleIn(300, function()
+        self.settings:saveSetting("auto_inflight", 0)
+        self.settings:flush()
+    end)
+end
+
+function NovelCheck:resumeAutomatic()
+    self.settings:saveSetting("auto_paused", false)
+    self.settings:saveSetting("auto_inflight", 0)
+    self.settings:flush()
+    UIManager:show(InfoMessage:new{ text = _("The automatic jobs are on again."), timeout = 3 })
 end
 
 function NovelCheck:isConnected()
@@ -489,19 +518,21 @@ function NovelCheck:downloadAll(quiet)
         if not quiet then
             UIManager:show(InfoMessage:new{ text = _("Downloading") .. " " .. tostring(#todo) .. " " .. _("books..."), timeout = 2 })
         end
-        UIManager:nextTick(function()
-            local got, failed = 0, 0
-            for _i, b in ipairs(todo) do
-                if self:fetchBook(b) then
-                    got = got + 1
-                else
-                    failed = failed + 1
-                end
+        local got, failed = 0, 0
+        self:runSteps(_("Downloading"), todo, function(b)
+            if self:fetchBook(b) then
+                got = got + 1
+            else
+                failed = failed + 1
             end
+        end, { batch = 1, quiet = quiet }, function(info)
             self:reportQuietly()
             local text = tostring(got) .. " " .. _("books downloaded.") .. "\n" .. _("Saved in:") .. " " .. self:downloadDir()
             if failed > 0 then
                 text = text .. "\n" .. tostring(failed) .. " " .. _("failed.")
+            end
+            if info.stopped then
+                text = text .. "\n" .. _("Stopped early.")
             end
             if not quiet or got > 0 then
                 UIManager:show(InfoMessage:new{ text = text })
@@ -510,7 +541,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

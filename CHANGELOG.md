@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.91.1]
+
+### 🧊 The Kindle no longer freezes after the plugin updates or starts (plugin 1.59.1)
+- **Every long job now works a few items at a time and hands the screen back in between:** reporting the books on the device, sending highlights, tidying book names, downloading books (from the Nightstand and from tasks), and the backup's preparation (listing the files and asking NovelCheck which are missing). Before, they read hundreds of books in one go, which froze the Kindle, power button included.
+- **The automatic jobs start a little apart** (quick ones first, the backup last, and only on the charger) instead of all at once.
+- **A safety brake:** if the Kindle does not stay responsive for five minutes after the automatic jobs begin (it froze or was restarted), the next start does **not** run them again. It says so, and **NovelCheck > Resume the automatic jobs** turns them back on. A frozen job can no longer freeze the Kindle again by itself.
+- **NovelCheck > Stop what the plugin is doing** stops any of these jobs (it replaces "Stop the backup").
+
 ## [1.91.0]
 
 ### 📲 Kindle tasks: ask a Kindle to do something, from the app (plugin 1.59.0)

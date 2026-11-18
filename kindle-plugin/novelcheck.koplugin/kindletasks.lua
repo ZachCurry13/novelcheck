@@ -103,9 +103,10 @@ return function(NovelCheck)
         return "done", "moved " .. n .. " books into Books/" .. folder
     end
 
-    DO.download_books = function(self, args)
+    -- a download goes one book per turn, so the Kindle keeps answering; it reports through report() when it ends
+    DO.download_books = function(self, args, report)
         local got, failed = 0, 0
-        for _i, b in ipairs(type(args.books) == "table" and args.books or {}) do
+        self:runSteps(_("Downloading"), type(args.books) == "table" and args.books or {}, function(b)
             if b.url and lfs.attributes(self:bookPath(b), "mode") ~= "file" then
                 if self:fetchBook(b) then
                     got = got + 1
@@ -113,9 +114,11 @@ return function(NovelCheck)
                     failed = failed + 1
                 end
             end
-        end
-        self:reportQuietly()
-        return (failed > 0 and got == 0) and "failed" or "done", "downloaded " .. got .. ", failed " .. failed
+        end, { batch = 1, quiet = true }, function(info)
+            self:reportQuietly()
+            report((failed > 0 and got == 0) and "failed" or "done", "downloaded " .. got .. ", failed " .. failed .. (info.stopped and ", stopped early" or ""))
+        end)
+        return nil -- the answer comes later
     end
 
     -- runKindleTasks asks for the waiting tasks and does them one after another.
@@ -134,24 +137,34 @@ return function(NovelCheck)
             end
             return
         end
-        local done = 0
-        for _i, t in ipairs(data.tasks) do
+        local count = #data.tasks
+        -- one task per turn; a long one (a download) reports itself when it ends
+        local idx = 0
+        local function nextTask()
+            idx = idx + 1
+            local t = data.tasks[idx]
+            if not t then
+                return
+            end
             local fn = DO[tostring(t.kind)]
-            local status, note
+            local function report(status, note)
+                self:dlog("info", "task " .. tostring(t.kind) .. ": " .. tostring(status) .. " " .. tostring(note))
+                result(self, t.id, status, note)
+            end
             if not fn then
-                status, note = "skipped", "this plugin does not know that task"
+                report("skipped", "this plugin does not know that task")
             else
-                local good, s2, n2 = pcall(fn, self, type(t.args) == "table" and t.args or {})
-                if good then
-                    status, note = s2, n2
-                else
-                    status, note = "failed", tostring(s2)
+                local good, s2, n2 = pcall(fn, self, type(t.args) == "table" and t.args or {}, report)
+                if not good then
+                    report("failed", tostring(s2))
+                elseif s2 ~= nil then
+                    report(s2, n2)
                 end
             end
-            self:dlog("info", "task " .. tostring(t.kind) .. ": " .. tostring(status) .. " " .. tostring(note))
-            result(self, t.id, status, note)
-            done = done + 1
+            UIManager:scheduleIn(0.2, nextTask)
         end
+        nextTask()
+        local done = count
         if not quiet then
             UIManager:show(InfoMessage:new{ text = _("Did") .. " " .. done .. " " .. _("tasks from NovelCheck."), timeout = 4 })
         end

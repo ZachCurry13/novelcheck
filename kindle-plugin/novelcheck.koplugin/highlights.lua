@@ -121,21 +121,33 @@ return function(NovelCheck, ctx)
     end
 
     function NovelCheck:sendHighlightsNow(quiet)
-        local files = {}
-        self:scanBooks(self:libraryDir(), files, 0)
-        local sigs = LuaSettings:open(DataStorage:getSettingsDir() .. "/novelcheck_highlights.lua")
-        local books, keys, total = {}, {}, 0
-        for _i, f in ipairs(files) do
-            if #books < MAX_BOOKS then
-                local list = self:highlightsFor(f.path)
-                local key = (f.md5 ~= "" and f.md5) or f.filename
-                if #list > 0 and sigs:readSetting(key) ~= signature(list) then
-                    table.insert(books, { md5 = f.md5, filename = f.filename, title = f.title, author = f.author, highlights = list })
-                    keys[#books] = { key = key, sig = signature(list) }
-                    total = total + #list
-                end
+        -- the scan and the reading of each book's notes go a few books at a time, so the Kindle keeps answering
+        self:scanBooksAsync(function(files, stopped)
+            if stopped then
+                return
             end
-        end
+            local sigs = LuaSettings:open(DataStorage:getSettingsDir() .. "/novelcheck_highlights.lua")
+            local books, keys, total = {}, {}, 0
+            self:runSteps(_("Reading highlights"), files, function(f)
+                if #books < MAX_BOOKS then
+                    local list = self:highlightsFor(f.path)
+                    local key = (f.md5 ~= "" and f.md5) or f.filename
+                    if #list > 0 and sigs:readSetting(key) ~= signature(list) then
+                        table.insert(books, { md5 = f.md5, filename = f.filename, title = f.title, author = f.author, highlights = list })
+                        keys[#books] = { key = key, sig = signature(list) }
+                        total = total + #list
+                    end
+                end
+            end, { batch = 4, quiet = quiet }, function(info)
+                if info.stopped then
+                    return
+                end
+                self:sendHighlightBatch(quiet, sigs, books, keys, total)
+            end)
+        end, { quiet = true })
+    end
+
+    function NovelCheck:sendHighlightBatch(quiet, sigs, books, keys, total)
         if #books == 0 then
             if not quiet then
                 UIManager:show(InfoMessage:new{ text = _("No new highlights to send.") })

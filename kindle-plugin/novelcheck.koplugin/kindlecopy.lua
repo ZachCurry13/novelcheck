@@ -53,6 +53,10 @@ return function(NovelCheck)
             return
         end
         for name in iter, state do
+            self._walked = (self._walked or 0) + 1
+            if self._walked % 100 == 0 and coroutine.running() then
+                coroutine.yield() -- hand the screen back every hundred entries
+            end
             if name ~= "." and name ~= ".." and not skipDir(name) then
                 local path = dir .. "/" .. name
                 local attr = lfs.attributes(path)
@@ -85,6 +89,10 @@ return function(NovelCheck)
             return
         end
         for name in iter, state do
+            self._walked = (self._walked or 0) + 1
+            if self._walked % 100 == 0 and coroutine.running() then
+                coroutine.yield()
+            end
             if name ~= "." and name ~= ".." then
                 local path = dir .. "/" .. name
                 local attr = lfs.attributes(path)
@@ -192,24 +200,47 @@ return function(NovelCheck)
         if self.kindle_copy_running then
             return
         end
+        self.kindle_copy_running = true
+        self.kindle_stop = false
         local files = {}
-        if backup then
-            self:findAll(self:kindleRoot(), "", files, 0)
-        else
-            self:findBooks(self:kindleRoot(), files, 0)
+        local function give_up()
+            self.kindle_copy_running = false
         end
+        -- 1. list the files, a hundred entries at a time so the screen keeps answering
+        local co = coroutine.create(function()
+            if backup then
+                self:findAll(self:kindleRoot(), "", files, 0)
+            else
+                self:findBooks(self:kindleRoot(), files, 0)
+            end
+        end)
         local todo, sizes, mtimes = {}, {}, {}
-        for _i, f in ipairs(files) do
-            sizes[f.path], mtimes[f.path] = f.size, f.mtime
+        local startSending, askBatch
+        local function walk()
+            if self.kindle_stop then
+                return give_up()
+            end
+            local ok = coroutine.resume(co)
+            if not ok or coroutine.status(co) == "dead" then
+                for _i, f in ipairs(files) do
+                    sizes[f.path], mtimes[f.path] = f.size, f.mtime
+                end
+                return UIManager:scheduleIn(0.02, function() askBatch(1) end)
+            end
+            UIManager:scheduleIn(0.02, walk)
         end
-        -- ask in batches (a Kindle with KOReader holds thousands of files)
-        local i = 1
-        while i <= #files do
+        -- 2. ask NovelCheck which are missing, 2000 at a time (one small request each turn)
+        askBatch = function(i)
+            if self.kindle_stop then
+                return give_up()
+            end
+            if i > #files then
+                return startSending()
+            end
             local list = {}
             for j = i, math.min(i + 1999, #files) do
                 list[#list + 1] = { path = files[j].path, size = files[j].size, mtime = backup and files[j].mtime or nil }
             end
-            i = i + 2000
             local code, answer = self:request("/kosync/plugin/kindle/check", nil, json.encode{ device = self:deviceName(), mode = backup and "backup" or nil, files = list })
             if code ~= 200 then
                 self:dlog("error", "kindle copy: NovelCheck answered " .. tostring(code))
@@ -217,25 +248,26 @@ return function(NovelCheck)
                     UIManager:show(InfoMessage:new{ text = (code == 401) and _("NovelCheck did not accept the username or sync code.")
                         or (_("Could not reach NovelCheck.") .. "\n" .. tostring(code or answer)) })
                 end
-                return
+                return give_up()
             end
             local good, data = pcall(json.decode, answer)
             for _k, p in ipairs((good and type(data) == "table" and type(data.send) == "table") and data.send or {}) do
                 todo[#todo + 1] = p
             end
+            UIManager:scheduleIn(0.02, function() askBatch(i + 2000) end)
         end
-        if #todo == 0 then
-            if backup then
-                self.settings:saveSetting("last_backup", os.time())
-                self.settings:flush()
+        -- 3. send what is missing, a piece at a time
+        startSending = function()
+            if #todo == 0 then
+                if backup then
+                    self.settings:saveSetting("last_backup", os.time())
+                    self.settings:flush()
+                end
+                if not quiet then
+                    UIManager:show(InfoMessage:new{ text = backup and _("This Kindle is already backed up to NovelCheck.") or _("Everything on this Kindle is already copied to NovelCheck.") })
+                end
+                return give_up()
             end
-            if not quiet then
-                UIManager:show(InfoMessage:new{ text = backup and _("This Kindle is already backed up to NovelCheck.") or _("Everything on this Kindle is already copied to NovelCheck.") })
-            end
-            return
-        end
-        self.kindle_copy_running = true
-        self.kindle_stop = false
         pcall(function() UIManager:preventStandby() end) -- the Kindle must not fall asleep (and drop Wi-Fi) halfway
         local started, sent, failed, skippedBig, n = os.time(), 0, 0, 0, 0
         local failures = 0
@@ -334,5 +366,7 @@ return function(NovelCheck)
             UIManager:scheduleIn(0.02, step)
         end
         UIManager:scheduleIn(0.1, step)
+        end -- startSending
+        UIManager:scheduleIn(0.05, walk)
     end
 end

@@ -62,41 +62,45 @@ return function(NovelCheck, ctx)
                     byMd5[n.md5] = n
                 end
             end
-            local books = {}
-            self:scanBooks(self:libraryDir(), books, 0, false)
-            local todo = {}
-            for _i, b in ipairs(books) do
-                local want = byMd5[b.md5]
-                if want then
-                    local props = currentProps(info, b.path)
-                    if props.title ~= want.title or (want.author ~= "" and props.authors ~= want.author) then
-                        table.insert(todo, { path = b.path, want = want })
+            self:scanBooksAsync(function(books, stopped)
+                if stopped then
+                    return
+                end
+                local todo = {}
+                for _i, b in ipairs(books) do
+                    local want = byMd5[b.md5]
+                    if want then
+                        local props = currentProps(info, b.path)
+                        if props.title ~= want.title or (want.author ~= "" and props.authors ~= want.author) then
+                            table.insert(todo, { path = b.path, want = want })
+                        end
                     end
                 end
-            end
-            if #todo == 0 then
-                UIManager:show(InfoMessage:new{ text = _("The names on this device already match your library.") })
-                return
-            end
-            UIManager:show(ConfirmBox:new{
-                text = _("Show your library's title and author for") .. " " .. tostring(#todo) .. " " .. _("books?") .. "\n\n" .. _("Only the displayed name changes, not the files."),
-                ok_text = _("Tidy"),
-                ok_callback = function()
-                    local changed = 0
-                    for _i, t in ipairs(todo) do
-                        local props = shallowCopy(currentProps(info, t.path, true))
-                        local done = pcall(info.setCustomMetadata, info, t.path, props, "title", t.want.title)
-                        if done and t.want.author ~= "" then
-                            pcall(info.setCustomMetadata, info, t.path, shallowCopy(currentProps(info, t.path, true)), "authors", t.want.author)
-                        end
-                        if done then
-                            changed = changed + 1
-                        end
-                    end
-                    pcall(function() UIManager:broadcastEvent(Event:new("BookMetadataChanged")) end)
-                    UIManager:show(InfoMessage:new{ text = tostring(changed) .. " " .. _("book names tidied.") })
-                end,
-            })
+                if #todo == 0 then
+                    UIManager:show(InfoMessage:new{ text = _("The names on this device already match your library.") })
+                    return
+                end
+                UIManager:show(ConfirmBox:new{
+                    text = _("Show your library's title and author for") .. " " .. tostring(#todo) .. " " .. _("books?") .. "\n\n" .. _("Only the displayed name changes, not the files."),
+                    ok_text = _("Tidy"),
+                    ok_callback = function()
+                        local changed = 0
+                        self:runSteps(_("Tidying names"), todo, function(t)
+                            local props = shallowCopy(currentProps(info, t.path, true))
+                            local done = pcall(info.setCustomMetadata, info, t.path, props, "title", t.want.title)
+                            if done and t.want.author ~= "" then
+                                pcall(info.setCustomMetadata, info, t.path, shallowCopy(currentProps(info, t.path, true)), "authors", t.want.author)
+                            end
+                            if done then
+                                changed = changed + 1
+                            end
+                        end, { batch = 3 }, function()
+                            pcall(function() UIManager:broadcastEvent(Event:new("BookMetadataChanged")) end)
+                            UIManager:show(InfoMessage:new{ text = tostring(changed) .. " " .. _("book names tidied.") })
+                        end)
+                    end,
+                })
+            end, { label = _("Reading your books") })
         end)
     end
 end

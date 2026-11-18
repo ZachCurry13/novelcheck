@@ -110,6 +110,32 @@ return function(NovelCheck, ctx)
         return ok and done == true, ok and done == true and day or nil
     end
 
+    -- bookEntry describes one book file (name, format, size, fingerprint, title and author, finished mark).
+    local function bookEntry(self, path, entry, attr, no_md5)
+        local ext = entry:match("%.([^.]+)$")
+        local sum = ""
+        if not no_md5 then
+            local ok, got = pcall(util.partialMD5, path)
+            sum = ok and got or ""
+        end
+        local ptitle, pauthor
+        if not no_md5 then
+            ptitle, pauthor = self:bookProps(path, sum)
+        end
+        local finished, finished_on = self:finishedOnDevice(path)
+        return {
+            finished = finished or nil,
+            finished_on = finished_on,
+            filename = entry,
+            path = path,
+            title = ptitle or (entry:gsub("%.[^.]+$", ""):gsub("[-_]", " ")),
+            author = pauthor or "",
+            format = ext:lower(),
+            size = attr.size,
+            md5 = sum,
+        }
+    end
+
     function NovelCheck:scanBooks(dir, books, depth, no_md5)
         if #books >= MAX_BOOKS or depth > 4 then return end
         if depth == 0 then
@@ -124,32 +150,47 @@ return function(NovelCheck, ctx)
                 elseif attr and attr.mode == "file" then
                     local ext = entry:match("%.([^.]+)$")
                     if ext and BOOK_EXT[ext:lower()] then
-                        local sum = ""
-                        if not no_md5 then
-                            local ok, got = pcall(util.partialMD5, path)
-                            sum = ok and got or ""
-                        end
-                        local ptitle, pauthor
-                        if not no_md5 then
-                            ptitle, pauthor = self:bookProps(path, sum)
-                        end
-                        local finished, finished_on = self:finishedOnDevice(path)
-                        table.insert(books, {
-                            finished = finished or nil,
-                            finished_on = finished_on,
-                            filename = entry,
-                            path = path,
-                            title = ptitle or (entry:gsub("%.[^.]+$", ""):gsub("[-_]", " ")),
-                            author = pauthor or "",
-                            format = ext:lower(),
-                            size = attr.size,
-                            md5 = sum,
-                        })
+                        table.insert(books, bookEntry(self, path, entry, attr, no_md5))
                     end
                 end
                 if #books >= MAX_BOOKS then return end
             end
         end
+    end
+
+    -- scanBooksAsync is scanBooks that keeps the Kindle answering: the folders are listed first (quick), then the
+    -- books are described a few at a time (the slow part: fingerprints, titles, finished marks), with the screen free
+    -- between turns. done(books, stopped) is called at the end. It can be stopped (NovelCheck > Stop what the plugin is doing).
+    function NovelCheck:scanBooksAsync(done, opts)
+        local found = {}
+        local function list(dir, depth)
+            if #found >= MAX_BOOKS or depth > 4 then return end
+            local ok, iter, state = pcall(lfs.dir, dir)
+            if not ok then return end
+            for entry in iter, state do
+                if entry:sub(1, 1) ~= "." and not entry:match("%.sdr$") then
+                    local path = dir .. "/" .. entry
+                    local attr = lfs.attributes(path)
+                    if attr and attr.mode == "directory" then
+                        list(path, depth + 1)
+                    elseif attr and attr.mode == "file" then
+                        local ext = entry:match("%.([^.]+)$")
+                        if ext and BOOK_EXT[ext:lower()] then
+                            found[#found + 1] = { path = path, entry = entry, attr = attr }
+                        end
+                    end
+                    if #found >= MAX_BOOKS then return end
+                end
+            end
+        end
+        self.props_opens = 0
+        list(self:libraryDir(), 0)
+        local books = {}
+        self:runSteps((opts and opts.label) or _("Reading your books"), found, function(f)
+            books[#books + 1] = bookEntry(self, f.path, f.entry, f.attr, false)
+        end, { batch = 3, quiet = opts and opts.quiet }, function(info)
+            done(books, info.stopped)
+        end)
     end
 
     -- withoutPaths drops the folder of each book: NovelCheck is told file names only.
@@ -169,12 +210,13 @@ return function(NovelCheck, ctx)
     -- (after books were deleted). It does nothing when not connected or offline.
     function NovelCheck:reportQuietly()
         if not self:isConnected() then return end
-        pcall(function()
-            local books = {}
-            self:scanBooks(self:libraryDir(), books, 0)
-            local code = self:request("/kosync/plugin/device", nil, json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) })
-            self:noteReported(code)
-        end)
+        self:scanBooksAsync(function(books, stopped)
+            if stopped then return end
+            pcall(function()
+                local code = self:request("/kosync/plugin/device", nil, json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) })
+                self:noteReported(code)
+            end)
+        end, { quiet = true })
     end
 
     -- noteReported remembers which plugin version NovelCheck last heard of, so
@@ -193,11 +235,9 @@ return function(NovelCheck, ctx)
         end
         NetworkMgr:runWhenOnline(function()
             UIManager:show(InfoMessage:new{ text = _("Listing the books on this device..."), timeout = 1 })
-            UIManager:nextTick(function()
-                local books = {}
-                local ok = pcall(self.scanBooks, self, self:libraryDir(), books, 0)
-                if not ok then
-                    UIManager:show(InfoMessage:new{ text = _("Could not read the books folder.") })
+            self:scanBooksAsync(function(books, stopped)
+                if stopped then
+                    UIManager:show(InfoMessage:new{ text = _("Stopped. Nothing was reported.") })
                     return
                 end
                 local body = json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) }
