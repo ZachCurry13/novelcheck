@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.60.0"
+local VERSION = "1.60.1"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -70,6 +70,12 @@ function NovelCheck:init()
     self.settings = LuaSettings:open(DataStorage:getSettingsDir() .. "/novelcheck.lua")
     self:importConfig()
     self.ui.menu:registerToMainMenu(self)
+    -- Kindle-store books KOReader cannot open are moved out of its library folder first (locked.lua): opening one
+    -- for a cover or a title can make KOReader stop. Once per start, quick (file names and a few header bytes).
+    if not NovelCheck._rescued and self.rescueLockedBooks then
+        NovelCheck._rescued = true
+        pcall(self.rescueLockedBooks, self)
+    end
     -- A shelf for the Bookshelf plugin, if it is installed (bookshelfsrc.lua); never allowed to stop the plugin.
     pcall(function() if self.offerBookshelf then self:offerBookshelf() end end)
     -- The stars window at the end of a book (finishbook.lua); never allowed to stop the plugin either.
@@ -284,8 +290,9 @@ function NovelCheck:autoRun()
         end },
         { 190, function() self:checkUpdate(true) end },
     }
-    for _i, j in ipairs(jobs) do
+    for n, j in ipairs(jobs) do
         UIManager:scheduleIn(j[1], function()
+            self:dlog("step", "automatic job " .. n .. " starts") -- the last such line before a freeze names the job
             local ok, err = pcall(j[2])
             if not ok then
                 self:dlog("error", "automatic job: " .. tostring(err))
@@ -541,7 +548,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps", "locked" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

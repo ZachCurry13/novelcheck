@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.92.1]
+
+### 🧯 Kindle-store books are kept out of KOReader's library (plugin 1.60.1)
+- **The likely cause of KOReader stopping:** Tidy moved Kindle-store books (KFX, AZW and protected AZW3/MOBI) into Books/NovelCheck, where KOReader looks for covers and titles. KOReader cannot open those books, and trying to can make it stop. **Tidy now leaves them where they are**, and **at start the plugin moves any it finds in the library folder back to the Kindle's documents folder** (where Amazon's reader shows them), with their reading data, without overwriting anything, and NovelCheck's backup copy moves too.
+- **The plugin no longer opens books to read their titles** unless they are EPUB, FB2 or plain text.
+- **The plugin's log now names each automatic job as it starts, and every tenth book a long job works on,** so if the Kindle stops again the last line says where.
+
 ## [1.92.0]
 
 ### 🎮 Kindle remote in Settings (plugin 1.60.0)

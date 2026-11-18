@@ -45,7 +45,8 @@ return function(NovelCheck)
                     local attr = lfs.attributes(path)
                     if attr and attr.mode == "directory" then
                         walk(path, depth + 1)
-                    elseif attr and attr.mode == "file" and EXTS[(name:match("%.([^.]+)$") or ""):lower()] and attr.size >= 2048 then
+                    elseif attr and attr.mode == "file" and EXTS[(name:match("%.([^.]+)$") or ""):lower()] and attr.size >= 2048
+                        and not (self.isLockedBook and self:isLockedBook(path)) then -- Kindle-store books stay where Amazon's reader finds them
                         table.insert(out, { path = path, size = attr.size, name = name })
                     end
                 end

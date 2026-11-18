@@ -74,7 +74,10 @@ return function(NovelCheck, ctx)
         if not info then
             return nil
         end
-        local may_open = (self.props_opens or 0) < PROPS_OPENS
+        -- only formats KOReader reads safely are opened for a title (never a Kindle-store or PDF file)
+        local ext = (path:match("%.([^./]+)$") or ""):lower()
+        local safe = ext == "epub" or ext == "fb2" or ext == "txt"
+        local may_open = safe and (self.props_opens or 0) < PROPS_OPENS
         local ok, props = pcall(info.getDocProps, info, path, nil, not may_open)
         if may_open then
             self.props_opens = (self.props_opens or 0) + 1

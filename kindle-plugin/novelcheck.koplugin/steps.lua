@@ -21,6 +21,7 @@ return function(NovelCheck)
         local i, errors, lastShown = 0, 0, os.time()
         self.job_stop = false
         self.job_label = label
+        pcall(function() self:dlog("step", label .. ": " .. total .. " items") end)
         local function finish(stopped)
             self.job_label = nil
             self.job_stop = false
@@ -36,7 +37,11 @@ return function(NovelCheck)
             while n < batch and i < total do
                 i = i + 1
                 n = n + 1
-                local ok, err = pcall(handler, items[i], i)
+                local it = items[i]
+                if type(it) == "table" and it.path and i % 10 == 1 then -- which book it is at, now and then
+                    pcall(function() self:dlog("step", label .. " " .. i .. ": " .. tostring(it.path)) end)
+                end
+                local ok, err = pcall(handler, it, i)
                 if not ok then
                     errors = errors + 1
                     pcall(function() self:dlog("error", label .. ": " .. tostring(err)) end)
