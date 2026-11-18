@@ -65,7 +65,7 @@ function kindleHTML(u) {
       <button type="button" id="ko-setup" class="btn-secondary">Open KOReader setup</button></div>
     <div id="plugin-card" class="card space-y-2${off}"></div>
     <div class="card space-y-2${off}"><details id="remote-card"><summary class="cursor-pointer text-lg font-semibold">Kindle remote: tell your Kindle what to do</summary>
-      <p class="mt-1 text-sm text-slate-400">Everything the plugin does, from here: it happens the next time the Kindle is online.</p><div id="remote-body" class="mt-2 text-sm text-slate-300"></div></details></div>
+      <p class="mt-1 text-sm text-slate-400">Runs on the Kindle at its next sync.</p><div id="remote-body" class="mt-2 text-sm text-slate-300"></div></details></div>
     <div id="sync-card" class="card space-y-2${off}"></div>`;
 }
 

@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.93.0]
+
+### ✂️ Shorter, plainer wording
+- **The first-run guide is about half as long**, one idea per sentence, for everyone, parents, admins and friends.
+- **The Kindle remote, Library cleanup cards, Backup AI, plugin and delivery screens say less**: what to do, what happens, and the one warning that matters.
+- **The Kindle plugin's messages are shorter** (plugin 1.60.3).
+- A writing guide for the app is in `docs/WRITING.md`. Other long texts are still to be gone through.
+
 ## [1.92.2]
 
 ### 📚 The same book more than once on your Kindle (plugin 1.60.2)

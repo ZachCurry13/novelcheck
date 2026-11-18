@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.60.2"
+local VERSION = "1.60.3"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -260,8 +260,8 @@ function NovelCheck:autoRun()
         self.settings:saveSetting("auto_paused", true)
         self.settings:saveSetting("auto_inflight", 0)
         self.settings:flush()
-        UIManager:show(InfoMessage:new{ text = _("NovelCheck's automatic jobs did not finish last time, so they are paused.") .. "\n"
-            .. _("NovelCheck > Resume the automatic jobs turns them on again. Report the problem with Developer tools > Send log."), timeout = 15 })
+        UIManager:show(InfoMessage:new{ text = _("The automatic jobs stopped early last time, so they're paused.") .. "\n"
+            .. _("Turn them back on with NovelCheck > Resume the automatic jobs."), timeout = 15 })
         return
     end
     self.settings:saveSetting("auto_inflight", os.time())
@@ -418,7 +418,7 @@ function NovelCheck:showUpNext()
     NetworkMgr:runWhenOnline(function()
         local code, body = self:request("/kosync/plugin/up-next")
         if code == 401 then
-            UIManager:show(InfoMessage:new{ text = _("NovelCheck did not accept the username or sync code. Check them under Connect to NovelCheck.") })
+            UIManager:show(InfoMessage:new{ text = _("Wrong username or sync code. Check Connect to NovelCheck.") })
             return
         elseif code ~= 200 then
             UIManager:show(InfoMessage:new{ text = _("Could not reach NovelCheck.") .. "\n" .. tostring(code or body) })

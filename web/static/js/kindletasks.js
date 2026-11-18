@@ -18,21 +18,21 @@ export async function renderKindleTasks(host, device = "") {
   host.textContent = "Loading…";
   const r = await get(`/api/me/kindle-tasks${device ? `?device=${encodeURIComponent(device)}` : ""}`).catch(() => null);
   if (!r) { host.textContent = "Couldn't load that just now."; return; }
-  if (!r.devices.length) { host.textContent = "No Kindle has reported yet. In KOReader run NovelCheck > Report books on this device (Settings → Kindle & KOReader has the steps)."; return; }
+  if (!r.devices.length) { host.textContent = "No Kindle yet. On the Kindle, run NovelCheck > Report books on this device."; return; }
   const dev = r.device;
   const task = (t) => `<li class="flex items-center justify-between gap-2 py-1"><span class="min-w-0"><b>${esc(KIND[t.kind] || t.kind)}</b> <span class="text-slate-400">${esc(t.device || "any Kindle")}</span>
     ${t.note ? `<span class="block text-xs text-slate-400">${esc(t.note)}</span>` : ""}</span>
     ${t.status === "waiting" ? `<button type="button" data-kt-cancel="${t.id}" class="btn-ghost shrink-0 py-0.5 text-xs">Take back</button>` : `<span class="shrink-0 text-xs ${t.status === "done" ? "text-emerald-400" : "text-slate-400"}">${esc(t.status)}</span>`}</li>`;
-  host.innerHTML = `<p class="mb-2">Things you ask for here happen the next time the Kindle is online (the plugin looks every few minutes while it is connected, or press <b>NovelCheck &gt; Do the tasks from NovelCheck now</b> on the Kindle). Deleting only works for books NovelCheck holds a copy of.</p>
+  host.innerHTML = `<p class="mb-2">Your Kindle does these at its next sync. Only backed-up books can be deleted.</p>
     <label class="mb-2 block text-xs text-slate-400">Kindle <select id="kt-dev" class="input mt-1">${r.devices.map((d) => `<option ${d.name === dev ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label>
     <p class="mb-2 flex flex-wrap gap-2">${["backup", "tidy", "crashlogs", "report", "highlights", "stats", "download_nightstand", "tidy_names", "selftest", "update_plugin", "stop", "resume_auto"]
       .map((k) => `<button type="button" data-kt="${k}" class="btn-secondary py-1 text-sm">${esc(k === "tidy" ? "Tidy its books into Books/NovelCheck" : KIND[k])}</button>`).join("")}</p>
     <details class="mb-3"><summary class="cursor-pointer text-sm text-slate-300">Its automatic switches</summary>
       <ul class="mt-1 divide-y divide-slate-800 text-sm">${Object.entries(SWITCH).map(([k, l]) => `<li class="flex items-center justify-between gap-2 py-1"><span class="min-w-0">${esc(l)}</span>
         <span class="flex shrink-0 gap-1"><button type="button" data-kt-sw="${k}" data-on="1" class="btn-ghost py-0.5 text-xs">Turn on</button><button type="button" data-kt-sw="${k}" data-on="0" class="btn-ghost py-0.5 text-xs">Turn off</button></span></li>`).join("")}</ul>
-      <p class="mt-1 text-xs text-slate-500">The Kindle keeps these itself; a change here happens at its next check-in. A plugin update only works after KOReader restarts (the Kindle asks).</p></details>
+      <p class="mt-1 text-xs text-slate-500">Changes apply at the next sync. A plugin update needs a KOReader restart.</p></details>
     ${(r.duplicates || []).length ? `<h4 class="label">The same book more than once (${r.duplicates.length})</h4>
-      <p class="mb-1 text-xs text-slate-400">The copy you read furthest is first. "Keep it" deletes the other copies from the Kindle at its next sync (only copies NovelCheck holds a backup of).</p>
+      <p class="mb-1 text-xs text-slate-400">★ is the copy you read furthest. The others are deleted at the next sync.</p>
       <ul class="mb-3 divide-y divide-slate-800 text-sm">${r.duplicates.map((g, gi) => `<li class="py-1.5"><b>${esc(g[0].title || g[0].filename)}</b>
         <ul class="mt-1 space-y-0.5 text-xs text-slate-400">${g.map((f, i) => `<li>${i === 0 ? "★ " : ""}${esc(f.filename)} · ${mb(f.size)} · ${Math.round((f.percent || 0) * 100)}% read${f.backed_up ? "" : " · not backed up"}</li>`).join("")}</ul>
         <button type="button" data-kt-keep="${gi}" class="btn-ghost mt-1 py-0.5 text-xs">Keep the ★ copy, delete the others</button></li>`).join("")}</ul>` : ""}
@@ -59,7 +59,7 @@ export async function renderKindleTasks(host, device = "") {
     if (keep) {
       const g = r.duplicates[Number(keep.dataset.ktKeep)];
       const others = g.slice(1).map((f) => f.filename);
-      if (confirm(`Keep "${g[0].filename}" and delete ${others.length} other cop${others.length === 1 ? "y" : "ies"} from the Kindle at its next sync?`)) make("delete_books", { filenames: others });
+      if (confirm(`Keep "${g[0].filename}" and delete ${others.length} other cop${others.length === 1 ? "y" : "ies"}?`)) make("delete_books", { filenames: others });
       return;
     }
     const sw = e.target.closest("[data-kt-sw]");
@@ -74,7 +74,7 @@ export async function renderKindleTasks(host, device = "") {
       host.querySelector("#kt-hits").innerHTML = books.map((b) => `<li class="flex items-center justify-between gap-2 py-1"><span class="min-w-0 break-words">${esc(b.title)} <span class="text-slate-400">· ${esc(b.author || "")}</span></span>
         <button type="button" data-kt-send="${b.id}" class="btn-ghost shrink-0 py-0.5 text-xs">Send</button></li>`).join("") || `<li class="py-1 text-slate-500">Nothing found.</li>`;
     } else if (k && !["delete_books", "move_books"].includes(k)) make(k);
-    else if (k === "delete_books") { const f = ticked(); if (f.length && confirm(`Delete ${f.length} book(s) from the Kindle at its next sync? NovelCheck holds a copy of each one.`)) make(k, { filenames: f }); }
+    else if (k === "delete_books") { const f = ticked(); if (f.length && confirm(`Delete ${f.length} book(s) from the Kindle? NovelCheck keeps a backup.`)) make(k, { filenames: f }); }
     else if (k === "move_books") { const f = ticked(); if (f.length) make(k, { filenames: f, folder: host.querySelector("#kt-folder").value }); }
   };
 }

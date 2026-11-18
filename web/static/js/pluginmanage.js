@@ -18,7 +18,7 @@ export function older(a, b) {
 // pluginStepsHTML is the install steps with a download button for zipUrl.
 export function pluginStepsHTML(zipUrl, latest) {
   return `<a href="${esc(zipUrl)}" download class="btn-primary inline-flex">⬇ Download the plugin${latest ? ` (${esc(latest)})` : ""}</a>
-    <p class="text-xs text-slate-500">It is already connected to this account: your server, username and sync code are inside, so there is nothing to type on the e-reader. Keep the file private.</p>
+    <p class="text-xs text-slate-500">Already connected to your account; nothing to type on the e-reader. Keep the file private.</p>
     <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
       <li>Unzip it, and connect the e-reader to the computer by USB.</li>
       <li>Copy the <b>novelcheck.koplugin</b> folder into <b>koreader/plugins/</b> on the e-reader (replace the old one when updating).</li>

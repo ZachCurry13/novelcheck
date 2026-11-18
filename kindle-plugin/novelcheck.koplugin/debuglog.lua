@@ -153,7 +153,7 @@ return function(NovelCheck, ctx)
         local function put(msg)
             self:dlog("test", msg)
         end
-        say(_("Self-test: looking at this Kindle..."))
+        say(_("Self-test: checking this Kindle..."))
         UIManager:scheduleIn(0.3, function()
             self._selftest_async = true
             pcall(self.selfTest, self) -- the checks on this Kindle (quick)

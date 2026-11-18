@@ -74,8 +74,7 @@ function koreaderHTML(url, username, own, simple) {
     <li>Tap <b>＋</b> (top left). Name: <b>NovelCheck</b>. Then either the short address with your username and sync code (the three boxes in <b>Easiest to type</b>), or the long private address with no login.</li>
     <li>Open <b>NovelCheck</b> in the list: the Nightstand books appear. Tap one and choose <b>Download</b>.</li>
   </ol>
-  <p class="text-xs text-slate-500">The e-reader must reach this address: the home Wi-Fi address works at home, the https:// remote address works anywhere.
-    Keep it private: anyone with it can download these books.</p>`;
+  <p class="text-xs text-slate-500">Use the https:// address to read away from home.</p>`;
 }
 
 // openKOReaderSetup shows the address for the signed-in person (no userId)

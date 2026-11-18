@@ -51,7 +51,7 @@ export async function renderCleanupTab(host, state) {
     row("🗂️", "Formats", "Keep only the formats you choose (say EPUB), convert books with no EPUB, undo for 7 days.", c?.remove_files, `<button type="button" data-cu="formats" class="btn-secondary py-1 text-sm">Formats…</button>`),
     row("🔖", "Genres", "Library books Calibre has no tags for. They are filled in by the AI by themselves; this runs it now.", g.missing, g.running ? btn("genres-stop", "Stop") : btn("genres-fill", "Fill in now")),
     row("📦", "Box sets", "Several books in one file: check them and split them into their books.", s?.box_sets, btn("box-sets", "Check and split")),
-    row("🖼️", "Books with no cover", job.running ? `Looking now: ${job.checked} of ${job.total} checked, ${job.found} found${job.current ? ` · ${esc(job.current)}` : ""}.` : "Books Calibre has no cover for show a drawn one. This looks for the real cover in Open Library and Google Books in the background (it also runs once a day), and only uses one whose title matches.", cv?.count ?? null, job.running ? `<button type="button" data-cu="covers-stop" class="btn-secondary py-1 text-sm">Stop</button>` : `<span class="flex flex-wrap gap-2"><button type="button" data-cu="covers-review" class="btn-primary py-1 text-sm">Review one by one</button><button type="button" data-cu="covers-find" class="btn-secondary py-1 text-sm">Find covers now</button></span>`),
+    row("🖼️", "Books with no cover", job.running ? `Looking now: ${job.checked} of ${job.total} checked, ${job.found} found${job.current ? ` · ${esc(job.current)}` : ""}.` : "Finds real covers for books that show a drawn one. Runs daily; only uses covers whose title matches.", cv?.count ?? null, job.running ? `<button type="button" data-cu="covers-stop" class="btn-secondary py-1 text-sm">Stop</button>` : `<span class="flex flex-wrap gap-2"><button type="button" data-cu="covers-review" class="btn-primary py-1 text-sm">Review one by one</button><button type="button" data-cu="covers-find" class="btn-secondary py-1 text-sm">Find covers now</button></span>`),
     row("🖼️", "Covers reported as wrong", "Covers your family flagged.", s?.cover_reports, btn("cover-reports", "Review")),
     row("🗑️", "Delete requests", "Books your family asked to remove.", s?.pending_deletes, link("#/deletions", "Review")),
     row("🔄", "Read the Calibre library now", "Re-reads Calibre so NovelCheck matches what is there (it also happens by itself).", null, btn("sync", "Read now")),
@@ -99,8 +99,8 @@ export async function renderCleanupTab(host, state) {
     const load = async () => {
       const r = await get("/api/admin/kindle-unknown").catch(() => null);
       if (!r) { body.textContent = "Couldn't load that just now."; return; }
-      if (!r.books.length) { body.textContent = "Nothing waiting. Book files the Kindle backup finds that NovelCheck has no book for show up here: tick the ones to add. Nothing is added by itself."; return; }
-      body.innerHTML = `<p class="mb-2">The Kindle backup found these book files, and NovelCheck has no book with that title. Tick the ones to <b>add</b> (they join NovelCheck under the title and author shown and go on your Nightstand). Many are probably books you already have under another name: leave those out.</p>
+      if (!r.books.length) { body.textContent = "Nothing waiting. Kindle books NovelCheck doesn't know will show up here."; return; }
+      body.innerHTML = `<p class="mb-2">Kindle books NovelCheck doesn't know. Tick the ones to add; skip any you already have under another name.</p>
         <ul class="max-h-96 divide-y divide-slate-800 overflow-auto">${r.books.map((b) => `<li class="flex items-center gap-2 py-1.5"><input type="checkbox" data-ku="${b.id}">
           <span class="min-w-0"><span class="block break-words">${esc(b.title || b.filename)}${b.author ? ` <span class="text-slate-400">· ${esc(b.author)}</span>` : ""}</span>
           <span class="block break-words text-xs text-slate-500">${esc(b.path)}</span></span></li>`).join("")}</ul>
@@ -123,11 +123,11 @@ export async function renderCleanupTab(host, state) {
     const r = await get("/api/admin/kindle-backup").catch(() => null);
     const mb = (b) => (b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(b / 1e6))} MB`);
     const q = (d) => `user=${encodeURIComponent(d.user)}&device=${encodeURIComponent(d.name)}`;
-    body.innerHTML = !r ? "Couldn't load that just now." : !r.devices.length ? "Nothing copied yet. The KOReader plugin copies every book on a Kindle here when it goes online (NovelCheck &gt; Copy my Kindle to NovelCheck now)."
+    body.innerHTML = !r ? "Couldn't load that just now." : !r.devices.length ? "Nothing copied yet. Back up a Kindle from the Kindle remote."
       : `${r.devices.map((d, i) => `<div class="mb-3"><p><b>${esc(d.name)}</b>: ${d.files} book${d.files === 1 ? "" : "s"}, ${mb(d.bytes)}.</p>
           <p class="mt-1 flex flex-wrap gap-2"><a class="btn-secondary py-1 text-sm" href="/api/admin/kindle-backup/zip?${q(d)}">⬇ Download everything (ZIP)</a>
           <button type="button" data-kb-list="${i}" class="btn-ghost py-1 text-sm">Show the files</button></p><div data-kb-files="${i}" class="mt-2"></div></div>`).join("")}
-        <p class="mt-2 text-xs text-slate-400">The files are in the <b>${esc(r.folder)}</b>, exactly as they were on the Kindle (protected ones too, marked 🔒: they only open on a device with your Kindle account). Nothing is converted or unlocked.</p>`;
+        <p class="mt-2 text-xs text-slate-400">Saved as-is in the <b>${esc(r.folder)}</b>. 🔒 books open only on a device with your Kindle account.</p>`;
     body.onclick = async (ev) => {
       const b = ev.target.closest("[data-kb-list]");
       if (!b) return;

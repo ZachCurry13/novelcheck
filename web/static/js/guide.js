@@ -6,57 +6,57 @@ import { $, esc, attempt } from "./ui.js";
 
 const EVERYONE = [
   ["Welcome to NovelCheck",
-    "NovelCheck helps you pick books that fit your family. Each book gets a simple rating for romance (\"spice\") and a few content flags, so you know what's inside before you start reading."],
+    "NovelCheck rates every book for romance (\"spice\") and other content, so you know what's inside before you read."],
   ["The Library",
-    "The <b>Library</b> tab shows every book with its cover. Search by title, author, series or tag, or narrow it down by <b>genre</b>, <b>fiction or nonfiction</b>, <b>author</b>, <b>series</b> and more. Tick the <b>Hide</b> boxes (like <b>Nudity</b>) to hide books that include those things. <b>Select</b> lets you pick several books at once, to add them to your Nightstand or ask to delete them."],
+    "The <b>Library</b> shows every book. Search, or filter by genre, author, series and more. <b>Hide</b> boxes hide books with that content. <b>Select</b> works on several books at once."],
   ["Discover",
-    "The <b>Discover</b> tab suggests books: what's popular now, new on the best-seller lists, top teen and kids' books, classics, and what's new or popular in your family. Your content rules apply. Tap <b>Wishlist</b> to ask for a book you don't have."],
+    "<b>Discover</b> suggests books: best sellers, kids' and teen picks, classics, and family favorites. Your content rules apply. <b>Wishlist</b> asks for a book you don't have."],
   ["Events",
-    "On free-book days such as <b>Stuff Your Kindle</b>, a parent pastes the event's list under <b>Discover → 🎉 Events</b>. You see each book's rating, which ones you already have, and a <b>Claim on Amazon</b> button; <b>✓ I claimed it</b> puts the book in your library. An event opens in the Library, so every filter and sort works on it, plus <b>Hide books we have</b>. When an event ends it moves to the archive."],
+    "Free-book days like <b>Stuff Your Kindle</b> live under <b>Discover → 🎉 Events</b>. Each book shows its rating and whether you have it. <b>Claim on Amazon</b>, then <b>✓ I claimed it</b> to add it to your library."],
   ["Collections & seasons",
-    "<b>Collections</b> are shelves across your libraries, like \"Summer reading\" or \"Dragon adventures\". The chips at the top of the Library show seasonal shelves such as 🎃 Halloween or 🕯️ Advent, the ones in season first. Tap one to see its books. <b>Series</b> (next to Collections) shows each series in order: the books you have, what you've read, and what's next."],
+    "<b>Collections</b> are shelves like \"Summer reading\". Seasonal ones (🎃 Halloween, 🕯️ Advent) sit at the top of the Library. <b>Series</b> lists each series in order, with what you've read and what's next."],
   ["What the ratings mean",
     `<p class="mb-2">Books get 0 to 5 peppers for romance and sexual content:</p>
     <ul class="space-y-1">${PEPPERS.map((p) => `<li>${pepperChip(p.n)}</li>`).join("")}
       <li><span class="chip-wait">Waiting</span> or <span class="chip-busy">Rating now…</span>: not rated yet; the rating shows up by itself.</li>
     </ul>
-    <p class="mt-2">Tap <b>What do the peppers mean?</b> in the Library for the full descriptions and examples.</p>
-    <p class="mt-2">Purple tags such as <span class="chip-flag">Dark Occult</span> point out other content you may want to know about. Small icons such as ⚔️ violence, 🗣️ language, 🩸 gore, 🍺 drinking or drugs and 🧩 other themes mean the book has some; open the book to see exactly what.</p>`],
+    <p class="mt-2"><b>What do the peppers mean?</b> in the Library has examples.</p>
+    <p class="mt-2">Purple tags like <span class="chip-flag">Dark Occult</span> flag other content. Icons (⚔️ violence, 🗣️ language, 🩸 gore, 🍺 drinking, 🧩 other) mean the book has some; open it for details.</p>`],
   ["Book details",
-    "Tap any book to open it. You'll see what it's about, its rating and content details, and which libraries or devices it's on. Tap <b>＋</b> or <b>＋ Nightstand</b> to save it for later."],
+    "Tap a book for its summary, rating and content. <b>＋ Nightstand</b> saves it for later."],
   ["Your Nightstand",
-    `<p class="mb-2">The <b>Nightstand</b> is your reading list: the books by your bed. (It used to be called Up Next.)</p>
+    `<p class="mb-2">The <b>Nightstand</b> is your reading list.</p>
     <ul class="list-disc space-y-1 pl-5">
-      <li><b>Currently reading</b> is at the top, with how far you are. Books you start on your e-reader show up here by themselves.</li>
-      <li><b>On the pile</b> is what you plan to read next. Tap <b>＋</b> on any book to put it there, and drag the <b>⠿</b> handle to put them in order.</li>
-      <li>When you're ready, press <b>▶ Start Reading</b> (just <b>▶</b> on a phone). If you've set up your e-reader, the book is sent to it.</li>
-      <li>Finished books leave the list. <b>Hide</b> takes a book off the Nightstand without removing it from your library, and <b>Hidden</b> brings it back.</li>
-      <li>Below, <b>On your KOReader</b> lists every book you've opened on your e-reader, and <b>Suggested Reads</b> picks books for you: thumbs up means more like this, thumbs down hides one (a quick "Why not?" helps it learn).</li>
+      <li><b>Currently reading</b> shows how far you are. Books you start on your e-reader appear by themselves.</li>
+      <li><b>On the pile</b> is what's next. Drag <b>⠿</b> to reorder.</li>
+      <li><b>▶ Start Reading</b> sends the book to your e-reader, if one is set up.</li>
+      <li><b>Suggested Reads</b> picks books for you. 👍 means more like this; 👎 hides one.</li>
+      <li>Your <b>bookshelf</b> at the bottom shows what you finished this year.</li>
     </ul>`],
   ["Readers and sharing",
-    "Your reading stats are private. In <b>Settings → Account → Sharing</b> you can share your reading profile with the family, and then the <b>Readers</b> page shows each person who shares with their reading time, streak-style numbers and, if they choose, what they're reading right now. Tap someone to see their reading report. You only see books you're allowed to see; highlights, notes and files that aren't in the library are never shown. Parents choose for their kids and can always see their own kids' reading."],
+    "Your reading stats are private. To share them, use <b>Settings → Account → Sharing</b>; <b>Readers</b> then shows the family's reading. Highlights and notes are never shared. Parents can always see their kids' reading."],
   ["Your profile",
-    "<b>Profile</b> is you: your name, a few numbers from your reading, <b>Your reading taste</b> (mark books you know so your suggestions fit you better) and the content rules on your account. <b>Settings</b> holds everything you can change: a light or dark look, an easier-to-read font and less motion under <b>Appearance</b>, how books reach your e-reader, notifications, your password and family-device PIN, your Kindle and KOReader, and your Hardcover and Libby accounts. Something not working, or an idea? <b>Report a problem or idea</b> at the bottom of any page tells your admin."],
+    "<b>Profile</b> has your reading and your content rules. <b>Settings</b> has the look, notifications, password, e-reader and accounts. Something wrong? <b>Report a problem</b> is at the bottom of every page."],
   ["Put it on your phone",
     "<b>iPhone:</b> tap <b>Share</b>, then <b>Add to Home Screen</b>.<br><b>Android:</b> tap <b>Install app</b> (or ⋮ → <b>Add to Home screen</b>). It then opens like a regular app."],
 ];
 
 const MANAGER = [
   ["The Admin tab",
-    "Your account can manage NovelCheck. On the <b>Admin</b> tab (<b>Manage</b> on editor accounts), <b>AI &amp; Scans</b> shows how many books are rated and what the AI has cost so far. <b>Rate waiting books now</b> rates the next few unrated books, and <b>Check Calibre for new books</b> picks up newly added ones. Banners at the top point out anything waiting for you, such as delete requests or reported problems."],
+    "<b>Admin</b> (<b>Manage</b> for editors) shows rating progress and AI cost. Banners at the top flag anything waiting for you, like delete requests or problem reports."],
   ["Fixing a rating",
-    "Open any book to set its <b>Age group</b> (Young kids, Middle grade, Teens, Young adult, Adults) and to leave <b>Parents' notes</b> after you've read it, for everyone or for parents only. If a rating looks wrong, choose <b>Edit rating</b>. Your correction is saved with your name. If a book is fine for your family even though a filter catches it (Harry Potter's magic, say), choose <b>✓ Mark as OK</b>: it then shows for everyone, kids included. <b>Find duplicates</b> (in the Library) lists books that are in Calibre twice."],
+    "Open a book to set its <b>Age group</b> or add <b>Parents' notes</b>. Rating looks wrong? <b>Edit rating</b>. Fine for your family even though a filter catches it? <b>✓ Mark as OK</b> shows it to everyone."],
   ["Kids' accounts",
-    "Under <b>Admin</b> (<b>Manage</b> on editor accounts) <b>→ Users &amp; Rules</b> you can add kid accounts by age group (they only see books rated for their age or younger), reset their passwords, and tick what each child should <b>not</b> see: Open Door or Dark Occult, say, and under <b>Hide content</b> whole groups (🗣️ Language, ⚔️ Violence, 🩸 Gore, 🍺 Substance Use, 🧩 Other) or single items like the F-word or self-harm. Hidden books never show up for them, not even in search."],
+    "Add kids under <b>Admin → Users &amp; Rules</b>. Each sees only books for their age, minus anything you tick under <b>Hide content</b>. Hidden books never show up for them, even in search."],
   ["Importing a Kindle",
-    "Plug a Kindle into your computer, open <b>Settings → Import books</b>, and pick its <b>documents</b> folder (or bring in a list from Goodreads, Amazon and others). NovelCheck adds the books to a library you name, like \"Kids' Kindle\". It's yours: tick <b>Private</b> so only you and the admins see it, and manage it under <b>Your libraries</b>."],
+    "<b>Settings → Import books</b> brings in a Kindle's books, or a Goodreads or Amazon list, as a library you name. Tick <b>Private</b> to keep it to yourself."],
   ["Paper books",
-    "Printed books count too. Open <b>Settings → Paper books</b>, pick or create a library such as \"Living room shelf\", and press <b>Scan barcodes</b>: hold up one book after another and each is added and rated. You can also type a title or ISBN, or take a photo of the cover."],
+    "Printed books count too. In <b>Settings → Paper books</b>, press <b>Scan barcodes</b> and hold up each book."],
 ];
 
 const ADMIN = [
   ["Admin settings",
-    "As the main admin you also have the technical settings: the AI key and model, spending limits, the email account used for Send-to-Kindle, and which Calibre library folder to use. You also decide what each other admin can reach: tick their areas on their card under <b>Admin → Users & Rules</b>. Editors can't see or change these."],
+    "As main admin you also set the AI, spending limits, Send-to-Kindle email and Calibre folder, and what each other admin can reach (<b>Admin → Users & Rules</b>)."],
   ["Start Reading delivery (optional)",
     `<p class="mb-2">When someone presses <b>▶ Start Reading</b> on your Nightstand, NovelCheck can put the book on their e-reader:</p>
     <ul class="list-disc space-y-1 pl-5">
@@ -68,18 +68,18 @@ const ADMIN = [
 
 // Admins other than the main admin: their areas instead of the setup steps.
 const SUB_ADMIN = [["Your admin areas",
-  "The main admin chose which admin areas you can reach (for example Deep Scans, or Email & Discover). The top of the <b>Admin</b> page lists them; ask the main admin if you need more."]];
+  "The main admin chose the admin areas you can reach. They're listed at the top of <b>Admin</b>."]];
 
-const DONE = [["You're all set", "You can reopen this guide any time from the <b>Help</b> link at the top or bottom of the page."]];
+const DONE = [["You're all set", "Reopen this guide any time from <b>Help</b>."]];
 
 // Parents see this right after the welcome: it's the main feature.
 const CHECK = ["Check a book",
-  "At a shop, or deciding what to buy? Open <b>Check a book</b> (it's the first tab), tap <b>Take a photo of the cover</b> or type the title, and you'll see its peppers, why, and a short summary. Books you already have answer at once; new ones take a few seconds and are kept under <b>Looked up</b>."];
+  "At a shop? <b>Check a book</b>: photograph the cover or type the title to see its rating and why."];
 
 // A friend's account has no admin side, no delivery and no sharing with a family: a shorter guide, with their reading.
 const FRIEND_SKIP = new Set(["Readers and sharing", "Collections & seasons"]);
 const READING = ["Your reading and bookshelf",
-  "Bring in what you've read from <b>StoryGraph</b>, <b>Goodreads</b> or <b>Bookly</b> under <b>Settings → Import books</b> (it's yours alone). <b>Stats</b> then shows your year, and <b>Wrapped</b> plays it as a story: tap <b>▶ Play your year's Wrapped</b> on the Library banner. At the bottom of your <b>Nightstand</b> stands your <b>bookshelf</b> of the books you finished this year: show covers or spines, and it changes with the season (winter, Halloween, autumn, spring, summer), or pick one yourself."];
+  "Import what you've read from <b>StoryGraph</b>, <b>Goodreads</b> or <b>Bookly</b> (<b>Settings → Import books</b>). <b>Stats</b> shows your year; <b>▶ Play Wrapped</b> on the Library banner plays it as a story. Your <b>bookshelf</b> is at the bottom of the <b>Nightstand</b>."];
 
 function stepsFor(user) {
   if (user.role === "friend") {

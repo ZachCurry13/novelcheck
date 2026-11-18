@@ -268,7 +268,7 @@ return function(NovelCheck, ctx)
                     end
                     UIManager:show(InfoMessage:new{ text = text })
                 elseif code == 401 then
-                    UIManager:show(InfoMessage:new{ text = _("NovelCheck did not accept the username or sync code.") })
+                    UIManager:show(InfoMessage:new{ text = _("Wrong username or sync code.") })
                 else
                     UIManager:show(InfoMessage:new{ text = _("Could not report to NovelCheck.") .. "\n" .. tostring(code or answer) })
                 end

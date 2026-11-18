@@ -125,17 +125,17 @@ export const TOP = {
   Features: note("", "Turn off what your family doesn't use. It disappears for everyone; kids' content rules always keep applying."),
 };
 export const EXTRA = {
-  "Backup AI": note("backup_llm_enabled", "Tried only when the main AI fails on a book. If the main server is switched off, NovelCheck goes straight to the backup. You'll get a 🔔 notice when the backup is used.") + `<div id="backup-preset-host" data-when="backup_llm_enabled"></div>
-    <div class="rounded-lg bg-slate-800/60 p-3 text-sm"><p class="text-slate-300">Trouble with the backup AI? Your Deep Scan machine already runs Ollama at home, so it can be the backup: free, no key and no daily limit.</p>
+  "Backup AI": note("backup_llm_enabled", "Used only when the main AI fails. You get a 🔔 notice when it's used.") + `<div id="backup-preset-host" data-when="backup_llm_enabled"></div>
+    <div class="rounded-lg bg-slate-800/60 p-3 text-sm"><p class="text-slate-300">Your Deep Scan machine can be the backup: free, no key, no daily limit.</p>
       <button type="button" data-act="backup-use-deep" class="btn-secondary mt-2">Use my Deep Scan machine as the backup AI</button>
-      <p class="mt-1 text-xs text-slate-400">Replaces the backup AI's address, key and models. Needs the Deep Scan machine set up below.</p>
-      <hr class="my-3 border-slate-700"><p class="text-slate-300">Or use <b>Google's free Gemini</b> (free to use; Google sets the daily limits per account, shown at aistudio.google.com/rate-limit, and may use free-tier prompts to improve its products). Paste a key from aistudio.google.com:</p>
-      <span class="mt-2 flex flex-wrap gap-2"><input id="google-key" type="password" class="field min-w-0 flex-1" placeholder="Google AI Studio key (blank = reuse a Google key you already saved)" autocomplete="off">
+      <p class="mt-1 text-xs text-slate-400">Replaces the backup AI's settings. Needs the Deep Scan machine below.</p>
+      <hr class="my-3 border-slate-700"><p class="text-slate-300">Or use <b>Google's free Gemini</b>. Paste a key from aistudio.google.com (limits are listed there; Google may use free-tier prompts).</p>
+      <span class="mt-2 flex flex-wrap gap-2"><input id="google-key" type="password" class="field min-w-0 flex-1" placeholder="Google AI Studio key (blank = saved key)" autocomplete="off">
       <button type="button" data-act="backup-use-google" class="btn-secondary">Use Google as the backup AI</button></span>
-      <p class="mt-3 text-slate-300">Google's free models cost nothing and answer in seconds. To try them: <b>compare the backup AI on 20 books</b> (nothing is saved), and if the levels match your current ones, <b>make Google the main AI</b>: your current AI becomes the backup, and the pause between books becomes 4 seconds (Google allows 15 requests a minute). Books already rated keep their ratings. Don't use Google for Deep Scans: they send the whole book.</p>
+      <p class="mt-3 text-slate-300">Try Google on 20 books first (nothing is saved). If the levels match, make it the main AI. Never use Google for Deep Scans: they send the whole book.</p>
       <span class="mt-2 flex flex-wrap gap-2"><button type="button" data-act="rerate-trial-backup" class="btn-ghost">Compare the backup AI on 20 books</button>
-      <button type="button" data-act="main-use-google" class="btn-secondary">Make Google the main AI (current AI becomes the backup)</button></span></div>`,
-  "Deep Scans": note("deep_llm_enabled", "Deep Scans read whole books, so a bigger model on a stronger machine rates them better. Ratings stay on the main AI. While this machine is off or asleep, Deep Scans wait (🧬⏸) and carry on when it answers.") + `<div id="deep-preset-host" data-when="deep_llm_enabled"></div><div id="deep-status-host"></div>`,
+      <button type="button" data-act="main-use-google" class="btn-secondary">Make Google the main AI</button></span></div>`,
+  "Deep Scans": note("deep_llm_enabled", "Deep Scans read whole books, so a bigger model rates them better. They wait (🧬⏸) while this machine is off.") + `<div id="deep-preset-host" data-when="deep_llm_enabled"></div><div id="deep-status-host"></div>`,
   "Extras": `<div id="ideas-host"></div><div id="custom-flags"></div>`,
   "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,
   "Free book events": `<div class="rounded-lg bg-slate-800/60 p-3 text-sm"><p class="text-slate-300">Do BookBub's emails arrive in the same email account as Send-to-Kindle above?</p>

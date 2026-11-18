@@ -106,7 +106,7 @@ export async function renderAdmin(view, state) {
     if (act === "problem-reports") {
       import("./problems.js").then((m) => m.openProblemReports());
     } else if (act === "genres-fill" || act === "genres-stop") {
-      if (act === "genres-fill" && !confirm("Ask the AI for the genres of the books Calibre has no tags for? It runs in the background, within your hourly token cap, and you can stop it any time.")) return;
+      if (act === "genres-fill" && !confirm("Fill in genres for books with no Calibre tags? It runs in the background and can be stopped.")) return;
       await attempt(() => post(`/api/admin/genres/${act === "genres-fill" ? "fill" : "stop"}`), act === "genres-fill" ? "Filling in genres…" : "Stopping after the current batch");
     } else if (act === "box-sets") {
       import("./boxsets.js").then((m) => m.openBoxSets(undefined, 0, state));
@@ -154,7 +154,7 @@ export async function renderAdmin(view, state) {
     } else if (act === "rerate-trial-backup") {
       (await import("./trialrate.js")).tryNewRules(20, "backup");
     } else if (act === "main-use-google") {
-      if (!confirm("Make Google's free Gemini the main AI? Your current AI becomes the backup, and the pause between books becomes 4 seconds. Books already rated keep their ratings.")) return;
+      if (!confirm("Make Google's free Gemini the main AI? Your current AI becomes the backup. Existing ratings stay.")) return;
       const r = await attempt(() => post("/api/admin/main-ai/use-google", { key: $("#google-key", view)?.value || "" }));
       if (r) toast(`Google is now the main AI (${r.models}). Reload this page to see it in the fields.`);
     } else if (act === "mail-use-smtp") {

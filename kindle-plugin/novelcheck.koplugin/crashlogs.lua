@@ -61,7 +61,7 @@ return function(NovelCheck)
         end
         UIManager:show(ConfirmBox:new{
             text = _("Delete") .. " " .. #list .. " " .. _("crash logs") .. " (" .. string.format("%.1f", bytes / 1048576) .. " MB)?\n\n"
-                .. _("They are error reports the Kindle's own software wrote, not books. Nothing else is touched."),
+                .. _("These are Kindle error reports, not books."),
             ok_text = _("Delete them"),
             ok_callback = function()
                 local gone = 0

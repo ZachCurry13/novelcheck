@@ -33,7 +33,7 @@ return function(NovelCheck, ctx)
     function NovelCheck:getJSON(path)
         local code, body = self:request(path)
         if code == 401 then
-            return nil, _("NovelCheck did not accept the username or sync code.")
+            return nil, _("Wrong username or sync code.")
         elseif code ~= 200 then
             return nil, _("Could not reach NovelCheck.") .. "\n" .. tostring(code or body)
         end

@@ -52,7 +52,7 @@ return function(NovelCheck)
             end
             if opts.show ~= false and not opts.quiet and os.time() - lastShown >= 8 then
                 lastShown = os.time()
-                UIManager:show(InfoMessage:new{ text = label .. " " .. i .. " / " .. total .. "\n" .. _("NovelCheck > Stop what the plugin is doing to stop."), timeout = 4 })
+                UIManager:show(InfoMessage:new{ text = label .. " " .. i .. " / " .. total .. "\n" .. _("Stop: NovelCheck > Stop what the plugin is doing"), timeout = 4 })
             end
             UIManager:scheduleIn(0.02, step)
         end
@@ -70,6 +70,6 @@ return function(NovelCheck)
             self.job_stop = true
             any = true
         end
-        UIManager:show(InfoMessage:new{ text = any and _("Stopping after the step in progress...") or _("Nothing is running."), timeout = 3 })
+        UIManager:show(InfoMessage:new{ text = any and _("Stopping...") or _("Nothing is running."), timeout = 3 })
     end
 end

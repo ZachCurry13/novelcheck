@@ -78,7 +78,7 @@ return function(NovelCheck, ctx)
             os.remove(DataStorage:getSettingsDir() .. "/statistics.sqlite3.sync") -- merge afresh with the new folder
         end
         G_reader_settings:flush()
-        return true, (not self.ui.cloudstorage) and _("KOReader's Cloud storage is not loaded in this screen; if Synchronize now does nothing, open a book and try from there.") or nil
+        return true, (not self.ui.cloudstorage) and _("If Synchronize now does nothing, open a book and try again.") or nil
     end
 
     -- syncStats presses "Reading statistics > Synchronize now".
@@ -107,7 +107,7 @@ return function(NovelCheck, ctx)
         NetworkMgr:runWhenOnline(function()
             local code = self:request("/kosync/users/auth")
             if code == 401 then
-                UIManager:show(InfoMessage:new{ text = _("NovelCheck did not accept the username or sync code. Check them under Connect to NovelCheck.") })
+                UIManager:show(InfoMessage:new{ text = _("Wrong username or sync code. Check Connect to NovelCheck.") })
                 return
             elseif code ~= 200 then
                 UIManager:show(InfoMessage:new{ text = _("Could not reach NovelCheck.") .. "\n" .. tostring(code) })
@@ -132,7 +132,7 @@ return function(NovelCheck, ctx)
             end
             local text = table.concat(lines, "\n") .. "\n\n"
                 .. _("Next: NovelCheck > Sync reading statistics now.") .. "\n"
-                .. _("If progress sync does not pick this up, restart KOReader (on a Kindle, reopen it from KUAL).")
+                .. _("If progress sync doesn't start, restart KOReader.")
             UIManager:show(InfoMessage:new{ text = text })
         end)
     end

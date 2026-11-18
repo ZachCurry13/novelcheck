@@ -158,7 +158,7 @@ return function(NovelCheck, ctx)
         if code ~= 200 then
             self:dlog("error", "highlights: NovelCheck answered " .. tostring(code))
             if not quiet then
-                UIManager:show(InfoMessage:new{ text = (code == 401) and _("NovelCheck did not accept the username or sync code.")
+                UIManager:show(InfoMessage:new{ text = (code == 401) and _("Wrong username or sync code.")
                     or (_("Could not send the highlights.") .. "\n" .. tostring(code or answer)) })
             end
             return

@@ -115,7 +115,7 @@ return function(NovelCheck)
             if auto then
                 return 0, tostring(skipped) .. " books left where they are (not backed up yet, or the name is taken)"
             end
-            UIManager:show(InfoMessage:new{ text = skipped > 0 and (tostring(skipped) .. " " .. _("books were left where they are (not backed up yet, or the name is taken). Run Back up my Kindle now first, then tidy again.")) or _("Every book is already in its place.") })
+            UIManager:show(InfoMessage:new{ text = skipped > 0 and (tostring(skipped) .. " " .. _("books stayed put (not backed up yet, or the name is taken). Back up first, then tidy again.")) or _("Every book is already in its place.") })
             return
         end
         if auto then -- asked for in NovelCheck: no question here

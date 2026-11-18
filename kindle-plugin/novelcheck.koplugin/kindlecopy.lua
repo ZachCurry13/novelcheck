@@ -245,7 +245,7 @@ return function(NovelCheck)
             if code ~= 200 then
                 self:dlog("error", "kindle copy: NovelCheck answered " .. tostring(code))
                 if not quiet then
-                    UIManager:show(InfoMessage:new{ text = (code == 401) and _("NovelCheck did not accept the username or sync code.")
+                    UIManager:show(InfoMessage:new{ text = (code == 401) and _("Wrong username or sync code.")
                         or (_("Could not reach NovelCheck.") .. "\n" .. tostring(code or answer)) })
                 end
                 return give_up()

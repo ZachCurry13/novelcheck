@@ -9,8 +9,7 @@ const size = (b) => (b >= 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.max(1, Ma
 export async function renderMemory(host) {
   const draw = (r) => {
     if (!r) return;
-    host.innerHTML = `<p class="text-sm text-slate-300">When a book leaves every library, list and event (an old Stuff Your Kindle day, a book taken out of Calibre),
-      NovelCheck keeps its rating and the cover it found, in case the book comes back: nothing is rated or searched for twice. It takes very little room:
+    host.innerHTML = `<p class="text-sm text-slate-300">NovelCheck remembers the rating and cover of books that leave, so a returning book isn't rated twice. It takes little room:
       <b>${fmtNum(r.ratings)}</b> remembered rating${r.ratings === 1 ? "" : "s"}${r.ratings_oldest ? ` (the oldest from ${r.ratings_oldest})` : ""} and
       <b>${fmtNum(r.covers_orphans)}</b> cover${r.covers_orphans === 1 ? "" : "s"} of books that are gone (${size(r.covers_orphan_bytes)}; the ${fmtNum(r.covers_kept)} covers of books you have use ${size(r.covers_kept_bytes)}).</p>
       <label class="toggle mt-2"><input type="checkbox" data-mem-on ${r.remember ? "checked" : ""}> Remember ratings and covers of books that leave</label>
@@ -18,7 +17,7 @@ export async function renderMemory(host) {
         <button type="button" data-mem="ratings:0" class="btn-secondary py-1 text-sm" ${r.ratings ? "" : "disabled"}>Forget all remembered ratings</button>
         <button type="button" data-mem="ratings:365" class="btn-secondary py-1 text-sm" ${r.ratings ? "" : "disabled"}>Forget ratings older than a year</button>
         <button type="button" data-mem="covers:0" class="btn-secondary py-1 text-sm" ${r.covers_orphans ? "" : "disabled"}>Delete covers of books that are gone</button></div>
-      <p class="mt-2 text-xs text-slate-400">Forgetting is permanent. A forgotten book that comes back is rated again, and its cover searched for again. Ratings of books you have are never touched.</p>`;
+      <p class="mt-2 text-xs text-slate-400">Forgetting can't be undone. Books you have are never touched.</p>`;
   };
   draw(await attempt(() => get("/api/admin/memory")));
   host.onchange = async (e) => {

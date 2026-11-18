@@ -95,7 +95,7 @@ return function(NovelCheck, ctx)
                 return
             elseif code ~= 200 or not ok or type(data) ~= "table" then
                 self:dlog("error", "finish: " .. tostring(code))
-                UIManager:show(InfoMessage:new{ text = (code == 401) and _("NovelCheck did not accept the username or sync code.")
+                UIManager:show(InfoMessage:new{ text = (code == 401) and _("Wrong username or sync code.")
                     or (_("Could not reach NovelCheck.") .. "\n" .. tostring(code or answer)) })
                 return
             end
