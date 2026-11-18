@@ -60,7 +60,7 @@ return function(NovelCheck, ctx)
     -- (which knows opened books and cached ones) and, for up to PROPS_OPENS books
     -- per scan, opens the book itself. Answers are kept in a small cache file
     -- (by fingerprint), so after a few reports every book is known.
-    local PROPS_OPENS = 25
+    local PROPS_OPENS = 100 -- per scan; the scan goes a few books at a time, so the screen stays free
 
     function NovelCheck:bookProps(path, md5)
         if not self.props_cache then

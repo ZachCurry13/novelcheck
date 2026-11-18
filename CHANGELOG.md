@@ -9,7 +9,7 @@ becomes the release notes for that version and is shown in the app under
 ### 🔎 The same book under different file names
 - **Kindle remote → "The same book more than once" now finds copies whose names differ**: "Fall of Five, The - Pittacus Lore (4006).epub", "Pittacus Lore - The Fall of Five.epub" and "The-Fall-of-Five.epub" are one book. NovelCheck tries every reading of a name, undoes Calibre's number "(4006)", the library-style "…, The" and hyphens between words, and also matches through your library. A reading whose "title" is really an author's name is ignored, so an author's other books don't get lumped together.
 - **The extra copies can be deleted even when they aren't backed up**, because the ★ copy stays on the Kindle (the Kindle checks it is still there before deleting anything; plugin 1.60.4). Other deletes still need a backup.
-- **The Kindle now reports each book's real title and author**, read from KOReader's own list (the one behind the cover view, filled from inside each book), instead of guessing from the file name. So copies are recognized by the book's name, not the file's (plugin 1.60.5).
+- **The Kindle now reports each book's real title and author**, read from KOReader's own list (the one behind the cover view, filled from inside each book), instead of guessing from the file name. So **Report books on this device** and **On this device** show the book's name, not the file's, and copies are recognized by it (plugin 1.60.5). A book KOReader hasn't listed yet is opened for its title (EPUB, FB2 and text only, up to 100 per report).
 - The same tidying helps the Kindle backup recognize books you already have, so fewer land in "Books NovelCheck doesn't know".
 
 ## [1.93.0]
