@@ -4,6 +4,17 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.94.0]
+
+### 🖼️ Covers for Kindle books, and ISBNs kept
+- **Why so many books had no cover:** Google Books' daily limit ran out partway through the cover search, and every book after that was counted as "nothing found" and left alone for a week. Now a refused search (Google's limit, a dropped connection) is not a miss: the book is searched again on the next run, and Google is left alone until its limit starts over. Books marked "nothing found" by older versions get searched again.
+- **New places to find a cover:** the cover inside the book's own file (EPUB, MOBI, AZW, AZW3, from Calibre or the Kindle backup; covers stay readable even in DRM books), and Amazon's cover by the book's ASIN (from a free-book list or the Kindle's file name). Most free Kindle books have no ISBN, but every one has a cover in its file and on Amazon.
+- **ISBNs are kept:** when the cover search finds the book on Open Library or Google Books with an ISBN, the book gets that ISBN.
+- **Fewer Google lookups:** Google is asked for two spellings of a title at most, and not at all by the quick pass for free books, so its daily limit lasts.
+
+### 🏠 The Kindle can use NovelCheck's home address (plugin 1.61.0)
+- **Connect to NovelCheck** has a new **Home address** field, like `http://192.168.1.20:8080`. At home the plugin talks to NovelCheck straight over Wi-Fi, without the internet, the tunnel or a name lookup. Away from home it tries the home address for 2 seconds at most, once every 10 minutes, then uses the main address. Progress sync and statistics sync keep using the main address.
+
 ## [1.93.2]
 
 ### 📶 A dropped Wi-Fi no longer fails the backup (plugin 1.60.6)

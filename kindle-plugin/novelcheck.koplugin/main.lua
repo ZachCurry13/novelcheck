@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.60.6"
+local VERSION = "1.61.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -328,6 +328,7 @@ function NovelCheck:connectDialog()
             { text = self.settings:readSetting("user") or "", hint = _("Your NovelCheck username") },
             { text = self.settings:readSetting("code") or "", hint = _("Sync code (Settings > KOReader setup)") },
             { text = self.settings:readSetting("server_alt") or "", hint = _("Backup address (optional): tried when the first can't be reached") },
+            { text = self.settings:readSetting("server_home") or "", hint = _("Home address (optional), like http://192.168.1.20:8080: used first when the Kindle is home") },
         },
         buttons = { {
             { text = _("Cancel"), callback = function() UIManager:close(dialog) end },
@@ -337,6 +338,8 @@ function NovelCheck:connectDialog()
                 self.settings:saveSetting("user", trim(f[2]))
                 self.settings:saveSetting("code", trim(f[3]))
                 self.settings:saveSetting("server_alt", (trim(f[4]):gsub("/+$", "")))
+                self.settings:saveSetting("server_home", (trim(f[5] or ""):gsub("/+$", "")))
+                self.home_seen = nil
                 self.settings:flush()
                 UIManager:close(dialog)
                 UIManager:show(InfoMessage:new{ text = _("Saved. Open NovelCheck > Nightstand to try it.") })
@@ -350,19 +353,24 @@ end
 -- request fetches path from NovelCheck. With file, the body is saved there;
 -- otherwise it is returned as text. It returns the HTTP code and the body.
 function NovelCheck:request(path, file, post_body)
-    local code, body = self:requestAt(self.settings:readSetting("server"), path, file, post_body)
-    -- "cannot assign requested address" and "network is unreachable" mean Wi-Fi had no address yet (the Kindle just
-    -- woke or is still joining): wait a moment and try once more before giving up.
-    if type(code) ~= "number" and (tostring(body):find("assign requested address", 1, true) or tostring(body):find("unreachable", 1, true)) then
-        socket.sleep(4)
-        code, body = self:requestAt(self.settings:readSetting("server"), path, file, post_body)
-    end
-    local alt = trim(self.settings:readSetting("server_alt"))
-    if type(code) ~= "number" and alt ~= "" then
-        -- The main address could not be reached (away from home, say): try the backup address.
-        local code2, body2 = self:requestAt(alt, path, file, post_body)
-        if type(code2) == "number" then
-            return code2, body2
+    -- The home address first when it answers (homeaddr.lua), then the main address, then the backup address.
+    local list = self.addresses and self:addresses() or { self.settings:readSetting("server"), trim(self.settings:readSetting("server_alt")) }
+    local code, body
+    for i, base in ipairs(list) do
+        if base and base ~= "" then
+            code, body = self:requestAt(base, path, file, post_body)
+            -- "cannot assign requested address" and "network is unreachable" mean Wi-Fi had no address yet (the Kindle
+            -- just woke or is still joining): wait a moment and try once more before giving up.
+            if type(code) ~= "number" and (tostring(body):find("assign requested address", 1, true) or tostring(body):find("unreachable", 1, true)) then
+                socket.sleep(4)
+                code, body = self:requestAt(base, path, file, post_body)
+            end
+            if type(code) == "number" then
+                return code, body
+            end
+            if i == 1 and self.homeFailed and base == trim(self.settings:readSetting("server_home")) then
+                self:homeFailed()
+            end
         end
     end
     return code, body
@@ -548,7 +556,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps", "locked" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps", "locked", "homeaddr" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

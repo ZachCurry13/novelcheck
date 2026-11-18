@@ -30,12 +30,13 @@ type coverJob struct {
 	Note    string `json:"note"`
 	Skipped int    `json:"skipped"` // searched in the last week with nothing found, left out this time
 	Free    int    `json:"free"`    // how many of Total are free books (events), looked for after the library's
+	Retry   int    `json:"retry"`   // not found while a place refused to answer (Google's daily limit): looked at again next run
 }
 
 func (j *coverJob) state() coverJob {
 	j.mu.Lock()
 	defer j.mu.Unlock()
-	return coverJob{Running: j.Running, Checked: j.Checked, Found: j.Found, Total: j.Total, Current: j.Current, Note: j.Note, Free: j.Free}
+	return coverJob{Running: j.Running, Checked: j.Checked, Found: j.Found, Total: j.Total, Current: j.Current, Note: j.Note, Free: j.Free, Retry: j.Retry}
 }
 
 func (s *Server) coverName(id int64) string { return "book-" + strconv.FormatInt(id, 10) }
@@ -103,17 +104,20 @@ func (s *Server) findCovers(again, freeOnly bool) {
 	free := s.MissingFreeCovers(freeCoverLimit)
 	missing = append(missing, free...)
 	j.mu.Lock()
-	j.Running, j.stop, j.Checked, j.Found, j.Total, j.Note, j.Skipped, j.Free = true, false, 0, 0, len(missing), "", 0, len(free)
+	j.Running, j.stop, j.Checked, j.Found, j.Total, j.Note, j.Skipped, j.Free, j.Retry = true, false, 0, 0, len(missing), "", 0, len(free), 0
 	j.mu.Unlock()
 	defer func() {
 		j.mu.Lock()
 		j.Running, j.Current = false, ""
-		found, total, note, skipped, nfree := j.Found, j.Total, j.Note, j.Skipped, j.Free
+		found, total, note, skipped, nfree, retry := j.Found, j.Total, j.Note, j.Skipped, j.Free, j.Retry
 		j.mu.Unlock()
 		if total > 0 && (!freeOnly || found > 0) { // the quick pass only says something when it found one
 			msg := fmt.Sprintf("Cover finder: found covers for %d of %d books that had none.%s", found, total, note)
 			if nfree > 0 {
 				msg += fmt.Sprintf(" %d of them were free books.", nfree)
+			}
+			if retry > 0 {
+				msg += fmt.Sprintf(" Google Books refused %d of them (its daily limit was used up), so they are looked at again on the next run.", retry)
 			}
 			if skipped > 0 {
 				msg += fmt.Sprintf(" %d were searched in the last week with nothing found, so they were skipped; Find covers now looks at them again.", skipped)
@@ -125,6 +129,12 @@ func (s *Server) findCovers(again, freeOnly bool) {
 	var hc *hardcover.Client // Hardcover as a cover source, when someone in the family connected it
 	if token := s.Store.RatingsToken(); token != "" {
 		hc = &hardcover.Client{Token: token, URL: hardcoverURL}
+	}
+	cv := s.Covers
+	cv.NoGoogle = freeOnly // the quick pass for free books leaves Google's small daily limit to the library
+	var backup map[string]string
+	if !freeOnly {
+		backup = s.kindleBackupFiles()
 	}
 	for _, b := range missing {
 		j.mu.Lock()
@@ -153,33 +163,11 @@ func (s *Server) findCovers(again, freeOnly bool) {
 			j.mu.Unlock()
 			continue
 		}
-		_, _, ok := s.Covers.OpenLibrary(ctx, firstNonEmpty(b.ISBN, isbn10(b.ASIN))) // the ISBN's cover, when it has one
-		sug := s.Store.TitleSuggestion(b.ID)
-		if !ok && sug == "" { // a wrong title is the usual reason for no cover: find the true one now
-			if sug = s.closestTitle(ctx, b.Title, b.Author); sug != "" {
-				s.Store.SuggestTitle(b.ID, sug)
-				if len(s.Store.CalibreIDs(b.ID)) > 0 {
-					s.saveTitleInCalibre(ctx, b.ID, sug)
-				} else if _, err := s.Store.RenameBook(b.ID, sug, b.Author); err == nil {
-					s.Store.MarkName(b.ID, 1)
-				}
-			}
-		}
-		if !ok { // Hardcover has many books the other two don't (self-published, Kindle Unlimited)
-			if u := s.hardcoverCover(ctx, hc, b, firstNonEmpty(sug, b.Title)); u != "" {
-				ok = s.Covers.Choose(ctx, s.coverName(b.ID), u)
-			}
-		}
-		if !ok && sug != "" { // search under the true title first
-			_, _, ok = s.Covers.Search(ctx, s.coverName(b.ID), sug, b.Author)
-			if !ok {
-				s.Covers.Forget(s.coverName(b.ID)) // the miss is for the true title; the old one gets its own try
-			}
-		}
-		if !ok {
-			_, _, ok = s.Covers.Search(ctx, s.coverName(b.ID), b.Title, b.Author)
-		}
+		ok, refused := s.findOneCover(ctx, cv, hc, b, backup)
 		j.mu.Lock()
+		if !ok && refused {
+			j.Retry++
+		}
 		j.Checked++
 		if ok {
 			j.Found++

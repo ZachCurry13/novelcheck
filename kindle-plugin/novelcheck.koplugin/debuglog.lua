@@ -130,7 +130,7 @@ return function(NovelCheck, ctx)
             put("LOAD ERRORS: " .. table.concat(self.load_errors, " ; "))
         end
         put("connected settings: " .. tostring(self:isConnected()) .. ", server " .. tostring(self.settings:readSetting("server"))
-            .. ", user " .. tostring(self.settings:readSetting("user")) .. ", backup " .. tostring(self.settings:readSetting("server_alt")))
+            .. ", user " .. tostring(self.settings:readSetting("user")) .. ", backup " .. tostring(self.settings:readSetting("server_alt")) .. ", home " .. tostring(self.settings:readSetting("server_home")))
         put("wifi: " .. tostring(NetworkMgr:isConnected()))
         if self.syncCheck then
             self:syncCheck(put)

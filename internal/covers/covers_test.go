@@ -153,6 +153,10 @@ func TestMissedAndForget(t *testing.T) {
 		t.Fatal("nothing searched yet")
 	}
 	_ = os.WriteFile(filepath.Join(c.Dir, "book-1.jpg.miss"), nil, 0o644)
+	if c.Missed("book-1") {
+		t.Fatal("a miss written before v1.94 (empty, maybe a refused search) is looked at again")
+	}
+	_ = os.WriteFile(filepath.Join(c.Dir, "book-1.jpg.miss"), []byte(missMark), 0o644)
 	if !c.Missed("book-1") {
 		t.Fatal("a fresh miss is remembered")
 	}

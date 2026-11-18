@@ -68,7 +68,7 @@ func (c Cache) openLibraryAll(ctx context.Context, title, author string) []Candi
 			Cover  int64    `json:"cover_i"`
 		} `json:"docs"`
 	}
-	if !c.getJSON(ctx, base+"/search.json?"+q.Encode(), &res) {
+	if !c.getJSON(ctx, base+"/search.json?"+q.Encode(), &res, nil) {
 		return nil
 	}
 	cover := c.OpenLibraryURL
@@ -110,7 +110,7 @@ func (c Cache) googleAll(ctx context.Context, title, author string) []Candidate 
 			} `json:"volumeInfo"`
 		} `json:"items"`
 	}
-	if !c.getJSON(ctx, base+"/books/v1/volumes?"+params.Encode(), &res) {
+	if !c.getJSON(ctx, base+"/books/v1/volumes?"+params.Encode(), &res, nil) {
 		return nil
 	}
 	var out []Candidate

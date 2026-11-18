@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,37 +16,73 @@ import (
 )
 
 // Search finds a cover for a book that has no ISBN to look up (or whose ISBN has no cover): Open
-// Library's search by title and author, then Google Books. A hit is kept as name.jpg; a miss is
-// remembered for two weeks so the same book is not searched again and again. Only a result whose title
-// really is the book's title (and whose author matches, when known) is used, so a wrong cover is not
-// put on a book.
+// Library's search by title and author, then Google Books. A hit is kept as name.jpg. Only a result whose title
+// really is the book's title (and whose author matches, when known) is used, so a wrong cover is not put on a book.
 func (c Cache) Search(ctx context.Context, name, title, author string) (string, os.FileInfo, bool) {
+	r := c.SearchBook(ctx, name, title, author)
+	return r.Path, r.Info, r.OK
+}
+
+// SearchResult is what SearchBook found: the cover (when OK), an ISBN the matching book carried, and whether a
+// place refused to answer (Google's daily limit, the network). After a refusal "nothing found" is not the last
+// word, so it is not remembered as a miss.
+type SearchResult struct {
+	Path    string
+	Info    os.FileInfo
+	OK      bool
+	ISBN    string
+	Refused bool
+}
+
+// missMark is what a miss file holds. Before v1.94 a refused search was written as a miss too; those old files
+// (empty) are ignored, so the books get searched again.
+const missMark = "2"
+
+// SearchBook is Search with the ISBN found and the refusals. A real miss is remembered for a week, so the same
+// book is not searched again and again. Google Books is asked for the first two spellings of the title only (its
+// daily limit is small); Open Library for all of them.
+func (c Cache) SearchBook(ctx context.Context, name, title, author string) SearchResult {
+	var r SearchResult
 	if c.Dir == "" || !storedName.MatchString(name) || strings.TrimSpace(title) == "" {
-		return "", nil, false
+		return r
 	}
 	out := filepath.Join(c.Dir, name+".jpg")
 	if info, ok := c.have(out); ok {
-		return out, info, true
+		return SearchResult{Path: out, Info: info, OK: true}
 	}
-	// A miss is remembered for a week so the same book is not searched again and again. (Before v1.72 the
-	// file was name.jpg.none and the search could not see past series names; those old misses are ignored.)
 	miss := out + ".miss"
 	if c.Missed(name) {
-		return "", nil, false
+		return r
 	}
 	_ = os.Remove(out + ".none")
-	for _, t := range searchTitles(title) {
-		for _, find := range []func(context.Context, string, string) string{c.openLibraryCoverURL, c.googleCoverURL} {
-			if u := find(ctx, t, author); u != "" {
-				if p, info, ok := c.fetch(ctx, u, out, miss); ok {
-					return p, info, true
-				}
+	for i, t := range searchTitles(title) {
+		finds := []func(context.Context, string, string, *bool) (string, string){c.openLibraryCoverURL}
+		if !c.NoGoogle && i < 2 {
+			if c.GoogleResting() {
+				r.Refused = true
+			} else {
+				finds = append(finds, c.googleCoverURL)
+			}
+		}
+		for _, find := range finds {
+			u, isbn := find(ctx, t, author, &r.Refused)
+			if r.ISBN == "" {
+				r.ISBN = isbn
+			}
+			if u == "" {
+				continue
+			}
+			if p, info, ok := c.fetch(ctx, u, out, miss); ok {
+				r.Path, r.Info, r.OK = p, info, true
+				return r
 			}
 		}
 	}
-	_ = os.MkdirAll(c.Dir, 0o755)
-	_ = os.WriteFile(miss, nil, 0o644)
-	return "", nil, false
+	if !r.Refused {
+		_ = os.MkdirAll(c.Dir, 0o755)
+		_ = os.WriteFile(miss, []byte(missMark), 0o644)
+	}
+	return r
 }
 
 // Missed says whether this book was searched in the last week and nothing was found (Search then skips it).
@@ -55,8 +90,13 @@ func (c Cache) Missed(name string) bool {
 	if c.Dir == "" {
 		return false
 	}
-	info, err := os.Stat(filepath.Join(c.Dir, name+".jpg.miss"))
-	return err == nil && time.Since(info.ModTime()) < 7*24*time.Hour
+	p := filepath.Join(c.Dir, name+".jpg.miss")
+	info, err := os.Stat(p)
+	if err != nil || time.Since(info.ModTime()) >= 7*24*time.Hour {
+		return false
+	}
+	b, _ := os.ReadFile(p)
+	return string(b) == missMark
 }
 
 // Forget drops the memory of a miss, so the next Search looks again.
@@ -153,7 +193,9 @@ func authorOK(found []string, ours string) bool {
 	return false
 }
 
-func (c Cache) getJSON(ctx context.Context, u string, into any) bool {
+// getJSON asks u and reads its answer into into. A failure that is not a plain "no such thing" (the network, a
+// daily limit, a server error) sets *refused, when refused is not nil; Google's limit also rests Google for the day.
+func (c Cache) getJSON(ctx context.Context, u string, into any, refused *bool) bool {
 	ctx, cancel := context.WithTimeout(ctx, 8*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
@@ -162,83 +204,28 @@ func (c Cache) getJSON(ctx context.Context, u string, into any) bool {
 	}
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
+		setTrue(refused)
 		return false
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(io.LimitReader(res.Body, 1<<20))
-	return err == nil && res.StatusCode == http.StatusOK && json.Unmarshal(body, into) == nil
+	switch {
+	case res.StatusCode == http.StatusOK:
+		return err == nil && json.Unmarshal(body, into) == nil
+	case res.StatusCode == http.StatusNotFound:
+		return false
+	}
+	setTrue(refused)
+	if (res.StatusCode == http.StatusTooManyRequests || res.StatusCode == http.StatusForbidden) && strings.Contains(u, "/books/v1/") {
+		c.Limits.restGoogle()
+	}
+	return false
 }
 
-func (c Cache) openLibraryCoverURL(ctx context.Context, title, author string) string {
-	base := c.SearchURL
-	if base == "" {
-		base = "https://openlibrary.org"
+func setTrue(b *bool) {
+	if b != nil {
+		*b = true
 	}
-	q := url.Values{"title": {title}, "limit": {"6"}, "fields": {"title,author_name,cover_i"}}
-	if lastName(author) != "" {
-		q.Set("author", author)
-	}
-	var res struct {
-		Docs []struct {
-			Title  string   `json:"title"`
-			Author []string `json:"author_name"`
-			Cover  int64    `json:"cover_i"`
-		} `json:"docs"`
-	}
-	if !c.getJSON(ctx, base+"/search.json?"+q.Encode(), &res) {
-		return ""
-	}
-	cover := c.OpenLibraryURL
-	if cover == "" {
-		cover = openLibrary
-	}
-	for _, d := range res.Docs {
-		if d.Cover > 0 && sameTitle(d.Title, title) && authorOK(d.Author, author) {
-			return cover + "/b/id/" + url.PathEscape(itoa(d.Cover)) + "-L.jpg?default=false"
-		}
-	}
-	return ""
-}
-
-func (c Cache) googleCoverURL(ctx context.Context, title, author string) string {
-	base := c.GoogleURL
-	if base == "" {
-		base = "https://www.googleapis.com"
-	}
-	q := "intitle:" + title
-	if lastName(author) != "" {
-		q += " inauthor:" + author
-	}
-	key := ""
-	if c.GoogleKey != nil {
-		key = strings.TrimSpace(c.GoogleKey())
-	}
-	var res struct {
-		Items []struct {
-			Info struct {
-				Title   string   `json:"title"`
-				Authors []string `json:"authors"`
-				Images  struct {
-					Thumb string `json:"thumbnail"`
-				} `json:"imageLinks"`
-			} `json:"volumeInfo"`
-		} `json:"items"`
-	}
-	params := url.Values{"q": {q}, "maxResults": {"6"}}
-	if key != "" {
-		params.Set("key", key)
-	}
-	if !c.getJSON(ctx, base+"/books/v1/volumes?"+params.Encode(), &res) {
-		return ""
-	}
-	for _, it := range res.Items {
-		if it.Info.Images.Thumb != "" && sameTitle(it.Info.Title, title) && authorOK(it.Info.Authors, author) {
-			u := strings.Replace(it.Info.Images.Thumb, "http://", "https://", 1)
-			u = strings.Replace(strings.Replace(u, "zoom=1", "zoom=3", 1), "&edge=curl", "", 1) // Google's thumbnail is 128 pixels; zoom=3 is about 600
-			return strings.Replace(u, "&edge=curl", "", 1)
-		}
-	}
-	return ""
 }
 
 func itoa(n int64) string {

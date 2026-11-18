@@ -32,6 +32,9 @@ type Cache struct {
 	// GoogleKey is the admin's Google Books API key (Admin → Delivery & Services). Without one, Google's
 	// shared daily limit is used up by others and every cover search there is refused.
 	GoogleKey func() string
+	Limits    *Limits // shared by every copy of the Cache: Google's daily limit (nil in tests: not remembered)
+	AmazonURL string  // "" = m.media-amazon.com (Amazon's cover pictures, by ASIN)
+	NoGoogle  bool    // leave Google Books out (the quick pass for free books, which have an ASIN instead)
 }
 
 // Find returns the cover.jpg next to any of the book's Calibre files that

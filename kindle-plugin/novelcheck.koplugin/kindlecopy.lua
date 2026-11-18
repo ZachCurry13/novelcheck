@@ -163,12 +163,20 @@ return function(NovelCheck)
         return code, table.concat(chunks)
     end
 
-    -- sendPiece asks with the main address, then the backup address when the main one could not be reached.
+    -- sendPiece sends with the home address when it answers, then the main address, then the backup address.
     function NovelCheck:sendPiece(q, data)
-        local code, body = putPiece(self, self.settings:readSetting("server"), q, data)
-        local alt = trim(self.settings:readSetting("server_alt"))
-        if type(code) ~= "number" and alt ~= "" then
-            code, body = putPiece(self, alt, q, data)
+        local list = self.addresses and self:addresses() or { self.settings:readSetting("server"), trim(self.settings:readSetting("server_alt")) }
+        local code, body
+        for i, base in ipairs(list) do
+            if base and base ~= "" then
+                code, body = putPiece(self, base, q, data)
+                if type(code) == "number" then
+                    return code, body
+                end
+                if i == 1 and self.homeFailed and base == trim(self.settings:readSetting("server_home")) then
+                    self:homeFailed()
+                end
+            end
         end
         return code, body
     end
