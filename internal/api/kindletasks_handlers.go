@@ -116,6 +116,7 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 		Filenames []string `json:"filenames"` // delete_books, move_books
 		Folder    string   `json:"folder"`    // move_books
 		BookIDs   []int64  `json:"book_ids"`  // download_books
+		Keep      string   `json:"keep"`      // delete_books for duplicates: the copy that stays on the Kindle
 		Switch    string   `json:"switch"`    // set_auto: one of store.KindleAutoSwitches
 		On        bool     `json:"on"`        // set_auto
 	}
@@ -146,7 +147,9 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				continue
 			}
-			if !have[name+"|"+strconv.FormatInt(size, 10)] {
+			// a copy of the same book stays on the Kindle (the duplicates list): no backup needed, nothing is lost
+			keeping := body.Kind == "delete_books" && body.Keep != "" && body.Keep != name && sizes[body.Keep] > 0
+			if !keeping && !have[name+"|"+strconv.FormatInt(size, 10)] {
 				notSafe = append(notSafe, name)
 				continue
 			}
@@ -161,6 +164,9 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		args["items"] = items
+		if body.Keep != "" && sizes[body.Keep] > 0 {
+			args["keep"] = map[string]any{"filename": body.Keep, "size": sizes[body.Keep]} // the Kindle checks it is still there first
+		}
 		if body.Kind == "move_books" {
 			folder := strings.TrimSpace(strings.Map(func(r rune) rune {
 				if r == '/' || r == '\\' || r == ':' || r < 32 {

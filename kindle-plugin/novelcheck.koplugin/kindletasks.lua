@@ -60,6 +60,10 @@ return function(NovelCheck)
     end
 
     DO.delete_books = function(self, args)
+        -- extra copies of a book: only while the copy that stays is really on this Kindle
+        if type(args.keep) == "table" and not self:findDeviceFile(tostring(args.keep.filename), tonumber(args.keep.size) or -1) then
+            return "skipped", "the copy to keep is not on this Kindle any more, so nothing was deleted"
+        end
         local gone, missing = 0, 0
         for _i, it in ipairs(type(args.items) == "table" and args.items or {}) do
             local path = self:findDeviceFile(tostring(it.filename), tonumber(it.size) or -1)

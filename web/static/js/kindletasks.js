@@ -32,7 +32,7 @@ export async function renderKindleTasks(host, device = "") {
         <span class="flex shrink-0 gap-1"><button type="button" data-kt-sw="${k}" data-on="1" class="btn-ghost py-0.5 text-xs">Turn on</button><button type="button" data-kt-sw="${k}" data-on="0" class="btn-ghost py-0.5 text-xs">Turn off</button></span></li>`).join("")}</ul>
       <p class="mt-1 text-xs text-slate-500">Changes apply at the next sync. A plugin update needs a KOReader restart.</p></details>
     ${(r.duplicates || []).length ? `<h4 class="label">The same book more than once (${r.duplicates.length})</h4>
-      <p class="mb-1 text-xs text-slate-400">★ is the copy you read furthest. The others are deleted at the next sync.</p>
+      <p class="mb-1 text-xs text-slate-400">★ is the copy you read furthest; it stays. The others are deleted at the next sync.</p>
       <ul class="mb-3 divide-y divide-slate-800 text-sm">${r.duplicates.map((g, gi) => `<li class="py-1.5"><b>${esc(g[0].title || g[0].filename)}</b>
         <ul class="mt-1 space-y-0.5 text-xs text-slate-400">${g.map((f, i) => `<li>${i === 0 ? "★ " : ""}${esc(f.filename)} · ${mb(f.size)} · ${Math.round((f.percent || 0) * 100)}% read${f.backed_up ? "" : " · not backed up"}</li>`).join("")}</ul>
         <button type="button" data-kt-keep="${gi}" class="btn-ghost mt-1 py-0.5 text-xs">Keep the ★ copy, delete the others</button></li>`).join("")}</ul>` : ""}
@@ -59,7 +59,7 @@ export async function renderKindleTasks(host, device = "") {
     if (keep) {
       const g = r.duplicates[Number(keep.dataset.ktKeep)];
       const others = g.slice(1).map((f) => f.filename);
-      if (confirm(`Keep "${g[0].filename}" and delete ${others.length} other cop${others.length === 1 ? "y" : "ies"}?`)) make("delete_books", { filenames: others });
+      if (confirm(`Keep "${g[0].filename}" and delete ${others.length} other cop${others.length === 1 ? "y" : "ies"}?`)) make("delete_books", { filenames: others, keep: g[0].filename });
       return;
     }
     const sw = e.target.closest("[data-kt-sw]");

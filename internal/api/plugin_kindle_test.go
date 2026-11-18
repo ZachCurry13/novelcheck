@@ -374,4 +374,12 @@ func TestKindleDuplicatesOnDevice(t *testing.T) {
 	if len(g) != 3 || g[0].(map[string]any)["filename"] != "Pittacus Lore - The Fall of Five.epub" {
 		t.Fatalf("the copy read furthest comes first: %v", g)
 	}
+	// none of them is backed up, but one copy stays on the Kindle: the others can go
+	others := []string{"Fall of Five, The - Pittacus Lore (4006).epub", "The-Fall-of-Five.epub"}
+	if res, out := admin.do("POST", "/api/me/kindle-tasks", map[string]any{"device": "Test Kindle", "kind": "delete_books", "filenames": others}, true); res.StatusCode != 409 {
+		t.Fatalf("without a copy staying, a book with no backup is refused: %d %v", res.StatusCode, out)
+	}
+	if res, out := admin.do("POST", "/api/me/kindle-tasks", map[string]any{"device": "Test Kindle", "kind": "delete_books", "filenames": others, "keep": "Pittacus Lore - The Fall of Five.epub"}, true); res.StatusCode != 200 {
+		t.Fatalf("the extra copies go when one stays: %d %v", res.StatusCode, out)
+	}
 }
