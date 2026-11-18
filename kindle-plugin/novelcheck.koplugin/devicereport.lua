@@ -113,6 +113,33 @@ return function(NovelCheck, ctx)
         return ok and done == true, ok and done == true and day or nil
     end
 
+    -- KOReader's cover browser keeps every book's real title and author (read from inside the book) in a small
+    -- database. Reading that is instant and needs no book to be opened, so a book's real name is known even when its
+    -- file is named "Fall of Five, The - Pittacus Lore (4006).epub". Loaded once per scan; nothing if it isn't there.
+    local function bookInfoCache()
+        local out = {}
+        pcall(function()
+            local SQ3 = require("lua-ljsqlite3/init")
+            local path = DataStorage:getSettingsDir() .. "/bookinfo_cache.sqlite3"
+            if lfs.attributes(path, "mode") ~= "file" then
+                return
+            end
+            local db = SQ3.open(path, "ro")
+            local stmt = db:prepare("SELECT directory, filename, title, authors FROM bookinfo WHERE title IS NOT NULL AND title != ''")
+            local row = stmt:step()
+            while row do
+                local dir, name, title, authors = row[1], row[2], row[3], row[4]
+                if dir and name and title then
+                    out[tostring(dir):gsub("/+$", "") .. "/" .. tostring(name)] = { t = tostring(title), a = tostring(authors or ""):match("([^\n]+)") or "" }
+                end
+                row = stmt:step()
+            end
+            stmt:close()
+            db:close()
+        end)
+        return out
+    end
+
     -- bookEntry describes one book file (name, format, size, fingerprint, title and author, finished mark).
     local function bookEntry(self, path, entry, attr, no_md5)
         local ext = entry:match("%.([^.]+)$")
@@ -122,7 +149,10 @@ return function(NovelCheck, ctx)
             sum = ok and got or ""
         end
         local ptitle, pauthor
-        if not no_md5 then
+        local known = self.book_info and self.book_info[path] -- the cover browser's record of the real title
+        if known then
+            ptitle, pauthor = known.t, known.a
+        elseif not no_md5 then
             ptitle, pauthor = self:bookProps(path, sum)
         end
         local finished, finished_on = self:finishedOnDevice(path)
@@ -151,6 +181,7 @@ return function(NovelCheck, ctx)
         if #books >= MAX_BOOKS or depth > 4 then return end
         if depth == 0 then
             self.props_opens = 0
+            self.book_info = bookInfoCache()
         end
         for entry in lfs.dir(dir) do
             if entry:sub(1, 1) ~= "." and not entry:match("%.sdr$") then
@@ -195,6 +226,7 @@ return function(NovelCheck, ctx)
             end
         end
         self.props_opens = 0
+        self.book_info = bookInfoCache()
         list(self:libraryDir(), 0)
         local books = {}
         self:runSteps((opts and opts.label) or _("Reading your books"), found, function(f)
