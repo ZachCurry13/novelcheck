@@ -156,3 +156,20 @@ func TestDropCalibreEntriesAndKeptHardcoverAnswer(t *testing.T) {
 		t.Fatalf("the kept answer comes back: %q %v %v", data, at, ok)
 	}
 }
+
+// File-name habits are undone before a title is compared: a Calibre number, a library-style ", The", hyphens.
+func TestTidyBookTitle(t *testing.T) {
+	for in, want := range map[string]string{
+		"Fall of Five, The":            "The Fall of Five",
+		"Pittacus Lore (4006)":         "Pittacus Lore",
+		"The-Fall-of-Five":             "The Fall of Five",
+		"A Wrinkle in Time":            "A Wrinkle in Time",
+		"Twenty-One Days":              "Twenty-One Days",
+		"Hunger Games, The (12)":       "The Hunger Games",
+		"Lion_the_Witch_Wardrobe, The": "The Lion the Witch Wardrobe",
+	} {
+		if got := store.TidyBookTitle(in); got != want {
+			t.Errorf("%q: got %q, want %q", in, got, want)
+		}
+	}
+}

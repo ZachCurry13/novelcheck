@@ -53,29 +53,56 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 			BackedUp bool    `json:"backed_up"`
 		}
 		files := []fileRow{}
-		// the same book more than once on the Kindle: grouped by the library book it matched, else by its title
-		groups := map[string][]fileRow{}
-		var order []string
+		// the same book more than once on the Kindle: files that share the library book they match or any reading of
+		// their names ("Fall of Five, The - Pittacus Lore (4006)", "Pittacus Lore - The Fall of Five", "The-Fall-of-Five")
+		var all []store.DeviceFile
+		have := map[string]bool{}
 		if device != "" {
-			have := s.kindleBackedUp(u.ID, device)
-			for _, b := range s.Store.DeviceFiles(u.ID, device) {
-				row := fileRow{b.Filename, b.Title, b.Author, b.Size, b.Percent, have[b.Filename+"|"+strconv.FormatInt(b.Size, 10)]}
-				files = append(files, row)
-				key := "id:" + strconv.FormatInt(b.BookID, 10)
-				if b.BookID == 0 {
-					key, _, _ = strings.Cut(store.NormKey(b.Title, ""), "|")
-					key = "t:" + key
-				}
-				if _, ok := groups[key]; !ok {
-					order = append(order, key)
-				}
-				groups[key] = append(groups[key], row)
+			all = s.Store.DeviceFiles(u.ID, device)
+			have = s.kindleBackedUp(u.ID, device)
+		}
+		parent := make([]int, len(all))
+		for i := range parent {
+			parent[i] = i
+		}
+		find := func(i int) int {
+			for parent[i] != i {
+				parent[i] = parent[parent[i]]
+				i = parent[i]
 			}
+			return i
+		}
+		owner := map[string]int{}
+		authors := s.Store.AuthorNames()
+		for i, b := range all {
+			files = append(files, fileRow{b.Filename, b.Title, b.Author, b.Size, b.Percent, have[b.Filename+"|"+strconv.FormatInt(b.Size, 10)]})
+			id, keys := s.Store.DeviceKeys(b.Filename, b.Title, b.Author, authors)
+			if id == 0 {
+				id = b.BookID
+			}
+			if id > 0 {
+				keys = append(keys, "id:"+strconv.FormatInt(id, 10))
+			}
+			for _, k := range keys {
+				if j, ok := owner[k]; ok {
+					parent[find(i)] = find(j)
+				} else {
+					owner[k] = i
+				}
+			}
+		}
+		groups := map[int][]fileRow{}
+		var order []int
+		for i := range all {
+			r := find(i)
+			if _, ok := groups[r]; !ok {
+				order = append(order, r)
+			}
+			groups[r] = append(groups[r], files[i])
 		}
 		dups := [][]fileRow{}
 		for _, k := range order {
-			if len(groups[k]) > 1 && k != "t:" {
-				g := groups[k]
+			if g := groups[k]; len(g) > 1 {
 				sort.SliceStable(g, func(i, j int) bool { return g[i].Percent > g[j].Percent }) // the furthest read first: the one to keep
 				dups = append(dups, g)
 			}

@@ -51,7 +51,7 @@ func (s *Store) MatchDeviceBook(ref MatchRef) int64 {
 		tries = append(tries, [2]string{g.Title, g.Author})
 	}
 	for _, t := range tries {
-		ti, au := titles.Clean(t[0]), t[1]
+		ti, au := titles.Clean(TidyBookTitle(t[0])), calibreNumber.ReplaceAllString(t[1], "") // "Fall of Five, The", "(4006)"
 		if junkAuthors[strings.ToLower(au)] {
 			au = ""
 		}

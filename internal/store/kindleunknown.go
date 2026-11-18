@@ -18,7 +18,7 @@ type KindleUnknown struct {
 func (s *Store) NoteKindleUnknown(userID int64, device, rel, filename string, size int64) {
 	title, author := "", ""
 	if gs := titles.FromFilename(filename); len(gs) > 0 {
-		title, author = gs[0].Title, gs[0].Author
+		title, author = TidyBookTitle(gs[0].Title), calibreNumber.ReplaceAllString(gs[0].Author, "")
 	}
 	_, _ = s.DB.Exec(`INSERT INTO kindle_unknown (user_id, device, path, filename, title, author, size) VALUES (?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(user_id, path) DO UPDATE SET size = excluded.size`, userID, device, rel, filename, title, author, size)

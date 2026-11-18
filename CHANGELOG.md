@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.93.1]
+
+### 🔎 The same book under different file names
+- **Kindle remote → "The same book more than once" now finds copies whose names differ**: "Fall of Five, The - Pittacus Lore (4006).epub", "Pittacus Lore - The Fall of Five.epub" and "The-Fall-of-Five.epub" are one book. NovelCheck tries every reading of a name, undoes Calibre's number "(4006)", the library-style "…, The" and hyphens between words, and also matches through your library. A reading whose "title" is really an author's name is ignored, so an author's other books don't get lumped together.
+- The same tidying helps the Kindle backup recognize books you already have, so fewer land in "Books NovelCheck doesn't know".
+
 ## [1.93.0]
 
 ### ✂️ Shorter, plainer wording

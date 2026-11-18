@@ -346,10 +346,18 @@ func TestKindleDuplicatesOnDevice(t *testing.T) {
 	admin := login(t, srv, "admin", "adminpass1")
 	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
 	sum := md5.Sum([]byte(ks["code"].(string)))
+	// the titles are what the plugin sends when it couldn't read the book: the file name with "-" and "_" as spaces
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	for _, t := range []string{"The Rise of Nine", "The Power of Six"} { // other books by the same author must not join in
+		id, _ := st.UpsertBook(t, "Pittacus Lore", "", "")
+		_ = st.AddCopy(cal, id, "/c/"+t+".epub", "epub", t)
+	}
 	b, _ := json.Marshal(map[string]any{"device": "Test Kindle", "books": []map[string]any{
-		{"filename": "Fall of Five, The - Pittacus Lore (4006).epub", "title": "The Fall of Five", "author": "Pittacus Lore", "format": "epub", "size": 100, "percent": 0.02},
-		{"filename": "Pittacus Lore - The Fall of Five.epub", "title": "The Fall of Five", "author": "Pittacus Lore", "format": "epub", "size": 200, "percent": 0.08},
-		{"filename": "The-Fall-of-Five.epub", "title": "The Fall of Five", "author": "Pittacus Lore", "format": "epub", "size": 300},
+		{"filename": "Fall of Five, The - Pittacus Lore (4006).epub", "title": "Fall of Five, The   Pittacus Lore (4006)", "format": "epub", "size": 100, "percent": 0.02},
+		{"filename": "Pittacus Lore - The Fall of Five.epub", "title": "Pittacus Lore   The Fall of Five", "format": "epub", "size": 200, "percent": 0.08},
+		{"filename": "The-Fall-of-Five.epub", "title": "The Fall of Five", "format": "epub", "size": 300},
+		{"filename": "Pittacus Lore - The Rise of Nine.epub", "title": "Pittacus Lore   The Rise of Nine", "format": "epub", "size": 500},
+		{"filename": "The-Power-of-Six.epub", "title": "The Power of Six", "format": "epub", "size": 600},
 		{"filename": "Other.epub", "title": "Another Book", "format": "epub", "size": 400}}})
 	req, _ := http.NewRequest("POST", srv.URL+"/kosync/plugin/device", bytes.NewReader(b))
 	req.Header.Set("x-auth-user", "admin")
