@@ -72,9 +72,21 @@ func (s *Store) CancelKindleTask(userID, id int64) bool {
 	return n > 0
 }
 
-// DeviceFiles are the book files a Kindle last reported (file name, title, author, format, size).
-func (s *Store) DeviceFiles(userID int64, device string) []DeviceBook {
-	out := []DeviceBook{}
-	_ = s.DB.Select(&out, `SELECT filename, title, author, format, size FROM device_books WHERE user_id = ? AND device = ? ORDER BY title COLLATE NOCASE LIMIT 3000`, userID, device)
+// DeviceFile is one book file a Kindle last reported, with the library book it matched (0 = none).
+type DeviceFile struct {
+	Filename string  `db:"filename"`
+	Title    string  `db:"title"`
+	Author   string  `db:"author"`
+	Format   string  `db:"format"`
+	Size     int64   `db:"size"`
+	Percent  float64 `db:"percent"`
+	BookID   int64   `db:"book_id"`
+}
+
+// DeviceFiles are the book files a Kindle last reported.
+func (s *Store) DeviceFiles(userID int64, device string) []DeviceFile {
+	out := []DeviceFile{}
+	_ = s.DB.Select(&out, `SELECT filename, title, author, format, size, percent, COALESCE(book_id, 0) AS book_id FROM device_books
+		WHERE user_id = ? AND device = ? ORDER BY title COLLATE NOCASE LIMIT 3000`, userID, device)
 	return out
 }

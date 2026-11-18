@@ -58,14 +58,7 @@ return function(NovelCheck, ctx)
                 { text = _("Send"), is_enter_default = true, callback = function()
                     local note = dialog:getInputText()
                     UIManager:close(dialog)
-                    NetworkMgr:runWhenOnline(function()
-                        local ok, err = self:uploadLog(note)
-                        if ok then
-                            UIManager:show(InfoMessage:new{ text = _("Sent. It is in NovelCheck under Settings > Developer > Bug reports.") })
-                        else
-                            UIManager:show(InfoMessage:new{ text = _("Could not send the log.") .. "\n" .. tostring(err) })
-                        end
-                    end)
+                    NetworkMgr:runWhenOnline(function() self:selfTestAsync(note) end)
                 end },
             } },
         }

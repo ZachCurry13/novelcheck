@@ -338,3 +338,32 @@ func TestKindleTasks(t *testing.T) {
 		t.Fatalf("a task taken back is not handed out: %v", again)
 	}
 }
+
+// The same book three times on a Kindle (different file names) is shown as one group, the copy read furthest first.
+func TestKindleDuplicatesOnDevice(t *testing.T) {
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = t.TempDir() })
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+	b, _ := json.Marshal(map[string]any{"device": "Test Kindle", "books": []map[string]any{
+		{"filename": "Fall of Five, The - Pittacus Lore (4006).epub", "title": "The Fall of Five", "author": "Pittacus Lore", "format": "epub", "size": 100, "percent": 0.02},
+		{"filename": "Pittacus Lore - The Fall of Five.epub", "title": "The Fall of Five", "author": "Pittacus Lore", "format": "epub", "size": 200, "percent": 0.08},
+		{"filename": "The-Fall-of-Five.epub", "title": "The Fall of Five", "author": "Pittacus Lore", "format": "epub", "size": 300},
+		{"filename": "Other.epub", "title": "Another Book", "format": "epub", "size": 400}}})
+	req, _ := http.NewRequest("POST", srv.URL+"/kosync/plugin/device", bytes.NewReader(b))
+	req.Header.Set("x-auth-user", "admin")
+	req.Header.Set("x-auth-key", hex.EncodeToString(sum[:]))
+	if res, err := http.DefaultClient.Do(req); err != nil || res.StatusCode != 200 {
+		t.Fatalf("report: %v %v", err, res)
+	}
+	_, out := admin.do("GET", "/api/me/kindle-tasks?device=Test+Kindle", nil, false)
+	dups, _ := out["duplicates"].([]any)
+	if len(dups) != 1 {
+		t.Fatalf("one book is on the Kindle three times: %v", out["duplicates"])
+	}
+	g := dups[0].([]any)
+	if len(g) != 3 || g[0].(map[string]any)["filename"] != "Pittacus Lore - The Fall of Five.epub" {
+		t.Fatalf("the copy read furthest comes first: %v", g)
+	}
+}

@@ -126,7 +126,15 @@ return function(NovelCheck, ctx)
             ptitle, pauthor = self:bookProps(path, sum)
         end
         local finished, finished_on = self:finishedOnDevice(path)
+        local percent = 0 -- how far KOReader is in it, so NovelCheck can tell which copy of a book to keep
+        pcall(function()
+            local DocSettings = require("docsettings")
+            if DocSettings:hasSidecarFile(path) then
+                percent = tonumber(DocSettings:open(path):readSetting("percent_finished")) or 0
+            end
+        end)
         return {
+            percent = percent,
             finished = finished or nil,
             finished_on = finished_on,
             filename = entry,
@@ -201,7 +209,7 @@ return function(NovelCheck, ctx)
         local out = {}
         for _i, b in ipairs(books) do
             table.insert(out, { filename = b.filename, title = b.title, author = b.author, format = b.format, size = b.size, md5 = b.md5,
-                finished = b.finished, finished_on = b.finished_on })
+                finished = b.finished, finished_on = b.finished_on, percent = b.percent })
         end
         if self.props_cache then
             self.props_cache:flush()

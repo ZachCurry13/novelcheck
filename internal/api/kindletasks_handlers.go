@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -44,20 +45,42 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 			device = devices[0].Name
 		}
 		type fileRow struct {
-			Filename string `json:"filename"`
-			Title    string `json:"title"`
-			Author   string `json:"author"`
-			Size     int64  `json:"size"`
-			BackedUp bool   `json:"backed_up"`
+			Filename string  `json:"filename"`
+			Title    string  `json:"title"`
+			Author   string  `json:"author"`
+			Size     int64   `json:"size"`
+			Percent  float64 `json:"percent"`
+			BackedUp bool    `json:"backed_up"`
 		}
 		files := []fileRow{}
+		// the same book more than once on the Kindle: grouped by the library book it matched, else by its title
+		groups := map[string][]fileRow{}
+		var order []string
 		if device != "" {
 			have := s.kindleBackedUp(u.ID, device)
 			for _, b := range s.Store.DeviceFiles(u.ID, device) {
-				files = append(files, fileRow{b.Filename, b.Title, b.Author, b.Size, have[b.Filename+"|"+strconv.FormatInt(b.Size, 10)]})
+				row := fileRow{b.Filename, b.Title, b.Author, b.Size, b.Percent, have[b.Filename+"|"+strconv.FormatInt(b.Size, 10)]}
+				files = append(files, row)
+				key := "id:" + strconv.FormatInt(b.BookID, 10)
+				if b.BookID == 0 {
+					key, _, _ = strings.Cut(store.NormKey(b.Title, ""), "|")
+					key = "t:" + key
+				}
+				if _, ok := groups[key]; !ok {
+					order = append(order, key)
+				}
+				groups[key] = append(groups[key], row)
 			}
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"devices": devices, "device": device, "files": files, "tasks": s.Store.KindleTasksOf(u.ID, 30)})
+		dups := [][]fileRow{}
+		for _, k := range order {
+			if len(groups[k]) > 1 && k != "t:" {
+				g := groups[k]
+				sort.SliceStable(g, func(i, j int) bool { return g[i].Percent > g[j].Percent }) // the furthest read first: the one to keep
+				dups = append(dups, g)
+			}
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"devices": devices, "device": device, "files": files, "duplicates": dups, "tasks": s.Store.KindleTasksOf(u.ID, 30)})
 		return
 	}
 	var body struct {

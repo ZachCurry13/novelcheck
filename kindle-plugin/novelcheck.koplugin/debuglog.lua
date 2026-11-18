@@ -22,6 +22,7 @@ local SHOW_CHARS = 6000
 return function(NovelCheck, ctx)
     local VERSION, PLUGIN_DIR = ctx.VERSION, ctx.PLUGIN_DIR
     local LOG = DataStorage:getSettingsDir() .. "/novelcheck-debug.log"
+    local TEST_PATHS = { "/kosync/plugin/version", "/kosync/plugin/up-next", "/kosync/plugin/names" }
 
     local function stamp()
         return os.date("!%Y-%m-%d %H:%M:%S") -- UTC, like the server's report
@@ -134,10 +135,73 @@ return function(NovelCheck, ctx)
         if self.syncCheck then
             self:syncCheck(put)
         end
-        for _i, p in ipairs{ "/kosync/plugin/version", "/kosync/plugin/up-next", "/kosync/plugin/names" } do
-            local code, body = self:request(p)
-            put(p .. " -> " .. tostring(code) .. " " .. tostring(code == 200 and #body .. " bytes" or body))
+        if not self._selftest_async then
+            for _i, p in ipairs(TEST_PATHS) do
+                local code, body = self:request(p)
+                put(p .. " -> " .. tostring(code) .. " " .. tostring(code == 200 and #body .. " bytes" or body))
+            end
         end
+    end
+
+    -- selfTestAsync is the self-test from the menu: each check is one step with a message saying which, so the
+    -- Kindle never sits silent; then the log is sent (a failed send is tried again a few seconds later, without
+    -- blocking the screen meanwhile), and the log is shown.
+    function NovelCheck:selfTestAsync(note)
+        local function say(text)
+            UIManager:show(InfoMessage:new{ text = text, timeout = 3 })
+        end
+        local function put(msg)
+            self:dlog("test", msg)
+        end
+        say(_("Self-test: looking at this Kindle..."))
+        UIManager:scheduleIn(0.3, function()
+            self._selftest_async = true
+            pcall(self.selfTest, self) -- the checks on this Kindle (quick)
+            self._selftest_async = false
+            local i = 0
+            local function sendLog(try)
+                say(_("Self-test: sending the log to NovelCheck...") .. (try > 1 and (" (" .. _("again") .. ")") or ""))
+                UIManager:scheduleIn(0.3, function()
+                    local text = self:readLog()
+                    if note and note ~= "" then
+                        text = "NOTE: " .. note .. "\n\n" .. text
+                    end
+                    if #text > 100 * 1024 then
+                        text = text:sub(-100 * 1024)
+                    end
+                    local body = json.encode{ device = self.settings:readSetting("device_name") or Device.model or "device", version = VERSION, text = text }
+                    local code, resp = self:request("/kosync/plugin/debug", nil, body)
+                    if code == 200 then
+                        put("result sent to NovelCheck")
+                        return self:showLog()
+                    end
+                    self:dlog("error", "sending the log failed: " .. tostring(code) .. " " .. tostring(resp))
+                    if try < 2 then
+                        return UIManager:scheduleIn(8, function() sendLog(try + 1) end)
+                    end
+                    put("result NOT sent to NovelCheck: " .. tostring(code or resp))
+                    self:showLog()
+                end)
+            end
+            local function nextCheck()
+                i = i + 1
+                local p = TEST_PATHS[i]
+                if not p then
+                    if self:isConnected() then
+                        return sendLog(1)
+                    end
+                    put("result not sent: not connected to NovelCheck")
+                    return self:showLog()
+                end
+                say(_("Self-test: asking NovelCheck") .. " (" .. i .. "/" .. #TEST_PATHS .. ")...")
+                UIManager:scheduleIn(0.3, function()
+                    local code, body = self:request(p)
+                    put(p .. " -> " .. tostring(code) .. " " .. tostring(code == 200 and #body .. " bytes" or body))
+                    nextCheck()
+                end)
+            end
+            nextCheck()
+        end)
     end
 
     function NovelCheck:showLog()
@@ -176,37 +240,14 @@ return function(NovelCheck, ctx)
             self:connectDialog()
             return
         end
-        NetworkMgr:runWhenOnline(function()
-            local ok, err = self:uploadLog()
-            if ok then
-                UIManager:show(InfoMessage:new{ text = _("Sent. It is in NovelCheck under Settings > Developer > Bug reports.") })
-            else
-                UIManager:show(InfoMessage:new{ text = _("Could not send the log.") .. "\n" .. tostring(err) })
-            end
-        end)
+        NetworkMgr:runWhenOnline(function() self:selfTestAsync() end)
     end
 
     -- developerMenu is the "Developer tools" submenu.
     function NovelCheck:developerMenu()
         return { text = _("Developer tools"), sub_item_table = {
             { text = _("Run self-test"), callback = function()
-                NetworkMgr:runWhenOnline(function()
-                    -- The result is sent to NovelCheck by itself, then shown here. Wi-Fi often has no address for a few
-                    -- seconds after it comes up ("cannot assign requested address"), so a failed send is tried
-                    -- again once, and the reason is written to the log.
-                    local sent, err = false, nil
-                    if self:isConnected() then
-                        sent, err = self:uploadLog()
-                        if not sent then
-                            socket.sleep(8)
-                            sent, err = self:uploadLog()
-                        end
-                    else
-                        self:selfTest()
-                    end
-                    self:dlog("test", sent and "result sent to NovelCheck" or ("result NOT sent to NovelCheck: " .. tostring(err or "not connected to NovelCheck")))
-                    self:showLog()
-                end)
+                NetworkMgr:runWhenOnline(function() self:selfTestAsync() end)
             end },
             { text = _("View log"), callback = function() self:showLog() end },
             { text = _("Send log to NovelCheck"), callback = function() self:sendDebugLog() end },

@@ -13,8 +13,9 @@ type DeviceBook struct {
 	Size     int64  `json:"size"`
 	Author   string `json:"author"` // from the book's own metadata, when the plugin could read it
 	// KOReader's own "finished" mark for the book, and the day it was made ("2026-11-09").
-	Finished   bool   `json:"finished"`
-	FinishedOn string `json:"finished_on"`
+	Finished   bool    `json:"finished"`
+	FinishedOn string  `json:"finished_on"`
+	Percent    float64 `json:"percent"` // how far KOReader is in it (0 to 1)
 }
 
 // Device is an e-reader that has reported.
@@ -56,8 +57,8 @@ func (s *Store) SaveDeviceBooks(userID int64, device string, books []DeviceBook)
 			bookID = ids[i]
 			matched++
 		}
-		if _, err := tx.Exec(`INSERT OR REPLACE INTO device_books (user_id, device, md5, filename, title, author, format, size, book_id, ignored, reported_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, userID, device, b.MD5, b.Filename, b.Title, b.Author, b.Format, b.Size, bookID, ignored[i], now); err != nil {
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO device_books (user_id, device, md5, filename, title, author, format, size, book_id, ignored, reported_at, percent)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, userID, device, b.MD5, b.Filename, b.Title, b.Author, b.Format, b.Size, bookID, ignored[i], now, b.Percent); err != nil {
 			return 0, err
 		}
 	}

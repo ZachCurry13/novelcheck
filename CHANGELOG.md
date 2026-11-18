@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.92.2]
+
+### 📚 The same book more than once on your Kindle (plugin 1.60.2)
+- **Settings → Kindle & KOReader → Kindle remote now lists books that are on the Kindle more than once** (for example "The Fall of Five" three times under three file names), with how far you read each copy. The copy read furthest is marked ★; **Keep the ★ copy, delete the others** removes the rest at the Kindle's next sync (only copies NovelCheck holds a backup of). The plugin now tells NovelCheck how far into each book you are.
+
+### 🩺 The self-test says what it is doing
+- **Run self-test** and **Send log** now show a message for each step ("asking NovelCheck (2/3)", "sending the log") and never block the screen while they wait; a failed send is tried again a few seconds later without holding the Kindle. Before, a slow connection made the Kindle sit silent for a minute or more.
+
 ## [1.92.1]
 
 ### 🧯 Kindle-store books are kept out of KOReader's library (plugin 1.60.1)

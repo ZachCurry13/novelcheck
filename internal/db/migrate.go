@@ -84,6 +84,7 @@ func migrate(d *sqlx.DB) error {
 		{"users", "share_current", "INTEGER NOT NULL DEFAULT 0"},
 		{"device_books", "author", "TEXT NOT NULL DEFAULT ''"},
 		{"device_books", "ignored", "INTEGER NOT NULL DEFAULT 0"},
+		{"device_books", "percent", "REAL NOT NULL DEFAULT 0"}, // how far into the book (KOReader), for the duplicates on a Kindle
 		{"koreader_books", "ignored", "INTEGER NOT NULL DEFAULT 0"},
 		{"koreader_books", "highlights", "INTEGER NOT NULL DEFAULT 0"},
 		{"koreader_books", "notes", "INTEGER NOT NULL DEFAULT 0"},
