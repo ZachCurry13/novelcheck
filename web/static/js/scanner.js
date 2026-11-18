@@ -39,7 +39,7 @@ export async function renderImport(view, state) {
     </div>
     <div class="card mb-4 space-y-3">
       <h2 class="text-lg font-semibold">From Amazon, Goodreads, StoryGraph, Hardcover or a spreadsheet</h2>
-      <p class="text-sm text-slate-400">No Kindle cable needed. Get a list of your books from the app or website you use (steps below),
+      <p class="text-sm text-slate-400">No cable needed. Get your book list from the app you use (steps below),
         then pick the file here, or copy the page and use <b>Paste a list</b> above.</p>
       <label class="btn-primary inline-flex cursor-pointer">Choose a list file (.csv)
         <input id="list-file" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" class="hidden"></label>

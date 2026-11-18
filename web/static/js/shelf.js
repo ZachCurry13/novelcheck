@@ -31,8 +31,8 @@ const remembered = () => {
 export async function renderShelf(view, state) {
   view.innerHTML = `
     <h1 class="mb-1 page-title">Paper books</h1>
-    <p class="mb-4 text-sm text-slate-400">Add the printed books on your shelves: scan the barcodes one after another, type a title or ISBN,
-      or take a photo of the cover. Each book is rated as it's added, and kids see it under their usual rules.</p>
+    <p class="mb-4 text-sm text-slate-400">Add printed books: scan barcodes, type a title or ISBN,
+      or photograph the cover. Each is rated as it's added.</p>
     <div class="card mb-4 space-y-3">
       <label class="block"><span class="label">Add to</span><select id="shelf" class="input"></select></label>
       <div id="new-shelf" class="hidden gap-2"><input id="new-name" class="input min-w-0 flex-1" placeholder="e.g. Living room shelf" maxlength="80">

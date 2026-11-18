@@ -49,7 +49,7 @@ export function reviewCard(d) {
           data-about="${esc(aboutText(n))}"
           class="mt-1 text-xs font-semibold text-sky-300 underline">Read this part in the book</button></div></li>`).join("")
         || "<li>No parts with sexual content were noted.</li>"}</ul>
-      <p class="mt-2 text-xs text-slate-400">A part counts as Level 4 or more only when the AI names sentences that really are in the book and a second question agrees.</p>
+      <p class="mt-2 text-xs text-slate-400">Level 4+ counts only when the AI quotes the book and a second check agrees.</p>
     </details>
     <div class="grid grid-cols-2 gap-2">
       <button data-act="accept" class="btn-primary">Accept Level ${d.proposed_level}</button>

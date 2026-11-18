@@ -17,7 +17,7 @@ const when = (t) => {
 const appVersion = () => document.querySelector("[data-app-version]")?.textContent?.trim() || document.body.textContent.match(/Version\s+(\S+)/)?.[1] || "";
 
 const browserCard = () => `<div class="card space-y-2 lg:col-span-2"><h2 class="text-lg font-semibold">This browser</h2>
-  <p class="text-sm text-slate-400">NovelCheck keeps a short record of the pages you open, the buttons you press (their names only, never what you type) and any errors. If something doesn't work, repeat it, say what you were doing, and press Send.</p>
+  <p class="text-sm text-slate-400">Something broken? Do it again, say what you were doing, and press Send. Only page names, button names and errors are sent.</p>
   <pre id="dev-web" class="max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-3 text-xs text-slate-300"></pre>
   <textarea id="dev-note" class="input" rows="2" maxlength="500" placeholder="What were you doing? (optional)" aria-label="What were you doing"></textarea>
   <div class="flex flex-wrap gap-2"><button type="button" data-dev="send" class="btn-primary">Send report to NovelCheck</button>

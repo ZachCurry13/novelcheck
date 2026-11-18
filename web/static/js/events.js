@@ -15,7 +15,7 @@ export async function renderEvents(view, state) {
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2"><h1 class="page-title">Events</h1>
       ${manager ? `<button data-new class="btn-primary">＋ New event</button>` : ""}</div>
     <p class="mb-4 text-sm text-slate-400">Free-book days such as Stuff Your Kindle: see which books suit your family, which you already have${state.user.role === "restricted" ? "" : ", and claim them on Amazon"}.
-      An event moves to the archive when it ends (or after 30 days, unless a parent pins it).</p>
+      Events move to the archive when they end, unless pinned.</p>
     <ul id="events" class="space-y-2"><li class="text-slate-400">Loading…</li></ul>
     <details id="archive" class="mt-5 hidden"><summary class="cursor-pointer text-sm font-semibold text-slate-300">Archive</summary>
       <ul class="mt-2 space-y-2"></ul></details>`;

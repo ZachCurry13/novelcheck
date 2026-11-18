@@ -48,7 +48,7 @@ function keepHTML(data, busy) {
       ${g.remove.map((f) => `${esc(f.format.toUpperCase())}${f.size ? ` (${fmtSize(f.size)})` : ""}`).join(", ")}</span></li>`).join("");
   return `<section class="space-y-3">
     <h3 class="font-semibold">Keep only these formats</h3>
-    <p class="text-sm text-slate-400">Each book that has a format you keep loses its other e-book formats (MOBI, AZW3 and the like), into Calibre's recycle bin. Books without one are left alone. PDFs, comics and audiobooks are never removed here, and a book whose kept file is missing or empty is skipped.</p>
+    <p class="text-sm text-slate-400">Removes extra formats (MOBI, AZW3…) from books that have one you keep, into Calibre's recycle bin. PDFs, comics and audiobooks stay.</p>
     <div class="flex flex-wrap gap-2">${fmts.map(([f, n]) => `<label class="flex items-center gap-2 ${row} py-1">
       <input type="checkbox" name="keep" value="${esc(f)}" ${data.keep.includes(f) ? "checked" : ""}> ${esc(f)}
       <span class="text-xs text-slate-500">${fmtNum(n)}</span></label>`).join("")}</div>
@@ -66,7 +66,7 @@ function convertHTML(data, busy) {
     <button type="button" data-convert="${f.book_id}" class="btn-ghost shrink-0 py-1 text-xs" ${busy}>Convert</button></li>`).join("");
   return `<section class="space-y-3 border-t border-slate-800 pt-4">
     <h3 class="font-semibold">Convert to EPUB</h3>
-    ${n ? `<p class="text-sm text-slate-400">${count(n, "book has", "books have")} no EPUB but a file Calibre can convert. Calibre makes the EPUB with its own conversion settings, one book at a time, on the computer it runs on. The original file stays.</p>
+    ${n ? `<p class="text-sm text-slate-400">${count(n, "book has", "books have")} no EPUB but a file Calibre can convert. The original file stays.</p>
       <details><summary class="cursor-pointer text-sm text-sky-300">See the books${n > data.convert.length ? ` (the first ${fmtNum(data.convert.length)})` : ""}</summary>
         <ul class="mt-2 space-y-1">${books}</ul></details>
       <button type="button" data-f="convert-all" class="btn-secondary" ${busy}>Convert ${n === 1 ? "it" : `all ${fmtNum(n)}`}</button>`

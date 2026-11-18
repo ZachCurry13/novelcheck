@@ -105,10 +105,10 @@ export async function renderDuplicates(view, state) {
       : "Only an admin can remove books from Calibre."} <button type="button" id="dup-copy" class="underline">Copy a Calibre search for the suggested removals</button></p>`;
     body.innerHTML = `${cant}
       ${sure.length ? `<section data-group data-sure class="mb-6 space-y-3"><h2 class="text-xl font-semibold">Looks like the same book (<span data-count></span>)</h2>
-        <p class="text-sm text-slate-400">Each copy's files match the one that stays in kind and size. NovelCheck can't open the books to compare the text, so glance at the covers.</p>
+        <p class="text-sm text-slate-400">Files match in type and size. Glance at the covers to be sure.</p>
         ${sure.map((g) => bookHTML(g, data.can_remove)).join("")}</section>` : ""}
       ${check.length ? `<section data-group class="space-y-3"><h2 class="text-xl font-semibold">Check these (<span data-count></span>)</h2>
-        <p class="text-sm text-slate-400">Something differs: maybe another edition, an omnibus, or a copy with a PDF or audiobook of its own. These are never removed in one go.</p>
+        <p class="text-sm text-slate-400">Something differs (another edition, an omnibus, an extra PDF). Never removed in one go.</p>
         ${check.map((g) => bookHTML(g, data.can_remove)).join("")}</section>` : ""}
       ${data.can_remove ? `<div id="dup-bar" class="save-bar hidden"><span></span><button type="button" data-all class="btn-primary">Remove their extra copies</button></div>` : ""}`;
     bar();

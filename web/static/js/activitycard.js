@@ -6,7 +6,7 @@ import { copyText } from "./copy.js";
 import { check as checkRecording } from "./activityrec.js";
 
 export const activityCardHTML = () => `<div class="card space-y-2 lg:col-span-2"><h2 class="text-lg font-semibold">Debug recording</h2>
-  <p class="text-sm text-slate-400">While it is on, everyone's NovelCheck shows a bar saying so, and the server keeps a timeline of what happens: pages opened, buttons tapped, what is typed (never passwords, codes or keys), every call the server answers (including KOReader and OPDS), and errors. It stops by itself (an hour at most), lines are deleted after a week, and the latest ones are added to bug reports.</p>
+  <p class="text-sm text-slate-400">While on, everyone sees a bar and the server records pages, taps, typing (never passwords or keys), server calls and errors. It stops within an hour; the record is deleted after a week.</p>
   <p id="act-state" class="text-sm font-semibold"></p>
   <div class="flex flex-wrap gap-2"><button type="button" data-act-start="5" class="btn-primary py-1 text-sm">Record 5 min</button>
     <button type="button" data-act-start="15" class="btn-secondary py-1 text-sm">15 min</button>

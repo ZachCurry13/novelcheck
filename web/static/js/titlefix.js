@@ -83,7 +83,7 @@ export async function openTitleFixes(onDone) {
         <button type="button" data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
       <p class="text-sm text-slate-400">${fixes.length ? `These titles are wrong in Calibre: track or series numbers, the author stuck on, dots, or a typo (the true title comes from the author's books on Open Library)${server ? ". Tick the ones to change in Calibre." : "."}` : "Every title in Calibre is tidy."}</p>
       ${server ? `<label class="flex items-start gap-2 rounded-lg bg-slate-800/60 p-2 text-sm"><input type="checkbox" data-auto ${auto ? "checked" : ""} class="mt-1">
-        <span>Fix Calibre by itself, when NovelCheck is sure: wrong titles (the title matches one of the author's own books) and missing ISBNs (found on Hardcover or Open Library)</span></label>` : ""}
+        <span>Fix Calibre by itself when sure: wrong titles and missing ISBNs</span></label>` : ""}
       ${!server && fixes.length ? noServer(cw) : ""}
       ${note ? `<div class="rounded-lg bg-amber-950/40 p-3 text-sm text-amber-200">${note}</div>` : ""}
       ${server && fixes.length > 1 ? `<label class="flex items-center gap-2 text-sm"><input type="checkbox" data-all checked> All ${fixes.length}</label>` : ""}

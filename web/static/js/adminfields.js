@@ -140,7 +140,7 @@ export const EXTRA = {
   "SMTP / Send-to-Kindle": `<button type="button" data-act="smtp-test" class="btn-secondary">Send test email</button>`,
   "Free book events": `<div class="rounded-lg bg-slate-800/60 p-3 text-sm"><p class="text-slate-300">Do BookBub's emails arrive in the same email account as Send-to-Kindle above?</p>
     <button type="button" data-act="mail-use-smtp" class="btn-secondary mt-2">Use my SMTP email account for BookBub</button>
-    <p class="mt-1 text-xs text-slate-400">Copies its address and app password (they stay on the server) into the mailbox fields and turns the BookBub event on. Read-only: nothing is marked, moved or deleted.</p></div>`,
+    <p class="mt-1 text-xs text-slate-400">Uses the same email account for BookBub's emails. Read-only: nothing is moved or deleted.</p></div>`,
   "Calibre Library": `<div id="calibre-picker"></div><div id="calibre-server"></div>`,
   Discover: `<div id="discover-admin" class="space-y-2"></div>`,
   Audiobookshelf: `<div id="abs-admin" class="space-y-2"></div>`,
@@ -152,8 +152,8 @@ export const HELP = {
   vision_model: help("A model on your local AI that can read pictures. Pick Ollama above, press Find Ollama and download Gemma 3 4B; NovelCheck then uses it for photos by itself."),
   local_context_tokens: help("How much text your local AI takes at once. Ollama's default is 4096; Deep Scan cuts books into parts that fit it. If you raised it on the server (e.g. OLLAMA_CONTEXT_LENGTH=8192), enter the new size so parts can be bigger and scans faster."),
   power_price_kwh: help("With the watts below, System → Usage counts what your own AI machines cost in electricity, and Deep Scan estimates show it. A plug-in power meter tells you a machine's watts while the AI works; count only the extra over idle. Saving watts or the price counts the calls already made again too, from how long each took."),
-  deep_read_model: help("Deep Scan reads whole books, so it needs a model that can tell romance from a tense or violent scene: 7B or bigger is recommended (e.g. qwen2.5:7b or llama3.1:8b on Ollama, or a cloud model). Small 1–3B models often over-rate books. Not used when a separate machine is switched on above."),
-  suggest_mode: help("Free matching looks for the next book in a series, the same authors and similar descriptions. With AI, your AI then picks the best 10 with a reason, at most once a day per person and within the hourly token limit. Kids' accounts (and anyone hiding unrated books) never get books you don't own."),
+  deep_read_model: help("Use a 7B or bigger model (e.g. qwen2.5:7b); small ones over-rate books. Not used when a separate machine is on."),
+  suggest_mode: help("Free matching finds next-in-series, same authors and similar books. With AI, it picks the best 10 with a reason, once a day. Kids only get books you own."),
   smtp_password: help(`Gmail: your normal Google password won't work. Turn on 2-Step Verification,
     then create an <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" class="underline">App Password</a>
     and paste its 16 letters here (spaces are fine). Use your full Gmail address as the username.`),

@@ -93,7 +93,7 @@ export async function renderStats(view, state, source = {}) {
   const draw = (top = false) => {
     view.innerHTML = `${s.page ? "" : back()}<h1 class="mb-2 text-[1.375rem] leading-7">${other ? `${esc(name)}'s reading` : "Reading stats"}</h1>
       ${s.page ? `<button type="button" data-back class="btn-ghost mb-3 px-3 py-1">‹ Back</button>` : tabStrip({ id: "stats-tabs", label: "Reading stats", active: s.tab, tabs })}
-      ${listOnly && !s.page ? `<p class="card-outlined mb-4 text-sm text-slate-300">These numbers come from the books your imported list (or Hardcover) says you finished, by the day you finished them. Hours, pages a day, streaks and the calendar need reading in KOReader.</p>` : ""}
+      ${listOnly && !s.page ? `<p class="card-outlined mb-4 text-sm text-slate-300">Based on finish dates from your imported list or Hardcover. Hours, streaks and the calendar need KOReader.</p>` : ""}
       ${body()}
       <p class="mt-6 text-xs text-slate-500">Days and hours use this device's time zone. Time is time with a page open (long pauses are cut short); pages are different pages seen. Books and details come from your library where NovelCheck knows the book.</p>`;
     setBars(view);

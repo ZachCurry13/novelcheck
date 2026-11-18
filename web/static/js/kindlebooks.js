@@ -45,7 +45,7 @@ export async function openKindleBooks(onChange) {
     d.innerHTML = `<div class="max-h-[85vh] space-y-3 overflow-y-auto p-5">
       <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">Match books on my e-readers</h2>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
-      <p class="text-sm text-slate-400">${items.length ? "These books on your e-readers aren't matched to your library. Add it to NovelCheck, match it to a book you already have, or mark it not a book." : "Everything on your e-readers is matched."}</p>
+      <p class="text-sm text-slate-400">${items.length ? "These e-reader books aren't matched yet. Add, match, or mark as not a book." : "Everything on your e-readers is matched."}</p>
       <ul class="space-y-2">${items.map(row).join("")}</ul></div>`;
   };
   paint();

@@ -19,8 +19,8 @@ export async function renderQueue(view, state) {
       <h1 class="page-title">Nightstand</h1>
       ${friend ? "" : `<p class="text-sm text-slate-400">Delivery: <span id="delivery-mode"></span> · <a href="#/settings" class="underline">change</a></p>`}
     </div>
-    <p id="nightstand-intro" class="mb-4 hidden rounded-lg bg-slate-800/60 p-3 text-sm text-slate-300"><b>Your Nightstand</b> (it used to be called Up Next): what you're reading now,
-      then the pile you plan to read next. Books you open on your e-reader show up here by themselves.
+    <p id="nightstand-intro" class="mb-4 hidden rounded-lg bg-slate-800/60 p-3 text-sm text-slate-300"><b>Your Nightstand</b> (once called Up Next): what you're reading now
+      and what's next.
       <button type="button" data-intro-ok class="ml-1 underline">Got it</button></p>
     <div id="listening"></div>
     <div id="twins"></div>

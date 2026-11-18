@@ -50,7 +50,7 @@ export function profileExtrasHTML(u) {
       <h2 class="text-lg font-semibold">Free-book events</h2>
       <label class="label" for="claim-lib">Books I claim go to</label>
       <select id="claim-lib" class="input"><option value="0">Ask on each event</option></select>
-      <p class="text-xs text-slate-400">Your own library for books you get from Stuff Your Kindle and other events, on every device. You can still pick another one on an event page.</p></div>` : ""}`;
+      <p class="text-xs text-slate-400">Where books you claim at events go. You can pick another on each event.</p></div>` : ""}`;
 }
 
 export function bindProfileExtras(view, u = {}) {

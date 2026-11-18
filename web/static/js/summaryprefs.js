@@ -10,7 +10,7 @@ export async function renderSummaryPrefs(host) {
   const prefs = await attempt(() => get("/api/me/summaries"));
   if (!prefs) return;
   host.innerHTML = `<h2 class="text-lg font-semibold">Reading summaries</h2>
-    <p class="text-sm text-slate-400">A notice on your phone when a week, a month or a year of reading is ready. Nothing is sent for a period you didn't read, and only to phones that have notifications on.</p>
+    <p class="text-sm text-slate-400">A phone notice when your week, month or year of reading is ready.</p>
     <div class="space-y-1">${ROWS.map(([k, name, note]) => `<label class="toggle min-h-[2.75rem]"><input type="checkbox" data-sum="${k}" ${prefs[k] ? "checked" : ""}>
       <span>${name}<span class="block text-xs text-slate-400">${note}</span></span></label>`).join("")}</div>`;
   host.onchange = async (e) => {

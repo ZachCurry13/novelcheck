@@ -12,10 +12,10 @@ export async function renderHardcover(host) {
       ${s.connected ? `<p class="text-sm">${s.username ? `Connected as <b>${esc(s.username)}</b>. ` : "Connected. "}${at ? `Last synced ${esc(ago(at))}` : "Not synced yet"}:
           ${s.books} book${s.books === 1 ? "" : "s"} (reading and read), ${s.matched} in your library.</p>
         <label class="toggle"><input type="checkbox" data-hc-push ${s.push ? "checked" : ""}> Also send my reading progress to Hardcover</label>
-        <p class="text-xs text-slate-500">Off by default, since it changes your Hardcover account. When on, books you're reading or finished on your Nightstand are added to your Hardcover shelves with how far you are (matched by ISBN, so a book without one is skipped), and never lowering anything already there.</p>
+        <p class="text-xs text-slate-500">Off by default. When on, your reading and finished books go to your Hardcover shelves (books with an ISBN only).</p>
         <div class="flex flex-wrap gap-2"><button type="button" data-hc="sync" class="btn-secondary">Sync now</button>
           <button type="button" data-hc="off" class="btn-ghost">Disconnect</button></div>`
-      : `<p class="text-sm text-slate-400">Free. Books you're reading or have read on Hardcover show up here, and books in your Nightstand move to Reading or Finished by themselves. Each book is matched by ISBN, then by title and author.</p>
+      : `<p class="text-sm text-slate-400">Free. Your Hardcover reading shows here, and Nightstand books move to Reading or Finished by themselves.</p>
         <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
           <li>On hardcover.app, open your profile menu → <b>Settings</b> → <b>Hardcover API</b> and copy your token.</li>
           <li>Paste it here and press <b>Connect</b>. Tokens can expire; connect again if syncing stops.</li></ol>

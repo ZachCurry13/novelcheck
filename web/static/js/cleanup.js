@@ -184,7 +184,7 @@ export async function mountCleanup(host, close) {
     const step = e.target.closest("[data-step]")?.dataset.step;
     if (step) return run(step);
     if (e.target.closest("[data-run]")) {
-      if (!confirm("You'll go through each step in turn. Before anything is changed you see the list for that step, and you can leave items out or stop. Start?")) return;
+      if (!confirm("Go through each step? You see each list before anything changes, and can skip items or stop.")) return;
       log = [];
       for (const k of ["titles", "convert", "formats"]) { // extra copies are compared by hand on their own page
         if (!rows(c).find((r) => r.id === k).n) continue; // an earlier step already took care of it
@@ -192,7 +192,7 @@ export async function mountCleanup(host, close) {
         const ok = await run(k);
         if (ok === "background") {
           busy = false;
-          say("Stopped here on purpose: the next steps (extra copies, other formats) depend on the conversions, so review them once the notice says it is done.");
+          say("Paused until the conversions finish; the next steps depend on them.");
           return;
         }
         if (ok === "cancelled") {

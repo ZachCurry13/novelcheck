@@ -28,8 +28,8 @@ export function renderDiagnose(host) {
   host.innerHTML = `
     <section class="card mb-6 space-y-3">
       <h2 class="text-lg font-semibold">Diagnose with AI</h2>
-      <p class="text-sm text-slate-400">Your AI reads NovelCheck's diagnostics (settings, recent problems and logs, never passwords or keys),
-        explains what's wrong, and keeps what it found with your bug reports (Settings → Developer, and the link to recent bug reports).</p>
+      <p class="text-sm text-slate-400">Your AI reads the diagnostics (never passwords or keys),
+        explains what's wrong and saves it with your bug reports.</p>
       <textarea id="dx-problem" rows="3" class="input" placeholder="What went wrong? (optional) e.g. 'Send test email fails' or paste an error">${esc(pending)}</textarea>
       <div class="flex flex-wrap items-center gap-2">
         <button id="dx-run" class="btn-primary">Diagnose</button>

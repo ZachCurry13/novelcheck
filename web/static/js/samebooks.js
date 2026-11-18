@@ -48,7 +48,7 @@ export async function renderSameBooks(host, onChange, state) {
   if (!r) return;
   const pairs = r.pairs || [];
   if (!pairs.length) {
-    host.innerHTML = `<p class="text-sm text-slate-400">No books are listed twice. When one is added to a list before it's in the library, NovelCheck joins them by itself once the library has it, but only when it is sure.</p>`;
+    host.innerHTML = `<p class="text-sm text-slate-400">No books are listed twice.</p>`;
     return;
   }
   const by = (c) => pairs.filter((p) => p.confidence === c);

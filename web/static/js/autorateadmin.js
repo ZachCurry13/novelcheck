@@ -13,8 +13,8 @@ export async function renderAutoRate(host, settings, ideasHost) {
   const limited = Boolean(settings.auto_rate_hours);
   const choice = settings.auto_rate || "";
   host.innerHTML = `
-    <p class="text-sm text-slate-400">When the AI has nothing to do, NovelCheck rates the books waiting for a rating by itself: books in someone's Nightstand
-      or wishlist first, then the newest. It keeps to the hourly token limit below.</p>
+    <p class="text-sm text-slate-400">Rates waiting books whenever the AI is free: Nightstand
+      and wishlist books first, within the hourly limit.</p>
     <div><label class="label" for="s-auto_rate">Rate waiting books automatically</label>
       <select id="s-auto_rate" data-key="auto_rate" class="input">
         <option value="" ${choice === "" ? "selected" : ""}>Default: on with a local AI (Ollama), off with a paid one</option>

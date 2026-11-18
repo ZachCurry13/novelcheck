@@ -26,7 +26,7 @@ export const PRESETS = {
   perplexity: {
     label: "Perplexity", guide: "Perplexity", provider: "openai", base: "https://api.perplexity.ai",
     model: "sonar", fallback: "", json: false, pin: "1.00", pout: "1.00",
-    hint: "Get a key at perplexity.ai → Settings → API. Sonar searches the web, which helps with lesser-known books. Perplexity also charges a small per-request fee that the cost estimate doesn't include.",
+    hint: "Key: perplexity.ai → Settings → API. Searches the web; small per-request fee not in the estimate.",
   },
   ollama: {
     label: "Ollama (on your own server, free)", guide: "Ollama", provider: "openai", base: "http://YOUR-TRUENAS-IP:11434/v1",

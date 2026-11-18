@@ -61,7 +61,7 @@ export function openNewEvent() {
         <input type="checkbox" data-list value="${esc(l.url)}" data-name="${esc(l.name)}" ${l.picked ? "checked" : ""} class="h-5 w-5">
         <span>${esc(l.name)}</span></label>`).join("")}</div>
       <label class="flex items-start gap-3 rounded-lg bg-slate-800 p-3 text-sm"><input type="checkbox" data-each checked class="mt-0.5 h-5 w-5">
-        <span>Keep each list as its own category<span class="block text-xs text-slate-400">They are saved as one event with the lists inside: open it to see every book, or one category. Kids' lists stay apart from the 18+ ones. Untick to mix all the books in one list.</span></span></label>
+        <span>Keep each list as its own category<span class="block text-xs text-slate-400">Saved as one event, with each list inside. Kids' and 18+ lists stay apart; untick to mix them.</span></span></label>
       <label class="block text-sm"><span class="label">Name of the event</span>
         <input data-group-name maxlength="100" class="input" value="${esc(`Stuff Your Kindle · ${new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}`)}"></label>
       ${endsField()}

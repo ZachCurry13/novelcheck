@@ -131,7 +131,7 @@ export async function renderLibbyCard(host) {
     host.innerHTML = `<h2 class="text-lg font-semibold">Libby libraries</h2>
       ${libs.length ? `<ul class="space-y-1 text-sm">${libs.map((l) => `<li class="flex items-center justify-between gap-2 rounded-lg bg-slate-800/60 p-2"><span><b>${esc(l.name)}</b> <span class="text-xs text-slate-500">(${esc(l.key)})</span></span>
           <button type="button" data-lb-rm="${esc(l.key)}" class="btn-ghost py-1 text-sm">Remove</button></li>`).join("")}</ul>
-        <p class="text-sm text-slate-400">Books show whether any of these lend them, and the book that is available soonest wins. In the background NovelCheck also checks the audiobook of every book you don't have as audio and keeps the answer, so the Library can show 🎧 and filter by it.</p>
+        <p class="text-sm text-slate-400">Books show which library lends them soonest. 🎧 marks books Libby has as audiobooks.</p>
         <button type="button" data-lb-scan class="btn-secondary">Check my books now</button>`
       : `<p class="text-sm text-slate-400">Free. See whether your library lends a book, how long the hold is, and open it in Libby. Libby does the borrowing; NovelCheck can't sign in for you. You can add more than one library.</p>`}
       <p class="text-xs text-slate-500">${libs.length ? "Add another library: " : ""}type its key, the first part of its OverDrive address (lapl for lapl.overdrive.com). You can paste the whole address.</p>

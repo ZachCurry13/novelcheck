@@ -23,7 +23,7 @@ const vramKey = (url) => `nc:vram:${url}`;
 function gpuText(g, msg) {
   const gb = (b) => (b / GB).toFixed(b >= 10 * GB ? 0 : 1);
   const text = {
-    none: "Ollama is running on the CPU only. Small models are recommended. If this server has a GPU, turn it on in the TrueNAS Ollama app's settings (GPU → allocate).",
+    none: "Ollama is running on the CPU only; use small models, or turn on the GPU in the Ollama app's settings.",
     about: `About ${gb(g.vram_bytes)} GB of GPU memory (measured with ${g.basis}).`,
     at_least: `At least ${gb(g.vram_bytes)} GB of GPU memory (${g.basis} fits entirely). Bigger models may fit too; pick your GPU size to be sure.`,
     manual: `${gb(g.vram_bytes)} GB of GPU memory (your choice).`,

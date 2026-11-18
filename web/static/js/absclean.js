@@ -18,9 +18,9 @@ const change = (f) => FIELDS.filter(([k]) => f[k] && (!Array.isArray(f[k]) || f[
 export async function renderABSClean(host) {
   const paint = (r) => {
     if (!r) return;
-    host.innerHTML = `<p class="text-sm text-slate-300">Each audiobook is matched with Hardcover by ISBN, by Audible ASIN, then by exact title and author.
-      When the match is certain, Audiobookshelf gets Hardcover's title, author and series, and whatever it is missing (ISBN, ASIN, narrator, genres,
-      description, cover). Anything less certain waits below for you. Every audiobook is looked at again after a month.</p>
+    host.innerHTML = `<p class="text-sm text-slate-300">Audiobooks are matched with Hardcover by ISBN, ASIN, then title and author.
+      Certain matches get Hardcover's title, author, series and any missing details (ISBN, ASIN, narrator, genres,
+      description, cover). Less certain ones wait below. Each is checked again after a month.</p>
       ${r.hardcover ? "" : `<p class="mt-2 text-sm text-amber-300">Connect Hardcover first (Profile → Integrations): the cleanup uses that connection.</p>`}
       <label class="toggle mt-2"><input type="checkbox" data-abs-auto ${r.auto ? "checked" : ""}> Fix certain matches by themselves</label>
       <p class="mt-2 text-xs text-slate-400">${esc(r.result || "Not run yet: it runs with the Hardcover ratings, every 6 hours.")}</p>

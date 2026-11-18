@@ -26,7 +26,7 @@ export function openRename(b, onSaved) {
       <input name="title" class="input w-full" maxlength="300" required value="${esc(b.title)}"></label>
     <label class="block text-sm"><span class="label">Author</span>
       <input name="author" class="input w-full" maxlength="200" value="${esc(b.author || "")}"></label>
-    <p class="text-xs text-slate-400">The old name is remembered, so checking the book again by it finds this one. If NovelCheck already has a book by the new name, the two become one.</p>
+    <p class="text-xs text-slate-400">The old name still finds it. If the new name already exists, the two are joined.</p>
     <div class="flex justify-end gap-2"><button type="button" data-close class="btn-ghost">Cancel</button><button class="btn-primary">Save</button></div>
   </form>`;
   d.querySelectorAll("[data-close]").forEach((x) => (x.onclick = () => d.close()));

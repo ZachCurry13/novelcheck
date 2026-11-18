@@ -56,5 +56,5 @@ export function recordsTab(m, s) {
       <ul class="list">${aw.map((a) => row(a.icon, a.title, a.winner, a.why || "")).join("")}</ul></section>` : ""}
     <section class="card mb-4"><h2 class="mb-1 text-base font-medium">${year == null ? "Personal bests, all time" : `Personal bests in ${year}`}</h2>
       ${rec.length ? `<ul class="list">${rec.map((r) => row(r.icon, r.title, r.value, r.note)).join("")}</ul>` : `<p class="text-sm text-slate-400">No reading recorded ${year == null ? "yet" : `in ${year}`}.</p>`}</section>
-    <p class="text-xs text-slate-500">A book counts as finished when KOReader's statistics show 97% or more. Sittings and hours are counted by the hour, as KOReader records them. A period still under way is compared with the whole one before it.</p>`;
+    <p class="text-xs text-slate-500">Finished means 97% or more in KOReader. A period still under way is compared with the whole one before.</p>`;
 }

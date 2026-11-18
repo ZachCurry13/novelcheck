@@ -65,5 +65,5 @@ export function trophiesTab(m) {
       return `<section class="card mb-4"><h2 class="mb-1 flex items-baseline justify-between text-base font-medium">${esc(g)}<span class="text-sm font-normal text-slate-400">${mine.reduce((t, a) => t + a.level, 0)} of ${mine.reduce((t, a) => t + a.tiers.length, 0)}</span></h2>
         <ul class="list">${mine.map(trophy).join("")}</ul></section>`;
     }).join("")}
-    <p class="text-xs text-slate-500">A book counts when KOReader's statistics show you finished it (97% or more). Likely dates assume you keep reading as you did in the last ${LOOK_BACK} days.</p>`;
+    <p class="text-xs text-slate-500">Finished means 97% or more in KOReader. Likely dates assume you keep reading as you did in the last ${LOOK_BACK} days.</p>`;
 }

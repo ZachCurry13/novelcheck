@@ -21,7 +21,7 @@ export async function renderCalTrash(host, fresh = false) {
   }
   if (!r || !host.isConnected) return;
   if (!r.found) {
-    host.innerHTML = `<p class="text-sm text-slate-400">NovelCheck found no recycle bin in the Calibre library folder. Either nothing has been removed lately, or this Calibre keeps none (it needs Calibre 6.13 or newer).</p>`;
+    host.innerHTML = `<p class="text-sm text-slate-400">No recycle bin found. Nothing was removed lately, or Calibre is older than 6.13.</p>`;
     return;
   }
   const books = r.books || [];
@@ -87,7 +87,7 @@ export async function renderCalTrash(host, fresh = false) {
         <div class="mt-2 space-y-2">
           <p>${fmtNum(books.length)} entries in Calibre's bin${empty ? `, ${fmtNum(empty)} of them empty` : ""}. Removed: ${[...days].map(([d, n]) => `${esc(d)} (${fmtNum(n)})`).join(", ")}.</p>
           <p>${r.read_at ? `Read ${esc(when(r.read_at))}. ` : ""}<button type="button" data-again class="underline">Read the bin again</button></p>
-          <p>“Put back” adds the book to Calibre again from its files, as a new entry with the title and authors it had. Calibre empties its bin by itself after a while.</p>
+          <p>“Put back” adds the book to Calibre again. Calibre empties its bin after a while.</p>
           ${removals.length ? `<p class="pt-1 font-medium text-slate-300">Removed through NovelCheck (${fmtNum(removals.length)})</p>
             <ul class="list">${removals.slice(0, 300).map((x) => `<li class="list-row"><div class="min-w-0 flex-1"><p class="break-words text-slate-200">${esc(x.title || `Calibre #${x.calibre_id}`)}</p>
               <p class="text-xs">${esc(when(utc(x.at)))} · ${esc(x.by || "someone")} · ${esc(x.tool)}</p></div></li>`).join("")}</ul>` : ""}

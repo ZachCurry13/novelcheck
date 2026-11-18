@@ -10,7 +10,8 @@ becomes the release notes for that version and is shown in the app under
 - **The first-run guide is about half as long**, one idea per sentence, for everyone, parents, admins and friends.
 - **The Kindle remote, Library cleanup cards, Backup AI, plugin and delivery screens say less**: what to do, what happens, and the one warning that matters.
 - **The Kindle plugin's messages are shorter** (plugin 1.60.3).
-- A writing guide for the app is in `docs/WRITING.md`. Other long texts are still to be gone through.
+- **Then the rest of the app too:** about 40 more help texts and confirmations in Admin, Library cleanup, Audiobookshelf, Hardcover, Libby, stats, events, notifications, uploads and duplicates say the same in fewer words. The pepper descriptions and the step-by-step import instructions stay as they are, since they need every word.
+- A writing guide for the app is in `docs/WRITING.md`.
 
 ## [1.92.2]
 

@@ -10,7 +10,7 @@ export async function renderDiscoverAdmin(host, form) {
   if (!s) return;
   const when = s.updated ? new Date(s.updated).toLocaleString() : "not yet";
   host.innerHTML = `
-    <p class="text-xs text-slate-400">Without a key, the Popular, teen and kids' rows come from Open Library and lean toward older books.
+    <p class="text-xs text-slate-400">Without a key, the rows come from Open Library and lean older.
       A New York Times Books key is free and takes about five minutes: <a href="${GUIDE_URL}" target="_blank" rel="noopener noreferrer" class="underline">how to get one</a>.</p>
     <p class="text-sm">Lists last refreshed: <b>${esc(when)}</b>${s.refreshing ? " (refreshing now…)" : ""}.
       ${s.counts.listed} books listed, ${s.counts.rated} rated, ${s.counts.waiting} waiting.</p>
