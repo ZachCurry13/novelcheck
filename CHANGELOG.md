@@ -4,6 +4,23 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.95.0]
+
+### 📴 Read your books offline
+- When you open a book in NovelCheck's reader, it stays on your phone or tablet: the last 5 books you opened, with your place in each. Your Nightstand, its covers and those books' pages open without a connection too.
+- Your place is saved on the device while you're offline and sent to NovelCheck when you're back online.
+- **Sign out** and **Switch profile** clear everything kept on the device, so the next person starts clean.
+
+### 🙈 A book you ask to delete is gone for you at once
+- After **Request to delete**, the book leaves your Library, Nightstand suggestions, Discover and search right away. An admin still decides whether it's deleted; if they keep it, it stays hidden for you.
+
+### 📚 Show on my pages
+- Each library on the Libraries page has a **Show on my pages** switch. Turn one off and its books stay out of your Library, Discover, Nightstand suggestions and search (nobody else is affected).
+- Admins start with other people's private libraries switched off, so a family member's private Kindle library no longer fills the admin's pages. Turn it on any time.
+
+### 🌙 Google's daily limit is a note, not a warning
+- When Google's free Gemini has used up its requests for the day and your local AI takes over, the 🔔 notice now says so calmly ("reached its free limit for today, so the local AI is rating books") instead of warning that the main AI isn't working. Check now shows it as "Free requests for today used up", and the Check a book log says "daily limit reached".
+
 ## [1.94.2]
 
 ### ⚡ Check a book doesn't wait on a struggling AI

@@ -40,6 +40,7 @@ import { keepUpToDate } from "./appupdate.js";
 import "./pulltorefresh.js"; // pull down from the top to refresh, on purpose
 import { initActivity } from "./activity.js";
 import { showFamily } from "./family.js";
+import { clearOffline, flushPositions } from "./offline.js";
 
 export const state = { user: null };
 
@@ -193,6 +194,7 @@ async function boot() {
   });
   initSearch();
   $("#logout-btn").addEventListener("click", async () => {
+    await clearOffline(); // what was kept for offline reading is this person's
     await attempt(() => post("/api/auth/logout"));
     showSignIn();
   });
@@ -216,6 +218,7 @@ async function boot() {
 
   try {
     state.user = await get("/api/me");
+    flushPositions(); // places saved while reading offline
     if (launchedFromHomeScreen() && location.hash === "#/library") toStartPage();
     showApp();
   } catch {

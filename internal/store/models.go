@@ -99,6 +99,7 @@ type Catalog struct {
 	Physical  bool   `db:"physical" json:"physical"` // paper books on a shelf
 	CreatedAt string `db:"created_at" json:"created_at"`
 	BookCount int    `db:"book_count" json:"book_count"`
+	Shown     bool   `db:"shown" json:"shown"` // on the viewer's pages ("Show on my pages")
 }
 
 type Book struct {

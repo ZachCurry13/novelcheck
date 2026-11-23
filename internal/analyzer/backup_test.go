@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -92,4 +93,48 @@ func TestUnreachable(t *testing.T) {
 	if analyzer.Unreachable(context.DeadlineExceeded) {
 		t.Fatal("a timeout is not 'unreachable'")
 	}
+}
+
+// When the main AI has used up its free requests for today, the backup's takeover is a calm note, not a warning.
+func TestBackupAfterDailyLimitIsANote(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	main := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte(`{"error":{"message":"Generate content requests per day limit exceeded on Free Tier. Please retry in 4h28m24s."}}`))
+	}))
+	defer main.Close()
+	backup := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"choices": []any{map[string]any{"message": map[string]string{
+			"role": "assistant", "content": `{"spice_level": 1, "summary_verdict": "Sweet."}`}}}})
+	}))
+	defer backup.Close()
+	for k, v := range map[string]string{
+		store.KeyLLMBaseURL: main.URL, store.KeyLLMModel: "gemini-a", store.KeyScanDelaySeconds: "0",
+		store.KeyBackupEnabled: "true", store.KeyBackupBaseURL: backup.URL, store.KeyBackupModel: "llama",
+	} {
+		_ = st.SetSetting(k, v)
+	}
+	id, _ := st.UpsertBook("Limit Book", "A", "", "")
+	_ = st.SetBlurb(id, "x")
+	w := analyzer.New(st)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go w.Run(ctx)
+	w.Enqueue(true, id)
+	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+		if b, _ := st.BookByID(id, nil); b.Status == "analyzed" {
+			items, _, _ := st.Notifications(10)
+			if len(items) != 1 || items[0].Level != "info" || !strings.Contains(items[0].Message, "free limit for today") ||
+				!strings.Contains(items[0].Message, "the local AI") {
+				t.Fatalf("expected a calm note, got %+v", items)
+			}
+			return
+		}
+	}
+	t.Fatal("book was not rated")
 }

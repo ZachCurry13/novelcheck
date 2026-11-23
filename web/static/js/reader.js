@@ -3,12 +3,13 @@
 // and the tools at the bottom: js/readerbars.js, js/readermenu.js). A slim status line shows the chapter and how
 // far you are. It opens with the menu showing for a moment, so the way out is never hidden. The book engine is
 // foliate-js (vendor/foliate).
-// Your place is saved to NovelCheck as you read; when KOReader's progress sync has you further on, the reader
+// Your place is saved to NovelCheck as you read (offline, it waits on the device: js/offline.js); when KOReader's progress sync has you further on, the reader
 // offers to jump there (by percentage, so to about a page).
 import "/vendor/foliate/view.js";
 import { readerSettings, applySettings, openContents, openSettings, closePanel } from "./readermenu.js";
 import { bindBars } from "./readerbars.js";
 import { startRecording, note as record } from "./debugrec.js";
+import { savePosition, pendingPosition, flushPositions } from "./offline.js";
 
 startRecording(); // the reader's errors reach the bug report like the app's
 
@@ -75,7 +76,7 @@ function save(cfi, fraction, xpointer) {
   saveTimer = setTimeout(() => {
     if (!cfi || cfi === lastSaved) return;
     lastSaved = cfi;
-    api(`/api/books/${id}/position`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cfi, fraction, xpointer }) }).catch(() => {});
+    savePosition(id, { cfi, fraction, xpointer });
   }, 1500);
 }
 
@@ -128,9 +129,11 @@ function onRelocate({ detail }) {
 async function start() {
   if (!id) return note("No book was picked. Go back to NovelCheck and press Read on a book.");
   note("Opening the book…");
+  await flushPositions();
+  addEventListener("online", flushPositions);
   const [info, file] = await Promise.all([
     api(`/api/books/${id}/position`).then((r) => (r.ok ? r.json() : null)),
-    api(`/api/books/${id}/download`).then(async (r) => {
+    api(`/api/books/${id}/download?keep=1`).then(async (r) => {
       if (r.status === 401) location.href = "/";
       if (!r.ok) return null;
       const name = /filename="([^"]+)"/.exec(r.headers.get("Content-Disposition") || "")?.[1] || "book.epub";
@@ -157,7 +160,8 @@ async function start() {
   }
   applySettings(view, readerSettings());
   note("");
-  const here = info?.here;
+  const pend = pendingPosition(id); // read offline and not sent yet: that place is the newest
+  const here = pend ? { ...info?.here, cfi: pend.cfi, fraction: pend.fraction, updated_at: pend.at } : info?.here;
   // Where your e-reader is (KOReader's progress sync, or its reading statistics): when you read there more
   // recently than here, or never read it here, the book opens there (by percentage, so to about a page).
   const ko = info?.koreader;

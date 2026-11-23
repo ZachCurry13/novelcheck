@@ -236,6 +236,7 @@ func (s *Server) Router() http.Handler {
 			r.Post("/books/{id}/delete-request", s.handleRequestDelete)
 			r.Delete("/books/{id}/delete-request", s.handleCancelDelete)
 			r.Get("/catalogs", s.handleListCatalogs)
+			r.Put("/catalogs/{id}/shown", s.handleCatalogShown)
 			r.Get("/age-groups", s.handleAgeGroups)
 			r.Get("/updates", s.handleUpdates)
 			r.Get("/flags", s.handleListFlags)

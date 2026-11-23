@@ -204,3 +204,36 @@ func (s *Server) keepImportedRead(userID, bookID int64, b driveBook) {
 		_ = s.Store.SetRating(userID, bookID, rating)
 	}
 }
+
+// handleCatalogShown turns a library on or off for the viewer's own pages ("Show on my pages"). Its books
+// stay in the admin tools; only the viewer's Library, Discover, Nightstand and search leave them out.
+func (s *Server) handleCatalogShown(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r, "id")
+	if !ok {
+		writeErr(w, http.StatusBadRequest, "bad id")
+		return
+	}
+	var body struct {
+		Shown bool `json:"shown"`
+	}
+	if !readJSON(w, r, &body, 1<<10) {
+		return
+	}
+	u := auth.UserFrom(r)
+	cs, err := s.Store.ListCatalogs(u)
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	for _, c := range cs {
+		if c.ID == id {
+			if err := s.Store.SetCatalogShown(u.ID, id, body.Shown); err != nil {
+				writeStoreErr(w, err)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+	}
+	writeErr(w, http.StatusNotFound, "no such library")
+}

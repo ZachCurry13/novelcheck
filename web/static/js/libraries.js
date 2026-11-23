@@ -1,7 +1,7 @@
 // 📚 Your libraries (on the Import page): rename a library, make it private
 // (only you and the admins see its books) or shared, or delete it. Admins
-// can also change who owns one.
-import { get, patch, del } from "./api.js";
+// can also change who owns one. Everyone can turn any library off for their own pages ("Show on my pages").
+import { get, patch, put, del } from "./api.js";
 import { esc, attempt } from "./ui.js";
 
 // canEdit mirrors the server: owners and admins; editors for the family's libraries.
@@ -15,25 +15,31 @@ export async function renderLibraries(host, state) {
     admin ? get("/api/admin/users").catch(() => []) : Promise.resolve([])]);
   if (!cats || !host.isConnected) return;
   const mine = cats.filter((c) => canEditLibrary(c, user));
+  const ed = (c) => mine.includes(c);
   const adults = (users || []).filter((u) => u.role !== "restricted");
   host.innerHTML = `<div class="card space-y-3">
     <h2 class="text-lg font-semibold">Your libraries</h2>
-    <p class="text-sm text-slate-400">Libraries you imported are yours. <b>Private</b> ones are seen only by you and the admins; <b>shared</b> ones by everyone (kids still only see what their rules allow).</p>
-    <ul class="space-y-2">${mine.map((c) => `<li data-cat="${c.id}" class="flex flex-wrap items-center gap-2 rounded-lg bg-slate-800/60 p-3">
+    <p class="text-sm text-slate-400">Libraries you imported are yours. <b>Private</b> ones are seen only by you and the admins; <b>shared</b> ones by everyone (kids still only see what their rules allow).
+      Turn off <b>Show on my pages</b> to keep a library's books out of your own Library, Discover, Nightstand and search.</p>
+    <ul class="space-y-2">${cats.map((c) => `<li data-cat="${c.id}" class="flex flex-wrap items-center gap-2 rounded-lg bg-slate-800/60 p-3">
       <span class="min-w-0 flex-1"><b>${esc(c.name)}</b> <span class="text-xs text-slate-400">${c.book_count.toLocaleString()} books ·
         ${c.owner ? `owned by ${esc(c.owner)}` : "the family's"}</span></span>
-      ${c.owner_id != null ? `<label class="toggle text-sm"><input type="checkbox" data-private ${c.private ? "checked" : ""}> Private</label>` : ""}
+      <label class="toggle text-sm"><input type="checkbox" data-shown ${c.shown ? "checked" : ""}> Show on my pages</label>
+      ${!ed(c) ? "" : `${c.owner_id != null ? `<label class="toggle text-sm"><input type="checkbox" data-private ${c.private ? "checked" : ""}> Private</label>` : ""}
       ${admin ? `<select data-owner class="input w-auto py-1 text-xs" aria-label="Owner of ${esc(c.name)}">
         <option value="0">Family (no owner)</option>${adults.map((u) => `<option value="${u.id}" ${u.id === c.owner_id ? "selected" : ""}>${esc(u.username)}</option>`).join("")}</select>` : ""}
       <button data-rename class="btn-ghost py-1 text-sm">Rename</button>
-      ${admin || c.owner_id === user.id ? `<button data-delete class="btn-ghost py-1 text-sm text-rose-300">Delete</button>` : ""}
+      ${admin || c.owner_id === user.id ? `<button data-delete class="btn-ghost py-1 text-sm text-rose-300">Delete</button>` : ""}`}
     </li>`).join("") || `<li class="text-sm text-slate-500">No libraries yet. Import a Kindle or a list above and it'll show here.</li>`}</ul></div>`;
   const reload = () => renderLibraries(host, state);
-  const catOf = (e) => mine.find((c) => c.id === Number(e.target.closest("[data-cat]")?.dataset.cat));
+  const catOf = (e) => cats.find((c) => c.id === Number(e.target.closest("[data-cat]")?.dataset.cat));
   host.onchange = async (e) => {
     const c = catOf(e);
     if (!c) return;
-    if (e.target.matches("[data-private]")) {
+    if (e.target.matches("[data-shown]")) {
+      const on = e.target.checked;
+      if (!(await attempt(() => put(`/api/catalogs/${c.id}/shown`, { shown: on }), on ? `${c.name} shows on your pages` : `${c.name} is hidden from your pages`))) e.target.checked = !on;
+    } else if (e.target.matches("[data-private]")) {
       const priv = e.target.checked;
       if (!(await attempt(() => patch(`/api/catalogs/${c.id}`, { private: priv }), priv ? `${c.name} is now private` : `${c.name} is now shared`))) e.target.checked = !priv;
     } else if (e.target.matches("[data-owner]")) {

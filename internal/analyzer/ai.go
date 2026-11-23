@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/llm"
@@ -23,6 +24,7 @@ func (w *Worker) askAIs(ctx context.Context, id int64, user string) (*store.Anal
 func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, user string) (*store.Analysis, error) {
 	var errs []string
 	var lastErr error
+	limited := false // every failure so far was a service's own daily limit, not a fault
 	for _, ai := range ais {
 		if len(ai.Models) == 0 {
 			lastErr = errors.New("LLM base URL and model must be configured")
@@ -35,7 +37,9 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 			v, err := w.analyzeWith(ctx, ai, client, model, id, user)
 			traceOf(ctx).add(ai.Name, model, time.Since(start), err)
 			if err == nil {
-				if ai.Name == "backup" {
+				if ai.Name == "backup" && limited {
+					w.Store.Notify("info", "llm-backup", takeoverNote(ais, ai), "#/system")
+				} else if ai.Name == "backup" {
 					w.Store.Notify("warning", "llm-backup",
 						"The main AI isn't working, so the backup AI rated some books. Check Admin → Integrations → Check now.", "#/system")
 				} else {
@@ -47,6 +51,7 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 			if ctx.Err() != nil {
 				return nil, ctx.Err()
 			}
+			limited = (lastErr == nil || limited) && llm.DailyLimit(err) != nil
 			lastErr = err
 			errs = append(errs, fmt.Sprintf("%s AI (%s): %v", ai.Name, model, err))
 			if llm.HostDown(err) {
@@ -58,6 +63,18 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 		return nil, errors.New(joinErrs(errs))
 	}
 	return nil, lastErr
+}
+
+// takeoverNote says, without alarm, that the main AI used up its free requests for today and the backup took over.
+func takeoverNote(ais []store.AIConfig, backup store.AIConfig) string {
+	main, by := "The main AI", "the backup AI"
+	if len(ais) > 0 && strings.Contains(ais[0].BaseURL, "googleapis.com") {
+		main = "Google's Gemini"
+	}
+	if llm.IsLocal(backup.BaseURL) {
+		by = "the local AI"
+	}
+	return main + " reached its free limit for today, so " + by + " is rating books. It switches back on its own when the limit resets."
 }
 
 func joinErrs(errs []string) string {

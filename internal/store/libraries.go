@@ -6,6 +6,7 @@ package store
 import (
 	"database/sql"
 	"errors"
+	"strings"
 )
 
 const catalogCols = `c.id, c.name, c.source, c.created_at, c.owner_id, COALESCE(u.username, '') AS owner, c.private, c.physical`
@@ -24,9 +25,10 @@ func (s *Store) ListCatalogs(viewer *User) ([]Catalog, error) {
 		shared = "" // a friend has only her own
 	}
 	err := s.DB.Select(&cs, `SELECT `+catalogCols+`,
-		(SELECT COUNT(DISTINCT book_id) FROM catalog_books cb WHERE cb.catalog_id = c.id) AS book_count
+		(SELECT COUNT(DISTINCT book_id) FROM catalog_books cb WHERE cb.catalog_id = c.id) AS book_count,
+		(`+strings.ReplaceAll(shownCond, "pc.", "c.")+`) AS shown
 		FROM catalogs c LEFT JOIN users u ON u.id = c.owner_id
-		WHERE c.name NOT IN (?, ?) AND (? OR `+shared+`c.owner_id = ?) ORDER BY c.name`, DiscoverCatalog, EventsCatalog, all, id)
+		WHERE c.name NOT IN (?, ?) AND (? OR `+shared+`c.owner_id = ?) ORDER BY c.name`, id, all, id, DiscoverCatalog, EventsCatalog, all, id)
 	return cs, err
 }
 
@@ -101,4 +103,16 @@ func (s *Store) RemoveFromCatalog(catalogID, bookID int64) (bool, error) {
 		return false, err
 	}
 	return n > 0, nil
+}
+
+// shownCond is whether library pc shows on this person's pages (args: user id, is admin, user id): their own
+// choice, else on, except that an admin starts with other people's private libraries off.
+const shownCond = `COALESCE((SELECT cv.shown FROM catalog_views cv WHERE cv.catalog_id = pc.id AND cv.user_id = ?),
+	CASE WHEN ? AND pc.private = 1 AND COALESCE(pc.owner_id, 0) != ? THEN 0 ELSE 1 END) = 1`
+
+// SetCatalogShown records whether a library shows on this person's pages.
+func (s *Store) SetCatalogShown(userID, catalogID int64, shown bool) error {
+	_, err := s.DB.Exec(`INSERT INTO catalog_views (user_id, catalog_id, shown) VALUES (?, ?, ?)
+		ON CONFLICT (user_id, catalog_id) DO UPDATE SET shown = excluded.shown`, userID, catalogID, shown)
+	return err
 }

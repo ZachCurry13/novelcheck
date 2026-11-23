@@ -24,8 +24,18 @@ func TestPrivateLibraries(t *testing.T) {
 		_, o := c.do("GET", "/api/books?q=Secret", nil, false)
 		return o["total"].(float64)
 	}
-	if count(owner) != 1 || count(admin) != 1 || count(other) != 0 || count(kid) != 0 {
+	if count(owner) != 1 || count(admin) != 0 || count(other) != 0 || count(kid) != 0 {
 		t.Fatalf("private: owner %v admin %v other %v kid %v", count(owner), count(admin), count(other), count(kid))
+	}
+	// An admin starts with other people's private libraries off their pages, and can turn them on.
+	if _, list := admin.doList("GET", "/api/catalogs"); len(list) != 1 || list[0]["shown"] != false {
+		t.Fatalf("an admin sees the library, off: %v", list)
+	}
+	if res, _ := admin.do("PUT", fmt.Sprintf("/api/catalogs/%d/shown", cat), map[string]bool{"shown": true}, true); res.StatusCode != 204 || count(admin) != 1 {
+		t.Fatalf("turned on: %d, %v", res.StatusCode, count(admin))
+	}
+	if res, _ := other.do("PUT", fmt.Sprintf("/api/catalogs/%d/shown", cat), map[string]bool{"shown": true}, true); res.StatusCode != 404 {
+		t.Fatalf("not a library they can see: %d", res.StatusCode)
 	}
 	if _, list := other.doList("GET", "/api/catalogs"); len(list) != 0 {
 		t.Fatalf("others don't see a private library: %v", list)
@@ -40,6 +50,11 @@ func TestPrivateLibraries(t *testing.T) {
 	if count(other) != 1 {
 		t.Fatal("shared with everyone")
 	}
+	other.do("PUT", fmt.Sprintf("/api/catalogs/%d/shown", cat), map[string]bool{"shown": false}, true)
+	if count(other) != 0 || count(owner) != 1 {
+		t.Fatal("hidden from their own pages only")
+	}
+	other.do("PUT", fmt.Sprintf("/api/catalogs/%d/shown", cat), map[string]bool{"shown": true}, true)
 	if res, _ := admin.do("PATCH", fmt.Sprintf("/api/catalogs/%d", cat), map[string]int64{"owner_id": 4}, true); res.StatusCode != 400 {
 		t.Fatalf("kids can't own a library: %d", res.StatusCode)
 	}

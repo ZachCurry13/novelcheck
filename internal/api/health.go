@@ -221,6 +221,9 @@ func (s *Server) checkModel(ctx context.Context, ai store.AIConfig, model string
 		}
 		return "error", "Can't reach the AI server at " + ai.BaseURL, fix
 	}
+	if d := llm.DailyLimit(err); d != nil { // the service's own daily limit: not a fault
+		return "skip", "Free requests for today used up", "Nothing to fix: the backup AI rates books meanwhile, and this one is asked again in " + d.Wait() + "."
+	}
 	if err != nil {
 		return errResult(err, "Check the API key, model name and credit with your AI provider (Admin → AI & Scans → Your AI → Show setup steps).")
 	}

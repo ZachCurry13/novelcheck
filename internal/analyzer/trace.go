@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/zachcurry13/novelcheck/internal/llm"
 )
 
 // Trace notes each AI asked while a person waits (which model, how long, and why it failed), for the bug log's
@@ -30,7 +32,9 @@ func (t *Trace) add(ai, model string, took time.Duration, err error) {
 		return
 	}
 	res := "ok"
-	if err != nil {
+	if d := llm.DailyLimit(err); d != nil {
+		res = "daily limit reached, asked again in " + d.Wait()
+	} else if err != nil {
 		res = err.Error()
 		if len(res) > 160 {
 			res = res[:160] + "…"

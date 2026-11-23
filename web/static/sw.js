@@ -1,7 +1,8 @@
 // NovelCheck service worker: caches the app shell for offline launch and
-// home-screen installs. API responses are never cached (they are private and
-// sent with Cache-Control: no-store).
-const CACHE = "novelcheck-shell-v205";
+// home-screen installs. API responses are not cached, except the few a reader
+// needs offline (MINE, below), which are cleared on sign-out and profile switch.
+const CACHE = "novelcheck-shell-v206";
+const MINE = "novelcheck-mine";
 const SHELL = [
   "/",
   "/index.html",
@@ -208,7 +209,45 @@ const SHELL = [
   "/js/libby.js",
   "/js/libbysearch.js",
   "/vendor/qrcode.esm.js",
+  "/reader.html",
+  "/js/reader.js",
+  "/js/readerbars.js",
+  "/js/readermenu.js",
+  "/js/offline.js",
+  ...["view", "epub", "epubcfi", "mobi", "fb2", "comic-book", "fixed-layout", "footnotes", "overlayer", "paginator",
+    "progress", "search", "text-walker", "vendor/zip", "vendor/fflate"].map((f) => `/vendor/foliate/${f}.js`),
 ];
+
+// The private answers kept for offline reading, newest last, each kind trimmed to its limit: the books opened in
+// the reader (5 per device), their places and pages, the Nightstand and its covers, and who is signed in.
+const KEEP = [
+  [/^\/api\/books\/\d+\/download$/, 5],
+  [/^\/api\/books\/\d+\/position$/, 50],
+  [/^\/api\/books\/\d+$/, 50],
+  [/^\/api\/books\/\d+\/cover$/, 50],
+  [/^\/api\/(me|queue|content)$/, 3],
+];
+const kept = (path) => KEEP.find(([re]) => re.test(path));
+
+async function keep(path, res) {
+  const c = await caches.open(MINE);
+  await c.delete(path);
+  await c.put(path, res);
+  const [re, max] = kept(path);
+  const same = (await c.keys()).filter((k) => re.test(new URL(k.url).pathname));
+  await Promise.all(same.slice(0, Math.max(0, same.length - max)).map((k) => c.delete(k)));
+}
+
+// A fresh Nightstand also keeps its books' pages and covers, so it opens offline.
+async function keepNightstand(res) {
+  const items = await res.json().catch(() => []);
+  for (const i of Array.isArray(items) ? items : []) {
+    for (const path of [`/api/books/${i.book_id}`, `/api/books/${i.book_id}/cover`]) {
+      const r = await fetch(path, { credentials: "same-origin", headers: { "X-NovelCheck": "1" } }).catch(() => null);
+      if (r?.ok) await keep(path, r);
+    }
+  }
+}
 
 self.addEventListener("install", (event) => {
   // cache: "reload" skips copies the browser may still hold from before (they
@@ -219,7 +258,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== MINE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -257,7 +296,23 @@ self.addEventListener("notificationclick", (event) => {
 // address; the plain address (precached above) is the offline fallback.
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (event.request.method !== "GET" || url.origin !== location.origin || url.pathname.startsWith("/api/")) return;
+  if (event.request.method !== "GET" || url.origin !== location.origin) return;
+  if (url.pathname.startsWith("/api/")) {
+    // Downloads are kept only for the reader (?keep=1), and the Nightstand only as the plain list.
+    const keepIt = kept(url.pathname) && (!url.pathname.endsWith("/download") || url.searchParams.has("keep")) &&
+      (url.pathname !== "/api/queue" || !url.search);
+    if (!keepIt) return;
+    event.respondWith(fetch(event.request)
+      .then((res) => {
+        if (res.ok && !url.pathname.endsWith("/cover")) { // covers are kept only for the Nightstand (keepNightstand)
+          const copy = res.clone(), list = url.pathname === "/api/queue" ? res.clone() : null;
+          event.waitUntil(keep(url.pathname, copy).then(() => list && keepNightstand(list)));
+        }
+        return res;
+      })
+      .catch(() => caches.open(MINE).then((c) => c.match(url.pathname)).then((r) => r || Response.error())));
+    return;
+  }
   const plain = url.pathname.replace(/^\/v\/[^/]+(?=\/)/, "");
   event.respondWith(
     fetch(event.request)

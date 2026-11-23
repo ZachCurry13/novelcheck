@@ -189,7 +189,7 @@ export async function openBook(id, state, onChange) {
     } else if (act === "request-delete") {
       const reason = prompt("Why should this book be deleted? (optional)\nAn admin will review it.", "");
       if (reason === null) return;
-      const ok = await attempt(() => post(`/api/books/${b.id}/delete-request`, { reason }), "Delete requested. An admin will review it.");
+      const ok = await attempt(() => post(`/api/books/${b.id}/delete-request`, { reason }), state.user.role === "admin" ? "Delete requested." : "Delete requested. It is hidden from your pages while an admin reviews it.");
       if (ok) refresh();
     } else if (act === "wish") {
       const note = prompt("Add a note for the family? (optional)", "");

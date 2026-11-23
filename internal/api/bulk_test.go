@@ -37,8 +37,11 @@ func TestBulkBookActions(t *testing.T) {
 	if del["removed"].(float64) != 2 || del["requested"].(float64) != 1 || del["skipped"].(float64) != 1 {
 		t.Fatalf("own books go at once, the family's are requested, looked-up ones skipped: %v", del)
 	}
-	if _, b := reader.do("GET", fmt.Sprintf("/api/books/%d", family), nil, false); b["my_delete_request"] == nil {
+	if st.MyDeleteRequest(family, 2) == nil {
 		t.Fatal("a delete request for the family's book")
+	}
+	if res, _ := reader.do("GET", fmt.Sprintf("/api/books/%d", family), nil, false); res.StatusCode != 404 {
+		t.Fatal("and it's hidden from the person who asked")
 	}
 	if res, _ := reader.do("POST", "/api/books/bulk", map[string]any{"ids": ids, "action": "explode"}, true); res.StatusCode != 400 {
 		t.Fatal("unknown action")

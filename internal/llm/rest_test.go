@@ -2,6 +2,7 @@ package llm
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -25,6 +26,12 @@ func TestQuotaRest(t *testing.T) {
 	err := noteQuota("https://x/v1", "gemini-test", daily)
 	if !strings.Contains(err.Error(), "used up its free requests") || strings.Contains(err.Error(), "aistudio") {
 		t.Fatalf("one short sentence, not the service's whole message: %v", err)
+	}
+	if d := DailyLimit(fmt.Errorf("wrapped: %w", err)); d == nil || d.Model != "gemini-test" {
+		t.Fatalf("a daily limit is told apart from a fault: %v", d)
+	}
+	if DailyLimit(errors.New("LLM error (401)")) != nil {
+		t.Fatal("other errors are not a daily limit")
 	}
 	if rested("https://x/v1", "gemini-test") == nil {
 		t.Fatal("left alone until then")

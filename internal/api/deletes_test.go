@@ -27,10 +27,15 @@ func TestDeleteRequests(t *testing.T) {
 			t.Fatalf("request %d: %d %v", id, res.StatusCode, out)
 		}
 	}
-	// Asking twice updates the reason instead of duplicating.
-	wife.do("POST", "/api/books/"+itoa(bad)+"/delete-request", map[string]string{"reason": "way too explicit"}, true)
-	if _, b := wife.do("GET", "/api/books/"+itoa(bad), nil, false); b["my_delete_request"].(map[string]any)["reason"] != "way too explicit" {
-		t.Fatalf("my request: %v", b["my_delete_request"])
+	// The book is gone from her pages at once; the admin still sees it.
+	if res, _ := wife.do("GET", "/api/books/"+itoa(bad), nil, false); res.StatusCode != 404 {
+		t.Fatalf("hidden from the person who asked: %d", res.StatusCode)
+	}
+	if _, o := wife.do("GET", "/api/books?q=Keep", nil, false); o["total"].(float64) != 0 {
+		t.Fatalf("not listed for her: %v", o["total"])
+	}
+	if res, _ := admin.do("GET", "/api/books/"+itoa(bad), nil, false); res.StatusCode != 200 {
+		t.Fatalf("the admin still sees it: %d", res.StatusCode)
 	}
 	// Editors can't review; admins see one group per book.
 	if res, _ := wife.do("GET", "/api/admin/delete-requests", nil, false); res.StatusCode != 403 {

@@ -126,13 +126,16 @@ func visibility(u *User, listed bool) (string, []any) {
 		clause += fc
 		args = append(args, fa...)
 	}
-	// Private libraries: a book only in someone else's private library is
-	// seen by its owner and the admins only.
+	// Libraries: a book only in libraries the viewer can't see (someone else's private one) or turned off
+	// ("Show on my pages") is left out. (A split box set's book is where the box set is.)
+	clause += ` AND (NOT EXISTS (SELECT 1 FROM catalog_books pn WHERE pn.book_id = b.id OR pn.book_id IN (SELECT pm.box_id FROM box_members pm WHERE pm.book_id = b.id))
+		OR EXISTS (SELECT 1 FROM catalog_books pv JOIN catalogs pc ON pc.id = pv.catalog_id
+			WHERE (pv.book_id = b.id OR pv.book_id IN (SELECT pm.box_id FROM box_members pm WHERE pm.book_id = b.id)) AND (? OR pc.private = 0 OR pc.owner_id = ?)
+			AND ` + shownCond + `))`
+	args = append(args, u.Role == RoleAdmin, u.ID, u.ID, u.Role == RoleAdmin, u.ID)
+	// A book this person asked to have deleted is gone from their pages at once, whatever the admin decides.
 	if u.Role != RoleAdmin {
-		// (A split box set's book is where the box set is.)
-		clause += ` AND (NOT EXISTS (SELECT 1 FROM catalog_books pn WHERE pn.book_id = b.id OR pn.book_id IN (SELECT pm.box_id FROM box_members pm WHERE pm.book_id = b.id))
-			OR EXISTS (SELECT 1 FROM catalog_books pv JOIN catalogs pc ON pc.id = pv.catalog_id
-				WHERE (pv.book_id = b.id OR pv.book_id IN (SELECT pm.box_id FROM box_members pm WHERE pm.book_id = b.id)) AND (pc.private = 0 OR pc.owner_id = ?)))`
+		clause += " AND NOT EXISTS (SELECT 1 FROM delete_requests hd WHERE hd.book_id = b.id AND hd.user_id = ?)"
 		args = append(args, u.ID)
 	}
 	return clause, args

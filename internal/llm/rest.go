@@ -1,6 +1,7 @@
 package llm
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -38,15 +39,36 @@ func quotaRest(err error) time.Duration {
 	return 0
 }
 
-// restingErr is the short sentence for a model that is being left alone.
-func restingErr(model string, until time.Time) error {
-	left := time.Until(until).Round(time.Minute)
+// DailyLimitErr is the short sentence for a model that is being left alone: not a fault, the service's own
+// daily limit, so callers word it as a note rather than an error.
+type DailyLimitErr struct {
+	Model string
+	Until time.Time
+}
+
+// Wait is how long until the model is asked again, as "3 h 10 min".
+func (e *DailyLimitErr) Wait() string {
+	left := time.Until(e.Until).Round(time.Minute)
 	h, m := int(left.Hours()), int(left.Minutes())%60
-	wait := fmt.Sprintf("%d min", max(m, 1))
 	if h > 0 {
-		wait = fmt.Sprintf("%d h %d min", h, m)
+		return fmt.Sprintf("%d h %d min", h, m)
 	}
-	return fmt.Errorf("%s has used up its free requests for today (the service's own daily limit); NovelCheck will ask it again in %s. A paid plan with that service, or another backup model, lifts the limit", model, wait)
+	return fmt.Sprintf("%d min", max(m, 1))
+}
+
+func (e *DailyLimitErr) Error() string {
+	return fmt.Sprintf("%s has used up its free requests for today (the service's own daily limit); NovelCheck will ask it again in %s. A paid plan with that service, or another backup model, lifts the limit", e.Model, e.Wait())
+}
+
+func restingErr(model string, until time.Time) error { return &DailyLimitErr{model, until} }
+
+// DailyLimit returns err's daily-limit note, or nil when err is something else.
+func DailyLimit(err error) *DailyLimitErr {
+	var d *DailyLimitErr
+	if errors.As(err, &d) {
+		return d
+	}
+	return nil
 }
 
 // rested returns an error at once when the model is being left alone.

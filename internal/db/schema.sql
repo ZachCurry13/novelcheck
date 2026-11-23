@@ -895,3 +895,12 @@ CREATE TABLE IF NOT EXISTS kindle_tasks (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     done_at    DATETIME
 );
+
+-- "Show on my pages" per person and library (Libraries page). No row = the default: shown, except that an
+-- admin starts with other people's private libraries off.
+CREATE TABLE IF NOT EXISTS catalog_views (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    catalog_id INTEGER NOT NULL REFERENCES catalogs(id) ON DELETE CASCADE,
+    shown      INTEGER NOT NULL,
+    PRIMARY KEY (user_id, catalog_id)
+);
