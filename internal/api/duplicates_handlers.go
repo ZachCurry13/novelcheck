@@ -149,6 +149,21 @@ func (s *Server) handleRemoveDuplicates(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 	}
+	ictx, icancel := context.WithTimeout(context.WithoutCancel(r.Context()), 30*time.Second)
+	for gi := range removing {
+		var stay, going []int
+		for _, e := range groups[gi].Entries {
+			if id, err := strconv.Atoi(e.CalibreID); err == nil {
+				if _, g := want[id]; g {
+					going = append(going, id)
+				} else {
+					stay = append(stay, id)
+				}
+			}
+		}
+		s.carryISBN(ictx, stay, going)
+	}
+	icancel()
 	if body.Later {
 		r = r.WithContext(context.WithValue(r.Context(), syncLaterKey{}, true))
 	}
