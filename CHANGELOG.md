@@ -25,6 +25,11 @@ becomes the release notes for that version and is shown in the app under
 ### 📚 Tidy titles in Calibre no longer stops on one book
 - Some Calibre entries carry the author in the title ("An American Sickness - Elisabeth Rosenthal", "Bad Beginning - Snicket, Lemony"), left by an older Kindle copy. NovelCheck's safety check took them for different books, so **Tidy titles in Calibre** and **Remove duplicates** stopped. They're now recognized (the part after the dash and a leading "The" are ignored for the check), and one book that really differs is skipped with a note while the rest go ahead.
 
+### 🔢 More ISBNs from the Hardcover cleanup
+- **Fix Calibre details from Hardcover** now also finds books on Hardcover by their title without a subtitle or series note ("Loving the Lonely Viscount: A Chasing Love Novella (Chasing Love Series)" is found as "Loving the Lonely Viscount").
+- When Hardcover doesn't know a book with no ISBN, the scan offers a **best guess** ISBN from Open Library (same author, same title). It may be another edition, so it's only offered, marked "best guess"; nothing is saved until you tick it.
+- The card says how many library books still have no ISBN. Many free Kindle books have none at all, since Amazon doesn't require one.
+
 ### 🏠 The Kindle can use NovelCheck's home address (plugin 1.61.0)
 - **Connect to NovelCheck** has a new **Home address** field, like `http://192.168.1.20:8080`. At home the plugin talks to NovelCheck straight over Wi-Fi, without the internet, the tunnel or a name lookup. Away from home it tries the home address for 2 seconds at most, once every 10 minutes, then uses the main address. Progress sync and statistics sync keep using the main address.
 - You can also set it from **Settings → Kindle & KOReader → Kindle remote → Home address**; the Kindle picks it up at its next sync.

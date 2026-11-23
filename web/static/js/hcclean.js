@@ -13,6 +13,7 @@ export async function renderHCClean(host) {
   host.innerHTML = `<p class="text-sm text-slate-400">Compares every book in Calibre with Hardcover (your Hardcover, set under Settings → Connections) in the background; for a library of a few thousand books it can take up to an hour. It only fills gaps and tidies how things are written; it never swaps one book's details for another's. You choose what to apply.</p>
     <div class="my-2 flex flex-wrap items-center gap-2"><button type="button" data-hc="scan" class="btn-primary py-1 text-sm">Scan the library</button>
       <button type="button" data-hc="stop" class="btn-ghost hidden py-1 text-sm">Stop</button><span id="hc-status" class="text-sm text-slate-300"></span></div>
+    <p id="hc-noisbn" class="text-xs text-slate-400"></p>
     <div id="hc-errors" class="hidden rounded-lg bg-amber-950/40 p-2 text-xs text-amber-200"></div>
     <div id="hc-list" class="space-y-2"></div>`;
   const status = host.querySelector("#hc-status");
@@ -23,6 +24,7 @@ export async function renderHCClean(host) {
     host.querySelector("[data-hc=scan]").disabled = j.running;
     host.querySelector("[data-hc=stop]").classList.toggle("hidden", !j.running);
     status.textContent = j.running ? `${j.kind === "apply" ? "Applying" : "Scanning"}: ${j.done} of ${j.total}${j.found ? ` · ${j.found} ${j.kind === "apply" ? "fixed" : "found"}` : ""}…` : j.note || "";
+    host.querySelector("#hc-noisbn").textContent = s.no_isbn ? `${s.no_isbn.toLocaleString()} library book${s.no_isbn === 1 ? " has" : "s have"} no ISBN. The scan offers Hardcover's ISBN, or a best guess from Open Library to check before you tick it. Free Kindle books often have no ISBN at all.` : "";
     const errs = host.querySelector("#hc-errors");
     errs.classList.toggle("hidden", !(j.errors || []).length);
     errs.innerHTML = (j.errors || []).map((e) => `<p>${esc(e)}</p>`).join("");

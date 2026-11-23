@@ -14,7 +14,7 @@ func (s *Server) handleHCCleanState(w http.ResponseWriter, r *http.Request) {
 	job := s.hcjob.state() // first: a job that is finished here has finished its changes to the list read next
 	list := s.Store.HCSuggestions("new", 1500)
 	writeJSON(w, http.StatusOK, map[string]any{
-		"job": job, "suggestions": list, "count": s.Store.CountHCSuggestions(),
+		"job": job, "suggestions": list, "count": s.Store.CountHCSuggestions(), "no_isbn": s.Store.CountNoISBN(),
 		"hardcover": s.Store.HardcoverToken(auth.UserFrom(r).ID) != "", "server": s.Store.Setting(store.KeyCalibreSrvURL) != "",
 	})
 }

@@ -118,7 +118,7 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 			}
 			info, how := byISBN[digitsOnly(isbnOf(d, r.ISBN))], "ISBN"
 			if info.ID == 0 && len(d.Authors) > 0 {
-				found, ok, err := hc.InfoByTitle(ctx, d.Title, d.Authors[0])
+				found, ok, err := hcInfoByTitle(ctx, hc, d.Title, d.Authors[0]) // also without a subtitle or series note
 				if err != nil {
 					s.hcjob.end("Hardcover: " + err.Error() + " (what was found so far is below)")
 					return
@@ -136,6 +136,10 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 				}
 			}
 			if info.ID == 0 {
+				if g, ok := s.isbnBestGuess(ctx, d, r.BookID, r.CalibreID); ok {
+					s.Store.AddHCSuggestion(g)
+					s.hcjob.update(func(st *hcJobState) { st.Found++ })
+				}
 				continue
 			}
 			changes := hcChanges(d, info)
