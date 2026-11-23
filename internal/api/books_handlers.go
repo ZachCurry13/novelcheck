@@ -108,6 +108,7 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
+	b.OldRules = store.OldRating(b)
 	out := map[string]any{"book": b, "copies": copies, "downloadable": downloadable, "notes": notes,
 		"my_delete_request": s.Store.MyDeleteRequest(id, u.ID), "my_wish": s.Store.MyWish(id, u.ID), "owned": s.Store.Owned(id),
 		"has_audio": s.Store.HasFormat(id, "audio"), "has_ebook": s.Store.HasFormat(id, "ebook"),

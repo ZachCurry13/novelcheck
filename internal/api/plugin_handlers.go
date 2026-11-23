@@ -100,6 +100,7 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(body.Plugin, "app ") { // the Kindle app: Amazon store books join the person's store library
 		s.addStoreBooks(u, body.Books)
 	}
+	before := s.Store.DownloadedIDs(u.ID, device)
 	matched, err := s.Store.SaveDeviceBooks(u.ID, device, body.Books)
 	if err != nil {
 		log.Printf("plugin device report for user %d: %v", u.ID, err)
@@ -108,7 +109,13 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	added := s.autoAddFromDevice(u, device)
-	kosyncJSON(w, http.StatusOK, map[string]int{"books": len(body.Books), "matched": matched, "added": added})
+	left := []store.LeftBook{}
+	if len(body.Books) < 500 || strings.HasPrefix(body.Plugin, "app ") { // the plugin lists 500 books at most: a cut list isn't books leaving
+		if l := s.Store.NoteLeft(u.ID, device, before, s.Store.DownloadedIDs(u.ID, device)); l != nil {
+			left = l
+		}
+	}
+	kosyncJSON(w, http.StatusOK, map[string]any{"books": len(body.Books), "matched": matched, "added": added, "left": left})
 }
 
 // handlePluginVersion tells the plugin which version this NovelCheck has and

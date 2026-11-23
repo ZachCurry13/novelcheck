@@ -38,15 +38,22 @@ type KindleBook struct {
 	Percent float64 `db:"percent" json:"percent"`
 	Level   *int    `db:"spice_level" json:"level"`
 	Status  string  `db:"status" json:"status"` // the book's rating status ("analyzed", "pending", …)
+	Old     bool    `db:"-" json:"old_rules"`   // rated under older rules
+	Rules   int     `db:"rules_version" json:"-"`
+	Model   string  `db:"analysis_model" json:"-"`
 }
 
 // KindleLibrary lists what a Kindle last reported, newest opened first, then by title.
 func (s *Store) KindleLibrary(userID int64, device string) []KindleBook {
 	out := []KindleBook{}
 	_ = s.DB.Select(&out, `SELECT COALESCE(d.book_id, 0) AS book_id, COALESCE(NULLIF(b.title, ''), d.title) AS title,
-		COALESCE(NULLIF(b.author, ''), d.author) AS author, d.format, d.percent, b.spice_level, COALESCE(b.status, '') AS status
+		COALESCE(NULLIF(b.author, ''), d.author) AS author, d.format, d.percent, b.spice_level, COALESCE(b.status, '') AS status,
+		COALESCE(b.rules_version, 0) AS rules_version, COALESCE(b.analysis_model, '') AS analysis_model
 		FROM device_books d LEFT JOIN books b ON b.id = d.book_id WHERE d.user_id = ? AND d.device = ? AND d.ignored = 0
 		ORDER BY d.opened_at DESC, d.title COLLATE NOCASE LIMIT 3000`, userID, device)
+	for i := range out {
+		out[i].Old = OldRating(&Book{Status: out[i].Status, RulesVersion: out[i].Rules, AnalysisModel: out[i].Model})
+	}
 	return out
 }
 

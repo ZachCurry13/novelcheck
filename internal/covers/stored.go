@@ -30,3 +30,15 @@ func (c Cache) Keep(name string, jpg []byte) (string, os.FileInfo, bool) {
 	info, err := os.Stat(p)
 	return p, info, err == nil
 }
+
+// SaveUpload keeps a picture someone uploaded (JPEG or PNG, at least 100 px a side, 8 MB at most) under name.
+func (c Cache) SaveUpload(name string, data []byte) bool {
+	return c.Dir != "" && storedName.MatchString(name) && c.saveImage(name, data)
+}
+
+// Drop removes a cover kept under name.
+func (c Cache) Drop(name string) {
+	if c.Dir != "" && storedName.MatchString(name) {
+		_ = os.Remove(filepath.Join(c.Dir, name+".jpg"))
+	}
+}

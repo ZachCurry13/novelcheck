@@ -111,6 +111,10 @@ func (s *Server) handleDecideDeletes(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case "delete":
+		if !auth.UserFrom(r).Owner {
+			writeErr(w, http.StatusForbidden, onlyOwnerDeletes)
+			return
+		}
 		if s.Store.Setting(store.KeyCalibreSrvURL) == "" {
 			writeErr(w, http.StatusBadRequest, "set up one-click removal (the calibre Content server) first, or use Copy Calibre search and Mark done")
 			return

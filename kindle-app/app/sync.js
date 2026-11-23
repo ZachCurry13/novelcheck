@@ -15,11 +15,12 @@ function syncNow(force) {
   if (!force && new Date().getTime() - (+stored("nc-synced") || 0) < SYNC_EVERY) return;
   var said = [];
   doTasks(said, function () {
-    report(said, function (ok) {
+    report(said, function (ok, left) {
       sendHighlights(said, function () {
         sendWords(said, function () {
           if (ok) keep("nc-synced", String(new Date().getTime()));
           note(said.join(" "));
+          if (left && left.length) showLeft(left); // books that left the Kindle: keep or remove them
         });
       });
     });
@@ -75,7 +76,7 @@ function report(said, done) {
       if (err) { said.push(err); return done(false); }
       said.push("Reported " + r.books + " books" + (lib.plugin ? " (KOReader's are the plugin's)" : "") + ". " +
         (r.matched === 1 ? "1 is" : r.matched + " are") + " in NovelCheck; new store books are being rated.");
-      done(true);
+      done(true, r.left);
     });
   });
 }

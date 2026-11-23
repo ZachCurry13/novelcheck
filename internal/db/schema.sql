@@ -793,6 +793,21 @@ CREATE TABLE IF NOT EXISTS book_highlights (
     PRIMARY KEY (user_id, book_id, key)
 );
 
+-- Books a person took out of their own view of the library ("Remove from my library"); nobody else is affected.
+CREATE TABLE IF NOT EXISTS hidden_books (
+    user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id   INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    hidden_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, book_id)
+);
+-- Library books that left someone's e-reader, waiting for them to say: keep, remove from my library, or ask to delete.
+CREATE TABLE IF NOT EXISTS kindle_left (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    device  TEXT NOT NULL DEFAULT '',
+    left_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, book_id)
+);
 -- Words looked up in Amazon's reader (the Kindle app reads the Kindle's Vocabulary Builder), per person and book.
 CREATE TABLE IF NOT EXISTS kindle_words (
     user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

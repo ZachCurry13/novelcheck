@@ -14,6 +14,7 @@ import { reduceMotion } from "./appearance.js";
 import { seriesLine, seriesText, openTitleEdit } from "./titlefix.js";
 import { genreChips, authorLinks, seriesLink } from "./genres.js";
 import { coverImg, reportCover } from "./covers.js";
+import { openCoverPicker } from "./coverpicker.js";
 import { loadContent, contentIcons, contentSection } from "./content.js";
 import { blurbHTML } from "./blurb.js";
 import { bookCollectionsHTML, bindBookCollections } from "./bookcollections.js";
@@ -79,6 +80,7 @@ export async function openBook(id, state, onChange) {
           ${coverImg(b.id, "h-36 w-24 sm:h-44 sm:w-28", true)}
           ${friend ? "" : data.my_cover_report ? `<span class="text-xs text-slate-500">Cover reported</span>`
             : `<button type="button" data-act="wrong-cover" class="text-xs text-slate-500 underline">Wrong cover?</button>`}
+          ${friend ? "" : `<button type="button" data-act="change-cover" class="text-xs text-slate-500 underline">Change cover</button>`}
         </div>
         <div class="min-w-0 flex-1 pr-8">
           <h2 class="text-xl font-semibold">${esc(b.title)}</h2>
@@ -97,6 +99,7 @@ export async function openBook(id, state, onChange) {
         ? `<p class="text-xs text-slate-400">${b.spice_reason ? `<b class="text-slate-200">Why ${b.spice_level} 🌶️:</b> ${esc(b.spice_reason)}. ` : ""}${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
       ${blurbHTML(b, "rounded-lg bg-slate-800 p-3 text-slate-200")}
       ${b.summary_verdict ? `<p class="text-xs text-slate-400"><b class="text-slate-300">Rating note:</b> ${esc(b.summary_verdict)}</p>` : ""}
+      ${b.old_rules ? `<p class="text-xs text-amber-300">Older rating: made under earlier rating rules.${manager ? " Re-analyze rates it with the current ones." : " A parent can re-rate it."}</p>` : ""}
       ${reviewChip(b) ? `<p class="rounded-lg bg-amber-900/30 p-2 text-sm text-amber-200">The AI wasn't sure of this rating${b.blurb || b.description ? "" : " (it had little to go on)"}.${!manager ? "" : data.big_model
         ? ` <button type="button" data-act="rerate-big" class="underline">Re-rate with the big model (${esc(data.big_model)})</button>` : " Check it and edit it, or mark it OK."}</p>` : ""}
       ${contentSection(b)}
@@ -128,6 +131,7 @@ export async function openBook(id, state, onChange) {
         ${!owned || friend ? "" : data.my_delete_request
             ? `<button data-act="cancel-delete" class="btn-ghost" title="${esc(data.my_delete_request.reason || "")}">Delete requested · Cancel</button>`
             : `<button data-act="request-delete" class="btn-ghost" title="Ask an admin to delete this book">Request to delete</button>`}
+        ${friend ? "" : `<button data-act="hide-book" class="btn-ghost" title="Only for you; Settings → Kindle &amp; KOReader can show it again">Remove from my library</button>`}
         ${owned && can(state.user, "calibre") && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
       </div>
       <div class="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap gap-2 border-t border-slate-800 bg-slate-900/95 px-6 py-3 backdrop-blur">
@@ -175,6 +179,8 @@ export async function openBook(id, state, onChange) {
       const name = data.copies.find((c) => String(c.catalog_id) === cat)?.catalog_name || "this library";
       if (!confirm(`Take "${b.title}" out of ${name}? Nothing is deleted from your device or Calibre.`)) return;
       if (await attempt(() => del(`/api/catalogs/${cat}/books/${b.id}`), `Removed from ${name}`)) refresh();
+    } else if (act === "change-cover") {
+      openCoverPicker(b, () => { const img = dlg.querySelector("img"); if (img) img.src = `/api/books/${b.id}/cover?size=l&v=${Date.now()}`; onChange?.(); });
     } else if (act === "wrong-cover") {
       if (await reportCover(b)) e.target.closest("[data-act]").replaceWith(Object.assign(document.createElement("span"),
         { className: "text-xs text-slate-500", textContent: "Cover reported" }));
@@ -191,6 +197,8 @@ export async function openBook(id, state, onChange) {
       if (reason === null) return;
       const ok = await attempt(() => post(`/api/books/${b.id}/delete-request`, { reason }), state.user.role === "admin" ? "Delete requested." : "Delete requested. It is hidden from your pages while an admin reviews it.");
       if (ok) refresh();
+    } else if (act === "hide-book") {
+      if (await attempt(() => post("/api/me/left", { book_id: b.id, choice: "hide" }), "Removed from your library. Settings → Kindle & KOReader shows it again.")) { dlg.close(); onChange?.(); }
     } else if (act === "wish") {
       const note = prompt("Add a note for the family? (optional)", "");
       if (note === null) return;

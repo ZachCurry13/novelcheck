@@ -30,8 +30,9 @@ func (s *Server) handleCover(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("size") == "l" {
 		width = covers.Large
 	}
-	// An hour, then the browser checks again: a cover fixed in Calibre shows up soon.
-	w.Header().Set("Cache-Control", "private, max-age=3600")
+	// Five minutes, then the browser checks again (cheap: unchanged covers answer 304): a cover fixed in Calibre or
+	// changed with Change cover shows up soon.
+	w.Header().Set("Cache-Control", "private, max-age=300")
 	serve := func(p string, info os.FileInfo) bool {
 		f, err := os.Open(p)
 		if err != nil {
@@ -41,6 +42,17 @@ func (s *Server) handleCover(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/jpeg")
 		http.ServeContent(w, r, "", info.ModTime(), f)
 		return true
+	}
+	// The person's own choice of cover, then the one an admin chose for everyone (mycover.go), unless ?copy= asks
+	// for a Calibre entry's own.
+	if r.URL.Query().Get("copy") == "" {
+		for _, name := range []string{myCoverName(auth.UserFrom(r).ID, id), pickedCoverName(id)} {
+			if src, srcInfo, ok := s.Covers.Stored(name); ok {
+				if p, err := s.Covers.Thumb(src, srcInfo, width); err == nil && serve(p, srcInfo) {
+					return
+				}
+			}
+		}
 	}
 	copies, _ := s.Store.BookCopies(id)
 	// ?copy=<Calibre id>: the cover of that Calibre entry only (Duplicates shows each copy's own cover).

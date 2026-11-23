@@ -30,7 +30,7 @@ func TestCoversAndReports(t *testing.T) {
 	_ = st.AddCopy(cat, plain, "calibre-entry:5", "", "5")
 
 	res, _ := admin.do("GET", "/api/books/"+itoa(mort)+"/cover", nil, false)
-	if res.StatusCode != 200 || res.Header.Get("Content-Type") != "image/jpeg" || res.Header.Get("Cache-Control") != "private, max-age=3600" {
+	if res.StatusCode != 200 || res.Header.Get("Content-Type") != "image/jpeg" || res.Header.Get("Cache-Control") != "private, max-age=300" {
 		t.Fatalf("cover: %d %v", res.StatusCode, res.Header)
 	}
 	if res, _ := admin.do("GET", "/api/books/"+itoa(plain)+"/cover", nil, false); res.StatusCode != 200 || res.Header.Get("Content-Type") != "image/svg+xml" {

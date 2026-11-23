@@ -124,14 +124,16 @@ func (c Cache) googleAll(ctx context.Context, title, author string) []Candidate 
 }
 
 // AllowedImage says whether u is an image address Review covers or the cover finder may save: the catalogs
-// NovelCheck searches (Open Library, Google Books, Hardcover), over https.
+// NovelCheck searches (Open Library, Google Books, Hardcover), over https, and archive.org, where Open Library's
+// cover addresses now redirect.
 func AllowedImage(u string) bool {
 	p, err := url.Parse(u)
 	if err != nil || p.Scheme != "https" {
 		return false
 	}
 	h := strings.ToLower(p.Hostname())
-	return h == "covers.openlibrary.org" || h == "books.google.com" || strings.HasSuffix(h, ".googleusercontent.com") || h == "assets.hardcover.app"
+	return h == "covers.openlibrary.org" || h == "books.google.com" || strings.HasSuffix(h, ".googleusercontent.com") || h == "assets.hardcover.app" ||
+		h == "archive.org" || strings.HasSuffix(h, ".archive.org")
 }
 
 // Choose saves the image at u as the book's cover (name.jpg), replacing any cover found before, and forgets an

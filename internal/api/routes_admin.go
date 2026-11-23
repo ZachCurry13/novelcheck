@@ -1,6 +1,8 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
@@ -77,8 +79,8 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/calibre/browse", s.handleCalibreBrowse)
 		r.Get("/admin/calibre/find", s.handleCalibreFind)
 		r.Get("/admin/calibre/removal", s.handleCalibreRemoval)
-		r.Post("/admin/calibre/remove", s.handleCalibreRemove)
-		r.Post("/admin/calibre/duplicates/remove", s.handleRemoveDuplicates)
+		r.With(ownerOnly).Post("/admin/calibre/remove", s.handleCalibreRemove) // removes the real files: the main admin only
+		r.With(ownerOnly).Post("/admin/calibre/duplicates/remove", s.handleRemoveDuplicates)
 		r.Get("/admin/calibre/trash", s.handleCalibreTrash)
 		r.Post("/admin/calibre/trash/restore", s.handleCalibreTrashRestore)
 		r.Get("/admin/calibre/server", s.handleCalibreServerGet)
@@ -105,7 +107,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.With(s.cached).Get("/admin/cleanup", s.handleCleanup)
 		r.Post("/admin/cleanup/refresh", s.handleCleanupRefresh)
 		r.Get("/admin/formats", s.handleFormats)
-		r.Post("/admin/formats/remove", s.handleRemoveFormats)
+		r.With(ownerOnly).Post("/admin/formats/remove", s.handleRemoveFormats)
 		r.Post("/admin/formats/undo", s.handleUndoFormats)
 		r.Post("/admin/formats/convert", s.handleConvertFormats)
 		r.Post("/admin/formats/convert/as-is", s.handleConvertAsIs)
@@ -163,3 +165,16 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Delete("/admin/device-logs/{id}", s.handleDeviceLog)
 	})
 }
+
+// ownerOnly keeps a route to the main admin: deleting a book's real files from the library is theirs alone.
+func ownerOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !auth.UserFrom(r).Owner {
+			writeErr(w, http.StatusForbidden, onlyOwnerDeletes)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+const onlyOwnerDeletes = "only the main admin can delete a book's files from the library; ask them, or use Request to delete"

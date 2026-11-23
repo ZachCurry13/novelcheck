@@ -16,6 +16,8 @@ NovelCheck address, username and sync code.
 
 ## Use
 
+When a book leaves the device (plugin 1.63.0), the plugin asks: keep it in NovelCheck, remove it from my library, or remove it and ask for it to be deleted (the main admin decides). Its rating stays either way.
+
 The menu (plugin 1.62.0): **Search**, **Nightstand**, **Download Nightstand**, **New**, **On this device**, **Finish this book…**, **Sync now** (the book report, highlights, reading statistics and the tasks from NovelCheck at once), **Kindle care** (back up, tidy, delete finished books, crash logs), **Automatic** and **Settings** (set up, connect, device name, update, stop, developer tools, about).
 
 1. In KOReader's top menu, open the tools tab (the wrench), then **NovelCheck >

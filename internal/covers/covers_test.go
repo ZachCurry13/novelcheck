@@ -169,13 +169,16 @@ func TestMissedAndForget(t *testing.T) {
 // Review covers only shows and saves images from the two catalogs it searches, and suggests the tidied title.
 func TestReviewCoversRules(t *testing.T) {
 	for u, ok := range map[string]bool{
-		"https://covers.openlibrary.org/b/id/1-M.jpg":   true,
-		"https://books.google.com/books/content?id=x":   true,
-		"https://lh3.googleusercontent.com/x":           true,
-		"http://covers.openlibrary.org/b/id/1-M.jpg":    false,
-		"https://evil.example/x.jpg":                    false,
-		"https://covers.openlibrary.org.evil.example/x": false,
-		"file:///etc/passwd":                            false,
+		"https://covers.openlibrary.org/b/id/1-M.jpg":            true,
+		"https://books.google.com/books/content?id=x":            true,
+		"https://lh3.googleusercontent.com/x":                    true,
+		"http://covers.openlibrary.org/b/id/1-M.jpg":             false,
+		"https://evil.example/x.jpg":                             false,
+		"https://covers.openlibrary.org.evil.example/x":          false,
+		"file:///etc/passwd":                                     false,
+		"https://archive.org/download/olcovers642/x.zip/1-L.jpg": true, // where Open Library redirects
+		"https://ia800100.us.archive.org/x.jpg":                  true,
+		"https://archive.org.evil.example/x.jpg":                 false,
 	} {
 		if AllowedImage(u) != ok {
 			t.Errorf("%s: want %v", u, ok)

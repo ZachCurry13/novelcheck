@@ -256,8 +256,11 @@ return function(NovelCheck, ctx)
         self:scanBooksAsync(function(books, stopped)
             if stopped then return end
             pcall(function()
-                local code = self:request("/kosync/plugin/device", nil, json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) })
+                local code, answer = self:request("/kosync/plugin/device", nil, json.encode{ device = self:deviceName(), plugin_version = VERSION, books = self:withoutPaths(books) })
                 self:noteReported(code)
+                if code == 200 and self.askLeft then
+                    self:askLeft(answer) -- books that left the device: keep or remove them
+                end
             end)
         end, { quiet = true })
     end
@@ -299,6 +302,9 @@ return function(NovelCheck, ctx)
                         text = text .. "\n" .. _("(Only the first 500 books are listed.)")
                     end
                     UIManager:show(InfoMessage:new{ text = text })
+                    if self.askLeft then
+                        UIManager:scheduleIn(2, function() self:askLeft(answer) end)
+                    end
                 elseif code == 401 then
                     UIManager:show(InfoMessage:new{ text = _("Wrong username or sync code.") })
                 else

@@ -128,6 +128,8 @@ type Book struct {
 	SpiceReason     string  `db:"spice_reason" json:"spice_reason"` // what drives the pepper level, a few words
 	AgeSetBy        string  `db:"age_set_by" json:"age_set_by"`
 	AnalysisModel   string  `db:"analysis_model" json:"analysis_model"`
+	RulesVersion    int     `db:"rules_version" json:"-"`
+	OldRules        bool    `db:"-" json:"old_rules"` // rated under older rating rules (set by OldRating)
 	AnalysisError   string  `db:"analysis_error" json:"analysis_error"`
 	Narrator        string  `db:"narrator" json:"narrator"`         // audiobooks: who reads it
 	DurationSec     int     `db:"duration_sec" json:"duration_sec"` // audiobooks: length in seconds; 0 = not an audiobook

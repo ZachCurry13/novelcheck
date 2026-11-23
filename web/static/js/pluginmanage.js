@@ -5,6 +5,7 @@ import { get, put } from "./api.js";
 import { esc, attempt } from "./ui.js";
 import { ago } from "./progress.js";
 import { openKindleBooks } from "./kindlebooks.js";
+import { renderLeftBooks } from "./leftbooks.js";
 
 // semverLess says whether version a is older than b ("1.2.0" < "1.10.0").
 export function older(a, b) {
@@ -63,7 +64,9 @@ export async function renderPluginCard(host) {
     <div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">Your e-readers</p>
       ${devices.length ? `<ul class="space-y-2">${devices.map((d) => `<li><b>${esc(d.name)}</b> ${badge(d)}<br>
         <span class="text-xs text-slate-400">${d.books} book${d.books === 1 ? "" : "s"}, ${d.in_library} in your library · reported ${esc(ago(d.reported_at))}</span></li>`).join("")}</ul>`
-      : `<p class="text-xs text-slate-500">None yet. After installing, open <b>NovelCheck → Sync now</b> in KOReader.</p>`}</div>`;
+      : `<p class="text-xs text-slate-500">None yet. After installing, open <b>NovelCheck → Sync now</b> in KOReader.</p>`}</div>
+    <div data-left-books></div>`;
+  renderLeftBooks(host.querySelector("[data-left-books]"));
   host.querySelector("[data-match]").onclick = () => openKindleBooks(() => renderPluginCard(host));
   host.querySelector("[data-autoadd]").onchange = (e) => attempt(() => put("/api/me/kindle-autoadd", { enabled: e.target.checked }), e.target.checked ? "Books on your e-reader will join your Nightstand" : "Switched off");
 }

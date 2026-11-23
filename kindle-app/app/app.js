@@ -59,7 +59,7 @@ function row(b) {
   what.appendChild(el("div", "title", b.title));
   what.appendChild(el("div", "by", b.author));
   if (state.list === "kindle-mine") { // the books on this Kindle: their rating, and where they are
-    what.appendChild(el("div", "meta", (b.status === "pending" || b.status === "processing" ? "Being rated…" : spice(b.level)) +
+    what.appendChild(el("div", "meta", (b.status === "pending" || b.status === "processing" ? "Being rated…" : spice(b.level) + (b.old_rules ? " (older rating)" : "")) +
       (b.format === "cloud" ? " · In your Amazon library" : b.percent > 0 ? " · " + Math.round(b.percent * 100) + "% read" : "")));
     if (b.id) what.onclick = function () { details(b.id); };
     r.appendChild(what);
@@ -151,6 +151,41 @@ function save(b, file, btn) {
     btn.textContent = "Download";
     note("The download failed. Check Wi-Fi and try again.");
   });
+}
+
+// showLeft asks about books that left the Kindle: keep them in NovelCheck, remove them from her library (only she
+// stops seeing them), or remove them and ask for them to be deleted for good (the main admin decides).
+function showLeft(list) {
+  var m = $("main");
+  m.innerHTML = "";
+  $("pages").hidden = true;
+  m.appendChild(el("h2", "", "These left your Kindle"));
+  m.appendChild(el("p", "meta", "Keep them in NovelCheck, or remove them. Their rating stays either way."));
+  var choices = [["keep", "Keep"], ["hide", "Remove from my library"], ["delete", "Remove, ask to delete"]];
+  for (var i = 0; i < list.length; i++) {
+    (function (b) {
+      var r = el("div", "book");
+      r.appendChild(el("div", "title", b.title));
+      r.appendChild(el("div", "by", b.author));
+      var acts = el("div", "actions");
+      for (var j = 0; j < choices.length; j++) {
+        (function (c) {
+          var btn = el("button", c[0] === "keep" ? "" : "main", c[1]);
+          btn.onclick = function () {
+            api("POST", "/kosync/plugin/left", { book_id: b.id, choice: c[0] }, function (err) {
+              if (err) return note(err);
+              m.removeChild(r);
+              note(c[0] === "keep" ? "Kept." : c[0] === "hide" ? "Removed from your library." : "Removed; the main admin will decide about deleting it.");
+              if (!m.querySelector(".book")) show("up-next");
+            });
+          };
+          acts.appendChild(btn);
+        })(choices[j]);
+      }
+      r.appendChild(acts);
+      m.appendChild(r);
+    })(list[i]);
+  }
 }
 
 window.addEventListener("resize", function () { applyScale(); });

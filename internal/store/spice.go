@@ -86,3 +86,9 @@ func (s *Store) AIRatedIDs() ([]int64, error) {
 		AND analysis_model NOT LIKE 'manual:%' AND analysis_model NOT LIKE 'deep:%' ORDER BY id`)
 	return ids, err
 }
+
+// OldRating says whether b's rating was made under older rating rules (a book back from the rating memory, or one
+// not re-rated since the rules changed). A parent's own rating and a Deep Scan's are never "old".
+func OldRating(b *Book) bool {
+	return b.Status == "analyzed" && b.RulesVersion < RulesVersion && !KeepsRating(b)
+}

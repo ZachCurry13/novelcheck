@@ -141,6 +141,7 @@ Process-level settings are environment variables. Everything else is edited in t
 - State-changing API calls require an `X-NovelCheck: 1` header (CSRF guard). Login is rate-limited per IP.
 - **The database backup contains password hashes and the LLM/SMTP secrets.** Store it like a credential.
 - The KOReader endpoints (`/kosync`) answer cross-origin requests from any page, so the Kindle app (a page on the Kindle itself) can use them. They take no cookies, only the account name and the sync code's MD5 in headers, which another page doesn't have.
+- Only the main admin can delete a book's files from the library (Remove from Calibre, duplicates, formats, a delete request's Delete). Everyone else can remove a book from their own view or ask for it to be deleted.
 - Book downloads are served only from paths recorded by the Calibre sync that sit inside `NOVELCHECK_CALIBRE_DIR`. The in-app folder browser is admin-only and can't leave that mount, even through symlinks.
 - First-run setup (`POST /api/setup`) only works while the database has no accounts.
 - The tunnel token is stored as a secret (never returned to the browser) and passed to `cloudflared` through its environment, not the command line.

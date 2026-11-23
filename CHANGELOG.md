@@ -6,6 +6,17 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.97.0]
 
+### 🗑️ Leaving the Kindle, and who deletes
+- **When a book leaves an e-reader** (deleted on the Kindle, or an Amazon book removed to the cloud), the Kindle app and the KOReader plugin (1.63.0) ask: **Keep** it in NovelCheck, **Remove from my library** (only you stop seeing it), or **Remove, ask to delete** (it goes on the main admin's delete list). Books still waiting are listed in **Settings → Kindle & KOReader**, with the ones you removed and **Show again**.
+- **Remove from my library** is also on every book's page, for anyone.
+- **Only the main admin deletes a book's files** from the library: Remove from Calibre, Remove duplicates, Remove formats, and Delete on a delete request. Other admins can still review and dismiss requests.
+- A deleted book's rating and cover are always kept. If it comes back, it gets them back, and a rating made under older rules now says **Older rating** (on the book's page and in the Kindle app's My Kindle list) so a parent can re-rate it.
+
+### 🖼️ Change cover
+- **Change cover** on a book's page: pick one of the covers found online or **upload your own**. Only your view changes. An admin can tick **Use it for everyone**, which wins over Calibre's cover. **Back to the usual cover** undoes it.
+- Fixed: Open Library covers never loaded in Review covers (Open Library now sends its pictures from archive.org).
+- Fixed: the Library page (and now the new cover and Kindle pages) could fail to open offline, because a page script wasn't kept for offline use. A test now catches it.
+
 ### 📖 The Kindle app does more (app 1.2.0)
 - **Sync now** (it replaces Report my books) does everything at once, and the app also syncs by itself when opened, at most every 12 hours. Nothing runs once it's closed.
 - **Store books are rated.** Books bought on Amazon or borrowed with Kindle Unlimited, downloaded or still in the cloud, join a private "Kindle store" library and NovelCheck rates them like any new book. The new **My Kindle** tab lists every book on the Kindle with its spice level, how far she is and whether it's only in the Amazon library.
