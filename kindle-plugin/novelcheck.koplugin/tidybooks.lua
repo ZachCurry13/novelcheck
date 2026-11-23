@@ -162,7 +162,7 @@ return function(NovelCheck)
         self.settings:flush()
         self:tellMoved(moves)
         if not quiet then
-            UIManager:show(InfoMessage:new{ text = _("Moved") .. " " .. done .. " " .. _("books.") .. " " .. _("NovelCheck > Undo the last tidy puts them back.") })
+            UIManager:show(InfoMessage:new{ text = _("Moved") .. " " .. done .. " " .. _("books.") .. " " .. _("NovelCheck > Kindle care > Undo tidy puts them back.") })
         end
         return done
     end

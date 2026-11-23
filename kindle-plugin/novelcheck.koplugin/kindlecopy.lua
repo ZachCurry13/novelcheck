@@ -335,7 +335,7 @@ return function(NovelCheck)
                 if os.time() - lastShown >= 8 then
                     lastShown = os.time()
                     UIManager:show(InfoMessage:new{ text = (backup and _("Backing up") or _("Copying")) .. " " .. n .. " / " .. #todo
-                        .. "\n" .. tostring(path:match("[^/]+$")) .. "\n" .. _("NovelCheck > Stop the backup to stop."), timeout = 4 })
+                        .. "\n" .. tostring(path:match("[^/]+$")) .. "\n" .. _("NovelCheck > Settings > Stop current job stops it."), timeout = 4 })
                 end
             end
             local data = cur.fh:read(PIECE) or ""

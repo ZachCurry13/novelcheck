@@ -98,7 +98,7 @@ export async function mountCleanup(host, close) {
         <div class="min-w-0 flex-1"><p class="font-semibold">${mark(status[r.id] || (r.n ? "todo" : "done"))} ${i}. ${esc(r.title)}</p><p class="text-xs text-slate-400">${r.n ? esc(r.note) : "Nothing to do."}</p></div>
         ${r.n && c.configured ? `<button type="button" data-step="${r.id}" class="btn-secondary py-1 text-sm" ${busy ? "disabled" : ""}>${r.btn}</button>` : ""}</li>`).join("")}</ul>
       <button type="button" data-run class="btn-primary w-full" ${busy || !todo || !c.configured ? "disabled" : ""}>▶ Go through the steps, reviewing each (extra copies are compared by hand)</button>
-      <p class="text-xs text-slate-400">Then on the Kindle: <b>Update plugin</b> → <b>Report books on this device</b> → <b>Tidy book names</b> → <b>Download all Nightstand</b>.</p>
+      <p class="text-xs text-slate-400">Then on the Kindle: <b>Settings → Update</b> → <b>Sync now</b> → <b>Kindle care → Tidy names</b> → <b>Download Nightstand</b>.</p>
       ${log.length ? `<pre class="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-2 text-xs text-slate-300">${esc(log.join("\n"))}</pre>` : ""}</div>`;
   };
   const reload = async () => {

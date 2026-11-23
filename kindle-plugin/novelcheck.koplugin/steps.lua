@@ -2,7 +2,7 @@
 NovelCheck plugin: long jobs that keep the Kindle answering. KOReader draws the screen and reads the buttons from one
 loop; a job that works through hundreds of books without handing control back freezes the Kindle (even the power
 button). runSteps goes through a list a few items at a time and returns to the loop between them, says how far it
-is now and then, and can be stopped (NovelCheck > Stop what the plugin is doing). It adds its functions to the
+is now and then, and can be stopped (NovelCheck > Settings > Stop current job). It adds its functions to the
 NovelCheck plugin class (see main.lua).
 ]]
 
@@ -52,7 +52,7 @@ return function(NovelCheck)
             end
             if opts.show ~= false and not opts.quiet and os.time() - lastShown >= 8 then
                 lastShown = os.time()
-                UIManager:show(InfoMessage:new{ text = label .. " " .. i .. " / " .. total .. "\n" .. _("Stop: NovelCheck > Stop what the plugin is doing"), timeout = 4 })
+                UIManager:show(InfoMessage:new{ text = label .. " " .. i .. " / " .. total .. "\n" .. _("Stop: NovelCheck > Settings > Stop current job"), timeout = 4 })
             end
             UIManager:scheduleIn(0.02, step)
         end

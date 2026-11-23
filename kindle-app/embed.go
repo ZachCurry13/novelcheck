@@ -18,8 +18,30 @@ import (
 //go:embed app NovelCheck.sh NovelCheck-Check.sh cover.png
 var files embed.FS
 
-// Version is the app's version, shown on the download.
-const Version = "1.0.0"
+// Version is the app's version. Raise it whenever a file in app/ changes: the app compares it with its own and
+// offers to update (Files and File below are what it fetches).
+const Version = "1.1.0"
+
+// Files are the app's files the app can fetch to update itself (never config.js, which is per account).
+func Files() []string {
+	entries, _ := files.ReadDir("app")
+	out := make([]string, 0, len(entries))
+	for _, e := range entries {
+		out = append(out, e.Name())
+	}
+	return out
+}
+
+// File is one of Files' contents.
+func File(name string) ([]byte, bool) {
+	for _, n := range Files() {
+		if n == name {
+			b, err := files.ReadFile("app/" + n)
+			return b, err == nil
+		}
+	}
+	return nil, false
+}
 
 // Zip is the app as a zip to unzip onto the Kindle's main folder, connected to server as user with the sync code.
 func Zip(server, user, code string) ([]byte, error) {

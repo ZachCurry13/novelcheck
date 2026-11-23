@@ -14,6 +14,14 @@ becomes the release notes for that version and is shown in the app under
 - Nothing runs on the Kindle after the app closes.
 - **NovelCheck Check**, a second book the download adds, tests what the app needs on the Kindle (KindleForge's helper, the library, reaching NovelCheck) and sends the result to the bug log. It changes nothing.
 - The app grows its text and buttons to the Kindle's screen and offers to turn on Wi-Fi when it's off.
+- **The app updates itself.** When NovelCheck has a newer version of the app, an **Update** button appears at the top; one tap fetches it and restarts the app. Your sign-in stays.
+
+### ✂️ A shorter KOReader plugin menu (plugin 1.62.0)
+- The menu went from 27 items to 9: **Search**, **Nightstand**, **Download Nightstand**, **New**, **On this device**, **Finish this book…**, **Sync now**, **Kindle care** and **Automatic**, with **Settings** last. Same words as the Kindle app where they overlap.
+- **Sync now** does in one tap what used to be four: report the books, send highlights, sync reading statistics and do the tasks from NovelCheck.
+- **Kindle care** holds back up, tidy, undo tidy, tidy names, delete finished books and delete crash logs. **Settings** holds set up, connect, device name, update, stop, resume, developer tools and about.
+- **Copy my Kindle to NovelCheck now** is gone: **Back up** already copies everything, books included. The automatic copy that ran when the daily backup was off is gone too.
+- The switches under **Automatic** have shorter names, here and in NovelCheck's Kindle remote.
 
 ## [1.95.0]
 

@@ -2,7 +2,7 @@
 NovelCheck plugin: tasks from the app. In NovelCheck (Library cleanup → Kindle tasks) the admin can ask this Kindle
 to back itself up, tidy its books, delete its crash logs, delete books (only ones NovelCheck holds a copy of, and only
 while the file is still the same size as the copy), move books into a folder under Books, or download library books.
-At each check-in (and NovelCheck > Do the tasks from NovelCheck now) the plugin asks for the waiting tasks, does them
+At each check-in (and NovelCheck > Sync now) the plugin asks for the waiting tasks, does them
 and reports each one back. Only these kinds exist; anything else is reported as skipped. A deleted book's reading data
 goes with it; nothing is overwritten.
 It adds its functions to the NovelCheck plugin class (see main.lua).

@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.61.0"
+local VERSION = "1.62.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -117,57 +117,40 @@ function NovelCheck:addToMainMenu(menu_items)
         text = _("NovelCheck"),
         sorting_hint = "tools",
         sub_item_table = {
-            { text = _("Set up everything"), callback = function() self:easySetup() end },
-            { text = _("Search library"), callback = function() self:searchLibrary() end },
-            { text = _("New in library"), callback = function() self:newInLibrary() end },
+            { text = _("Search"), callback = function() self:searchLibrary() end },
             { text = _("Nightstand"), callback = function() self:showUpNext() end },
-            { text = _("Download all Nightstand"), callback = function() self:downloadAll() end },
-            { text = _("Sync reading statistics now"), callback = function() self:syncStatsNow() end },
+            { text = _("Download Nightstand"), callback = function() self:downloadAll() end },
+            { text = _("New"), callback = function() self:newInLibrary() end },
             { text = _("On this device"), callback = function() DeviceBooks.show(self) end },
-            { text = _("Delete finished books..."), callback = function() DeviceBooks.removeFinished(self) end },
-            { text = _("Finish this book..."), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
-            { text = _("Back up my Kindle now (apps, plugins, settings, books)"), callback = function() if self.backupKindle then self:backupKindle(false) end end },
-            { text = _("Tidy my Kindle's books (into Books/NovelCheck)..."), callback = function() if self.tidyBooks then self:tidyBooks() end end },
-            { text = _("Delete the Kindle's crash logs..."), callback = function() if self.cleanCrashLogs then self:cleanCrashLogs() end end },
-            { text = _("Undo the last tidy"), callback = function() if self.undoTidy then self:undoTidy() end end },
-            { text = _("Do the tasks from NovelCheck now"), callback = function() if self.runKindleTasks then self:runKindleTasks(false) end end },
-            { text = _("Stop what the plugin is doing"), callback = function() if self.stopJob then self:stopJob() end end },
-            { text = _("Resume the automatic jobs"), callback = function() self:resumeAutomatic() end },
-            { text = _("Copy my Kindle to NovelCheck now"), callback = function() if self.copyKindle then self:copyKindle(false) end end },
-            { text = _("Send highlights now"), callback = function() if self.sendHighlights then self:sendHighlights(false) end end },
-            { text = _("Tidy book names"), callback = function() self:tidyNames() end },
-            { text = _("Report books on this device"), callback = function() self:reportDevice() end },
-            { text = _("Automatic"), sub_item_table = {
-                { text = _("Report books when online"), keep_menu_open = true,
-                  checked_func = function() return self:autoEnabled("auto_report", true) end,
-                  callback = function() self:toggleAuto("auto_report", true) end },
-                { text = _("Download Nightstand when online"), keep_menu_open = true,
-                  checked_func = function() return self:autoEnabled("auto_download", false) end,
-                  callback = function() self:toggleAuto("auto_download", false) end },
-                { text = _("Sync reading statistics when online"), keep_menu_open = true,
-                  checked_func = function() return self:autoEnabled("auto_stats", false) end,
-                  callback = function() self:toggleAuto("auto_stats", false) end },
-                { text = _("Delete the Kindle's crash logs when online"), keep_menu_open = true,
-                  checked_func = function() return self:autoEnabled("auto_crashlogs", true) end,
-                  callback = function() self:toggleAuto("auto_crashlogs", true) end },
-                { text = _("Back up my whole Kindle when online (once a day)"), keep_menu_open = true,
-                  checked_func = function() return self:autoEnabled("auto_backup", true) end,
-                  callback = function() self:toggleAuto("auto_backup", true) end },
-                { text = _("Copy my Kindle's books when online"), keep_menu_open = true,
-                  checked_func = function() return self:autoEnabled("auto_kindle", true) end,
-                  callback = function() self:toggleAuto("auto_kindle", true) end },
-                { text = _("Send highlights when online"), keep_menu_open = true,
-                  checked_func = function() return self:autoEnabled("auto_highlights", true) end,
-                  callback = function() self:toggleAuto("auto_highlights", true) end },
-                { text = _("Ask for stars at the end of a book"), keep_menu_open = true,
-                  checked_func = function() return self:autoEnabled("auto_finish", true) end,
-                  callback = function() self:toggleAuto("auto_finish", true) end },
+            { text = _("Finish this book…"), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
+            { text = _("Sync now"), callback = function() self:syncNow() end },
+            { text = _("Kindle care"), sub_item_table = {
+                { text = _("Back up now"), callback = function() if self.backupKindle then self:backupKindle(false) end end },
+                { text = _("Tidy books…"), callback = function() if self.tidyBooks then self:tidyBooks() end end },
+                { text = _("Undo tidy"), callback = function() if self.undoTidy then self:undoTidy() end end },
+                { text = _("Tidy names"), callback = function() self:tidyNames() end },
+                { text = _("Delete finished books…"), callback = function() DeviceBooks.removeFinished(self) end },
+                { text = _("Delete crash logs…"), callback = function() if self.cleanCrashLogs then self:cleanCrashLogs() end end },
             } },
-            { text = _("Device name..."), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
-            { text = _("Connect to NovelCheck..."), keep_menu_open = true, callback = function() self:connectDialog() end },
-            { text = _("Update plugin"), callback = function() self:checkUpdate(false) end },
-            self:developerMenu(),
-            { text = _("About"), keep_menu_open = true, callback = function() self:showAbout() end },
+            { text = _("Automatic"), sub_item_table = {
+                self:autoItem(_("Report books"), "auto_report", true),
+                self:autoItem(_("Download Nightstand"), "auto_download", false),
+                self:autoItem(_("Reading stats"), "auto_stats", false),
+                self:autoItem(_("Highlights"), "auto_highlights", true),
+                self:autoItem(_("Daily backup (on the charger)"), "auto_backup", true),
+                self:autoItem(_("Delete crash logs"), "auto_crashlogs", true),
+                self:autoItem(_("Ask for stars at the end"), "auto_finish", true),
+            } },
+            { text = _("Settings"), sub_item_table = {
+                { text = _("Set up"), callback = function() self:easySetup() end },
+                { text = _("Connect…"), keep_menu_open = true, callback = function() self:connectDialog() end },
+                { text = _("Device name…"), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
+                { text = _("Update"), callback = function() self:checkUpdate(false) end },
+                { text = _("Stop current job"), callback = function() if self.stopJob then self:stopJob() end end },
+                { text = _("Resume automatic jobs"), callback = function() self:resumeAutomatic() end },
+                self:developerMenu(),
+                { text = _("About"), keep_menu_open = true, callback = function() self:showAbout() end },
+            } },
         },
     }
     self:trackMenu(entry.sub_item_table)
@@ -237,7 +220,7 @@ function NovelCheck:onNetworkConnected()
         UIManager:scheduleIn(8, function() pcall(self.runKindleTasks, self, true) end)
     end
     if not (self:autoEnabled("auto_report", true) or self:autoEnabled("auto_download", false) or self:autoEnabled("auto_stats", false)
-        or self:autoEnabled("auto_highlights", true) or self:autoEnabled("auto_kindle", true) or self:autoEnabled("auto_backup", true) or self:autoEnabled("auto_crashlogs", true)) then
+        or self:autoEnabled("auto_highlights", true) or self:autoEnabled("auto_backup", true) or self:autoEnabled("auto_crashlogs", true)) then
         return
     end
     local now = os.time()
@@ -261,7 +244,7 @@ function NovelCheck:autoRun()
         self.settings:saveSetting("auto_inflight", 0)
         self.settings:flush()
         UIManager:show(InfoMessage:new{ text = _("The automatic jobs stopped early last time, so they're paused.") .. "\n"
-            .. _("Turn them back on with NovelCheck > Resume the automatic jobs."), timeout = 15 })
+            .. _("Turn them back on with NovelCheck > Settings > Resume automatic jobs."), timeout = 15 })
         return
     end
     self.settings:saveSetting("auto_inflight", os.time())
@@ -284,8 +267,6 @@ function NovelCheck:autoRun()
             end)
             if self.backupKindle and self:autoEnabled("auto_backup", true) and charging and os.time() - (tonumber(self.settings:readSetting("last_backup")) or 0) > day then
                 self:backupKindle(true)
-            elseif self.copyKindle and self:autoEnabled("auto_kindle", true) and not self:autoEnabled("auto_backup", true) then
-                self:copyKindle(true)
             end
         end },
         { 190, function() self:checkUpdate(true) end },
@@ -304,6 +285,37 @@ function NovelCheck:autoRun()
         self.settings:saveSetting("auto_inflight", 0)
         self.settings:flush()
     end)
+end
+
+-- autoItem is one switch of the Automatic menu (done when the Kindle is online).
+function NovelCheck:autoItem(text, key, default)
+    return { text = text, keep_menu_open = true,
+        checked_func = function() return self:autoEnabled(key, default) end,
+        callback = function() self:toggleAuto(key, default) end }
+end
+
+-- syncNow does at once what the automatic jobs do when online, except the backup: the tasks asked for in NovelCheck,
+-- the book report, highlights and reading statistics. Each works quietly and logs its own trouble.
+function NovelCheck:syncNow()
+    if not self:isConnected() then
+        UIManager:show(InfoMessage:new{ text = _("Not connected. Open NovelCheck > Settings > Connect.") })
+        return
+    end
+    UIManager:show(InfoMessage:new{ text = _("Syncing with NovelCheck…"), timeout = 3 })
+    local jobs = {
+        function() if self.runKindleTasks then self:runKindleTasks(true) end end,
+        function() self:reportQuietly() end,
+        function() if self.sendHighlights then self:sendHighlights(true) end end,
+        function() self:syncStats() end,
+    }
+    for n, job in ipairs(jobs) do
+        UIManager:scheduleIn(n * 4, function()
+            local ok, err = pcall(job)
+            if not ok then
+                self:dlog("error", "sync now: " .. tostring(err))
+            end
+        end)
+    end
 end
 
 function NovelCheck:resumeAutomatic()

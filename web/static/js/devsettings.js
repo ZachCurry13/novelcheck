@@ -27,7 +27,7 @@ const browserCard = () => `<div class="card space-y-2 lg:col-span-2"><h2 class="
   <label class="flex items-center gap-2 text-sm text-slate-300"><input type="checkbox" data-dev="auto" ${autoSendOn() ? "checked" : ""}> Send a report by itself when something breaks (at most one every few minutes)</label></div>`;
 
 const kindleCard = (admin) => `<div class="card space-y-2 lg:col-span-2"><h2 class="text-lg font-semibold">Kindle and KOReader</h2>
-  <p class="text-sm text-slate-400">In KOReader open <b>NovelCheck → Developer tools</b>: <i>Run self-test</i> checks the connection and the plugin's files and sends the result here by itself, <i>View log</i> shows what the plugin did, and <i>Send log to NovelCheck</i> sends it with a note. A plugin error also sends the log on its own.
+  <p class="text-sm text-slate-400">In KOReader open <b>NovelCheck → Settings → Developer tools</b>: <i>Run self-test</i> checks the connection and the plugin's files and sends the result here by itself, <i>View log</i> shows what the plugin did, and <i>Send log to NovelCheck</i> sends it with a note. A plugin error also sends the log on its own.
     If the plugin doesn't show up in KOReader at all, look for <code>LOAD_ERROR.txt</code> in its folder, or send KOReader's <code>crash.log</code>.</p>
   ${admin ? `<div class="flex items-center justify-between gap-2 pt-1"><h3 class="font-semibold">Bug reports</h3><button type="button" data-dev="rmall" class="btn-ghost py-1 text-sm">Delete all</button></div><div id="dev-logs" class="space-y-2"></div>` : `<p class="text-xs text-slate-500">Reports sent from a device are read by an admin.</p>`}</div>`;
 

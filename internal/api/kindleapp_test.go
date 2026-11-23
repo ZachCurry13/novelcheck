@@ -63,6 +63,15 @@ func TestKindleApp(t *testing.T) {
 		t.Fatalf("an EPUB only, with no Calibre Content server to convert it: %d %s", code, body)
 	}
 
+	if code, body, _ := get("/kosync/plugin/kindle-app"); code != 200 || !strings.Contains(string(body), `"update.js"`) || strings.Contains(string(body), "config.js") {
+		t.Fatalf("the app's version and files, for updating: %d %s", code, body)
+	}
+	if code, body, _ := get("/kosync/plugin/kindle-app/app.js"); code != 200 || !strings.Contains(string(body), "ES5") {
+		t.Fatalf("an app file: %d", code)
+	}
+	if code, _, _ := get("/kosync/plugin/kindle-app/config.js"); code != 404 {
+		t.Fatalf("no per-account file is served: %d", code)
+	}
 	req, _ := http.NewRequest("OPTIONS", srv.URL+"/kosync/plugin/search", nil)
 	req.Header.Set("Origin", "file://")
 	req.Header.Set("Access-Control-Request-Headers", "x-auth-user, x-auth-key")

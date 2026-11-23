@@ -61,7 +61,7 @@ function kindleHTML(u) {
   const off = on(u, "koreader") ? "" : " module-off";
   return `<div class="card space-y-2 lg:col-span-2${off}">
       <h2 class="text-lg font-semibold">KOReader setup</h2>
-      <p class="text-sm text-slate-400">The catalog address, QR code and reading-sync steps for a Kindle or phone. With the plugin below you rarely need them: <b>NovelCheck → Set up everything</b> does it on the Kindle.</p>
+      <p class="text-sm text-slate-400">The catalog address, QR code and reading-sync steps for a Kindle or phone. With the plugin below you rarely need them: <b>NovelCheck → Settings → Set up</b> does it on the Kindle.</p>
       <button type="button" id="ko-setup" class="btn-secondary">Open KOReader setup</button></div>
     <div id="plugin-card" class="card space-y-2${off}"></div>
     <div class="card space-y-2${off}"><details id="remote-card"><summary class="cursor-pointer text-lg font-semibold">Kindle remote: tell your Kindle what to do</summary>

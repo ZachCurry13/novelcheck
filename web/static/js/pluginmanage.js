@@ -22,7 +22,7 @@ export function pluginStepsHTML(zipUrl, latest) {
     <ol class="list-decimal space-y-1 pl-5 text-sm text-slate-300">
       <li>Unzip it, and connect the e-reader to the computer by USB.</li>
       <li>Copy the <b>novelcheck.koplugin</b> folder into <b>koreader/plugins/</b> on the e-reader (replace the old one when updating).</li>
-      <li>Restart KOReader. It offers <b>Set up NovelCheck sync?</b>: tap <b>Set up</b>. That connects progress sync and reading statistics for you (no WebDAV or catalog to add by hand) and asks to restart once more. The same button is always in the top menu under <b>Tools → NovelCheck → Set up everything</b>.</li>
+      <li>Restart KOReader. It offers <b>Set up NovelCheck sync?</b>: tap <b>Set up</b>. That connects progress sync and reading statistics for you (no WebDAV or catalog to add by hand) and asks to restart once more. The same button is always in the top menu under <b>Tools → NovelCheck → Settings → Set up</b>.</li>
     </ol>`;
 }
 
@@ -55,7 +55,7 @@ export async function renderPluginCard(host) {
     <div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">Your e-readers</p>
       ${devices.length ? `<ul class="space-y-2">${devices.map((d) => `<li><b>${esc(d.name)}</b> ${badge(d)}<br>
         <span class="text-xs text-slate-400">${d.books} book${d.books === 1 ? "" : "s"}, ${d.in_library} in your library · reported ${esc(ago(d.reported_at))}</span></li>`).join("")}</ul>`
-      : `<p class="text-xs text-slate-500">None yet. After installing, open <b>NovelCheck → Report books on this device</b> in KOReader.</p>`}</div>`;
+      : `<p class="text-xs text-slate-500">None yet. After installing, open <b>NovelCheck → Sync now</b> in KOReader.</p>`}</div>`;
   host.querySelector("[data-match]").onclick = () => openKindleBooks(() => renderPluginCard(host));
   host.querySelector("[data-autoadd]").onchange = (e) => attempt(() => put("/api/me/kindle-autoadd", { enabled: e.target.checked }), e.target.checked ? "Books on your e-reader will join your Nightstand" : "Switched off");
 }

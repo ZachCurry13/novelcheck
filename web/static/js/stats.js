@@ -59,7 +59,7 @@ export async function renderStats(view, state, source = {}) {
       ? `<p>NovelCheck has your statistics file (${m.books.length} book${m.books.length === 1 ? "" : "s"}, synced ${esc(ago(data.synced_at))}) but it holds no page-by-page reading yet. Read a few pages in KOReader, then press <b>Reading statistics → Synchronize now</b> again.</p>` : "";
     view.innerHTML = `${heading()}
       <div class="card space-y-2 text-sm text-slate-300"><p>No reading recorded yet.</p>${have}
-      <p>In KOReader, run <b>NovelCheck → Set up everything</b>, then <b>NovelCheck → Sync reading statistics now</b>. (Settings → Kindle &amp; KOReader has the steps.)</p>
+      <p>In KOReader, run <b>NovelCheck → Settings → Set up</b>, then <b>NovelCheck → Sync now</b>. (Settings → Kindle &amp; KOReader has the steps.)</p>
       <a href="#/settings?s=kindle" class="btn-secondary inline-flex">Open Kindle settings</a></div>`;
     return;
   }

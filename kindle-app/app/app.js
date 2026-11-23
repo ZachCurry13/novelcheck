@@ -199,4 +199,5 @@ document.addEventListener("DOMContentLoaded", function () {
   $("prev").onclick = function () { state.page--; rows(); };
   $("next").onclick = function () { state.page++; rows(); };
   show("up-next");
+  checkUpdate();
 });

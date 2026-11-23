@@ -22,4 +22,5 @@ input { flex: 1; min-height: 2.75rem; font-size: 1.25rem; border: 0.125rem solid
 .book p { margin: 0.5rem 0; line-height: 1.35; }
 .book .actions { clear: both; display: flex; align-items: center; padding-top: 0.5rem; }
 footer { display: flex; align-items: center; justify-content: space-between; padding-top: 0.625rem; }
-footer[hidden] { display: none; }
+footer[hidden], button[hidden] { display: none; }
+header button { margin-left: 0.5rem; }

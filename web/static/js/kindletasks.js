@@ -9,16 +9,16 @@ const KIND = { backup: "Back up", tidy: "Tidy the books", crashlogs: "Delete cra
   report: "Report its books", highlights: "Send highlights", stats: "Sync reading statistics", download_nightstand: "Download the Nightstand", tidy_names: "Tidy book names",
   selftest: "Self-test and send the log", update_plugin: "Update the plugin", stop: "Stop what it's doing", resume_auto: "Resume the automatic jobs", set_auto: "Automatic switch", set_home: "Home address" };
 // the plugin's automatic switches (NovelCheck > Automatic on the Kindle)
-const SWITCH = { auto_report: "Report books when online", auto_download: "Download Nightstand when online", auto_stats: "Sync reading statistics when online",
-  auto_highlights: "Send highlights when online", auto_finish: "Ask for stars at the end of a book", auto_backup: "Back up the whole Kindle (once a day, on the charger)",
-  auto_kindle: "Copy the Kindle's books when online", auto_crashlogs: "Delete crash logs when online" };
+const SWITCH = { auto_report: "Report books", auto_download: "Download Nightstand", auto_stats: "Reading stats",
+  auto_highlights: "Highlights", auto_finish: "Ask for stars at the end", auto_backup: "Daily backup (on the charger)",
+  auto_crashlogs: "Delete crash logs" };
 const mb = (b) => (b >= 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1e3))} KB`);
 
 export async function renderKindleTasks(host, device = "") {
   host.textContent = "Loading…";
   const r = await get(`/api/me/kindle-tasks${device ? `?device=${encodeURIComponent(device)}` : ""}`).catch(() => null);
   if (!r) { host.textContent = "Couldn't load that just now."; return; }
-  if (!r.devices.length) { host.textContent = "No Kindle yet. On the Kindle, run NovelCheck > Report books on this device."; return; }
+  if (!r.devices.length) { host.textContent = "No Kindle yet. On the Kindle, run NovelCheck > Sync now."; return; }
   const dev = r.device;
   const task = (t) => `<li class="flex items-center justify-between gap-2 py-1"><span class="min-w-0"><b>${esc(KIND[t.kind] || t.kind)}</b> <span class="text-slate-400">${esc(t.device || "any Kindle")}</span>
     ${t.note ? `<span class="block text-xs text-slate-400">${esc(t.note)}</span>` : ""}</span>

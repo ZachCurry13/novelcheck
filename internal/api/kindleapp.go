@@ -10,9 +10,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/safe"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	kindleapp "github.com/zachcurry13/novelcheck/kindle-app"
 )
 
 // The Kindle app (kindle-app/, for a jailbroken Kindle without KOReader) uses the plugin's endpoints, plus these:
@@ -148,6 +150,28 @@ func (s *Server) convertForKindle(id int64, calibreID int, from string) {
 	} else {
 		kindleJobs[id] = why
 	}
+}
+
+// handleKindleAppVersion: GET /kosync/plugin/kindle-app, the app's newest version and files, so it can offer to update.
+func (s *Server) handleKindleAppVersion(w http.ResponseWriter, r *http.Request) {
+	if s.kosyncUser(w, r) == nil {
+		return
+	}
+	kosyncJSON(w, http.StatusOK, map[string]any{"version": kindleapp.Version, "files": kindleapp.Files()})
+}
+
+// handleKindleAppFile: GET /kosync/plugin/kindle-app/{name}, one of the app's files.
+func (s *Server) handleKindleAppFile(w http.ResponseWriter, r *http.Request) {
+	if s.kosyncUser(w, r) == nil {
+		return
+	}
+	data, ok := kindleapp.File(chi.URLParam(r, "name"))
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "application/octet-stream")
+	_, _ = w.Write(data)
 }
 
 // handlePluginCover: GET /kosync/plugin/cover/{id}, the web app's cover for the plugin's sign-in.
