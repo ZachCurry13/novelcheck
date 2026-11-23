@@ -20,6 +20,9 @@ func HostDown(err error) bool {
 	return errors.As(err, &dns) || errors.Is(err, context.DeadlineExceeded)
 }
 
+// Busy reports whether err is the service saying it is too busy right now (429 or 503, like Gemini's "high demand").
+func Busy(err error) bool { return errors.Is(err, errBusy) }
+
 // TooLong reports whether the AI refused the request for not fitting its
 // context window ("exceeds the available context size", "maximum context
 // length", "input length exceeds the context length").

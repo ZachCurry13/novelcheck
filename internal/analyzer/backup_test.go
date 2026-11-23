@@ -13,6 +13,7 @@ import (
 
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/db"
+	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -137,4 +138,49 @@ func TestBackupAfterDailyLimitIsANote(t *testing.T) {
 		}
 	}
 	t.Fatal("book was not rated")
+}
+
+// With a person waiting, two "busy" answers from Google skip its next model (Gemma's slow 30 s) for the backup,
+// and the takeover is a calm note.
+func TestBusyMainGoesStraightToBackup(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	var asked []string
+	main := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Model string `json:"model"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		asked = append(asked, body.Model)
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = w.Write([]byte(`{"error":{"message":"This model is currently experiencing high demand."}}`))
+	}))
+	defer main.Close()
+	backup := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"choices": []any{map[string]any{"message": map[string]string{
+			"role": "assistant", "content": `{"spice_level": 1, "summary_verdict": "Sweet."}`}}}})
+	}))
+	defer backup.Close()
+	for k, v := range map[string]string{
+		store.KeyLLMBaseURL: main.URL, store.KeyLLMModel: "flash-a", store.KeyLLMFallbackModel: "flash-b,gemma", store.KeyScanDelaySeconds: "0",
+		store.KeyBackupEnabled: "true", store.KeyBackupBaseURL: backup.URL, store.KeyBackupModel: "llama",
+	} {
+		_ = st.SetSetting(k, v)
+	}
+	id, _ := st.UpsertBook("Busy Book", "A", "", "")
+	_ = st.SetBlurb(id, "x")
+	if err := analyzer.New(st).RateNow(llm.Quick(context.Background()), id); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(asked, ",") != "flash-a,flash-b" {
+		t.Fatalf("Gemma should be skipped after two busy answers: asked %v", asked)
+	}
+	items, _, _ := st.Notifications(10)
+	if len(items) != 1 || items[0].Level != "info" || !strings.Contains(items[0].Message, "too busy") {
+		t.Fatalf("expected a calm note, got %+v", items)
+	}
 }

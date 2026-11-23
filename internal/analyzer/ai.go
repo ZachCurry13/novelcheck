@@ -25,7 +25,9 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 	var errs []string
 	var lastErr error
 	limited := false // every failure so far was a service's own daily limit, not a fault
+	busy := false    // every failure so far was a service saying it is too busy right now
 	for _, ai := range ais {
+		busyHere := 0
 		if len(ai.Models) == 0 {
 			lastErr = errors.New("LLM base URL and model must be configured")
 			errs = append(errs, ai.Name+" AI: no model set")
@@ -39,6 +41,8 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 			if err == nil {
 				if ai.Name == "backup" && limited {
 					w.Store.Notify("info", "llm-backup", takeoverNote(ais, ai), "#/system")
+				} else if ai.Name == "backup" && busy {
+					w.Store.Notify("info", "llm-backup", busyNote(ais, ai), "#/system")
 				} else if ai.Name == "backup" {
 					w.Store.Notify("warning", "llm-backup",
 						"The main AI isn't working, so the backup AI rated some books. Check Admin → Integrations → Check now.", "#/system")
@@ -52,10 +56,17 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 				return nil, ctx.Err()
 			}
 			limited = (lastErr == nil || limited) && llm.DailyLimit(err) != nil
+			busy = (lastErr == nil || busy) && llm.Busy(err)
 			lastErr = err
 			errs = append(errs, fmt.Sprintf("%s AI (%s): %v", ai.Name, model, err))
 			if llm.HostDown(err) {
 				break // the server is down or stuck: its other models won't answer either
+			}
+			if llm.Busy(err) {
+				busyHere++
+			}
+			if busyHere >= 2 && llm.IsQuick(ctx) {
+				break // a person is waiting and this service said "busy" twice: its next model (often a slow one) won't help
 			}
 		}
 	}
@@ -75,6 +86,18 @@ func takeoverNote(ais []store.AIConfig, backup store.AIConfig) string {
 		by = "the local AI"
 	}
 	return main + " reached its free limit for today, so " + by + " is rating books. It switches back on its own when the limit resets."
+}
+
+// busyNote says, without alarm, that the main AI was too busy and the backup rated instead.
+func busyNote(ais []store.AIConfig, backup store.AIConfig) string {
+	main, by := "The main AI", "the backup AI"
+	if len(ais) > 0 && strings.Contains(ais[0].BaseURL, "googleapis.com") {
+		main = "Google's Gemini"
+	}
+	if llm.IsLocal(backup.BaseURL) {
+		by = "the local AI"
+	}
+	return main + " was too busy for a moment (too many people using it), so " + by + " rated some books. Nothing to fix."
 }
 
 func joinErrs(errs []string) string {
