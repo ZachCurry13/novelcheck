@@ -6,6 +6,7 @@ import (
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	kindleapp "github.com/zachcurry13/novelcheck/kindle-app"
 	kindleplugin "github.com/zachcurry13/novelcheck/kindle-plugin"
 )
 
@@ -55,4 +56,27 @@ func (s *Server) handleUserPluginZip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.servePluginZip(w, r, target)
+}
+
+// handleMyKindleAppZip sends the Kindle app (kindle-app/) set up for the person downloading it.
+func (s *Server) handleMyKindleAppZip(w http.ResponseWriter, r *http.Request) {
+	if !s.Store.SettingBool(store.KeyModuleKOReader) {
+		writeErr(w, http.StatusForbidden, "Kindle and KOReader delivery is turned off in NovelCheck")
+		return
+	}
+	u := auth.UserFrom(r)
+	code, err := s.Store.KosyncCode(u.ID, false)
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	data, err := kindleapp.Zip(s.baseURL(r), u.Username, code)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "could not build the Kindle app")
+		return
+	}
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", `attachment; filename="novelcheck-kindle-app-`+strings.ReplaceAll(kindleapp.Version, ".", "-")+`.zip"`)
+	w.Header().Set("Cache-Control", "no-store") // it holds the sign-in
+	_, _ = w.Write(data)
 }

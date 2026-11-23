@@ -57,10 +57,15 @@ func (c *Client) StartConversion(ctx context.Context, id int, from string) (int,
 
 // StartConversionWith is StartConversion with conversion options (calibre's own names, like "flow_size").
 func (c *Client) StartConversionWith(ctx context.Context, id int, from string, options map[string]any) (int, error) {
+	return c.StartConversionTo(ctx, id, from, "EPUB", options)
+}
+
+// StartConversionTo is StartConversionWith to another format (AZW3 for the Kindle app).
+func (c *Client) StartConversionTo(ctx context.Context, id int, from, to string, options map[string]any) (int, error) {
 	if options == nil {
 		options = map[string]any{}
 	}
-	body, _ := json.Marshal(map[string]any{"input_fmt": strings.ToUpper(from), "output_fmt": "EPUB", "options": options})
+	body, _ := json.Marshal(map[string]any{"input_fmt": strings.ToUpper(from), "output_fmt": strings.ToUpper(to), "options": options})
 	raw, err := c.do(ctx, http.MethodPost, "/conversion/start/"+strconv.Itoa(id)+c.libraryQuery(), body)
 	if err != nil {
 		return 0, err

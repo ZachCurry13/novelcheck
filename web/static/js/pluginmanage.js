@@ -1,4 +1,4 @@
-// Profile: the KOReader plugin and your e-readers. Download the plugin already
+// Profile: the KOReader plugin, the Kindle app and your e-readers. Download the plugin already
 // connected to your account, see each device that reported, which plugin
 // version it runs, and when the plugin there is out of date.
 import { get, put } from "./api.js";
@@ -26,16 +26,29 @@ export function pluginStepsHTML(zipUrl, latest) {
     </ol>`;
 }
 
+// kindleAppHTML offers the Kindle app: NovelCheck on a jailbroken Kindle that has no KOReader (kindle-app/).
+const kindleAppHTML = `<details class="space-y-2 border-t border-slate-800 pt-2 text-sm"><summary class="label cursor-pointer">No KOReader? The Kindle app</summary>
+    <p class="text-slate-400">For a jailbroken Kindle with KindleForge. A NovelCheck "book" on the Kindle's home screen opens your library: search, see the spice level, download (as AZW3, so Amazon's reader opens it) and report the Kindle's books, including the ones in the Amazon cloud.</p>
+    <a href="/api/me/kindle-app.zip" download class="btn-primary inline-flex">⬇ Download the Kindle app</a>
+    <p class="text-xs text-slate-500">Connected to your account. Keep the file private.</p>
+    <ol class="list-decimal space-y-1 pl-5 text-slate-300">
+      <li>Connect the Kindle to the computer by USB and unzip the file onto it, merging the <b>documents</b> and <b>extensions</b> folders.</li>
+      <li>Eject the Kindle. <b>NovelCheck</b> shows in its library: tap it.</li>
+      <li>If downloads say they need KindleForge's helper, open KindleForge once, then NovelCheck again.</li>
+    </ol></details>`;
+
 export async function renderPluginCard(host) {
   const s = await get("/api/me/reading-sync").catch(() => null);
   if (!s) return;
   const devices = s.devices || [];
-  const badge = (d) => (!d.plugin_version ? `<span class="chip-pending">plugin before 1.38</span>`
+  const badge = (d) => (String(d.plugin_version).startsWith("app ") ? `<span class="chip-none">Kindle ${esc(d.plugin_version)}</span>`
+    : !d.plugin_version ? `<span class="chip-pending">plugin before 1.38</span>`
     : older(d.plugin_version, s.plugin_latest) ? `<span class="chip-wait">plugin ${esc(d.plugin_version)}: update to ${esc(s.plugin_latest)}</span>`
       : `<span class="chip-none">plugin ${esc(d.plugin_version)}</span>`);
   host.innerHTML = `<h2 class="text-lg font-semibold">KOReader plugin</h2>
     <p class="text-sm text-slate-400">Nightstand on your e-reader, one-tap downloads, a list of what's on it with delete, and reports back to NovelCheck.</p>
     ${pluginStepsHTML("/api/me/koplugin.zip", s.plugin_latest)}
+    ${kindleAppHTML}
     <label class="toggle min-h-[2.5rem] text-sm"><input type="checkbox" data-autoadd ${s.kindle_autoadd ? "checked" : ""}> Add the books on my e-reader to your Nightstand (started ones show as Currently reading)</label>
     <button type="button" data-match class="btn-secondary w-full text-sm">Match books on my e-readers${s.kindle_attention ? ` (${s.kindle_attention} to look at)` : ""}</button>
     <div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">Your e-readers</p>

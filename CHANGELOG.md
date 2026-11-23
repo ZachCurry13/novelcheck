@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.96.0]
+
+### 📖 NovelCheck on a Kindle without KOReader
+- **Settings → Kindle & KOReader → No KOReader? The Kindle app** downloads a small app for a jailbroken Kindle with KindleForge, already connected to your account. Unzip it onto the Kindle and a **NovelCheck** book with the NovelCheck cover appears in its library.
+- Tap it to see your Nightstand and the newest books, search the library, and open a book for its cover, spice level, verdict and summary.
+- **Download** puts the book straight into the Kindle's library as AZW3, which Amazon's reader opens. A book NovelCheck only has as EPUB is converted by Calibre first ("Getting it ready for Kindle…"), which needs the Calibre Content server set up.
+- **Report my books** sends NovelCheck the books in the Kindle's library, including the ones in the Amazon cloud, with how far she is in each. They show under Your e-readers and can join her Nightstand like the plugin's reports.
+- Nothing runs on the Kindle after the app closes.
+
 ## [1.95.0]
 
 ### 📴 Read your books offline

@@ -99,7 +99,7 @@ func (s *Server) Router() http.Handler {
 	r.Get("/opds/{token}/book/{id}/{name}", s.handleOPDSBook)
 	// KOReader progress sync: signed in with the NovelCheck name and a sync code.
 	r.Route("/kosync", func(r chi.Router) {
-		r.Use(noStore)
+		r.Use(noStore, kosyncCORS)
 		r.Post("/users/create", s.handleKosyncCreate)
 		r.Get("/users/auth", s.handleKosyncAuth)
 		r.Put("/syncs/progress", s.handleKosyncPut)
@@ -124,6 +124,8 @@ func (s *Server) Router() http.Handler {
 		r.Get("/plugin/tasks", s.handlePluginTasks)
 		r.Post("/plugin/tasks/result", s.handlePluginTaskResult)
 		r.Get("/plugin/file/{name}", s.handlePluginFile)
+		r.Get("/plugin/kindle/{id}", s.handlePluginKindleBook) // the Kindle app (kindle-app/)
+		r.Get("/plugin/cover/{id}", s.handlePluginCover)
 	})
 	// KOReader's reading statistics (Cloud sync): a private WebDAV folder, same sign-in.
 	r.Handle("/dav", http.HandlerFunc(s.handleDAV))
@@ -169,6 +171,7 @@ func (s *Server) Router() http.Handler {
 			r.Get("/me/kosync", s.handleMyKosync)
 			r.Post("/me/kosync", s.handleMyKosync)
 			r.Get("/me/koplugin.zip", s.handleMyPluginZip)
+			r.Get("/me/kindle-app.zip", s.handleMyKindleAppZip)
 			r.Put("/me/kindle-autoadd", s.handleKindleAutoAdd)
 			r.Get("/me/kindle-books", s.handleKindleBooks)
 			r.Post("/me/kindle-match", s.handleKindleMatch)

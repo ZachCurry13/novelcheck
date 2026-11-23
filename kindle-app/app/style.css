@@ -1,0 +1,23 @@
+/* Margins, not flex gaps (the Kindle's browser predates them). E Ink: black on white, no shadows, gradients or animation; tap targets at least 48px. */
+body { margin: 0; padding: 0 16px 16px; background: #fff; color: #000; font-family: sans-serif; font-size: 20px; }
+header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #000; padding: 8px 0; }
+h1 { font-size: 28px; margin: 0; }
+button { min-height: 48px; min-width: 48px; padding: 0 14px; font-size: 20px; background: #fff; color: #000; border: 2px solid #000; border-radius: 6px; }
+button.on, button.main { background: #000; color: #fff; }
+button[disabled] { border-style: dashed; color: #555; }
+nav { padding: 10px 0; }
+form { display: flex; margin-bottom: 8px; }
+form input, .tabs button, .book .actions > * { margin-right: 8px; }
+input { flex: 1; min-height: 44px; font-size: 20px; border: 2px solid #000; border-radius: 6px; padding: 0 10px; }
+.tabs { display: flex; }
+#note { min-height: 24px; margin: 4px 0; font-weight: bold; }
+.row { display: flex; align-items: center; border-bottom: 1px solid #000; padding: 10px 0; }
+.row .what { flex: 1; min-width: 0; margin-right: 10px; }
+.title { font-weight: bold; }
+.by, .meta { font-size: 17px; }
+.book img { float: left; width: 150px; margin: 0 14px 10px 0; border: 1px solid #000; }
+.book h2 { margin: 0 0 4px; font-size: 24px; }
+.book p { margin: 8px 0; line-height: 1.35; }
+.book .actions { clear: both; display: flex; align-items: center; padding-top: 8px; }
+footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; }
+footer[hidden] { display: none; }
