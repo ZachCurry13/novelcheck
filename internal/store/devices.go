@@ -15,7 +15,8 @@ type DeviceBook struct {
 	// KOReader's own "finished" mark for the book, and the day it was made ("2026-11-09").
 	Finished   bool    `json:"finished"`
 	FinishedOn string  `json:"finished_on"`
-	Percent    float64 `json:"percent"` // how far KOReader is in it (0 to 1)
+	Percent    float64 `json:"percent"`   // how far KOReader (or, from the Kindle app, Amazon's reader) is in it (0 to 1)
+	OpenedAt   int64   `json:"opened_at"` // the Kindle app: when Amazon's reader last opened it (Unix seconds)
 }
 
 // Device is an e-reader that has reported.
@@ -57,8 +58,8 @@ func (s *Store) SaveDeviceBooks(userID int64, device string, books []DeviceBook)
 			bookID = ids[i]
 			matched++
 		}
-		if _, err := tx.Exec(`INSERT OR REPLACE INTO device_books (user_id, device, md5, filename, title, author, format, size, book_id, ignored, reported_at, percent)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, userID, device, b.MD5, b.Filename, b.Title, b.Author, b.Format, b.Size, bookID, ignored[i], now, b.Percent); err != nil {
+		if _, err := tx.Exec(`INSERT OR REPLACE INTO device_books (user_id, device, md5, filename, title, author, format, size, book_id, ignored, reported_at, percent, opened_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, userID, device, b.MD5, b.Filename, b.Title, b.Author, b.Format, b.Size, bookID, ignored[i], now, b.Percent, b.OpenedAt); err != nil {
 			return 0, err
 		}
 	}

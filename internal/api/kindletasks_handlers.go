@@ -37,7 +37,10 @@ func (s *Server) kindleBackedUp(userID int64, device string) map[string]bool {
 // handleKindleTasks: GET /api/admin/kindle-tasks?device= lists the Kindles, the newest tasks and (for the chosen
 // Kindle) its book files with whether the server holds a copy; POST creates a task; DELETE /{id} takes one back.
 func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
-	u := auth.UserFrom(r)
+	u, ok := s.taskOwner(w, r)
+	if !ok {
+		return
+	}
 	if r.Method == http.MethodGet {
 		devices := s.Store.Devices(u.ID)
 		device := r.URL.Query().Get("device")
@@ -51,6 +54,7 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 			Size     int64   `json:"size"`
 			Percent  float64 `json:"percent"`
 			BackedUp bool    `json:"backed_up"`
+			Store    bool    `json:"store"` // a downloaded Amazon store book (the Kindle app), which stays in the Amazon cloud
 		}
 		files := []fileRow{}
 		// the same book more than once on the Kindle: files that share the library book they match or any reading of
@@ -75,7 +79,8 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 		owner := map[string]int{}
 		authors := s.Store.AuthorNames()
 		for i, b := range all {
-			files = append(files, fileRow{b.Filename, b.Title, b.Author, b.Size, b.Percent, have[b.Filename+"|"+strconv.FormatInt(b.Size, 10)]})
+			files = append(files, fileRow{b.Filename, b.Title, b.Author, b.Size, b.Percent, have[b.Filename+"|"+strconv.FormatInt(b.Size, 10)],
+				strings.HasPrefix(b.MD5, "asin:") && b.Format != "cloud"})
 			id, keys := s.Store.DeviceKeys(b.Filename, b.Title, b.Author, authors)
 			if id == 0 {
 				id = b.BookID
@@ -107,7 +112,8 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 				dups = append(dups, g)
 			}
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"devices": devices, "device": device, "files": files, "duplicates": dups, "tasks": s.Store.KindleTasksOf(u.ID, 30)})
+		writeJSON(w, http.StatusOK, map[string]any{"devices": devices, "device": device, "files": files, "duplicates": dups, "tasks": s.Store.KindleTasksOf(u.ID, 30),
+			"app": device != "" && s.Store.IsAppDevice(u.ID, device)})
 		return
 	}
 	var body struct {
@@ -181,6 +187,28 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 			}
 			args["folder"] = folder
 		}
+	case "remove_store": // the Kindle app: downloaded Amazon store books, which stay in the Amazon cloud
+		if !s.Store.IsAppDevice(u.ID, body.Device) {
+			writeErr(w, http.StatusBadRequest, "pick a Kindle that has the NovelCheck Kindle app")
+			return
+		}
+		bought := map[string]bool{}
+		for _, f := range s.Store.DeviceFiles(u.ID, body.Device) {
+			if strings.HasPrefix(f.MD5, "asin:") && f.Format != "cloud" {
+				bought[f.Filename] = true
+			}
+		}
+		var names []string
+		for _, n := range body.Filenames {
+			if bought[n] {
+				names = append(names, n)
+			}
+		}
+		if len(names) == 0 {
+			writeErr(w, http.StatusBadRequest, "tick at least one downloaded Amazon store book; other books need Delete books (NovelCheck keeps a backup first)")
+			return
+		}
+		args["filenames"] = names
 	case "set_home":
 		a, ok := homeAddress(body.Address)
 		if !ok {
@@ -225,7 +253,11 @@ func (s *Server) handleKindleTaskCancel(w http.ResponseWriter, r *http.Request) 
 		writeErr(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	if !s.Store.CancelKindleTask(auth.UserFrom(r).ID, id) {
+	u, allowed := s.taskOwner(w, r)
+	if !allowed {
+		return
+	}
+	if !s.Store.CancelKindleTask(u.ID, id) {
 		writeErr(w, http.StatusNotFound, "that task was already done or taken back")
 		return
 	}
@@ -266,4 +298,20 @@ func (s *Server) handlePluginTaskResult(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	kosyncJSON(w, http.StatusOK, map[string]bool{"ok": s.Store.SetKindleTaskResult(u.ID, body.ID, body.Status, body.Note)})
+}
+
+// taskOwner is whose Kindles the remote works on: the person asking, or (?user=<id>) someone they manage, like a kid.
+func (s *Server) taskOwner(w http.ResponseWriter, r *http.Request) (*store.User, bool) {
+	u := auth.UserFrom(r)
+	raw := r.URL.Query().Get("user")
+	if raw == "" {
+		return u, true
+	}
+	id, err := strconv.ParseInt(raw, 10, 64)
+	target, uerr := s.Store.UserByID(id)
+	if err != nil || uerr != nil || target == nil || (target.ID != u.ID && !canManageUser(u, target)) {
+		writeErr(w, http.StatusForbidden, "you can use the remote for your own Kindles and the ones of people you manage")
+		return nil, false
+	}
+	return target, true
 }

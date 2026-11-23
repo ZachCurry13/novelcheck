@@ -109,7 +109,11 @@ func (s *Store) ReadingProgress(userID int64) map[int64]Progress {
 		FROM koreader_books k WHERE k.user_id = ? AND k.book_id IS NOT NULL AND k.ignored = 0
 		UNION ALL
 		SELECT h.book_id, h.percent, 'Hardcover' AS device, h.updated_at AS at
-		FROM hardcover_books h WHERE h.user_id = ? AND h.book_id IS NOT NULL AND h.percent > 0`, userID, userID, userID)
+		FROM hardcover_books h WHERE h.user_id = ? AND h.book_id IS NOT NULL AND h.percent > 0
+		UNION ALL
+		SELECT d.book_id, d.percent, 'Kindle' AS device, d.opened_at AS at
+		FROM device_books d JOIN device_info i ON i.user_id = d.user_id AND i.device = d.device AND i.plugin_version LIKE 'app %'
+		WHERE d.user_id = ? AND d.book_id IS NOT NULL AND d.ignored = 0 AND d.percent > 0 AND d.opened_at > 0`, userID, userID, userID, userID)
 	out := map[int64]Progress{}
 	for _, r := range rows {
 		if cur, ok := out[r.BookID]; !ok || r.At > cur.At {

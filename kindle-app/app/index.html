@@ -11,17 +11,18 @@
 <header>
   <h1>NovelCheck</h1>
   <button id="update" class="main" hidden></button>
-  <button id="report">Report my books</button>
+  <button id="report">Sync now</button>
 </header>
 <nav>
   <form id="find"><input id="q" type="text" placeholder="Title or author"><button>Search</button></form>
-  <div class="tabs"><button data-list="up-next">Nightstand</button><button data-list="new">New</button></div>
+  <div class="tabs"><button data-list="up-next">Nightstand</button><button data-list="new">New</button><button data-list="kindle-mine">My Kindle</button></div>
 </nav>
 <p id="note"></p>
 <main id="main"></main>
 <footer id="pages"><button id="prev">Prev</button><span id="page"></span><button id="next">Next</button></footer>
 <script src="kindle.js"></script>
 <script src="update.js"></script>
+<script src="sync.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

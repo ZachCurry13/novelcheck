@@ -4,7 +4,19 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
-## [1.96.1]
+## [1.97.0]
+
+### 📖 The Kindle app does more (app 1.2.0)
+- **Sync now** (it replaces Report my books) does everything at once, and the app also syncs by itself when opened, at most every 12 hours. Nothing runs once it's closed.
+- **Store books are rated.** Books bought on Amazon or borrowed with Kindle Unlimited, downloaded or still in the cloud, join a private "Kindle store" library and NovelCheck rates them like any new book. The new **My Kindle** tab lists every book on the Kindle with its spice level, how far she is and whether it's only in the Amazon library.
+- **Amazon's reader counts as reading.** How far she is in each book, and the books she finished, reach her Nightstand (Currently reading, Finished) and Hardcover, as the plugin does for KOReader.
+- **Highlights and notes** from Amazon's reader (the Kindle's "My Clippings" file) appear on each book's page, like the plugin's.
+- **Words looked up** in the Kindle's dictionary appear on each book's page under **Words I looked up**, with the sentence they were in.
+- **Remove store books from a Kindle.** In the Kindle remote, a downloaded Amazon store book can be removed from a Kindle with the app; it stays in the Amazon library. A parent can pick a kid's Kindle in the remote (**Whose Kindle**). Other books still need NovelCheck's backup before they can be deleted.
+- **Plugin and app on one Kindle:** the app reports under its own name, "Kindle (Amazon reader)", and leaves the books only KOReader reads to the plugin, so nothing is done twice.
+
+### ⚡ Check a book waits less when Google is busy
+- When a person is waiting and Google answers "too busy" twice, the next Google model (Gemma, which often takes its full 30 seconds) is skipped and your local AI rates the book right away. The 🔔 notice says Google was busy instead of warning that the main AI isn't working.
 
 ### 📖 Plugin or app?
 - **Settings → Kindle & KOReader** now says when to use the KOReader plugin, the Kindle app, or both, with both downloads side by side.

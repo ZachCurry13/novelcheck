@@ -91,7 +91,7 @@ func (s *Server) handleBookHighlights(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"highlights": s.Store.Highlights(u.ID, id)})
+	writeJSON(w, http.StatusOK, map[string]any{"highlights": s.Store.Highlights(u.ID, id), "words": s.Store.KindleWords(u.ID, id)})
 }
 
 // handlePluginFinish: POST /kosync/plugin/finish {md5, filename, title, author, stars, day}. The end of a book

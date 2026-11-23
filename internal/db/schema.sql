@@ -793,6 +793,16 @@ CREATE TABLE IF NOT EXISTS book_highlights (
     PRIMARY KEY (user_id, book_id, key)
 );
 
+-- Words looked up in Amazon's reader (the Kindle app reads the Kindle's Vocabulary Builder), per person and book.
+CREATE TABLE IF NOT EXISTS kindle_words (
+    user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id   INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    word      TEXT NOT NULL,
+    usage     TEXT NOT NULL DEFAULT '',
+    looked_at TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (user_id, book_id, word, looked_at)
+);
+
 -- What was decided about a book, kept when its row is deleted (it left every library, list and event) and put
 -- back when the same book (the same norm_key) comes again, so it is not rated twice. Filled and read by two
 -- triggers (internal/db/ratingmemory.go), so every way of deleting or adding a book is covered.

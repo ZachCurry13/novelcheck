@@ -17,7 +17,7 @@ const kindleTaskCols = `id, device, kind, args, status, note, created_at, COALES
 // KindleTaskKinds are the only things a task can ask for.
 var KindleTaskKinds = map[string]bool{"backup": true, "tidy": true, "crashlogs": true, "delete_books": true, "download_books": true, "move_books": true,
 	"report": true, "highlights": true, "stats": true, "download_nightstand": true, "tidy_names": true, "selftest": true, "update_plugin": true,
-	"stop": true, "resume_auto": true, "set_auto": true, "set_home": true}
+	"stop": true, "resume_auto": true, "set_auto": true, "set_home": true, "remove_store": true}
 
 // KindleAutoSwitches are the plugin's automatic switches a task may turn on or off.
 var KindleAutoSwitches = map[string]bool{"auto_report": true, "auto_download": true, "auto_stats": true, "auto_highlights": true, "auto_finish": true,
@@ -81,12 +81,13 @@ type DeviceFile struct {
 	Size     int64   `db:"size"`
 	Percent  float64 `db:"percent"`
 	BookID   int64   `db:"book_id"`
+	MD5      string  `db:"md5"` // the Kindle app: "asin:<id>" for an Amazon store book
 }
 
 // DeviceFiles are the book files a Kindle last reported.
 func (s *Store) DeviceFiles(userID int64, device string) []DeviceFile {
 	out := []DeviceFile{}
-	_ = s.DB.Select(&out, `SELECT filename, title, author, format, size, percent, COALESCE(book_id, 0) AS book_id FROM device_books
+	_ = s.DB.Select(&out, `SELECT filename, title, author, format, size, percent, COALESCE(book_id, 0) AS book_id, md5 FROM device_books
 		WHERE user_id = ? AND device = ? ORDER BY title COLLATE NOCASE LIMIT 3000`, userID, device)
 	return out
 }

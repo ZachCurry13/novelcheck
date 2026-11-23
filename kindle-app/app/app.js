@@ -25,7 +25,7 @@ function show(list, query) {
     if (err) return offline(err);
     state.books = (data && data.books) || [];
     state.page = 0;
-    note(state.books.length ? "" : list === "up-next" ? "Your Nightstand is empty." : "No books found.");
+    note(state.books.length ? "" : list === "up-next" ? "Your Nightstand is empty." : list === "kindle-mine" ? "Nothing yet: tap Sync now." : "No books found.");
     rows();
   });
 }
@@ -58,6 +58,13 @@ function row(b) {
   var what = el("div", "what");
   what.appendChild(el("div", "title", b.title));
   what.appendChild(el("div", "by", b.author));
+  if (state.list === "kindle-mine") { // the books on this Kindle: their rating, and where they are
+    what.appendChild(el("div", "meta", (b.status === "pending" || b.status === "processing" ? "Being rated…" : spice(b.level)) +
+      (b.format === "cloud" ? " · In your Amazon library" : b.percent > 0 ? " · " + Math.round(b.percent * 100) + "% read" : "")));
+    if (b.id) what.onclick = function () { details(b.id); };
+    r.appendChild(what);
+    return r;
+  }
   what.appendChild(el("div", "meta", spice(b.level)));
   what.onclick = function () { details(b.id); };
   r.appendChild(what);
@@ -146,41 +153,6 @@ function save(b, file, btn) {
   });
 }
 
-// report sends NovelCheck the books in the Kindle's library (on this Kindle and in the Amazon cloud),
-// read from a copy of the library database (the Kindle keeps the real one open).
-function report() {
-  var out = "/tmp/nc-books.txt", snap = "/tmp/nc_cc_snap.db";
-  var cmd = "rm -f " + out + " " + snap + "*; cp /var/local/cc.db " + snap + "; [ -e /var/local/cc.db-wal ] && cp /var/local/cc.db-wal " + snap + "-wal; " +
-    "sqlite3 -separator '\t' " + snap + " \"SELECT p_cdeKey, p_titles_0_nominal, COALESCE(p_location,''), COALESCE(p_percentFinished,0), " +
-    "COALESCE(j_credits,'') FROM Entries WHERE p_type='Entry:Item' AND p_cdeType IN ('EBOK','PDOC')\" > " + out + "; rm -f " + snap + "*; echo END >> " + out;
-  if (!run(cmd)) return note("Reporting needs KindleForge's helper. Open KindleForge once, then try again.");
-  note("Reading your Kindle library…");
-  waitFor(out, 90, function (text) {
-    if (text == null) return note("Couldn't read the Kindle library.");
-    var books = parseLibrary(text);
-    note("Sending " + books.length + " books…");
-    api("POST", "/kosync/plugin/device", { device: NC.device, plugin_version: "app " + NC.version, books: books }, function (err, r) {
-      if (err) return note(err);
-      note("Reported " + r.books + " books. " + (r.matched === 1 ? "1 is" : r.matched + " are") + " in NovelCheck.");
-    });
-  });
-}
-
-// parseLibrary turns the database lines (key, title, file, percent, credits) into the plugin's device report.
-function parseLibrary(text) {
-  var lines = text.split("\n"), books = [];
-  for (var i = 0; i < lines.length; i++) {
-    var f = lines[i].split("\t");
-    if (f.length < 5 || !f[1] || /\.sh$/.test(f[2])) continue;
-    var author = "";
-    try { author = JSON.parse(f.slice(4).join("\t"))[0].name.display || ""; } catch (e) {}
-    var file = f[2] ? f[2].split("/").pop() : f[1].replace(/[\/\\]/g, " ") + " [" + f[0] + "]";
-    var ext = f[2] ? (file.split(".").pop() || "").toLowerCase() : "cloud";
-    books.push({ filename: file, title: f[1], author: author, format: ext, percent: Math.min(1, (+f[3] || 0) / 100) });
-  }
-  return books;
-}
-
 window.addEventListener("resize", function () { applyScale(); });
 if (window.kindle && window.kindle.appmgr) window.kindle.appmgr.ongo = chrome; // the Kindle shows the app: set its top bar
 
@@ -188,6 +160,7 @@ document.addEventListener("DOMContentLoaded", function () {
   applyScale();
   chrome();
   if (!NC.server) return note("This copy has no settings. Download it again from NovelCheck.");
+  if (NC.device === "Kindle") NC.device = "Kindle (Amazon reader)"; // its own name, so the plugin's report on the same Kindle is never replaced
   $("find").onsubmit = function (e) {
     e.preventDefault();
     var q = $("q").value.replace(/^\s+|\s+$/g, "");
@@ -195,9 +168,10 @@ document.addEventListener("DOMContentLoaded", function () {
   };
   var tabs = document.querySelectorAll(".tabs button");
   for (var i = 0; i < tabs.length; i++) tabs[i].onclick = function () { show(this.getAttribute("data-list")); };
-  $("report").onclick = report;
+  $("report").onclick = function () { note("Syncing…"); syncNow(true); };
   $("prev").onclick = function () { state.page--; rows(); };
   $("next").onclick = function () { state.page++; rows(); };
   show("up-next");
   checkUpdate();
+  syncNow(false); // by itself at most every 12 hours
 });

@@ -97,6 +97,9 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.Store.SaveDeviceInfo(u.ID, device, strings.TrimSpace(body.Plugin))
+	if strings.HasPrefix(body.Plugin, "app ") { // the Kindle app: Amazon store books join the person's store library
+		s.addStoreBooks(u, body.Books)
+	}
 	matched, err := s.Store.SaveDeviceBooks(u.ID, device, body.Books)
 	if err != nil {
 		log.Printf("plugin device report for user %d: %v", u.ID, err)
