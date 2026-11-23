@@ -35,6 +35,7 @@ const kindleAppHTML = `<details class="space-y-2 border-t border-slate-800 pt-2 
       <li>Connect the Kindle to the computer by USB and unzip the file onto it, merging the <b>documents</b> and <b>extensions</b> folders.</li>
       <li>Eject the Kindle. <b>NovelCheck</b> shows in its library: tap it.</li>
       <li>If downloads say they need KindleForge's helper, open KindleForge once, then NovelCheck again.</li>
+      <li>Something not working? Tap <b>NovelCheck Check</b> in the Kindle's library. It tests the Kindle and sends the result to NovelCheck's bug log.</li>
     </ol></details>`;
 
 export async function renderPluginCard(host) {

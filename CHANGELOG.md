@@ -12,6 +12,8 @@ becomes the release notes for that version and is shown in the app under
 - **Download** puts the book straight into the Kindle's library as AZW3, which Amazon's reader opens. A book NovelCheck only has as EPUB is converted by Calibre first ("Getting it ready for Kindle…"), which needs the Calibre Content server set up.
 - **Report my books** sends NovelCheck the books in the Kindle's library, including the ones in the Amazon cloud, with how far she is in each. They show under Your e-readers and can join her Nightstand like the plugin's reports.
 - Nothing runs on the Kindle after the app closes.
+- **NovelCheck Check**, a second book the download adds, tests what the app needs on the Kindle (KindleForge's helper, the library, reaching NovelCheck) and sends the result to the bug log. It changes nothing.
+- The app grows its text and buttons to the Kindle's screen and offers to turn on Wi-Fi when it's off.
 
 ## [1.95.0]
 

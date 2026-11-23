@@ -1,6 +1,7 @@
 // Package kindleapp embeds the NovelCheck Kindle app (for a jailbroken Kindle without KOReader), so NovelCheck can
 // hand it out already set up for the person who downloads it. Unzipped onto the Kindle, it puts NovelCheck.sh (a
-// "book" with the NovelCheck cover that opens the app) in documents and the app itself in extensions.
+// "book" with the NovelCheck cover that opens the app) and NovelCheck-Check.sh (a check that reports what the app
+// needs, for when it doesn't work) in documents, and the app itself in extensions.
 package kindleapp
 
 import (
@@ -14,7 +15,7 @@ import (
 	"strings"
 )
 
-//go:embed app NovelCheck.sh cover.png
+//go:embed app NovelCheck.sh NovelCheck-Check.sh cover.png
 var files embed.FS
 
 // Version is the app's version, shown on the download.
@@ -56,8 +57,19 @@ func Zip(server, user, code string) ([]byte, error) {
 	if err := add("documents/NovelCheck.sh", script); err != nil {
 		return nil, err
 	}
+	check, _ := files.ReadFile("NovelCheck-Check.sh")
+	check = []byte(strings.NewReplacer("{{SERVER}}", shellQuote(strings.TrimRight(server, "/")), "{{USER}}", shellQuote(user),
+		"{{KEY}}", shellQuote(hex.EncodeToString(sum[:])), "{{VERSION}}", Version).Replace(string(check)))
+	if err := add("documents/NovelCheck-Check.sh", check); err != nil {
+		return nil, err
+	}
 	if err := zw.Close(); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+// shellQuote quotes s as one word for the Kindle's shell.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }

@@ -34,4 +34,5 @@ INSERT OR REPLACE INTO properties(handlerId,name,value) VALUES('$APP_ID','comman
 INSERT OR REPLACE INTO properties(handlerId,name,value) VALUES('$APP_ID','supportedOrientation','U');
 EOF
 
+sleep 2 # as KindleForge does: the app manager needs a moment to see the new entry
 nohup lipc-set-prop com.lab126.appmgrd start app://$APP_ID >/dev/null 2>&1 &

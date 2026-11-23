@@ -96,6 +96,9 @@ func TestKindleApp(t *testing.T) {
 	if err := json.Unmarshal([]byte(cfg), &nc); err != nil || nc["user"] != "admin" || nc["key"] != key || nc["server"] != srv.URL {
 		t.Fatalf("config.js: %v %q", err, cfg)
 	}
+	if c := got["documents/NovelCheck-Check.sh"]; !strings.Contains(c, "NCKEY='"+key+"'") || !strings.Contains(c, "SERVER='"+srv.URL+"'") || strings.Contains(c, "{{") {
+		t.Fatalf("the check script is filled in for this account: %q", c[:300])
+	}
 	if s := got["documents/NovelCheck.sh"]; !strings.Contains(s, "# Icon: data:image/png;base64,iVBOR") || got["extensions/novelcheck-app/app.js"] == "" {
 		t.Fatalf("the launcher has its cover, the app its files: %v", len(got))
 	}

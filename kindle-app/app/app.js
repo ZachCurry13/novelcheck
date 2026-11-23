@@ -181,7 +181,11 @@ function parseLibrary(text) {
   return books;
 }
 
+window.addEventListener("resize", function () { applyScale(); });
+if (window.kindle && window.kindle.appmgr) window.kindle.appmgr.ongo = chrome; // the Kindle shows the app: set its top bar
+
 document.addEventListener("DOMContentLoaded", function () {
+  applyScale();
   chrome();
   if (!NC.server) return note("This copy has no settings. Download it again from NovelCheck.");
   $("find").onsubmit = function (e) {

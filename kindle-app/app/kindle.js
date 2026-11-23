@@ -46,7 +46,7 @@ function cover(img, id) {
 function run(cmd) {
   var k = window.kindle || (window.top && window.top.kindle);
   if (!k || !k.messaging) return false;
-  k.messaging.sendStringMessage("com.kindlemodding.utild", "runCMD", cmd);
+  setTimeout(function () { k.messaging.sendStringMessage("com.kindlemodding.utild", "runCMD", cmd); }, 10); // repaint first
   return true;
 }
 
@@ -84,12 +84,30 @@ function waitFor(path, limit, done) {
   })();
 }
 
-// chrome sets the Kindle's top bar: the title and a close button.
+// chrome sets the Kindle's top bar (the title and a close button), in the newer or the older firmware's way, and lets
+// the Kindle offer to turn on Wi-Fi (as KindleForge does).
 function chrome() {
   try {
-    window.kindle.messaging.sendMessage("com.lab126.chromebar", "configureChrome", {
-      appId: "com.novelcheck.kindle",
-      topNavBar: { template: "title", title: "NovelCheck", buttons: [{ id: "KPP_CLOSE", state: "enabled", handling: "system" }] }
-    });
+    var k = window.kindle;
+    if (k.chrome && k.chrome.isDecanterChromeEnabled) {
+      k.messaging.sendMessage("com.lab126.chromebar", "configureChrome", {
+        appId: "com.novelcheck.kindle",
+        topNavBar: { template: "title", title: "NovelCheck", buttons: [{ id: "KPP_CLOSE", state: "enabled", handling: "system" }] }
+      });
+    } else {
+      k.messaging.sendMessage("com.lab126.pillow", "configureChrome", {
+        appId: "com.novelcheck.kindle",
+        searchBar: { clientParams: { profile: { name: "default", buttons: [{ id: "menu", state: "enabled", handling: "system" }] } } }
+      });
+    }
+    k.net.ensureConnection("all", false, function () {});
   } catch (e) {}
+}
+
+// applyScale grows the page to the screen: the Kindle's browser reports a bigger window than the 758 x 1024 the
+// layout is drawn for, and every size in style.css is in rem (KindleForge's way).
+function applyScale() {
+  var w = window.innerWidth || 758, h = window.innerHeight || 1024;
+  var scale = Math.max(1, Math.min(2.2, Math.min(w / 758, h / 1024)));
+  document.documentElement.style.fontSize = Math.round(16 * scale * 100) / 100 + "px";
 }
