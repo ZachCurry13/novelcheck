@@ -97,6 +97,22 @@ func TestCheckABook(t *testing.T) {
 			t.Fatalf("not rated: %+v", got)
 		}
 	}
+	// The bug log shows the check, how long it took and which AI answered.
+	tok, _ := st.NewBugLinkToken()
+	for deadline := time.Now().Add(5 * time.Second); ; time.Sleep(20 * time.Millisecond) {
+		res, err := http.Get(srv.URL + "/bugs/" + tok)
+		if err != nil {
+			t.Fatal(err)
+		}
+		page, _ := io.ReadAll(res.Body)
+		res.Body.Close()
+		if strings.Contains(string(page), `photo → "Fourth Wing"`) && strings.Contains(string(page), "main vision-model") {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("no Check a book line in the bug log:\n%s", page[:min(len(page), 3000)])
+		}
+	}
 	// Checking it again is instant: no second rating.
 	if _, out = admin.do("POST", "/api/check", map[string]string{"query": "Fourth Wing"}, true); out["rating"] != false {
 		t.Fatalf("second check should reuse the rating: %v", out)

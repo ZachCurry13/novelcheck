@@ -31,7 +31,9 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 		}
 		client := llm.New(ai.Provider, ai.BaseURL, ai.APIKey, ai.JSONMode)
 		for _, model := range ai.Models {
+			start := time.Now()
 			v, err := w.analyzeWith(ctx, ai, client, model, id, user)
+			traceOf(ctx).add(ai.Name, model, time.Since(start), err)
 			if err == nil {
 				if ai.Name == "backup" {
 					w.Store.Notify("warning", "llm-backup",
@@ -85,7 +87,7 @@ func (w *Worker) systemPrompt() string {
 }
 
 func (w *Worker) analyzeWith(ctx context.Context, ai store.AIConfig, c llm.Completer, model string, id int64, user string) (*llm.Verdict, error) {
-	limit := llm.Timeout(ai.BaseURL, w.Store.SettingInt(store.KeyLLMTimeoutSeconds))
+	limit := llm.QuickTimeout(ctx, ai.BaseURL, llm.Timeout(ai.BaseURL, w.Store.SettingInt(store.KeyLLMTimeoutSeconds)))
 	cctx, cancel := context.WithTimeout(ctx, limit)
 	defer cancel()
 	start := time.Now()

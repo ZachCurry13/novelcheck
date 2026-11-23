@@ -114,7 +114,7 @@ func (c *Client) send(ctx context.Context, body chatRequest) (string, Usage, err
 		if quotaRest(err) > 0 { // "retry in 4 hours": no point trying again now
 			return out, u, noteQuota(c.BaseURL, body.Model, err)
 		}
-		if err == nil || !errors.Is(err, errBusy) || try >= len(busyWaits) {
+		if err == nil || !errors.Is(err, errBusy) || try >= len(busyWaits) || IsQuick(ctx) {
 			return out, u, err
 		}
 		select {

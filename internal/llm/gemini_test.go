@@ -99,4 +99,13 @@ func TestBusyRetries(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "high demand") || calls != 4 {
 		t.Fatalf("always busy: %v (%d calls)", err, calls)
 	}
+	// A person waiting (Check a book): no second try, the next model is asked instead.
+	calls = 0
+	if _, _, err := c.Complete(Quick(context.Background()), "m", "s", "u"); err == nil || calls != 1 {
+		t.Fatalf("quick: %v (%d calls)", err, calls)
+	}
+	if QuickTimeout(Quick(context.Background()), "https://api.example.com/v1", 2*time.Minute) != QuickLimit ||
+		QuickTimeout(context.Background(), "https://api.example.com/v1", 2*time.Minute) != 2*time.Minute {
+		t.Fatal("a cloud model gets QuickLimit only while a person waits")
+	}
 }

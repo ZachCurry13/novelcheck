@@ -6,10 +6,12 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/enrich"
+	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -33,6 +35,9 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &body, maxPhoto*4/3+4096) {
 		return
 	}
+	ctx, trace := analyzer.WithTrace(llm.Quick(r.Context())) // a person is waiting: see llm.Quick
+	r = r.WithContext(ctx)
+	start := time.Now()
 	look, ok := s.lookUp(w, r, body.Query, body.Image, body.Pick)
 	if !ok {
 		return
@@ -60,8 +65,12 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
+	what := body.Query
+	if body.Image != "" {
+		what = "photo"
+	}
+	s.rateChecked(b, checkRun{At: start, User: auth.UserFrom(r).Username, What: what, Title: b.Title, Lookup: time.Since(start), Steps: trace.String()})
 	if b.Status != "analyzed" && b.Status != "processing" {
-		s.rateSoon(b)
 		b.Status = "processing"
 	}
 	var catalogs []string

@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.94.2]
+
+### ⚡ Check a book doesn't wait on a struggling AI
+- When Google's AI was busy or out of its limit, Check a book waited (up to 2 minutes per model, plus pauses of 3, 8 and 20 seconds to try again) before moving to the next AI. While someone is waiting on Check a book, each online AI now gets 30 seconds and no second try, then the next one answers. Background ratings keep waiting patiently.
+- The bug log has a new **Check a book** section: each check, how long the lookup and the rating took, and every AI asked (how long, and why it failed).
+
 ## [1.94.1]
 
 ### 🔢 Removing a duplicate keeps the ISBN

@@ -139,11 +139,12 @@ func (w *Worker) ReadCoverChecked(ctx context.Context, image []byte, mediaType s
 				errs = append(errs, fmt.Sprintf("%s (%s): can't read photos", ai.Name, model))
 				continue
 			}
-			limit := min(photoLimit, llm.Timeout(ai.BaseURL, w.Store.SettingInt(store.KeyLLMTimeoutSeconds)))
+			limit := llm.QuickTimeout(ctx, ai.BaseURL, min(photoLimit, llm.Timeout(ai.BaseURL, w.Store.SettingInt(store.KeyLLMTimeoutSeconds))))
 			cctx, cancel := context.WithTimeout(ctx, limit)
 			start := time.Now()
 			out, usage, err := reader.ReadImage(cctx, model, llm.CoverPrompt, image, mediaType)
 			cancel()
+			traceOf(ctx).add(ai.Name+" photo", model, time.Since(start), err)
 			if usage.Total() > 0 {
 				_ = w.Store.RecordUsageCost(0, model, usage.PromptTokens, usage.CompletionTokens, ai, time.Since(start))
 			}
