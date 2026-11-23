@@ -10,10 +10,17 @@ becomes the release notes for that version and is shown in the app under
 - **Why so many books had no cover:** Google Books' daily limit ran out partway through the cover search, and every book after that was counted as "nothing found" and left alone for a week. Now a refused search (Google's limit, a dropped connection) is not a miss: the book is searched again on the next run, and Google is left alone until its limit starts over. Books marked "nothing found" by older versions get searched again.
 - **New places to find a cover:** the cover inside the book's own file (EPUB, MOBI, AZW, AZW3, from Calibre or the Kindle backup; covers stay readable even in DRM books), and Amazon's cover by the book's ASIN (from a free-book list or the Kindle's file name). Most free Kindle books have no ISBN, but every one has a cover in its file and on Amazon.
 - **ISBNs are kept:** when the cover search finds the book on Open Library or Google Books with an ISBN, the book gets that ISBN.
-- **Fewer Google lookups:** Google is asked for two spellings of a title at most, and not at all by the quick pass for free books, so its daily limit lasts.
+- **Fewer Google lookups:** Google is asked for two spellings of a title at most, and not at all by the quick pass for free books, so its daily limit lasts. Book descriptions (looked up before rating) also leave Google alone once its daily limit is used up, and use Open Library meanwhile.
+
+### 🤖 Google's Gemma works as a fallback AI
+- NovelCheck sent every Google model a "think a little" setting. Gemini models accept it, but Gemma refused every request ("Thinking level is not supported for this model"), so the third model in your list never rated a book. Gemma now gets the request without it.
+
+### 📚 Tidy titles in Calibre no longer stops on one book
+- Some Calibre entries carry the author in the title ("An American Sickness - Elisabeth Rosenthal", "Bad Beginning - Snicket, Lemony"), left by an older Kindle copy. NovelCheck's safety check took them for different books, so **Tidy titles in Calibre** and **Remove duplicates** stopped. They're now recognized (the part after the dash and a leading "The" are ignored for the check), and one book that really differs is skipped with a note while the rest go ahead.
 
 ### 🏠 The Kindle can use NovelCheck's home address (plugin 1.61.0)
 - **Connect to NovelCheck** has a new **Home address** field, like `http://192.168.1.20:8080`. At home the plugin talks to NovelCheck straight over Wi-Fi, without the internet, the tunnel or a name lookup. Away from home it tries the home address for 2 seconds at most, once every 10 minutes, then uses the main address. Progress sync and statistics sync keep using the main address.
+- You can also set it from **Settings → Kindle & KOReader → Kindle remote → Home address**; the Kindle picks it up at its next sync.
 
 ## [1.93.2]
 

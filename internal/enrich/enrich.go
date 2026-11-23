@@ -57,7 +57,7 @@ func (c *Client) getJSON(ctx context.Context, u string, out any) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("GET %s: %s", u, resp.Status)
+		return statusErr{code: resp.StatusCode, msg: fmt.Sprintf("GET %s: %s", u, resp.Status)}
 	}
 	return json.NewDecoder(http.MaxBytesReader(nil, resp.Body, 2<<20)).Decode(out)
 }
@@ -108,6 +108,9 @@ func olText(raw json.RawMessage) string {
 }
 
 func (c *Client) googleBooks(ctx context.Context, title, author, isbn string) (string, error) {
+	if googleResting() {
+		return "", fmt.Errorf("Google Books' daily limit is used up until 08:00 UTC")
+	}
 	query := "intitle:" + title
 	if isbn != "" {
 		query = "isbn:" + isbn
@@ -126,6 +129,7 @@ func (c *Client) googleBooks(ctx context.Context, title, author, isbn string) (s
 		} `json:"items"`
 	}
 	if err := c.getJSON(ctx, c.GoogleBooksURL+"/volumes?"+q.Encode(), &res); err != nil {
+		noteGoogleRefusal(err)
 		return "", err
 	}
 	if len(res.Items) == 0 {

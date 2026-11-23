@@ -138,7 +138,9 @@ func (c *Client) sendOnce(ctx context.Context, body chatRequest) (string, Usage,
 		body.ResponseFormat = map[string]string{"type": "json_object"}
 	}
 	if isGemini(c.BaseURL) {
-		body.ReasoningEffort = "low" // accepted by every Gemini 2.5 and 3 model
+		if strings.HasPrefix(strings.ToLower(body.Model), "gemini") {
+			body.ReasoningEffort = "low" // accepted by every Gemini 2.5 and 3 model; Google's Gemma models refuse it (400)
+		}
 		body.MaxTokens = max(body.MaxTokens, geminiMinTokens)
 	}
 	buf, _ := json.Marshal(body)

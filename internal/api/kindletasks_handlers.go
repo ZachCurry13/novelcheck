@@ -119,6 +119,7 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 		Keep      string   `json:"keep"`      // delete_books for duplicates: the copy that stays on the Kindle
 		Switch    string   `json:"switch"`    // set_auto: one of store.KindleAutoSwitches
 		On        bool     `json:"on"`        // set_auto
+		Address   string   `json:"address"`   // set_home: the server's address on the home network ("" clears it)
 	}
 	if !readJSON(w, r, &body, 256<<10) {
 		return
@@ -180,6 +181,13 @@ func (s *Server) handleKindleTasks(w http.ResponseWriter, r *http.Request) {
 			}
 			args["folder"] = folder
 		}
+	case "set_home":
+		a, ok := homeAddress(body.Address)
+		if !ok {
+			writeErr(w, http.StatusBadRequest, "give an address like http://192.168.1.20:8080 (or leave it empty to stop using one)")
+			return
+		}
+		args["address"] = a
 	case "set_auto":
 		if !store.KindleAutoSwitches[body.Switch] {
 			writeErr(w, http.StatusBadRequest, "that isn't one of the plugin's automatic switches")

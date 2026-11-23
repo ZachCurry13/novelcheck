@@ -48,6 +48,15 @@ func TestGemini(t *testing.T) {
 		t.Fatalf("request: %v", got)
 	}
 
+	// Google's Gemma models refuse a thinking setting ("Thinking level is not supported for this model").
+	got = nil
+	if _, _, err := c.Complete(context.Background(), "gemma-4-31b-it", "system", "user"); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := got["reasoning_effort"]; ok {
+		t.Fatalf("Gemma got a thinking setting: %v", got)
+	}
+
 	fail = true
 	_, _, err = c.Complete(context.Background(), "gemini-2.5-flash", "system", "user")
 	if err == nil || !strings.Contains(err.Error(), "is not found for API version") || strings.Contains(err.Error(), `[{`) {

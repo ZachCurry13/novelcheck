@@ -143,6 +143,15 @@ return function(NovelCheck)
         return "done", tostring(args.switch) .. " is " .. (args.on == true and "on" or "off")
     end
 
+    DO.set_home = function(self, args)
+        local a = tostring(args.address or "")
+        if a ~= "" and not a:match("^https?://[%w%.%-%[%]:]+$") then return "skipped", "not an address" end
+        self.settings:saveSetting("server_home", a)
+        self.settings:flush()
+        self.home_seen = nil
+        return "done", a == "" and "no home address" or ("home address set: " .. a)
+    end
+
     -- a download goes one book per turn, so the Kindle keeps answering; it reports through report() when it ends
     DO.download_books = function(self, args, report)
         local got, failed = 0, 0

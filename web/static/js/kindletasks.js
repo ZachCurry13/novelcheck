@@ -7,7 +7,7 @@ import { esc, attempt } from "./ui.js";
 
 const KIND = { backup: "Back up", tidy: "Tidy the books", crashlogs: "Delete crash logs", delete_books: "Delete books", download_books: "Send books", move_books: "Move books",
   report: "Report its books", highlights: "Send highlights", stats: "Sync reading statistics", download_nightstand: "Download the Nightstand", tidy_names: "Tidy book names",
-  selftest: "Self-test and send the log", update_plugin: "Update the plugin", stop: "Stop what it's doing", resume_auto: "Resume the automatic jobs", set_auto: "Automatic switch" };
+  selftest: "Self-test and send the log", update_plugin: "Update the plugin", stop: "Stop what it's doing", resume_auto: "Resume the automatic jobs", set_auto: "Automatic switch", set_home: "Home address" };
 // the plugin's automatic switches (NovelCheck > Automatic on the Kindle)
 const SWITCH = { auto_report: "Report books when online", auto_download: "Download Nightstand when online", auto_stats: "Sync reading statistics when online",
   auto_highlights: "Send highlights when online", auto_finish: "Ask for stars at the end of a book", auto_backup: "Back up the whole Kindle (once a day, on the charger)",
@@ -31,6 +31,9 @@ export async function renderKindleTasks(host, device = "") {
       <ul class="mt-1 divide-y divide-slate-800 text-sm">${Object.entries(SWITCH).map(([k, l]) => `<li class="flex items-center justify-between gap-2 py-1"><span class="min-w-0">${esc(l)}</span>
         <span class="flex shrink-0 gap-1"><button type="button" data-kt-sw="${k}" data-on="1" class="btn-ghost py-0.5 text-xs">Turn on</button><button type="button" data-kt-sw="${k}" data-on="0" class="btn-ghost py-0.5 text-xs">Turn off</button></span></li>`).join("")}</ul>
       <p class="mt-1 text-xs text-slate-500">Changes apply at the next sync. A plugin update needs a KOReader restart.</p></details>
+    <details class="mb-3"><summary class="cursor-pointer text-sm text-slate-300">Home address</summary>
+      <p class="mt-1 text-xs text-slate-400">NovelCheck's address on your home network, like http://192.168.1.20:8080. At home the Kindle uses it first, without the internet; away it uses the main address. Leave it empty to stop using one. Plugin 1.61 or newer.</p>
+      <p class="mt-1 flex flex-wrap gap-2"><input id="kt-home" class="input flex-1" placeholder="http://192.168.1.20:8080" maxlength="100"><button type="button" id="kt-home-set" class="btn-secondary py-1 text-sm">Set home address</button></p></details>
     ${(r.duplicates || []).length ? `<h4 class="label">The same book more than once (${r.duplicates.length})</h4>
       <p class="mb-1 text-xs text-slate-400">★ is the copy you read furthest; it stays. The others are deleted at the next sync.</p>
       <ul class="mb-3 divide-y divide-slate-800 text-sm">${r.duplicates.map((g, gi) => `<li class="py-1.5"><b>${esc(g[0].title || g[0].filename)}</b>
@@ -62,6 +65,7 @@ export async function renderKindleTasks(host, device = "") {
       if (confirm(`Keep "${g[0].filename}" and delete ${others.length} other cop${others.length === 1 ? "y" : "ies"}?`)) make("delete_books", { filenames: others, keep: g[0].filename });
       return;
     }
+    if (e.target.closest("#kt-home-set")) return make("set_home", { address: host.querySelector("#kt-home").value.trim() }, "Queued: the home address is set at the next sync");
     const sw = e.target.closest("[data-kt-sw]");
     if (sw) return make("set_auto", { switch: sw.dataset.ktSw, on: sw.dataset.on === "1" }, `Queued: ${SWITCH[sw.dataset.ktSw]} ${sw.dataset.on === "1" ? "on" : "off"} at the next check-in`);
     const k = e.target.closest("[data-kt]")?.dataset.kt, c = e.target.closest("[data-kt-cancel]")?.dataset.ktCancel, s = e.target.closest("#kt-search"), q = e.target.closest("[data-kt-send]")?.dataset.ktSend;

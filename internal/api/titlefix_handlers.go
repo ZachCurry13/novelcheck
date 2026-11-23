@@ -163,11 +163,19 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 			serverNote = " What the Content server serves: " + joinLines(report) + "."
 		}
 	}
+	// Compared like NovelCheck matches books: ignoring case, punctuation and numbering. One book renamed in Calibre
+	// is left alone and the rest go ahead; when more than one in five differ, it is the wrong library: nothing changes.
+	odd := map[int]bool{}
 	for _, cid := range all {
-		// Compared like NovelCheck matches books: ignoring case, punctuation and numbering.
 		if title, found := have[cid]; found && !sameCalibreTitle(title, want[cid]) {
-			writeErr(w, http.StatusConflict, "stopped: calibre's book #"+strconv.Itoa(cid)+" is \""+title+
-				"\" but NovelCheck expected \""+want[cid]+"\". Is the Content server using the same library? (If you renamed it in Calibre, run a sync first.) Nothing was changed.")
+			odd[cid] = true
+		}
+	}
+	if len(odd) > 0 && len(odd)*5 > len(all) {
+		for cid := range odd {
+			writeErr(w, http.StatusConflict, "stopped: calibre's book #"+strconv.Itoa(cid)+" is \""+have[cid]+
+				"\" but NovelCheck expected \""+want[cid]+"\", and "+strconv.Itoa(len(odd))+" of "+strconv.Itoa(len(all))+
+				" differ. Is the Content server using the same library? (If you renamed books in Calibre, run a sync first.) Nothing was changed.")
 			return 0, nil, false
 		}
 	}
@@ -175,8 +183,12 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 	for _, p := range pushes {
 		unchanged := !s.Store.ChangedInCalibre(p.Book)
 		saved := false
-		var gone, other []string
+		var gone, other, renamed []string
 		for _, cid := range entries[p.Book] {
+			if odd[cid] {
+				renamed = append(renamed, "#"+strconv.Itoa(cid)+" is “"+have[cid]+"” there")
+				continue
+			}
 			if t, found := have[cid]; found && t == p.Title && seen[p.Book] != "" && seen[p.Book] != p.Title {
 				// The Content server already has the tidy title, yet the library NovelCheck reads still has the old one.
 				other = append(other, "#"+strconv.Itoa(cid))
@@ -197,6 +209,9 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 			if len(other) > 0 {
 				why = "the Content server already shows the tidy title for " + strings.Join(other, ", ") + ", but the library NovelCheck reads (" + s.readLibrary() + ") still has “" + seen[p.Book] +
 					"”. The Content server and NovelCheck are not looking at the same library (the Content server serves “" + s.Store.Setting(store.KeyCalibreSrvLibrary) + "”): point both at the same one under Admin → Calibre Library"
+			}
+			if len(renamed) > 0 {
+				why = "left alone: in Calibre " + strings.Join(renamed, ", ") + ", not this book. If it was renamed in Calibre, read the library again (Library cleanup) and retry"
 			}
 			if len(gone) > 0 {
 				why = "the Content server has no book " + strings.Join(gone, ", ") + " (is it serving the same library NovelCheck reads? If the library changed, read it again first). If these books were added with Calibre-Web, the Content server hasn't noticed them yet: restart the Calibre app (it reads the library when it starts), then try again." + serverNote
