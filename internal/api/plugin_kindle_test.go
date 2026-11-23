@@ -1,11 +1,13 @@
 package api_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"crypto/md5"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -121,6 +123,17 @@ func TestKindleCopy(t *testing.T) {
 		res, err := admin.http.Get(srv.URL + u)
 		if err != nil || res.StatusCode != 200 {
 			t.Fatalf("download %s: %v %v", u, err, res)
+		}
+	}
+	for part, want := range map[string]int{"drm": 2, "books": 4, "apps": 0, "all": 4} {
+		res, err := admin.http.Get(srv.URL + "/api/admin/kindle-backup/zip?user=1&device=Test+Kindle&part=" + part)
+		if err != nil || res.StatusCode != 200 {
+			t.Fatalf("zip %s: %v %v", part, err, res)
+		}
+		body, _ := io.ReadAll(res.Body)
+		zr, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
+		if err != nil || len(zr.File) != want {
+			t.Fatalf("zip %s: %d files, want %d (%v)", part, len(zr.File), want, err)
 		}
 	}
 	if res, _ := admin.do("GET", "/api/admin/kindle-backup/file?user=1&device=Test+Kindle&path=../../novelcheck.db", nil, false); res.StatusCode != 404 {

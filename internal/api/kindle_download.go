@@ -82,17 +82,44 @@ func (s *Server) handleKindleFile(w http.ResponseWriter, r *http.Request) {
 	http.ServeContent(w, r, path.Base(rel), fi.ModTime(), f)
 }
 
-// handleKindleZip: GET /api/admin/kindle-backup/zip?user=&device= streams the whole copy as a ZIP (stored, not
-// squeezed: e-books are compressed already, and it starts at once).
+// kindleZipParts are the pieces of a Kindle copy that can be downloaded on their own: apps, plugins, settings and
+// reading data (everything that is not a book), every book, only the locked (DRM) books, or all of it.
+var kindleZipParts = map[string]string{"all": "backup", "apps": "apps and settings", "books": "books", "drm": "DRM books"}
+
+// inKindlePart says whether the file at rel (p on disk) belongs in that part.
+func inKindlePart(part, rel, p string) bool {
+	book := kindleExts[ext(rel)] && !strings.HasPrefix(strings.ToLower(filepath.ToSlash(rel)), "koreader/") && !strings.HasPrefix(strings.ToLower(filepath.ToSlash(rel)), "extensions/")
+	switch part {
+	case "apps":
+		return !book
+	case "books":
+		return book
+	case "drm":
+		return book && kindleLocked(p)
+	}
+	return true
+}
+
+// handleKindleZip: GET /api/admin/kindle-backup/zip?user=&device=&part= streams the copy, or one part of it
+// (kindleZipParts), as a ZIP (stored, not squeezed: e-books are compressed already, and it starts at once).
 func (s *Server) handleKindleZip(w http.ResponseWriter, r *http.Request) {
 	root := s.kindleRoot(r)
 	if root == "" {
 		writeErr(w, http.StatusNotFound, "no such Kindle copy")
 		return
 	}
+	part := r.URL.Query().Get("part")
+	if part == "" {
+		part = "all"
+	}
+	label, ok := kindleZipParts[part]
+	if !ok {
+		writeErr(w, http.StatusBadRequest, "part is all, apps, books or drm")
+		return
+	}
 	name := strings.ReplaceAll(r.URL.Query().Get("device"), `"`, "")
 	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", `attachment; filename="`+name+` books.zip"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="`+name+` `+label+`.zip"`)
 	zw := zip.NewWriter(w)
 	defer zw.Close()
 	_ = filepath.WalkDir(root, func(p string, e os.DirEntry, err error) error {
@@ -100,6 +127,9 @@ func (s *Server) handleKindleZip(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 		rel, _ := filepath.Rel(root, p)
+		if !inKindlePart(part, rel, p) {
+			return nil
+		}
 		fi, err := e.Info()
 		if err != nil {
 			return nil

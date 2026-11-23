@@ -12,6 +12,9 @@ becomes the release notes for that version and is shown in the app under
 - **ISBNs are kept:** when the cover search finds the book on Open Library or Google Books with an ISBN, the book gets that ISBN.
 - **Fewer Google lookups:** Google is asked for two spellings of a title at most, and not at all by the quick pass for free books, so its daily limit lasts. Book descriptions (looked up before rating) also leave Google alone once its daily limit is used up, and use Open Library meanwhile.
 
+### ⬇ Download the Kindle backup in parts
+- **Library cleanup → Kindle backup** now offers **Everything**, **Apps and settings** (KOReader, plugins, settings and reading data: everything that isn't a book), **All books** and **DRM books** (only the locked ones), each as its own ZIP.
+
 ### 🤖 Google's Gemma works as a fallback AI
 - NovelCheck sent every Google model a "think a little" setting. Gemini models accept it, but Gemma refused every request ("Thinking level is not supported for this model"), so the third model in your list never rated a book. Gemma now gets the request without it.
 

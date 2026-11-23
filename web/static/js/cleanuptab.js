@@ -125,7 +125,8 @@ export async function renderCleanupTab(host, state) {
     const q = (d) => `user=${encodeURIComponent(d.user)}&device=${encodeURIComponent(d.name)}`;
     body.innerHTML = !r ? "Couldn't load that just now." : !r.devices.length ? "Nothing copied yet. Back up a Kindle from the Kindle remote."
       : `${r.devices.map((d, i) => `<div class="mb-3"><p><b>${esc(d.name)}</b>: ${d.files} book${d.files === 1 ? "" : "s"}, ${mb(d.bytes)}.</p>
-          <p class="mt-1 flex flex-wrap gap-2"><a class="btn-secondary py-1 text-sm" href="/api/admin/kindle-backup/zip?${q(d)}">⬇ Download everything (ZIP)</a>
+          <p class="mt-1 flex flex-wrap gap-2">${[["all", "Everything"], ["apps", "Apps and settings"], ["books", "All books"], ["drm", "DRM books"]].map(([p, l]) =>
+            `<a class="${p === "all" ? "btn-secondary" : "btn-ghost"} py-1 text-sm" href="/api/admin/kindle-backup/zip?${q(d)}&part=${p}">⬇ ${l} (ZIP)</a>`).join("")}
           <button type="button" data-kb-list="${i}" class="btn-ghost py-1 text-sm">Show the files</button></p><div data-kb-files="${i}" class="mt-2"></div></div>`).join("")}
         <p class="mt-2 text-xs text-slate-400">Saved as-is in the <b>${esc(r.folder)}</b>. 🔒 books open only on a device with your Kindle account.</p>`;
     body.onclick = async (ev) => {
