@@ -28,7 +28,10 @@ function paintBadge() {
   badge.classList.toggle("hidden", n === 0);
 }
 
+let active = false; // the bell is this person's (a later profile switch may hide it)
+
 async function refresh() {
+  if (!active) return;
   try {
     data = await get("/api/notifications");
   } catch {
@@ -126,6 +129,7 @@ export function initBell(state) {
   const show = canManage(state.user);
   admin = can(state.user, "system"); // Diagnose and "Check everything" need System
   bell.classList.toggle("hidden", !show);
+  active = show;
   clearInterval(timer);
   if (!show) return;
   const panel = $("#bell-panel");

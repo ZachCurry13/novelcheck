@@ -222,7 +222,7 @@ export async function openBook(id, state, onChange) {
   }
   renderBookLibby($("#libby-section", dlg), b.id);
   if (!friend) renderHighlights($("#hl-section", dlg), b);
-  renderHCMore($("#hc-more", dlg), b, { hasAudio: data.has_audio, open: (other) => (dlg.close(), openBook(other, state, onChange)) });
+  if (!friend) renderHCMore($("#hc-more", dlg), b, { hasAudio: data.has_audio, open: (other) => (dlg.close(), openBook(other, state, onChange)) });
   bindStars(dlg, b.id);
   bindFinished(dlg, b.id);
 }

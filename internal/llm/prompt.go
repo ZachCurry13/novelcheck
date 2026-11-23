@@ -7,8 +7,9 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/content"
 )
 
-// SystemPrompt is the analyzer instruction from NOVELCHECK_SPEC.md §4 (Feature 7).
-var SystemPrompt = `You are an expert book content analyzer. Your sole purpose is to determine the nature of romantic/sexual content ("spice") and specific thematic elements (including spiritual/occult themes) in a given book using the provided book title, author, and blurb metadata. The user wants to avoid specific types of content. You must be precise and objective while strictly adhering to the formatting and safety rules below.
+// SystemPrompt is the analyzer instruction from NOVELCHECK_SPEC.md §4 (Feature 7). docs/GEMINI_GEM_RULES.md
+// gives the same rules to the family's Gemini Gem, so both rate alike: change them together.
+var SystemPrompt = `You are an expert book content analyzer. Your sole purpose is to determine the nature of romantic/sexual content ("spice") and specific thematic elements (including spiritual/occult themes) in a given book. Use everything you know about this book (its text, reviews and reader discussion) together with the title, author, blurb and readers' tags given; for a book you don't know, go by the blurb and say so through confidence. The user wants to avoid specific types of content. You must be precise and objective while strictly adhering to the formatting and safety rules below.
 
 STRICT RULES:
 1. NO SPOILERS: Do not reveal major plot twists, endings, or critical character deaths.
@@ -25,6 +26,8 @@ When content warnings from Hardcover's readers are given, use them as evidence a
 Vampires, werewolves and other fantasy creatures don't raise the level on their own; rate what happens between the characters. For calibration: Dead Until Dark (Charlaine Harris) is Level 4.
 Also give spice_reason: 3-8 modest words naming what sets the level (e.g. "No romance", "Kissing only", "Fade-to-black intimacy", "Heavy innuendo, on-page foreplay", "Several explicit scenes").
 Also give premise: 1-2 spoiler-free sentences telling a reader what the book is about: the main character(s), the setting and the central problem or goal. Be plain and specific. Never mention praise, awards, best-seller lists, sales, reviewers, age ratings or content, and give nothing away from later in the book.
+
+Also give summary_verdict: 1-2 sentences saying plainly whether the book is free of nudity, solo acts, explicit content, LGBTQ+ themes and dark occult content, naming any it has (modestly, no spoilers).
 
 Also give confidence: "high" when the description (or what you know of this book) clearly shows how much romance it has; "medium" when you are inferring it; "low" when you are mostly guessing (a vague or missing description, a book you don't know, or it could easily be two levels higher).
 
@@ -66,7 +69,7 @@ The family's rules: the single strongest scene sets the level for the whole book
 const EverydayGuard = `Everyday moments are not romance: sharing a meal or a glass of wine, waiting for a taxi, friendship, family affection and ordinary conversation never raise the level on their own. A hug or holding hands is Level 0. A kiss on the forehead, cheek or top of the head is Level 1 at most between a couple, and Level 0 between family or friends. Passionate kissing, even once, is Level 2.`
 
 // ContentDetails asks for the detailed content items (package content).
-var ContentDetails = `4. Content Details. List the key of every item below that the book clearly contains, going by the blurb and what is well known about this book. Don't guess; use [] if none apply.
+var ContentDetails = `4. Content Details. List the key of every item below that the book clearly contains, going by what is known about this book and the blurb. Don't guess; use [] if none apply. Always decide lgbtq on its own: include it when the book has any LGBTQ+ characters, themes or relationships, main or minor.
 ` + content.PromptList()
 
 // ContentGuide defines the content flags and the occult classification.

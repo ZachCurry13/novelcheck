@@ -18,6 +18,11 @@ becomes the release notes for that version and is shown in the app under
 - Each library on the Libraries page has a **Show on my pages** switch. Turn one off and its books stay out of your Library, Discover, Nightstand suggestions and search (nobody else is affected).
 - Admins start with other people's private libraries switched off, so a family member's private Kindle library no longer fills the admin's pages. Turn it on any time.
 
+### 🔎 Ratings use what the AI knows about the book
+- The AI now rates from everything it knows about a book (its text, reviews and reader discussion), not mainly the blurb, the way the family's Gemini Gem does. It always decides LGBTQ+ content on its own, and the verdict says plainly whether the book is free of nudity, solo acts, explicit content, LGBTQ+ themes and dark occult content. Books already rated keep their rating.
+- `docs/GEMINI_GEM_RULES.md` holds the same rules written for a Gemini Gem, so the Gem and NovelCheck rate alike.
+- A friend's account no longer asks for the notices bell or Hardcover's extras (it isn't allowed them, so each try was an error in the log).
+
 ### 🌙 Google's daily limit is a note, not a warning
 - When Google's free Gemini has used up its requests for the day and your local AI takes over, the 🔔 notice now says so calmly ("reached its free limit for today, so the local AI is rating books") instead of warning that the main AI isn't working. Check now shows it as "Free requests for today used up", and the Check a book log says "daily limit reached".
 
