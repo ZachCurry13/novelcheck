@@ -311,6 +311,7 @@ func (s *Server) Router() http.Handler {
 				r.Get("/admin/users/{id}/kosync", s.handleUserKosync)
 				r.Post("/admin/users/{id}/kosync", s.handleUserKosync)
 				r.Get("/admin/users/{id}/koplugin.zip", s.handleUserPluginZip)
+				r.Get("/admin/users/{id}/kindle-app.zip", s.handleUserKindleAppZip)
 				r.Get("/admin/kids-sharing", s.handleKidsSharing)
 				r.Put("/admin/users/{id}/sharing", s.handleKidSharing)
 				r.Get("/admin/users/{id}/reading", s.handleUserReading)

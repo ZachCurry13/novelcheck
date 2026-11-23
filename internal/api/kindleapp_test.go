@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -83,23 +84,23 @@ func TestKindleApp(t *testing.T) {
 		t.Fatalf("covers need the sign-in: %d", res.StatusCode)
 	}
 
+	_, wife := admin.do("POST", "/api/admin/users", map[string]string{"username": "partner", "password": "partnerpass1", "role": "admin"}, true)
+	pres, err := admin.http.Get(srv.URL + "/api/admin/users/" + fmt.Sprint(wife["id"]) + "/kindle-app.zip")
+	if err != nil || pres.StatusCode != 200 {
+		t.Fatalf("the main admin downloads the app for the other parent: %v %v", err, pres)
+	}
+	praw, _ := io.ReadAll(pres.Body)
+	pres.Body.Close()
+	if !strings.Contains(unzip(t, praw)["extensions/novelcheck-app/config.js"], `"user":"partner"`) {
+		t.Fatal("that download signs in as the other parent")
+	}
 	zres, err := admin.http.Get(srv.URL + "/api/me/kindle-app.zip")
 	if err != nil || zres.StatusCode != 200 {
 		t.Fatalf("zip: %v %v", err, zres)
 	}
 	raw, _ := io.ReadAll(zres.Body)
 	zres.Body.Close()
-	zr, err := zip.NewReader(bytes.NewReader(raw), int64(len(raw)))
-	if err != nil {
-		t.Fatal(err)
-	}
-	got := map[string]string{}
-	for _, f := range zr.File {
-		rc, _ := f.Open()
-		b, _ := io.ReadAll(rc)
-		rc.Close()
-		got[f.Name] = string(b)
-	}
+	got := unzip(t, raw)
 	cfg := strings.TrimSuffix(strings.SplitN(got["extensions/novelcheck-app/config.js"], "var NC = ", 2)[len(strings.SplitN(got["extensions/novelcheck-app/config.js"], "var NC = ", 2))-1], ";\n")
 	var nc map[string]string
 	if err := json.Unmarshal([]byte(cfg), &nc); err != nil || nc["user"] != "admin" || nc["key"] != key || nc["server"] != srv.URL {
@@ -111,4 +112,21 @@ func TestKindleApp(t *testing.T) {
 	if s := got["documents/NovelCheck.sh"]; !strings.Contains(s, "# Icon: data:image/png;base64,iVBOR") || got["extensions/novelcheck-app/app.js"] == "" {
 		t.Fatalf("the launcher has its cover, the app its files: %v", len(got))
 	}
+}
+
+// unzip is a zip's files by name.
+func unzip(t *testing.T, raw []byte) map[string]string {
+	t.Helper()
+	zr, err := zip.NewReader(bytes.NewReader(raw), int64(len(raw)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]string{}
+	for _, f := range zr.File {
+		rc, _ := f.Open()
+		b, _ := io.ReadAll(rc)
+		rc.Close()
+		got[f.Name] = string(b)
+	}
+	return got
 }

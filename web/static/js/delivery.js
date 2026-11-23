@@ -1,7 +1,7 @@
 // "Start Reading" delivery help: the Send-to-Kindle confirmation with the
 // approved-sender steps, and KOReader setup (the private OPDS feed address,
 // a QR code and step-by-step instructions).
-import { pluginStepsHTML } from "./pluginmanage.js";
+import { pluginStepsHTML, whichHTML, kindleAppHTML } from "./pluginmanage.js";
 import { get, post } from "./api.js";
 import { esc, attempt } from "./ui.js";
 import { copyText } from "./copy.js";
@@ -157,8 +157,11 @@ function statsHTML(url, username, code) {
     <p class="text-xs text-slate-500">Menu names can differ a little between KOReader versions.</p></div>`;
 }
 
-// pluginHTML: the KOReader plugin, already connected to this person's account.
+// pluginHTML: the KOReader plugin and the Kindle app, already connected to this person's account.
 function pluginHTML(userId) {
-  return `<div class="space-y-2 border-t border-slate-800 pt-4"><h3 class="font-semibold">KOReader plugin</h3>
-    ${pluginStepsHTML(userId ? `/api/admin/users/${userId}/koplugin.zip` : "/api/me/koplugin.zip")}</div>`;
+  const base = userId ? `/api/admin/users/${userId}` : "/api/me";
+  return `<div class="space-y-2 border-t border-slate-800 pt-4"><h3 class="font-semibold">KOReader plugin and Kindle app</h3>
+    ${whichHTML}
+    ${pluginStepsHTML(`${base}/koplugin.zip`)}
+    ${kindleAppHTML(`${base}/kindle-app.zip`)}</div>`;
 }

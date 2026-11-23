@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.96.1]
+
+### 📖 Plugin or app?
+- **Settings → Kindle & KOReader** now says when to use the KOReader plugin, the Kindle app, or both, with both downloads side by side.
+- Parents can download the Kindle app already set up for another family member, as with the plugin: open that person's KOReader setup from Accounts.
+
 ## [1.96.0]
 
 ### 📖 NovelCheck on a Kindle without KOReader

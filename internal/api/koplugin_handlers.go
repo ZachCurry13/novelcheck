@@ -58,13 +58,35 @@ func (s *Server) handleUserPluginZip(w http.ResponseWriter, r *http.Request) {
 	s.servePluginZip(w, r, target)
 }
 
-// handleMyKindleAppZip sends the Kindle app (kindle-app/) set up for the person downloading it.
 func (s *Server) handleMyKindleAppZip(w http.ResponseWriter, r *http.Request) {
+	s.serveKindleAppZip(w, r, auth.UserFrom(r))
+}
+
+// handleUserKindleAppZip is the Kindle app for someone else's Kindle (a kid, or the family a main admin manages).
+func (s *Server) handleUserKindleAppZip(w http.ResponseWriter, r *http.Request) {
+	id, ok := pathID(r, "id")
+	if !ok {
+		writeErr(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+	target, err := s.Store.UserByID(id)
+	if err != nil || target == nil {
+		writeErr(w, http.StatusNotFound, "no such user")
+		return
+	}
+	if !canManageUser(auth.UserFrom(r), target) {
+		writeErr(w, http.StatusForbidden, "you can set up kids' devices; the main admin manages the other parents")
+		return
+	}
+	s.serveKindleAppZip(w, r, target)
+}
+
+// serveKindleAppZip sends the Kindle app (kindle-app/) set up for u: their sign-in is inside, nothing to type.
+func (s *Server) serveKindleAppZip(w http.ResponseWriter, r *http.Request, u *store.User) {
 	if !s.Store.SettingBool(store.KeyModuleKOReader) {
 		writeErr(w, http.StatusForbidden, "Kindle and KOReader delivery is turned off in NovelCheck")
 		return
 	}
-	u := auth.UserFrom(r)
 	code, err := s.Store.KosyncCode(u.ID, false)
 	if err != nil {
 		writeStoreErr(w, err)
