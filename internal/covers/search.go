@@ -12,16 +12,9 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/zachcurry13/novelcheck/internal/enrich"
 	"github.com/zachcurry13/novelcheck/internal/titles"
 )
-
-// Search finds a cover for a book that has no ISBN to look up (or whose ISBN has no cover): Open
-// Library's search by title and author, then Google Books. A hit is kept as name.jpg. Only a result whose title
-// really is the book's title (and whose author matches, when known) is used, so a wrong cover is not put on a book.
-func (c Cache) Search(ctx context.Context, name, title, author string) (string, os.FileInfo, bool) {
-	r := c.SearchBook(ctx, name, title, author)
-	return r.Path, r.Info, r.OK
-}
 
 // SearchResult is what SearchBook found: the cover (when OK), an ISBN the matching book carried, and whether a
 // place refused to answer (Google's daily limit, the network). After a refusal "nothing found" is not the last
@@ -38,7 +31,9 @@ type SearchResult struct {
 // (empty) are ignored, so the books get searched again.
 const missMark = "2"
 
-// SearchBook is Search with the ISBN found and the refusals. A real miss is remembered for a week, so the same
+// SearchBook finds a cover for a book that has no ISBN to look up (or whose ISBN has no cover): Open Library's
+// search by title and author, then Google Books. A hit is kept as name.jpg. Only a result whose title really is the
+// book's title (and whose author matches, when known) is used, so a wrong cover is not put on a book. A real miss is remembered for a week, so the same
 // book is not searched again and again. Google Books is asked for the first two spellings of the title only (its
 // daily limit is small); Open Library for all of them.
 func (c Cache) SearchBook(ctx context.Context, name, title, author string) SearchResult {
@@ -58,7 +53,7 @@ func (c Cache) SearchBook(ctx context.Context, name, title, author string) Searc
 	for i, t := range searchTitles(title) {
 		finds := []func(context.Context, string, string, *bool) (string, string){c.openLibraryCoverURL}
 		if !c.NoGoogle && i < 2 {
-			if c.GoogleResting() {
+			if enrich.GoogleResting() {
 				r.Refused = true
 			} else {
 				finds = append(finds, c.googleCoverURL)
@@ -217,7 +212,7 @@ func (c Cache) getJSON(ctx context.Context, u string, into any, refused *bool) b
 	}
 	setTrue(refused)
 	if (res.StatusCode == http.StatusTooManyRequests || res.StatusCode == http.StatusForbidden) && strings.Contains(u, "/books/v1/") {
-		c.Limits.restGoogle()
+		enrich.RestGoogle()
 	}
 	return false
 }

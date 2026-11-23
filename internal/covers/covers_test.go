@@ -83,14 +83,14 @@ func TestSearchFindsMatchingCover(t *testing.T) {
 	}))
 	defer fake.Close()
 	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, GoogleURL: fake.URL}
-	p, _, ok := c.Search(context.Background(), "book-5", "Dune", "Frank Herbert")
-	if !ok || !strings.HasSuffix(p, "book-5.jpg") {
-		t.Fatalf("the Dune cover, not Dune Messiah's: %q %v", p, ok)
+	r := c.SearchBook(context.Background(), "book-5", "Dune", "Frank Herbert")
+	if !r.OK || !strings.HasSuffix(r.Path, "book-5.jpg") {
+		t.Fatalf("the Dune cover, not Dune Messiah's: %+v", r)
 	}
-	if _, _, ok := c.Search(context.Background(), "book-6", "Dune", "Someone Else"); ok {
+	if c.SearchBook(context.Background(), "book-6", "Dune", "Someone Else").OK {
 		t.Fatal("a different author's book is not used")
 	}
-	if _, _, ok := c.Search(context.Background(), "book-7", "A Book Nobody Wrote", "Frank Herbert"); ok {
+	if c.SearchBook(context.Background(), "book-7", "A Book Nobody Wrote", "Frank Herbert").OK {
 		t.Fatal("no matching title, no cover")
 	}
 	if _, err := os.Stat(filepath.Join(c.Dir, "book-7.jpg.miss")); err != nil {
@@ -138,7 +138,7 @@ func TestSearchTitlesWithoutSeries(t *testing.T) {
 	defer fake.Close()
 	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, GoogleURL: fake.URL, GoogleKey: func() string { return "k123" }}
 	_ = os.WriteFile(filepath.Join(c.Dir, "book-9.jpg.none"), nil, 0o644)
-	if _, _, ok := c.Search(context.Background(), "book-9", "Dune Chronicles 1 - Dune", "Frank Herbert"); !ok && googleKey == "" {
+	if !c.SearchBook(context.Background(), "book-9", "Dune Chronicles 1 - Dune", "Frank Herbert").OK && googleKey == "" {
 		t.Fatal("the old miss is ignored and the series is left out of the search")
 	}
 	if googleKey != "k123" {

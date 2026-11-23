@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 )
 
 // After Google says its daily limit is used up, the blurb lookups stop asking it until the limit starts again.
@@ -21,11 +20,11 @@ func TestGoogleRestsAfterLimit(t *testing.T) {
 		http.NotFound(w, r)
 	}))
 	defer fake.Close()
-	defer func() { googleRest.mu.Lock(); googleRest.until = time.Time{}; googleRest.mu.Unlock() }()
+	defer ResumeGoogle()
 	c := &Client{HTTP: fake.Client(), OpenLibraryURL: fake.URL, GoogleBooksURL: fake.URL + "/books/v1"}
 	c.Blurb(context.Background(), "A Book", "Someone", "", "")
 	c.Blurb(context.Background(), "Another Book", "Someone", "", "")
-	if asked != 1 || !googleResting() {
+	if asked != 1 || !GoogleResting() {
 		t.Fatalf("Google asked %d times; want once, then a rest", asked)
 	}
 }

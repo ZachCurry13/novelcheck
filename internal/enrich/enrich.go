@@ -108,7 +108,7 @@ func olText(raw json.RawMessage) string {
 }
 
 func (c *Client) googleBooks(ctx context.Context, title, author, isbn string) (string, error) {
-	if googleResting() {
+	if GoogleResting() {
 		return "", fmt.Errorf("Google Books' daily limit is used up until 08:00 UTC")
 	}
 	query := "intitle:" + title

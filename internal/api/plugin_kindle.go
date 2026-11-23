@@ -91,7 +91,7 @@ func (s *Server) kindleDir(userID int64, device string) string {
 		}
 		return r
 	}, strings.TrimSpace(device))
-	if d == "" {
+	if d == "" || d == "." || d == ".." { // ".." would be every person's backups
 		d = "kindle"
 	}
 	return filepath.Join(s.Cfg.DataDir, "kindle-backup", strconv.FormatInt(userID, 10), d)

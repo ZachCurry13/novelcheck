@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/zachcurry13/novelcheck/internal/enrich"
 )
 
 func testJPEG(t *testing.T) []byte {
@@ -40,12 +42,13 @@ func TestRefusedSearchIsNoMiss(t *testing.T) {
 		}
 	}))
 	defer fake.Close()
-	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, GoogleURL: fake.URL, Limits: &Limits{}}
+	defer enrich.ResumeGoogle()
+	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, GoogleURL: fake.URL}
 	r := c.SearchBook(context.Background(), "book-1", "Frogs at Noontide: A Quirky YA Frog Prince Retelling", "Janeen Ippolito")
 	if r.OK || !r.Refused || r.ISBN != "9781234567897" {
 		t.Fatalf("refused, with the ISBN: %+v", r)
 	}
-	if c.Missed("book-1") || !c.GoogleResting() {
+	if c.Missed("book-1") || !enrich.GoogleResting() {
 		t.Fatal("no miss written, and Google rests")
 	}
 	asked := googleAsked

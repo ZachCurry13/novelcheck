@@ -85,7 +85,9 @@ func csrfGuard(next http.Handler) http.Handler {
 func realIP(trust bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if trust {
+			// Only the built-in tunnel (on this machine) may say who the visitor is: anyone else could
+			// write any address into these headers and dodge the sign-in limits.
+			if host, _, err := net.SplitHostPort(r.RemoteAddr); trust && err == nil && net.ParseIP(host).IsLoopback() {
 				if ip := clientIP(r); ip != "" {
 					r.RemoteAddr = net.JoinHostPort(ip, "0")
 				}
@@ -155,7 +157,13 @@ func (l *loginLimiter) fail(ip string) {
 	if len(l.attempts) > 10000 {
 		l.attempts = map[string][]time.Time{}
 	}
-	l.attempts[ip] = append(l.attempts[ip], time.Now())
+	kept := l.attempts[ip][:0]
+	for _, t := range l.attempts[ip] {
+		if time.Since(t) < l.window {
+			kept = append(kept, t)
+		}
+	}
+	l.attempts[ip] = append(kept, time.Now())
 }
 
 func (l *loginLimiter) allow(ip string) bool {
