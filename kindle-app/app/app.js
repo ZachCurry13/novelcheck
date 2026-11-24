@@ -412,7 +412,7 @@ if (window.kindle && window.kindle.appmgr) window.kindle.appmgr.ongo = chrome; /
 document.addEventListener("DOMContentLoaded", function () {
   applyScale();
   chrome();
-  if (!NC.server) return note("This copy has no settings. Download it again from NovelCheck.");
+  if (!NC.server) return signin(); // installed from KindleForge: asks for the sign-in once
   // its own name ("Zach Paperwhite (Amazon reader)"), so the plugin's report of the same Kindle is never replaced
   if (!/ \(Amazon reader\)$/.test(NC.device)) NC.device = (NC.device || "Kindle") + " (Amazon reader)";
   $("navbtn").onclick = goBack;

@@ -1,0 +1,9 @@
+{
+    "name": "NovelCheck",
+    "uri": "NovelCheck",
+    "description": "Your NovelCheck library and Nightstand on the Kindle (needs a NovelCheck server)",
+    "author": "NovelCheck",
+    "ABI": ["hf", "sf"],
+    "dependencies": [],
+    "tags": ["MEDIA", "PRODUCTIVITY"]
+}

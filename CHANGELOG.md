@@ -6,6 +6,10 @@ becomes the release notes for that version and is shown in the app under
 
 ## [2.1.4]
 
+### 📲 Kindle app straight on the Kindle
+- **The Kindle app signs in by itself (app 1.14.0).** A copy with no sign-in file now shows a screen for NovelCheck's address, your name and password (and a name for the Kindle). NovelCheck answers with a key, never your password or sync code, and the app keeps it.
+- **A KindleForge package** (`kindle-app/kindleforge`: `install.sh`, `uninstall.sh`, a registry entry) installs the app from the latest release, so a jailbroken Kindle needs no computer or phone. It becomes visible in KindleForge once its entry is accepted into the KindleForge package list.
+
 ### 📲 Kindle app straight from KOReader
 - **NovelCheck → Settings → Install the Kindle app** (plugin 1.66.0). On a jailbroken Kindle that already has the plugin, this downloads the Kindle app, signed in as you, and puts the NovelCheck "book" in the library. No computer or phone needed. Close KOReader and open the book called NovelCheck.
 

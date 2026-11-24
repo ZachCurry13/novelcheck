@@ -54,5 +54,9 @@ func main() {
 		log.Fatal(err)
 	}
 	write(*out, *base, "kindle-app", kindleapp.Version, kindleapp.MinServer, kindleapp.Files(), kindleapp.File)
+	// the launcher "book" (not an app file: the app never updates it), for the KindleForge package's install.sh
+	if err := os.WriteFile(filepath.Join(*out, "kindle-app-NovelCheck.sh"), kindleapp.Launcher(), 0o644); err != nil {
+		log.Fatal(err)
+	}
 	write(*out, *base, "kindle-plugin", kindleplugin.Version(), kindleplugin.MinServer, kindleplugin.UpdatableFiles(), kindleplugin.File)
 }

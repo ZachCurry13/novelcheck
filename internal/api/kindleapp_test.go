@@ -82,6 +82,22 @@ func TestKindleApp(t *testing.T) {
 	if code, body, _ := get("/kosync/plugin/kindle-app/NovelCheck.sh"); code != 200 || !strings.HasPrefix(string(body), "#!/bin/sh") || strings.Contains(string(body), "{{ICON}}") {
 		t.Fatalf("the launcher: %d", code)
 	}
+	// the app installed from KindleForge signs in once with the password and gets the same key
+	post := func(pw string) (int, string) {
+		res, err := http.Post(srv.URL+"/kosync/plugin/app-signin", "application/json", strings.NewReader(`{"username":"admin","password":"`+pw+`"}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		b, _ := io.ReadAll(res.Body)
+		return res.StatusCode, string(b)
+	}
+	if c, b := post("adminpass1"); c != 200 || !strings.Contains(b, key) || strings.Contains(b, ks["code"].(string)) {
+		t.Fatalf("app sign-in: %d %s", c, b)
+	}
+	if c, _ := post("wrong"); c != 401 {
+		t.Fatalf("a wrong password: %d", c)
+	}
 	req, _ := http.NewRequest("OPTIONS", srv.URL+"/kosync/plugin/search", nil)
 	req.Header.Set("Origin", "file://")
 	req.Header.Set("Access-Control-Request-Headers", "x-auth-user, x-auth-key")

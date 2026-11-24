@@ -21,6 +21,7 @@ button[disabled] { border-style: dashed; color: #555; }
 nav { padding: 0.375rem 0; }
 form { margin-bottom: 0.5rem; }
 form input, .tabs button, .book .actions > * { margin-right: 0.5rem; }
+#signin input { width: 100%; }
 input { width: 68%; box-sizing: border-box; vertical-align: middle; min-height: 2.75rem; font-size: 1.25rem; border: 0.125rem solid #000; border-radius: 0.375rem; padding: 0 0.625rem; }
 .tabs button { margin-bottom: 0.375rem; }
 .sect { margin: 0.75rem 0 0.25rem; padding-bottom: 0.25rem; border-bottom: 0.125rem solid #000; font-weight: bold; font-size: 1.25rem; }

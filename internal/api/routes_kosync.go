@@ -7,6 +7,7 @@ import "github.com/go-chi/chi/v5"
 func (s *Server) kosyncRoutes(r chi.Router) {
 	r.Use(noStore, kosyncCORS)
 	r.Post("/users/create", s.handleKosyncCreate)
+	r.Post("/plugin/app-signin", s.handleAppSignin)
 	r.Get("/users/auth", s.handleKosyncAuth)
 	r.Put("/syncs/progress", s.handleKosyncPut)
 	r.Get("/syncs/progress/{document}", s.handleKosyncGet)

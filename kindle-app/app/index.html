@@ -24,6 +24,15 @@
     <button id="t-backup">Back up my books to NovelCheck</button><button id="t-restore">Restore books from NovelCheck</button><button id="t-crash">Delete crash logs</button><button id="t-hidden">Books I hid</button></div>
   <p class="help"><button id="check" class="small">Something not working? Send a check</button></p>
 </section>
+<section id="signin" hidden>
+  <div class="brand"><img src="logo.png" alt=""><div><h1>NovelCheck</h1><span class="meta">Sign in to start</span></div></div>
+  <p><input id="si-server" type="text" placeholder="NovelCheck's address" autocapitalize="none"></p>
+  <p><input id="si-user" type="text" placeholder="Your NovelCheck name" autocapitalize="none"></p>
+  <p><input id="si-pass" type="password" placeholder="Your password"></p>
+  <p><input id="si-device" type="text" placeholder="A name for this Kindle (optional)"></p>
+  <p><button id="si-go" class="main">Sign in</button></p>
+  <p id="si-msg" class="meta"></p>
+</section>
 <section id="lists">
   <div id="filters"><div class="tabs pills"><button id="sortbtn" class="sort">Sort: Recent</button><span class="meta">Spice level:</span> <button data-lvl="">All</button><button data-lvl="0">0</button><button data-lvl="1">1</button><button data-lvl="2">2</button><button data-lvl="3">3</button><button data-lvl="4">4</button><button data-lvl="5">5</button></div>
   <p class="tabs"><button id="dlall" hidden>Download all of my Nightstand</button></p></div>
@@ -38,6 +47,7 @@
 <script src="tools.js"></script>
 <script src="bookpage.js"></script>
 <script src="layout.js"></script>
+<script src="signin.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
