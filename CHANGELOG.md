@@ -4,6 +4,26 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.98.0]
+
+### 🎚️ What to hide or flag, per person
+- **Profile → What to hide or flag**: each grown-up picks, for every content label, **Hide** (the book stays out of their pages), **Heads-up** (it shows, with a note at the top of its page) or **Don't mention**. Spice has two settings: hide books above a spice level, and a heads-up from a spice level. Kids' accounts keep the rules a parent sets.
+- A heads-up for spice on a book a Deep Scan has read says where: "Spice level 4: around 42% in (Chapter 12)".
+
+### 🧹 Simpler to find your way
+- **One Remove… button** on a book's page with what "remove" can mean for you: from my library, from a list, ask to delete it for good, and (main admin) delete its files.
+- **One set of words**: Nightstand, e-reader, and Spice level with No Spice / Closed Door / Open Door as its short description (the web app, the plugin and the Kindle app).
+- **Every e-reader tool in Settings → Kindle & KOReader**: the plugin and the Kindle app, your e-readers and matching, books that left, the Kindle remote (a parent can pick a family member's), unknown Kindle books and Kindle backups (admins), reading sync, and the manual KOReader setup folded away at the bottom.
+- **Five admin tabs**: AI & Scans (Deep Scan under it) · People & Rules · Library · E-readers & Delivery · System (Toggles, Integrations, Usage). One server check, on the Integrations page.
+- **One Fix titles and covers page** in Admin → Library: every book that needs a tidier title, Hardcover's corrections or a cover, each with its own Apply, and buttons to start the finders.
+- "Hide" now means only taking a book out of your own library. The Nightstand's 🙈 is **Put aside**, and an e-reader file that isn't a book is **Not a book**.
+
+### 💾 Restore from NovelCheck (plugin 1.64.0)
+- **Kindle care → Restore from NovelCheck…** puts back every file from the e-reader's backup that is missing (books, KOReader settings, reading progress, highlights, other plugins). It never replaces a file that is there, and **Stop current job** stops it.
+
+### 🐞 For the bug link
+- It lists the family's own filters and each Kindle backup (files, size, newest file, unfinished pieces).
+
 ## [1.97.0]
 
 ### 🗑️ Leaving the Kindle, and who deletes
