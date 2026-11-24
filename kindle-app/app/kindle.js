@@ -137,6 +137,17 @@ function chrome() {
   } catch (e) {}
 }
 
+// pager shows ▲ ▼ when the page is longer than the screen; each moves it by most of a screen at once (e-ink redraws a
+// scrolling page over and over, which makes scrolling slow).
+function pager() {
+  var p = document.getElementById("pager");
+  if (!p) return;
+  var h = window.innerHeight || 1024;
+  p.className = document.body.scrollHeight > h + 10 ? "on" : "";
+  document.getElementById("pgup").onclick = function () { window.scrollBy(0, -Math.round(h * 0.85)); };
+  document.getElementById("pgdn").onclick = function () { window.scrollBy(0, Math.round(h * 0.85)); };
+}
+
 // applyScale grows the page to the screen: the Kindle's browser reports a bigger window than the 758 x 1024 the
 // layout is drawn for, and every size in style.css is in rem (KindleForge's way).
 function applyScale() {

@@ -42,6 +42,7 @@ function offline(err) {
 }
 
 function rows() {
+  window.scrollTo(0, 0);
   var m = $("main");
   m.innerHTML = "";
   var pages = Math.max(1, Math.ceil(state.books.length / PER_PAGE));
@@ -178,7 +179,8 @@ function showLeft(list) {
   }
 }
 
-window.addEventListener("resize", function () { applyScale(); });
+window.addEventListener("resize", function () { applyScale(); pager(); });
+setInterval(pager, 1500); // pages change size as lists and books load
 if (window.kindle && window.kindle.appmgr) window.kindle.appmgr.ongo = chrome; // the Kindle shows the app: set its top bar
 
 document.addEventListener("DOMContentLoaded", function () {

@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.98.2]
+
+### 📖 Kindle app 1.3.1
+- **Page buttons instead of slow scrolling.** E-ink redraws a scrolling page over and over, so a long page now shows **▲ ▼** buttons that move it most of a screen at once. Each list and book page starts at the top.
+
 ## [1.98.1]
 
 ### 📖 Kindle app 1.3.0

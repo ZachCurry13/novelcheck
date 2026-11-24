@@ -8,6 +8,7 @@ function details(id) {
   api("GET", "/kosync/plugin/info/" + id, null, function (err, b) {
     if (err) return note(err);
     note("");
+    window.scrollTo(0, 0);
     var m = $("main");
     m.innerHTML = "";
     $("pages").hidden = true;
