@@ -38,7 +38,15 @@ func TestBackupMakesAReadableCopy(t *testing.T) {
 	if _, ok := s.lastBackup(); !ok {
 		t.Fatal("the new copy isn't seen")
 	}
-	copyDB, err := db.OpenDSN("file:" + files[len(files)-1] + "?mode=ro")
+	raw, err := os.ReadFile(files[len(files)-1]) // open a working copy of the backup (opening runs the migrations, which write)
+	if err != nil {
+		t.Fatal(err)
+	}
+	work := filepath.Join(t.TempDir(), "restored.db")
+	if err := os.WriteFile(work, raw, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	copyDB, err := db.OpenDSN("file:" + work)
 	if err != nil {
 		t.Fatal(err)
 	}

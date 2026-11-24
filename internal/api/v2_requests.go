@@ -83,6 +83,9 @@ func (s *Server) handleDecideRequest(w http.ResponseWriter, r *http.Request) {
 	if bookID == 0 && q.BookID != nil {
 		bookID = *q.BookID
 	}
+	if bookID == 0 && body.Action != "decline" { // it may be in the library by now
+		bookID = s.Store.MatchBook(q.Title, q.Author)
+	}
 	switch body.Action {
 	case "decline":
 		if q.Status != "pending" {

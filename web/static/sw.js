@@ -1,7 +1,7 @@
 // NovelCheck service worker: caches the app shell for offline launch and
 // home-screen installs. API responses are not cached, except the few a reader
 // needs offline (MINE, below), which are cleared on sign-out and profile switch.
-const CACHE = "novelcheck-shell-v225";
+const CACHE = "novelcheck-shell-v227";
 const MINE = "novelcheck-mine";
 const SHELL = [
   "/",
@@ -169,6 +169,10 @@ const SHELL = [
   "/js/kindlebooks.js",
   "/js/stats.js",
   "/js/kindle.js",
+  "/js/home.js",
+  "/js/health.js",
+  "/js/accuracy.js",
+  "/js/disagree.js",
   "/js/dropbooks.js",
   "/js/statscalc.js",
   "/js/statsperiods.js",

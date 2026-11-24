@@ -15,6 +15,7 @@ const LOOKS = [
 ];
 
 const PAGES = [
+  ["home", "Home", (u) => u.role !== "friend"],
   ["check", "Check a book", (u) => canManage(u)],
   ["library", "Library", () => true],
   ["discover", "Discover", (u) => on(u, "discover")],

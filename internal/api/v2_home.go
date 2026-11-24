@@ -27,6 +27,14 @@ type homeBook struct {
 	Status string `json:"status,omitempty"`
 }
 
+// one says the singular for 1 and the plural otherwise ("1 book has no cover", "3 books have no cover").
+func one(n int, singular, plural string) string {
+	if n == 1 {
+		return singular
+	}
+	return plural
+}
+
 func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	u := auth.UserFrom(r)
 	out := map[string]any{"name": u.Username, "role": u.Role, "may_upload": u.MayUpload()}
@@ -61,17 +69,17 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 			inbox = append(inbox, homeCard{id, title, detail, n, link})
 		}
 	}
-	add("review", "ratings to look at", "The AI wasn't sure about these. A person decides the level.", s.Store.CountReviewRatings(), "#/library?spice=review")
-	add("disagree", "ratings people disagree with", "Someone gave a different level than the AI. Use theirs, or leave it.", s.Store.UnresolvedFeedback(), "#/accuracy")
+	add("review", one(s.Store.CountReviewRatings(), "rating to look at", "ratings to look at"), "The AI wasn't sure about these. A person decides the level.", s.Store.CountReviewRatings(), "#/library?spice=review")
+	add("disagree", one(s.Store.UnresolvedFeedback(), "rating a person disagrees with", "ratings people disagree with"), "Someone gave a different level than the AI. Use theirs, or leave it.", s.Store.UnresolvedFeedback(), "#/accuracy")
 	if u.IsAdmin() {
-		add("covers", "books have no cover", "The cover finder keeps trying; you can pick one by hand.", len(s.missingForPage()), "#/admin?tab=cleanup")
+		add("covers", one(len(s.missingForPage()), "book has no cover", "books have no cover"), "The cover finder keeps trying; you can pick one by hand.", len(s.missingForPage()), "#/admin?tab=cleanup")
 		if u.Can(store.AreaCalibre) {
 			if c, err := s.cleanupSummary(); err == nil {
 				num := func(k string) int { n, _ := c[k].(int); return n }
-				add("pairs", "books listed twice in NovelCheck", "The same book under two names. Join them or say they differ.", num("pairs"), "#/duplicates")
-				add("dups", "books are in Calibre more than once", "Pick the copy to keep; the others go to Calibre's recycle bin.", num("calibre_dups"), "#/duplicates")
-				add("titles", "titles can be tidied in Calibre", "NovelCheck found cleaner titles.", num("titles"), "#/admin?tab=cleanup")
-				add("convert", "books can be converted to EPUB", "They have no EPUB but a file Calibre can convert.", num("convert"), "#/admin?tab=cleanup")
+				add("pairs", one(num("pairs"), "book listed twice in NovelCheck", "books listed twice in NovelCheck"), "The same book under two names. Join them or say they differ.", num("pairs"), "#/duplicates")
+				add("dups", one(num("calibre_dups"), "book is in Calibre more than once", "books are in Calibre more than once"), "Pick the copy to keep; the others go to Calibre's recycle bin.", num("calibre_dups"), "#/duplicates")
+				add("titles", one(num("titles"), "title can be tidied in Calibre", "titles can be tidied in Calibre"), "NovelCheck found cleaner titles.", num("titles"), "#/admin?tab=cleanup")
+				add("convert", one(num("convert"), "book can be converted to EPUB", "books can be converted to EPUB"), "They have no EPUB but a file Calibre can convert.", num("convert"), "#/admin?tab=cleanup")
 			}
 		}
 		items := s.healthItems()

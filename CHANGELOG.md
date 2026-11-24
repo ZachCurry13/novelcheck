@@ -4,6 +4,28 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.0.0]
+
+NovelCheck 2.0 is about not having to babysit it: it tells you what needs you, checks itself, keeps a safety copy of your data, and lets the family ask for books.
+
+### 🏠 Home is the new start screen
+- Everyone lands on **Home** (unless they chose another start page in Profile): their next books on the Nightstand, new books in the library, their asks and the answers, and e-reader books that couldn't be matched.
+- **Parents** also see the asks waiting for them, with **Yes** and **Not this time**.
+- **Admins** also see **Needs a decision**: books listed twice, Calibre duplicates, titles to tidy, books to convert, books with no cover, ratings to look at and ratings people disagree with, each with the number, what it means and a **Review** button that opens the tool that decides it. **Not now** hides an item for a week.
+
+### 🩺 Health
+- **Health** (admins) says whether NovelCheck is working, worst first, each problem with what to do about it: Calibre not read for a day, no AI set up or a big rating backlog, Hardcover not connected, a Kindle that hasn't reported for two weeks or runs an old app or plugin, a nearly full disk, a day of many errors, and the safety copy below. The worst few also show on Home.
+
+### 💾 A safety copy of your data
+- NovelCheck makes a copy of its database every day (the first a few minutes after it starts) and keeps the last week, in the **backups** folder of its data folder. Ratings, Nightstands, settings and reading live in that one file, so a bad update or a failing disk can't take them away. To restore: stop NovelCheck, put a backup file in the data folder as `novelcheck.db`, start it.
+
+### 🎯 How accurate are the ratings?
+- On a rated book, parents and admins now have **I disagree**: pick the level you would give it. It doesn't change the book.
+- The **Accuracy** page (parents and admins) scores each AI model against those levels: how often it was exactly right, within one level, and whether it errs high or low. Admins can press **Use** to give a book the level a person gave.
+
+### 🙋 Ask for a book
+- Anyone can ask for a book on Home. A parent says yes: the book is marked OK for kids' accounts (the same OK as "Mark as OK" on its page) and goes on that person's Nightstand. A book that isn't in the library yet is approved and stays in the admins' list until someone gets it; **Got it** then puts it on their Nightstand.
+
 ## [1.108.0]
 
 ### 📖 Kindle app 1.10.0: sort, the Kindle's ⋯ menu, fuller pages, and an "Offline" fix

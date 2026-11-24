@@ -38,6 +38,9 @@ import { buildMobileNav, markMobileNav } from "./mobilenav.js";
 import { initSearch, setSearchUser } from "./search.js";
 import { keepUpToDate } from "./appupdate.js";
 import { renderKindle } from "./kindle.js";
+import { renderHome } from "./home.js";
+import { renderHealth } from "./health.js";
+import { renderAccuracy } from "./accuracy.js";
 import "./pulltorefresh.js"; // pull down from the top to refresh, on purpose
 import { initActivity } from "./activity.js";
 import { showFamily } from "./family.js";
@@ -64,20 +67,23 @@ const routes = {
   discover: renderDiscover,
   stats: renderStats,
   kindle: renderKindle,
+  home: renderHome,
+  health: renderHealth,
+  accuracy: renderAccuracy,
   wrapped: renderWrapped,
   shelf: renderShelf,
   collections: renderCollections,
   series: renderSeries,
   events: renderEvents,
 };
-const managerRoutes = new Set(["check", "import", "shelf", "admin", "duplicates"]);
+const managerRoutes = new Set(["check", "import", "shelf", "admin", "duplicates", "accuracy"]);
 // A friend's account (an adult from outside the family) reaches only these.
 const friendRoutes = new Set(["library", "discover", "events", "queue", "check", "stats", "wrapped", "profile", "settings", "whatsnew"]);
 // Admin pages and the area each needs (the main admin gives areas).
-const ROUTE_AREA = { system: "system", usage: "system", deletions: "calibre", deepscan: "deep" };
+const ROUTE_AREA = { system: "system", usage: "system", deletions: "calibre", deepscan: "deep", health: "system" };
 const moduleRoutes = { queue: "queue", import: "import", shelf: "import" }; // pages an admin can turn off
 // Pages without a menu item of their own light up the one they belong to.
-const NAV_OF = { wrapped: "stats", series: "collections", wishlist: "discover", events: "discover", import: "settings", shelf: "settings", deepscan: "admin", usage: "admin", system: "admin",
+const NAV_OF = { health: "home", accuracy: "home", wrapped: "stats", series: "collections", wishlist: "discover", events: "discover", import: "settings", shelf: "settings", deepscan: "admin", usage: "admin", system: "admin",
   duplicates: "admin", deletions: "admin" };
 
 function showOnly(id) {
@@ -145,7 +151,7 @@ async function route() {
   // Everyone lands on their chosen start page; by default parents on Check a
   // book (the main feature), kids on the Library.
   const friend = state.user.role === "friend";
-  let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || state.user.start_page || (canManage(state.user) ? "check" : friend ? "discover" : "library");
+  let name = (location.hash.replace(/^#\/?/, "").split("?")[0]) || state.user.start_page || (friend ? "discover" : "home");
   if (friend && !friendRoutes.has(name)) name = "discover";
   if (!routes[name] || (managerRoutes.has(name) && !canManage(state.user) && !(friend && name === "check")) ||
     (ROUTE_AREA[name] && !can(state.user, ROUTE_AREA[name])) ||

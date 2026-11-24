@@ -10,6 +10,7 @@ import { on } from "./modules.js";
 import { customChips } from "./customflags.js";
 import { renderDeepSection, deepChip } from "./deepscan.js";
 import { reviewChip } from "./librarycard.js";
+import { disagreeHTML, bindDisagree } from "./disagree.js";
 import { reduceMotion } from "./appearance.js";
 import { seriesLine, seriesText, openTitleEdit } from "./titlefix.js";
 import { genreChips, authorLinks, seriesLink } from "./genres.js";
@@ -121,6 +122,7 @@ export async function openBook(id, state, onChange) {
       <div id="hc-more" class="space-y-2"></div>
       ${friend ? "" : `<div id="hl-section"></div>`}
       ${state.user.role === "restricted" ? "" : starsHTML(data.my_rating || 0)}
+      ${friend || state.user.role === "restricted" || b.spice_level == null ? "" : `<div id="disagree-box" class="space-y-2">${disagreeHTML()}</div>`}
       ${finishedHTML(data.finished_on || "")}
       ${manager ? verdictFormHTML(b) : ""}
       ${parents ? ageAndNotesHTML(b, data.notes || [], manager, state.user) : ""}
@@ -145,6 +147,7 @@ export async function openBook(id, state, onChange) {
     dlg.close();
     onChange?.();
   };
+  if (dlg.querySelector("#disagree-box")) bindDisagree(dlg.querySelector("#disagree-box"), b);
   if (manager) bindVerdictForm(dlg, b.id, refresh);
   if (parents) bindAgeAndNotes(dlg, b, data.notes || [], state.user, onChange);
   dlg.onclick = async (e) => {
