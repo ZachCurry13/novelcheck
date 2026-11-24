@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.100.0]
+
+### 🏷️ Genres come from Hardcover first
+- A book Calibre has no tags for now gets its genres from Hardcover's genre tags (found while NovelCheck looks up ratings). The AI is asked only when Hardcover has nothing that fits. Calibre's own tags still win, and a later Calibre sync keeps Hardcover's genres. Genres the AI made earlier are replaced when Hardcover knows the book. The genre chip's hover note says where it came from.
+
 ## [1.99.4]
 
 ### 🖼️ Covers for books copied from a list

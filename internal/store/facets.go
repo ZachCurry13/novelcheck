@@ -162,6 +162,17 @@ func (s *Store) CountMissingGenres() int {
 // Calibre's tags). Empty keys still mark the book as done.
 func (s *Store) SetAIGenres(id int64, keys []string, kind string) error {
 	_, err := s.DB.Exec(`UPDATE books SET genres = ?, kind = CASE WHEN ? != '' THEN ? ELSE kind END, genre_source = 'ai'
-		WHERE id = ? AND genre_source != 'calibre'`, genres.Join(keys), kind, kind, id)
+		WHERE id = ? AND genre_source NOT IN ('calibre', 'hardcover')`, genres.Join(keys), kind, kind, id)
 	return err
+}
+
+// SetHCGenres saves the categories Hardcover's genre tags point to, over ones the AI made but never over Calibre's.
+// No matching category changes nothing (the AI still fills the book in).
+func (s *Store) SetHCGenres(id int64, tags []string) {
+	keys, kind := genres.FromTags(tags)
+	if len(keys) == 0 {
+		return
+	}
+	_, _ = s.DB.Exec(`UPDATE books SET genres = ?, kind = CASE WHEN ? != '' THEN ? ELSE kind END, genre_source = 'hardcover'
+		WHERE id = ? AND genre_source != 'calibre'`, genres.Join(keys), kind, kind, id)
 }

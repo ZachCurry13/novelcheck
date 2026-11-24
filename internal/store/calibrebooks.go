@@ -54,13 +54,13 @@ func (s *Store) UpsertCalibreBook(catalogID int64, e CalibreEntry) (int64, error
 	if t.Title != strings.Join(strings.Fields(e.Title), " ") {
 		fix = e.Title
 	}
-	// Categories from Calibre's tags; without any, genres the AI filled in stay.
+	// Categories from Calibre's tags; without any, genres Hardcover or the AI filled in stay.
 	keys, kind := genres.FromTags(e.Tags)
 	g := genres.Join(keys)
 	_, err = s.DB.Exec(`UPDATE books SET series = ?, series_index = ?, title_fix = ?, tags = ?,
-		genres = CASE WHEN ? != '' OR genre_source != 'ai' THEN ? ELSE genres END,
-		kind = CASE WHEN ? != '' OR genre_source != 'ai' THEN ? ELSE kind END,
-		genre_source = CASE WHEN ? != '' THEN 'calibre' WHEN genre_source = 'ai' THEN 'ai' ELSE '' END,
+		genres = CASE WHEN ? != '' OR genre_source NOT IN ('ai', 'hardcover') THEN ? ELSE genres END,
+		kind = CASE WHEN ? != '' OR genre_source NOT IN ('ai', 'hardcover') THEN ? ELSE kind END,
+		genre_source = CASE WHEN ? != '' THEN 'calibre' WHEN genre_source IN ('ai', 'hardcover') THEN genre_source ELSE '' END,
 		calibre_added = CASE WHEN ? != '' AND (calibre_added = '' OR ? < calibre_added) THEN ? ELSE calibre_added END
 		WHERE id = ?`, series, index, fix, strings.Join(e.Tags, ", "), g, g, g, kind, g, e.Added, e.Added, e.Added, id)
 	return id, err

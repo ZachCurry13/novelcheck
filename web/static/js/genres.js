@@ -16,7 +16,8 @@ const link = (param, value) => `#/library?${param}=${encodeURIComponent(value)}`
 export function genreChips(b) {
   const keys = (b.genres || "").split(",").filter((k) => GENRES[k]);
   const kind = b.kind ? `<a href="${link("kind", b.kind)}" data-close class="chip-cat">${b.kind === "fiction" ? "Fiction" : "Nonfiction"}</a>` : "";
-  const byAI = b.genre_source === "ai" ? ` title="Genre suggested by the AI (Calibre has no tags for this book)"` : "";
+  const byAI = b.genre_source === "ai" ? ` title="Genre suggested by the AI (Calibre has no tags for this book)"`
+    : b.genre_source === "hardcover" ? ` title="Genre from Hardcover (Calibre has no tags for this book)"` : "";
   return kind + keys.map((k) => `<a href="${link("genre", k)}" data-close class="chip-cat"${byAI}>${esc(GENRES[k])}</a>`).join("");
 }
 

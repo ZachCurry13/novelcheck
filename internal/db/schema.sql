@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS books (
     tags             TEXT NOT NULL DEFAULT '',     -- Calibre's tags, comma-separated
     genres           TEXT NOT NULL DEFAULT '',     -- categories (package genres) as ",fantasy,romance,"
     kind             TEXT NOT NULL DEFAULT '',     -- fiction, nonfiction or '' (unknown)
-    genre_source     TEXT NOT NULL DEFAULT '',     -- calibre (from tags) or ai; '' = none yet
+    genre_source     TEXT NOT NULL DEFAULT '',     -- calibre (from tags), hardcover or ai; '' = none yet
     cover_url        TEXT NOT NULL DEFAULT '',     -- a cover address kept with a book that has no file (from a series lookup)
     calibre_added    TEXT NOT NULL DEFAULT '',     -- when Calibre says the book was added to its library (the earliest entry); '' = unknown
     age_set_by       TEXT NOT NULL DEFAULT '',

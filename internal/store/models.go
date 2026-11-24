@@ -141,7 +141,7 @@ type Book struct {
 	Tags            string  `db:"tags" json:"tags"`                 // Calibre's tags, comma-separated
 	Genres          string  `db:"genres" json:"genres"`             // categories as ",fantasy,romance," (package genres)
 	Kind            string  `db:"kind" json:"kind"`                 // fiction, nonfiction or ""
-	GenreSource     string  `db:"genre_source" json:"genre_source"` // calibre, ai or ""
+	GenreSource     string  `db:"genre_source" json:"genre_source"` // calibre, hardcover, ai or ""
 	AnalyzedAt      *string `db:"analyzed_at" json:"analyzed_at"`
 	CreatedAt       string  `db:"created_at" json:"created_at"`
 	UpdatedAt       string  `db:"updated_at" json:"updated_at"`

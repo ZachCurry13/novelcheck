@@ -40,6 +40,7 @@ func (s *Server) FillRatings(ctx context.Context, limit int) int {
 		if t := hcTrueTitle(b.Title, b.Author, info); t != "" && s.applyTrueTitle(ctx, b.ID, b.Author, t) {
 			renamed++
 		}
+		s.Store.SetHCGenres(b.ID, info.Tags)
 		s.Store.SaveHCTags(b.ID, strings.Join(info.Warnings, ", "), strings.Join(info.Moods, ", "))
 		if info.Rating > 0 {
 			found++
