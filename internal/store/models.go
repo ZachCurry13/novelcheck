@@ -66,7 +66,9 @@ type User struct {
 	AgeLevel        int      `db:"age_level" json:"age_level"` // kid accounts only; 0 = not set
 	MaxSpice        int      `db:"max_spice" json:"max_spice"` // kid accounts: most peppers shown (0-5); -1 = no limit
 	CreatedAt       string   `db:"created_at" json:"created_at"`
-	HiddenContent   []string `db:"-" json:"hidden_content"`                  // content hide rules: items, "g:<group>", "flag:<custom key>"
+	HiddenContent   []string `db:"-" json:"hidden_content"`
+	ContentWarn     string   `db:"content_warn" json:"content_warn"`         // Heads-up: content keys (as HiddenContent, plus nudity, solo_acts, heavy_innuendo, dark_occult), comma-separated
+	WarnSpice       int      `db:"warn_spice" json:"warn_spice"`             // Heads-up from this spice level on; -1 = none                  // content hide rules: items, "g:<group>", "flag:<custom key>"
 	OnlyCollections bool     `db:"only_collections" json:"only_collections"` // kid accounts: only books in Collections
 	Collections     []int64  `db:"-" json:"collections"`                     // the collections they may see then
 	AIFeatures      bool     `db:"ai_features" json:"ai_features"`           // kid accounts: a parent allowed AI features

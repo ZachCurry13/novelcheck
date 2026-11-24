@@ -98,6 +98,7 @@ export async function openBook(id, state, onChange) {
         ? `<p class="text-xs text-slate-400">${b.spice_reason ? `<b class="text-slate-200">Why ${b.spice_level} 🌶️:</b> ${esc(b.spice_reason)}. ` : ""}${esc(PEPPERS[b.spice_level].desc)} <button type="button" data-peppers class="underline">About peppers</button></p>` : ""}
       ${blurbHTML(b, "rounded-lg bg-slate-800 p-3 text-slate-200")}
       ${b.summary_verdict ? `<p class="text-xs text-slate-400"><b class="text-slate-300">Rating note:</b> ${esc(b.summary_verdict)}</p>` : ""}
+      ${(data.heads_up || []).length ? `<div class="rounded-lg border border-amber-500/40 bg-amber-900/20 p-2 text-sm text-amber-100"><b>Heads-up:</b> ${data.heads_up.map(esc).join(" · ")}</div>` : ""}
       ${b.old_rules ? `<p class="text-xs text-amber-300">Older rating: made under earlier rating rules.${manager ? " Re-analyze rates it with the current ones." : " A parent can re-rate it."}</p>` : ""}
       ${reviewChip(b) ? `<p class="rounded-lg bg-amber-900/30 p-2 text-sm text-amber-200">The AI wasn't sure of this rating${b.blurb || b.description ? "" : " (it had little to go on)"}.${!manager ? "" : data.big_model
         ? ` <button type="button" data-act="rerate-big" class="underline">Re-rate with the big model (${esc(data.big_model)})</button>` : " Check it and edit it, or mark it OK."}</p>` : ""}

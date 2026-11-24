@@ -7,6 +7,7 @@ import { openGuide } from "./guide.js";
 import { on } from "./modules.js";
 import { openTaste } from "./taste.js";
 import { renderReadingSummary } from "./profilesummary.js";
+import { renderContentPrefs } from "./contentprefs.js";
 
 const ROLES = { admin: "Admin", editor: "Editor", restricted: "Kid account", viewer: "Reader" };
 
@@ -25,7 +26,8 @@ export async function renderProfile(view, state) {
         <h2 class="text-lg font-semibold">Your reading taste</h2>
         <p class="text-sm text-slate-400">Optional: mark books you know (want to read, read &amp; liked, …) so 💡 Suggested Reads on your Nightstand fit you better.</p>
         <button type="button" id="taste-open" class="btn-secondary">Rate some books</button></div>` : ""}
-      <div class="card">
+      ${u.role === "restricted" || u.role === "friend" ? "" : `<div id="content-prefs" class="card space-y-2 lg:col-span-2"></div>`}
+      <div class="card${u.role === "restricted" ? "" : " hidden"}">
         <h2 class="mb-2 text-lg font-semibold">Content rules on this account</h2>
         ${u.age_level ? `<p class="mb-2 text-sm text-slate-300">Age group: <b>${esc(ageLabel(u.age_level))}</b>. Books a parent rated for older readers are hidden.</p>` : ""}
         ${active ? `<ul class="list-disc pl-5 text-sm text-slate-300">${active}</ul>`
@@ -41,6 +43,7 @@ export async function renderProfile(view, state) {
     </div>`;
 
   $("#replay-guide", view).addEventListener("click", () => openGuide(state));
+  if ($("#content-prefs", view)) renderContentPrefs($("#content-prefs", view));
   $("#taste-open", view)?.addEventListener("click", () => openTaste());
   if (on(u, "koreader") || u.role === "friend") renderReadingSummary($("#reading-summary", view), u.role === "friend");
 }

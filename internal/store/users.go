@@ -9,7 +9,7 @@ import (
 var ErrNotFound = errors.New("not found")
 
 const userCols = `id, username, password_hash, role, hide_open_door, hide_nudity, hide_solo_acts,
-	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, only_collections, ai_features, start_page, claim_catalog, theme, font, motion, owner, admin_areas, created_at`
+	hide_innuendo, hide_dark_occult, hide_unrated, delivery_method, kindle_email, guide_seen, age_level, max_spice, only_collections, ai_features, start_page, claim_catalog, theme, font, motion, owner, admin_areas, content_warn, warn_spice, created_at`
 
 func (s *Store) CountUsers() (int, error) {
 	var n int

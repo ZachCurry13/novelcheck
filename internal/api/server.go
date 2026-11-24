@@ -179,6 +179,8 @@ func (s *Server) Router() http.Handler {
 			r.Post("/me/kosync", s.handleMyKosync)
 			r.Get("/me/koplugin.zip", s.handleMyPluginZip)
 			r.Get("/me/kindle-app.zip", s.handleMyKindleAppZip)
+			r.Get("/me/content-prefs", s.handleContentPrefs) // Hide / Heads-up / Don't mention, per person
+			r.Put("/me/content-prefs", s.handleContentPrefs)
 			r.Get("/me/left", s.handleMyLeft) // books that left your e-reader, and the ones you removed from your library
 			r.Post("/me/left", s.handleMyLeft)
 			r.Delete("/me/hidden-books/{id}", s.handleUnhide)
