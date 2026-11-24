@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.103.0]
+
+### 🧹 Clean-up
+- **Wrong merges:** two books with the same ISBN are no longer joined by themselves when they sit at different places in a series or their files are very different in size (an ISBN can be wrong on one of them). They are listed for a person to look at, with the reason. This is how "The Lost Files: The Fugitive" ended up with "Six's Legacy".
+- **Kindle page:** a parent can pick a kid's Kindle.
+- **Adding books:** people who aren't admins can add up to 50 a day, and the bug link lists the latest additions and who made them.
+- Behind the scenes: the routes and the Kindle copy code were split into smaller files. A security scan found nothing the code uses.
+
 ## [1.102.0]
 
 ### 📚 Add books by drag and drop

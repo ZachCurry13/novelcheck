@@ -53,6 +53,7 @@ func (s *Server) handleBugLink(w http.ResponseWriter, r *http.Request) {
 	s.writeUnmatched(&b)
 	s.writeCleanupLog(&b)
 	s.writeAppSeen(&b)
+	s.writeUploads(&b)
 	s.writeNoCovers(&b)
 	b.WriteString(`
 == Handled? ==

@@ -32,10 +32,24 @@ function rowHTML(b) {
 }
 
 export async function renderKindle(view) {
-  view.innerHTML = `<h1 class="page-title mb-1">Kindle</h1><div id="k-body"><p class="text-slate-400">Loading…</p></div>`;
-  const s = await attempt(() => get("/api/me/reading-sync"));
-  const body = view.querySelector("#k-body");
-  if (!s) return;
+  view.innerHTML = `<h1 class="page-title mb-1">Kindle</h1><div id="k-who"></div><div id="k-body"><p class="text-slate-400">Loading…</p></div>`;
+  const people = await get("/api/admin/users").catch(() => []); // a parent can look at a kid's Kindle
+  let user = sessionStorage.getItem("nc-kindle-user") || "";
+  const who = view.querySelector("#k-who");
+  if (Array.isArray(people) && people.length > 1) {
+    who.innerHTML = `<label class="mb-2 block text-sm text-slate-400">Whose Kindle <select id="k-user" class="input ml-1 py-1"><option value="">Mine</option>
+      ${people.map((p) => `<option value="${p.id}" ${String(p.id) === user ? "selected" : ""}>${esc(p.username)}</option>`).join("")}</select></label>`;
+    who.querySelector("#k-user").onchange = (e) => { user = e.target.value; sessionStorage.setItem("nc-kindle-user", user); draw(); };
+  }
+  const qs = (extra) => [user ? `user=${encodeURIComponent(user)}` : "", extra].filter(Boolean).join("&");
+  async function draw() {
+    const body = view.querySelector("#k-body");
+    const s = await attempt(() => get("/api/me/kindles?" + qs("")));
+    if (!s) return;
+    show(body, s);
+  }
+  draw();
+  function show(body, s) {
   const devices = s.devices || [], links = s.links || {};
   const groups = new Map();
   for (const d of devices) {
@@ -51,9 +65,9 @@ export async function renderKindle(view) {
   let current = names.includes(saved) ? saved : names[0];
   let filter = "all";
 
-  async function show() {
+  async function paint() {
     const ds = groups.get(current);
-    const r = await attempt(() => get("/api/me/kindle-library?kindle=" + encodeURIComponent(current)));
+    const r = await attempt(() => get("/api/me/kindle-library?" + qs("kindle=" + encodeURIComponent(current))));
     const books = (r && r.books) || [];
     const test = FILTERS.find((f) => f[0] === filter)[2];
     const shown = books.filter(test);
@@ -67,11 +81,12 @@ export async function renderKindle(view) {
       <section id="k-left" class="mt-4"></section>
       <section class="card mt-4 space-y-2"><h2 class="font-semibold">Ask this Kindle to…</h2><div id="k-tasks"></div></section>`;
     body.querySelectorAll("[data-w]").forEach((e) => (e.style.width = e.dataset.w + "%")); // inline style="" is refused by the page policy
-    body.querySelector("#k-pick")?.addEventListener("change", (e) => { current = e.target.value; sessionStorage.setItem("nc-kindle", current); show(); });
-    body.querySelectorAll("[data-f]").forEach((b) => b.addEventListener("click", () => { filter = b.dataset.f; show(); }));
-    renderLeftBooks(body.querySelector("#k-left"));
+    body.querySelector("#k-pick")?.addEventListener("change", (e) => { current = e.target.value; sessionStorage.setItem("nc-kindle", current); paint(); });
+    body.querySelectorAll("[data-f]").forEach((b) => b.addEventListener("click", () => { filter = b.dataset.f; paint(); }));
+    if (!user) renderLeftBooks(body.querySelector("#k-left")); // the books that left are shown for your own Kindle
     const plugin = ds.find((d) => !isApp(d));
-    renderKindleTasks(body.querySelector("#k-tasks"), (plugin || ds[0]).name);
+    renderKindleTasks(body.querySelector("#k-tasks"), (plugin || ds[0]).name, user);
   }
-  show();
+  paint();
+  }
 }

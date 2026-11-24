@@ -89,8 +89,13 @@ func (s *Store) judge(a, b *sameRow, kind string) *judged {
 	sa, sb := boil(a.Series), boil(b.Series)
 	namesDiffer := sa != "" && sb != "" && sa != sb
 	if a.SeriesIndex > 0 && b.SeriesIndex > 0 {
-		if a.SeriesIndex != b.SeriesIndex && !isbn {
-			return nil // book 1 and book 5 of a series are different books
+		if a.SeriesIndex != b.SeriesIndex {
+			if !isbn {
+				return nil // book 1 and book 5 of a series are different books
+			}
+			// the same ISBN on book 1 and book 10: one of the ISBNs is wrong, so it proves nothing
+			different = true
+			warn(fmt.Sprintf("Same ISBN, but different places in the series (#%g and #%g): one ISBN may be wrong", a.SeriesIndex, b.SeriesIndex))
 		}
 		if namesDiffer && !isbn { // "Lorien Legacies #1" and "The Lost Files #1" are the first of two series
 			different = true
@@ -121,9 +126,9 @@ func (s *Store) judge(a, b *sameRow, kind string) *judged {
 	if a.Size > 0 && b.Size > 0 {
 		hi, lo := max(a.Size, b.Size), min(a.Size, b.Size)
 		switch {
-		case float64(hi) >= 2.5*float64(lo) && !isbn:
+		case float64(hi) >= 2.5*float64(lo):
 			different = true
-			warn(fmt.Sprintf("Very different file sizes (%s and %s): one may be a novella or short story", humanSize(hi), humanSize(lo)))
+			warn(fmt.Sprintf("Very different file sizes (%s and %s): one may be a novella or short story%s", humanSize(hi), humanSize(lo), map[bool]string{true: ", even with the same ISBN", false: ""}[isbn]))
 		case float64(hi) <= 1.5*float64(lo):
 			good(fmt.Sprintf("Similar file sizes (%s and %s)", humanSize(a.Size), humanSize(b.Size)))
 		}
@@ -161,7 +166,7 @@ func (s *Store) judge(a, b *sameRow, kind string) *judged {
 	}
 	conf := "check"
 	switch {
-	case isbn:
+	case isbn && !different:
 		conf = "sure"
 	case different:
 		conf = "check" // something says they are two books: a person looks

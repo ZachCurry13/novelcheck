@@ -1,0 +1,45 @@
+package api
+
+import "github.com/go-chi/chi/v5"
+
+// kosyncRoutes: KOReader progress sync and the plugin and Kindle app endpoints, all signed in with the NovelCheck name
+// and a sync code (not a login).
+func (s *Server) kosyncRoutes(r chi.Router) {
+	r.Use(noStore, kosyncCORS)
+	r.Post("/users/create", s.handleKosyncCreate)
+	r.Get("/users/auth", s.handleKosyncAuth)
+	r.Put("/syncs/progress", s.handleKosyncPut)
+	r.Get("/syncs/progress/{document}", s.handleKosyncGet)
+	// The KOReader plugin: the same sign-in, JSON, and downloads.
+	r.Get("/plugin/up-next", s.handlePluginUpNext)
+	r.Post("/plugin/device", s.handlePluginDevice)
+	r.Post("/plugin/debug", s.handlePluginDebug)
+	r.Get("/plugin/book/{id}/{name}", s.handlePluginBook)
+	r.Get("/plugin/version", s.handlePluginVersion)
+	r.Get("/plugin/names", s.handlePluginNames)
+	r.Get("/plugin/search", s.handlePluginSearch)
+	r.Get("/plugin/new", s.handlePluginNew)
+	r.Get("/plugin/info/{id}", s.handlePluginInfo)
+	r.Post("/plugin/nightstand", s.handlePluginNightstand)
+	r.Post("/plugin/highlights", s.handlePluginHighlights)
+	r.Post("/plugin/finish", s.handlePluginFinish)
+	r.Post("/plugin/kindle/check", s.handlePluginKindleCheck)
+	r.Put("/plugin/kindle/file", s.handlePluginKindleFile)
+	r.Put("/plugin/kindle/chunk", s.handlePluginKindleChunk)
+	r.Post("/plugin/kindle/moved", s.handlePluginKindleMoved)
+	r.Get("/plugin/tasks", s.handlePluginTasks)
+	r.Post("/plugin/tasks/result", s.handlePluginTaskResult)
+	r.Get("/plugin/file/{name}", s.handlePluginFile)
+	r.Get("/plugin/kindle/{id}", s.handlePluginKindleBook) // the Kindle app (kindle-app/)
+	r.Get("/plugin/cover/{id}", s.handlePluginCover)
+	r.Get("/plugin/kindle-app", s.handleKindleAppVersion)
+	r.Get("/plugin/kindle-mine", s.handleKindleMine)
+	r.Get("/plugin/discover", s.handleKindleDiscover)
+	r.Get("/plugin/collections", s.handleKindleCollections)
+	r.Get("/plugin/collection/{id}", s.handleKindleCollection)
+	r.Post("/plugin/kindle-words", s.handleKindleWords)
+	r.Post("/plugin/left", s.handlePluginLeft)
+	r.Get("/plugin/restore", s.handleRestoreList) // Restore from NovelCheck (plugin)
+	r.Get("/plugin/restore/file", s.handleRestoreFile)
+	r.Get("/plugin/kindle-app/{name}", s.handleKindleAppFile)
+}

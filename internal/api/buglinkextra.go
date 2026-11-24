@@ -98,3 +98,15 @@ func (s *Server) writeAppSeen(b *strings.Builder) {
 		b.WriteString("(never)\n")
 	}
 }
+
+// writeUploads lists the latest books added by drag and drop: who, when and the Calibre number.
+func (s *Server) writeUploads(b *strings.Builder) {
+	b.WriteString("\n== Books added by drag and drop (newest first: person · when · Calibre #) ==\n")
+	list := s.Store.RecentUploads(30)
+	for _, u := range list {
+		fmt.Fprintf(b, "%s · %s UTC · #%s\n", u.Username, u.At, u.CalibreID)
+	}
+	if len(list) == 0 {
+		b.WriteString("(none)\n")
+	}
+}

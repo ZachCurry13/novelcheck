@@ -18,6 +18,9 @@ import (
 // author). A sure match fixes the title, series, missing author and ISBN in Calibre; an unsure one comes back with
 // Hardcover's best guess for the person to confirm or correct (POST /api/upload/fix).
 
+// maxUploadsPerDay is how many books a person who isn't an admin may add in a day.
+const maxUploadsPerDay = 50
+
 // POST /api/upload/ebook: one e-book file (multipart field "file").
 func (s *Server) handleFamilyUpload(w http.ResponseWriter, r *http.Request) {
 	u := auth.UserFrom(r)
@@ -27,6 +30,10 @@ func (s *Server) handleFamilyUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	if s.Store.Setting(store.KeyCalibreSrvURL) == "" {
 		writeErr(w, http.StatusBadRequest, "adding books isn't set up yet: ask an admin")
+		return
+	}
+	if !u.IsAdmin() && s.Store.UploadsToday(u.ID) >= maxUploadsPerDay {
+		writeErr(w, http.StatusTooManyRequests, "that's "+strconv.Itoa(maxUploadsPerDay)+" books today: try again tomorrow, or ask an admin")
 		return
 	}
 	name, data, ok := readEbookUpload(w, r)
