@@ -49,7 +49,11 @@ function nextCover() {
   coverBusy = true;
   var img = job.img, id = job.id;
   var done = function (why) {
-    if (why) { if (img.parentNode && img.className !== "thumb") img.parentNode.removeChild(img); logLine("cover " + id + ": " + why); }
+    if (why) { logLine("cover " + id + ": " + why + " (trying the Kindle's own download)"); return fileCover(job, function (ok) {
+      if (!ok && img.parentNode && img.className !== "thumb") img.parentNode.removeChild(img);
+      coverBusy = false;
+      nextCover();
+    }); }
     coverBusy = false;
     nextCover();
   };
@@ -73,6 +77,21 @@ function nextCover() {
   };
   x.onerror = function () { done("network error"); };
   x.send();
+}
+
+// fileCover is the second way to a cover: the Kindle's own curl (through KindleForge's helper) saves it as a file in the
+// app's folder and the page shows that file. Used when the first way failed.
+function fileCover(job, done) {
+  var dir = "/var/local/mesquite/NovelCheck/covers", name = "c" + job.id + "_" + job.size + ".jpg", out = "/tmp/nc-cover-" + job.id + ".txt";
+  var cmd = "mkdir -p " + dir + "; rm -f " + out + "; if curl -sfL -H " + sh("x-auth-user: " + NC.user) + " -H " + sh("x-auth-key: " + NC.key) +
+    " -o " + dir + "/" + name + " " + sh(NC.server + "/kosync/plugin/cover/" + job.id + "?size=" + job.size) + "; then echo ok > " + out + "; else rm -f " + dir + "/" + name + "; echo failed > " + out + "; fi; echo END >> " + out;
+  if (!run(cmd)) return done(false);
+  waitFor(out, 20, function (text) {
+    var ok = !!text && text.indexOf("ok") >= 0;
+    if (ok) job.img.src = "file://" + dir + "/" + name;
+    logLine("cover " + job.id + " by file: " + (ok ? "saved" : "failed"));
+    done(ok);
+  });
 }
 
 // logLine notes what the app did or what went wrong (the last 150 lines, kept on the Kindle); sendLog sends them to

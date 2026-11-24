@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.99.2]
+
+### 📖 Kindle app 1.4.2
+- **Covers have a second way in.** If the first way fails on the Kindle's old browser, the app has the Kindle download the picture itself and shows that file. The app logs which way worked, and the bug link shows it.
+
+### 🏷️ Calmer content labels
+- Some built-in labels now read in a plainer tone: **Strong language** (was Strong profanity / F-word), **Mild language**, **God's name used as a curse**, **Crude humor**, **Graphic death scenes**, **Disturbing changes to bodies**, **Dead bodies**, **Drug use**, and **LGBTQ+ characters or themes**. Ratings, filters and each person's Hide / Heads-up choices keep working, and the old names are still understood.
+
 ## [1.99.1]
 
 ### 📖 Kindle app 1.4.1

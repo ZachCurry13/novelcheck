@@ -29,11 +29,11 @@ type Group struct {
 // Groups is the catalog, in display order.
 var Groups = []Group{
 	{"language", "🗣️", "Language", []Item{
-		{"profanity", "Profanity", "mild swearing such as damn or hell"},
-		{"strong_profanity", "Strong profanity / F-word", "the F-word or equally strong swearing"},
-		{"blasphemy", "Religious profanity / blasphemy", "God's or Jesus' name used as a curse, or mocking the sacred"},
+		{"profanity", "Mild language", "mild swearing such as damn or hell"},
+		{"strong_profanity", "Strong language", "the F-word or equally strong swearing"},
+		{"blasphemy", "God's name used as a curse", "God's or Jesus' name used as a curse, or mocking the sacred"},
 		{"sexual_language", "Sexual language", "crude sexual words or talk"},
-		{"crude_humor", "Crude / vulgar humor", "gross-out, bathroom or vulgar jokes"},
+		{"crude_humor", "Crude humor", "gross-out, bathroom or vulgar jokes"},
 		{"slurs", "Slurs", "racial, ethnic or other hateful slurs"},
 		{"insults", "Insults / name-calling", "mean insults or name-calling"},
 	}},
@@ -53,12 +53,12 @@ var Groups = []Group{
 	{"gore", "🩸", "Gore", []Item{
 		{"blood", "Blood", ""},
 		{"graphic_injuries", "Graphic injuries", "wounds described in detail"},
-		{"graphic_deaths", "Graphic deaths", "deaths described in gory detail"},
+		{"graphic_deaths", "Graphic death scenes", "deaths described in gory detail"},
 		{"dismemberment", "Dismemberment", ""},
 		{"mutilation", "Mutilation", ""},
-		{"body_horror", "Body horror", "bodies twisted, infested or transformed in disturbing ways"},
+		{"body_horror", "Disturbing changes to bodies", "bodies twisted, infested or transformed in disturbing ways"},
 		{"organs", "Organs / bodily contents", ""},
-		{"corpses", "Corpses", "dead bodies described"},
+		{"corpses", "Dead bodies", "dead bodies described"},
 	}},
 	{"substances", "🍺", "Substance Use", []Item{
 		{"alcohol", "Alcohol use", "characters drink alcohol"},
@@ -66,7 +66,7 @@ var Groups = []Group{
 		{"tobacco", "Tobacco / smoking", ""},
 		{"vaping", "Vaping", ""},
 		{"marijuana", "Marijuana", ""},
-		{"drugs", "Recreational / illegal drugs", ""},
+		{"drugs", "Drug use", ""},
 		{"prescription_misuse", "Prescription drug misuse", ""},
 		{"drug_dealing", "Drug dealing", ""},
 		{"addiction", "Addiction", ""},
@@ -79,7 +79,7 @@ var Groups = []Group{
 		{"bullying", "Bullying", ""},
 		{"death_grief", "Death / grief", "a loved one dies, grieving"},
 		{"religious_themes", "Religious themes", "faith, prayer or religion as a theme"},
-		{"lgbtq", "LGBTQ+ themes", "LGBTQ+ characters or relationships"},
+		{"lgbtq", "LGBTQ+ characters or themes", "LGBTQ+ characters or relationships"},
 		{"pregnancy", "Pregnancy / childbirth", ""},
 		{"mental_health", "Mental health themes", "depression, anxiety, trauma or other mental illness"},
 	}},
@@ -98,12 +98,20 @@ var aliases = map[string]string{
 	"lgbtq_content": "lgbtq", "animal_death": "animal_harm", "grief": "death_grief",
 }
 
+// oldLabels are item labels before they were reworded; a model or a saved answer may still use them.
+var oldLabels = map[string]string{"Profanity": "profanity", "Strong profanity / F-word": "strong_profanity", "Religious profanity / blasphemy": "blasphemy",
+	"Crude / vulgar humor": "crude_humor", "Graphic deaths": "graphic_deaths", "Body horror": "body_horror", "Corpses": "corpses",
+	"Recreational / illegal drugs": "drugs", "LGBTQ+ themes": "lgbtq"}
+
 func init() {
 	for _, g := range Groups {
 		for _, it := range g.Items {
 			items[it.Key] = g.Key
 			byLabel[squash(it.Label)] = it.Key
 		}
+	}
+	for label, key := range oldLabels {
+		byLabel[squash(label)] = key
 	}
 }
 
