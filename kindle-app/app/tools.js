@@ -47,6 +47,19 @@ function backupKindle(done) {
   });
 }
 
+// autoBackup is backupKindle by itself, at most every 24 hours, after an automatic sync (books NovelCheck already has are skipped).
+function autoBackup() {
+  if (toolBusy || new Date().getTime() - (+stored("nc-auto-bk") || 0) < 24 * 3600 * 1000) return;
+  toolBusy = true;
+  backupKindle(function (sent, wanted) {
+    toolBusy = false;
+    if (sent < 0) return logLine("automatic backup could not run");
+    keep("nc-auto-bk", String(new Date().getTime()));
+    logLine("automatic backup: " + sent + " of " + wanted + " new books sent");
+    if (sent) note("Sent " + sent + " new book" + (sent === 1 ? "" : "s") + " to NovelCheck.");
+  });
+}
+
 // restoreKindle puts back the books of this Kindle's backup that are not on it (nothing is replaced).
 function restoreKindle(done) {
   note("Looking at the backup…");

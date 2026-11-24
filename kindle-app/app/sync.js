@@ -24,6 +24,7 @@ function syncNow(force) {
           logLine("sync" + (force ? " (button)" : "") + ": " + said.join(" "));
           sendLog("after a sync");
           if (left && left.length) showLeft(left); // books that left the Kindle: keep or remove them
+          if (!force) autoBackup(); // the automatic sync also sends new books to NovelCheck, at most once a day
         });
       });
     });

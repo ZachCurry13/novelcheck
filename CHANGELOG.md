@@ -8,6 +8,7 @@ becomes the release notes for that version and is shown in the app under
 
 ### 🔧 Fixes
 - **Duplicates: "Remove" on one book no longer ends with an error.** The page crashed right after removing ("Cannot access 'gone' before initialization"): the copy was removed in Calibre, but the book stayed on screen, the count never updated and the page never read Calibre again. It now updates as it should.
+- **Kindle app 1.15.0 sends new books by itself.** After its automatic sync (at most every 12 hours) the app also sends books NovelCheck doesn't have yet, at most once a day, the same as the Menu's "Back up my books". DRM-free books go into Calibre; books from Amazon's store are left out.
 
 ## [2.1.4]
 
