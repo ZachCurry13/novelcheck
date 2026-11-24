@@ -31,7 +31,7 @@ function row(i, n) {
         ${found}</div></div>
     <div class="flex flex-wrap gap-2"><button type="button" data-act="add" class="btn-primary px-3 py-1 text-sm" title="Keep this book in NovelCheck, with the title and author shown">Add to NovelCheck</button>
       <button type="button" data-act="match" class="btn-secondary px-3 py-1 text-sm">Match…</button>
-      <button type="button" data-act="ignore" class="btn-ghost px-3 py-1 text-sm" title="A file that isn't a book: hide it">Not a book</button></div>
+      <button type="button" data-act="ignore" class="btn-ghost px-3 py-1 text-sm" title="A file that isn't a book (a thumbnail, a guide): never matched again">Not a book</button></div>
     <div data-search class="hidden space-y-2"></div></li>`;
 }
 
@@ -63,7 +63,7 @@ export async function openKindleBooks(onChange) {
     const n = Number(li.dataset.n);
     const item = items[n];
     if (btn.dataset.act === "ignore") {
-      if (await attempt(() => post("/api/me/kindle-match", { ...ref(item), ignored: true }))) finish(n, "Hidden: not a book");
+      if (await attempt(() => post("/api/me/kindle-match", { ...ref(item), ignored: true }))) finish(n, "Marked: not a book");
     } else if (btn.dataset.act === "add") {
       if (await attempt(() => post("/api/me/kindle-match", { ...ref(item), add: true, book_id: item.book_id || 0 }))) finish(n, "Added to NovelCheck");
     } else if (btn.dataset.act === "match") {

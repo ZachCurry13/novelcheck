@@ -4,7 +4,7 @@
 // (Hardcover, Libby).
 // Profile keeps who you are; Admin keeps the technical settings.
 import { put } from "./api.js";
-import { $, esc, attempt } from "./ui.js";
+import { $, esc, attempt, canHere } from "./ui.js";
 import { refreshUser } from "./app.js";
 import { on, deliveryOptions } from "./modules.js";
 import { renderPushCard } from "./push.js";
@@ -14,6 +14,7 @@ import { profileExtrasHTML, bindProfileExtras } from "./profileextras.js";
 import { familyCardHTML, bindFamilyCard } from "./familysettings.js";
 import { renderSyncStatus } from "./syncstatus.js";
 import { renderPluginCard } from "./pluginmanage.js";
+import { kindleAdminHTML, bindKindleAdmin } from "./kindleadmin.js";
 import { renderHardcover } from "./hardcover.js";
 import { renderLibbyCard } from "./libby.js";
 import { renderABSCard } from "./absaccount.js";
@@ -57,16 +58,19 @@ const accountHTML = (u) => `<form id="password" class="card space-y-3">
   ${u.role === "friend" ? "" : `<div id="sharing-card" class="card space-y-3 lg:col-span-2"></div>
   ${familyCardHTML(u)}`}`;
 
+// Every e-reader tool in one place: the plugin and the Kindle app (downloads, your e-readers, matching, books that
+// left), the Kindle remote (yours or a family member's), for admins the unknown Kindle books and backups, reading
+// sync, and last the manual KOReader setup for those without the plugin.
 function kindleHTML(u) {
   const off = on(u, "koreader") ? "" : " module-off";
-  return `<div class="card space-y-2 lg:col-span-2${off}">
-      <h2 class="text-lg font-semibold">KOReader setup</h2>
-      <p class="text-sm text-slate-400">The catalog address, QR code and reading-sync steps for a Kindle or phone. With the plugin below you rarely need them: <b>NovelCheck → Settings → Set up</b> does it on the Kindle.</p>
-      <button type="button" id="ko-setup" class="btn-secondary">Open KOReader setup</button></div>
-    <div id="plugin-card" class="card space-y-2${off}"></div>
-    <div class="card space-y-2${off}"><details id="remote-card"><summary class="cursor-pointer text-lg font-semibold">Kindle remote: tell your Kindle what to do</summary>
-      <p class="mt-1 text-sm text-slate-400">Runs on the Kindle at its next sync.</p><div id="remote-body" class="mt-2 text-sm text-slate-300"></div></details></div>
-    <div id="sync-card" class="card space-y-2${off}"></div>`;
+  return `<div id="plugin-card" class="card space-y-2${off}"></div>
+    <div class="card space-y-2${off}"><details id="remote-card"><summary class="cursor-pointer text-lg font-semibold">Kindle remote: tell an e-reader what to do</summary>
+      <p class="mt-1 text-sm text-slate-400">Runs on the e-reader at its next sync. Parents can pick a family member's.</p><div id="remote-body" class="mt-2 text-sm text-slate-300"></div></details></div>
+    ${canHere("calibre") ? kindleAdminHTML : ""}
+    <div id="sync-card" class="card space-y-2${off}"></div>
+    <div class="card space-y-2${off}"><details><summary class="cursor-pointer text-lg font-semibold">Without the plugin: manual KOReader setup</summary>
+      <p class="mt-1 text-sm text-slate-400">The catalog address, QR code and reading-sync steps, for a phone or an e-reader without the plugin. With the plugin, <b>NovelCheck → Settings → Set up</b> does all of it.</p>
+      <button type="button" id="ko-setup" class="btn-secondary mt-2">Open KOReader setup</button></details></div>`;
 }
 
 const connectionsHTML = () => `<div id="hardcover-card" class="card space-y-2"></div><div id="libby-card" class="card space-y-2"></div><div id="abs-card" class="card space-y-2" hidden></div>`;
@@ -115,6 +119,7 @@ export async function renderSettings(view, state) {
         $("#remote-card", view)?.addEventListener("toggle", (e) => {
           if (e.target.open) import("./kindletasks.js").then((m) => m.renderKindleTasks($("#remote-body", view)));
         });
+        if ($("#ka-unknown", view)) bindKindleAdmin(view);
       }
     } else {
       renderHardcover($("#hardcover-card", view));

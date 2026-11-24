@@ -66,7 +66,6 @@ export async function openBook(id, state, onChange) {
         ${cw && e.source === "calibre" && /^\d+$/.test(e.external_id) ? `<a href="${esc(cw)}/book/${e.external_id}" target="_blank" rel="noopener noreferrer" class="text-xs text-sky-300 underline">Open in Calibre-Web ↗</a>` : ""}
         ${e.formats.length ? e.formats.map((f) => `<span class="chip-fmt">${esc(f)}</span>`).join(" ") : `<span class="text-xs text-slate-500">no file</span>`}
         ${e.from_box ? `<span class="text-xs text-slate-400">in the box set “${esc(e.from_box)}”</span>` : ""}
-        ${!e.from_box && (data.editable_catalogs || []).includes(e.catalog_id) && e.source !== "calibre" ? `<button type="button" data-act="remove-from" data-cat="${e.catalog_id}" class="text-xs text-rose-300 underline">Remove from this library</button>` : ""}
       </div>
       ${isAdmin && realPaths(e).length ? `<p class="mt-0.5 break-all text-xs text-slate-500">${realPaths(e).map(esc).join("<br>")}</p>` : ""}
     </li>`).join("");
@@ -128,12 +127,12 @@ export async function openBook(id, state, onChange) {
         ${data.downloadable ? `<a href="/api/books/${b.id}/download" class="btn-secondary">${data.has_audio ? "Download e-book" : "Download"}</a>` : ""}
         ${manager ? `<button data-act="analyze" class="btn-secondary">${b.classification ? "Re-analyze" : "Analyze now"}</button>
           <button data-act="approve" class="btn-secondary" title="Show this book even when it matches someone's hide filters or content rules">${b.approved ? "Remove OK mark" : "✓ Mark as OK"}</button>` : ""}
-        ${!owned || friend ? "" : data.my_delete_request
+        ${data.my_delete_request && !friend
             ? `<button data-act="cancel-delete" class="btn-ghost" title="${esc(data.my_delete_request.reason || "")}">Delete requested · Cancel</button>`
-            : `<button data-act="request-delete" class="btn-ghost" title="Ask an admin to delete this book">Request to delete</button>`}
-        ${friend ? "" : `<button data-act="hide-book" class="btn-ghost" title="Only for you; Settings → Kindle &amp; KOReader can show it again">Remove from my library</button>`}
+            : friend ? "" : `<button data-act="remove" class="btn-ghost">Remove…</button>`}
         ${owned && can(state.user, "calibre") && b.delete_requests ? `<a href="#/deletions" data-close class="btn-ghost">Review delete requests (${b.delete_requests})</a>` : ""}
       </div>
+      ${friend ? "" : removePanel(b, data, entries, owned, state.user)}
       <div class="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap gap-2 border-t border-slate-800 bg-slate-900/95 px-6 py-3 backdrop-blur">
         ${readable ? `<a href="/reader.html?id=${b.id}" class="btn-primary"><span class="ms" aria-hidden="true">local_library</span>Read</a>` : ""}
         ${on(state.user, "queue") ? `<button data-act="queue" class="${readable ? "btn-secondary" : "btn-primary"}">${owned || friend ? "＋ Nightstand" : "＋ Nightstand (to get)"}</button>` : ""}
@@ -197,6 +196,11 @@ export async function openBook(id, state, onChange) {
       if (reason === null) return;
       const ok = await attempt(() => post(`/api/books/${b.id}/delete-request`, { reason }), state.user.role === "admin" ? "Delete requested." : "Delete requested. It is hidden from your pages while an admin reviews it.");
       if (ok) refresh();
+    } else if (act === "remove") {
+      $("#remove-panel", dlg).classList.toggle("hidden");
+    } else if (act === "delete-files") {
+      if (!confirm(`Delete "${b.title}" from Calibre for good? It goes to Calibre's recycle bin; its rating and cover stay in NovelCheck.`)) return;
+      if (await attempt(() => post(`/api/books/${b.id}/delete-request`, { reason: "Main admin: delete the files" }))) { dlg.close(); location.hash = "#/deletions"; }
     } else if (act === "hide-book") {
       if (await attempt(() => post("/api/me/left", { book_id: b.id, choice: "hide" }), "Removed from your library. Settings → Kindle & KOReader shows it again.")) { dlg.close(); onChange?.(); }
     } else if (act === "wish") {
@@ -238,3 +242,16 @@ export async function openBook(id, state, onChange) {
 // realPaths are a copy's files, without the markers of books that came from a
 // list (claimed from an event, or listed on one).
 const realPaths = (e) => e.paths.filter((p) => !/^(claimed|event|discover|list):/.test(p));
+
+// removePanel is the one Remove… button's choices: what "remove" can mean for this person and book.
+function removePanel(b, data, entries, owned, user) {
+  const lists = [...entries.values()].filter((e) => !e.from_box && (data.editable_catalogs || []).includes(e.catalog_id) && e.source !== "calibre");
+  const choice = (act, label, note, extra = "") => `<button type="button" data-act="${act}" ${extra} class="block w-full rounded-lg bg-slate-800/60 p-2 text-left hover:bg-slate-800">
+    <span class="font-medium">${label}</span><span class="block text-xs text-slate-400">${note}</span></button>`;
+  return `<div id="remove-panel" class="hidden space-y-2 rounded-lg border border-slate-700 p-3 text-sm"><p class="font-semibold">Remove “${esc(b.title)}”</p>
+    ${choice("hide-book", "From my library", "Only you stop seeing it. Settings → Kindle &amp; KOReader can show it again.")}
+    ${lists.map((e) => choice("remove-from", `From “${esc(e.catalog_name)}”`, "It leaves that list; nothing is deleted.", `data-cat="${e.catalog_id}"`)).join("")}
+    ${owned && !data.my_delete_request ? choice("request-delete", "Ask to delete it for good", "It's hidden from you at once; the main admin decides.") : ""}
+    ${user.owner && owned ? choice("delete-files", "Delete its files (main admin)", "From Calibre; you confirm on the delete list.") : ""}
+    <p class="text-xs text-slate-500">Its rating and cover always stay in NovelCheck.</p></div>`;
+}
