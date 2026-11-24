@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -85,6 +86,7 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 	_ = s.Store.ClearNewHCSuggestions()
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Hour)
 	defer cancel()
+	waits := 0
 	for i := 0; i < len(refs); i += 25 {
 		if s.hcjob.stopped() {
 			s.hcEnd("Stopped; what was found so far is below.")
@@ -107,6 +109,16 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 			}
 		}
 		byISBN, err := hc.InfoByISBN(ctx, isbns)
+		if errors.Is(err, hardcover.ErrTooMany) && waits < 30 { // Hardcover wants a rest: take one, then do this group again
+			waits++
+			s.hcjob.update(func(st *hcJobState) { st.Note = "Waiting a few minutes: Hardcover asked for a rest" })
+			select {
+			case <-ctx.Done():
+			case <-time.After(3 * time.Minute):
+			}
+			i -= 25
+			continue
+		}
 		if err != nil {
 			s.hcEnd("Hardcover: " + err.Error() + " (what was found so far is below)")
 			return

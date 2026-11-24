@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.7]
+
+### 🖼️ Covers, for good
+- **Hardcover no longer says "too many requests" to everything at once.** The cover finder, the genre scan, ratings and each person's sync all talked to Hardcover separately, so together they went over its limit and the scan did 0 of 1,320 books. They now share one pace per Hardcover account, and when Hardcover asks for a rest, all of them wait. The Hardcover scan waits a few minutes and carries on instead of stopping.
+- **Not a book: leave it out.** In Fix titles and covers, each book with no cover has this button. It drops the book from the cover lists, the finder and the bug log for good (for the junk Calibre entries and free comics).
+- Already there for the rest: **Choose cover** on the same list lets you pick one by hand (a search result, an address or an upload).
+
 ## [2.1.6]
 
 ### 📚 Pick where the Kindle app puts downloaded books

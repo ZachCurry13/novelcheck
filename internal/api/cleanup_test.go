@@ -60,6 +60,13 @@ func TestMissingCovers(t *testing.T) {
 	if out["count"] != float64(1) {
 		t.Fatalf("one book with no cover: %v", out)
 	}
+	// "Not a book: leave it out" drops it from the list for good
+	if res, _ := admin.do("POST", "/api/admin/covers/leave-out", map[string]any{"id": b}, true); res.StatusCode != 200 {
+		t.Fatalf("leave out: %d", res.StatusCode)
+	}
+	if _, out = admin.do("GET", "/api/admin/covers/missing", nil, false); out["count"] != float64(0) {
+		t.Fatalf("left out: %v", out)
+	}
 	if res, _ := admin.do("POST", "/api/admin/covers/find", map[string]string{}, true); res.StatusCode != 202 {
 		t.Fatalf("start: %d", res.StatusCode)
 	}

@@ -57,13 +57,34 @@ func (s *Server) hasCover(b store.BriefBook) bool {
 // MissingCovers lists the library books with no real cover.
 func (s *Server) MissingCovers() []store.BriefBook {
 	books, _ := s.Store.LibraryBooks()
+	left := s.Store.LeftOut()
 	var out []store.BriefBook
 	for _, b := range books {
-		if !s.hasCover(b) {
+		if !left[b.ID] && !s.hasCover(b) {
 			out = append(out, b)
 		}
 	}
 	return out
+}
+
+// handleLeaveOut: POST /api/admin/covers/leave-out {"id"}. "Not a book": it drops out of the cover lists for good.
+func (s *Server) handleLeaveOut(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		ID int64 `json:"id"`
+	}
+	if !readJSON(w, r, &body, 1<<10) {
+		return
+	}
+	if _, err := s.Store.BookByID(body.ID, nil); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	if err := s.Store.LeaveOut(body.ID); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	s.rcache.ver.Add(1) // the lists are kept for a minute: start them again
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 // freeCoverLimit is how many free books one run looks at, newest first (a Stuff Your Kindle day lists up to a

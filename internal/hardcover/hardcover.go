@@ -39,17 +39,43 @@ type Client struct {
 	Token string
 	URL   string // "" = Endpoint (tests point it elsewhere)
 	HTTP  *http.Client
-
-	mu   sync.Mutex
-	last time.Time
 }
 
-// pause waits until MinGap has passed since this client's last call.
+// gate is one token's shared pace. Every part of NovelCheck that talks to Hardcover (cover finder, genre scan, ratings,
+// each person's sync) makes its own Client, so the limit has to be kept per token, not per Client: together they
+// sent more than 60 a minute and Hardcover answered "too many requests" to all of them.
+type gate struct {
+	mu    sync.Mutex
+	last  time.Time
+	until time.Time // after a "too many requests": nobody asks before this
+}
+
+var (
+	gatesMu sync.Mutex
+	gates   = map[string]*gate{}
+)
+
+func (c *Client) gate() *gate {
+	gatesMu.Lock()
+	defer gatesMu.Unlock()
+	t := CleanToken(c.Token)
+	if gates[t] == nil {
+		gates[t] = &gate{}
+	}
+	return gates[t]
+}
+
+// pause waits until MinGap has passed since the last call with this token, and until any cool-down is over.
 func (c *Client) pause(ctx context.Context) error {
-	c.mu.Lock()
-	wait := MinGap - time.Since(c.last)
-	c.last = time.Now().Add(max(wait, 0))
-	c.mu.Unlock()
+	g := c.gate()
+	g.mu.Lock()
+	next := g.last.Add(MinGap)
+	if g.until.After(next) {
+		next = g.until
+	}
+	wait := time.Until(next)
+	g.last = time.Now().Add(max(wait, 0))
+	g.mu.Unlock()
 	if wait <= 0 {
 		return nil
 	}
@@ -61,7 +87,15 @@ func (c *Client) pause(ctx context.Context) error {
 	}
 }
 
-var errTooMany = errors.New("Hardcover says too many requests; it will try again later")
+// coolDown keeps every caller using this token quiet for d.
+func (c *Client) coolDown(d time.Duration) {
+	g := c.gate()
+	g.mu.Lock()
+	g.until = time.Now().Add(d)
+	g.mu.Unlock()
+}
+
+var ErrTooMany = errors.New("Hardcover says too many requests; it will try again later")
 
 // CleanToken drops a pasted "Bearer " and stray spaces.
 func CleanToken(t string) string {
@@ -77,11 +111,10 @@ func (c *Client) do(ctx context.Context, query string, out any) error {
 		return err
 	}
 	err := c.doOnce(ctx, query, out)
-	if errors.Is(err, errTooMany) && MinGap > 0 {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(15 * time.Second):
+	if errors.Is(err, ErrTooMany) && MinGap > 0 {
+		c.coolDown(45 * time.Second) // every caller waits, not only this one
+		if err := c.pause(ctx); err != nil {
+			return err
 		}
 		return c.doOnce(ctx, query, out)
 	}
@@ -115,7 +148,7 @@ func (c *Client) doOnce(ctx context.Context, query string, out any) error {
 	case http.StatusUnauthorized, http.StatusForbidden:
 		return errors.New("Hardcover didn't accept the token: copy it again from hardcover.app → Settings → Hardcover API (tokens can expire)")
 	case http.StatusTooManyRequests:
-		return errTooMany
+		return ErrTooMany
 	}
 	var env struct {
 		Data   json.RawMessage `json:"data"`

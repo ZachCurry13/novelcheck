@@ -42,7 +42,7 @@ export async function openFixBooks(onDone) {
       <ul class="divide-y divide-slate-800">${list.slice(0, shown).map((b) => `<li class="flex gap-3 py-2">${coverImg(b.id, "h-16 w-11")}
         <div class="min-w-0 flex-1"><p class="font-medium">${esc(b.title)}${b.author ? ` <span class="text-sm text-slate-400">· ${esc(b.author)}</span>` : ""}</p>
         <ul class="mt-1 space-y-1 text-sm">${b.fixes.map((f, i) => `<li class="flex flex-wrap items-center gap-2"><span class="text-slate-300">${esc(f.what)}${f.kind === "cover" ? "" : `: <s class="text-slate-500">${esc(f.from || "–")}</s> → ${esc(f.to)}`}${f.sure ? ` <span class="text-xs text-slate-500">(${esc(f.sure)})</span>` : ""}</span>
-          ${f.kind === "cover" ? `<button type="button" data-fx="cover" data-book="${b.id}" class="btn-ghost py-0.5 text-xs">Choose cover</button>`
+          ${f.kind === "cover" ? `<button type="button" data-fx="cover" data-book="${b.id}" class="btn-ghost py-0.5 text-xs">Choose cover</button><button type="button" data-fx="leave" data-book="${b.id}" class="btn-ghost py-0.5 text-xs" title="Not a real book, or one that needs no cover: stop listing it">Not a book: leave it out</button>`
             : `<button type="button" data-fx="apply" data-book="${b.id}" data-i="${i}" class="btn-secondary py-0.5 text-xs">Apply</button>${f.kind === "hc" ? `<button type="button" data-fx="skip" data-book="${b.id}" data-i="${i}" class="btn-ghost py-0.5 text-xs">Skip</button>` : ""}`}</li>`).join("")}</ul></div></li>`).join("")
       || `<li class="py-3 text-slate-400">Nothing waiting. ✓</li>`}</ul>
       ${list.length > shown ? `<button type="button" data-fx="more" class="btn-ghost">Show ${Math.min(PAGE, list.length - shown)} more</button>` : ""}</div>`;
@@ -55,6 +55,7 @@ export async function openFixBooks(onDone) {
       if (k === "more") { shown += PAGE; return load(); }
       if (k === "review") { dlg.close(); return import("./coverreview.js").then((m) => m.openCoverReview()); }
       if (k === "cover") return openCoverPicker(b, load, { everyone: true });
+      if (k === "leave") ok = await attempt(() => post("/api/admin/covers/leave-out", { id: b.id }), "Left out of the cover lists");
       if (k === "hc-scan") ok = await attempt(() => post("/api/admin/hc-clean/scan"), "Comparing with Hardcover in the background");
       if (k === "covers-find") ok = await attempt(() => post("/api/admin/covers/find"), "Looking for covers in the background");
       if (k === "titles-all") ok = await attempt(() => post("/api/admin/title-fixes", { ids: tf.fixes.map((x) => x.id) }), "Titles tidied in Calibre");
