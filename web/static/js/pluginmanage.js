@@ -6,6 +6,7 @@ import { esc, attempt } from "./ui.js";
 import { ago } from "./progress.js";
 import { openKindleBooks } from "./kindlebooks.js";
 import { renderLeftBooks } from "./leftbooks.js";
+import { devicesHTML, bindDevices } from "./kindlegroups.js";
 
 // semverLess says whether version a is older than b ("1.2.0" < "1.10.0").
 export function older(a, b) {
@@ -35,9 +36,12 @@ export const whichHTML = `<div class="space-y-1 rounded bg-slate-800/60 p-2 text
       <li><b>Both:</b> KOReader is installed but some books are read in Amazon's reader (store or Kindle Unlimited books). The plugin covers KOReader; the app reports the store books and puts books in Amazon's library.</li>
     </ul></div>`;
 
-// kindleAppHTML offers the Kindle app (kindle-app/) set up for the person zipUrl belongs to.
+// kindleAppHTML offers the Kindle app (kindle-app/) set up for the person zipUrl belongs to. Naming the Kindle
+// ("Zach Paperwhite", the name its KOReader plugin uses) lets NovelCheck see the app and the plugin as one Kindle.
 export const kindleAppHTML = (zipUrl) => `<div class="space-y-2 border-t border-slate-800 pt-2 text-sm"><p class="font-semibold">Kindle app (no KOReader)</p>
-    <a href="${esc(zipUrl)}" download class="btn-primary inline-flex">⬇ Download the Kindle app</a>
+    <label class="block text-xs text-slate-400">Name of this Kindle (the same name as its KOReader plugin, if it has one)
+      <input data-app-name class="input mt-1" maxlength="40" placeholder="Zach Paperwhite"></label>
+    <a href="${esc(zipUrl)}" data-app-zip download class="btn-primary inline-flex">⬇ Download the Kindle app</a>
     <p class="text-xs text-slate-500">Already connected to this account; nothing to type on the Kindle. Keep the file private.</p>
     <ol class="list-decimal space-y-1 pl-5 text-slate-300">
       <li>Connect the Kindle to the computer by USB and unzip the file onto it, merging the <b>documents</b> and <b>extensions</b> folders.</li>
@@ -65,11 +69,19 @@ export async function renderPluginCard(host) {
     <label class="toggle min-h-[2.5rem] text-sm"><input type="checkbox" data-autoadd ${s.kindle_autoadd ? "checked" : ""}> Add the books on my e-reader to your Nightstand (started ones show as Currently reading)</label>
     <button type="button" data-match class="btn-secondary w-full text-sm">Match books on my e-readers${s.kindle_attention ? ` (${s.kindle_attention} to look at)` : ""}</button>
     <div class="space-y-1 border-t border-slate-800 pt-2 text-sm"><p class="label">Your e-readers</p>
-      ${devices.length ? `<ul class="space-y-2">${devices.map((d) => `<li><b>${esc(d.name)}</b> ${badge(d)}<br>
-        <span class="text-xs text-slate-400">${d.books} book${d.books === 1 ? "" : "s"}, ${d.in_library} in your library · reported ${esc(ago(d.reported_at))}</span></li>`).join("")}</ul>`
-      : `<p class="text-xs text-slate-500">None yet. After installing, open <b>NovelCheck → Sync now</b> in KOReader.</p>`}</div>
+      <div data-devices>${devicesHTML(devices, s.links || {}, badge)}</div></div>
     <div data-left-books></div>`;
   renderLeftBooks(host.querySelector("[data-left-books]"));
+  bindDevices(host.querySelector("[data-devices]"), devices, s.links || {}, () => renderPluginCard(host));
+  bindAppName(host);
   host.querySelector("[data-match]").onclick = () => openKindleBooks(() => renderPluginCard(host));
   host.querySelector("[data-autoadd]").onchange = (e) => attempt(() => put("/api/me/kindle-autoadd", { enabled: e.target.checked }), e.target.checked ? "Books on your e-reader will join your Nightstand" : "Switched off");
+}
+
+// bindAppName puts the typed Kindle name into the app download's address.
+export function bindAppName(root) {
+  const input = root.querySelector("[data-app-name]"), a = root.querySelector("[data-app-zip]");
+  if (!input || !a) return;
+  const base = a.getAttribute("href").split("?")[0];
+  input.oninput = () => a.setAttribute("href", input.value.trim() ? `${base}?name=${encodeURIComponent(input.value.trim())}` : base);
 }

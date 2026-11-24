@@ -1,6 +1,9 @@
 package store
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // What's on a reader's e-readers, from the KOReader plugin's reports.
 
@@ -107,4 +110,59 @@ func (s *Store) DeviceNames(userID int64, device string) []DeviceName {
 	_ = s.DB.Select(&out, `SELECT d.md5, d.filename, b.title, b.author FROM device_books d JOIN books b ON b.id = d.book_id
 		WHERE d.user_id = ? AND (? = '' OR d.device = ?) AND d.ignored = 0 AND `+ownedCond+` ORDER BY d.filename`, userID, device, device)
 	return out
+}
+
+// DeviceLinks maps each of a person's linked e-reader names to the Kindle they are part of.
+func (s *Store) DeviceLinks(userID int64) map[string]string {
+	var rows []struct {
+		Device string `db:"device"`
+		Kindle string `db:"kindle"`
+	}
+	_ = s.DB.Select(&rows, `SELECT device, kindle FROM device_links WHERE user_id = ?`, userID)
+	out := map[string]string{}
+	for _, r := range rows {
+		out[r.Device] = r.Kindle
+	}
+	return out
+}
+
+// LinkDevice says an e-reader report is part of the Kindle called kindle ("" unlinks it).
+func (s *Store) LinkDevice(userID int64, device, kindle string) error {
+	if strings.TrimSpace(kindle) == "" {
+		_, err := s.DB.Exec(`DELETE FROM device_links WHERE user_id = ? AND device = ?`, userID, device)
+		return err
+	}
+	_, err := s.DB.Exec(`INSERT INTO device_links (user_id, device, kindle) VALUES (?, ?, ?)
+		ON CONFLICT(user_id, device) DO UPDATE SET kindle = excluded.kindle`, userID, device, strings.TrimSpace(kindle))
+	return err
+}
+
+// AppDeviceSuffix is what the Kindle app adds to the Kindle's name, so its reports never replace the plugin's.
+const AppDeviceSuffix = " (Amazon reader)"
+
+// AutoLink links the Kindle app's report and the plugin's when their names say it: "Zach Paperwhite" (plugin) and
+// "Zach Paperwhite (Amazon reader)" (app, named when it was downloaded).
+func (s *Store) AutoLink(userID int64, device string) {
+	base := strings.TrimSuffix(device, AppDeviceSuffix)
+	if base == "" {
+		return
+	}
+	var n int
+	for _, d := range []string{base, base + AppDeviceSuffix} {
+		if d != device {
+			_ = s.DB.Get(&n, `SELECT COUNT(*) FROM device_info WHERE user_id = ? AND device = ?`, userID, d)
+			if n == 0 {
+				return
+			}
+		}
+	}
+	_ = s.LinkDevice(userID, base, base)
+	_ = s.LinkDevice(userID, base+AppDeviceSuffix, base)
+}
+
+// HasDevice says whether the person has an e-reader report with this name (the plugin's or the app's).
+func (s *Store) HasDevice(userID int64, device string) bool {
+	var n int
+	_ = s.DB.Get(&n, `SELECT (SELECT COUNT(*) FROM device_info WHERE user_id = ? AND device = ?) + (SELECT COUNT(*) FROM device_books WHERE user_id = ? AND device = ?)`, userID, device, userID, device)
+	return n > 0
 }

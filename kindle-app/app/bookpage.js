@@ -15,7 +15,7 @@ function details(id) {
     var d = el("div", "book");
     var img = el("img");
     d.appendChild(img);
-    cover(img, id);
+    cover(img, id, "l");
     d.appendChild(el("h2", "", b.title));
     d.appendChild(el("div", "by", b.author + (b.series ? " · " + b.series + (b.series_index ? " #" + b.series_index : "") : "")));
     d.appendChild(el("p", "title", (b.level == null ? "Not rated yet" : "Spice level " + b.level + (b.door ? " · " + b.door : "")) +

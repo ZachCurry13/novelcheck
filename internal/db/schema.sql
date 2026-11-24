@@ -793,6 +793,13 @@ CREATE TABLE IF NOT EXISTS book_highlights (
     PRIMARY KEY (user_id, book_id, key)
 );
 
+-- Which e-reader reports are one Kindle: the KOReader plugin and the Kindle app on the same Kindle (kindle = its name).
+CREATE TABLE IF NOT EXISTS device_links (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    device  TEXT NOT NULL,
+    kindle  TEXT NOT NULL,
+    PRIMARY KEY (user_id, device)
+);
 -- Library cleanup's own log: each action's result when something wasn't done (skipped, refused, failed), with why.
 CREATE TABLE IF NOT EXISTS cleanup_log (
     id     INTEGER PRIMARY KEY AUTOINCREMENT,

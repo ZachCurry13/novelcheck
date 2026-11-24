@@ -33,26 +33,45 @@ function api(method, path, body, done) {
   x.send(body ? JSON.stringify(body) : null);
 }
 
-// cover shows a book's cover in img. Covers need the sign-in, so they come by XHR, as bytes turned into a data:
-// address (the Kindle's browser has no blob: addresses for pictures).
-function cover(img, id) {
+// cover shows a book's cover in img (size "l" for a book's page, else the small one). Covers need the sign-in, so they
+// come by XHR as bytes turned into a data: address (the Kindle's browser has no blob: addresses for pictures). One
+// at a time, so a list of covers doesn't crowd a slow Wi-Fi. A typed array isn't passed to apply (old engines refuse).
+var coverQueue = [], coverBusy = false, coverLogged = 0;
+function cover(img, id, size) {
+  coverQueue.push({ img: img, id: id, size: size || "s" });
+  nextCover();
+}
+
+function nextCover() {
+  if (coverBusy) return;
+  var job = coverQueue.shift();
+  if (!job) return;
+  coverBusy = true;
+  var img = job.img, id = job.id;
+  var done = function (why) {
+    if (why) { if (img.parentNode && img.className !== "thumb") img.parentNode.removeChild(img); logLine("cover " + id + ": " + why); }
+    coverBusy = false;
+    nextCover();
+  };
+  if (!window.Uint8Array || !window.btoa) return done("this browser can't show covers (no Uint8Array or btoa)");
   var x = new XMLHttpRequest();
-  x.open("GET", NC.server + "/kosync/plugin/cover/" + id + "?size=l", true);
+  x.open("GET", NC.server + "/kosync/plugin/cover/" + id + "?size=" + job.size, true);
   x.setRequestHeader("x-auth-user", NC.user);
   x.setRequestHeader("x-auth-key", NC.key);
   x.responseType = "arraybuffer";
-  var drop = function (why) {
-    if (img.parentNode) img.parentNode.removeChild(img);
-    if (why) logLine("cover " + id + ": " + why);
-  };
   x.onload = function () {
     var type = x.getResponseHeader("Content-Type") || "";
-    if (x.status !== 200 || type.indexOf("image/") !== 0) return drop(x.status === 200 ? "" : "status " + x.status);
-    var bytes = new Uint8Array(x.response), bin = "";
-    for (var i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
-    img.src = "data:" + type.split(";")[0] + ";base64," + window.btoa(bin);
+    if (x.status !== 200) return done("status " + x.status);
+    if (type.indexOf("image/") !== 0) return done("not a picture (" + type + ")");
+    try {
+      var bytes = new Uint8Array(x.response), parts = [];
+      for (var i = 0; i < bytes.length; i++) parts.push(String.fromCharCode(bytes[i]));
+      img.src = "data:" + type.split(";")[0] + ";base64," + window.btoa(parts.join(""));
+      if (coverLogged++ < 3) logLine("cover " + id + " ok, " + bytes.length + " bytes, " + type.split(";")[0]);
+      done("");
+    } catch (e) { done("couldn't turn it into a picture: " + e); }
   };
-  x.onerror = function () { drop("network error"); };
+  x.onerror = function () { done("network error"); };
   x.send();
 }
 

@@ -1,6 +1,6 @@
 /* NovelCheck Kindle app: the screens. ES5 only (see kindle.js). */
 var PER_PAGE = 6;
-var state = { books: [], page: 0, list: "up-next" };
+var state = { books: [], page: 0, list: "up-next", door: "" }; // door: a spice filter ("none", "closed", "open"), "" = all
 var got = {}; // books downloaded on this Kindle, by id
 try { got = JSON.parse(localStorage.getItem("nc-got")) || {}; } catch (e) {}
 
@@ -12,12 +12,28 @@ function el(tag, cls, text) {
   if (text != null) e.textContent = text;
   return e;
 }
+function doorOf(level) { return level == null ? "" : level >= 4 ? "open" : level >= 2 ? "closed" : "none"; }
+function shown() {
+  if (!state.door) return state.books;
+  var out = [];
+  for (var i = 0; i < state.books.length; i++) if (doorOf(state.books[i].level) === state.door) out.push(state.books[i]);
+  return out;
+}
+function badge(level) { return level == null ? "Not rated yet" : "Spice " + level + " · " + (level >= 4 ? "Open Door" : level >= 2 ? "Closed Door" : "No Spice"); }
 function spice(level) { return level == null ? "Not rated yet" : "Spice level " + level + " (" + (level >= 4 ? "Open Door" : level >= 2 ? "Closed Door" : "No Spice") + ")"; }
 function onKindle(b) { return got[b.id] || b.on_device; }
 
+// paintSynced says how long ago the last sync was ("Synced 2 h ago").
+function paintSynced() {
+  var at = 0;
+  try { at = +localStorage.getItem("nc-synced") || 0; } catch (e) {}
+  var m = at ? Math.round((new Date().getTime() - at) / 60000) : -1;
+  $("synced").textContent = m < 0 ? "Not synced yet" : m < 2 ? "Synced just now" : m < 120 ? "Synced " + m + " min ago" : m < 2880 ? "Synced " + Math.round(m / 60) + " h ago" : "Synced " + Math.round(m / 1440) + " days ago";
+}
+
 function show(list, query) {
   state.list = list;
-  var tabs = document.querySelectorAll(".tabs button");
+  var tabs = document.querySelectorAll(".tabs button[data-list]");
   for (var i = 0; i < tabs.length; i++) tabs[i].className = tabs[i].getAttribute("data-list") === list ? "on" : "";
   var path = list === "search" ? "/kosync/plugin/search?q=" + encodeURIComponent(query) : "/kosync/plugin/" + list;
   note("Loading…");
@@ -45,9 +61,16 @@ function rows() {
   window.scrollTo(0, 0);
   var m = $("main");
   m.innerHTML = "";
-  var pages = Math.max(1, Math.ceil(state.books.length / PER_PAGE));
-  var part = state.books.slice(state.page * PER_PAGE, (state.page + 1) * PER_PAGE);
+  var list = shown();
+  var pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
+  var part = list.slice(state.page * PER_PAGE, (state.page + 1) * PER_PAGE);
   for (var i = 0; i < part.length; i++) m.appendChild(row(part[i]));
+  if (!part.length && state.books.length) m.appendChild(el("p", "meta", "No books with that spice level here. Tap All."));
+  var pills = document.querySelectorAll(".pills button");
+  for (var j = 0; j < pills.length; j++) pills[j].className = pills[j].getAttribute("data-door") === state.door ? "on" : "";
+  var missing = 0;
+  for (var q = 0; q < state.books.length; q++) if (!onKindle(state.books[q])) missing++;
+  $("dlall").hidden = !(state.list === "up-next" && missing > 0);
   $("pages").hidden = pages < 2;
   $("page").textContent = (state.page + 1) + " of " + pages;
   $("prev").disabled = state.page === 0;
@@ -56,17 +79,27 @@ function rows() {
 
 function row(b) {
   var r = el("div", "row");
+  if (b.id) { // a small cover; the book's page has the big one
+    var th = el("img", "thumb");
+    th.alt = "";
+    r.appendChild(th);
+    cover(th, b.id, "s");
+  }
   var what = el("div", "what");
   what.appendChild(el("div", "title", b.title));
   what.appendChild(el("div", "by", b.author));
   if (state.list === "kindle-mine") { // the books on this Kindle: their rating, and where they are
-    what.appendChild(el("div", "meta", (b.status === "pending" || b.status === "processing" ? "Being rated…" : spice(b.level) + (b.old_rules ? " (older rating)" : "")) +
-      (b.format === "cloud" ? " · In your Amazon library" : b.percent > 0 ? " · " + Math.round(b.percent * 100) + "% read" : "")));
+    var meta = el("div", "meta");
+    meta.appendChild(el("span", "badge", b.status === "pending" || b.status === "processing" ? "Being rated…" : badge(b.level) + (b.old_rules ? " (older)" : "")));
+    meta.appendChild(document.createTextNode((b.format === "cloud" ? " In your Amazon library" : b.percent > 0 ? " " + Math.round(b.percent * 100) + "% read" : "")));
+    what.appendChild(meta);
     if (b.id) what.onclick = function () { details(b.id); };
     r.appendChild(what);
     return r;
   }
-  what.appendChild(el("div", "meta", spice(b.level)));
+  var line = el("div", "meta");
+  line.appendChild(el("span", "badge", badge(b.level)));
+  what.appendChild(line);
   what.onclick = function () { details(b.id); };
   r.appendChild(what);
   r.appendChild(downloadButton(b));
@@ -81,6 +114,9 @@ function downloadButton(b, main) {
 }
 
 // download asks the server for a Kindle copy (it may convert first), then has utild save it into documents/NovelCheck.
+var afterDownload = null; // Download all: what runs when a download has ended, well or not
+function ended() { var f = afterDownload; if (f) f(); }
+
 function download(b, btn, tries) {
   tries = tries || 0;
   btn.disabled = true;
@@ -89,11 +125,12 @@ function download(b, btn, tries) {
     if (err) {
       btn.disabled = false;
       btn.textContent = "Download";
-      return note(err);
+      note(err);
+      return ended();
     }
     if (status === 202) {
       note((data && data.message) || "Getting it ready for Kindle…");
-      if (tries > 100) return note("This is taking too long. Try again later.");
+      if (tries > 100) { note("This is taking too long. Try again later."); return ended(); }
       return setTimeout(function () { download(b, btn, tries + 1); }, 6000);
     }
     save(b, data.file, btn);
@@ -134,14 +171,40 @@ function save(b, file, btn) {
       logLine("downloaded " + b.title + " as " + file);
       try { localStorage.setItem("nc-got", JSON.stringify(got)); } catch (e) {}
       btn.textContent = "On Kindle";
-      return note(b.title + " is in your Kindle library.");
+      note(b.title + " is in your Kindle library.");
+      return ended();
     }
     btn.disabled = false;
     btn.textContent = "Download";
     note("The download failed. Check Wi-Fi and try again.");
+    setTimeout(ended, 0);
     logLine("download failed: " + b.title + " (" + file + "): " + (text == null ? "no answer from the Kindle helper" : text.replace(/\s+/g, " ")));
     sendLog("a download failed");
   });
+}
+
+// downloadAll downloads the Nightstand books that aren't on this Kindle yet, one after another (the plugin's
+// "Download Nightstand").
+function downloadAll() {
+  var todo = [], done = 0, current = null;
+  for (var i = 0; i < state.books.length; i++) if (!onKindle(state.books[i])) todo.push(state.books[i]);
+  var total = todo.length;
+  if (!total) return note("Everything on your Nightstand is already on this Kindle.");
+  $("dlall").disabled = true;
+  var next = function () {
+    if (current && got[current.id]) done++;
+    current = todo.shift();
+    if (!current) {
+      afterDownload = null;
+      $("dlall").disabled = false;
+      logLine("download all: " + done + " of " + total);
+      return note("Downloaded " + done + " of " + total + " Nightstand books.");
+    }
+    note("Downloading " + (total - todo.length) + " of " + total + ": " + current.title + "…");
+    download(current, { disabled: false, textContent: "" });
+  };
+  afterDownload = next;
+  next();
 }
 
 // showLeft asks about books that left the Kindle: keep them in NovelCheck, remove them from her library (only she
@@ -187,14 +250,22 @@ document.addEventListener("DOMContentLoaded", function () {
   applyScale();
   chrome();
   if (!NC.server) return note("This copy has no settings. Download it again from NovelCheck.");
-  if (NC.device === "Kindle") NC.device = "Kindle (Amazon reader)"; // its own name, so the plugin's report on the same Kindle is never replaced
+  // its own name ("Zach Paperwhite (Amazon reader)"), so the plugin's report of the same Kindle is never replaced
+  if (!/ \(Amazon reader\)$/.test(NC.device)) NC.device = (NC.device || "Kindle") + " (Amazon reader)";
   $("find").onsubmit = function (e) {
     e.preventDefault();
     var q = $("q").value.replace(/^\s+|\s+$/g, "");
     if (q.length > 1) show("search", q);
   };
-  var tabs = document.querySelectorAll(".tabs button");
+  var tabs = document.querySelectorAll(".tabs button[data-list]");
   for (var i = 0; i < tabs.length; i++) tabs[i].onclick = function () { show(this.getAttribute("data-list")); };
+  var pills = document.querySelectorAll(".pills button");
+  for (var k = 0; k < pills.length; k++) pills[k].onclick = function () { state.door = this.getAttribute("data-door"); state.page = 0; rows(); };
+  $("dlall").onclick = downloadAll;
+  $("ver").textContent = "v" + (NC.version || "?");
+  paintSynced();
+  setInterval(paintSynced, 60000);
+  logLine("app " + NC.version + " opened as " + NC.device);
   $("report").onclick = function () { note("Syncing…"); syncNow(true); };
   $("check").onclick = function () {
     if (!run("sh /mnt/us/extensions/novelcheck-app/check.sh")) return note("The check needs KindleForge's helper. Open KindleForge once, then try again.");

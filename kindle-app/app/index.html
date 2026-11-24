@@ -9,15 +9,17 @@
 </head>
 <body>
 <header>
-  <h1>NovelCheck</h1>
+  <div class="brand"><img id="logo" src="logo.png" alt=""><div><h1>NovelCheck</h1><span id="ver" class="meta"></span></div></div>
   <button id="update" class="main" hidden></button>
-  <button id="report">Sync now</button>
+  <div class="sync"><button id="report">Sync now</button><span id="synced" class="meta"></span></div>
 </header>
 <nav>
   <form id="find"><input id="q" type="text" placeholder="Title or author"><button>Search</button></form>
   <div class="tabs"><button data-list="up-next">Nightstand</button><button data-list="new">New</button><button data-list="kindle-mine">My Kindle</button></div>
+  <div class="tabs pills"><button data-door="">All</button><button data-door="none">No Spice</button><button data-door="closed">Closed Door</button><button data-door="open">Open Door</button></div>
 </nav>
 <p id="note"></p>
+<p class="tabs"><button id="dlall" hidden>Download all of my Nightstand</button></p>
 <main id="main"></main>
 <footer id="pages"><button id="prev">Prev</button><span id="page"></span><button id="next">Next</button></footer>
 <p class="help"><button id="check" class="small">Something not working? Send a check</button></p>

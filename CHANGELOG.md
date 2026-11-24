@@ -4,6 +4,24 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.99.0]
+
+### 📖 Kindle app 1.4.0
+- **It shows its version** under the name at the top, and **Synced 2 h ago** under Sync now. The NovelCheck logo is in the header.
+- **Covers**: small covers in every list, and the big one on a book's page. They load one at a time and the app logs how each went (the bug link shows it), so a cover that fails says why.
+- **Spice filter** under the tabs: All, No Spice, Closed Door, Open Door. Each book shows its spice level and door as a badge.
+- **Download all of my Nightstand** (the plugin's Download Nightstand), one book after another.
+- After a sync, "On Kindle" follows what the Kindle really has, so a book deleted on the Kindle goes back to Download.
+
+### 🔗 The plugin and the app are one Kindle
+- **Settings → Kindle & KOReader → Your e-readers** now lists each Kindle once, with the KOReader plugin and the Kindle app under it. **Same Kindle as…** links them by hand; NovelCheck offers the link when it sees a plugin and an app that aren't linked, and links them by itself when their names match.
+- **Name the Kindle when you download the app** ("Zach Paperwhite", the name its plugin uses): the app reports as "Zach Paperwhite (Amazon reader)", so the two are linked from the start.
+- The Kindle list says when a Kindle's **app is out of date** (as it already did for the plugin).
+
+### 🧹 Removing extra Calibre copies, again
+- A book that Calibre's Content server doesn't know yet (its files are in the library) used to count as "already gone". Now the page says how many aren't removed because of that and to restart the Calibre app, and a 🔔 notice stays until it catches up.
+- A batch Calibre refuses ("Foreign key violation: authors is still referenced") no longer stops everything: the books go one at a time, the ones Calibre won't take are named, and the rest are removed.
+
 ## [1.98.4]
 
 ### 📖 Kindle app 1.3.2: updates itself

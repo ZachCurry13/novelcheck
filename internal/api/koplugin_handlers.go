@@ -92,7 +92,7 @@ func (s *Server) serveKindleAppZip(w http.ResponseWriter, r *http.Request, u *st
 		writeStoreErr(w, err)
 		return
 	}
-	data, err := kindleapp.Zip(s.baseURL(r), u.Username, code)
+	data, err := kindleapp.Zip(s.baseURL(r), u.Username, code, r.URL.Query().Get("name"))
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "could not build the Kindle app")
 		return

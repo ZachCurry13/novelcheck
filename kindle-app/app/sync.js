@@ -18,7 +18,8 @@ function syncNow(force) {
     report(said, function (ok, left) {
       sendHighlights(said, function () {
         sendWords(said, function () {
-          if (ok) keep("nc-synced", String(new Date().getTime()));
+          if (ok) { keep("nc-synced", String(new Date().getTime())); got = {}; keep("nc-got", "{}"); } // the Kindle's own list is the truth now
+          paintSynced();
           note(said.join(" "));
           logLine("sync" + (force ? " (button)" : "") + ": " + said.join(" "));
           sendLog("after a sync");

@@ -20,7 +20,7 @@ var files embed.FS
 
 // Version is the app's version. Raise it whenever a file in app/ changes: the app compares it with its own and
 // offers to update (Files and File below are what it fetches).
-const Version = "1.3.2"
+const Version = "1.4.0"
 
 // Files are the app's files the app can fetch to update itself (never config.js, which is per account).
 func Files() []string {
@@ -44,7 +44,7 @@ func File(name string) ([]byte, bool) {
 }
 
 // Zip is the app as a zip to unzip onto the Kindle's main folder, connected to server as user with the sync code.
-func Zip(server, user, code string) ([]byte, error) {
+func Zip(server, user, code, name string) ([]byte, error) {
 	var buf bytes.Buffer
 	zw := zip.NewWriter(&buf)
 	add := func(name string, data []byte) error {
@@ -69,7 +69,7 @@ func Zip(server, user, code string) ([]byte, error) {
 	}
 	sum := md5.Sum([]byte(code)) // the plugin's sign-in sends the sync code's MD5, never the code
 	cfg, _ := json.Marshal(map[string]string{"server": strings.TrimRight(server, "/"), "user": user,
-		"key": hex.EncodeToString(sum[:]), "device": "Kindle", "version": Version})
+		"key": hex.EncodeToString(sum[:]), "device": deviceName(name), "version": Version})
 	if err := add("extensions/novelcheck-app/config.js", []byte("// Made by NovelCheck for this account.\nvar NC = "+string(cfg)+";\n")); err != nil {
 		return nil, err
 	}
@@ -83,4 +83,22 @@ func Zip(server, user, code string) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+// deviceName is what the Kindle's reports are called: the name given at download ("Zach Paperwhite") with
+// " (Amazon reader)", so NovelCheck can tell it from the KOReader plugin's report of the same Kindle. No name: "Kindle".
+func deviceName(name string) string {
+	name = strings.TrimSpace(strings.Map(func(r rune) rune {
+		if r < 32 || r == '/' || r == '\\' || r == '"' {
+			return ' '
+		}
+		return r
+	}, name))
+	if len([]rune(name)) > 40 {
+		name = string([]rune(name)[:40])
+	}
+	if name == "" {
+		return "Kindle"
+	}
+	return name
 }

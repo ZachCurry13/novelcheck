@@ -1,7 +1,7 @@
 // "Start Reading" delivery help: the Send-to-Kindle confirmation with the
 // approved-sender steps, and KOReader setup (the private OPDS feed address,
 // a QR code and step-by-step instructions).
-import { pluginStepsHTML, whichHTML, kindleAppHTML } from "./pluginmanage.js";
+import { pluginStepsHTML, whichHTML, kindleAppHTML, bindAppName } from "./pluginmanage.js";
 import { get, post } from "./api.js";
 import { esc, attempt } from "./ui.js";
 import { copyText } from "./copy.js";
@@ -91,6 +91,7 @@ export async function openKOReaderSetup(userId) {
       <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-semibold">Set up KOReader</h2>
         <button data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>${koreaderHTML(url, i.username, !userId, s ? { url: location.origin + "/opds", code: s.code } : null)}
       ${s ? syncHTML(location.origin + s.path, s.username, s.code) + statsHTML(location.origin + s.dav, s.username, s.code) + pluginHTML(userId) : ""}</div>`;
+    bindAppName(d);
     d.onclick = async (e) => {
       const ko = e.target.closest("[data-ko]")?.dataset.ko;
       if (e.target === d || e.target.closest("[data-close]")) d.close();

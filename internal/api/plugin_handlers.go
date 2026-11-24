@@ -97,6 +97,7 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.Store.SaveDeviceInfo(u.ID, device, strings.TrimSpace(body.Plugin))
+	s.Store.AutoLink(u.ID, device)              // the plugin and the app on one Kindle, when their names say so
 	if strings.HasPrefix(body.Plugin, "app ") { // the Kindle app: Amazon store books join the person's store library
 		s.addStoreBooks(u, body.Books)
 	}
