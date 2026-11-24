@@ -48,6 +48,8 @@ func (s *Server) handleBugLink(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(&b, "\n--- P%d · %s · version %s · page %s · %s UTC ---\n%s\n(device: %s)\n", p.ID, p.Username, p.Version, orNone(p.Page), p.CreatedAt, p.Text, orNone(p.Device))
 	}
 	writeCheckRuns(&b)
+	s.writeFamilyFilters(&b)
+	s.writeKindleBackups(&b)
 	s.writeNoCovers(&b)
 	b.WriteString(`
 == Handled? ==
