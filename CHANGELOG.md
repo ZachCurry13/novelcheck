@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.5]
+
+### 🔧 Fixes
+- **Duplicates: "Remove" on one book no longer ends with an error.** The page crashed right after removing ("Cannot access 'gone' before initialization"): the copy was removed in Calibre, but the book stayed on screen, the count never updated and the page never read Calibre again. It now updates as it should.
+
 ## [2.1.4]
 
 ### 📲 Kindle app straight on the Kindle
