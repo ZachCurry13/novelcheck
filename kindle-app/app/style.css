@@ -23,4 +23,6 @@ input { flex: 1; min-height: 2.75rem; font-size: 1.25rem; border: 0.125rem solid
 .book .actions { clear: both; display: flex; align-items: center; padding-top: 0.5rem; }
 footer { display: flex; align-items: center; justify-content: space-between; padding-top: 0.625rem; }
 footer[hidden], button[hidden] { display: none; }
+.help { margin-top: 1.5rem; text-align: center; }
+button.small { font-size: 1rem; border-width: 0.0625rem; }
 header button { margin-left: 0.5rem; }

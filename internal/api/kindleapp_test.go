@@ -106,8 +106,13 @@ func TestKindleApp(t *testing.T) {
 	if err := json.Unmarshal([]byte(cfg), &nc); err != nil || nc["user"] != "admin" || nc["key"] != key || nc["server"] != srv.URL {
 		t.Fatalf("config.js: %v %q", err, cfg)
 	}
-	if c := got["documents/NovelCheck-Check.sh"]; !strings.Contains(c, "NCKEY='"+key+"'") || !strings.Contains(c, "SERVER='"+srv.URL+"'") || strings.Contains(c, "{{") {
-		t.Fatalf("the check script is filled in for this account: %q", c[:300])
+	for name := range got {
+		if strings.HasPrefix(name, "documents/") && name != "documents/NovelCheck.sh" {
+			t.Fatalf("only the app's own book goes in documents (anything else shows in the library): %s", name)
+		}
+	}
+	if !strings.Contains(got["extensions/novelcheck-app/check.sh"], "config.js") {
+		t.Fatal("the check comes with the app and reads its account from config.js")
 	}
 	if s := got["documents/NovelCheck.sh"]; !strings.Contains(s, "# Icon: data:image/png;base64,iVBOR") || got["extensions/novelcheck-app/app.js"] == "" {
 		t.Fatalf("the launcher has its cover, the app its files: %v", len(got))

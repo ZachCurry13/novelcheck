@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.98.1]
+
+### 📖 Kindle app 1.2.2: nothing extra in her library
+- The check that used to be a **NovelCheck Check** "book" (and its **NovelCheck-check** result) is now **Send a check** at the bottom of the app; its result goes only to NovelCheck. The app takes the two old items out of the library by itself after it updates.
+
 ## [1.98.0]
 
 ### 🎚️ What to hide or flag, per person

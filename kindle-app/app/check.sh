@@ -1,20 +1,19 @@
 #!/bin/sh
-# Name: NovelCheck Check
-# Author: NovelCheck
-# DontUseFBInk
+# NovelCheck app: "Send a check" (at the bottom of the app) runs this. It tests what the app needs on this Kindle,
+# keeps the result in /mnt/us/novelcheck-check.txt (outside documents, so it never shows as a book) and sends it to
+# NovelCheck's bug log. Changes nothing. The account comes from the app's own config.js.
 
-# Tap this "book" if the NovelCheck app doesn't work. It tests what the app needs on this Kindle, writes the result
-# to documents/NovelCheck-check.txt (open it from the library) and sends it to NovelCheck's bug log. Changes nothing.
-
-SERVER={{SERVER}}
-NCUSER={{USER}}
-NCKEY={{KEY}}
-OUT=/mnt/us/documents/NovelCheck-check.txt
+APP=/mnt/us/extensions/novelcheck-app
+VERSION=$(sed -n 's/.*"version":"\([^"]*\)".*/\1/p' "$APP/config.js")
+SERVER=$(sed -n 's/.*"server":"\([^"]*\)".*/\1/p' "$APP/config.js")
+NCUSER=$(sed -n 's/.*"user":"\([^"]*\)".*/\1/p' "$APP/config.js")
+NCKEY=$(sed -n 's/.*"key":"\([^"]*\)".*/\1/p' "$APP/config.js")
+OUT=/mnt/us/novelcheck-check.txt
 H1="x-auth-user: $NCUSER"
 H2="x-auth-key: $NCKEY"
 
 {
-echo "NovelCheck check, app {{VERSION}}"
+echo "NovelCheck check, app $VERSION"
 echo "== date"; date
 echo "== firmware"; cat /etc/prettyversion.txt 2>/dev/null || cat /etc/version.txt 2>&1
 echo "== hard-float (needs UtildHF)"; ls /lib/ld-linux-armhf.so.3 2>&1
@@ -36,7 +35,6 @@ echo "== done"
 # Send it to the bug log (the JSON is built by hand: busybox has no JSON tool).
 TEXT=$(tr -d '\000-\010\013\014\016-\037' < "$OUT" | awk '{gsub(/\\/,"\\\\"); gsub(/"/,"\\\""); gsub(/\t/," "); printf "%s\\n", $0}')
 curl -sS -m 20 -X POST "$SERVER/kosync/plugin/debug" -H "$H1" -H "$H2" -H "Content-Type: application/json" \
-    --data "{\"device\":\"Kindle app\",\"version\":\"{{VERSION}}\",\"text\":\"$TEXT\"}" >/dev/null 2>&1 && SENT="Sent to NovelCheck." || SENT="Couldn't send it (no Wi-Fi?)."
+    --data "{\"device\":\"Kindle app\",\"version\":\"$VERSION\",\"text\":\"$TEXT\"}" >/dev/null 2>&1 && SENT="Sent to NovelCheck." || SENT="Couldn't send it (no Wi-Fi?)."
 
-lipc-set-prop com.lab126.scanner doFullScan 1 2>/dev/null
-lipc-set-prop com.lab126.pillow pillowAlert "{ \"clientParams\":{ \"alertId\":\"appAlert1\", \"show\":true, \"customStrings\":[ { \"matchStr\":\"alertTitle\", \"replaceStr\":\"NovelCheck Check\" }, { \"matchStr\":\"alertText\", \"replaceStr\":\"Done. $SENT The result is NovelCheck-check in your library.\" } ] } }" 2>/dev/null
+lipc-set-prop com.lab126.pillow pillowAlert "{ \"clientParams\":{ \"alertId\":\"appAlert1\", \"show\":true, \"customStrings\":[ { \"matchStr\":\"alertTitle\", \"replaceStr\":\"NovelCheck Check\" }, { \"matchStr\":\"alertText\", \"replaceStr\":\"Done. $SENT\" } ] } }" 2>/dev/null

@@ -204,6 +204,13 @@ document.addEventListener("DOMContentLoaded", function () {
   var tabs = document.querySelectorAll(".tabs button");
   for (var i = 0; i < tabs.length; i++) tabs[i].onclick = function () { show(this.getAttribute("data-list")); };
   $("report").onclick = function () { note("Syncing…"); syncNow(true); };
+  $("check").onclick = function () {
+    if (!run("sh /mnt/us/extensions/novelcheck-app/check.sh")) return note("The check needs KindleForge's helper. Open KindleForge once, then try again.");
+    note("Checking this Kindle… A message appears when it's done, and the result goes to NovelCheck.");
+  };
+  if (!stored("nc-tidy-1") && run("rm -f '/mnt/us/documents/NovelCheck-check.txt' '/mnt/us/documents/NovelCheck-Check.sh'; lipc-set-prop com.lab126.scanner doFullScan 1")) {
+    keep("nc-tidy-1", "1"); // app 1.2.0 put a check "book" and its result in the library: take them out once
+  }
   $("prev").onclick = function () { state.page--; rows(); };
   $("next").onclick = function () { state.page++; rows(); };
   show("up-next");
