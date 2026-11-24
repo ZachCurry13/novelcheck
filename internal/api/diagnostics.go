@@ -73,7 +73,7 @@ func (s *Server) diagnosticsText() string {
 		line("[%s] %s %s: %s (x%d)", n.UpdatedAt, n.Level, n.Source, n.Message, n.Count)
 	}
 
-	errs := s.Store.RecentErrors(40)
+	errs := groupErrors(s.Store.RecentErrors(400), 40)
 	line("\n== Recent server errors (newest first; the code is what the app showed as E-xxxx) ==")
 	if len(errs) == 0 {
 		line("(none)")
@@ -84,10 +84,10 @@ func (s *Server) diagnosticsText() string {
 			user = " user=" + e.Username
 		}
 		if e.Method == "background" { // from the server's own work, not a request
-			line("%s %s UTC background (%s): %s", e.Code, e.At, e.Path, e.Detail)
+			line("%s %s UTC background (%s): %s%s", e.Code, e.At, e.Path, e.Detail, e.times())
 			continue
 		}
-		line("%s %s UTC %s %s -> %d%s: %s", e.Code, e.At, e.Method, e.Path, e.Status, user, e.Detail)
+		line("%s %s UTC %s %s -> %d%s: %s%s", e.Code, e.At, e.Method, e.Path, e.Status, user, e.Detail, e.times())
 	}
 
 	s.slowSection(line)

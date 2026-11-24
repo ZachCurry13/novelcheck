@@ -185,7 +185,8 @@ func (s *Server) Router() http.Handler {
 			r.Get("/me/content-prefs", s.handleContentPrefs) // Hide / Heads-up / Don't mention, per person
 			r.Put("/me/content-prefs", s.handleContentPrefs)
 			r.Put("/me/device-link", s.handleDeviceLink) // the plugin and the app are one Kindle
-			r.Get("/me/left", s.handleMyLeft)            // books that left your e-reader, and the ones you removed from your library
+			r.Get("/me/kindle-library", s.handleKindleLibrary)
+			r.Get("/me/left", s.handleMyLeft) // books that left your e-reader, and the ones you removed from your library
 			r.Post("/me/left", s.handleMyLeft)
 			r.Delete("/me/hidden-books/{id}", s.handleUnhide)
 			r.Put("/me/kindle-autoadd", s.handleKindleAutoAdd)

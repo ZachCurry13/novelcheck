@@ -4,7 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
-## [1.100.1]
+## [1.101.0]
+
+### 📱 A Kindle page in the main menu
+- **Kindle** shows one Kindle at a time (pick one if you have several): its KOReader plugin and Kindle app together, how many books and when it last reported, every book with its cover, Spice level and Door, how far along it is, and whether it is downloaded or only in your Amazon library. Filter by Downloaded, Amazon cloud, No Spice, Closed Door, Open Door or Not rated. Below: the books that left it, and the things you can ask it to do (sync, back up, send a book, clean up).
+
+### 🐞 The bug link folds repeated errors
+- The same server error that happened dozens of times (like the Deep Scan crashing) is now one line with how many times and since when, so other errors are not buried.
 
 ### 🧹 Two cleanup fixes
 - **Duplicates:** when NovelCheck lumps a different book in with real copies (for example "The Lost Files #10: The Fugitive" with two copies of "Six's Legacy"), tick **Not a copy: a different book, keep it too** on that entry. Only the remaining copies are removed.

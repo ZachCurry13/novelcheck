@@ -92,7 +92,7 @@ func (s *Server) handleConvertAsIs(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		CalibreID string `json:"calibre_id"`
 		AsIs      bool   `json:"as_is"`
-		Title     string `json:"title"`  // for a book that never failed: "don't convert this one" is remembered too
+		Title     string `json:"title"` // for a book that never failed: "don't convert this one" is remembered too
 		Format    string `json:"format"`
 	}
 	if !readJSON(w, r, &body, 1<<10) {
