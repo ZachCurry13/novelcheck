@@ -20,7 +20,7 @@ var files embed.FS
 
 // Version is the app's version. Raise it whenever a file in app/ changes: the app compares it with its own and
 // offers to update (Files and File below are what it fetches).
-const Version = "1.4.2"
+const Version = "1.5.0"
 
 // Files are the app's files the app can fetch to update itself (never config.js, which is per account).
 func Files() []string {

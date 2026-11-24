@@ -14,7 +14,7 @@ function el(tag, cls, text) {
 }
 function doorOf(level) { return level == null ? "" : level >= 4 ? "open" : level >= 2 ? "closed" : "none"; }
 function shown() {
-  if (!state.door) return state.books;
+  if (!state.door || state.list === "collections") return state.books;
   var out = [];
   for (var i = 0; i < state.books.length; i++) if (doorOf(state.books[i].level) === state.door) out.push(state.books[i]);
   return out;
@@ -34,14 +34,31 @@ function paintSynced() {
 function show(list, query) {
   state.list = list;
   var tabs = document.querySelectorAll(".tabs button[data-list]");
-  for (var i = 0; i < tabs.length; i++) tabs[i].className = tabs[i].getAttribute("data-list") === list ? "on" : "";
-  var path = list === "search" ? "/kosync/plugin/search?q=" + encodeURIComponent(query) : "/kosync/plugin/" + list;
+  var tab = list === "collection" ? "collections" : list; // a collection's books stay under Collections
+  for (var i = 0; i < tabs.length; i++) tabs[i].className = tabs[i].getAttribute("data-list") === tab ? "on" : "";
+  var path = list === "search" ? "/kosync/plugin/search?q=" + encodeURIComponent(query) :
+    list === "collection" ? "/kosync/plugin/collection/" + encodeURIComponent(query) : "/kosync/plugin/" + list;
   note("Loading…");
   api("GET", path + (path.indexOf("?") > 0 ? "&" : "?") + "device=" + encodeURIComponent(NC.device), null, function (err, data) {
     if (err) return offline(err);
-    state.books = (data && data.books) || [];
+    state.header = "";
+    if (list === "discover") { // rows of books the family has; each book remembers its row's name
+      state.books = [];
+      var rowsIn = (data && data.rows) || [];
+      for (var r = 0; r < rowsIn.length; r++) for (var k = 0; k < rowsIn[r].books.length; k++) {
+        rowsIn[r].books[k].section = (rowsIn[r].icon ? rowsIn[r].icon + " " : "") + rowsIn[r].title;
+        state.books.push(rowsIn[r].books[k]);
+      }
+    } else if (list === "collections") {
+      state.books = (data && data.collections) || [];
+      for (var c = 0; c < state.books.length; c++) state.books[c].collection = true;
+    } else {
+      state.books = (data && data.books) || [];
+      if (list === "collection") state.header = ((data.icon ? data.icon + " " : "") + data.name) + (data.about ? ": " + data.about : "");
+    }
     state.page = 0;
-    note(state.books.length ? "" : list === "up-next" ? "Your Nightstand is empty." : list === "kindle-mine" ? "Nothing yet: tap Sync now." : "No books found.");
+    note(state.books.length ? "" : list === "up-next" ? "Your Nightstand is empty." : list === "kindle-mine" ? "Nothing yet: tap Sync now." :
+      list === "discover" ? "Nothing on Discover is in your library yet." : list === "collections" ? "No collections yet." : "No books found.");
     rows();
   });
 }
@@ -52,7 +69,7 @@ function offline(err) {
   m.innerHTML = "";
   m.appendChild(el("p", "", err));
   var again = el("button", "main", "Try again");
-  again.onclick = function () { show(state.list === "search" ? "up-next" : state.list); };
+  again.onclick = function () { show(state.list === "search" ? "up-next" : state.list === "collection" ? "collections" : state.list); };
   m.appendChild(again);
   $("pages").hidden = true;
 }
@@ -64,7 +81,21 @@ function rows() {
   var list = shown();
   var pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
   var part = list.slice(state.page * PER_PAGE, (state.page + 1) * PER_PAGE);
-  for (var i = 0; i < part.length; i++) m.appendChild(row(part[i]));
+  if (state.list === "collection") { // one collection: its name, and the way back
+    var head = el("div", "sect", state.header || "Collection");
+    m.appendChild(head);
+    var back = el("button", "", "‹ All collections");
+    back.onclick = function () { show("collections"); };
+    m.appendChild(back);
+  }
+  var last = "";
+  for (var i = 0; i < part.length; i++) {
+    if (part[i].section && part[i].section !== last) { // Discover: the row's name above its books
+      m.appendChild(el("div", "sect", part[i].section));
+      last = part[i].section;
+    }
+    m.appendChild(row(part[i]));
+  }
   if (!part.length && state.books.length) m.appendChild(el("p", "meta", "No books with that spice level here. Tap All."));
   var pills = document.querySelectorAll(".pills button");
   for (var j = 0; j < pills.length; j++) pills[j].className = pills[j].getAttribute("data-door") === state.door ? "on" : "";
@@ -77,7 +108,26 @@ function rows() {
   $("next").disabled = state.page >= pages - 1;
 }
 
+// collectionRow is one collection in the Collections list.
+function collectionRow(b) {
+  var r = el("div", "row");
+  var what = el("div", "what");
+  what.appendChild(el("div", "title", (b.icon ? b.icon + " " : "") + b.name));
+  var meta = el("div", "meta");
+  if (b.ai) meta.appendChild(el("span", "badge", "Made by AI"));
+  meta.appendChild(document.createTextNode((b.ai ? " " : "") + b.books + " book" + (b.books === 1 ? "" : "s")));
+  what.appendChild(meta);
+  if (b.about) what.appendChild(el("div", "by", b.about));
+  what.onclick = function () { show("collection", b.id); };
+  r.appendChild(what);
+  var open = el("button", "", "Open");
+  open.onclick = what.onclick;
+  r.appendChild(open);
+  return r;
+}
+
 function row(b) {
+  if (b.collection) return collectionRow(b);
   var r = el("div", "row");
   if (b.id) { // a small cover; the book's page has the big one
     var th = el("img", "thumb");

@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.99.3]
+
+### 📖 Kindle app 1.5.0: Discover and Collections
+- **Discover** tab: the web app's Discover rows (popular now, new in your libraries, the family's favorites, the season's books), showing only the books you already have, so each one can be downloaded to the Kindle.
+- **Collections** tab: your family's collections and the **AI-made ones** (marked "Made by AI"). Open one to see its books; a kid's limits apply as everywhere else.
+
 ## [1.99.2]
 
 ### 📖 Kindle app 1.4.2
