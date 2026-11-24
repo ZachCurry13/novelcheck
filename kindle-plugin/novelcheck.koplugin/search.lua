@@ -102,7 +102,7 @@ return function(NovelCheck, ctx)
             end
             local marks = {}
             if type(h.level) == "number" then
-                table.insert(marks, "L" .. tostring(h.level))
+                table.insert(marks, "Spice " .. tostring(h.level))
             end
             if h.on_device then
                 table.insert(marks, _("on device"))
@@ -149,7 +149,7 @@ return function(NovelCheck, ctx)
         end
         if type(info.level) == "number" then
             local why = (info.reason and info.reason ~= "") and (": " .. info.reason) or ""
-            table.insert(lines, _("Content rating") .. ": " .. tostring(info.level) .. " / 5" .. why)
+            table.insert(lines, _("Spice level") .. ": " .. tostring(info.level) .. why)
         end
         if info.verdict and info.verdict ~= "" then
             table.insert(lines, info.verdict)

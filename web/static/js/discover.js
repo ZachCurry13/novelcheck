@@ -162,7 +162,7 @@ function emptyText(data, user) {
 function card(b, kid, queueOn, wishOn = true) { // wishOn: a friend's account has no family wishlist
   const lvl = b.spice_level;
   const rated = b.status === "analyzed" && lvl !== null && lvl !== undefined;
-  const pepper = rated ? `<span class="chip-none" title="Level ${lvl}: ${esc(PEPPERS[lvl].name)}">${pepperIcons(lvl)}</span>`
+  const pepper = rated ? `<span class="chip-none" title="Spice level ${lvl}: ${esc(PEPPERS[lvl].name)}">${pepperIcons(lvl)}</span>`
     : `<span class="chip-pending" title="The AI rates a few dozen Discover books a day">Not rated yet</span>`;
   const q = encodeURIComponent(`${b.title} ${b.author || ""}`.trim());
   const olLink = b.link || (b.isbn ? `https://openlibrary.org/isbn/${encodeURIComponent(b.isbn)}` : `https://openlibrary.org/search?q=${q}`);

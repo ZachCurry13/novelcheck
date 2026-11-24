@@ -124,7 +124,7 @@ func (s *Server) handleOPDSFeed(w http.ResponseWriter, r *http.Request) {
 		}
 		summary := b.SummaryVerdict
 		if b.SpiceLevel != nil {
-			summary = fmt.Sprintf("Level %d. %s", *b.SpiceLevel, summary)
+			summary = fmt.Sprintf("Spice level %d. %s", *b.SpiceLevel, summary)
 		}
 		href := fmt.Sprintf("%s/book/%d/%s", self, b.ID, fileName(b.Title, format))
 		feed.Entries = append(feed.Entries, opdsEntry{Title: b.Title, ID: fmt.Sprintf("urn:novelcheck:book:%d", b.ID),

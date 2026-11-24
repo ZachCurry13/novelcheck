@@ -80,7 +80,7 @@ func (s *Store) NoteDeepDecision(id, userID int64, by string, level int) error {
 		}
 		// Where and how high only: what happens is a spoiler, kept in the
 		// Deep Scan section's 📖 reader for whoever wants it.
-		lines = append(lines, fmt.Sprintf("• %s: Level %d", n.Label, n.Level))
+		lines = append(lines, fmt.Sprintf("• %s: spice level %d", n.Label, n.Level))
 	}
 	if len(lines) == 0 {
 		return nil
@@ -89,7 +89,7 @@ func (s *Store) NoteDeepDecision(id, userID int64, by string, level int) error {
 	if len(lines) > 1 {
 		head = fmt.Sprintf("🧬 Deep Scan found %d scenes with sexual content", len(lines))
 	}
-	body := fmt.Sprintf("%s:\n%s\n%s decided on Level %d.", head, strings.Join(lines, "\n"), by, level)
+	body := fmt.Sprintf("%s:\n%s\n%s decided on spice level %d.", head, strings.Join(lines, "\n"), by, level)
 	if len(body) > MaxNoteLen { // bytes, like the note check: cut at a character boundary
 		cut := MaxNoteLen - len("…")
 		for cut > 0 && !utf8.RuneStart(body[cut]) {

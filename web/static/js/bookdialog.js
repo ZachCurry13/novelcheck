@@ -215,7 +215,7 @@ export async function openBook(id, state, onChange) {
         btn.disabled = true;
       }
     } else if (act === "analyze") {
-      const ok = await attempt(() => post(`/api/books/${b.id}/analyze`), "Queued for analysis");
+      const ok = await attempt(() => post(`/api/books/${b.id}/analyze`), "In line to be rated");
       if (ok) {
         dlg.close();
         onChange?.();

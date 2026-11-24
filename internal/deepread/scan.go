@@ -104,7 +104,7 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 		if err := r.Store.HoldDeepRead(d.ID, string(raw), a, *a.SpiceLevel); err != nil {
 			return err
 		}
-		r.Store.Notify("warning", "deep-scan-review", fmt.Sprintf("Deep Scan suggests raising “%s” from Level %d to Level %d. Review it before it applies.",
+		r.Store.Notify("warning", "deep-scan-review", fmt.Sprintf("Deep Scan suggests raising “%s” from spice level %d to %d. Review it before it applies.",
 			book.Title, *prev, *a.SpiceLevel), "#/deepscan?review")
 		return nil
 	}
@@ -151,11 +151,11 @@ func (r *Runner) wrapUp(ctx context.Context, book *store.Book, level int, notes 
 func (r *Runner) announce(title string, prev *int, level int) {
 	switch {
 	case prev != nil && level > *prev:
-		r.Store.Notify("warning", "deep-scan", fmt.Sprintf("Deep Scan raised “%s” from Level %d to Level %d.", title, *prev, level), "#/deepscan")
+		r.Store.Notify("warning", "deep-scan", fmt.Sprintf("Deep Scan raised “%s” from spice level %d to %d.", title, *prev, level), "#/deepscan")
 	case prev != nil && level < *prev:
-		r.Store.NotifyRoutine("deep-scan-done", fmt.Sprintf("Deep Scan lowered “%s” from Level %d to Level %d.", title, *prev, level), "#/deepscan")
+		r.Store.NotifyRoutine("deep-scan-done", fmt.Sprintf("Deep Scan lowered “%s” from spice level %d to %d.", title, *prev, level), "#/deepscan")
 	default:
-		r.Store.NotifyRoutine("deep-scan-done", fmt.Sprintf("Deep Scan finished: “%s” is Level %d.", title, level), "#/deepscan")
+		r.Store.NotifyRoutine("deep-scan-done", fmt.Sprintf("Deep Scan finished: “%s” is spice level %d.", title, level), "#/deepscan")
 	}
 }
 

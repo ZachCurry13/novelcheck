@@ -269,7 +269,7 @@ func (s *Server) Router() http.Handler {
 			r.Post("/problems", s.handleReportProblem)
 
 			r.Group(func(r chi.Router) {
-				r.Use(s.requireModule(store.KeyModuleQueue, "The reading queue"))
+				r.Use(s.requireModule(store.KeyModuleQueue, "The Nightstand"))
 				r.Get("/queue", s.handleListQueue)
 				r.Post("/queue", s.handleEnqueue)
 				r.Put("/queue/order", s.handleReorderQueue)

@@ -121,7 +121,7 @@ function NovelCheck:addToMainMenu(menu_items)
             { text = _("Nightstand"), callback = function() self:showUpNext() end },
             { text = _("Download Nightstand"), callback = function() self:downloadAll() end },
             { text = _("New"), callback = function() self:newInLibrary() end },
-            { text = _("On this device"), callback = function() DeviceBooks.show(self) end },
+            { text = _("On this e-reader"), callback = function() DeviceBooks.show(self) end },
             { text = _("Finish this book…"), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
             { text = _("Sync now"), callback = function() self:syncNow() end },
             { text = _("Kindle care"), sub_item_table = {

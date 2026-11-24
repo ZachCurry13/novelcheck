@@ -105,7 +105,7 @@ function DeviceBooks.show(plugin)
         })
     end
     plugin.devicemenu = Menu:new{
-        title = _("On this device") .. " (" .. tostring(#books) .. ")",
+        title = _("On this e-reader") .. " (" .. tostring(#books) .. ")",
         item_table = items,
         is_borderless = true,
         is_popout = false,

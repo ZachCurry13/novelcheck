@@ -154,7 +154,7 @@ func TestScanRaisesRatingAndLogsIt(t *testing.T) {
 		t.Fatalf("held scan: %+v", dr)
 	}
 	items, _, _ := st.Notifications(5)
-	if len(items) == 0 || items[0].Source != "deep-scan-review" || items[0].Link != "#/deepscan?review" || !strings.Contains(items[0].Message, "Level 2 to Level 4") {
+	if len(items) == 0 || items[0].Source != "deep-scan-review" || items[0].Link != "#/deepscan?review" || !strings.Contains(items[0].Message, "spice level 2 to 4") {
 		t.Fatalf("review notice: %+v", items)
 	}
 	if ok, err := st.AcceptDeepRead(dr.ID, "admin"); !ok || err != nil {

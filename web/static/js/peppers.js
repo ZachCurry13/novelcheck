@@ -1,5 +1,6 @@
 // The 0-5 pepper scale. The server's AI prompt (internal/llm/prompt.go) uses
-// the same descriptions. Labels stay neutral: "Level N: name".
+// the same descriptions. Labels stay neutral: "Spice level N: name", with the door (No Spice, Closed Door, Open
+// Door) as a short description.
 import { esc } from "./ui.js";
 
 export const PEPPERS = [
@@ -23,12 +24,15 @@ export const PEPPERS = [
     ex: "Fifty Shades of Gray (E. L. James)" },
 ];
 
+// door is the short description under a spice level: 0-1 No Spice, 2-3 Closed Door, 4-5 Open Door.
+export const door = (n) => (n >= 4 ? "Open Door" : n >= 2 ? "Closed Door" : "No Spice");
+
 // "🌶️🌶️" for 2; 0 peppers shows a single faded pepper so the scale reads.
 export const pepperIcons = (n) => (n > 0 ? "🌶️".repeat(n) : `<span class="opacity-40">🌶️</span>`);
 
 export function pepperChip(n) {
   const p = PEPPERS[n];
-  return `<span class="${p.cls}" title="${esc(p.desc)}">${pepperIcons(n)} Level ${n}: ${esc(p.name)}</span>`;
+  return `<span class="${p.cls}" title="${esc(door(n))}: ${esc(p.desc)}">${pepperIcons(n)} Spice level ${n}: ${esc(p.name)}</span>`;
 }
 
 // "Why was this flagged?": books at Level 3 or higher show the AI's reason
@@ -38,17 +42,17 @@ export function whyChip(b) {
   const lvl = b.spice_level;
   if (lvl === null || lvl === undefined || lvl < 3) return "";
   const why = b.spice_reason || (b.heavy_innuendo ? "Heavy innuendo" : b.nudity ? "Nudity" : lvl >= 4 ? "Explicit scenes" : "Heavy tension");
-  return `<span class="${lvl >= 4 ? "chip-open" : "chip-closed"}" title="Why this is Level ${lvl}: ${esc(why)}">ⓘ ${esc(why)}</span>`;
+  return `<span class="${lvl >= 4 ? "chip-open" : "chip-closed"}" title="Why this is Spice level ${lvl}: ${esc(why)}">ⓘ ${esc(why)}</span>`;
 }
 
 // Options for a pepper <select>; selected may be null.
 export function pepperOptions(selected) {
-  return PEPPERS.map((p) => `<option value="${p.n}" ${selected === p.n ? "selected" : ""}>Level ${p.n}: ${esc(p.name)}</option>`).join("");
+  return PEPPERS.map((p) => `<option value="${p.n}" ${selected === p.n ? "selected" : ""}>Spice level ${p.n}: ${esc(p.name)}</option>`).join("");
 }
 
 export function pepperScaleHTML() {
   return `<ul class="space-y-3">${PEPPERS.map((p) => `
-    <li><p class="font-semibold">${pepperIcons(p.n)} Level ${p.n}: ${esc(p.name)}</p>
+    <li><p class="font-semibold">${pepperIcons(p.n)} Spice level ${p.n}: ${esc(p.name)} <span class="text-xs font-normal text-slate-400">· ${door(p.n)}</span></p>
       <p class="text-sm text-slate-300">${esc(p.desc)}</p>
       <p class="text-xs text-slate-400">Examples: ${esc(p.ex)}</p></li>`).join("")}</ul>`;
 }

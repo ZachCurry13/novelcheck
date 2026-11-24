@@ -12,7 +12,7 @@ function el(tag, cls, text) {
   if (text != null) e.textContent = text;
   return e;
 }
-function spice(level) { return level == null ? "Not rated yet" : "Spice " + level + "/5"; }
+function spice(level) { return level == null ? "Not rated yet" : "Spice level " + level + " (" + (level >= 4 ? "Open Door" : level >= 2 ? "Closed Door" : "No Spice") + ")"; }
 function onKindle(b) { return got[b.id] || b.on_device; }
 
 function show(list, query) {

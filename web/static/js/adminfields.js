@@ -79,7 +79,7 @@ export const SECTIONS = [
     ["events_mail_host", "Mail server (IMAP)", "imap.gmail.com:993"],
   ]],
   ["system", "Features", [
-    ["module_queue", "Nightstand reading queue", "", "bool"],
+    ["module_queue", "Nightstand", "", "bool"],
     ["module_send_to_kindle", "Send-to-Kindle email delivery", "", "bool"],
     ["module_koreader", "KOReader catalog delivery", "", "bool"],
     ["module_import", "Import books (Kindle / drive scanner and lists)", "", "bool"],

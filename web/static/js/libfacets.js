@@ -14,7 +14,7 @@ export function peppersHTML() {
   return `<section class="facet"><h3>Peppers <span data-pep-sum class="facet-sum"></span></h3>
     <input type="hidden" name="spice" value="">
     <div class="pep-squares" role="group" aria-label="Pepper levels">${PEPPERS.map((p) =>
-      `<button type="button" data-pep="${p.n}" class="pep-sq" aria-pressed="false" title="Level ${p.n}: ${esc(p.name)}"><span class="lvl lvl-${p.n}">${p.n}</span></button>`).join("")}</div>
+      `<button type="button" data-pep="${p.n}" class="pep-sq" aria-pressed="false" title="Spice level ${p.n}: ${esc(p.name)}"><span class="lvl lvl-${p.n}">${p.n}</span></button>`).join("")}</div>
     <div class="pep-presets">${PRESETS.map(([l, v]) => `<button type="button" data-pep-preset="${v}" class="chip-filter" aria-pressed="false">${esc(l)}</button>`).join("")}</div>
     <button type="button" id="pepper-help" class="facet-link">What do the peppers mean?</button></section>`;
 }

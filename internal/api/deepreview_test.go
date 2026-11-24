@@ -99,7 +99,7 @@ func TestAcceptAllAndReviewNotices(t *testing.T) {
 		_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: new(int), Model: "gpt"})
 		scan, _ := st.RequestDeepRead(id, "admin", "admin", "", true, 1000, 1, 1)
 		_ = st.HoldDeepRead(scan, `[]`, store.Analysis{SpiceLevel: &four}, 4)
-		st.Notify("warning", "deep-scan-review", fmt.Sprintf("Deep Scan suggests raising “%s” from Level 0 to Level 4. Review it before it applies.", title), "#/deepscan?review")
+		st.Notify("warning", "deep-scan-review", fmt.Sprintf("Deep Scan suggests raising “%s” from spice level 0 to 4. Review it before it applies.", title), "#/deepscan?review")
 		scans = append(scans, scan)
 	}
 	unread := func() int {
@@ -151,8 +151,8 @@ func TestDeepScanSetLevelAndParentNote(t *testing.T) {
 	parent, _ := st.UserByName("admin")
 	notes, _ := st.BookNotes(id, parent)
 	// Where and how high, not what happens (no spoilers in the book's notes).
-	if len(notes) != 1 || notes[0].Visibility != "parents" || !strings.Contains(notes[0].Body, "about 55% in: Level") ||
-		strings.Contains(notes[0].Body, "Two adults kiss") || !strings.Contains(notes[0].Body, "admin decided on Level 3") {
+	if len(notes) != 1 || notes[0].Visibility != "parents" || !strings.Contains(notes[0].Body, "about 55% in: spice level") ||
+		strings.Contains(notes[0].Body, "Two adults kiss") || !strings.Contains(notes[0].Body, "admin decided on spice level 3") {
 		t.Fatalf("parents' note: %+v", notes)
 	}
 	if st.LatestDeepRead(id).Held {

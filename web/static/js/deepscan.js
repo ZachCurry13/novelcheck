@@ -19,14 +19,14 @@ export const deepChip = (b) => (b.analysis_model?.startsWith("deep: ")
 // when reads the database's timestamps ("2026-09-24 22:40:34" or RFC 3339).
 export const when = (ts) => new Date(ts.includes("T") ? ts : ts.replace(" ", "T") + "Z");
 
-// deepChangeLine renders "Level 2 → Level 4" for a finished scan that changed the rating.
+// deepChangeLine renders "Spice level 2 → 4" for a finished scan that changed the rating.
 export function deepChangeLine(d) {
   if (d?.held) {
-    return `<p class="text-sm font-semibold text-amber-300">Deep Scan suggests Level ${d.proposed_level} (now Level ${d.prev_level}). An admin will review it before it applies.</p>`;
+    return `<p class="text-sm font-semibold text-amber-300">Deep Scan suggests Spice level ${d.proposed_level} (now Spice level ${d.prev_level}). An admin will review it before it applies.</p>`;
   }
   if (!d || d.status !== "done" || d.prev_level === null || d.new_level === null || d.new_level === d.prev_level) return "";
   const up = d.new_level > d.prev_level;
-  return `<p class="text-sm font-semibold ${up ? "text-amber-300" : "text-emerald-300"}">${up ? "Rating changed via Deep Scan" : "✓ Deep Scan lowered the rating"}: Level ${d.prev_level} → Level ${d.new_level}</p>`;
+  return `<p class="text-sm font-semibold ${up ? "text-amber-300" : "text-emerald-300"}">${up ? "Rating changed via Deep Scan" : "✓ Deep Scan lowered the rating"}: Spice level ${d.prev_level} → Spice level ${d.new_level}</p>`;
 }
 
 // aboutText is what the AI saw in a part (its note, then the scene), as
@@ -43,10 +43,10 @@ function whyHTML(notes, parents, rated = null) {
   const those = notes.map((n, i) => ({ n, i })).filter((x) => x.n.level === top);
   const p = PEPPERS[top];
   return `<div class="card-outlined space-y-2 p-3">
-    <p class="flex items-center gap-2 font-semibold">${levelBadge(top)}<span>${rated == null || rated === top ? "Why" : "The highest parts are"} Level ${top}${p ? `: ${esc(p.name)}` : ""}</span></p>
-    ${rated != null && rated !== top ? `<p class="text-sm text-amber-200">The book itself is rated Level ${rated}: the scan's own checks, or a parent, settled on that after these parts were noted.</p>` : ""}
+    <p class="flex items-center gap-2 font-semibold">${levelBadge(top)}<span>${rated == null || rated === top ? "Why" : "The highest parts are"} Spice level ${top}${p ? `: ${esc(p.name)}` : ""}</span></p>
+    ${rated != null && rated !== top ? `<p class="text-sm text-amber-200">The book itself is rated Spice level ${rated}: the scan's own checks, or a parent, settled on that after these parts were noted.</p>` : ""}
     ${p ? `<p class="text-sm text-slate-300">${esc(p.desc)}</p>` : ""}
-    <p class="text-sm text-slate-300"><b>${those.length} of ${notes.length}</b> noted part${notes.length === 1 ? "" : "s"} reached Level ${top}. A book gets the highest level found anywhere in it, so ${those.length === 1 ? "this part is" : "these parts are"} the reason:</p>
+    <p class="text-sm text-slate-300"><b>${those.length} of ${notes.length}</b> noted part${notes.length === 1 ? "" : "s"} reached Spice level ${top}. A book gets the highest level found anywhere in it, so ${those.length === 1 ? "this part is" : "these parts are"} the reason:</p>
     <ul class="space-y-1 text-sm">${those.map(({ n, i }) => `<li><span class="font-semibold">${esc(n.label)}</span>
       <span class="text-slate-400">· ${esc(kindOf(n.level))}</span>
       ${parents ? `<button type="button" data-read="${i}" class="ml-1 text-xs font-semibold text-sky-300 underline">Read it</button>` : ""}</li>`).join("")}</ul>
@@ -60,7 +60,7 @@ function foundHTML(notes, parents, rated = null) {
   const list = `${notes.length > 3 ? levelTally(notes) : ""}<ul class="mt-2 space-y-2 text-sm">${notes.map((n, i) => `<li class="flex items-start gap-3${parents ? " rounded-md bg-slate-900/60 p-2" : ""}">
     ${levelBadge(n.level)}
     <div class="min-w-0 flex-1"><p class="font-semibold leading-snug">${esc(n.label)}</p>
-      <p class="text-xs text-slate-400">Level ${n.level}${PEPPERS[n.level] ? ` · ${esc(PEPPERS[n.level].name)}` : ""} · ${esc(kindOf(n.level))}</p>
+      <p class="text-xs text-slate-400">Spice level ${n.level}${PEPPERS[n.level] ? ` · ${esc(PEPPERS[n.level].name)}` : ""} · ${esc(kindOf(n.level))}</p>
       ${parents ? `<button type="button" data-read="${i}" class="mt-1 block text-left text-xs font-semibold text-sky-300 underline">Read this part in the book</button>` : ""}</div></li>`).join("")}</ul>`;
   if (!parents) return `${whyHTML(notes, false, rated)}${list}`;
   return `${whyHTML(notes, true, rated)}<details class="rounded-lg bg-slate-900/40 px-3 py-2"><summary class="cursor-pointer py-1 text-sm text-slate-300">
