@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -72,5 +73,28 @@ func (s *Server) writeUnmatched(b *strings.Builder) {
 	}
 	if len(rows) == 0 {
 		b.WriteString("(none)\n")
+	}
+}
+
+// writeAppSeen lists when each person's Kindle app last asked NovelCheck for an update (it does that every time it
+// opens with Wi-Fi), with the version and the name it gave: whether the app reaches the server at all.
+func (s *Server) writeAppSeen(b *strings.Builder) {
+	all, _ := s.Store.AllSettings()
+	b.WriteString("\n== Kindle app: last time it asked for an update (person · when · name · version) ==\n")
+	n := 0
+	for k, v := range all {
+		if id, ok := strings.CutPrefix(k, "app_seen_"); ok {
+			who := id
+			if uid, err := strconv.ParseInt(id, 10, 64); err == nil {
+				if u, err := s.Store.UserByID(uid); err == nil && u != nil {
+					who = u.Username
+				}
+			}
+			fmt.Fprintf(b, "%s · %s\n", who, v)
+			n++
+		}
+	}
+	if n == 0 {
+		b.WriteString("(never)\n")
 	}
 }

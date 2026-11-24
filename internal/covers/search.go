@@ -27,9 +27,10 @@ type SearchResult struct {
 	Refused bool
 }
 
-// missMark is what a miss file holds. Before v1.94 a refused search was written as a miss too; those old files
-// (empty) are ignored, so the books get searched again.
-const missMark = "2"
+// missMark is what a miss file holds. Before v1.94 a refused search was written as a miss too, and before v1.99.4 a
+// list title like "Neuromancer - William Gibson - 1984" was searched whole; those older files are ignored, so the
+// books get searched again.
+const missMark = "3"
 
 // SearchBook finds a cover for a book that has no ISBN to look up (or whose ISBN has no cover): Open Library's
 // search by title and author, then Google Books. A hit is kept as name.jpg. Only a result whose title really is the
@@ -41,6 +42,7 @@ func (c Cache) SearchBook(ctx context.Context, name, title, author string) Searc
 	if c.Dir == "" || !storedName.MatchString(name) || strings.TrimSpace(title) == "" {
 		return r
 	}
+	title, author = SplitListTitle(title, author)
 	out := filepath.Join(c.Dir, name+".jpg")
 	if info, ok := c.have(out); ok {
 		return SearchResult{Path: out, Info: info, OK: true}
@@ -99,6 +101,18 @@ func (c Cache) Forget(name string) {
 	if c.Dir != "" {
 		_ = os.Remove(filepath.Join(c.Dir, name+".jpg.miss"))
 	}
+}
+
+// listTitle is a title copied from a list: "Neuromancer - William Gibson - 1984", the year last.
+var listTitle = regexp.MustCompile(`^(.+?)\s+[-–—]\s+(.+?)\s+[-–—]\s+(1[4-9]\d\d|20\d\d)$`)
+
+// SplitListTitle takes the title and the author out of a list title ("Neuromancer - William Gibson - 1984" with
+// the list's name as its author): the book can then be found. Any other title comes back as it was.
+func SplitListTitle(title, author string) (string, string) {
+	if m := listTitle.FindStringSubmatch(strings.TrimSpace(title)); m != nil {
+		return strings.TrimSpace(m[1]), strings.TrimSpace(m[2])
+	}
+	return title, author
 }
 
 // searchTitles is what to search for a library title, best first: the title tidied of track and series

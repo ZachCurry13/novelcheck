@@ -14,7 +14,7 @@ function newer(a, b) {
 }
 
 function checkUpdate() {
-  api("GET", "/kosync/plugin/kindle-app", null, function (err, v) {
+  api("GET", "/kosync/plugin/kindle-app?v=" + encodeURIComponent(NC.version || "") + "&device=" + encodeURIComponent(NC.device || ""), null, function (err, v) {
     if (err || !v || !newer(v.version, NC.version)) return;
     var b = $("update");
     b.textContent = "Update to " + v.version;

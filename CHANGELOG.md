@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.99.4]
+
+### 🖼️ Covers for books copied from a list
+- About 60 well-known books (like Neuromancer, Hyperion, Snow Crash) had no cover because they were imported as "Neuromancer - William Gibson - 1984" with the list's name as the author, and the cover finder searched that whole text. It now takes the title and author out of such a title. Books it searched before without success are searched again on the next run.
+
+### 📖 Kindle app 1.5.1
+- The app tells NovelCheck its version and name each time it asks for an update, and the bug link lists when each Kindle app last did ("Kindle app: last time it asked for an update"), so it's visible whether the app reaches the server at all.
+
 ## [1.99.3]
 
 ### 📖 Kindle app 1.5.0: Discover and Collections

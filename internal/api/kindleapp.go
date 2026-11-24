@@ -154,9 +154,14 @@ func (s *Server) convertForKindle(id int64, calibreID int, from string) {
 
 // handleKindleAppVersion: GET /kosync/plugin/kindle-app, the app's newest version and files, so it can offer to update.
 func (s *Server) handleKindleAppVersion(w http.ResponseWriter, r *http.Request) {
-	if s.kosyncUser(w, r) == nil {
+	u := s.kosyncUser(w, r)
+	if u == nil {
 		return
 	}
+	// noted for the bug link: when the app last asked, and (apps from 1.5.1) which version it runs and as whom
+	q := r.URL.Query()
+	_ = s.Store.SetSetting("app_seen_"+strconv.FormatInt(u.ID, 10), time.Now().UTC().Format("2006-01-02 15:04:05")+" UTC · "+
+		clipText(q.Get("device"), 60)+" · app "+clipText(q.Get("v"), 20))
 	kosyncJSON(w, http.StatusOK, map[string]any{"version": kindleapp.Version, "files": kindleapp.Files()})
 }
 

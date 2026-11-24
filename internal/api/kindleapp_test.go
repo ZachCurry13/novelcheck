@@ -67,6 +67,12 @@ func TestKindleApp(t *testing.T) {
 	if code, body, _ := get("/kosync/plugin/kindle-app"); code != 200 || !strings.Contains(string(body), `"update.js"`) || strings.Contains(string(body), "config.js") {
 		t.Fatalf("the app's version and files, for updating: %d %s", code, body)
 	}
+	if code, _, _ := get("/kosync/plugin/kindle-app?v=1.5.0&device=Zach%20Paperwhite%20(Amazon%20reader)"); code != 200 {
+		t.Fatalf("the update check: %d", code)
+	}
+	if v := st.Setting("app_seen_1"); !strings.Contains(v, "Zach Paperwhite (Amazon reader)") || !strings.Contains(v, "app 1.5.0") {
+		t.Fatalf("noted for the bug link: %q", v)
+	}
 	if code, body, _ := get("/kosync/plugin/kindle-app/app.js"); code != 200 || !strings.Contains(string(body), "ES5") {
 		t.Fatalf("an app file: %d", code)
 	}
