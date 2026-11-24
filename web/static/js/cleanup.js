@@ -48,7 +48,8 @@ const reviews = {
     const r = await attempt(() => get("/api/admin/formats"));
     if (!r) return null;
     return { title: "Convert to EPUB", intro: "Calibre converts each book on this list, one at a time; this can take a while. The original file stays until the last step. A book that fails keeps its file. Untick a book to leave it.", confirm: "Convert the ticked books",
-      items: (r.convert || []).map((f) => ({ id: f.book_id, label: f.title, detail: `${f.author || ""} · ${String(f.format).toUpperCase()} → EPUB` })),
+      items: (r.convert || []).map((f) => ({ id: f.book_id, label: f.title, detail: `${f.author || ""} · ${String(f.format).toUpperCase()} → EPUB`,
+        never: { label: "Don't convert", run: async () => !!(await attempt(() => post("/api/admin/formats/convert/as-is", { calibre_id: f.calibre_id, as_is: true, title: f.title, format: f.format }), `“${f.title}” won't be offered again`)) } })),
       more: r.convert_count > (r.convert || []).length ? `…and ${r.convert_count - (r.convert || []).length} more, left for another run.` : "" };
   },
   formats: async () => {

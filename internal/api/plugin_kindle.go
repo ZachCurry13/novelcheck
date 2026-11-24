@@ -33,7 +33,8 @@ func kindleSkip(rel string) bool {
 	l := strings.ToLower(rel)
 	for _, part := range strings.Split(l, "/") {
 		// "novelcheck" is the folder the plugin downloads Nightstand books into: they came from this server
-		if strings.HasPrefix(part, ".") || strings.HasSuffix(part, ".sdr") || part == "koreader" || part == "system" || part == "novelcheck.koplugin" || part == "novelcheck" {
+		// "dictionaries" is Amazon's own dictionary files: big, protected, and put back by the Kindle itself
+		if strings.HasPrefix(part, ".") || strings.HasSuffix(part, ".sdr") || part == "koreader" || part == "system" || part == "novelcheck.koplugin" || part == "novelcheck" || part == "dictionaries" {
 			return true
 		}
 	}
@@ -55,7 +56,7 @@ func kindleSkip(rel string) bool {
 func backupSkip(rel string) bool {
 	l := strings.ToLower(rel)
 	for _, part := range strings.Split(l, "/") {
-		if strings.HasPrefix(part, ".") || part == "system" || part == "trash" || part == "lost+found" {
+		if strings.HasPrefix(part, ".") || part == "system" || part == "trash" || part == "lost+found" || part == "dictionaries" {
 			return true
 		}
 	}

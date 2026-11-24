@@ -74,6 +74,22 @@ function paintDetails(b) {
     var cv = el("button", "", "Change cover");
     cv.onclick = function () { pickCover(b); };
     acts.appendChild(cv);
+    var hide = el("button", "", "Don't show this book");
+    hide.onclick = function () { // two taps, so it isn't done by accident
+      if (hide.textContent !== "Tap again to hide it") {
+        hide.textContent = "Tap again to hide it";
+        note("This hides it from your own lists only. It stays in NovelCheck for everyone else, and the web app's Settings can show it again.");
+        return setTimeout(function () { hide.textContent = "Don't show this book"; }, 6000);
+      }
+      api("POST", "/kosync/plugin/left", { book_id: b.id, choice: "hide" }, function (err3) {
+        if (err3) return note(err3);
+        dropBook(b.id);
+        logLine("hidden from my lists: " + b.title);
+        rows();
+        note("Hidden. It won't show in your lists.");
+      });
+    };
+    acts.appendChild(hide);
     var fin = el("button", "", "I finished it");
     fin.onclick = function () { finishPanel(b, d); };
     acts.appendChild(fin);
@@ -173,4 +189,18 @@ function dropFromNightstand(id) {
     for (var j = 0; j < state.books.length; j++) if (state.books[j].id !== id) rest.push(state.books[j]);
     state.books = rest;
   }
+}
+
+// dropBook takes a hidden book out of every list: the one on screen and the saved copies of all of them.
+function dropBook(id) {
+  var keepOnly = function (books) {
+    var out = [];
+    for (var i = 0; i < books.length; i++) if (books[i].id !== id) out.push(books[i]);
+    return out;
+  };
+  for (var key in LISTS) {
+    var saved = cachedList(key);
+    if (saved && saved.books) cacheList(key, keepOnly(saved.books), saved.header);
+  }
+  state.books = keepOnly(state.books);
 }

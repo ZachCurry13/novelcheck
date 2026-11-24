@@ -107,3 +107,26 @@ func TestDisagreeAndAccuracy(t *testing.T) {
 		t.Fatalf("the book should have the person's level: %v", b.SpiceLevel)
 	}
 }
+
+// "Don't convert" on the Convert to EPUB list is remembered: the book is not offered again.
+func TestDontConvertIsRemembered(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cat, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	id, _ := st.UpsertBook("Notes", "Somebody", "", "")
+	_ = st.AddCopy(cat, id, "/c/notes.mobi", "mobi", "77")
+	count := func() int {
+		_, out := admin.do("GET", "/api/admin/formats", nil, false)
+		n, _ := out["convert_count"].(float64)
+		return int(n)
+	}
+	if count() != 1 {
+		t.Fatalf("the book should be offered for converting: %d", count())
+	}
+	if res, out := admin.do("POST", "/api/admin/formats/convert/as-is", map[string]any{"calibre_id": "77", "as_is": true, "title": "Notes", "format": "mobi"}, true); res.StatusCode != 200 {
+		t.Fatalf("don't convert: %d %v", res.StatusCode, out)
+	}
+	if count() != 0 {
+		t.Fatalf("it should not be offered again: %d", count())
+	}
+}

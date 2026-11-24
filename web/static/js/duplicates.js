@@ -37,7 +37,7 @@ function bookHTML(g, canRemove) {
     <p class="text-xs text-slate-400">Suggested to keep #${esc(g.keep)}: ${esc(g.why || "it is the best copy")}.</p>
     <div class="dup-copies">${g.entries.map((e) => copyHTML(g, e, canRemove)).join("")}</div>
     <button type="button" data-compare class="btn-ghost py-1 text-sm">Compare what Calibre has for each</button>
-    ${canRemove ? `<button type="button" data-one class="${g.sure ? "btn-secondary" : "btn-ghost"} py-1 text-sm">Remove the other ${others === 1 ? "copy" : `${others} copies`}${g.sure ? "" : " anyway"}</button>` : ""}
+    ${canRemove ? `<p data-plan class="text-sm"></p><button type="button" data-one class="${g.sure ? "btn-secondary" : "btn-ghost"} py-1 text-sm">Remove the other ${others === 1 ? "copy" : `${others} copies`}${g.sure ? "" : " anyway"}</button>` : ""}
   </section>`;
 }
 
@@ -79,6 +79,16 @@ export async function renderDuplicates(view, state) {
     const also = $$("[data-also]:checked", card).map((c) => c.value); // ticked "a different book": stays too
     return group(card.dataset.book).entries.map((e) => e.calibre_id).filter((id) => id !== keep && !also.includes(id));
   };
+  // plan says, in numbers, what this book's button will do with the current ticks: which copies stay and which go.
+  const plan = (card) => {
+    const one = $("[data-one]", card);
+    if (!one) return;
+    const g = group(card.dataset.book), gone = others(card), tag = (id) => `#${id}`;
+    const stay = g.entries.map((e) => e.calibre_id).filter((id) => !gone.includes(id));
+    $("[data-plan]", card).innerHTML = gone.length ? `Stays in Calibre: <b>${stay.map(tag).join(", ")}</b>. Goes to Calibre's recycle bin: <b>${gone.map(tag).join(", ")}</b>.` : "Nothing will be taken out.";
+    one.textContent = gone.length ? `Remove ${gone.map(tag).join(", ")}${g.sure ? "" : " anyway"}` : "Nothing to remove";
+    one.disabled = !gone.length;
+  };
   const say = (text, good = true) => (result.innerHTML = `<div class="card mb-4 ${good ? "text-emerald-200" : "text-amber-200"}">${esc(text)}</div>`);
   const bar = () => {
     const sure = $$("[data-sure] [data-book]", body);
@@ -113,12 +123,15 @@ export async function renderDuplicates(view, state) {
         <p class="text-sm text-slate-400">Something differs (another edition, an omnibus, an extra PDF). Never removed in one go.</p>
         ${check.map((g) => bookHTML(g, data.can_remove)).join("")}</section>` : ""}
       ${data.can_remove ? `<div id="dup-bar" class="save-bar hidden"><span></span><button type="button" data-all class="btn-primary">Remove their extra copies</button></div>` : ""}`;
+    $$("[data-book]", body).forEach(plan);
     bar();
   }
 
   body.addEventListener("change", (e) => {
     const card = e.target.closest("[data-book]");
-    if (!card || e.target.type !== "radio") return;
+    if (!card) return;
+    if (e.target.type === "checkbox") return plan(card); // "Not a copy": that copy stays too
+    if (e.target.type !== "radio") return;
     $$(".dup-copy", card).forEach((c) => {
       const on = c.dataset.copy === e.target.value;
       c.classList.toggle("keep", on);
@@ -126,6 +139,7 @@ export async function renderDuplicates(view, state) {
       if (on) $("[data-also]", c).checked = false;
       $("[data-keep-label]", c).textContent = on ? "Keep this one" : "Keep this one instead";
     });
+    plan(card);
   });
 
   body.addEventListener("click", async (e) => {
@@ -148,7 +162,7 @@ export async function renderDuplicates(view, state) {
       const ids = others(card);
       if (!ids.length) return void toast("Nothing to remove: every other copy is marked as a different book.");
       const doubts = g.entries.filter((x) => ids.includes(x.calibre_id) && x.doubt).map((x) => `#${x.calibre_id}: ${x.doubt}`);
-      if (doubts.length && !confirm(`Remove ${copies(ids.length)} of “${g.title}” although:\n\n${doubts.join("\n")}\n\nThey go to Calibre's recycle bin.`)) return;
+      if (doubts.length && !confirm(`Remove ${copies(ids.length)} of “${g.title}” (${ids.map((id) => "#" + id).join(", ")}) although:\n\n${doubts.join("\n")}\n\nThey go to Calibre's recycle bin.`)) return;
       one.disabled = true;
       one.textContent = "Removing…";
       // "later": the answer comes at once and Calibre is read again in the background.

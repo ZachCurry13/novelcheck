@@ -45,7 +45,7 @@ function openMore(links) {
     swipeToClose(d);
   }
   const tile = (a) => `<a href="${a.getAttribute("href")}" class="flex flex-col items-center gap-1 rounded-xl bg-slate-800/70 px-1 py-3 text-center text-sm text-slate-200 hover:bg-slate-700">
-    <span class="ms" aria-hidden="true">${a.querySelector(".ms")?.textContent || "more_vert"}</span>${[...a.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim()}</a>`;
+    <span class="ms" aria-hidden="true">${a.querySelector(".ms")?.innerHTML || "more_vert"}</span>${[...a.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim()}</a>`;
   const item = (ico, label, attrs) => `<a href="#" ${attrs} class="flex items-center gap-3 rounded-lg px-3 py-3 text-base hover:bg-slate-800">
     <span class="ms" aria-hidden="true">${ico}</span>${label}</a>`;
   d.innerHTML = `<div class="space-y-3 p-4">

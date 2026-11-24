@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.0.1]
+
+### 🔧 Fixes from your phone and Kindle
+- **Duplicates:** each book now says in numbers what its button will do: "Stays in Calibre: #609, #1724. Goes to Calibre's recycle bin: #1737." The button names the copies (before it said "Remove the other 2 copies" even when one was ticked "Not a copy", though only the unticked one would go). It updates as you tick.
+- **Convert to EPUB in Library cleanup:** every book in the review window now has **Don't convert**; it takes the book off the list for good. (It was only on the Formats window before.)
+- **The More sheet on a phone** showed three dots for Home and Kindle; they show their own icons now.
+- **Kindle backups** no longer include Amazon's dictionaries (the plugin's whole-Kindle backup skips them too), and the Kindle app leaves out books named by Amazon's code (B0…_EBOK, the odd-looking names): those are bought books, still in your Amazon library. Backups made before stay on the server.
+- **Kindle app 1.12.0: Don't show this book.** On a book's page (tap twice): it disappears from your lists in the app and on the web, stays in NovelCheck for everyone else, and Settings on the web can show it again.
+
 ## [2.0.0]
 
 NovelCheck 2.0 is about not having to babysit it: it tells you what needs you, checks itself, keeps a safety copy of your data, and lets the family ask for books.

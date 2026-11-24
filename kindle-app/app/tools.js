@@ -4,6 +4,7 @@
 var APP_TASKS = { remove_store: 1, download_books: 1, download_nightstand: 1, crashlogs: 1, backup: 1, selftest: 1 }; // report, highlights and stats are the sync itself: left for the plugin to answer
 var MAX_UPLOAD = 95 * 1024 * 1024; // the tunnel refuses bigger bodies
 var AUTH = " -H " + sh("x-auth-user: " + NC.user) + " -H " + sh("x-auth-key: " + NC.key);
+var STORE_NAME = /(^|[_ -])B[0-9A-Z]{9}([_. -]|$)|_EBOK|_PDOC|_SAMPLE/i; // a file named by Amazon's code instead of the title
 var toolBusy = false;
 
 // shellOut runs cmd (which must write its answer to out, ending with END) and gives the text, or null.
@@ -22,7 +23,8 @@ function backupKindle(done) {
     var files = [], lines = text.split("\n");
     for (var i = 0; i < lines.length; i++) {
       var f = lines[i].split("\t");
-      if (f.length === 2 && +f[0] >= 0 && f[1].indexOf("/mnt/us/") === 0 && f[1].indexOf("..") < 0) files.push({ path: f[1], size: +f[0] });
+      // Amazon's dictionaries, and books named by Amazon's code (B0…_EBOK.azw: bought books, still in the Amazon library), are not backed up
+      if (f.length === 2 && +f[0] >= 0 && f[1].indexOf("/mnt/us/") === 0 && f[1].indexOf("..") < 0 && !/\/dictionaries\//i.test(f[1]) && !STORE_NAME.test(f[1].split("/").pop())) files.push({ path: f[1], size: +f[0] });
     }
     note("Asking NovelCheck which of " + files.length + " files it needs…");
     api("POST", "/kosync/plugin/kindle/check", { device: NC.device, files: files }, function (err, r) {

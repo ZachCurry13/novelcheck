@@ -82,3 +82,27 @@ func TestKindleAppRemovesFromNightstand(t *testing.T) {
 		t.Fatalf("not back: %v", items)
 	}
 }
+
+// The Kindle app can hide a book from its person's lists without deleting it for anyone else.
+func TestKindleAppHidesABook(t *testing.T) {
+	srv, st := setup(t)
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+	id, _ := st.UpsertBook("A Very Steamy Book", "Someone", "", "")
+	req, _ := http.NewRequest("POST", srv.URL+"/kosync/plugin/left", strings.NewReader(`{"book_id":`+itoa(id)+`,"choice":"hide"}`))
+	req.Header.Set("x-auth-user", "admin")
+	req.Header.Set("x-auth-key", hex.EncodeToString(sum[:]))
+	res, err := http.DefaultClient.Do(req)
+	if err != nil || res.StatusCode != 200 {
+		t.Fatalf("hide: %v %v", err, res)
+	}
+	u, _ := st.UserByName("admin")
+	if h := st.HiddenBooks(u.ID); len(h) != 1 || h[0].BookID != id {
+		t.Fatalf("the book should be hidden for this person: %v", h)
+	}
+	if _, err := st.BookByID(id, nil); err != nil {
+		t.Fatal("the book must stay in NovelCheck")
+	}
+}
