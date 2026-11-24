@@ -14,22 +14,29 @@ import (
 
 // handleCleanup is the summary: what each step would do now.
 func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
+	out, err := s.cleanupSummary()
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// cleanupSummary is what handleCleanup answers (kept while the library is unchanged); Home counts from it too.
+func (s *Server) cleanupSummary() (map[string]any, error) {
 	print := s.libraryPrint()
 	if kept, ok := s.cleanup.get(print); ok { // nothing changed since it was last worked out
 		kept["job"] = s.formats.state()
-		writeJSON(w, http.StatusOK, kept)
-		return
+		return kept, nil
 	}
 	pairs, _ := s.Store.SamePairs()
 	fixes, err := s.Store.TitleFixes()
 	if err != nil {
-		writeStoreErr(w, err)
-		return
+		return nil, err
 	}
 	dupGroups, err := s.Store.CalibreDuplicates()
 	if err != nil {
-		writeStoreErr(w, err)
-		return
+		return nil, err
 	}
 	var dupIDs []string // the extra entries NovelCheck would remove: all but the best copy of each book
 	for _, g := range dupGroups {
@@ -42,20 +49,17 @@ func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
 	}
 	convert, err := s.Store.ToConvert()
 	if err != nil {
-		writeStoreErr(w, err)
-		return
+		return nil, err
 	}
 	groups, err := s.Store.FormatCleanup([]string{"EPUB"})
 	if err != nil {
-		writeStoreErr(w, err)
-		return
+		return nil, err
 	}
 	files, bytes := s.sized(groups)
 	ids := make([]int64, 0, len(fixes))
 	for _, f := range fixes {
 		ids = append(ids, f.ID)
 	}
-
 	out := map[string]any{
 		"configured":     s.Store.Setting(store.KeyCalibreSrvURL) != "",
 		"pairs":          len(pairs),
@@ -70,7 +74,7 @@ func (s *Server) handleCleanup(w http.ResponseWriter, r *http.Request) {
 		"convert_failed": len(s.Store.ConvertFailures()),
 	}
 	s.cleanup.put(print, out)
-	writeJSON(w, http.StatusOK, out)
+	return out, nil
 }
 
 // refreshCalibre re-reads the Calibre library now (when it can), so the lists match what Calibre has.

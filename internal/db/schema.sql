@@ -952,3 +952,40 @@ CREATE TABLE IF NOT EXISTS upload_log (
     at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (calibre_id, user_id)
 );
+
+-- 2.0: a person's own level for a book ("I disagree"), kept with what the AI said then, so the AI can be scored.
+CREATE TABLE IF NOT EXISTS rating_feedback (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id       INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    level         INTEGER NOT NULL CHECK (level BETWEEN 0 AND 5),
+    ai_level      INTEGER,
+    model         TEXT NOT NULL DEFAULT '',
+    rules_version INTEGER NOT NULL DEFAULT 0,
+    note          TEXT NOT NULL DEFAULT '',
+    created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (book_id, user_id)
+);
+
+-- 2.0: a person asks for a book (a kid asks a parent); a parent says yes or no.
+CREATE TABLE IF NOT EXISTS book_requests (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title      TEXT NOT NULL,
+    author     TEXT NOT NULL DEFAULT '',
+    note       TEXT NOT NULL DEFAULT '',
+    book_id    INTEGER REFERENCES books(id) ON DELETE SET NULL,
+    status     TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'declined', 'done')),
+    answer     TEXT NOT NULL DEFAULT '',
+    decided_by TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    decided_at DATETIME
+);
+
+-- 2.0: an item on the Home inbox that a person set aside until a day.
+CREATE TABLE IF NOT EXISTS inbox_snooze (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    item    TEXT NOT NULL,
+    until   DATETIME NOT NULL,
+    PRIMARY KEY (user_id, item)
+);

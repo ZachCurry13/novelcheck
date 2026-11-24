@@ -38,6 +38,12 @@ func (s *Server) userRoutes(r chi.Router) {
 	r.Put("/me/device-link", s.handleDeviceLink)  // the plugin and the app are one Kindle
 	r.Post("/upload/ebook", s.handleFamilyUpload) // drag and drop for admins and people an admin allowed
 	r.Post("/upload/fix", s.handleUploadFix)
+	r.Get("/home", s.handleHome) // 2.0: the start screen
+	r.Post("/home/snooze", s.handleSnooze)
+	r.Get("/requests", s.handleRequests) // ask for a book; a parent answers
+	r.Post("/requests", s.handleAddRequest)
+	r.Post("/requests/{id}/decide", s.handleDecideRequest)
+	r.Post("/books/{id}/disagree", s.handleDisagree) // a grown-up's own level for a book
 	r.Get("/me/kindle-library", s.handleKindleLibrary)
 	r.Get("/me/kindles", s.handleKindles)
 	r.Get("/me/left", s.handleMyLeft) // books that left your e-reader, and the ones you removed from your library
