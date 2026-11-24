@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/zachcurry13/novelcheck/internal/delivery"
+	"github.com/zachcurry13/novelcheck/internal/genres"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -37,8 +38,20 @@ func (s *Server) pluginBookFor(b *store.Book) (pluginBook, bool) {
 	if st, err := os.Stat(best.Path); err == nil {
 		size = st.Size()
 	}
-	return pluginBook{ID: b.ID, Title: b.Title, Author: b.Author, Format: format, Size: size, Level: b.SpiceLevel,
-		URL: "/kosync/plugin/book/" + strconv.FormatInt(b.ID, 10) + "/" + fileName(b.Title, format)}, true
+	pb := pluginBook{ID: b.ID, Title: b.Title, Author: b.Author, Format: format, Size: size, Level: b.SpiceLevel, Stars: b.HCRating,
+		URL: "/kosync/plugin/book/" + strconv.FormatInt(b.ID, 10) + "/" + fileName(b.Title, format)}
+	if b.Series != "" {
+		pb.Series = b.Series
+		if b.SeriesIndex > 0 {
+			pb.Series += " #" + strconv.FormatFloat(b.SeriesIndex, 'f', -1, 64)
+		}
+	}
+	for _, k := range genres.Split(b.Genres) {
+		if l := genres.Label(k); l != "" && len(pb.Genres) < 3 {
+			pb.Genres = append(pb.Genres, l)
+		}
+	}
+	return pb, true
 }
 
 // hits turns books into search results marked with what the person has already.

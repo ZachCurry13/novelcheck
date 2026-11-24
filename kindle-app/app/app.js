@@ -119,10 +119,10 @@ function collectionRow(b) {
   what.appendChild(meta);
   if (b.about) what.appendChild(el("div", "by", b.about));
   what.onclick = function () { show("collection", b.id); };
-  r.appendChild(what);
-  var open = el("button", "", "Open");
+  var open = el("button", "act", "Open");
   open.onclick = what.onclick;
   r.appendChild(open);
+  r.appendChild(what);
   return r;
 }
 
@@ -138,6 +138,11 @@ function row(b) {
   var what = el("div", "what");
   what.appendChild(el("div", "title", b.title));
   what.appendChild(el("div", "by", b.author));
+  var more = [];
+  if (b.series) more.push(b.series);
+  if (b.stars) more.push("\u2605 " + (Math.round(b.stars * 10) / 10));
+  if (b.genres && b.genres.length) more.push(b.genres.join(", "));
+  if (more.length) what.appendChild(el("div", "meta", more.join(" \u00b7 ")));
   if (state.list === "kindle-mine") { // the books on this Kindle: their rating, and where they are
     var meta = el("div", "meta");
     meta.appendChild(el("span", "badge", b.status === "pending" || b.status === "processing" ? "Being rated…" : badge(b.level) + (b.old_rules ? " (older)" : "")));
@@ -151,8 +156,10 @@ function row(b) {
   line.appendChild(el("span", "badge", badge(b.level)));
   what.appendChild(line);
   what.onclick = function () { details(b.id); };
+  var dl = downloadButton(b);
+  dl.className += " act"; // floats right, so it goes in before the text
+  r.appendChild(dl);
   r.appendChild(what);
-  r.appendChild(downloadButton(b));
   return r;
 }
 

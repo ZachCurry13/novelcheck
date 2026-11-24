@@ -15,7 +15,10 @@ function newer(a, b) {
 
 function checkUpdate() {
   api("GET", "/kosync/plugin/kindle-app?v=" + encodeURIComponent(NC.version || "") + "&device=" + encodeURIComponent(NC.device || ""), null, function (err, v) {
-    if (err || !v || !newer(v.version, NC.version)) return;
+    var ver = $("ver"), base = "v" + (NC.version || "?");
+    if (err || !v) { ver.textContent = base + " · couldn't check for updates"; return; }
+    if (!newer(v.version, NC.version)) { ver.textContent = base + " · up to date"; return; }
+    ver.textContent = base + " · v" + v.version + " is ready";
     var b = $("update");
     b.textContent = "Update to " + v.version;
     b.hidden = false;

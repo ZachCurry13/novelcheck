@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.104.0]
+
+### 📖 Kindle app 1.6.0: no more dead space
+- **The layout no longer relies on flexbox.** The Kindle's browser showed every row stacked in one column (cover, then title, then chip, then the Download button on its own line), which left most of each row empty. Covers now sit on the left, the Download button on the right and the title, author and details in between; the header is one line.
+- **More about each book** in the lists: its series and number, Hardcover readers' stars and its genres, under the author.
+- **The version line says whether the app is current**: "v1.6.0 · up to date", "v1.7.0 is ready", or "couldn't check for updates". (Your Kindle was already on the newest version, 1.5.2, so there was nothing to offer.)
+- Not yet seen on a real Kindle: the old browser may still surprise.
+
 ## [1.103.0]
 
 ### 🧹 Clean-up

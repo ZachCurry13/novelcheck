@@ -26,6 +26,10 @@ type pluginBook struct {
 	Level  *int   `json:"level"`
 	Status string `json:"status"` // queued | reading
 	URL    string `json:"url"`
+	// What the Kindle app shows beside a book (the plugin ignores them).
+	Series string   `json:"series,omitempty"` // "The Lost Files #1"
+	Stars  float64  `json:"stars,omitempty"`  // Hardcover readers' average
+	Genres []string `json:"genres,omitempty"`
 }
 
 // handlePluginUpNext: GET /kosync/plugin/up-next.
