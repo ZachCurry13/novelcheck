@@ -4,6 +4,16 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.106.0]
+
+### 🖼️ More covers found
+The cover finder now tries more places, in this order, before it gives up: Open Library by ISBN, then **Amazon by the book's ISBN** (its ISBN-10; Amazon has the cover of most print books Open Library lacks), the cover inside the book's file, **Hardcover by the book's ISBN** (exact), Hardcover by title, then the title and author search. It also fixes why books were missed:
+- A book written by "Rob Knight with Brendan Buhler" (or "Written By J. K. Rowling, Narrated By Jim Dale", or a list of translators) was only accepted when the found book named the *last* person on the line. Now any person on the line counts, and the main author is the one searched for.
+- Titles with brackets or tags are searched without them: "A Longa Marcha [The Long Walk]" is also searched as "The Long Walk", "…(Full-Cast Edition) (Unabridged)" as the bare title, "HP-1 Harry Potter…" as "Harry Potter…".
+- When the search finds the right book but Open Library has no picture for it, that book's own ISBN is tried at Open Library and Amazon, and a medium picture is taken when there is no large one.
+- Books searched in the last week with nothing found are searched again after this update (they were being skipped).
+Still without a cover afterwards: comics and free-comic-day issues, junk files in Calibre ("Quick Start Guide", "server-config"), and obscure books nobody lists. Those need Change cover (web page, or the Kindle app) or Review covers.
+
 ## [1.105.0]
 
 ### 🔄 The Kindle app and the plugin update from GitHub

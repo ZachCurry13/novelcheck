@@ -29,8 +29,9 @@ type SearchResult struct {
 
 // missMark is what a miss file holds. Before v1.94 a refused search was written as a miss too, and before v1.99.4 a
 // list title like "Neuromancer - William Gibson - 1984" was searched whole; those older files are ignored, so the
-// books get searched again.
-const missMark = "3"
+// books get searched again. v1.106.0 added sources (Amazon by ISBN-10, the ISBN of the matching book, Hardcover by ISBN,
+// main author of "A with B", titles without brackets), so earlier misses are searched again too.
+const missMark = "4"
 
 // SearchBook finds a cover for a book that has no ISBN to look up (or whose ISBN has no cover): Open Library's
 // search by title and author, then Google Books. A hit is kept as name.jpg. Only a result whose title really is the
@@ -71,6 +72,20 @@ func (c Cache) SearchBook(ctx context.Context, name, title, author string) Searc
 			}
 			if p, info, ok := c.fetch(ctx, u, out, miss); ok {
 				r.Path, r.Info, r.OK = p, info, true
+				return r
+			}
+			if strings.Contains(u, "-L.jpg") { // Open Library sometimes has only the medium picture
+				if p, info, ok := c.fetch(ctx, strings.Replace(u, "-L.jpg", "-M.jpg", 1), out, miss); ok {
+					r.Path, r.Info, r.OK = p, info, true
+					return r
+				}
+			}
+		}
+	}
+	if r.ISBN != "" { // the matching book was found but had no picture: its ISBN may (Open Library, then Amazon)
+		if c.ByISBN(ctx, r.ISBN, out, miss) {
+			if info, ok := c.have(out); ok {
+				r.Path, r.Info, r.OK = out, info, true
 				return r
 			}
 		}
@@ -134,9 +149,22 @@ func searchTitles(raw string) []string {
 	}
 	t := titles.Clean(raw)
 	add(t)
-	if i := strings.LastIndex(t, " ("); i > 0 && strings.HasSuffix(t, ")") {
-		t = strings.TrimSpace(t[:i])
+	for { // "Title (Full-Cast Edition) (Unabridged)" and "Title [Other Title]": the bare title, and what was in the brackets
+		cut := false
+		if i := strings.LastIndex(t, " ["); i > 0 && strings.HasSuffix(t, "]") {
+			add(t[i+2 : len(t)-1])
+			t, cut = strings.TrimSpace(t[:i]), true
+		} else if i := strings.LastIndex(t, " ("); i > 0 && strings.HasSuffix(t, ")") {
+			t, cut = strings.TrimSpace(t[:i]), true
+		}
+		if !cut {
+			break
+		}
 		add(t)
+	}
+	if m := codePrefix.FindStringSubmatch(t); m != nil {
+		add(m[1])
+		t = m[1]
 	}
 	if m := seriesPrefix.FindStringSubmatch(t); m != nil {
 		add(m[1])
@@ -149,6 +177,9 @@ func searchTitles(raw string) []string {
 	}
 	return out
 }
+
+// codePrefix is a short series code and number in front of a title ("HP-1 Harry Potter and the…").
+var codePrefix = regexp.MustCompile(`^[A-Za-z]{1,4}-?\d{1,2}\s+(.{4,})$`)
 
 // seriesPrefix is "Series Name 2 - Title" or "Series #2: Title": the title after the number.
 var seriesPrefix = regexp.MustCompile(`^.+?\s#?\d+(?:\.\d+)?\s*[-–—:]\s*(.+)$`)
@@ -189,14 +220,71 @@ func lastName(a string) string {
 	return norm(f[len(f)-1])
 }
 
+// authorNames are the people in an author line ("Rob Knight with Brendan Buhler", "Written By J. K. Rowling,
+// Narrated By Jim Dale", "Murray, Brian H. (Writer on real estate)"): the whole line and each part of it, so a book
+// matches when any one of them is its author.
+func authorNames(a string) []string {
+	var out []string
+	add := func(s string) {
+		s = strings.TrimSpace(s)
+		for _, p := range []string{"Written By ", "Narrated By ", "By "} {
+			s = strings.TrimPrefix(s, p)
+		}
+		if i := strings.Index(s, " ("); i > 0 {
+			s = s[:i]
+		}
+		if s = strings.TrimSpace(s); s != "" {
+			out = append(out, s)
+		}
+	}
+	parts := strings.FieldsFunc(a, func(r rune) bool { return r == ';' || r == '&' })
+	for _, p := range parts {
+		for _, q := range strings.Split(p, " with ") {
+			for _, w := range strings.Split(q, " and ") {
+				add(w)
+			}
+		}
+	}
+	for _, p := range strings.Split(a, ",") { // "Stephen King, Gregorio Vlastelica": a list; "Meyer, Marissa": handled by lastName
+		add(p)
+	}
+	add(a)
+	return out
+}
+
+// mainAuthor is the author to search for: the first person of an author line.
+func mainAuthor(a string) string {
+	a = strings.TrimSpace(a)
+	for _, p := range []string{"Written By ", "Narrated By ", "By "} {
+		a = strings.TrimPrefix(a, p)
+	}
+	for _, sep := range []string{" with ", " & ", ";", " and "} {
+		if i := strings.Index(a, sep); i > 0 {
+			a = a[:i]
+		}
+	}
+	if i := strings.Index(a, " ("); i > 0 {
+		a = a[:i]
+	}
+	if i := strings.Index(a, ", "); i > 0 && strings.Contains(a[:i], " ") { // "Stephen King, Gregorio…", not "Meyer, Marissa"
+		a = a[:i]
+	}
+	return strings.TrimSpace(a)
+}
+
 func authorOK(found []string, ours string) bool {
-	want := lastName(ours)
-	if want == "" || len(found) == 0 {
+	if lastName(ours) == "" || len(found) == 0 {
 		return true
 	}
-	for _, f := range found {
-		if strings.Contains(norm(f), want) {
-			return true
+	for _, name := range authorNames(ours) {
+		want := lastName(name)
+		if want == "" {
+			continue
+		}
+		for _, f := range found {
+			if strings.Contains(norm(f), want) {
+				return true
+			}
 		}
 	}
 	return false

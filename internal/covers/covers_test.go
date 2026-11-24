@@ -82,7 +82,7 @@ func TestSearchFindsMatchingCover(t *testing.T) {
 		}
 	}))
 	defer fake.Close()
-	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, GoogleURL: fake.URL}
+	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, AmazonURL: fake.URL, GoogleURL: fake.URL}
 	r := c.SearchBook(context.Background(), "book-5", "Dune", "Frank Herbert")
 	if !r.OK || !strings.HasSuffix(r.Path, "book-5.jpg") {
 		t.Fatalf("the Dune cover, not Dune Messiah's: %+v", r)
@@ -136,7 +136,7 @@ func TestSearchTitlesWithoutSeries(t *testing.T) {
 		}
 	}))
 	defer fake.Close()
-	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, GoogleURL: fake.URL, GoogleKey: func() string { return "k123" }}
+	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, AmazonURL: fake.URL, GoogleURL: fake.URL, GoogleKey: func() string { return "k123" }}
 	_ = os.WriteFile(filepath.Join(c.Dir, "book-9.jpg.none"), nil, 0o644)
 	if !c.SearchBook(context.Background(), "book-9", "Dune Chronicles 1 - Dune", "Frank Herbert").OK && googleKey == "" {
 		t.Fatal("the old miss is ignored and the series is left out of the search")

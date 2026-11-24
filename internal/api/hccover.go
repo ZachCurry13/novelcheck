@@ -31,6 +31,18 @@ func (s *Server) hardcoverCover(ctx context.Context, hc *hardcover.Client, b sto
 			}
 		}
 	}
+	if isbn := firstNonEmpty(b.ISBN, isbn10(b.ASIN)); isbn != "" { // the ISBN's book on Hardcover: exact, so before any title search
+		if m, err := hc.InfoByISBN(ctx, []string{isbn}); err == nil {
+			for _, info := range m {
+				if info.ID > 0 {
+					s.Store.SaveHCID(b.ID, info.ID)
+					if covers.AllowedImage(info.Image) {
+						return info.Image
+					}
+				}
+			}
+		}
+	}
 	if id := s.Store.HCIDOf(b.ID); id > 0 {
 		if u, err := hc.ImageByID(ctx, id); err == nil && covers.AllowedImage(u) {
 			return u

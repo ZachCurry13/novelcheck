@@ -13,9 +13,9 @@ func (c Cache) openLibraryCoverURL(ctx context.Context, title, author string, re
 	if base == "" {
 		base = "https://openlibrary.org"
 	}
-	q := url.Values{"title": {title}, "limit": {"6"}, "fields": {"title,author_name,cover_i,isbn"}}
+	q := url.Values{"title": {title}, "limit": {"15"}, "fields": {"title,author_name,cover_i,isbn"}}
 	if lastName(author) != "" {
-		q.Set("author", author)
+		q.Set("author", mainAuthor(author)) // "Rob Knight with Brendan Buhler" is searched as Rob Knight
 	}
 	var res struct {
 		Docs []struct {
@@ -56,7 +56,7 @@ func (c Cache) googleCoverURL(ctx context.Context, title, author string, refused
 	}
 	q := "intitle:" + title
 	if lastName(author) != "" {
-		q += " inauthor:" + author
+		q += " inauthor:" + mainAuthor(author)
 	}
 	var res struct {
 		Items []struct {

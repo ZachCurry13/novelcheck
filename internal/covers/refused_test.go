@@ -43,7 +43,7 @@ func TestRefusedSearchIsNoMiss(t *testing.T) {
 	}))
 	defer fake.Close()
 	defer enrich.ResumeGoogle()
-	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, GoogleURL: fake.URL}
+	c := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, AmazonURL: fake.URL, GoogleURL: fake.URL}
 	r := c.SearchBook(context.Background(), "book-1", "Frogs at Noontide: A Quirky YA Frog Prince Retelling", "Janeen Ippolito")
 	if r.OK || !r.Refused || r.ISBN != "9781234567897" {
 		t.Fatalf("refused, with the ISBN: %+v", r)
@@ -56,7 +56,7 @@ func TestRefusedSearchIsNoMiss(t *testing.T) {
 	if googleAsked != asked || !r.Refused {
 		t.Fatalf("Google is left alone for the day (asked %d more times)", googleAsked-asked)
 	}
-	nog := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, GoogleURL: fake.URL, NoGoogle: true}
+	nog := Cache{Dir: t.TempDir(), SearchURL: fake.URL, OpenLibraryURL: fake.URL, AmazonURL: fake.URL, GoogleURL: fake.URL, NoGoogle: true}
 	if r := nog.SearchBook(context.Background(), "book-3", "Nothing Here", "Nobody"); r.Refused || !nog.Missed("book-3") {
 		t.Fatalf("without Google a plain miss is remembered: %+v", r)
 	}

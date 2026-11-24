@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"path/filepath"
 
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/hardcover"
@@ -14,7 +15,10 @@ import (
 // answer (Google's daily limit, the network), so "nothing found" is not the last word.
 func (s *Server) findOneCover(ctx context.Context, cv covers.Cache, hc *hardcover.Client, b store.BriefBook, backup map[string]string) (ok, refused bool) {
 	_, _, ok = s.Covers.OpenLibrary(ctx, firstNonEmpty(b.ISBN, isbn10(b.ASIN))) // the ISBN's cover, when it has one
-	if !ok {                                                                    // the cover inside the book's own file, or Amazon's by ASIN: exact, so before any search by title
+	if !ok && b.ISBN != "" {                                                    // the same ISBN on Amazon (its ISBN-10)
+		ok = s.Covers.ByISBN(ctx, b.ISBN, filepath.Join(s.Covers.Dir, s.coverName(b.ID)+".jpg"), filepath.Join(s.Covers.Dir, s.coverName(b.ID)+".jpg.none"))
+	}
+	if !ok { // the cover inside the book's own file, or Amazon's by ASIN: exact, so before any search by title
 		ok = s.extraCover(ctx, cv, b, backup)
 	}
 	sug := s.Store.TitleSuggestion(b.ID)
