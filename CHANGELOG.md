@@ -12,6 +12,9 @@ becomes the release notes for that version and is shown in the app under
 - **Genres come from Hardcover, not the AI.** The AI no longer fills in genres by itself, and the Admin banner now offers **Look them up on Hardcover now** instead of "Fill in with AI". Books with no genre are looked at on Hardcover again once (a few hundred every few hours, by itself).
 - **Find covers is clearer.** The Fix titles and covers window now says in words what the cover finder is doing (and updates while it works), and what it found last time.
 
+### 📲 A link to hand out for the Kindle app
+- **`/kindleapp`** (any capitals: `/Kindleapp` works): a page that asks the person to sign in, then offers the Kindle app already set up for their account, with a box for the Kindle's name and the install steps. Nothing to type on the Kindle. It says plainly that the Kindle must be jailbroken with KindleForge and that the file goes on over a cable from a computer (a Kindle can't download and install it by itself). Use `https://<your NovelCheck address>/Kindleapp`.
+
 ## [2.1.3]
 
 ### 🔎 Audiobooks no longer count as "no cover"

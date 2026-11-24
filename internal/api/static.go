@@ -32,6 +32,9 @@ func (s *Server) serveStatic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p, build := stripBuild(r.URL.Path)
+	if strings.EqualFold(strings.Trim(p, "/"), "kindleapp") { // the short address to hand out: sign in, download the Kindle app
+		p = "/kindleapp.html"
+	}
 	name := strings.TrimPrefix(path.Clean(p), "/")
 	if name == "" {
 		name = "index.html"

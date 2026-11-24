@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/api"
@@ -254,5 +255,34 @@ func TestHealthOneLinePerKindle(t *testing.T) {
 	}
 	if got := len(st.AllDevices()); got != 1 {
 		t.Fatalf("one Kindle left: %d", got)
+	}
+}
+
+// /kindleapp (in any capitals) is a page anyone can open; the zip behind it is made for whoever signed in.
+func TestKindleAppPage(t *testing.T) {
+	srv, _ := setupWith(t, func(s *api.Server) {
+		s.Web = fstest.MapFS{"index.html": {Data: []byte("<html>app</html>")}, "kindleapp.html": {Data: []byte("<title>NovelCheck for your Kindle</title>")}}
+	})
+	for _, p := range []string{"/kindleapp", "/Kindleapp", "/KindleApp/"} {
+		res, err := http.Get(srv.URL + p)
+		if err != nil || res.StatusCode != 200 {
+			t.Fatalf("%s: %v %v", p, err, res)
+		}
+		b := make([]byte, 400)
+		n, _ := res.Body.Read(b)
+		res.Body.Close()
+		if !strings.Contains(string(b[:n]), "NovelCheck for your Kindle") {
+			t.Fatalf("%s isn't the Kindle app page: %q", p, b[:n])
+		}
+	}
+	admin := login(t, srv, "admin", "adminpass1")
+	req, _ := http.NewRequest("GET", srv.URL+"/api/me/kindle-app.zip?name=Jenna%27s+Paperwhite", nil)
+	res, err := admin.http.Do(req)
+	if err != nil || res.StatusCode != 200 || !strings.Contains(res.Header.Get("Content-Type"), "zip") {
+		t.Fatalf("the zip: %v %v", err, res)
+	}
+	res.Body.Close()
+	if res, _ := http.Get(srv.URL + "/api/me/kindle-app.zip"); res.StatusCode != 401 {
+		t.Fatalf("the zip needs a sign-in: %d", res.StatusCode)
 	}
 }
