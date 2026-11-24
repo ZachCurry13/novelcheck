@@ -56,14 +56,18 @@ function paintDetails(b) {
     if (b.summary) d.appendChild(el("p", "", b.summary));
     var acts = el("div", "actions");
     if (b.url) acts.appendChild(downloadButton(b, true));
-    var ns = el("button", "", b.queue ? "On your Nightstand" : "Add to Nightstand");
-    ns.disabled = !!b.queue;
+    var onNs = !!b.queue; // the button adds the book to the Nightstand, or takes it off again
+    var ns = el("button", "", onNs ? "Remove from Nightstand" : "Add to Nightstand");
     ns.onclick = function () {
-      api("POST", "/kosync/plugin/nightstand", { book_id: b.id }, function (err2) {
+      ns.disabled = true;
+      api("POST", "/kosync/plugin/nightstand" + (onNs ? "/remove" : ""), { book_id: b.id }, function (err2) {
+        ns.disabled = false;
         if (err2) return note(err2);
-        ns.textContent = "On your Nightstand";
-        ns.disabled = true;
-        logLine("added to the Nightstand: " + b.title);
+        onNs = !onNs;
+        ns.textContent = onNs ? "Remove from Nightstand" : "Add to Nightstand";
+        note(onNs ? "Added to your Nightstand." : "Taken off your Nightstand.");
+        if (!onNs) dropFromNightstand(b.id);
+        logLine((onNs ? "added to" : "removed from") + " the Nightstand: " + b.title);
       });
     };
     acts.appendChild(ns);
@@ -153,4 +157,20 @@ function pickCover(b) {
     tail.appendChild(reset);
     m.appendChild(tail);
   });
+}
+
+// dropFromNightstand takes a book out of the Nightstand list on screen and in the saved copy, so it does not come back
+// until the next refresh says so.
+function dropFromNightstand(id) {
+  var keep = [];
+  var saved = cachedList("up-next");
+  if (saved && saved.books) {
+    for (var i = 0; i < saved.books.length; i++) if (saved.books[i].id !== id) keep.push(saved.books[i]);
+    cacheList("up-next", keep, saved.header);
+  }
+  if (state.list === "up-next") {
+    var rest = [];
+    for (var j = 0; j < state.books.length; j++) if (state.books[j].id !== id) rest.push(state.books[j]);
+    state.books = rest;
+  }
 }

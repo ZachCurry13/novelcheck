@@ -49,6 +49,17 @@ func (s *Store) Enqueue(userID, bookID int64) error {
 	return err
 }
 
+// HideQueuedBook takes a book off someone's Nightstand the way Hide does: it stays in the table, hidden, so the
+// e-reader does not put it back by itself (Enqueue shows it again). It says whether the book was on the list.
+func (s *Store) HideQueuedBook(userID, bookID int64) bool {
+	res, err := s.DB.Exec(`UPDATE queue_items SET hidden = 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND book_id = ?`, userID, bookID)
+	if err != nil {
+		return false
+	}
+	n, _ := res.RowsAffected()
+	return n > 0
+}
+
 // EnqueueAuto adds a book the e-reader has (status "queued", or "reading" when
 // it has been started) unless it is already in the list, hidden or not.
 // It says whether it was added.

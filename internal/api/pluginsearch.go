@@ -155,7 +155,27 @@ func (s *Server) handlePluginInfo(w http.ResponseWriter, r *http.Request) {
 	kosyncJSON(w, http.StatusOK, out)
 }
 
-// handlePluginNightstand: POST /kosync/plugin/nightstand {"book_id": 12}.
+// handlePluginNightstandRemove: POST /kosync/plugin/nightstand/remove {"book_id": 12} takes a book off the Nightstand (hidden, so the e-reader does not add it back).
+func (s *Server) handlePluginNightstandRemove(w http.ResponseWriter, r *http.Request) {
+	u := s.kosyncUser(w, r)
+	if u == nil {
+		return
+	}
+	var body struct {
+		BookID int64 `json:"book_id"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).Decode(&body); err != nil || body.BookID <= 0 {
+		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "which book?"})
+		return
+	}
+	if !s.Store.HideQueuedBook(u.ID, body.BookID) {
+		kosyncJSON(w, http.StatusNotFound, map[string]string{"message": "that book isn't on your Nightstand"})
+		return
+	}
+	kosyncJSON(w, http.StatusOK, map[string]string{"queue": "removed"})
+}
+
+// handlePluginNightstand: POST /kosync/plugin/nightstand {"book_id"} adds a book to the Nightstand.
 func (s *Server) handlePluginNightstand(w http.ResponseWriter, r *http.Request) {
 	u := s.kosyncUser(w, r)
 	if u == nil {

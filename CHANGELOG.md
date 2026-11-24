@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.107.0]
+
+### 📖 Kindle app 1.9.1: remove a book from the Nightstand
+- On a book's page, the Nightstand button now reads **Remove from Nightstand** when the book is on it (and **Add to Nightstand** when it isn't). Removing hides the book the way Hide does on the web page: it stays in the library and the Kindle doesn't add it back by itself. Adding it again brings it back.
+
 ## [1.106.0]
 
 ### 🖼️ More covers found
