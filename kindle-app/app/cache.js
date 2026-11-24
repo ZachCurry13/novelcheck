@@ -101,7 +101,7 @@ function retryPending() {
     afterDownload = function () {
       retrying = false;
       if (got[b.id]) { dropPending(b.id); setTimeout(retryPending, 500); } else retryAt = new Date().getTime() + 30000;
-      if (state.list) rows();
+      if (state.list && !$("lists").hidden && !$("filters").hidden) rows(); // only when a list is what is on screen
     };
     download(b, { disabled: false, textContent: "" });
   });

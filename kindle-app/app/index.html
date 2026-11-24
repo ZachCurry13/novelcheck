@@ -9,21 +9,25 @@
 </head>
 <body>
 <header>
-  <div class="brand"><img id="logo" src="logo.png" alt=""><div><h1>NovelCheck</h1><span id="ver" class="meta"></span><br><span id="who" class="meta"></span></div></div>
-  <button id="update" class="main" hidden></button>
-  <div class="sync"><button id="report">Sync now</button><span id="synced" class="meta"></span></div>
+  <button id="navbtn">☰ Menu</button>
+  <button id="report" class="sync">Sync now</button>
+  <div class="mid"><h1 id="title">NovelCheck</h1><span id="synced" class="meta"></span></div>
 </header>
-<nav>
-  <form id="find"><input id="q" type="text" placeholder="Title or author"><button>Search</button></form>
-  <div class="tabs"><button data-list="up-next">Nightstand</button><button data-list="new">New</button><button data-list="discover">Discover</button><button data-list="collections">Collections</button><button data-list="kindle-mine">My Kindle</button></div>
-  <div class="tabs pills"><span class="meta">Spice level:</span> <button data-lvl="">All</button><button data-lvl="0">0</button><button data-lvl="1">1</button><button data-lvl="2">2</button><button data-lvl="3">3</button><button data-lvl="4">4</button><button data-lvl="5">5</button></div>
-</nav>
 <p id="status" class="meta" hidden></p>
 <p id="note"></p>
-<p class="tabs"><button id="dlall" hidden>Download all of my Nightstand</button></p>
-<main id="main"></main>
-<footer id="pages"><button id="prev">Prev</button><span id="page"></span><button id="next">Next</button></footer>
-<p class="help"><button id="check" class="small">Something not working? Send a check</button></p>
+<section id="menu" hidden>
+  <div class="brand"><img id="logo" src="logo.png" alt=""><div><h1>NovelCheck</h1><span id="ver" class="meta"></span><br><span id="who" class="meta"></span></div></div>
+  <button id="update" class="main" hidden></button>
+  <form id="find"><input id="q" type="text" placeholder="Title or author"><button>Search</button></form>
+  <div class="tabs menutabs"><button data-list="up-next">Nightstand</button><button data-list="new">New</button><button data-list="discover">Discover</button><button data-list="collections">Collections</button><button data-list="kindle-mine">My Kindle</button></div>
+  <p class="help"><button id="check" class="small">Something not working? Send a check</button></p>
+</section>
+<section id="lists">
+  <div id="filters"><div class="tabs pills"><span class="meta">Spice level:</span> <button data-lvl="">All</button><button data-lvl="0">0</button><button data-lvl="1">1</button><button data-lvl="2">2</button><button data-lvl="3">3</button><button data-lvl="4">4</button><button data-lvl="5">5</button></div>
+  <p class="tabs"><button id="dlall" hidden>Download all of my Nightstand</button></p></div>
+  <main id="main"></main>
+  <footer id="pages"><button id="prev">Prev</button><span id="page"></span><button id="next">Next</button></footer>
+</section>
 <div id="pager"><button id="pgup" aria-label="Page up">▲</button><button id="pgdn" aria-label="Page down">▼</button></div>
 <script src="kindle.js"></script>
 <script src="cache.js"></script>

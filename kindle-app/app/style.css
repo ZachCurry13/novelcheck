@@ -3,11 +3,13 @@
    showed every flex row stacked in one column): floats, inline-blocks and a block that fills the space between floats. */
 body { margin: 0; padding: 0 1rem 1rem; background: #fff; color: #000; font-family: sans-serif; font-size: 1.25rem; }
 header { overflow: hidden; border-bottom: 0.125rem solid #000; padding: 0.5rem 0; }
-.brand { float: left; }
+header #navbtn { float: left; }
+header .sync { float: right; }
+header .mid { overflow: hidden; text-align: center; }
+header h1 { font-size: 1.5rem; }
+.brand { overflow: hidden; margin: 0.5rem 0; }
 .brand img, .brand div { display: inline-block; vertical-align: middle; }
 .brand img { width: 2.5rem; height: 2.5rem; margin-right: 0.625rem; }
-.sync { float: right; text-align: right; }
-.sync .meta { display: block; }
 .pills { margin-top: 0.5rem; }
 .pills button { min-height: 2.5rem; font-size: 1.0625rem; }
 .thumb { float: left; width: 3.75rem; height: 5.625rem; margin-right: 0.75rem; border: 0.0625rem solid #000; background: #eee; }
@@ -47,4 +49,10 @@ footer[hidden], button[hidden] { display: none; }
 .book .actions > * { display: inline-block; margin-bottom: 0.5rem; vertical-align: middle; }
 .help { margin: 0.5rem 0 0; text-align: center; }
 button.small { font-size: 1rem; border-width: 0.0625rem; }
-header button { margin-left: 0.5rem; }
+header button { margin: 0 0.25rem; }
+
+.menutabs button { display: block; width: 100%; margin: 0 0 0.5rem; text-align: left; }
+#menu form { margin-top: 0.75rem; }
+.cands .cand { float: left; width: 46%; margin: 0 4% 0.75rem 0; }
+.cands img { width: 100%; border: 0.0625rem solid #000; }
+.cands button { width: 100%; margin-top: 0.25rem; }

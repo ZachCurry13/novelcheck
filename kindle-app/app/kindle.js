@@ -37,8 +37,14 @@ function api(method, path, body, done) {
 // come by XHR as bytes turned into a data: address (the Kindle's browser has no blob: addresses for pictures). One
 // at a time, so a list of covers doesn't crowd a slow Wi-Fi. A typed array isn't passed to apply (old engines refuse).
 var coverQueue = [], coverBusy = false, coverLogged = 0;
+var coverVer = {}; // books whose cover was just changed: a new address so the old picture is not reused
 function cover(img, id, size) {
   coverQueue.push({ img: img, id: id, size: size || "s" });
+  nextCover();
+}
+// coverFrom shows a picture from another address of NovelCheck (a candidate cover's preview) the same way.
+function coverFrom(img, path) {
+  coverQueue.push({ img: img, id: "x", size: "s", path: path });
   nextCover();
 }
 
@@ -49,6 +55,7 @@ function nextCover() {
   coverBusy = true;
   var img = job.img, id = job.id;
   var done = function (why) {
+    if (why && job.path) { logLine("cover preview: " + why); coverBusy = false; return nextCover(); } // no file fallback for a preview
     if (why) { logLine("cover " + id + ": " + why + " (trying the Kindle's own download)"); return fileCover(job, function (ok) {
       if (!ok && img.parentNode && img.className !== "thumb") img.parentNode.removeChild(img);
       coverBusy = false;
@@ -59,7 +66,7 @@ function nextCover() {
   };
   if (!window.Uint8Array || !window.btoa) return done("this browser can't show covers (no Uint8Array or btoa)");
   var x = new XMLHttpRequest();
-  x.open("GET", NC.server + "/kosync/plugin/cover/" + id + "?size=" + job.size, true);
+  x.open("GET", NC.server + (job.path || "/kosync/plugin/cover/" + id + "?size=" + job.size + (coverVer[id] ? "&v=" + coverVer[id] : "")), true);
   x.setRequestHeader("x-auth-user", NC.user);
   x.setRequestHeader("x-auth-key", NC.key);
   x.responseType = "arraybuffer";

@@ -23,6 +23,9 @@ function details(id) {
 function paintDetails(b) {
   var id = b.id;
   {
+    showLists(false);
+    backTo = function () { rows(); };
+    paintNav("Book");
     window.scrollTo(0, 0);
     var m = $("main");
     m.innerHTML = "";
@@ -64,12 +67,12 @@ function paintDetails(b) {
       });
     };
     acts.appendChild(ns);
+    var cv = el("button", "", "Change cover");
+    cv.onclick = function () { pickCover(b); };
+    acts.appendChild(cv);
     var fin = el("button", "", "I finished it");
     fin.onclick = function () { finishPanel(b, d); };
     acts.appendChild(fin);
-    var back = el("button", "", "Back");
-    back.onclick = rows;
-    acts.appendChild(back);
     d.appendChild(acts);
     m.appendChild(d);
   }
@@ -94,4 +97,60 @@ function finishPanel(b, d) {
     })(n);
   }
   d.appendChild(p);
+}
+
+// pickCover: the covers NovelCheck found for the book, two across; tapping "Use this" makes it your cover on every
+// screen (and, once the book is downloaded, its tile in the Kindle's library). "Back to the usual cover" undoes it.
+function pickCover(b) {
+  note("Looking for covers…");
+  api("GET", "/kosync/plugin/cover-options/" + b.id, null, function (err, data) {
+    if (err) return note(err);
+    var list = (data && data.candidates) || [];
+    note(list.length ? "" : "No other covers found for this book.");
+    showLists(false);
+    backTo = function () { details(b.id); };
+    paintNav("Choose a cover");
+    window.scrollTo(0, 0);
+    var m = $("main");
+    m.innerHTML = "";
+    $("pages").hidden = true;
+    var box = el("div", "cands");
+    for (var i = 0; i < list.length; i++) {
+      (function (c) {
+        var d = el("div", "cand");
+        var img = el("img");
+        img.alt = "";
+        d.appendChild(img);
+        coverFrom(img, "/kosync/plugin/cover-preview?u=" + encodeURIComponent(c.url));
+        var use = el("button", "", "Use this");
+        use.onclick = function () {
+          use.disabled = true;
+          use.textContent = "Saving…";
+          api("POST", "/kosync/plugin/cover", { book_id: b.id, url: c.url }, function (e2) {
+            if (e2) { use.disabled = false; use.textContent = "Use this"; return note(e2); }
+            coverVer[b.id] = new Date().getTime();
+            logLine("cover chosen for " + b.title);
+            note("Cover changed.");
+            details(b.id);
+          });
+        };
+        d.appendChild(use);
+        box.appendChild(d);
+      })(list[i]);
+    }
+    m.appendChild(box);
+    var reset = el("button", "", "Back to the usual cover");
+    reset.onclick = function () {
+      api("POST", "/kosync/plugin/cover", { book_id: b.id, reset: true }, function (e3) {
+        if (e3) return note(e3);
+        coverVer[b.id] = new Date().getTime();
+        note("Back to the usual cover.");
+        details(b.id);
+      });
+    };
+    var tail = el("div", "actions");
+    tail.style.clear = "both";
+    tail.appendChild(reset);
+    m.appendChild(tail);
+  });
 }

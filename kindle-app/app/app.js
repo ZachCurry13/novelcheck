@@ -6,6 +6,29 @@ try { got = JSON.parse(localStorage.getItem("nc-got")) || {}; } catch (e) {}
 
 function $(id) { return document.getElementById(id); }
 function note(text) { $("note").textContent = text || ""; }
+
+// ----- where you are: the top bar has ☰ Menu at the left (on a list) or ‹ Back (inside a book, the menu, a collection)
+var backTo = null; // what ‹ Back does; null on a list, where the button opens the menu
+var TITLES = { "up-next": "Nightstand", "new": "New", "discover": "Discover", "collections": "Collections", "kindle-mine": "My Kindle", "search": "Search" };
+function paintNav(title) {
+  $("navbtn").textContent = backTo ? "‹ Back" : "☰ Menu";
+  $("title").textContent = title || "NovelCheck";
+}
+function showLists(listView) { // listView: the filters and the page buttons belong to a list, not to a book
+  $("menu").hidden = true;
+  $("lists").hidden = false;
+  $("filters").hidden = !listView;
+}
+function openMenu() {
+  $("lists").hidden = true;
+  $("menu").hidden = false;
+  note("");
+  backTo = function () { backTo = null; rows(); };
+  paintNav("Menu");
+  window.scrollTo(0, 0);
+}
+// goBack: a book's page returns to the list it was opened from
+function goBack() { if (backTo) backTo(); else openMenu(); }
 // setOffline shows (or clears) the line that says there is no connection and which saved copy is on screen.
 function setOffline(on, at) {
   state.offline = on;
@@ -43,6 +66,7 @@ function paintSynced() {
 
 function show(list, query) {
   state.list = list;
+  showLists(true);
   var tabs = document.querySelectorAll(".tabs button[data-list]");
   var tab = list === "collection" ? "collections" : list; // a collection's books stay under Collections
   for (var i = 0; i < tabs.length; i++) tabs[i].className = tabs[i].getAttribute("data-list") === tab ? "on" : "";
@@ -99,6 +123,9 @@ function offline(err) {
 }
 
 function rows() {
+  showLists(true);
+  backTo = state.list === "collection" ? function () { show("collections"); } : null;
+  paintNav(state.list === "collection" ? (state.header || "Collection").split(":")[0] : TITLES[state.list]);
   window.scrollTo(0, 0);
   var m = $("main");
   m.innerHTML = "";
@@ -108,9 +135,6 @@ function rows() {
   if (state.list === "collection") { // one collection: its name, and the way back
     var head = el("div", "sect", state.header || "Collection");
     m.appendChild(head);
-    var back = el("button", "", "‹ All collections");
-    back.onclick = function () { show("collections"); };
-    m.appendChild(back);
   }
   var last = "";
   for (var i = 0; i < part.length; i++) {
@@ -301,6 +325,9 @@ function downloadAll() {
 function showLeft(list) {
   var m = $("main");
   m.innerHTML = "";
+  showLists(false);
+  backTo = function () { rows(); };
+  paintNav("Left your Kindle");
   $("pages").hidden = true;
   m.appendChild(el("h2", "", "These left your Kindle"));
   m.appendChild(el("p", "meta", "Keep them in NovelCheck, or remove them. Their rating stays either way."));
@@ -341,6 +368,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!NC.server) return note("This copy has no settings. Download it again from NovelCheck.");
   // its own name ("Zach Paperwhite (Amazon reader)"), so the plugin's report of the same Kindle is never replaced
   if (!/ \(Amazon reader\)$/.test(NC.device)) NC.device = (NC.device || "Kindle") + " (Amazon reader)";
+  $("navbtn").onclick = goBack;
   $("find").onsubmit = function (e) {
     e.preventDefault();
     var q = $("q").value.replace(/^\s+|\s+$/g, "");
