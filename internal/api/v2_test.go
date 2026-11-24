@@ -224,3 +224,35 @@ func TestTidyBackups(t *testing.T) {
 		t.Fatal("the plugin's copy must stay")
 	}
 }
+
+// Health says everything about one Kindle on one line (not a line per problem), and a Kindle that stopped reporting can be forgotten.
+func TestHealthOneLinePerKindle(t *testing.T) {
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = t.TempDir() })
+	admin := login(t, srv, "admin", "adminpass1")
+	u, _ := st.UserByName("admin")
+	for _, d := range []string{"Old Kindle (Amazon reader)", "New Kindle (Amazon reader)"} {
+		_, _ = st.SaveDeviceBooks(u.ID, d, []store.DeviceBook{{Filename: "x.epub", Title: "X"}})
+		st.SaveDeviceInfo(u.ID, d, "app 1.0.0")
+	}
+	_, _ = st.DB.Exec(`UPDATE device_info SET reported_at = ? WHERE device = 'Old Kindle (Amazon reader)'`, time.Now().Add(-20*24*time.Hour).Unix())
+	_, h := admin.do("GET", "/api/admin/health", nil, false)
+	var kindles []map[string]any
+	for _, it := range h["items"].([]any) {
+		m := it.(map[string]any)
+		if strings.Contains(m["title"].(string), "Kindle") {
+			kindles = append(kindles, m)
+		}
+	}
+	if len(kindles) != 2 {
+		t.Fatalf("one line per Kindle, not one per problem: %v", kindles)
+	}
+	if res, _ := admin.do("POST", "/api/admin/devices/forget", map[string]any{"user_id": u.ID, "device": "New Kindle (Amazon reader)"}, true); res.StatusCode != 409 {
+		t.Fatalf("a Kindle that just reported can't be forgotten: %d", res.StatusCode)
+	}
+	if res, out := admin.do("POST", "/api/admin/devices/forget", map[string]any{"user_id": u.ID, "device": "Old Kindle (Amazon reader)"}, true); res.StatusCode != 200 {
+		t.Fatalf("forget: %d %v", res.StatusCode, out)
+	}
+	if got := len(st.AllDevices()); got != 1 {
+		t.Fatalf("one Kindle left: %d", got)
+	}
+}

@@ -105,6 +105,7 @@ func (s *Server) FillRatings(ctx context.Context, limit int) int {
 }
 
 const hcTitlesKey = "hc_titles_pass"
+const hcGenresKey = "hc_genres_pass"
 
 // RatingLoop fills ratings 12 minutes after start, then every 6 hours, 800 books a round.
 func (s *Server) RatingLoop(ctx context.Context) {
@@ -119,6 +120,10 @@ func (s *Server) RatingLoop(ctx context.Context) {
 		if s.Store.Setting(hcTitlesKey) != "1" { // the pass learned the true titles: look at every book again
 			s.Store.RecheckHardcover()
 			_ = s.Store.SetSetting(hcTitlesKey, "1")
+		}
+		if s.Store.Setting(hcGenresKey) != "1" { // genres from Hardcover (2.1.4): the books without one are looked at again
+			s.Store.RecheckGenreless()
+			_ = s.Store.SetSetting(hcGenresKey, "1")
 		}
 		if n := s.FillRatings(ctx, 800); n > 0 {
 			log.Printf("hardcover ratings: %d books rated", n)

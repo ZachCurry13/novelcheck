@@ -105,6 +105,8 @@ export async function renderAdmin(view, state) {
     if (!act) return;
     if (act === "problem-reports") {
       import("./problems.js").then((m) => m.openProblemReports());
+    } else if (act === "genres-hardcover") {
+      await attempt(() => post("/api/admin/genres/hardcover"), "Looking the books up on Hardcover in the background");
     } else if (act === "genres-fill" || act === "genres-stop") {
       if (act === "genres-fill" && !confirm("Fill in genres for books with no Calibre tags? It runs in the background and can be stopped.")) return;
       await attempt(() => post(`/api/admin/genres/${act === "genres-fill" ? "fill" : "stop"}`), act === "genres-fill" ? "Filling in genres…" : "Stopping after the current batch");

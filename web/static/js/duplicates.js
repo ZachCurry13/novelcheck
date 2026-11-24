@@ -37,7 +37,8 @@ function bookHTML(g, canRemove) {
     <p class="text-xs text-slate-400">Suggested to keep #${esc(g.keep)}: ${esc(g.why || "it is the best copy")}.</p>
     <div class="dup-copies">${g.entries.map((e) => copyHTML(g, e, canRemove)).join("")}</div>
     <button type="button" data-compare class="btn-ghost py-1 text-sm">Compare what Calibre has for each</button>
-    ${canRemove ? `<p data-plan class="text-sm"></p><button type="button" data-one class="${g.sure ? "btn-secondary" : "btn-ghost"} py-1 text-sm">Remove the other ${others === 1 ? "copy" : `${others} copies`}${g.sure ? "" : " anyway"}</button>` : ""}
+    ${canRemove ? `<p data-plan class="text-sm"></p><div data-splitbox class="hidden space-y-1"><button type="button" data-split class="btn-secondary py-1 text-sm">These are different books: split them, and remember it</button>
+      <p class="text-xs text-slate-400">The ticked “Not a copy” entries become a book of their own and stop being listed here. Nothing is removed from Calibre.</p></div><button type="button" data-one class="${g.sure ? "btn-secondary" : "btn-ghost"} py-1 text-sm">Remove the other ${others === 1 ? "copy" : `${others} copies`}${g.sure ? "" : " anyway"}</button>` : ""}
   </section>`;
 }
 
@@ -88,6 +89,7 @@ export async function renderDuplicates(view, state) {
     $("[data-plan]", card).innerHTML = gone.length ? `Stays in Calibre: <b>${stay.map(tag).join(", ")}</b>. Goes to Calibre's recycle bin: <b>${gone.map(tag).join(", ")}</b>.` : "Nothing will be taken out.";
     one.textContent = gone.length ? `Remove ${gone.map(tag).join(", ")}${g.sure ? "" : " anyway"}` : "Nothing to remove";
     one.disabled = !gone.length;
+    $("[data-splitbox]", card).classList.toggle("hidden", !$$("[data-also]:checked", card).length);
   };
   const say = (text, good = true) => (result.innerHTML = `<div class="card mb-4 ${good ? "text-emerald-200" : "text-amber-200"}">${esc(text)}</div>`);
   const bar = () => {
@@ -151,6 +153,20 @@ export async function renderDuplicates(view, state) {
       } catch {
         prompt("Copy this into Calibre's search bar:", search);
       }
+      return;
+    }
+    const split = e.target.closest("[data-split]");
+    if (split) {
+      const card = split.closest("[data-book]");
+      const ids = $$("[data-also]:checked", card).map((c) => c.value);
+      split.disabled = true;
+      split.textContent = "Splitting… (Calibre is read again)";
+      const r = await attempt(() => post("/api/admin/calibre/duplicates/split", { calibre_ids: ids }));
+      if (!r) { split.disabled = false; split.textContent = "These are different books: split them, and remember it"; return; }
+      say(`✓ Split into separate books. Calibre is being read again; the list updates in a moment.`);
+      setTimeout(load, 8000);
+      card.remove();
+      bar();
       return;
     }
     const cmp = e.target.closest("[data-compare]");

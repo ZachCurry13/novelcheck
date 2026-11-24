@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/aitools"
 	"github.com/zachcurry13/novelcheck/internal/analyzer"
@@ -54,12 +53,10 @@ func (b *background) start(ctx context.Context) {
 	}, b.worker.Enqueue) // Stuff Your Kindle days, books free right now and BookBub's email, every 3 hours
 	go b.aiTools.Loop(ctx) // daily: newer versions of the Ollama models in use
 	go b.syncer.Loop(ctx)
-	go b.deep.Run(ctx)                  // Deep Scans: full-text reading of chosen books, one at a time
-	go b.discover.Loop(ctx)             // outside book lists refreshed daily; their books rated a few dozen a day
-	go audiobookshelf.Loop(ctx, b.st)   // the audiobook library, every few hours
-	go hardcover.Loop(ctx, b.st)        // everyone's Hardcover shelves, hourly
-	go b.genres.Loop(ctx, func() bool { // genres for new books, on the same switch and hours as automatic rating
-		return analyzer.AutoRateOn(b.st) && analyzer.RateHoursOpen(b.st, time.Now())
-	})
+	go b.deep.Run(ctx)                // Deep Scans: full-text reading of chosen books, one at a time
+	go b.discover.Loop(ctx)           // outside book lists refreshed daily; their books rated a few dozen a day
+	go audiobookshelf.Loop(ctx, b.st) // the audiobook library, every few hours
+	go hardcover.Loop(ctx, b.st)      // everyone's Hardcover shelves, hourly
+	// Genres come from Calibre's tags and from Hardcover (api.RatingLoop); the AI no longer fills them in by itself.
 	log.Printf("background work started")
 }

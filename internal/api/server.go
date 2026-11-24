@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 	"sync"
+	"sync/atomic"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -56,6 +57,7 @@ type Server struct {
 	codeGuesses *loginLimiter   // wrong sync codes (KOReader, WebDAV, plugin)
 	formats     formatJob       // format cleanup's background job
 	refreshMu   sync.Mutex      // one Calibre re-read from Library cleanup at a time
+	ratingBusy  atomic.Bool     // a Hardcover look-up round started by hand is running
 	cleanup     cleanupCache    // the Library cleanup summary, kept while the library is unchanged
 	trial       trialJob        // "try the new rules on 20 books" (trial_handlers.go)
 	missing     missingCache    // the books with no cover, kept a minute (coverfinder.go)

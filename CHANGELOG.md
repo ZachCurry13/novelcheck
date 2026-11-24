@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.4]
+
+### 🔧 From your list
+- **Health: one line per Kindle.** Jenna's name showed four times because each Kindle's problems (out of date, no backup, not reporting) were separate lines, and she has an old Kindle entry that never reports. Now each Kindle is one line with everything about it, and a Kindle that hasn't reported for two weeks has **Forget this Kindle** (main admin; its backup files stay).
+- **Duplicates: "These are different books: split them, and remember it."** After ticking "Not a copy", this button makes those entries a book of their own for good. Before, the choice was forgotten and the same two copies were listed again. Nothing is removed from Calibre; Calibre is read again afterwards.
+- **Genres come from Hardcover, not the AI.** The AI no longer fills in genres by itself, and the Admin banner now offers **Look them up on Hardcover now** instead of "Fill in with AI". Books with no genre are looked at on Hardcover again once (a few hundred every few hours, by itself).
+- **Find covers is clearer.** The Fix titles and covers window now says in words what the cover finder is doing (and updates while it works), and what it found last time.
+
 ## [2.1.3]
 
 ### 🔎 Audiobooks no longer count as "no cover"

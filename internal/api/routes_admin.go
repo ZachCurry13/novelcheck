@@ -15,8 +15,9 @@ import (
 func (s *Server) adminRoutes(r chi.Router) {
 	r.Use(auth.RequireAdmin)
 
-	r.Get("/admin/health", s.handleHealth)   // 2.0: is everything working
-	r.Get("/admin/backups", s.handleBackups) // 2.0.2: the daily copies, Back up now, the main admin's download
+	r.With(ownerOnly).Post("/admin/devices/forget", s.handleForgetDevice) // a Kindle that stopped reporting
+	r.Get("/admin/health", s.handleHealth)                                // 2.0: is everything working
+	r.Get("/admin/backups", s.handleBackups)                              // 2.0.2: the daily copies, Back up now, the main admin's download
 	r.Post("/admin/backups/now", s.handleBackupNow)
 	r.Get("/admin/backups/tidy", s.handleTidyPreview) // Tidy backups: dictionaries, and files the plugin's backup holds identically
 	r.Post("/admin/backups/tidy", s.handleTidyRun)
@@ -50,6 +51,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Post("/admin/rerate/trial", s.handleTrial)
 		r.Get("/admin/genres", s.handleGenreStatus)
 		r.Post("/admin/genres/fill", s.handleGenreFill)
+		r.Post("/admin/genres/hardcover", s.handleGenreHardcover) // genres from Hardcover now (the AI no longer fills them in by itself)
 		r.Post("/admin/genres/stop", s.handleGenreStop)
 		r.Get("/admin/ollama/find", s.handleOllamaFind)
 		r.Post("/admin/ollama/pull", s.handleOllamaPull)
@@ -89,6 +91,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/calibre/removal", s.handleCalibreRemoval)
 		r.With(ownerOnly).Post("/admin/calibre/remove", s.handleCalibreRemove) // removes the real files: the main admin only
 		r.With(ownerOnly).Post("/admin/calibre/duplicates/remove", s.handleRemoveDuplicates)
+		r.With(ownerOnly).Post("/admin/calibre/duplicates/split", s.handleSplitDuplicates)
 		r.Get("/admin/calibre/trash", s.handleCalibreTrash)
 		r.Post("/admin/calibre/trash/restore", s.handleCalibreTrashRestore)
 		r.Get("/admin/calibre/server", s.handleCalibreServerGet)

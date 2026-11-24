@@ -27,9 +27,14 @@ export async function openFixBooks(onDone) {
     for (const b of cv?.books || []) book(b.id, b.title, b.author).fixes.push({ kind: "cover", what: "No cover" });
     const list = [...books.values()];
     const job = cv?.job || {}, hjob = hc?.job || {};
+    // what the cover finder is doing or did last, in words: it used to be a button that changed and nothing else
+    const jobLine = job.running ? `Finding covers: ${job.checked} of ${job.total}${job.current ? ` · now looking for “${esc(job.current)}”` : ""}${job.found ? ` · found ${job.found} so far` : ""}`
+      : job.total ? `Last time it looked at ${job.total} book${job.total === 1 ? "" : "s"} and found ${job.found}${job.skipped ? `; ${job.skipped} were skipped because they were searched this week` : ""}${job.retry ? `; ${job.retry} will be tried again (Google's daily limit)` : ""}. The books listed below have no cover on any site it searches: choose one by hand.` : "";
+    if (job.running) setTimeout(() => dlg.open && load(), 3000); // watch it work
     dlg.innerHTML = `<div class="space-y-3 p-4"><div class="flex flex-wrap items-center justify-between gap-2"><h3 class="text-lg font-semibold">Fix titles and covers (${list.length})</h3>
         <button type="button" data-close class="btn-ghost">Close</button></div>
       <p class="text-sm text-slate-400">Every book that needs something, with what the finders found. They keep looking by themselves; these buttons start them now.</p>
+      ${jobLine ? `<p class="rounded-lg bg-slate-800/60 p-2 text-sm">${jobLine}</p>` : ""}
       <p class="flex flex-wrap gap-2">${hc?.hardcover ? `<button type="button" data-fx="hc-scan" class="btn-secondary py-1 text-sm" ${hjob.running ? "disabled" : ""}>${hjob.running ? "Comparing with Hardcover…" : "Compare with Hardcover"}</button>` : `<a href="#/settings?s=connections" data-close class="btn-ghost py-1 text-sm">Connect Hardcover to compare</a>`}
         <button type="button" data-fx="covers-find" class="btn-secondary py-1 text-sm" ${job.running ? "disabled" : ""}>${job.running ? `Finding covers (${job.checked} of ${job.total})…` : "Find covers now"}</button>
         ${(tf?.fixes || []).length ? `<button type="button" data-fx="titles-all" class="btn-ghost py-1 text-sm">Apply every title (${tf.fixes.length})</button>` : ""}

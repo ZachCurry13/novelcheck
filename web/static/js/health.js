@@ -12,9 +12,16 @@ export async function renderHealth(view) {
   const d = await attempt(() => get("/api/admin/health"));
   if (!d) return;
   backups(view);
+  const host = view.querySelector("#health");
+  host.onclick = async (e) => {
+    const f = e.target.closest("[data-forget]");
+    if (!f || !confirm("Forget this Kindle? NovelCheck stops listing it. Its backup files stay.")) return;
+    if (await attempt(() => post("/api/admin/devices/forget", JSON.parse(f.dataset.forget)), "Forgotten")) renderHealth(view);
+  };
   view.querySelector("#health").innerHTML = d.items.map((i) => `<div class="card flex items-start gap-3"><span class="mt-1 shrink-0 text-xs font-semibold ${DOT[i.level]}">${WORD[i.level]}</span>
     <div class="min-w-0"><p class="font-semibold">${esc(i.title)}</p><p class="text-sm text-slate-300">${esc(i.detail)}</p>
-    ${i.fix ? `<p class="text-sm"><b>What to do:</b> ${esc(i.fix)} ${i.link ? `<a href="${esc(i.link)}" class="underline">Go</a>` : ""}</p>` : ""}</div></div>`).join("") || `<p class="text-slate-400">Nothing to report.</p>`;
+    ${i.fix ? `<p class="text-sm"><b>What to do:</b> ${esc(i.fix)} ${i.link ? `<a href="${esc(i.link)}" class="underline">Go</a>` : ""}</p>` : ""}
+    ${i.forget ? `<button type="button" data-forget='${esc(JSON.stringify(i.forget))}' class="btn-ghost mt-1 py-1 text-xs">Forget this Kindle</button>` : ""}</div></div>`).join("") || `<p class="text-slate-400">Nothing to report.</p>`;
 }
 
 // backups lists the daily copies of NovelCheck's database with "Back up now"; the main admin can download one to keep elsewhere.

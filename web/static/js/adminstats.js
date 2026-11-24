@@ -50,11 +50,9 @@ export function renderStats(view, s) {
   }
   banner($("#rerate", view), rerate !== "", rerate);
   const g = s.genres || {};
-  banner($("#genres-banner", view), canHere("ai") && (g.missing || g.running), g.running
-    ? `Filling in genres with AI… <b>${fmtNum(g.done)}</b> of ${fmtNum(g.total)} books. <button data-act="genres-stop" class="ml-2 underline">Stop</button>`
-    : `<b>${fmtNum(g.missing)}</b> library book${g.missing === 1 ? " has" : "s have"} no genre (no tags in Calibre).
-      <button data-act="genres-fill" class="btn-secondary ml-2 py-1">Fill in with AI${g.est_cost ? ` (≈ ${fmtMoney(g.est_cost)})` : ""}</button>
-      <span class="block text-xs text-slate-400">New books are filled in by themselves (same switch and hours as automatic rating), a batch of books per AI call, within your hourly token cap. Tags you add in Calibre always win.${g.error ? ` <span class="text-rose-400">Last run stopped: ${esc(g.error)}</span>` : ""}</span>`);
+  banner($("#genres-banner", view), canHere("ai") && g.missing, `<b>${fmtNum(g.missing)}</b> library book${g.missing === 1 ? " has" : "s have"} no genre yet.
+    <button data-act="genres-hardcover" class="btn-secondary ml-2 py-1">Look them up on Hardcover now</button>
+    <span class="block text-xs text-slate-400">Genres come from Calibre's tags first, then from Hardcover as it looks each book up (a few hundred every few hours, by itself). The AI doesn't make genres any more. Tags you add in Calibre always win.</span>`);
 
   const w = s.worker;
   const sync = s.calibre_last_sync;

@@ -31,3 +31,19 @@ func (s *Store) CountReviewRatings() int {
 	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM books b WHERE b.status = 'review' AND `+ownedCond)
 	return n
 }
+
+// ForgetDevice drops what NovelCheck knows of a person's e-reader (its report, its book list and its link to another
+// report). Its backup files are not touched.
+func (s *Store) ForgetDevice(userID int64, device string) error {
+	for _, q := range []string{
+		`DELETE FROM device_books WHERE user_id = ? AND device = ?`,
+		`DELETE FROM device_info WHERE user_id = ? AND device = ?`,
+		`DELETE FROM device_links WHERE user_id = ? AND device = ?`,
+		`DELETE FROM kindle_tasks WHERE user_id = ? AND device = ? AND status = 'waiting'`,
+	} {
+		if _, err := s.DB.Exec(q, userID, device); err != nil {
+			return err
+		}
+	}
+	return nil
+}

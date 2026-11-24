@@ -36,7 +36,7 @@ type coverJob struct {
 func (j *coverJob) state() coverJob {
 	j.mu.Lock()
 	defer j.mu.Unlock()
-	return coverJob{Running: j.Running, Checked: j.Checked, Found: j.Found, Total: j.Total, Current: j.Current, Note: j.Note, Free: j.Free, Retry: j.Retry}
+	return coverJob{Running: j.Running, Checked: j.Checked, Found: j.Found, Total: j.Total, Current: j.Current, Note: j.Note, Free: j.Free, Retry: j.Retry, Skipped: j.Skipped}
 }
 
 func (s *Server) coverName(id int64) string { return "book-" + strconv.FormatInt(id, 10) }

@@ -17,13 +17,19 @@ import (
 // Health: one list that says whether NovelCheck is working, from what the server already knows (no outside call), each
 // problem with what to do about it. The worst level is the page's colour: ok, warn or bad.
 
+type forgetDevice struct {
+	UserID int64  `json:"user_id"`
+	Device string `json:"device"`
+}
+
 type healthItem struct {
-	ID     string `json:"id"`
-	Level  string `json:"level"` // ok | warn | bad
-	Title  string `json:"title"`
-	Detail string `json:"detail"`
-	Fix    string `json:"fix,omitempty"`  // what to do, in words
-	Link   string `json:"link,omitempty"` // where
+	ID     string        `json:"id"`
+	Level  string        `json:"level"` // ok | warn | bad
+	Title  string        `json:"title"`
+	Detail string        `json:"detail"`
+	Fix    string        `json:"fix,omitempty"`    // what to do, in words
+	Link   string        `json:"link,omitempty"`   // where
+	Forget *forgetDevice `json:"forget,omitempty"` // a Kindle that stopped reporting can be forgotten
 }
 
 // ago says how long ago a time was, in words ("3 h", "2 days").
@@ -40,7 +46,7 @@ func ago(d time.Duration) string {
 func (s *Server) healthItems() []healthItem {
 	var out []healthItem
 	add := func(id, level, title, detail, fix, link string) {
-		out = append(out, healthItem{id, level, title, detail, fix, link})
+		out = append(out, healthItem{ID: id, Level: level, Title: title, Detail: detail, Fix: fix, Link: link})
 	}
 	// Calibre is read often; a long silence means the connection or the schedule broke
 	if s.Store.Setting(store.KeyCalibreSrvURL) != "" || s.Syncer != nil && s.Syncer.Available() {
@@ -66,18 +72,38 @@ func (s *Server) healthItems() []healthItem {
 	} else {
 		add("hardcover", "ok", "Hardcover", "Connected.", "", "")
 	}
-	// Kindles
+	// Kindles: one line each, with everything about it (not one line per problem)
 	for _, d := range s.Store.AllDevices() {
 		seen := time.Since(time.Unix(d.Reported, 0))
 		name := d.Device + " (" + d.User + ")"
-		switch {
-		case seen > 14*24*time.Hour:
-			add("kindle-"+name, "warn", name+" hasn't reported for "+ago(seen), "Its books and reading aren't being tracked.", "Open NovelCheck on it with Wi-Fi on and press Sync now.", "#/kindle")
-		case strings.HasPrefix(d.Version, "app ") && versionOlder(strings.TrimPrefix(d.Version, "app "), kindleapp.Version):
-			add("kindle-"+name, "warn", name+": Kindle app "+strings.TrimPrefix(d.Version, "app ")+" is out of date", "Newest is "+kindleapp.Version+".", "Open the app with Wi-Fi on: it updates itself.", "#/kindle")
-		case !strings.HasPrefix(d.Version, "app ") && versionOlder(d.Version, kindleplugin.Version()):
-			add("kindle-"+name, "warn", name+": KOReader plugin "+d.Version+" is out of date", "Newest is "+kindleplugin.Version()+".", "Open KOReader on it with Wi-Fi on: the plugin offers to update.", "#/kindle")
+		var issues []string
+		level := "ok"
+		stale := seen > 14*24*time.Hour
+		if stale {
+			issues = append(issues, "hasn't reported for "+ago(seen))
+			level = "warn"
 		}
+		if strings.HasPrefix(d.Version, "app ") && versionOlder(strings.TrimPrefix(d.Version, "app "), kindleapp.Version) {
+			issues = append(issues, "Kindle app "+strings.TrimPrefix(d.Version, "app ")+" is out of date (newest "+kindleapp.Version+")")
+			level = "warn"
+		} else if !strings.HasPrefix(d.Version, "app ") && versionOlder(d.Version, kindleplugin.Version()) {
+			issues = append(issues, "KOReader plugin "+d.Version+" is out of date (newest "+kindleplugin.Version()+")")
+			level = "warn"
+		}
+		if !stale && !s.hasKindleBackup(d.UserID, d.Device) {
+			issues = append(issues, "has no backup in NovelCheck")
+			level = "warn"
+		}
+		if level == "ok" {
+			continue
+		}
+		fix := "Open NovelCheck on it with Wi-Fi on, press Sync now, and update if it offers. Back it up from the app's Menu or KOReader's Copy my Kindle."
+		it := healthItem{ID: "kindle-" + name, Level: level, Title: name, Detail: strings.Join(issues, "; "), Fix: fix, Link: "#/kindle"}
+		if stale {
+			it.Forget = &forgetDevice{UserID: d.UserID, Device: d.Device}
+			it.Fix = "If this Kindle is gone or replaced, forget it (its backup files stay). Otherwise open NovelCheck on it with Wi-Fi on."
+		}
+		out = append(out, it)
 	}
 	// the same failure over and over in the background (the Deep Scan machine's program crashing, a service that refuses)
 	day := time.Now().UTC().Add(-24 * time.Hour).Format("2006-01-02 15:04:05")
@@ -103,12 +129,6 @@ func (s *Server) healthItems() []healthItem {
 				add("calibre-behind", "warn", "Calibre's Content server is behind", n.Message, "Restart the Calibre app (or its Content server) so it sees the newer books.", "")
 				break
 			}
-		}
-	}
-	// a Kindle with no copy of its books on the server
-	for _, d := range s.Store.AllDevices() {
-		if time.Since(time.Unix(d.Reported, 0)) < 14*24*time.Hour && !s.hasKindleBackup(d.UserID, d.Device) {
-			add("nobackup-"+d.Device, "warn", d.Device+" ("+d.User+") has no backup in NovelCheck", "If the Kindle is lost or reset, its books can't be put back.", "In KOReader: NovelCheck → Copy my Kindle. In the Kindle app: Menu → Back up my books.", "#/kindle")
 		}
 	}
 	// disk
@@ -200,4 +220,31 @@ func (s *Server) hasKindleBackup(userID int64, device string) bool {
 		return nil
 	})
 	return found
+}
+
+// handleForgetDevice: POST /api/admin/devices/forget {"user_id", "device"}: a Kindle that stopped reporting (14 days) is forgotten.
+func (s *Server) handleForgetDevice(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		UserID int64  `json:"user_id"`
+		Device string `json:"device"`
+	}
+	if !readJSON(w, r, &body, 2<<10) || body.UserID <= 0 || body.Device == "" {
+		writeErr(w, http.StatusBadRequest, "which Kindle?")
+		return
+	}
+	for _, d := range s.Store.AllDevices() {
+		if d.UserID == body.UserID && d.Device == body.Device {
+			if time.Since(time.Unix(d.Reported, 0)) < 14*24*time.Hour {
+				writeErr(w, http.StatusConflict, "that Kindle reported in the last two weeks; it isn't gone")
+				return
+			}
+			if err := s.Store.ForgetDevice(body.UserID, body.Device); err != nil {
+				writeStoreErr(w, err)
+				return
+			}
+			writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+			return
+		}
+	}
+	writeErr(w, http.StatusNotFound, "NovelCheck doesn't know that Kindle")
 }
