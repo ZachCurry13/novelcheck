@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.3]
+
+### 🔎 Audiobooks no longer count as "no cover"
+- An audiobook shows the square cover Audiobookshelf holds, so it isn't a book without a picture. Home's "books have no cover" and the Admin count now leave out audiobooks whose Audiobookshelf cover exists (the cover finder still tries to give them a book-shaped one). In the bug link, the "picture the app still shows" column now really checks Audiobookshelf.
+
 ## [2.1.2]
 
 ### 🔎 The bug link says what each cover-less book is

@@ -229,12 +229,34 @@ type missingCache struct {
 	ver  uint64
 }
 
+// audioPicture says whether an audiobook has the (square) cover Audiobookshelf holds: the app shows it, so the book is not
+// "without a picture", only without a book-shaped one. Asking Audiobookshelf keeps the answer on disk after the first time.
+func (s *Server) audioPicture(b store.BriefBook) bool {
+	item := s.Store.AudioItemID(b.ID)
+	if item == "" {
+		return false
+	}
+	_, _, ok := s.audioCover(context.Background(), item)
+	return ok
+}
+
+// withoutAPicture is the books the finder couldn't help that the app also shows nothing for.
+func (s *Server) withoutAPicture(books []store.BriefBook) []store.BriefBook {
+	var out []store.BriefBook
+	for _, b := range books {
+		if !s.audioPicture(b) {
+			out = append(out, b)
+		}
+	}
+	return out
+}
+
 func (s *Server) missingForPage() []store.BriefBook {
 	c := &s.missing
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if v := s.rcache.ver.Load(); !c.ok || c.ver != v || time.Since(c.at) > time.Minute {
-		c.list, c.at, c.ok, c.ver = s.MissingCovers(), time.Now(), true, v
+		c.list, c.at, c.ok, c.ver = s.withoutAPicture(s.MissingCovers()), time.Now(), true, v
 	}
 	return c.list
 }

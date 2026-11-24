@@ -218,9 +218,9 @@ func (s *Server) coverContext(m store.BriefBook) string {
 	picture := "none"
 	for _, c := range copies {
 		where = append(where, c.CatalogName+": "+orNone(c.Format))
-		if c.Source == "audiobookshelf" {
-			picture = "square audiobook cover"
-		}
+	}
+	if s.audioPicture(m) {
+		picture = "Audiobookshelf's square cover"
 	}
 	if picture == "none" && s.Store.DiscoverCoverURL(m.ID) != "" {
 		picture = "a list's cover"
