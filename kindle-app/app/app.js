@@ -417,6 +417,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!/ \(Amazon reader\)$/.test(NC.device)) NC.device = (NC.device || "Kindle") + " (Amazon reader)";
   $("navbtn").onclick = goBack;
   $("sortbtn").onclick = nextSort;
+  bindTools();
   $("find").onsubmit = function (e) {
     e.preventDefault();
     var q = $("q").value.replace(/^\s+|\s+$/g, "");

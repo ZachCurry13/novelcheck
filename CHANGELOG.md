@@ -30,6 +30,11 @@ NovelCheck 2.0 is about not having to babysit it: it tells you what needs you, c
 ### 🙋 Ask for a book
 - Anyone can ask for a book on Home. A parent says yes: the book is marked OK for kids' accounts (the same OK as "Mark as OK" on its page) and goes on that person's Nightstand. A book that isn't in the library yet is approved and stays in the admins' list until someone gets it; **Got it** then puts it on their Nightstand.
 
+### 📖 Kindle app 1.11.0: tools like the plugin's
+- **This Kindle** on the app's Menu: **Back up my books to NovelCheck** (sends the books NovelCheck doesn't have, one at a time; Amazon's own protected books are left out, and files over 95 MB are skipped), **Restore books from NovelCheck** (puts back backed-up books that aren't on the Kindle; nothing is replaced) and **Delete crash logs**.
+- **Things you ask from NovelCheck's Kindle page now work for the app too**: Back up, Delete crash logs, Download the Nightstand and the self-test. The app does them when it is opened (it can't run on the charger overnight like KOReader). The page only offers the app the ones it can do.
+- Not in the app: tidying books into a folder. Moving a book changes where the Amazon reader finds it, and it would lose its place and collections, so it stays a plugin job.
+
 ## [1.108.0]
 
 ### 📖 Kindle app 1.10.0: sort, the Kindle's ⋯ menu, fuller pages, and an "Offline" fix

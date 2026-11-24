@@ -20,6 +20,8 @@
   <button id="update" class="main" hidden></button>
   <form id="find"><input id="q" type="text" placeholder="Title or author"><button>Search</button></form>
   <div class="tabs menutabs"><button data-list="up-next">Nightstand</button><button data-list="new">New</button><button data-list="discover">Discover</button><button data-list="collections">Collections</button><button data-list="kindle-mine">My Kindle</button></div>
+  <div class="tabs menutabs tools"><p class="meta">This Kindle</p>
+    <button id="t-backup">Back up my books to NovelCheck</button><button id="t-restore">Restore books from NovelCheck</button><button id="t-crash">Delete crash logs</button></div>
   <p class="help"><button id="check" class="small">Something not working? Send a check</button></p>
 </section>
 <section id="lists">
@@ -33,6 +35,7 @@
 <script src="cache.js"></script>
 <script src="update.js"></script>
 <script src="sync.js"></script>
+<script src="tools.js"></script>
 <script src="bookpage.js"></script>
 <script src="layout.js"></script>
 <script src="app.js"></script>

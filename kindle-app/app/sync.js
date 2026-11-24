@@ -30,33 +30,42 @@ function syncNow(force) {
   });
 }
 
-// doTasks removes the Amazon store books a parent picked in NovelCheck's Kindle remote; other tasks are the plugin's.
+// doTasks does what was asked from NovelCheck's Kindle remote for this Kindle (tools.js runs each kind), then the sync goes on.
 function doTasks(said, done) {
   api("GET", "/kosync/plugin/tasks?device=" + encodeURIComponent(NC.device), null, function (err, data) {
     var tasks = [];
     var all = (!err && data && data.tasks) || [];
-    for (var i = 0; i < all.length; i++) if (all[i].kind === "remove_store") tasks.push(all[i]);
+    for (var i = 0; i < all.length; i++) if (APP_TASKS[all[i].kind]) tasks.push(all[i]);
     (function next() {
       var t = tasks.shift();
       if (!t) return done();
-      var places = {}, rm = [], missing = 0;
-      try { places = JSON.parse(stored("nc-places")) || {}; } catch (e) {}
-      var names = (t.args && t.args.filenames) || [];
-      for (var j = 0; j < names.length; j++) {
-        var p = places[names[j]];
-        if (p && p.indexOf("/mnt/us/documents/") === 0 && p.indexOf("..") < 0) rm.push("rm -f " + sh(p)); else missing++;
-      }
-      var out = "/tmp/nc-task.txt";
-      if (!rm.length || !run("rm -f " + out + "; " + rm.join("; ") + "; lipc-set-prop com.lab126.scanner doFullScan 1; echo ok > " + out + "; echo END >> " + out)) {
-        return api("POST", "/kosync/plugin/tasks/result", { id: t.id, status: "skipped", note: "None of those books were found on the Kindle." }, next);
-      }
-      waitFor(out, 60, function (text) {
-        var ok = text && text.indexOf("ok") >= 0;
-        if (ok) said.push("Removed " + rm.length + " book" + (rm.length === 1 ? "" : "s") + " (still in your Amazon library).");
-        api("POST", "/kosync/plugin/tasks/result", { id: t.id, status: ok ? "done" : "failed",
-          note: ok ? "Removed " + rm.length + (missing ? "; " + missing + " not found" : "") : "The Kindle couldn't remove them." }, next);
-      });
+      runTask(t, said, next);
     })();
+  });
+}
+
+// finishTask tells NovelCheck how a task went.
+function finishTask(t, status, note, next) {
+  api("POST", "/kosync/plugin/tasks/result", { id: t.id, status: status, note: note }, next);
+}
+
+// removeStore removes the Amazon store books a parent picked in NovelCheck's Kindle remote.
+function removeStore(t, said, next) {
+  var places = {}, rm = [], missing = 0;
+  try { places = JSON.parse(stored("nc-places")) || {}; } catch (e) {}
+  var names = (t.args && t.args.filenames) || [];
+  for (var j = 0; j < names.length; j++) {
+    var p = places[names[j]];
+    if (p && p.indexOf("/mnt/us/documents/") === 0 && p.indexOf("..") < 0) rm.push("rm -f " + sh(p)); else missing++;
+  }
+  var out = "/tmp/nc-task.txt";
+  if (!rm.length || !run("rm -f " + out + "; " + rm.join("; ") + "; lipc-set-prop com.lab126.scanner doFullScan 1; echo ok > " + out + "; echo END >> " + out)) {
+    return finishTask(t, "skipped", "None of those books were found on the Kindle.", next);
+  }
+  waitFor(out, 60, function (text) {
+    var ok = text && text.indexOf("ok") >= 0;
+    if (ok) said.push("Removed " + rm.length + " book" + (rm.length === 1 ? "" : "s") + " (still in your Amazon library).");
+    finishTask(t, ok ? "done" : "failed", ok ? "Removed " + rm.length + (missing ? "; " + missing + " not found" : "") : "The Kindle couldn't remove them.", next);
   });
 }
 
