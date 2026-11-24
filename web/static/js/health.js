@@ -28,6 +28,27 @@ async function backups(view) {
       <p class="text-xs text-slate-400">A copy is made every day and the last week is kept. To restore: stop NovelCheck, put a copy in the data folder as <b>novelcheck.db</b>, start it. Keep a copy somewhere else too.</p>
       ${r.files.length ? `<ul class="space-y-1 text-sm">${r.files.map((f) => `<li class="flex items-center justify-between gap-2"><span>${esc(f.name)} <span class="text-slate-400">${mb(f.size)} · ${esc(f.at)} UTC</span></span>
         ${r.can_download ? `<a href="/api/admin/backups/${esc(f.name)}" class="underline">Download</a>` : ""}</li>`).join("")}</ul>` : `<p class="text-sm text-slate-400">None yet. The first one is made a few minutes after NovelCheck starts.</p>`}`;
+    const tidy = document.createElement("div");
+    tidy.className = "space-y-2 text-sm";
+    tidy.innerHTML = `<button type="button" data-tidy class="btn-ghost py-1 text-sm">Tidy backups…</button><div data-tidy-out></div>`;
+    host.append(tidy);
+    tidy.querySelector("[data-tidy]").onclick = async (e) => {
+      e.target.disabled = true;
+      const t = await attempt(() => get("/api/admin/backups/tidy"));
+      e.target.disabled = false;
+      if (!t) return;
+      const mb = (n) => `${(n / (1 << 20)).toFixed(1)} MB`;
+      const out = tidy.querySelector("[data-tidy-out]");
+      out.innerHTML = t.count ? `<p>This would remove <b>${t.count}</b> file${t.count === 1 ? "" : "s"} (${mb(t.bytes)}): Amazon's dictionary files, and files from a Kindle app backup whose identical copy is in the same Kindle's plugin backup. Nothing else is touched.</p>
+        <ul class="max-h-48 space-y-1 overflow-y-auto text-xs text-slate-400">${t.items.map((i) => `<li>${esc(i.device)} · ${esc(i.path)} · ${mb(i.size)} · ${esc(i.why)}</li>`).join("")}</ul>
+        ${t.can_delete ? `<button type="button" data-go class="btn-primary py-1 text-sm">Remove these ${t.count} files</button>` : `<p class="text-xs text-slate-400">Only the main admin can remove them.</p>`}` : `<p>Nothing to tidy.</p>`;
+      if (t.unlinked.length) out.innerHTML += `<p class="text-xs text-amber-300">Not checked for copies: ${t.unlinked.map(esc).join(", ")}. If it is the same Kindle as one with the KOReader plugin, link them (Settings → Kindle: "Same Kindle as…") and tidy again.</p>`;
+      out.querySelector("[data-go]")?.addEventListener("click", async (ev) => {
+        ev.target.disabled = true;
+        const r = await attempt(() => post("/api/admin/backups/tidy"));
+        out.innerHTML = r ? `<p class="text-emerald-300">Removed ${r.removed} file${r.removed === 1 ? "" : "s"} (${mb(r.bytes)}).</p>` : "";
+      });
+    };
     host.querySelector("[data-now]").onclick = async (e) => {
       e.target.disabled = true;
       const n = await attempt(() => post("/api/admin/backups/now"), "Backed up");

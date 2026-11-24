@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -177,5 +179,48 @@ func TestHealthSaysWhatIsRepeating(t *testing.T) {
 		if !strings.Contains(string(text), want) {
 			t.Fatalf("health lacks %q: %s", want, text)
 		}
+	}
+}
+
+// Tidy backups removes Amazon's dictionaries and the Kindle app's files that the plugin's backup of the same Kindle holds
+// identically, and nothing else (a file with the same name but other content stays).
+func TestTidyBackups(t *testing.T) {
+	data := t.TempDir()
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = data })
+	admin := login(t, srv, "admin", "adminpass1")
+	u, _ := st.UserByName("admin")
+	const appName, pluginName = "Zach Paperwhite (Amazon reader)", "Zach Paperwhite"
+	for _, d := range []string{appName, pluginName} {
+		_, _ = st.SaveDeviceBooks(u.ID, d, []store.DeviceBook{{Filename: "x.epub", Title: "X"}})
+	}
+	_ = st.LinkDevice(u.ID, appName, pluginName)
+	put := func(device, rel, body string) {
+		dir := filepath.Join(data, "kindle-backup", itoa(u.ID), device)
+		_ = os.MkdirAll(filepath.Dir(filepath.Join(dir, rel)), 0o755)
+		if err := os.WriteFile(filepath.Join(dir, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	put(appName, "documents/Same Book.epub", "the same bytes")
+	put(pluginName, "documents/Books/Same Book.epub", "the same bytes")
+	put(appName, "documents/Other.epub", "app version!!") // same name and size as the plugin's, other content
+	put(pluginName, "documents/Other.epub", "plugin version")
+	put(appName, "documents/dictionaries/Oxford.azw", "a dictionary")
+	_, plan := admin.do("GET", "/api/admin/backups/tidy", nil, false)
+	if plan["count"] != float64(2) {
+		t.Fatalf("the duplicate and the dictionary: %v", plan)
+	}
+	_, done := admin.do("POST", "/api/admin/backups/tidy", nil, true)
+	if done["removed"] != float64(2) {
+		t.Fatalf("removed: %v", done)
+	}
+	for rel, want := range map[string]bool{"documents/Same Book.epub": false, "documents/dictionaries/Oxford.azw": false, "documents/Other.epub": true} {
+		_, err := os.Stat(filepath.Join(data, "kindle-backup", itoa(u.ID), appName, filepath.FromSlash(rel)))
+		if (err == nil) != want {
+			t.Fatalf("%s kept = %v, want %v", rel, err == nil, want)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(data, "kindle-backup", itoa(u.ID), pluginName, "documents/Books/Same Book.epub")); err != nil {
+		t.Fatal("the plugin's copy must stay")
 	}
 }

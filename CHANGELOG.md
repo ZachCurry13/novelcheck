@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.1]
+
+### 🧹 Tidy backups
+- On the Health page, under Backups: **Tidy backups…** shows what it would remove, then (main admin only) removes it: **Amazon's dictionary files** from any Kindle backup, and files in a **Kindle app backup whose identical copy** (same name, same size, same SHA-256) is in the backup of the same Kindle's KOReader plugin. A file with the same name but other content stays, and the plugin's copy always stays. If the app's Kindle isn't linked to the plugin's ("Same Kindle as…" in Settings → Kindle), it says so and leaves its books alone.
+
 ## [2.1.0]
 
 Ten smaller improvements.
