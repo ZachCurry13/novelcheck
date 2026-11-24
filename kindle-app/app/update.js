@@ -1,6 +1,7 @@
-/* NovelCheck Kindle app: updating itself. On start it asks NovelCheck for the newest version; when there is one,
-   an Update button appears, and a tap has utild fetch the new files into both copies of the app (the one in
-   extensions and the one the Kindle runs), then reloads. config.js (the account) is never replaced. ES5 only. */
+/* NovelCheck Kindle app: updating itself. On start it asks NovelCheck for the newest version; when there is one, it
+   has utild fetch the new files into both copies of the app (the one in extensions and the one the Kindle runs) and
+   reloads, by itself. If that fails, the Update button stays to try again. config.js (the account) is never replaced.
+   ES5 only. */
 
 // newer says whether version a is newer than b ("1.10.0" > "1.9.0").
 function newer(a, b) {
@@ -19,6 +20,12 @@ function checkUpdate() {
     b.textContent = "Update to " + v.version;
     b.hidden = false;
     b.onclick = function () { update(v, b); };
+    var tried = "";
+    try { tried = localStorage.getItem("nc-auto-update") || ""; } catch (e) {}
+    if (tried === v.version) return; // tried by itself once already: the button is there to try again
+    try { localStorage.setItem("nc-auto-update", v.version); } catch (e) {}
+    logLine("updating by itself from " + NC.version + " to " + v.version);
+    update(v, b);
   });
 }
 

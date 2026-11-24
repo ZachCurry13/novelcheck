@@ -6,6 +6,9 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.98.4]
 
+### 📖 Kindle app 1.3.2: updates itself
+- The app now installs a new version by itself when it opens (and restarts); the **Update** button stays only if that didn't work, to try again. An app older than 1.3.2 still needs one tap on **Update** at the top to get here.
+
 ### 📚 Books I've read
 - The Library's filters have **Books I've read**: only the books you've finished (on your Nightstand, or marked read in an import or on Hardcover, as Stats counts them), or only the ones you haven't. Everyone sees their own.
 
