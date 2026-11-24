@@ -96,15 +96,26 @@ func (s *Server) calibreCompareSection(line func(string, ...any)) {
 		line("(no Content server set up, or no books)")
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	have, err := s.calibreClient().Titles(ctx, ids)
+	have, missing, gone, onDisk, examples, err := s.compareCalibre(ids)
 	if err != nil {
 		line("the Content server: %v", err)
 		return
 	}
-	missing, gone, onDisk := 0, 0, 0
-	var examples []string
+	line("of %d sampled ids the Content server has %d and lacks %d: %d with their files gone (leftovers NovelCheck should forget), %d still with files on disk (a different or older library?)", len(ids), len(have), missing, gone, onDisk)
+	if len(examples) > 0 {
+		line("e.g. %s", strings.Join(examples, ", "))
+	}
+}
+
+// compareCalibre asks the Content server for these Calibre ids: how many it has, lacks, lacks with no files on disk
+// (leftovers NovelCheck should forget) and lacks while their files are on disk (it is behind, or serves another
+// library), with a few examples.
+func (s *Server) compareCalibre(ids []int) (have map[int]string, missing, gone, onDisk int, examples []string, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if have, err = s.calibreClient().Titles(ctx, ids); err != nil {
+		return nil, 0, 0, 0, nil, err
+	}
 	for _, id := range ids {
 		if _, ok := have[id]; ok {
 			continue
@@ -126,8 +137,44 @@ func (s *Server) calibreCompareSection(line func(string, ...any)) {
 			examples = append(examples, "#"+strconv.Itoa(id)+" ("+strconv.Itoa(exist)+" of "+strconv.Itoa(len(files))+" files on disk)")
 		}
 	}
-	line("of %d sampled ids the Content server has %d and lacks %d: %d with their files gone (leftovers NovelCheck should forget), %d still with files on disk (a different or older library?)", len(ids), len(have), missing, gone, onDisk)
-	if len(examples) > 0 {
-		line("e.g. %s", strings.Join(examples, ", "))
+	return have, missing, gone, onDisk, examples, nil
+}
+
+// calibreBehindMsg is what to do when the Content server lacks books whose files are in the library.
+const calibreBehindMsg = "Calibre's Content server is behind your library: it doesn't have some of your newer books yet, though their files are there (books added with Calibre-Web or another program aren't seen until it reads the library again). Until then NovelCheck can't remove duplicates of them or tidy their titles. Restart the Calibre app (it reads the library when it starts)."
+
+// checkCalibreBehind compares a sample of the library with the Content server and keeps a 🔔 notice while it is
+// behind (cleared when it catches up). It reports whether it is behind.
+func (s *Server) checkCalibreBehind() bool {
+	if s.Store.Setting("calibre_server_url") == "" {
+		return false
+	}
+	ids, _, _ := s.Store.CalibreSample(80)
+	if len(ids) == 0 {
+		return false
+	}
+	_, _, _, onDisk, _, err := s.compareCalibre(ids)
+	if err != nil {
+		return false
+	}
+	if onDisk > 0 {
+		s.Store.Notify("warning", "calibre-behind", calibreBehindMsg, "#/admin?tab=cleanup")
+		return true
+	}
+	s.Store.Resolve("calibre-behind")
+	return false
+}
+
+// CalibreBehindLoop checks every hour (the first time ten minutes after start).
+func (s *Server) CalibreBehindLoop(ctx context.Context) {
+	wait := 10 * time.Minute
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(wait):
+		}
+		wait = time.Hour
+		s.checkCalibreBehind()
 	}
 }

@@ -139,6 +139,11 @@ func (s *Server) handleRemoveDuplicates(w http.ResponseWriter, r *http.Request) 
 				}
 			}
 		}
+		if !kept && s.keptOnDiskOnly(groups[gi].Entries, want, there) {
+			s.checkCalibreBehind()
+			writeErr(w, http.StatusConflict, "\""+groups[gi].Title+"\": "+calibreBehindMsg+" Nothing was removed.")
+			return
+		}
 		if !kept {
 			go func() { // the list is out of date: read Calibre again so it is right next time
 				s.refreshMu.Lock()
@@ -176,3 +181,26 @@ func (s *Server) handleRemoveDuplicates(w http.ResponseWriter, r *http.Request) 
 
 // syncLaterKey marks a removal whose re-read of Calibre happens in the background.
 type syncLaterKey struct{}
+
+// keptOnDiskOnly says whether a copy that would stay is missing from the Content server while its files are in the
+// library: the Content server is behind, not the list.
+func (s *Server) keptOnDiskOnly(entries []store.DupEntry, going map[int]string, there map[int]string) bool {
+	for _, e := range entries {
+		id, err := strconv.Atoi(e.CalibreID)
+		if err != nil {
+			continue
+		}
+		if _, g := going[id]; g {
+			continue
+		}
+		if _, ok := there[id]; ok {
+			continue
+		}
+		for _, p := range s.Store.CalibreEntryFiles(id) {
+			if _, err := os.Stat(p); err == nil {
+				return true
+			}
+		}
+	}
+	return false
+}
