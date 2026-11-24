@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.102.0]
+
+### 📚 Add books by drag and drop
+- The Library has an **Add books** box: drop e-books on it (or tap to choose them). Each goes straight into Calibre, then NovelCheck asks Hardcover what it really is. A sure match fixes the title, a missing author, the series and the ISBN by itself. When Hardcover isn't sure, a small form shows its best guess (or empty boxes): confirm or correct the title and author and press Save. A book that's already in the library is refused with a clear message.
+- Admins can do it. Anyone else needs **Allow adding e-books** on their card in Readers (off for everyone until you switch it on). People can fix only the books they added, for a week.
+- Not tried against your real Calibre and Hardcover yet: the upload route is the same one the Admin upload page uses.
+
 ## [1.101.0]
 
 ### 📱 A Kindle page in the main menu

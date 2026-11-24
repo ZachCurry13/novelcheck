@@ -71,6 +71,7 @@ type User struct {
 	WarnSpice       int      `db:"warn_spice" json:"warn_spice"`             // Heads-up from this spice level on; -1 = none                  // content hide rules: items, "g:<group>", "flag:<custom key>"
 	OnlyCollections bool     `db:"only_collections" json:"only_collections"` // kid accounts: only books in Collections
 	Collections     []int64  `db:"-" json:"collections"`                     // the collections they may see then
+	CanUpload       bool     `db:"can_upload" json:"can_upload"`             // a non-admin the admin allowed to add e-books
 	AIFeatures      bool     `db:"ai_features" json:"ai_features"`           // kid accounts: a parent allowed AI features
 	StartPage       string   `db:"start_page" json:"start_page"`             // the page NovelCheck opens on
 	ClaimCatalog    int64    `db:"claim_catalog" json:"claim_catalog"`       // where event books they claim go, 0 = pick on the event
@@ -86,6 +87,9 @@ func (u *User) IsAdmin() bool { return u.Role == RoleAdmin }
 // MayUseAI reports whether the account may use AI features (AI-picked
 // suggestions, Deep Scan requests): parents always, kids when a parent
 // allowed it.
+// MayUpload: admins, and people an admin switched on, may add e-books.
+func (u *User) MayUpload() bool { return u != nil && (u.Role == RoleAdmin || u.CanUpload) }
+
 func (u *User) MayUseAI() bool { return u.Role != RoleRestricted || u.AIFeatures }
 
 // CanManage is true for admins and editors (the non-technical management tier).

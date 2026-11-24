@@ -125,6 +125,8 @@ export async function renderUsers(host, viewer) {
       $$("[data-rule]", cardEl).forEach((cb) => (body[cb.dataset.rule] = cb.checked));
       body.hidden_content = pickedIn(cardEl);
       readCollectionLimit(cardEl, body);
+      const up = $("[data-can-upload]", cardEl);
+      if (up) body.can_upload = up.checked;
       const ai = $("[data-ai-features]", cardEl);
       if (ai) body.ai_features = ai.checked;
       const ms = $("[name=max_spice]", cardEl);
@@ -168,6 +170,8 @@ function userCard(u, parents, viewer) {
       </div>
       <div><span class="label" title="Books with any ticked item are hidden from this account, unless a parent marked them OK">Hide content</span>
         ${hidePicker(u.hidden_content || [], "data-hide")}</div>
+      ${u.role !== "admin" ? `<label class="toggle min-h-[2.5rem]"><input type="checkbox" data-can-upload ${u.can_upload ? "checked" : ""}>
+        Allow adding e-books (drag and drop in the Library; checked against Hardcover)</label>` : ""}
       ${u.role === "restricted" ? `<label class="toggle min-h-[2.5rem]"><input type="checkbox" data-ai-features ${u.ai_features ? "checked" : ""}>
         Allow AI features (Suggested Reads picked by the AI, asking for a Deep Scan)</label>${collectionLimitHTML(u, collections)}` : ""}
       <div class="grid gap-2 sm:grid-cols-2">
@@ -199,6 +203,7 @@ function badges(u) {
     if (age) out.push(`<span class="chip-cat">${esc(age[1])}</span>`);
     const n = (u.hidden_content || []).length;
     if (n) out.push(`<span class="chip-cat" title="Content items or groups hidden from this account">${n} content rule${n === 1 ? "" : "s"}</span>`);
+    if (u.can_upload) out.push(`<span class="chip-cat" title="May add e-books">Can add books</span>`);
     if (u.ai_features) out.push(`<span class="chip-cat" title="A parent allowed AI features">AI on</span>`);
     if (u.only_collections) out.push(`<span class="chip-cat" title="Sees only books in the collections chosen for them">Collections only</span>`);
   }

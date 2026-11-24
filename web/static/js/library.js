@@ -24,6 +24,7 @@ import { bindFacets } from "./libfacets.js";
 import { combo } from "./combo.js";
 import { isBack, saveForm, restoreForm } from "./viewstate.js";
 import { markKeptAudio } from "./libby.js";
+import { dropBoxHTML, bindDropBox, mayUpload } from "./dropbooks.js";
 
 const PAGE = 60;
 
@@ -45,12 +46,14 @@ export async function renderLibrary(view, state) {
     <div class="lib-layout">
     ${filtersHTML({ facets, catOpts, catalogs, event, state })}
     <div class="lib-main">
+    ${mayUpload(state.user) ? dropBoxHTML() : ""}
     <div class="mb-3 flex items-center justify-between gap-2"><p id="result-count" class="text-sm text-slate-400"></p>
       <button type="button" id="select-toggle" class="btn-ghost py-1 text-sm" title="Pick several books to add to your Nightstand, Deep Scan or delete">Select</button></div>
     <div id="grid" class="lib-grid"></div>
     <div class="mt-6 text-center"><button id="more-btn" class="btn-secondary hidden">Load more</button></div>
     </div></div>`;
 
+  if (mayUpload(state.user)) bindDropBox($("#add-books", view));
   const form = $("#filters", view);
   combo(form.author, () => facets.authors);
   combo(form.series, () => facets.series);

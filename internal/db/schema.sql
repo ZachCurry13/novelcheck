@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     age_level        INTEGER NOT NULL DEFAULT 0,   -- kid accounts: 1 young kids .. 5 adults; 0 = not set
     max_spice        INTEGER NOT NULL DEFAULT -1,  -- kid accounts: hide books above this many peppers (0-5); -1 = no limit
     only_collections INTEGER NOT NULL DEFAULT 0,   -- kid accounts: see only books in their collections (user_collections)
+    can_upload       INTEGER NOT NULL DEFAULT 0,   -- a non-admin the admin allowed to add e-books (drag and drop)
     ai_features      INTEGER NOT NULL DEFAULT 0,   -- kid accounts: a parent allowed AI features (AI suggestions, Deep Scan requests)
     start_page       TEXT NOT NULL DEFAULT '',
     claim_catalog    INTEGER NOT NULL DEFAULT 0,   -- the library event books this person claims go to (0 = ask on the event)     -- the page NovelCheck opens on ('' = Check a book for parents, Library for kids)
@@ -942,4 +943,12 @@ CREATE TABLE IF NOT EXISTS catalog_views (
     catalog_id INTEGER NOT NULL REFERENCES catalogs(id) ON DELETE CASCADE,
     shown      INTEGER NOT NULL,
     PRIMARY KEY (user_id, catalog_id)
+);
+
+-- Who added which Calibre book by drag and drop (so they can fix its title afterwards, and only theirs).
+CREATE TABLE IF NOT EXISTS upload_log (
+    calibre_id TEXT NOT NULL,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (calibre_id, user_id)
 );

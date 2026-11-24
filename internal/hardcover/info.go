@@ -145,20 +145,16 @@ func (c *Client) InfoByISBN(ctx context.Context, isbns []string) (map[string]Boo
 	return out, nil
 }
 
-// InfoByTitle finds a book by title and author through Hardcover's search, accepting only an exact title and
-// author match (so a look-alike never provides "corrections").
-func (c *Client) InfoByTitle(ctx context.Context, title, author string) (BookInfo, bool, error) {
-	if strings.TrimSpace(title) == "" || strings.TrimSpace(author) == "" {
-		return BookInfo{}, false, nil
-	}
-	lit, _ := json.Marshal(strings.TrimSpace(title + " " + author))
+// searchBooks runs Hardcover's search for text and returns the top books (up to 5), best match first.
+func (c *Client) searchBooks(ctx context.Context, text string) ([]rawBook, error) {
+	lit, _ := json.Marshal(strings.TrimSpace(text))
 	var s struct {
 		Search struct {
 			IDs []json.RawMessage `json:"ids"`
 		} `json:"search"`
 	}
 	if err := c.do(ctx, `query { search(query: `+string(lit)+`, query_type: "Book", per_page: 5, page: 1) { ids } }`, &s); err != nil {
-		return BookInfo{}, false, err
+		return nil, err
 	}
 	var ids []string
 	for _, raw := range s.Search.IDs {
@@ -167,17 +163,39 @@ func (c *Client) InfoByTitle(ctx context.Context, title, author string) (BookInf
 		}
 	}
 	if len(ids) == 0 {
-		return BookInfo{}, false, nil
+		return nil, nil
 	}
 	var d struct {
 		Books []rawBook `json:"books"`
 	}
 	q := fmt.Sprintf(`query { books(where: {id: {_in: [%s]}}) { %s editions(order_by: {users_count: desc_nulls_last}, limit: 1) { pages isbn_13 isbn_10 } } }`, strings.Join(ids, ", "), bookFields)
 	if err := c.do(ctx, q, &d); err != nil {
+		return nil, err
+	}
+	// the books query doesn't keep the search's order: put them back in it
+	out := make([]rawBook, 0, len(d.Books))
+	for _, id := range ids {
+		for _, r := range d.Books {
+			if strconv.Itoa(r.ID) == id {
+				out = append(out, r)
+			}
+		}
+	}
+	return out, nil
+}
+
+// InfoByTitle finds a book by title and author through Hardcover's search, accepting only an exact title and
+// author match (so a look-alike never provides "corrections").
+func (c *Client) InfoByTitle(ctx context.Context, title, author string) (BookInfo, bool, error) {
+	if strings.TrimSpace(title) == "" || strings.TrimSpace(author) == "" {
+		return BookInfo{}, false, nil
+	}
+	books, err := c.searchBooks(ctx, title+" "+author)
+	if err != nil {
 		return BookInfo{}, false, err
 	}
 	want := store.NormKey(title, author)
-	for _, r := range d.Books {
+	for _, r := range books {
 		b := r.info()
 		for _, a := range b.Authors {
 			if store.NormKey(b.Title, a) == want {
@@ -186,4 +204,17 @@ func (c *Client) InfoByTitle(ctx context.Context, title, author string) (BookInf
 		}
 	}
 	return BookInfo{}, false, nil
+}
+
+// BestGuess is Hardcover's top search result for a title (and author, when known), exact or not: a suggestion for
+// a person to confirm, never something to save by itself.
+func (c *Client) BestGuess(ctx context.Context, title, author string) (BookInfo, bool, error) {
+	if strings.TrimSpace(title) == "" {
+		return BookInfo{}, false, nil
+	}
+	books, err := c.searchBooks(ctx, title+" "+author)
+	if err != nil || len(books) == 0 {
+		return BookInfo{}, false, err
+	}
+	return books[0].info(), true, nil
 }

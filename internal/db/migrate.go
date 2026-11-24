@@ -70,6 +70,7 @@ func migrate(d *sqlx.DB) error {
 		{"users", "only_collections", "INTEGER NOT NULL DEFAULT 0"},
 		{"deep_reads", "position", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "ai_features", "INTEGER NOT NULL DEFAULT 0"},
+		{"users", "can_upload", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "start_page", "TEXT NOT NULL DEFAULT ''"},
 		{"token_usage", "seconds", "REAL NOT NULL DEFAULT 0"},
 		{"books", "confidence", "TEXT NOT NULL DEFAULT ''"},

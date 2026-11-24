@@ -57,52 +57,60 @@ func (s *Server) handleUploadTargets(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
+// readEbookUpload reads the one e-book file (multipart field "file") of a request, answering the error itself.
+func readEbookUpload(w http.ResponseWriter, r *http.Request) (name string, data []byte, ok bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxEbookBytes+(1<<20)) // before the reader is made, or it limits nothing
+	mr, err := r.MultipartReader()
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, "send the file as a form upload")
+		return "", nil, false
+	}
+	for {
+		part, err := mr.NextPart()
+		if err != nil {
+			writeErr(w, http.StatusBadRequest, "no file came with that")
+			return "", nil, false
+		}
+		name = path.Base(part.FileName())
+		if part.FormName() != "file" || name == "." || name == "" {
+			continue
+		}
+		if !ebookExts[ext(name)] {
+			writeErr(w, http.StatusBadRequest, "“"+name+"” isn't an e-book file (epub, pdf, mobi, azw3, kepub, fb2, cbz)")
+			return "", nil, false
+		}
+		data, err = io.ReadAll(io.LimitReader(part, maxEbookBytes+1))
+		if err != nil || len(data) > maxEbookBytes {
+			writeErr(w, http.StatusRequestEntityTooLarge, "that file is larger than 200 MB")
+			return "", nil, false
+		}
+		return name, data, true
+	}
+}
+
 // POST /api/admin/upload/ebook: one e-book file (multipart field "file") into Calibre.
 func (s *Server) handleUploadEbook(w http.ResponseWriter, r *http.Request) {
 	if s.Store.Setting(store.KeyCalibreSrvURL) == "" {
 		writeErr(w, http.StatusBadRequest, "set up the calibre Content server connection first (Admin → Calibre Library)")
 		return
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, maxEbookBytes+(1<<20)) // before the reader is made, or it limits nothing
-	mr, err := r.MultipartReader()
+	name, data, ok := readEbookUpload(w, r)
+	if !ok {
+		return
+	}
+	cal := s.calibreClient()
+	id, err := cal.AddBook(r.Context(), name, data)
 	if err != nil {
-		writeErr(w, http.StatusBadRequest, "send the file as a form upload")
+		writeErr(w, http.StatusBadGateway, "Calibre: "+err.Error())
 		return
 	}
-	for {
-		part, err := mr.NextPart()
-		if err != nil {
-			writeErr(w, http.StatusBadRequest, "no file came with that")
-			return
-		}
-		name := path.Base(part.FileName())
-		if part.FormName() != "file" || name == "." || name == "" {
-			continue
-		}
-		if !ebookExts[ext(name)] {
-			writeErr(w, http.StatusBadRequest, "“"+name+"” isn't an e-book file (epub, pdf, mobi, azw3, kepub, fb2, cbz)")
-			return
-		}
-		data, err := io.ReadAll(io.LimitReader(part, maxEbookBytes+1))
-		if err != nil || len(data) > maxEbookBytes {
-			writeErr(w, http.StatusRequestEntityTooLarge, "that file is larger than 200 MB")
-			return
-		}
-		cal := s.calibreClient()
-		id, err := cal.AddBook(r.Context(), name, data)
-		if err != nil {
-			writeErr(w, http.StatusBadGateway, "Calibre: "+err.Error())
-			return
-		}
-		d, err := cal.Details(r.Context(), []int{id}) // read it back: is it really there?
-		if err != nil || d[id].Title == "" {
-			writeErr(w, http.StatusBadGateway, "Calibre said it added book #"+strconv.Itoa(id)+" but it can't be read back: check Admin → Check my servers")
-			return
-		}
-		s.syncSoon(nil) // NovelCheck reads Calibre again so the book shows up
-		writeJSON(w, http.StatusOK, map[string]any{"calibre_id": id, "title": d[id].Title, "authors": d[id].Authors})
+	d, err := cal.Details(r.Context(), []int{id}) // read it back: is it really there?
+	if err != nil || d[id].Title == "" {
+		writeErr(w, http.StatusBadGateway, "Calibre said it added book #"+strconv.Itoa(id)+" but it can't be read back: check Admin → Check my servers")
 		return
 	}
+	s.syncSoon(nil) // NovelCheck reads Calibre again so the book shows up
+	writeJSON(w, http.StatusOK, map[string]any{"calibre_id": id, "title": d[id].Title, "authors": d[id].Authors})
 }
 
 // POST /api/admin/upload/audiobook: multipart with the fields title, author, series, library, folder first, then the
