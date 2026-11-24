@@ -99,7 +99,7 @@ func TestKindleAppHidesABook(t *testing.T) {
 		t.Fatalf("hide: %v %v", err, res)
 	}
 	u, _ := st.UserByName("admin")
-	if h := st.HiddenBooks(u.ID); len(h) != 1 || h[0].BookID != id {
+	if h := st.HiddenBooks(u.ID); len(h) != 1 || h[0].ID != id {
 		t.Fatalf("the book should be hidden for this person: %v", h)
 	}
 	if _, err := st.BookByID(id, nil); err != nil {
