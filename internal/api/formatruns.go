@@ -82,6 +82,9 @@ func (s *Server) afterFormatJob() {
 		return
 	}
 	msg := fmt.Sprintf("%s finished: %s", strings.ToUpper(st.Kind[:1])+st.Kind[1:], st.Note)
+	if st.Failed > 0 || st.Skipped > 0 {
+		s.cleanupNote("Formats: "+st.Kind, fmt.Sprintf("%d done, %d skipped, %d failed. %s\n  %s", st.Done, st.Skipped, st.Failed, st.Note, strings.Join(st.Errors, "\n  ")))
+	}
 	if st.Failed > 0 {
 		s.Store.Notify("warning", "format-job", fmt.Sprintf("%s %d did not work; the reasons are in the bug report (Settings → Developer).", msg, st.Failed), "#/admin?tab=cleanup")
 		return

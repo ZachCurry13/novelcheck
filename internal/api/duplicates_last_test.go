@@ -25,8 +25,11 @@ func TestNeverRemoveTheLastCopyCalibreHas(t *testing.T) {
 	admin.do("PUT", "/api/admin/calibre/server", map[string]string{"url": cs.URL}, true)
 
 	res, out := admin.do("POST", "/api/admin/calibre/duplicates/remove", map[string]any{"remove": []string{"11"}, "later": true}, true)
-	if res.StatusCode != 409 || removed.Load() != 0 || !strings.Contains(out["error"].(string), "last copy") {
+	if res.StatusCode != 409 || removed.Load() != 0 || !strings.Contains(out["error"].(string), "no other copy left") {
 		t.Fatalf("the last copy Calibre has must stay: %d %v (removed %d)", res.StatusCode, out, removed.Load())
+	}
+	if log := st.CleanupLog(5); len(log) == 0 || !strings.Contains(log[0].Text, "The Hobbit") {
+		t.Fatalf("the refusal is in the cleanup log: %+v", log)
 	}
 	// The copy that is already gone can still be "removed" (nothing happens), and the real one stays.
 	res, out = admin.do("POST", "/api/admin/calibre/duplicates/remove", map[string]any{"remove": []string{"10"}, "later": true}, true)
@@ -35,9 +38,9 @@ func TestNeverRemoveTheLastCopyCalibreHas(t *testing.T) {
 	}
 }
 
-// When the copy that would stay is missing from the Content server but its file is in the library, the Content
-// server is behind (books added with Calibre-Web): say so, with a notice, and remove nothing.
-func TestContentServerBehindIsSaid(t *testing.T) {
+// When the copy that would stay is missing from Calibre's Content server but its file is in the library (the
+// Content server lags behind books added with Calibre-Web), it is a real copy: the duplicate is removed.
+func TestContentServerBehindStillRemoves(t *testing.T) {
 	srv, st := setup(t)
 	admin := login(t, srv, "admin", "adminpass1")
 	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
@@ -53,15 +56,7 @@ func TestContentServerBehindIsSaid(t *testing.T) {
 	admin.do("PUT", "/api/admin/calibre/server", map[string]string{"url": cs.URL}, true)
 
 	res, out := admin.do("POST", "/api/admin/calibre/duplicates/remove", map[string]any{"remove": []string{"11"}, "later": true}, true)
-	if res.StatusCode != 409 || removed.Load() != 0 || !strings.Contains(out["error"].(string), "Content server is behind") {
-		t.Fatalf("say the Content server is behind: %d %v", res.StatusCode, out)
-	}
-	items, _, _ := st.Notifications(10)
-	found := false
-	for _, n := range items {
-		found = found || n.Source == "calibre-behind"
-	}
-	if !found {
-		t.Fatalf("a 🔔 notice: %+v", items)
+	if res.StatusCode != 200 || removed.Load() != 1 {
+		t.Fatalf("the copy on disk counts: the duplicate goes: %d %v (removed %d)", res.StatusCode, out, removed.Load())
 	}
 }

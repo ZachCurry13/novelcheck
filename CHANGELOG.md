@@ -6,6 +6,10 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.98.2]
 
+### 🧹 Removing extra Calibre copies works when Calibre lags
+- The copy that stays now counts when its file is in your library, not only when Calibre's Content server lists it. The Content server doesn't see books added with Calibre-Web until it restarts, so removals like "Yesteryear" were refused with "the other one is already gone" although it wasn't. Now the extra copy goes. A copy is only refused when it really is the last one (neither Calibre nor the library folder has another).
+- **Library cleanup tells the bug link what it didn't do.** Every action on the Library page that is refused, fails, or skips or leaves out items is noted with what was asked and the answer, as are the Formats, cover finder and Hardcover jobs (with the books they couldn't do). The bug link shows it under "Library cleanup: what wasn't done", to work out what cleanup still needs.
+
 ### 📖 Kindle app 1.3.1
 - **Page buttons instead of slow scrolling.** E-ink redraws a scrolling page over and over, so a long page now shows **▲ ▼** buttons that move it most of a screen at once. Each list and book page starts at the top.
 

@@ -793,6 +793,13 @@ CREATE TABLE IF NOT EXISTS book_highlights (
     PRIMARY KEY (user_id, book_id, key)
 );
 
+-- Library cleanup's own log: each action's result when something wasn't done (skipped, refused, failed), with why.
+CREATE TABLE IF NOT EXISTS cleanup_log (
+    id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    action TEXT NOT NULL DEFAULT '',
+    text   TEXT NOT NULL DEFAULT ''
+);
 -- Books a person took out of their own view of the library ("Remove from my library"); nobody else is affected.
 CREATE TABLE IF NOT EXISTS hidden_books (
     user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

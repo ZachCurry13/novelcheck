@@ -78,7 +78,7 @@ func isbnOf(d calibresrv.Details, fallback string) string {
 func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 	defer func() {
 		if r := recover(); r != nil {
-			s.hcjob.end(fmt.Sprintf("Stopped by a problem: %v", r))
+			s.hcEnd(fmt.Sprintf("Stopped by a problem: %v", r))
 		}
 	}()
 	cal, hc := s.calibreClient(), &hardcover.Client{Token: token, URL: hardcoverURL}
@@ -87,7 +87,7 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 	defer cancel()
 	for i := 0; i < len(refs); i += 25 {
 		if s.hcjob.stopped() {
-			s.hcjob.end("Stopped; what was found so far is below.")
+			s.hcEnd("Stopped; what was found so far is below.")
 			return
 		}
 		chunk := refs[i:min(i+25, len(refs))]
@@ -97,7 +97,7 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 		}
 		have, err := cal.Details(ctx, ids)
 		if err != nil {
-			s.hcjob.end("Calibre didn't answer: " + err.Error())
+			s.hcEnd("Calibre didn't answer: " + err.Error())
 			return
 		}
 		var isbns []string
@@ -108,7 +108,7 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 		}
 		byISBN, err := hc.InfoByISBN(ctx, isbns)
 		if err != nil {
-			s.hcjob.end("Hardcover: " + err.Error() + " (what was found so far is below)")
+			s.hcEnd("Hardcover: " + err.Error() + " (what was found so far is below)")
 			return
 		}
 		for _, r := range chunk {
@@ -120,7 +120,7 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 			if info.ID == 0 && len(d.Authors) > 0 {
 				found, ok, err := hcInfoByTitle(ctx, hc, d.Title, d.Authors[0]) // also without a subtitle or series note
 				if err != nil {
-					s.hcjob.end("Hardcover: " + err.Error() + " (what was found so far is below)")
+					s.hcEnd("Hardcover: " + err.Error() + " (what was found so far is below)")
 					return
 				}
 				if ok {
@@ -159,7 +159,7 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 		}
 		s.hcjob.update(func(st *hcJobState) { st.Done += len(chunk) })
 	}
-	s.hcjob.end(fmt.Sprintf("Compared %d books with Hardcover.", len(refs)))
+	s.hcEnd(fmt.Sprintf("Compared %d books with Hardcover.", len(refs)))
 }
 
 func digitsOnly(s string) string {
@@ -188,14 +188,14 @@ func (s *Server) runHCApply(list []store.HCSuggestion) {
 	defer cancel()
 	for _, id := range order {
 		if s.hcjob.stopped() {
-			s.hcjob.end("Stopped.")
+			s.hcEnd("Stopped.")
 			return
 		}
 		g := groups[id]
 		title := g[0].Title
 		before, err := cal.Details(ctx, []int{id})
 		if err != nil {
-			s.hcjob.end("Calibre didn't answer: " + err.Error())
+			s.hcEnd("Calibre didn't answer: " + err.Error())
 			return
 		}
 		if d, ok := before[id]; !ok || store.NormKey(d.Title, "") != store.NormKey(title, "") {
@@ -243,7 +243,7 @@ func (s *Server) runHCApply(list []store.HCSuggestion) {
 	}
 	s.syncSoon(nil) // NovelCheck reads Calibre again so it shows the new details
 	log.Printf("hardcover cleanup: applied suggestions to %d Calibre books", len(order))
-	s.hcjob.end(fmt.Sprintf("Fixed %d books in Calibre.", s.hcjob.state().Found))
+	s.hcEnd(fmt.Sprintf("Fixed %d books in Calibre.", s.hcjob.state().Found))
 }
 
 // hcApplied checks that Calibre now has the suggested value.
@@ -310,4 +310,13 @@ func hasField(cs []hcChange, field string) bool {
 		}
 	}
 	return false
+}
+
+// hcEnd finishes the Hardcover job; when anything wasn't done, the cleanup log says what.
+func (s *Server) hcEnd(note string) {
+	st := s.hcjob.state()
+	s.hcjob.end(note)
+	if len(st.Errors) > 0 || (st.Total > 0 && st.Done < st.Total) {
+		s.cleanupNote("Hardcover "+st.Kind, fmt.Sprintf("%d of %d done, %d found. %s\n  %s", st.Done, st.Total, st.Found, note, strings.Join(st.Errors, "\n  ")))
+	}
 }

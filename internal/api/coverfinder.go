@@ -123,6 +123,9 @@ func (s *Server) findCovers(again, freeOnly bool) {
 			if skipped > 0 {
 				msg += fmt.Sprintf(" %d were searched in the last week with nothing found, so they were skipped; Find covers now looks at them again.", skipped)
 			}
+			if found < total {
+				s.cleanupNote("Cover finder", fmt.Sprintf("no cover found for %d of %d books (%d skipped as searched this week, %d refused by Google). Some: %s", total-found, total, skipped, retry, s.coverMisses(missing, 25)))
+			}
 			s.Store.NotifyRoutine("covers-found", msg, "#/admin?tab=cleanup")
 		}
 	}()
@@ -259,4 +262,18 @@ func (s *Server) handleStopCovers(w http.ResponseWriter, r *http.Request) {
 	s.covers.stop = true
 	s.covers.mu.Unlock()
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+// coverMisses names up to n of the books still without a cover after a run (title · author · ISBN), for the cleanup log.
+func (s *Server) coverMisses(books []store.BriefBook, n int) string {
+	var out []string
+	for _, b := range books {
+		if len(out) >= n {
+			break
+		}
+		if !s.hasCover(b) {
+			out = append(out, b.Title+" · "+b.Author+" · "+orNone(b.ISBN))
+		}
+	}
+	return strings.Join(out, " | ")
 }

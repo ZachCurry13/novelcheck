@@ -128,29 +128,17 @@ func (s *Server) handleRemoveDuplicates(w http.ResponseWriter, r *http.Request) 
 		writeErr(w, http.StatusBadGateway, "couldn't ask Calibre which copies it still has: "+err.Error()+". Nothing was removed.")
 		return
 	}
+	// A copy stays when Calibre's Content server has it, or when its files are in the library: the Content server
+	// can lag behind (books added with Calibre-Web aren't seen until it restarts), and a file on disk is a real copy.
 	for gi := range removing {
-		kept := false
-		for _, e := range groups[gi].Entries {
-			if id, err := strconv.Atoi(e.CalibreID); err == nil {
-				if _, ok := there[id]; ok {
-					if _, going := want[id]; !going {
-						kept = true
-					}
-				}
-			}
-		}
-		if !kept && s.keptOnDiskOnly(groups[gi].Entries, want, there) {
-			s.checkCalibreBehind()
-			writeErr(w, http.StatusConflict, "\""+groups[gi].Title+"\": "+calibreBehindMsg+" Nothing was removed.")
-			return
-		}
-		if !kept {
+		if !s.keepsACopy(groups[gi].Entries, want, there) {
 			go func() { // the list is out of date: read Calibre again so it is right next time
 				s.refreshMu.Lock()
 				defer s.refreshMu.Unlock()
 				s.refreshCalibre()
 			}()
-			writeErr(w, http.StatusConflict, "that would remove the last copy of \""+groups[gi].Title+"\" that Calibre still has (the other one is already gone). Nothing was removed; the list is being refreshed.")
+			s.cleanupNote("Remove extra Calibre copies", "refused \""+groups[gi].Title+"\": no other copy is left, neither in Calibre's Content server nor as a file in the library; the list is being re-read")
+			writeErr(w, http.StatusConflict, "\""+groups[gi].Title+"\" has no other copy left (Calibre and the library folder both lack it), so this one stays. Nothing was removed; the list is being re-read.")
 			return
 		}
 	}
@@ -182,9 +170,9 @@ func (s *Server) handleRemoveDuplicates(w http.ResponseWriter, r *http.Request) 
 // syncLaterKey marks a removal whose re-read of Calibre happens in the background.
 type syncLaterKey struct{}
 
-// keptOnDiskOnly says whether a copy that would stay is missing from the Content server while its files are in the
-// library: the Content server is behind, not the list.
-func (s *Server) keptOnDiskOnly(entries []store.DupEntry, going map[int]string, there map[int]string) bool {
+// keepsACopy says whether a copy that isn't being removed is still real: Calibre's Content server has it, or its
+// files are in the library folder.
+func (s *Server) keepsACopy(entries []store.DupEntry, going map[int]string, there map[int]string) bool {
 	for _, e := range entries {
 		id, err := strconv.Atoi(e.CalibreID)
 		if err != nil {
@@ -194,7 +182,7 @@ func (s *Server) keptOnDiskOnly(entries []store.DupEntry, going map[int]string, 
 			continue
 		}
 		if _, ok := there[id]; ok {
-			continue
+			return true
 		}
 		for _, p := range s.Store.CalibreEntryFiles(id) {
 			if _, err := os.Stat(p); err == nil {

@@ -66,7 +66,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 	})
 
 	r.Group(func(r chi.Router) { // 📚 Calibre & cleanup
-		r.Use(area(store.AreaCalibre))
+		r.Use(area(store.AreaCalibre), s.cleanupRecorder) // what a cleanup action didn't do goes to the bug link
 		r.Post("/admin/server-checks", s.handleServerChecks)
 		r.Get("/admin/upload/targets", s.handleUploadTargets)
 		r.Post("/admin/upload/ebook", s.handleUploadEbook)
