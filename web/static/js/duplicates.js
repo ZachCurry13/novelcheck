@@ -25,7 +25,8 @@ function copyHTML(g, e, canRemove) {
       <span class="flex flex-wrap gap-1">${files}</span>
       ${e.doubt ? `<span class="block text-xs text-amber-300">${esc(e.doubt)}</span>` : ""}
       <span data-detail class="block space-y-0.5 text-xs text-slate-300"></span>
-      ${canRemove ? `<span class="toggle text-sm"><input type="radio" name="keep-${g.book_id}" value="${esc(e.calibre_id)}" ${keep ? "checked" : ""}> <span data-keep-label>${keep ? "Keep this one" : "Keep this one instead"}</span></span>` : keep ? `<span class="chip-none">✓ Suggested keep</span>` : ""}
+      ${canRemove ? `<span class="toggle text-sm"><input type="radio" name="keep-${g.book_id}" value="${esc(e.calibre_id)}" ${keep ? "checked" : ""}> <span data-keep-label>${keep ? "Keep this one" : "Keep this one instead"}</span></span>
+      <span class="toggle text-xs text-slate-300" data-also-row ${keep ? "hidden" : ""}><input type="checkbox" data-also value="${esc(e.calibre_id)}"> <span>Not a copy: a different book, keep it too</span></span>` : keep ? `<span class="chip-none">✓ Suggested keep</span>` : ""}
     </span></label>`;
 }
 
@@ -75,7 +76,8 @@ export async function renderDuplicates(view, state) {
   // others lists the copies of a book that are not the one picked to keep.
   const others = (card) => {
     const keep = $("input[type=radio]:checked", card)?.value;
-    return group(card.dataset.book).entries.map((e) => e.calibre_id).filter((id) => id !== keep);
+    const also = $$("[data-also]:checked", card).map((c) => c.value); // ticked "a different book": stays too
+    return group(card.dataset.book).entries.map((e) => e.calibre_id).filter((id) => id !== keep && !also.includes(id));
   };
   const say = (text, good = true) => (result.innerHTML = `<div class="card mb-4 ${good ? "text-emerald-200" : "text-amber-200"}">${esc(text)}</div>`);
   const bar = () => {
@@ -120,6 +122,8 @@ export async function renderDuplicates(view, state) {
     $$(".dup-copy", card).forEach((c) => {
       const on = c.dataset.copy === e.target.value;
       c.classList.toggle("keep", on);
+      $("[data-also-row]", c).hidden = on;
+      if (on) $("[data-also]", c).checked = false;
       $("[data-keep-label]", c).textContent = on ? "Keep this one" : "Keep this one instead";
     });
   });
@@ -142,6 +146,7 @@ export async function renderDuplicates(view, state) {
       const card = one.closest("[data-book]");
       const g = group(card.dataset.book);
       const ids = others(card);
+      if (!ids.length) return void toast("Nothing to remove: every other copy is marked as a different book.");
       const doubts = g.entries.filter((x) => ids.includes(x.calibre_id) && x.doubt).map((x) => `#${x.calibre_id}: ${x.doubt}`);
       if (doubts.length && !confirm(`Remove ${copies(ids.length)} of “${g.title}” although:\n\n${doubts.join("\n")}\n\nThey go to Calibre's recycle bin.`)) return;
       one.disabled = true;

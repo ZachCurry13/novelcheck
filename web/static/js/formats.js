@@ -63,7 +63,8 @@ function convertHTML(data, busy) {
   const n = data.convert_count;
   const books = data.convert.map((f) => `<li class="flex items-center justify-between gap-2 ${row}">
     <span class="min-w-0"><b class="block truncate">${esc(f.title)}</b><span class="text-xs text-slate-400">${esc(f.author || "Unknown author")} · from ${esc(f.format.toUpperCase())}</span></span>
-    <button type="button" data-convert="${f.book_id}" class="btn-ghost shrink-0 py-1 text-xs" ${busy}>Convert</button></li>`).join("");
+    <span class="flex shrink-0 gap-1"><button type="button" data-convert="${f.book_id}" class="btn-ghost py-1 text-xs" ${busy}>Convert</button>
+    <button type="button" data-asis="${esc(f.calibre_id)}" data-on="1" data-title="${esc(f.title)}" data-format="${esc(f.format)}" class="btn-ghost py-1 text-xs" title="Never offer this book for converting" ${busy}>Don't convert</button></span></li>`).join("");
   return `<section class="space-y-3 border-t border-slate-800 pt-4">
     <h3 class="font-semibold">Convert to EPUB</h3>
     ${n ? `<p class="text-sm text-slate-400">${count(n, "book has", "books have")} no EPUB but a file Calibre can convert. The original file stays.</p>
@@ -170,7 +171,7 @@ export async function openFormats() {
     } else if (f === "convert-all") {
       if (confirm(`Convert ${count(data.convert_count, "book")} to EPUB? Calibre does one at a time, so a long list takes a while.`)) start("/api/admin/formats/convert", { book_ids: [] });
     } else if (t.dataset.asis) {
-      if (await attempt(() => post("/api/admin/formats/convert/as-is", { calibre_id: t.dataset.asis, as_is: t.dataset.on === "1" }), t.dataset.on === "1" ? "Left as it is" : "On the convert list again")) load();
+      if (await attempt(() => post("/api/admin/formats/convert/as-is", { calibre_id: t.dataset.asis, as_is: t.dataset.on === "1", title: t.dataset.title || "", format: t.dataset.format || "" }), t.dataset.on === "1" ? "Left as it is" : "On the convert list again")) load();
     } else if (t.dataset.convert) {
       start("/api/admin/formats/convert", { book_ids: [Number(t.dataset.convert)] });
     } else if (t.dataset.undoBatch) {

@@ -92,9 +92,14 @@ func (s *Server) handleConvertAsIs(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		CalibreID string `json:"calibre_id"`
 		AsIs      bool   `json:"as_is"`
+		Title     string `json:"title"`  // for a book that never failed: "don't convert this one" is remembered too
+		Format    string `json:"format"`
 	}
 	if !readJSON(w, r, &body, 1<<10) {
 		return
+	}
+	if body.AsIs && body.Title != "" { // a book still on the convert list has no failure row yet
+		_ = s.Store.NoteConvertFailure(body.CalibreID, body.Title, body.Format, "You chose not to convert this one.")
 	}
 	if err := s.Store.SetConvertAsIs(body.CalibreID, body.AsIs); err != nil {
 		writeStoreErr(w, err)

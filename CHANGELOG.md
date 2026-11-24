@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.100.1]
+
+### 🧹 Two cleanup fixes
+- **Duplicates:** when NovelCheck lumps a different book in with real copies (for example "The Lost Files #10: The Fugitive" with two copies of "Six's Legacy"), tick **Not a copy: a different book, keep it too** on that entry. Only the remaining copies are removed.
+- **Convert to EPUB:** each book on the list now has **Don't convert**. It is never offered again (the "did not convert" list has **Offer again** if you change your mind).
+
 ## [1.100.0]
 
 ### 🏷️ Genres come from Hardcover first
