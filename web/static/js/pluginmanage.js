@@ -50,7 +50,10 @@ export async function renderPluginCard(host) {
   const s = await get("/api/me/reading-sync").catch(() => null);
   if (!s) return;
   const devices = s.devices || [];
-  const badge = (d) => (String(d.plugin_version).startsWith("app ") ? `<span class="chip-none">Kindle ${esc(d.plugin_version)}</span>`
+  const appOld = (d) => older(String(d.plugin_version).slice(4), s.app_latest);
+  const badge = (d) => (String(d.plugin_version).startsWith("app ")
+    ? appOld(d) ? `<span class="chip-wait" title="Open NovelCheck on the Kindle: it updates when it opens (an app before 1.3.2 shows an Update button to tap once)">Kindle ${esc(d.plugin_version)}: update to ${esc(s.app_latest)}</span>`
+      : `<span class="chip-none">Kindle ${esc(d.plugin_version)}</span>`
     : !d.plugin_version ? `<span class="chip-pending">plugin before 1.38</span>`
     : older(d.plugin_version, s.plugin_latest) ? `<span class="chip-wait">plugin ${esc(d.plugin_version)}: update to ${esc(s.plugin_latest)}</span>`
       : `<span class="chip-none">plugin ${esc(d.plugin_version)}</span>`);

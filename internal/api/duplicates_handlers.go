@@ -160,11 +160,12 @@ func (s *Server) handleRemoveDuplicates(w http.ResponseWriter, r *http.Request) 
 	if body.Later {
 		r = r.WithContext(context.WithValue(r.Context(), syncLaterKey{}, true))
 	}
+	r, info := withRemovalInfo(r)
 	removed, skipped, ok := s.removeFromCalibre(w, r, ids, want)
 	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]int{"removed": removed, "skipped": skipped})
+	writeJSON(w, http.StatusOK, info.answer(removed, skipped))
 }
 
 // syncLaterKey marks a removal whose re-read of Calibre happens in the background.

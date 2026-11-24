@@ -56,7 +56,9 @@ export async function openCalibreRemoval(filters, onDone) {
       const r = await attempt(() => post("/api/admin/calibre/remove", { ...filters, expected_count: data.count }));
       if (r) {
         dlg.close();
-        toast(`Removed ${r.removed} book(s) from Calibre${r.skipped ? ` (${r.skipped} were already gone)` : ""}. Syncing…`);
+        const notes = [r.behind ? `${r.behind} not removed: Calibre's Content server doesn't know them yet (restart the Calibre app, then try again)` : "",
+          (r.failed || []).length ? `${r.failed.length} refused by Calibre` : "", Math.max(0, (r.skipped || 0) - (r.behind || 0)) ? `${Math.max(0, r.skipped - (r.behind || 0))} were already gone` : ""].filter(Boolean);
+        toast(`Removed ${r.removed} book(s) from Calibre${notes.length ? ` (${notes.join("; ")})` : ""}. Syncing…`, notes.some((n) => !n.endsWith("already gone")));
         onDone?.();
       } else {
         rm.disabled = false;

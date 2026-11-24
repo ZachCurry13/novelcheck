@@ -31,7 +31,7 @@ func (c *cleanupCapture) Write(b []byte) (int, error) {
 }
 
 // notDone are the answer's fields that mean something wasn't done.
-var notDone = []string{"skipped", "failed", "failures", "errors", "not_in_calibre", "unmatched", "refused", "left"}
+var notDone = []string{"skipped", "failed", "failures", "errors", "not_in_calibre", "unmatched", "refused", "left", "behind"}
 
 func (s *Server) cleanupRecorder(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -177,7 +177,12 @@ export async function renderDuplicates(view, state) {
     all.textContent = "Remove their extra copies";
     if (!r) return;
     await load(); // the server read Calibre again before answering
-    say(`✓ Removed ${copies(r.removed)} (in Calibre's recycle bin)${r.skipped ? `; ${r.skipped} left alone: already gone, or Calibre's title differs (see the 🔔 notices)` : ""}.`, !r.skipped);
+    const gone = Math.max(0, (r.skipped || 0) - (r.behind || 0));
+    const why = [];
+    if (r.behind) why.push(`${r.behind} not removed: Calibre's Content server doesn't know these books yet (their files are in your library). Restart the Calibre app, then press this again`);
+    if ((r.failed || []).length) why.push(`${r.failed.length} refused by Calibre: ${r.failed.slice(0, 3).join("; ")}${r.failed.length > 3 ? "…" : ""}`);
+    if (gone) why.push(`${gone} already gone from Calibre, or Calibre's title differs (see the 🔔 notices)`);
+    say(`${r.removed ? "✓" : "✗"} Removed ${copies(r.removed)} (in Calibre's recycle bin)${why.length ? `. ${why.join(". ")}` : ""}.`, !why.length);
   });
   await load();
 

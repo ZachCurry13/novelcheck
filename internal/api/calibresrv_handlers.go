@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -122,11 +123,12 @@ func (s *Server) handleCalibreRemove(w http.ResponseWriter, r *http.Request) {
 			want[id] = m.Title
 		}
 	}
+	r, info := withRemovalInfo(r)
 	removed, skipped, ok := s.removeFromCalibre(w, r, ids, want)
 	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]int{"removed": removed, "skipped": skipped})
+	writeJSON(w, http.StatusOK, info.answer(removed, skipped))
 }
 
 // removeFromCalibre checks every id's title against calibre (so the wrong
@@ -142,11 +144,18 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 		writeErr(w, http.StatusBadGateway, err.Error())
 		return
 	}
+	info, _ := r.Context().Value(removalInfoKey{}).(*removalInfo)
+	if info == nil {
+		info = &removalInfo{}
+	}
 	var toRemove, odd []int
 	for _, id := range ids {
 		title, found := have[id]
 		if !found {
-			skipped++ // already gone from calibre
+			skipped++
+			if s.entryOnDisk(id) { // its files are in the library: Calibre's Content server just doesn't know the book yet
+				info.Behind = append(info.Behind, want[id])
+			}
 			continue
 		}
 		// Compare like NovelCheck matches books: ignoring case, punctuation and a subtitle on one side.
@@ -169,13 +178,28 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 		s.Store.Notify("warning", "calibre-remove", "Left alone: Calibre calls book #"+strconv.Itoa(id)+" \""+have[id]+
 			"\", NovelCheck expected \""+want[id]+"\". Read the Calibre library again (Admin → Library) and retry.", "#/admin?tab=cleanup")
 	}
+	// A batch Calibre refuses (one book with a bad author link, for instance) is tried one book at a time, so the
+	// rest still go and the ones it won't take are named.
+	var removedIDs []int
 	for start := 0; start < len(toRemove); start += 200 {
 		end := min(start+200, len(toRemove))
-		if err := c.Remove(ctx, toRemove[start:end]); err != nil {
-			writeErr(w, http.StatusBadGateway, "removed "+strconv.Itoa(start)+" books, then: "+err.Error())
-			return
+		if err := c.Remove(ctx, toRemove[start:end]); err == nil {
+			removedIDs = append(removedIDs, toRemove[start:end]...)
+			continue
+		}
+		for _, id := range toRemove[start:end] {
+			if err := c.Remove(ctx, []int{id}); err != nil {
+				info.Failed = append(info.Failed, "“"+want[id]+"” (#"+strconv.Itoa(id)+"): "+err.Error())
+			} else {
+				removedIDs = append(removedIDs, id)
+			}
 		}
 	}
+	if len(toRemove) > 0 && len(removedIDs) == 0 {
+		writeErr(w, http.StatusBadGateway, "Calibre refused every book: "+info.Failed[0]+". Nothing was removed. (If it says \"Foreign key violation\", Calibre's own library has a problem with that book's author: run Calibre's Library → Check library on it.)")
+		return
+	}
+	toRemove = removedIDs
 	by := ""
 	if u := auth.UserFrom(r); u != nil {
 		by = u.Username
@@ -184,6 +208,9 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 		log.Printf("calibre: logging removals failed: %v", err)
 	}
 	log.Printf("calibre: removed %d books via Content server (requested by %s)", len(toRemove), by)
+	if len(info.Behind) > 0 {
+		go s.checkCalibreBehind() // the 🔔 notice that says what to do
+	}
 	s.Store.DropCalibreEntries(toRemove) // the lists are right at once, before Calibre is read again
 	// One book at a time from the Duplicates page: answer now and read Calibre again behind it (one read at a
 	// time; several removals in a row share the next one).
@@ -215,4 +242,33 @@ func removalTool(path string) string {
 		return "Library cleanup: extra entries"
 	}
 	return "Library cleanup"
+}
+
+// removalInfo is what a removal couldn't do beyond "already gone": books Calibre's Content server doesn't know yet
+// (their files are in the library) and books Calibre refused. A handler that wants them puts one in the request.
+type removalInfo struct {
+	Behind []string
+	Failed []string
+}
+
+type removalInfoKey struct{}
+
+func withRemovalInfo(r *http.Request) (*http.Request, *removalInfo) {
+	info := &removalInfo{}
+	return r.WithContext(context.WithValue(r.Context(), removalInfoKey{}, info)), info
+}
+
+// answer is a removal's JSON: what was removed, skipped, and why the rest weren't.
+func (i *removalInfo) answer(removed, skipped int) map[string]any {
+	return map[string]any{"removed": removed, "skipped": skipped, "behind": len(i.Behind), "failed": i.Failed}
+}
+
+// entryOnDisk says whether any file of this Calibre entry is in the library folder.
+func (s *Server) entryOnDisk(id int) bool {
+	for _, p := range s.Store.CalibreEntryFiles(id) {
+		if _, err := os.Stat(p); err == nil {
+			return true
+		}
+	}
+	return false
 }
