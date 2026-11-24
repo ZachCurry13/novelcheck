@@ -907,7 +907,7 @@ CREATE TABLE IF NOT EXISTS kindle_unknown (
     UNIQUE (user_id, path)
 );
 
--- Things the admin asked for in the app that a Kindle does at its next sync (Library cleanup → Kindle tasks): the
+-- Things the admin asked for in the app that a Kindle does at its next sync (Admin → Library → Kindle tasks): the
 -- plugin asks for the waiting ones, does them and reports back. Only a fixed list of kinds exists.
 CREATE TABLE IF NOT EXISTS kindle_tasks (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,

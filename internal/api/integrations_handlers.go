@@ -81,7 +81,7 @@ func (s *Server) handleDatabaseCheck(w http.ResponseWriter, r *http.Request) {
 	ok := len(lines) == 1 && lines[0] == "ok"
 	msg := "The database file is sound."
 	if !ok {
-		msg = "SQLite reports: " + strings.Join(lines[:min(len(lines), 5)], "; ") + ". Download a backup now (System & Toggles) and report this."
+		msg = "SQLite reports: " + strings.Join(lines[:min(len(lines), 5)], "; ") + ". Download a backup now (System) and report this."
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": ok, "message": msg})
 }

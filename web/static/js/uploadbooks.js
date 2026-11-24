@@ -1,4 +1,4 @@
-// Admin → Library cleanup → Upload: e-books go into Calibre (through its Content server), audiobooks into
+// Admin → Library → Upload: e-books go into Calibre (through its Content server), audiobooks into
 // Audiobookshelf. Experimental: "Check my servers" (Settings → Developer) shows whether each server has the route.
 // Nothing is sent until the button is pressed and the list has been confirmed.
 import { get } from "./api.js";
@@ -16,7 +16,7 @@ async function send(path, form) {
 export async function renderUpload(host) {
   const t = await get("/api/admin/upload/targets").catch(() => ({}));
   const libs = t.abs || [];
-  host.innerHTML = `<p class="text-sm text-slate-400">Experimental. Run <b>Settings → Developer → Check my servers</b> first to see whether your Calibre and Audiobookshelf have the features this uses. Files over 100 MB need the home network.</p>
+  host.innerHTML = `<p class="text-sm text-slate-400">Experimental. Run <b>Admin → System → Integrations (Check my servers)</b> first to see whether your Calibre and Audiobookshelf have the features this uses. Files over 100 MB need the home network.</p>
     <div class="mt-3 space-y-2"><h3 class="font-semibold">E-books into Calibre</h3>
       ${t.calibre ? "" : `<p class="text-sm text-amber-200">Set up the Calibre Content server first (Admin → Calibre Library).</p>`}
       <input id="up-eb" type="file" multiple accept=".epub,.pdf,.mobi,.azw3,.azw,.kepub,.fb2,.cbz" class="input">

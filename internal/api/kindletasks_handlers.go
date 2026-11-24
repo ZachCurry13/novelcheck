@@ -13,7 +13,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// Kindle tasks (Library cleanup → Kindle tasks): things the admin asks for in the app that a Kindle does at its next
+// Kindle tasks (Admin → Library → Kindle tasks): things the admin asks for in the app that a Kindle does at its next
 // sync: back up, tidy the books, delete crash logs, delete books (only ones NovelCheck holds a copy of), send library
 // books, move books into a folder. The plugin asks for the waiting ones (GET /kosync/plugin/tasks), does them, and
 // reports each (POST /kosync/plugin/tasks/result). Only these kinds exist; nothing else is ever run.

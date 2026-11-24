@@ -1,7 +1,7 @@
 package api
 
 // Audiobookshelf, the admin side and each person's own link. The address and
-// token are saved with the other settings (Admin → Delivery & Services); this
+// token are saved with the other settings (Admin → E-readers & Delivery); this
 // is the status line, the test and the sync button, plus "link my account".
 
 import (

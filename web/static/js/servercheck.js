@@ -1,4 +1,4 @@
-// Settings → Developer (admins): "Check my servers" runs harmless read-only checks of Calibre, Audiobookshelf and
+// Admin → System → Integrations: "Check my servers" runs harmless read-only checks of Calibre, Audiobookshelf and
 // Calibre-Web, shows what they answered, and (being in the server report) lets a bug report carry it.
 import { post } from "./api.js";
 import { attempt } from "./ui.js";

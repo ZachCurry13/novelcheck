@@ -1,4 +1,4 @@
-// Admin → Library cleanup → Calibre's recycle bin: the books removed from Calibre lately (by NovelCheck, Calibre
+// Admin → Library → Calibre's recycle bin: the books removed from Calibre lately (by NovelCheck, Calibre
 // or Calibre-Web), read from the hidden .caltrash folder in the library, with a button to put one back.
 import { get, post } from "./api.js";
 import { esc, attempt, toast, fmtNum } from "./ui.js";

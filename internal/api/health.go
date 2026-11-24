@@ -123,7 +123,7 @@ func (s *Server) checks() []check {
 		}},
 		check{"calibre", "Calibre library", "#/admin", func(ctx context.Context) (string, string, string) {
 			if !s.Syncer.Available() {
-				return "error", "No Calibre library selected or found", "Pick your library in Admin → Delivery & Services → Calibre Library."
+				return "error", "No Calibre library selected or found", "Pick your library in Admin → E-readers & Delivery → Calibre Library."
 			}
 			n, err := calibre.CountBooks(s.Syncer.LibraryDir())
 			if err != nil {
@@ -146,7 +146,7 @@ func (s *Server) checks() []check {
 	if set(store.KeyCalibreSrvURL) != "" {
 		cs = append(cs, check{"calibre-server", "Calibre Content server", "#/admin", func(ctx context.Context) (string, string, string) {
 			if _, _, err := s.calibreClient().Libraries(ctx); err != nil {
-				return errResult(err, "Make sure Calibre is running with its Content server on, then re-check the login in Admin → Delivery & Services → Calibre Library.")
+				return errResult(err, "Make sure Calibre is running with its Content server on, then re-check the login in Admin → E-readers & Delivery → Calibre Library.")
 			}
 			return "ok", "Connected", ""
 		}})
@@ -165,7 +165,7 @@ func (s *Server) checks() []check {
 			if st.State == "connected" {
 				return "ok", "Connected", ""
 			}
-			return "error", "Not connected (" + st.State + ")" + strings.TrimSpace(" "+st.LastError), "Open Admin → Delivery & Services → Remote access and check the token and the connector log."
+			return "error", "Not connected (" + st.State + ")" + strings.TrimSpace(" "+st.LastError), "Open Admin → E-readers & Delivery → Remote access and check the token and the connector log."
 		}})
 		if host := strings.TrimSpace(set(store.KeyTunnelHostname)); host != "" {
 			cs = append(cs, check{"public-address", "Public address (" + host + ")", "#/admin", func(ctx context.Context) (string, string, string) {

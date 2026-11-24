@@ -11,7 +11,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/covers"
 )
 
-// Review covers (Admin → Library cleanup): go through the books with no cover one at a time, see cleaner titles
+// Review covers (Admin → Library): go through the books with no cover one at a time, see cleaner titles
 // and cover candidates, and pick.
 
 // handleCoverSuggest: GET /api/admin/covers/suggest?id=N[&q=…] gives the book's title and author, cleaner titles

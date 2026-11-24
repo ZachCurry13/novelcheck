@@ -104,7 +104,7 @@ func (s *Server) integrations(ctx context.Context) []IntegGroup {
 	}
 
 	// NovelCheck itself.
-	app := row("updates", "NovelCheck "+version.Version, "info", "Not checked", "Turn on the update check under System & Toggles to see new versions here.", "#/admin?tab=system")
+	app := row("updates", "NovelCheck "+version.Version, "info", "Not checked", "Turn on the update check under System to see new versions here.", "#/admin?tab=system")
 	if s.Updates != nil && s.Store.SettingBool(store.KeyCheckUpdates) {
 		st := s.Updates.Status(ctx, false)
 		switch {
@@ -191,7 +191,7 @@ func (s *Server) integrations(ctx context.Context) []IntegGroup {
 	groups = append(groups, IntegGroup{"Your AI", "What rates the books. \"Check now\" asks each model a tiny question to see that it answers.", ais})
 
 	// Library servers and accounts.
-	cal := act(row("calibre", "Calibre library folder", "warn", "Not found", "Choose the library folder under Delivery & Services → Calibre Library.", "#/admin?tab=delivery"), "calibre-sync", "Read now")
+	cal := act(row("calibre", "Calibre library folder", "warn", "Not found", "Choose the library folder under E-readers & Delivery → Calibre Library.", "#/admin?tab=delivery"), "calibre-sync", "Read now")
 	if s.Syncer != nil && s.Syncer.Available() {
 		cal.Badge, cal.Label, cal.Detail = "ok", "Found", "Read "+since(set(store.KeyCalibreLastSync))+"."
 	}

@@ -19,7 +19,7 @@ import (
 )
 
 // ErrNYTKey means the New York Times refused the API key.
-var ErrNYTKey = errors.New("the New York Times refused the API key; check it in Admin → Delivery & Services → Discover")
+var ErrNYTKey = errors.New("the New York Times refused the API key; check it in Admin → E-readers & Delivery → Discover")
 
 // Client fetches the lists. The URLs can point at test servers.
 type Client struct {

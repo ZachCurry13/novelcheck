@@ -63,7 +63,7 @@ func (s *Server) checkTitles(c *calibresrv.Client, want map[int]string) (map[int
 		return nil, fmt.Errorf("calibre's book #%d is %q but NovelCheck expected %q, and so on for %d of %d books. Is the Content server using the same library?", id, have[id].Title, want[id], len(odd), len(want))
 	}
 	for _, id := range odd {
-		s.formats.fail(want[id], fmt.Sprintf("Calibre calls book #%d %q; left alone. Read the Calibre library again (Library cleanup) and retry.", id, have[id].Title))
+		s.formats.fail(want[id], fmt.Sprintf("Calibre calls book #%d %q; left alone. Read the Calibre library again (Admin → Library) and retry.", id, have[id].Title))
 		delete(have, id)
 	}
 	return have, nil
@@ -86,7 +86,7 @@ func (s *Server) afterFormatJob() {
 		s.Store.Notify("warning", "format-job", fmt.Sprintf("%s %d did not work; the reasons are in the bug report (Settings → Developer).", msg, st.Failed), "#/admin?tab=cleanup")
 		return
 	}
-	s.Store.NotifyRoutine("format-job", msg+" Next: Admin → Library cleanup.", "#/admin?tab=cleanup")
+	s.Store.NotifyRoutine("format-job", msg+" Next: Admin → Library.", "#/admin?tab=cleanup")
 }
 
 func mb(n int64) string { return strconv.FormatFloat(float64(n)/(1<<20), 'f', 1, 64) + " MB" }

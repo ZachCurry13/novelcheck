@@ -1,4 +1,4 @@
-// Admin → Library cleanup: everything for keeping the library tidy in one place. The guided
+// Admin → Library: everything for keeping the library tidy in one place. The guided
 // cleanup (cleanup.js) runs the Calibre steps in order; below it each tool on its own, with
 // how much is waiting. The buttons marked data-act are handled by the Admin page.
 import { get, post } from "./api.js";

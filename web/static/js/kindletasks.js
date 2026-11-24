@@ -1,4 +1,4 @@
-// Library cleanup → "Kindle tasks": ask a Kindle (in NovelCheck, from anywhere) to do something at its next sync:
+// Admin → Library → "Kindle tasks": ask a Kindle (in NovelCheck, from anywhere) to do something at its next sync:
 // back up, tidy its books, delete crash logs, delete books NovelCheck holds a copy of, move books into a folder, or
 // download library books. The plugin (js-free, plugin 1.59) asks for the waiting tasks, does them and reports back
 // (api/kindletasks_handlers.go). Only these tasks exist.

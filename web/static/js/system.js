@@ -1,6 +1,7 @@
 // Admin → Integrations (the page that took over from System checks): everything NovelCheck is made of or
 // talks to, in one place. Each row shows how it stands and what can be done; "Check now" tests every
 // connection and pins the result to its row. Resource use lives on the Usage page.
+import { serverCheckHTML, bindServerCheck } from "./servercheck.js";
 import { adminNavHTML } from "./adminnav.js";
 import { get, post } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";
@@ -53,9 +54,11 @@ export async function renderSystem(view) {
       <span id="integ-when" class="basis-full text-sm text-slate-400"></span>
     </div>
     <div id="integ-body"><p class="text-slate-400">Loading…</p></div>
+    <div class="mb-4">${serverCheckHTML()}</div>
     <p class="my-4 text-sm text-slate-400">Looking for CPU, memory, network or AI token use? See <a href="#/usage" class="underline">Usage</a>.</p>
     <details class="card"><summary class="cursor-pointer font-semibold">Diagnose with AI</summary><div id="diagnose" class="mt-3"></div></details>`;
   renderDiagnose($("#diagnose", view));
+  bindServerCheck(view);
   const body = $("#integ-body", view);
   const btn = $("#integ-check", view);
   let data = null;

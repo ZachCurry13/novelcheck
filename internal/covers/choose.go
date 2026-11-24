@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Choosing a cover by hand (Admin → Library cleanup → Review covers): the candidates for a book, from Open Library
+// Choosing a cover by hand (Admin → Library → Review covers): the candidates for a book, from Open Library
 // and Google Books under each tidied form of its title, and saving the one a person picks.
 
 // Candidate is a cover a person can pick.

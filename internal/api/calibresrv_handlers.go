@@ -167,7 +167,7 @@ func (s *Server) removeFromCalibre(w http.ResponseWriter, r *http.Request, ids [
 	for _, id := range odd {
 		skipped++
 		s.Store.Notify("warning", "calibre-remove", "Left alone: Calibre calls book #"+strconv.Itoa(id)+" \""+have[id]+
-			"\", NovelCheck expected \""+want[id]+"\". Read the Calibre library again (Library cleanup) and retry.", "#/admin?tab=cleanup")
+			"\", NovelCheck expected \""+want[id]+"\". Read the Calibre library again (Admin → Library) and retry.", "#/admin?tab=cleanup")
 	}
 	for start := 0; start < len(toRemove); start += 200 {
 		end := min(start+200, len(toRemove))

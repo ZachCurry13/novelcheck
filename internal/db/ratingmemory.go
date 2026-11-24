@@ -20,7 +20,7 @@ func ratingMemory(d *sqlx.DB) error {
 		confidence, premise, approved, approved_by, age_level, age_set_by, spice_level, spice_reason, rules_version, flags_version,
 		content_version, content_amounts, genres, kind, genre_source, hc_rating, hc_ratings, hc_rated_at, hc_warnings, hc_moods, hc_id,
 		big_rules, analysis_model, analyzed_at`
-	// Both triggers do nothing when the admin turned remembering off (Library cleanup → Remembered ratings and covers).
+	// Both triggers do nothing when the admin turned remembering off (Admin → Library → Remembered ratings and covers).
 	const on = `COALESCE((SELECT value FROM settings WHERE key = 'remember_ratings'), 'true') != 'false'`
 	remember := `CREATE TRIGGER books_remember_rating BEFORE DELETE ON books WHEN OLD.status = 'analyzed' AND ` + on + `
 BEGIN

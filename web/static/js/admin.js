@@ -1,5 +1,5 @@
-// Admin control panel in tabs: AI & Scans, Users & Rules, Library cleanup, Delivery &
-// Services, System & Toggles. Each tab shows only its own notices; the others carry a count on their tab. Editors see the first two, without technical
+// Admin control panel in tabs: AI & Scans, People & Rules, Library cleanup, Delivery &
+// Services, System. Each tab shows only its own notices; the others carry a count on their tab. Editors see the first two, without technical
 // settings, secrets, backups or the destructive queue wipe. Admins other than
 // the main admin see what their areas cover (the main admin gives areas).
 import { once } from "./inflight.js";
@@ -17,7 +17,7 @@ import { renderStats, perBookCost } from "./adminstats.js";
 import { adminNavHTML, markAdminSection, tabsFor } from "./adminnav.js";
 import { AREA_NAMES } from "./adminaccess.js";
 
-const TABS = [["ai", "AI & Scans"], ["users", "Users & Rules"], ["cleanup", "Library cleanup"], ["delivery", "Delivery & Services"], ["system", "System & Toggles"]];
+const TABS = [["ai", "AI & Scans"], ["users", "People & Rules"], ["cleanup", "Library"], ["delivery", "E-readers & Delivery"], ["system", "System"]];
 
 // The open tab lives in the address (#/admin?tab=users) so a reload keeps it.
 const tabFromHash = () => new URLSearchParams(location.hash.split("?")[1] || "").get("tab");

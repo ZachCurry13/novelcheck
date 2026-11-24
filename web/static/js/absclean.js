@@ -1,4 +1,4 @@
-// Library cleanup → Audiobookshelf (api/absclean.go): every audiobook matched against Hardcover. Certain
+// Admin → Library → Audiobookshelf (api/absclean.go): every audiobook matched against Hardcover. Certain
 // matches are fixed by themselves (a switch turns that off); the rest wait here with what would change,
 // to Apply or Skip one by one.
 import { get, put, post } from "./api.js";

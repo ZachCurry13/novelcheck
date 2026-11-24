@@ -1,4 +1,4 @@
-// Library cleanup → "Remembered ratings and covers" (api/memory_handlers.go): what NovelCheck keeps about books that
+// Admin → Library → "Remembered ratings and covers" (api/memory_handlers.go): what NovelCheck keeps about books that
 // left every library, list and event, so they are not rated or searched for again; a switch to stop, and buttons
 // to forget ratings and to delete the covers of books that are gone.
 import { get, put, post } from "./api.js";

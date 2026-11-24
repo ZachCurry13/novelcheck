@@ -11,7 +11,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// Library cleanup → "Remembered ratings and covers": what NovelCheck keeps about books that left every library, list
+// Admin → Library → "Remembered ratings and covers": what NovelCheck keeps about books that left every library, list
 // and event (a rating, a found cover) so they are not rated or searched for again; a switch to stop remembering, and
 // buttons to forget ratings (all, or older than some days) and to delete the covers of books that are gone.
 

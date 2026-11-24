@@ -161,7 +161,7 @@ func (s *Server) serverChecksSection(line func(string, ...any)) {
 	checkMu.Lock()
 	txt, at := checkText, checkAt
 	checkMu.Unlock()
-	line("\n== Server checks (Settings → Developer → Check my servers) ==")
+	line("\n== Server checks (Admin → System → Integrations (Check my servers)) ==")
 	if txt == "" {
 		line("(not run since the server started)")
 		return

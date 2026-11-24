@@ -113,7 +113,7 @@ func (s *Server) NameLoop(ctx context.Context) {
 			_ = s.Store.SetSetting(namesVersionKey, namesVersion)
 		}
 		if n := s.fixNames(ctx, 2000); n > 0 {
-			s.Store.NotifyRoutine("names-fixed", fmt.Sprintf("Book names: %d books have their true title from Open Library. Calibre books are waiting under Library cleanup → Tidy titles in Calibre.", n), "#/admin?tab=cleanup")
+			s.Store.NotifyRoutine("names-fixed", fmt.Sprintf("Book names: %d books have their true title from Open Library. Calibre books are waiting under Admin → Library → Tidy titles in Calibre.", n), "#/admin?tab=cleanup")
 		}
 	}
 }

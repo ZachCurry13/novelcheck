@@ -56,14 +56,14 @@ const MANAGER = [
 
 const ADMIN = [
   ["Admin settings",
-    "As main admin you also set the AI, spending limits, Send-to-Kindle email and Calibre folder, and what each other admin can reach (<b>Admin → Users & Rules</b>)."],
+    "As main admin you also set the AI, spending limits, Send-to-Kindle email and Calibre folder, and what each other admin can reach (<b>Admin → People & Rules</b>)."],
   ["Start Reading delivery (optional)",
     `<p class="mb-2">When someone presses <b>▶ Start Reading</b> on your Nightstand, NovelCheck can put the book on their e-reader:</p>
     <ul class="list-disc space-y-1 pl-5">
-      <li><b>Kindle</b>: fill in <b>Admin → Delivery & Services → SMTP / Send-to-Kindle</b> (for Gmail, an App Password) and press <b>Send test email</b>. Each reader adds that sender to their Amazon approved list; <b>Profile</b> shows how.</li>
+      <li><b>Kindle</b>: fill in <b>Admin → E-readers & Delivery → SMTP / Send-to-Kindle</b> (for Gmail, an App Password) and press <b>Send test email</b>. Each reader adds that sender to their Amazon approved list; <b>Profile</b> shows how.</li>
       <li><b>KOReader</b>: nothing to set up here. Each reader opens <b>Settings → KOReader setup</b> for their private catalog address and QR code, and for reading sync, which marks books Reading and Finished on your Nightstand (parents can do it for kids from their account card).</li>
     </ul>
-    <p class="mt-2">Don't use either? Switch them off under <b>Admin → System & Toggles → Features</b>.</p>`],
+    <p class="mt-2">Don't use either? Switch them off under <b>Admin → System → Features</b>.</p>`],
 ];
 
 // Admins other than the main admin: their areas instead of the setup steps.

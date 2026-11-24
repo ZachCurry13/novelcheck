@@ -1,4 +1,4 @@
-// Admin → Delivery & Services → Audiobookshelf: how the last read went, a test
+// Admin → E-readers & Delivery → Audiobookshelf: how the last read went, a test
 // for the address and token as typed, and a "read it now" button.
 import { get, post } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";

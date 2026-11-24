@@ -1,4 +1,4 @@
-// Review covers (Admin → Library cleanup → Books with no cover): one book at a time, its title in a box to fix
+// Review covers (Admin → Library → Books with no cover): one book at a time, its title in a box to fix
 // (filled with the true title when NovelCheck found one among the author's books: "Unnatural.Exprosure" is
 // Unnatural Exposure), saved to Calibre and searched again; then cover candidates from Open Library and Google
 // Books to tap. A search box tries other words; Skip moves on.

@@ -8,7 +8,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// Library cleanup (Admin → Library cleanup): one place that shows what is left to tidy and
+// Library cleanup (Admin → Library): one place that shows what is left to tidy and
 // runs the guarded steps in order. Each step uses the same safe tools as before (title fixes,
 // format cleanup with Undo, the Content server), so a book is never changed without a check.
 

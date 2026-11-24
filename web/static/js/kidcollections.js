@@ -1,4 +1,4 @@
-// Users & Rules: a kid's account can be limited to chosen collections (they
+// People & Rules: a kid's account can be limited to chosen collections (they
 // then see no other books anywhere; their content rules still apply).
 import { $, $$, esc } from "./ui.js";
 

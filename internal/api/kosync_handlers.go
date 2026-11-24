@@ -33,7 +33,7 @@ func kosyncJSON(w http.ResponseWriter, status int, v any) {
 // kosyncUser is the reader signing in, or nil (and 401 sent).
 func (s *Server) kosyncUser(w http.ResponseWriter, r *http.Request) *store.User {
 	if !s.Store.SettingBool(store.KeyModuleKOReader) {
-		kosyncJSON(w, http.StatusUnauthorized, map[string]string{"message": "KOReader is turned off in NovelCheck (Admin → System & Toggles → Features)"})
+		kosyncJSON(w, http.StatusUnauthorized, map[string]string{"message": "KOReader is turned off in NovelCheck (Admin → System → Features)"})
 		return nil
 	}
 	if s.codeGuesses.blocked(remoteHost(r)) {

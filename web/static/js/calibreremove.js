@@ -28,7 +28,7 @@ export async function openCalibreRemoval(filters, onDone) {
         <p class="mt-1 text-xs text-slate-400">They go to Calibre's recycle bin, so you can restore them in Calibre.</p>
       </div>
       <p class="text-xs text-slate-500">Or do it by hand in Calibre:</p>` : `
-      <p class="text-xs text-slate-400">Tip: set up <b>Admin → Delivery & Services → Calibre Library → One-click removal</b> to remove books straight from here.</p>`}
+      <p class="text-xs text-slate-400">Tip: set up <b>Admin → E-readers & Delivery → Calibre Library → One-click removal</b> to remove books straight from here.</p>`}
       <div>
         <span class="label">Calibre search</span>
         <textarea id="cal-search" readonly rows="3" class="input font-mono text-xs">${esc(data.search)}</textarea>

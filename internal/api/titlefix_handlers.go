@@ -116,7 +116,7 @@ func (s *Server) pushTitles(w http.ResponseWriter, r *http.Request, pushes []tit
 	}
 	defer s.titleMu.Unlock()
 	if s.Store.Setting(store.KeyCalibreSrvURL) == "" {
-		writeErr(w, http.StatusBadRequest, "set up the calibre Content server connection first (Admin → Delivery & Services → Calibre Library)")
+		writeErr(w, http.StatusBadRequest, "set up the calibre Content server connection first (Admin → E-readers & Delivery → Calibre Library)")
 		return 0, nil, false
 	}
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 10*time.Minute) // not stopped by leaving the page

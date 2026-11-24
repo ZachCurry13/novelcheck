@@ -15,7 +15,7 @@
 - 2026-11-09: v1.52.0 (feature/v1.52): title saves answer at once (background Calibre re-read, one at a time, button shows progress). Next: owner OK to release; confirm Scarlet saves fast.
 - 2026-11-09: v1.52 (feature/v1.52): same-book pairs carry evidence and a confidence; spin-offs no longer paired; auto-join only when sure. Next: owner OK to release 1.52.0; check the Listed twice list again.
 - 2026-11-09: v1.52 also: Kindle finished books leave the Nightstand (plugin 1.51.0), genres auto-fill. Next: owner OK to release 1.52.0; then design the Wrapped / achievements page.
-- 2026-11-09: v1.53.0 (feature/v1.53): Admin → Library cleanup tab. Next: owner OK to release; then Wrapped/achievements.
+- 2026-11-09: v1.53.0 (feature/v1.53): Admin → Library tab. Next: owner OK to release; then Wrapped/achievements.
 - 2026-11-09: v1.54.0 (feature/v1.54, on top of unreleased v1.53): Back button fixes. Next: owner OK to release 1.53.0 + 1.54.0 together; then Wrapped.
 - 2026-11-09: v1.55.0 (feature/v1.55): review-first cleanup, keep choice for joins, stricter pair evidence, box sets join existing books, tidy reasons. Open: ask owner whether NovelCheck and the Content server read the same Calibre library (Clean Library vs config); read Last format job in the next report.
 - 2026-11-09: v1.55.0 is the big release (everything on feature/v1.55). Before release: full test run. After: owner to try Wrapped, the Libby filters, Find the missing books, and read the next bug report for the conversion failures and the Clean Library vs config question.

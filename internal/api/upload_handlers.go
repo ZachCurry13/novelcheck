@@ -11,7 +11,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// Upload (Admin → Library cleanup): e-books go into Calibre through its Content server, audiobooks into
+// Upload (Admin → Library): e-books go into Calibre through its Content server, audiobooks into
 // Audiobookshelf. Both are experimental until "Check my servers" has shown the routes exist on the real servers;
 // each upload says exactly what the other side answered.
 

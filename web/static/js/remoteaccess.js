@@ -1,4 +1,4 @@
-// Admin → Delivery & Services → Remote access: built-in Cloudflare Tunnel settings and status.
+// Admin → E-readers & Delivery → Remote access: built-in Cloudflare Tunnel settings and status.
 import { once } from "./inflight.js";
 import { copyBar, bindCopy, setLogText } from "./copy.js";
 import { get, put } from "./api.js";

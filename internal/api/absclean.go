@@ -20,7 +20,7 @@ import (
 // by Audible ASIN, then by exact title and author. A certain match fixes the audiobook in Audiobookshelf by
 // itself: title, author and series as Hardcover has them, and what is missing (ISBN, ASIN, narrator, genres,
 // description, cover). A match that needed a typo fixed in the title, or an ISBN that leads to a different
-// title, waits for a parent (Library cleanup → Audiobookshelf). Each audiobook is looked at again after a month.
+// title, waits for a parent (Admin → Library → Audiobookshelf). Each audiobook is looked at again after a month.
 
 const keyABSCleanAuto = "abs_cleanup_auto" // "off" = every fix waits for a parent
 const keyABSCleanResult = "abs_cleanup_result"

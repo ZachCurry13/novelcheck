@@ -99,7 +99,7 @@ Sentence case everywhere. No all-capitals labels (the old `.label` style goes).
 
 ## 6. Search in the top bar
 
-A full-round search bar, 56 high on the page, opening a search view (full screen on phones, a docked list on wide screens). It finds **settings, admin tools, pages and actions**: not books, people or collections, which keep their own search on Library. Each result is a list row with an icon, a name, and where it lives ("Admin → Library cleanup"). Admin results show only to people who can open them.
+A full-round search bar, 56 high on the page, opening a search view (full screen on phones, a docked list on wide screens). It finds **settings, admin tools, pages and actions**: not books, people or collections, which keep their own search on Library. Each result is a list row with an icon, a name, and where it lives ("Admin → Library"). Admin results show only to people who can open them.
 
 ## 7. Page patterns
 

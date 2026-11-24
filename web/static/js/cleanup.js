@@ -1,4 +1,4 @@
-// Admin → Library cleanup: what is left to tidy, and one button that runs the steps in order: tidy
+// Admin → Library: what is left to tidy, and one button that runs the steps in order: tidy
 // titles in Calibre, convert books to EPUB, remove the extra Calibre copies of a book (keeping its
 // best one), remove the other formats where an EPUB exists, then re-read the library. Before every
 // step a review window lists exactly what would change, with a tick box for each item, and nothing

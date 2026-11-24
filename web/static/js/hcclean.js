@@ -1,4 +1,4 @@
-// Admin → Library cleanup → "Fix Calibre details from Hardcover": a background scan compares every Calibre book
+// Admin → Library → "Fix Calibre details from Hardcover": a background scan compares every Calibre book
 // with Hardcover and lists what differs (series and number, tidy title and author, ISBN, description, genres).
 // Nothing is written until the ticked changes are applied; each book is read back afterwards to check Calibre
 // kept them.

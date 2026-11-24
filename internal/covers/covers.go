@@ -29,7 +29,7 @@ type Cache struct {
 	OpenLibraryURL string // "" = covers.openlibrary.org (tests use a fake)
 	SearchURL      string // "" = openlibrary.org (its search)
 	GoogleURL      string // "" = www.googleapis.com (Google Books)
-	// GoogleKey is the admin's Google Books API key (Admin → Delivery & Services). Without one, Google's
+	// GoogleKey is the admin's Google Books API key (Admin → E-readers & Delivery). Without one, Google's
 	// shared daily limit is used up by others and every cover search there is refused.
 	GoogleKey func() string
 	AmazonURL string // "" = m.media-amazon.com (Amazon's cover pictures, by ASIN)

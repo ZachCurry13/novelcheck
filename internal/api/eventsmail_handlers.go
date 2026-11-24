@@ -7,7 +7,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
-// "Use my SMTP email account" for the BookBub mailbox (Admin → Delivery & Services → Free book events): when the
+// "Use my SMTP email account" for the BookBub mailbox (Admin → E-readers & Delivery → Free book events): when the
 // Send-to-Kindle email account also receives BookBub's emails, one press copies its address and app password
 // (they stay on the server) into the BookBub mailbox, with the matching IMAP server, and switches the BookBub
 // event on, instead of typing them in again.

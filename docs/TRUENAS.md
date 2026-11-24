@@ -95,23 +95,23 @@ services:
 
 Open the **Admin** tab.
 
-1. **Pick your Calibre library:** under **Delivery & Services**, in the **Calibre Library** box, click **Find libraries automatically** and then **Use this** next to your library. Or click **Browse folders…**, click through to it (for example `books` → `Clean Library`), and click **Use this**. Folders that are Calibre libraries show a 📚 **Calibre library** badge. NovelCheck then loads your books, which takes a few seconds.
+1. **Pick your Calibre library:** under **E-readers & Delivery**, in the **Calibre Library** box, click **Find libraries automatically** and then **Use this** next to your library. Or click **Browse folders…**, click through to it (for example `books` → `Clean Library`), and click **Use this**. Folders that are Calibre libraries show a 📚 **Calibre library** badge. NovelCheck then loads your books, which takes a few seconds.
 2. **AI settings** (the AI that rates books), under **AI & Scans**, in the **Your AI** card:
    - Pick your **AI provider**: OpenAI, Anthropic Claude, Google Gemini, Perplexity, or Ollama (a free AI running on your own server). NovelCheck fills in the right address, a small low-cost model, and prices.
    - Paste the provider's **API key**. Click **Show setup steps** under the menu for step-by-step instructions for that provider, or see [AI_PROVIDERS.md](AI_PROVIDERS.md). Not sure which to choose? Click **Which one should I pick?**. Ollama doesn't need a key.
    - Click **Save settings**.
 3. Under **AI & Scans → When it runs**, set **Books per “Rate waiting books now”** to something small like `5`, then click **Rate waiting books now**. Watch "Tokens this hour" and "Spent to date" to see real costs before running bigger batches. With a local AI such as Ollama, NovelCheck also rates waiting books by itself while it's idle (**AI & Scans → Automatic rating**).
-4. **Accounts:** under **Users & Rules**, add everyone else:
+4. **Accounts:** under **People & Rules**, add everyone else:
    - **Editor**: for a spouse or co-parent. They can check and correct ratings, run scans, import Kindles, and manage kids' accounts, but can't change AI or email settings, API keys, or backups.
    - **Restricted (Kid)**: starts with the strictest content rules on. Untick any you don't need.
-5. **Send-to-Kindle (optional):** under **Delivery & Services**, fill in the SMTP box. With Gmail, use host `smtp.gmail.com`, port `587`, your Gmail address, and a Gmail *App Password*. Click **Send test email**. Then add that Gmail address to Amazon's **Approved Personal Document E-mail List**.
+5. **Send-to-Kindle (optional):** under **E-readers & Delivery**, fill in the SMTP box. With Gmail, use host `smtp.gmail.com`, port `587`, your Gmail address, and a Gmail *App Password*. Click **Send test email**. Then add that Gmail address to Amazon's **Approved Personal Document E-mail List**.
 
 ## Step 6: Put it on your phone's home screen
 
 - **iPhone (Safari):** open the NovelCheck address, tap **Share**, then **Add to Home Screen**.
 - **Android (Chrome):** open the address and tap **Install app** (or ⋮ → **Add to Home screen**).
 
-To use NovelCheck away from home (on cellular, or at a friend's house), turn on the built-in Cloudflare Tunnel under **Admin → Delivery & Services → Remote access**. Click **Show setup steps** there, or see [REMOTE_ACCESS.md](REMOTE_ACCESS.md). It needs a free Cloudflare account and a domain name, and no router changes.
+To use NovelCheck away from home (on cellular, or at a friend's house), turn on the built-in Cloudflare Tunnel under **Admin → E-readers & Delivery → Remote access**. Click **Show setup steps** there, or see [REMOTE_ACCESS.md](REMOTE_ACCESS.md). It needs a free Cloudflare account and a domain name, and no router changes.
 
 ---
 
@@ -127,13 +127,13 @@ If TrueNAS doesn't offer the update, download it yourself, then restart the app 
 
 Or, from **System → Shell**: `sudo docker pull ghcr.io/zachcurry13/novelcheck:latest`, then step 2.
 
-The version you are running shows at the bottom of every page (and at the top right on a computer). Admins can turn the update check off under **Admin → System & Toggles → Sign-in & Updates**.
+The version you are running shows at the bottom of every page (and at the top right on a computer). Admins can turn the update check off under **Admin → System → Sign-in & Updates**.
 
 **Installed before version 1.26.1 with the pull policy "Always"?** That still works, but then TrueNAS must download NovelCheck on every start, including at boot, and the app may fail to start when the internet or GitHub is slow (for example "Timed out waiting for response"). To switch, **Edit** the app and set **Pull Policy** to **Only pull image if not present on host** (form), or change `pull_policy: always` to `pull_policy: missing` (YAML), then **Save**.
 
 ## Backups
 
-In NovelCheck: **Admin → System & Toggles → Download novelcheck.db**. Keep that file somewhere safe. It contains passwords (scrambled) and your API keys.
+In NovelCheck: **Admin → System → Download novelcheck.db**. Keep that file somewhere safe. It contains passwords (scrambled) and your API keys.
 
 ## Troubleshooting
 
@@ -143,9 +143,9 @@ In NovelCheck: **Admin → System & Toggles → Download novelcheck.db**. Keep t
 | **Browse folders…** shows nothing, or says **permission denied** | Give the **apps** user *Read* access to the Step 2 dataset: **Datasets → that dataset → Permissions → Edit → Add Item → User: apps → Read**, and tick **Apply permissions recursively**. |
 | **Find libraries automatically** finds nothing | Check the Step 3 path points at the folder that *contains* your library somewhere inside it. The search goes up to 5 folders deep; use **Browse folders…** for anything deeper. |
 | Can't open `http://…:30080` | Another app may already use port 30080. Edit the app and change `30080` to another number like `30081`. |
-| Forgot a password | Another admin can reset it under **Admin → Users & Rules → Reset password**. Editors can reset kids' passwords the same way under **Manage**. |
+| Forgot a password | Another admin can reset it under **Admin → People & Rules → Reset password**. Editors can reset kids' passwords the same way under **Manage**. |
 | Locked out of the only admin account | Open **Apps → novelcheck → Shell** (the icon on the container row, next to Logs) and type `novelcheck reset-password YOUR-USERNAME`. It prints a new password; sign in with it and change it under **Profile**. (`novelcheck users` lists the account names.) |
-| Asked to sign in every time | Make sure **Keep me signed in on this device** is ticked when you sign in. You then stay signed in as long as you use NovelCheck at least once every 30 days (admins can change this under **Admin → System & Toggles → Sign-in & Updates**). Some things always need a separate sign-in: the iPhone home-screen app and Safari keep separate logins, each address you use (for example your TrueNAS IP and a Cloudflare address) needs its own sign-in, and private browsing windows forget you when closed. |
+| Asked to sign in every time | Make sure **Keep me signed in on this device** is ticked when you sign in. You then stay signed in as long as you use NovelCheck at least once every 30 days (admins can change this under **Admin → System → Sign-in & Updates**). Some things always need a separate sign-in: the iPhone home-screen app and Safari keep separate logins, each address you use (for example your TrueNAS IP and a Cloudflare address) needs its own sign-in, and private browsing windows forget you when closed. |
 | Updated but the version number didn't change | TrueNAS restarted the copy it already had. Pull the new image and **Edit → Save** the app, as described in [Updating NovelCheck](#updating-novelcheck). |
 | The app doesn't start after a reboot, or TrueNAS says **Timed out waiting for response** | TrueNAS is trying to download NovelCheck at boot. Set the pull policy to **Only pull image if not present on host** as described at the end of [Updating NovelCheck](#updating-novelcheck). |
 | See what's going on | **Apps → novelcheck → Logs** (the icon on the container row). |

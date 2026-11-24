@@ -1,4 +1,4 @@
-// Admin → Delivery & Services → Discover: how the lists are doing, a test for
+// Admin → E-readers & Delivery → Discover: how the lists are doing, a test for
 // the New York Times key, and a refresh button.
 import { get, post } from "./api.js";
 import { $, esc, attempt, toast } from "./ui.js";

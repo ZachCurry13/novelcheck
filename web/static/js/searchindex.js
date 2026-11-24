@@ -2,7 +2,7 @@
 // collections: those have their own search on the Library page. Each entry is
 // { name, where, icon, href | click, words }: href opens a page, click presses a button that is already on the page.
 import { canHere, canManage } from "./ui.js";
-import { tabsFor } from "./adminnav.js";
+import { tabsFor, adminPages } from "./adminnav.js";
 
 const shown = (a) => !a.classList.contains("hidden") && !a.classList.contains("module-off");
 const label = (a) => [...a.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
@@ -33,7 +33,7 @@ const SECTION = { general: "General", account: "Account", kindle: "Kindle & KORe
 
 const PROFILE = [["My reading", "summary"], ["Your reading taste", "rate books likes"], ["Content rules on this account", "hidden filters peppers"]];
 
-// Tools on Admin → Library cleanup.
+// Tools on Admin → Library.
 const CLEANUP = [["Books listed twice in NovelCheck", "join same book"], ["Duplicates in Calibre", "copies remove keep"], ["Tidy titles in Calibre", "rename numbers"],
   ["Formats", "epub convert remove other formats"], ["Genres", "tags fill"], ["Box sets", "split omnibus"], ["Books with no cover", "find covers"],
   ["Covers reported as wrong", "review"], ["Read the Calibre library now", "sync refresh re-read"], ["Calibre's recycle bin", "put back restore removed trash"]];
@@ -57,11 +57,12 @@ export function entries(user) {
   if (canManage(user)) {
     const strip = (t) => t.replace(/^[^\p{L}]+/u, "");
     for (const [k, , text] of tabsFor()) {
-      add(strip(text), "Admin", "admin_panel_settings", { href: k.startsWith("@") ? `#/${k.slice(1)}` : `#/admin?tab=${k}` }, ADMIN_WORDS[k] || "");
+      add(strip(text), "Admin", "admin_panel_settings", { href: `#/admin?tab=${k}` }, ADMIN_WORDS[k] || "");
     }
+    for (const [k, name, href] of adminPages()) add(name, "Admin", "admin_panel_settings", { href }, ADMIN_WORDS[k] || "");
     if (canHere("calibre")) {
-      for (const [name, words] of CLEANUP) add(name, "Admin → Library cleanup", "admin_panel_settings", { href: "#/admin?tab=cleanup" }, words);
-      add("Delete requests", "Admin → Library cleanup", "delete", { href: "#/deletions" }, "remove books family asked");
+      for (const [name, words] of CLEANUP) add(name, "Admin → Library", "admin_panel_settings", { href: "#/admin?tab=cleanup" }, words);
+      add("Delete requests", "Admin → Library", "delete", { href: "#/deletions" }, "remove books family asked");
     }
   }
   add("How to use NovelCheck", "Action", "help", { click: "#help-btn" }, "help guide tour");

@@ -80,7 +80,7 @@ export async function renderUsers(host, viewer) {
         kids ? typeOptions("restricted", 2, viewer) : typeOptions("editor", 0, viewer, false)}</select>
       <button class="btn-primary">Add user</button>
     </form>
-    ${kids ? "" : `<p class="mb-3 text-xs text-slate-500">Parent tools are turned off (Admin → System & Toggles → Features), so new kid accounts can't be added. Existing kids keep their rules.</p>`}
+    ${kids ? "" : `<p class="mb-3 text-xs text-slate-500">Parent tools are turned off (Admin → System → Features), so new kid accounts can't be added. Existing kids keep their rules.</p>`}
     <div id="family-devices"></div>
     <div class="grid gap-3 lg:grid-cols-2">${users.map((u) => userCard(u, parents, viewer)).join("")}</div>`;
   fillKidReading(root);
