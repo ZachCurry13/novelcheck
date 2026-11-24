@@ -30,7 +30,9 @@ export async function renderKindleTasks(host, device = "", user = "") {
   const task = (t) => `<li class="flex items-center justify-between gap-2 py-1"><span class="min-w-0"><b>${esc(KIND[t.kind] || t.kind)}</b> <span class="text-slate-400">${esc(t.device || "any Kindle")}</span>
     ${t.note ? `<span class="block text-xs text-slate-400">${esc(t.note)}</span>` : ""}</span>
     ${t.status === "waiting" ? `<button type="button" data-kt-cancel="${t.id}" class="btn-ghost shrink-0 py-0.5 text-xs">Take back</button>` : `<span class="shrink-0 text-xs ${t.status === "done" ? "text-emerald-400" : "text-slate-400"}">${esc(t.status)}</span>`}</li>`;
-  host.innerHTML = `${pick}<p class="mb-2">The Kindle does these at its next sync. Only backed-up books can be deleted; Amazon store books can be removed, since they stay in the Amazon cloud.</p>
+  const plugin = !r.app; // the KOReader plugin's Kindle (the Kindle app can't tidy or delete files)
+  host.innerHTML = `${pick}${plugin ? `<p class="mb-2"><button type="button" data-kt-clean class="btn-primary">Clean up this Kindle</button>
+      <span class="block text-xs text-slate-400">Moves its books into KOReader's library folder (Books/NovelCheck) and deletes the extra copies of the same book, keeping the one read furthest${(r.duplicates || []).length ? ` (${r.duplicates.length} book${r.duplicates.length === 1 ? "" : "s"} with extra copies)` : ""}.</span></p>` : ""}<p class="mb-2">The Kindle does these at its next sync. Only backed-up books can be deleted; Amazon store books can be removed, since they stay in the Amazon cloud.</p>
     <label class="mb-2 block text-xs text-slate-400">Kindle <select id="kt-dev" class="input mt-1">${r.devices.map((d) => `<option ${d.name === dev ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label>
     <p class="mb-2 flex flex-wrap gap-2">${["backup", "tidy", "crashlogs", "report", "highlights", "stats", "download_nightstand", "tidy_names", "selftest", "update_plugin", "stop", "resume_auto"]
       .map((k) => `<button type="button" data-kt="${k}" class="btn-secondary py-1 text-sm">${esc(k === "tidy" ? "Tidy its books into Books/NovelCheck" : KIND[k])}</button>`).join("")}</p>
@@ -66,6 +68,18 @@ export async function renderKindleTasks(host, device = "", user = "") {
   host.querySelector("#kt-dev").onchange = again;
   bindUser();
   host.onclick = async (e) => {
+    if (e.target.closest("[data-kt-clean]")) {
+      const groups = r.duplicates || [];
+      if (!confirm(`Clean up this Kindle? Its books move into Books/NovelCheck${groups.length ? ` and ${groups.reduce((n, g) => n + g.length - 1, 0)} extra copies are deleted (the copy read furthest stays)` : ""}. It happens at its next sync.`)) return;
+      const device = host.querySelector("#kt-dev").value, url = `/api/me/kindle-tasks?${qs("")}`;
+      const ok = await attempt(async () => {
+        await post(url, { device, kind: "tidy" });
+        for (const g of groups) await post(url, { device, kind: "delete_books", filenames: g.slice(1).map((f) => f.filename), keep: g[0].filename });
+        return true;
+      }, "Queued: the Kindle cleans up at its next sync");
+      if (ok) again();
+      return;
+    }
     const keep = e.target.closest("[data-kt-keep]");
     if (keep) {
       const g = r.duplicates[Number(keep.dataset.ktKeep)];

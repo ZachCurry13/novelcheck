@@ -1,6 +1,6 @@
 #!/bin/sh
 # NovelCheck app: "Send a check" (at the bottom of the app) runs this. It tests what the app needs on this Kindle,
-# keeps the result in /mnt/us/novelcheck-check.txt (outside documents, so it never shows as a book) and sends it to
+# keeps the result in the app's own folder (never where the Kindle or KOReader would list it as a book) and sends it to
 # NovelCheck's bug log. Changes nothing. The account comes from the app's own config.js.
 
 APP=/mnt/us/extensions/novelcheck-app
@@ -8,7 +8,7 @@ VERSION=$(sed -n 's/.*"version":"\([^"]*\)".*/\1/p' "$APP/config.js")
 SERVER=$(sed -n 's/.*"server":"\([^"]*\)".*/\1/p' "$APP/config.js")
 NCUSER=$(sed -n 's/.*"user":"\([^"]*\)".*/\1/p' "$APP/config.js")
 NCKEY=$(sed -n 's/.*"key":"\([^"]*\)".*/\1/p' "$APP/config.js")
-OUT=/mnt/us/novelcheck-check.txt
+OUT=/mnt/us/extensions/novelcheck-app/last-check.txt
 H1="x-auth-user: $NCUSER"
 H2="x-auth-key: $NCKEY"
 

@@ -20,26 +20,59 @@ function api(method, path, body, done) {
     if (x.readyState !== 4) return;
     var data = null;
     try { data = JSON.parse(x.responseText); } catch (e) {}
-    if (x.status === 0) return done("No connection. Turn off Airplane Mode and try again.", null, 0);
-    if (x.status >= 400) return done((data && data.message) || ("NovelCheck answered " + x.status + "."), data, x.status);
+    if (x.status === 0) {
+      if (path.indexOf("/plugin/debug") < 0) logLine(method + " " + path.split("?")[0] + ": no connection");
+      return done("No connection. Turn off Airplane Mode and try again.", null, 0);
+    }
+    if (x.status >= 400) {
+      if (path.indexOf("/plugin/debug") < 0) logLine(method + " " + path.split("?")[0] + " -> " + x.status + " " + ((data && data.message) || ""));
+      return done((data && data.message) || ("NovelCheck answered " + x.status + "."), data, x.status);
+    }
     done(null, data, x.status);
   };
   x.send(body ? JSON.stringify(body) : null);
 }
 
-// cover shows a book's cover in img (covers need the sign-in, so they come by XHR).
+// cover shows a book's cover in img. Covers need the sign-in, so they come by XHR, as bytes turned into a data:
+// address (the Kindle's browser has no blob: addresses for pictures).
 function cover(img, id) {
   var x = new XMLHttpRequest();
   x.open("GET", NC.server + "/kosync/plugin/cover/" + id + "?size=l", true);
   x.setRequestHeader("x-auth-user", NC.user);
   x.setRequestHeader("x-auth-key", NC.key);
-  x.responseType = "blob";
-  x.onload = function () {
-    if (x.status === 200 && window.URL) img.src = window.URL.createObjectURL(x.response);
-    else img.parentNode && img.parentNode.removeChild(img);
+  x.responseType = "arraybuffer";
+  var drop = function (why) {
+    if (img.parentNode) img.parentNode.removeChild(img);
+    if (why) logLine("cover " + id + ": " + why);
   };
-  x.onerror = function () { img.parentNode && img.parentNode.removeChild(img); };
+  x.onload = function () {
+    var type = x.getResponseHeader("Content-Type") || "";
+    if (x.status !== 200 || type.indexOf("image/") !== 0) return drop(x.status === 200 ? "" : "status " + x.status);
+    var bytes = new Uint8Array(x.response), bin = "";
+    for (var i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+    img.src = "data:" + type.split(";")[0] + ";base64," + window.btoa(bin);
+  };
+  x.onerror = function () { drop("network error"); };
   x.send();
+}
+
+// logLine notes what the app did or what went wrong (the last 150 lines, kept on the Kindle); sendLog sends them to
+// NovelCheck's bug log, so an admin sees what the app is doing without asking.
+function logLine(text) {
+  var lines = [];
+  try { lines = JSON.parse(localStorage.getItem("nc-log")) || []; } catch (e) {}
+  lines.push(new Date().toISOString().slice(0, 19).replace("T", " ") + " " + text);
+  try { localStorage.setItem("nc-log", JSON.stringify(lines.slice(-150))); } catch (e) {}
+}
+
+function sendLog(why) {
+  var lines = [];
+  try { lines = JSON.parse(localStorage.getItem("nc-log")) || []; } catch (e) {}
+  if (!lines.length) return;
+  api("POST", "/kosync/plugin/debug", { device: NC.device, version: "app " + NC.version,
+    text: "KINDLE APP LOG (" + why + ")\n" + navigator.userAgent + "\n\n" + lines.join("\n") }, function (err) {
+    if (!err) try { localStorage.setItem("nc-log", "[]"); } catch (e) {}
+  });
 }
 
 // run has KindleForge's helper (utild) run a shell command as the Kindle; false when there is no helper.

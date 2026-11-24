@@ -79,34 +79,6 @@ function downloadButton(b, main) {
   return btn;
 }
 
-function details(id) {
-  note("Loading…");
-  api("GET", "/kosync/plugin/info/" + id, null, function (err, b) {
-    if (err) return note(err);
-    note("");
-    var m = $("main");
-    m.innerHTML = "";
-    $("pages").hidden = true;
-    var d = el("div", "book");
-    var img = el("img");
-    d.appendChild(img);
-    cover(img, id);
-    d.appendChild(el("h2", "", b.title));
-    d.appendChild(el("div", "by", b.author + (b.series ? " · " + b.series + (b.series_index ? " #" + b.series_index : "") : "")));
-    d.appendChild(el("p", "title", spice(b.level) + (b.reason ? ": " + b.reason : "")));
-    if (b.verdict) d.appendChild(el("p", "", b.verdict));
-    if (b.summary) d.appendChild(el("p", "", b.summary));
-    var acts = el("div", "actions");
-    var back = el("button", "", "Back");
-    back.onclick = rows;
-    if (b.url) acts.appendChild(downloadButton(b, true));
-    else acts.appendChild(el("span", "meta", "No file to download."));
-    acts.appendChild(back);
-    d.appendChild(acts);
-    m.appendChild(d);
-  });
-}
-
 // download asks the server for a Kindle copy (it may convert first), then has utild save it into documents/NovelCheck.
 function download(b, btn, tries) {
   tries = tries || 0;
@@ -158,6 +130,7 @@ function save(b, file, btn) {
   waitFor(out, 600, function (text) {
     if (text && text.indexOf("ok") >= 0) {
       got[b.id] = true;
+      logLine("downloaded " + b.title + " as " + file);
       try { localStorage.setItem("nc-got", JSON.stringify(got)); } catch (e) {}
       btn.textContent = "On Kindle";
       return note(b.title + " is in your Kindle library.");
@@ -165,6 +138,8 @@ function save(b, file, btn) {
     btn.disabled = false;
     btn.textContent = "Download";
     note("The download failed. Check Wi-Fi and try again.");
+    logLine("download failed: " + b.title + " (" + file + "): " + (text == null ? "no answer from the Kindle helper" : text.replace(/\s+/g, " ")));
+    sendLog("a download failed");
   });
 }
 

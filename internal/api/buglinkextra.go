@@ -51,3 +51,26 @@ func (s *Server) writeKindleBackups(b *strings.Builder) {
 		}
 	}
 }
+
+// writeUnmatched lists the e-reader books NovelCheck couldn't match to a library book (per person and device,
+// with a few examples), so a matching problem shows without anyone reporting it.
+func (s *Server) writeUnmatched(b *strings.Builder) {
+	var rows []struct {
+		User   string `db:"username"`
+		Device string `db:"device"`
+		Count  int    `db:"n"`
+		Some   string `db:"some"`
+	}
+	_ = s.Store.DB.Select(&rows, `SELECT u.username, d.device, COUNT(*) AS n,
+		(SELECT GROUP_CONCAT(x.t, ' | ') FROM (SELECT COALESCE(NULLIF(e.title, ''), e.filename) || COALESCE(' · ' || NULLIF(e.author, ''), '') AS t
+			FROM device_books e WHERE e.user_id = d.user_id AND e.device = d.device AND e.book_id IS NULL AND e.ignored = 0 LIMIT 12) x) AS some
+		FROM device_books d JOIN users u ON u.id = d.user_id WHERE d.book_id IS NULL AND d.ignored = 0
+		GROUP BY d.user_id, d.device ORDER BY n DESC`)
+	b.WriteString("\n== E-reader books NovelCheck couldn't match (person / device: how many, a few of them) ==\n")
+	for _, r := range rows {
+		fmt.Fprintf(b, "%s / %s: %d · %s\n", r.User, r.Device, r.Count, r.Some)
+	}
+	if len(rows) == 0 {
+		b.WriteString("(none)\n")
+	}
+}

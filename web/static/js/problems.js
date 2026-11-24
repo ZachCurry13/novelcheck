@@ -5,6 +5,16 @@ import { esc, attempt } from "./ui.js";
 import { copyText } from "./copy.js";
 import { diagnoseLater } from "./diagnose.js";
 import { when } from "./deepscan.js";
+import { report } from "./debugrec.js";
+
+// screenText is what was on the screen when the report was made (the page and any open window), for the admin and
+// the bug link: it saves asking "what did you see?".
+function screenText() {
+  const parts = [...document.querySelectorAll("dialog[open]:not(#report-problem-dialog)")].map((dl) => `[window]\n${dl.innerText}`);
+  parts.unshift(`[page ${location.hash || "#/"}]\n${document.getElementById("view")?.innerText || ""}`);
+  const text = parts.join("\n\n").replace(/\n{3,}/g, "\n\n");
+  return text.length > 12000 ? text.slice(0, 12000) + "\n…" : text;
+}
 
 function dialog(id) {
   let d = document.getElementById(id);
@@ -25,16 +35,21 @@ export function openReportProblem() {
       <button type="button" data-close class="btn-ghost px-2 text-xl" aria-label="Close">✕</button></div>
     <label class="block"><span class="label">What happened, or what would you like?</span>
       <textarea name="text" required maxlength="4000" rows="5" class="input" placeholder="What were you doing, and what went wrong? Ideas are welcome too."></textarea></label>
-    <p class="text-xs text-slate-400">Your admin gets this, with the page you were on (${esc(page)}) and your device type.</p>
+    <p class="text-xs text-slate-400">Your admin gets this, with what is on your screen now (${esc(page)}), your device type and the app's recent log.</p>
     <button class="btn-primary">Send to my admin</button>
   </form>`;
   const form = d.querySelector("form");
+  const screen = screenText(); // before this window covers anything
   d.onclick = (e) => {
     if (e.target === d || e.target.closest("[data-close]")) d.close();
   };
   form.onsubmit = async (e) => {
     e.preventDefault();
-    if (await attempt(() => post("/api/problems", { text: form.text.value, page }), "Sent. Your admin will take a look.")) d.close();
+    if (await attempt(() => post("/api/problems", { text: form.text.value, page }), "Sent. Your admin will take a look.")) {
+      d.close();
+      const version = document.querySelector("[data-app-version]")?.textContent?.trim() || "";
+      post("/api/me/bug-report", { text: `PROBLEM REPORT: ${form.text.value}\n\n== What was on the screen ==\n${screen}\n\n${report(version)}` }).catch(() => {});
+    }
   };
   d.showModal();
   form.text.focus();

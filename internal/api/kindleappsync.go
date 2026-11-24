@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/zachcurry13/novelcheck/internal/content"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -94,4 +95,57 @@ func (s *Server) handleKindleWords(w http.ResponseWriter, r *http.Request) {
 		added += n
 	}
 	kosyncJSON(w, http.StatusOK, map[string]int{"books": matched, "added": added})
+}
+
+// moreInfo adds what a book page on an e-reader shows beyond the plugin's basics (the Kindle app's book page): the
+// door, the content found grouped as on the web page, this person's heads-up, the rating's yes/no answers, genres,
+// Hardcover readers' stars and the person's own.
+func (s *Server) moreInfo(u *store.User, b *store.Book, out map[string]any) {
+	if b.SpiceLevel != nil {
+		out["door"] = "No Spice"
+		if *b.SpiceLevel >= 4 {
+			out["door"] = "Open Door"
+		} else if *b.SpiceLevel >= 2 {
+			out["door"] = "Closed Door"
+		}
+	}
+	groups := map[string][]string{}
+	var order []string
+	for _, kv := range strings.Split(b.Content, ",") {
+		k, _, _ := strings.Cut(kv, ":")
+		g := content.GroupOf(k)
+		if g == "" {
+			continue
+		}
+		if _, ok := groups[g]; !ok {
+			order = append(order, g)
+		}
+		groups[g] = append(groups[g], content.Label(k))
+	}
+	var found []map[string]any
+	for _, g := range order {
+		found = append(found, map[string]any{"group": content.Label(g), "items": groups[g]})
+	}
+	out["content"] = found
+	var flags []string
+	for _, f := range []struct {
+		on    bool
+		label string
+	}{{b.Nudity, "Nudity"}, {b.SoloActs, "Solo acts"}, {b.HeavyInnuendo, "Heavy innuendo"}, {b.DarkOccult, "Dark occult"}, {b.DemonicPresence, "Demonic presence"}} {
+		if f.on {
+			flags = append(flags, f.label)
+		}
+	}
+	out["flags"] = flags
+	out["heads_up"] = s.Store.HeadsUp(u, b)
+	var genres []string
+	for _, g := range strings.Split(strings.Trim(b.Genres, ","), ",") {
+		if g != "" {
+			genres = append(genres, g)
+		}
+	}
+	out["genres"] = genres
+	out["hc_rating"], out["hc_ratings"] = b.HCRating, b.HCRatings
+	out["my_stars"] = s.Store.RatingOf(u.ID, b.ID)
+	out["old_rules"] = store.OldRating(b)
 }

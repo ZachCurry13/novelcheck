@@ -20,6 +20,8 @@ function syncNow(force) {
         sendWords(said, function () {
           if (ok) keep("nc-synced", String(new Date().getTime()));
           note(said.join(" "));
+          logLine("sync" + (force ? " (button)" : "") + ": " + said.join(" "));
+          sendLog("after a sync");
           if (left && left.length) showLeft(left); // books that left the Kindle: keep or remove them
         });
       });

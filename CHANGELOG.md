@@ -6,9 +6,19 @@ becomes the release notes for that version and is shown in the app under
 
 ## [1.98.1]
 
-### 📖 Kindle app 1.2.2: nothing extra in her library
-- The check that used to be a **NovelCheck Check** "book" (and its **NovelCheck-check** result) is now **Send a check** at the bottom of the app; its result goes only to NovelCheck. The app takes the two old items out of the library by itself after it updates.
-- **Covers for downloaded books.** After a download, the app puts the book's NovelCheck cover where the Kindle looks for it (its thumbnails folder, as Calibre does), so the book shows its cover instead of a plain tile. Books downloaded before this keep the plain tile until they're downloaded again.
+### 📖 Kindle app 1.3.0
+- **A fuller book page**: the cover (it didn't load on the Kindle before), spice level with its door, your heads-up, what the book contains (as on the web page), genres, Hardcover readers' stars and yours, and the summary.
+- **Add to Nightstand** and **I finished it** (with stars; it marks the book finished in NovelCheck and Hardcover, like the plugin does at the end of a book) on the book page.
+- **Covers for downloaded books.** After a download, the app puts the book's NovelCheck cover where the Kindle looks for it, so it shows its cover instead of a plain tile. Books downloaded before this keep the plain tile until they're downloaded again.
+- **Nothing extra in the library.** The check that used to be a **NovelCheck Check** "book" (and its result) is now **Send a check** at the bottom of the app; the app removes the two old items by itself after it updates.
+- **It tells NovelCheck what it did.** After each sync and any failed download, the app sends its log to the bug link, so problems show without anyone reporting them.
+
+### 🧹 Fixes
+- **Removing extra Calibre copies:** when Calibre's Content server is behind your library (books added with Calibre-Web aren't seen until it restarts), NovelCheck now says so plainly, and a 🔔 notice stays until the Content server catches up (checked every hour). The same cause stopped tidying titles.
+- **Covers:** a book-shaped cover now wins over an audiobook's square one, and the cover finder looks for one for audiobooks too.
+- **Report a problem or idea** now sends what was on the screen and the app's recent log along with the words.
+- **Clean up this Kindle** in the Kindle remote (your idea): moves the Kindle's books into KOReader's library folder and deletes the extra copies of the same book, keeping the one read furthest.
+- The bug link lists e-reader books NovelCheck couldn't match.
 
 ## [1.98.0]
 

@@ -131,6 +131,7 @@ func (s *Server) handlePluginInfo(w http.ResponseWriter, r *http.Request) {
 	if pb, ok := s.pluginBookFor(b); ok {
 		out["format"], out["size"], out["url"] = pb.Format, pb.Size, pb.URL
 	}
+	s.moreInfo(u, b, out)
 	if items, err := s.Store.ListQueue(u.ID, false); err == nil {
 		for _, it := range items {
 			if it.BookID == b.ID {

@@ -50,7 +50,8 @@ func (s *Server) hasCover(b store.BriefBook) bool {
 	if _, _, ok := s.Covers.Stored(s.coverName(b.ID)); ok {
 		return true
 	}
-	return s.Covers.HasOpenLibrary(b.ISBN) || s.Store.AudioItemID(b.ID) != "" || s.Store.DiscoverCoverURL(b.ID) != ""
+	// An audiobook's square cover from Audiobookshelf doesn't count: the finder still looks for the book-shaped one.
+	return s.Covers.HasOpenLibrary(b.ISBN) || s.Store.DiscoverCoverURL(b.ID) != ""
 }
 
 // MissingCovers lists the library books with no real cover.

@@ -50,6 +50,7 @@ func (s *Server) handleBugLink(w http.ResponseWriter, r *http.Request) {
 	writeCheckRuns(&b)
 	s.writeFamilyFilters(&b)
 	s.writeKindleBackups(&b)
+	s.writeUnmatched(&b)
 	s.writeNoCovers(&b)
 	b.WriteString(`
 == Handled? ==

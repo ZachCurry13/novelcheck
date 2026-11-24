@@ -76,14 +76,6 @@ func (s *Server) handleCover(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// An audiobook: the cover Audiobookshelf has, kept after the first time.
-	if item := s.Store.AudioItemID(id); item != "" {
-		if src, srcInfo, found := s.audioCover(r.Context(), item); found {
-			if p, err := s.Covers.Thumb(src, srcInfo, width); err == nil && serve(p, srcInfo) {
-				return
-			}
-		}
-	}
 	// Not in Calibre (a looked-up or wished-for book): Open Library by ISBN.
 	if p, info, found := s.Covers.OpenLibrary(r.Context(), b.ISBN); found && serve(p, info) {
 		return
@@ -98,6 +90,14 @@ func (s *Server) handleCover(w http.ResponseWriter, r *http.Request) {
 	if u := s.Store.DiscoverCoverURL(id); u != "" {
 		if p, info, found := s.Covers.Remote(r.Context(), u); found && serve(p, info) {
 			return
+		}
+	}
+	// An audiobook: the cover Audiobookshelf has (square), only when no book-shaped cover was found.
+	if item := s.Store.AudioItemID(id); item != "" {
+		if src, srcInfo, found := s.audioCover(r.Context(), item); found {
+			if p, err := s.Covers.Thumb(src, srcInfo, width); err == nil && serve(p, srcInfo) {
+				return
+			}
 		}
 	}
 	w.Header().Set("Content-Type", "image/svg+xml")
