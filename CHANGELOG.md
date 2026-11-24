@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.108.0]
+
+### 📖 Kindle app 1.10.0: sort, the Kindle's ⋯ menu, fuller pages, and an "Offline" fix
+- **Sort** every list (Nightstand, New, My Kindle, search): Recent, Name A to Z, Author, Spice low to high, Spice high to low, or Hardcover rating. Tap the **Sort** button above the books to go through them, or pick one from the menu. It remembers your choice. (My Kindle shows Hardcover ratings after the server is updated.)
+- **The ⋯ button next to the X** opens the Kindle's own menu, the way KindleForge's does: the sorts, Sync now, the app's own Menu, and Reload.
+- **Fuller pages:** a page now counts how much room is really left, so it adds books until the screen is full (before, it could leave a quarter of the screen empty).
+- **Fixed: "Offline" that stayed after the Kindle was online again.** The banner now clears as soon as NovelCheck answers anything, it says "Can't reach NovelCheck right now" instead (a slow answer is not always offline), and an empty list says so on the page instead of showing nothing.
+
 ## [1.107.0]
 
 ### 📖 Kindle app 1.9.1: remove a book from the Nightstand

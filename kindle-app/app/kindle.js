@@ -20,6 +20,8 @@ function api(method, path, body, done) {
     if (x.readyState !== 4) return;
     var data = null;
     try { data = JSON.parse(x.responseText); } catch (e) {}
+    // any answer at all means NovelCheck can be reached: a leftover "Offline" line goes
+    if (x.status > 0 && typeof state !== "undefined" && state.offline && typeof setOffline === "function") setOffline(false);
     if (x.status === 0) {
       if (path.indexOf("/plugin/debug") < 0) logLine(method + " " + path.split("?")[0] + ": no connection");
       return done("No connection. Turn off Airplane Mode and try again.", null, 0);
@@ -164,14 +166,26 @@ function waitFor(path, limit, done) {
 
 // chrome sets the Kindle's top bar (the title and a close button), in the newer or the older firmware's way, and lets
 // the Kindle offer to turn on Wi-Fi (as KindleForge does).
+var menuBound = false;
 function chrome() {
   try {
     var k = window.kindle;
     if (k.chrome && k.chrome.isDecanterChromeEnabled) {
+      // the ⋯ button next to the X opens the Kindle's own menu (as KindleForge's does); a pick comes back as an event
+      var items = [], n = 0;
+      for (var i = 0; typeof SORTS !== "undefined" && i < SORTS.length; i++) items.push({ id: "NC_SORT_" + SORTS[i][0], state: "enabled", handling: "notifyApp", label: "Sort: " + SORTS[i][1], position: n++ });
+      items.push({ id: "NC_SYNC", state: "enabled", handling: "notifyApp", label: "Sync now", position: n++ });
+      items.push({ id: "NC_MENU", state: "enabled", handling: "notifyApp", label: "Menu: search and lists", position: n++ });
+      items.push({ id: "NC_RELOAD", state: "enabled", handling: "notifyApp", label: "Reload", position: n++ });
       k.messaging.sendMessage("com.lab126.chromebar", "configureChrome", {
         appId: "com.novelcheck.kindle",
-        topNavBar: { template: "title", title: "NovelCheck", buttons: [{ id: "KPP_CLOSE", state: "enabled", handling: "system" }] }
+        topNavBar: { template: "title", title: "NovelCheck", buttons: [{ id: "KPP_MORE", state: "enabled", handling: "system" }, { id: "KPP_CLOSE", state: "enabled", handling: "system" }] },
+        systemMenu: { clientParams: { profile: { name: "default", items: items, selectionMode: "none", closeOnUse: true } } }
       });
+      if (!menuBound) {
+        menuBound = true;
+        k.messaging.receiveMessage("systemMenuItemSelected", function (type, id) { if (typeof menuPick === "function") menuPick(id); });
+      }
     } else {
       k.messaging.sendMessage("com.lab126.pillow", "configureChrome", {
         appId: "com.novelcheck.kindle",

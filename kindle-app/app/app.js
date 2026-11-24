@@ -33,7 +33,7 @@ function goBack() { if (backTo) backTo(); else openMenu(); }
 function setOffline(on, at) {
   state.offline = on;
   var s = $("status");
-  s.textContent = on ? "Offline" + (at ? ": showing what was saved " + dateText(at) : "") + ". Downloads wait for Wi-Fi." : "";
+  s.textContent = on ? "Can't reach NovelCheck right now" + (at ? ". Showing what was saved " + dateText(at) : "") + ". Downloads wait until it can be reached." : "";
   s.hidden = !on;
 }
 function el(tag, cls, text) {
@@ -42,12 +42,54 @@ function el(tag, cls, text) {
   if (text != null) e.textContent = text;
   return e;
 }
+// ----- sorting a list (not Discover or Collections, which are in rows of their own)
+var SORTS = [["recent", "Recent"], ["title", "Name A to Z"], ["author", "Author"], ["spice_up", "Spice, low to high"], ["spice_down", "Spice, high to low"], ["stars", "Hardcover rating"]];
+var sortKey = stored("nc-sort") || "recent";
+function sortLabel(k) { for (var i = 0; i < SORTS.length; i++) if (SORTS[i][0] === k) return SORTS[i][1]; return "Recent"; }
+function plain(t) { return String(t || "").toLowerCase().replace(/^(the|a|an) /, "").replace(/[^a-z0-9]+/g, " ").replace(/^ +/, ""); }
+function lastNameKey(a) { var f = String(a || "").toLowerCase().replace(/[^a-z ,]+/g, " ").replace(/ +/g, " ").replace(/^ | $/g, "").split(" "); return f[f.length - 1] || ""; }
+function sorted(books) {
+  if (sortKey === "recent" || state.list === "discover" || state.list === "collections") return books;
+  var idx = [];
+  for (var i = 0; i < books.length; i++) idx.push({ b: books[i], i: i });
+  var num = function (v, none) { return v == null ? none : v; };
+  idx.sort(function (x, y) {
+    var a = x.b, b = y.b, d = 0;
+    if (sortKey === "title") d = plain(a.title) < plain(b.title) ? -1 : plain(a.title) > plain(b.title) ? 1 : 0;
+    else if (sortKey === "author") { d = lastNameKey(a.author) < lastNameKey(b.author) ? -1 : lastNameKey(a.author) > lastNameKey(b.author) ? 1 : 0; if (!d) d = plain(a.title) < plain(b.title) ? -1 : 1; }
+    else if (sortKey === "spice_up") d = num(a.level, 99) - num(b.level, 99);
+    else if (sortKey === "spice_down") d = num(b.level, -1) - num(a.level, -1);
+    else if (sortKey === "stars") d = (b.stars || 0) - (a.stars || 0);
+    return d || x.i - y.i; // ties keep the list's own order
+  });
+  var out = [];
+  for (var j = 0; j < idx.length; j++) out.push(idx[j].b);
+  return out;
+}
+function setSort(k) {
+  sortKey = k;
+  keep("nc-sort", k);
+  state.page = 0;
+  if (!$("lists").hidden && !$("filters").hidden) rows();
+}
+// menuPick runs what was chosen in the Kindle's own ⋯ menu (kindle.js chrome).
+function menuPick(id) {
+  if (id.indexOf("NC_SORT_") === 0) return setSort(id.slice(8));
+  if (id === "NC_SYNC") { note("Syncing…"); return syncNow(true); }
+  if (id === "NC_MENU") return openMenu();
+  if (id === "NC_RELOAD") window.location.reload();
+}
+function nextSort() {
+  for (var i = 0; i < SORTS.length; i++) if (SORTS[i][0] === sortKey) return setSort(SORTS[(i + 1) % SORTS.length][0]);
+  setSort(SORTS[0][0]);
+}
+
 function anyLevel() { for (var k in state.levels) if (state.levels[k]) return true; return false; }
 function shown() {
-  if (!anyLevel() || state.list === "collections") return state.books;
+  if (!anyLevel() || state.list === "collections") return sorted(state.books);
   var out = [];
   for (var i = 0; i < state.books.length; i++) if (state.books[i].level != null && state.levels[state.books[i].level]) out.push(state.books[i]);
-  return out;
+  return sorted(out);
 }
 function badge(level) { return level == null ? "Not rated yet" : "Spice " + level + " · " + (level >= 4 ? "Open Door" : level >= 2 ? "Closed Door" : "No Spice"); }
 function spice(level) { return level == null ? "Not rated yet" : "Spice level " + level + " (" + (level >= 4 ? "Open Door" : level >= 2 ? "Closed Door" : "No Spice") + ")"; }
@@ -73,7 +115,7 @@ function show(list, query) {
   var path = list === "search" ? "/kosync/plugin/search?q=" + encodeURIComponent(query) :
     list === "collection" ? "/kosync/plugin/collection/" + encodeURIComponent(query) : "/kosync/plugin/" + list;
   var cached = cachedList(list);
-  if (cached && cached.books) { // what was saved shows at once; the fresh list replaces it
+  if (cached && cached.books && cached.books.length) { // what was saved shows at once; the fresh list replaces it
     state.books = cached.books;
     state.header = cached.header || "";
     state.page = 0;
@@ -84,7 +126,7 @@ function show(list, query) {
     if (state.list !== list) return; // another tab was opened meanwhile
     if (err) {
       if (status === 0) setOffline(true, cached && cached.at);
-      if (cached && cached.books) return note(status === 0 ? "" : err);
+      if (cached && cached.books && cached.books.length) return note(status === 0 ? "" : err);
       return offline(err);
     }
     setOffline(false);
@@ -145,7 +187,12 @@ function rows() {
     m.appendChild(row(part[i]));
   }
   if (!part.length && state.books.length) m.appendChild(el("p", "meta", "No books at the spice levels picked here. Tap All."));
-  var pills = document.querySelectorAll(".pills button");
+  if (!state.books.length) m.appendChild(el("p", "", state.list === "up-next" ? "Your Nightstand is empty. Add books to it from New or Discover, or in NovelCheck on the web." :
+    state.list === "kindle-mine" ? "Nothing yet: tap Sync now." : state.list === "collections" ? "No collections yet." : state.list === "discover" ? "Nothing on Discover is in your library yet." : "No books found."));
+  var pills = document.querySelectorAll(".pills button[data-lvl]");
+  var sb = $("sortbtn");
+  sb.hidden = state.list === "discover" || state.list === "collections";
+  sb.textContent = "Sort: " + sortLabel(sortKey);
   for (var j = 0; j < pills.length; j++) { var lv = pills[j].getAttribute("data-lvl"); pills[j].className = (lv === "" ? !anyLevel() : state.levels[lv]) ? "on" : ""; }
   var missing = 0;
   for (var q = 0; q < state.books.length; q++) if (!onKindle(state.books[q])) missing++;
@@ -369,6 +416,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // its own name ("Zach Paperwhite (Amazon reader)"), so the plugin's report of the same Kindle is never replaced
   if (!/ \(Amazon reader\)$/.test(NC.device)) NC.device = (NC.device || "Kindle") + " (Amazon reader)";
   $("navbtn").onclick = goBack;
+  $("sortbtn").onclick = nextSort;
   $("find").onsubmit = function (e) {
     e.preventDefault();
     var q = $("q").value.replace(/^\s+|\s+$/g, "");
@@ -376,7 +424,7 @@ document.addEventListener("DOMContentLoaded", function () {
   };
   var tabs = document.querySelectorAll(".tabs button[data-list]");
   for (var i = 0; i < tabs.length; i++) tabs[i].onclick = function () { show(this.getAttribute("data-list")); };
-  var pills = document.querySelectorAll(".pills button");
+  var pills = document.querySelectorAll(".pills button[data-lvl]");
   for (var k = 0; k < pills.length; k++) pills[k].onclick = function () {
     var lv = this.getAttribute("data-lvl");
     if (lv === "") state.levels = {}; else state.levels[lv] = !state.levels[lv]; // several levels can be ticked together
