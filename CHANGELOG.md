@@ -4,6 +4,28 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.0]
+
+Ten smaller improvements.
+
+### 🏠 Home and the phone
+- **Home is on the phone's bottom bar** (first tab) instead of hiding under More.
+- **Quick actions** on Home for admins: Find covers now, Read Calibre again, Back up now.
+- **Kids: "Ask a parent for “…”"** shows when a search finds nothing; it opens Home with the title filled in.
+
+### 🩺 Health and backups
+- **Backups** on the Health page: the daily copies with size and time, **Back up now**, and (main admin only) **Download**, so a copy can live somewhere else than the server. `docs/BACKUP.md` says how to restore.
+- Health now names **an error that keeps repeating** (like the Deep Scan machine's program crashing: "the same error 30 times"), **Calibre's Content server being behind** (the reason removing copies failed), and **a Kindle with no backup** on the server.
+
+### 📴 Offline mode
+- The offline bar now says **when the pages you're seeing were saved**.
+
+### 📖 Kindle app 1.13.0
+- **Books I hid** on the Menu lists the books hidden with Don't show this book, each with **Show again**.
+
+### 📚 Docs
+- `docs/BACKUP.md`: what is backed up, how to restore, why to keep a copy elsewhere.
+
 ## [2.0.1]
 
 ### 🔧 Fixes from your phone and Kindle

@@ -63,3 +63,29 @@ func (s *Server) handleUnhide(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
+
+// handlePluginHidden: GET /kosync/plugin/hidden, the books this person hid (the Kindle app's "Hidden books").
+func (s *Server) handlePluginHidden(w http.ResponseWriter, r *http.Request) {
+	u := s.kosyncUser(w, r)
+	if u == nil {
+		return
+	}
+	kosyncJSON(w, http.StatusOK, map[string]any{"books": s.Store.HiddenBooks(u.ID)})
+}
+
+// handlePluginUnhide: POST /kosync/plugin/unhide {"book_id"}, Show again.
+func (s *Server) handlePluginUnhide(w http.ResponseWriter, r *http.Request) {
+	u := s.kosyncUser(w, r)
+	if u == nil {
+		return
+	}
+	var c leftChoice
+	if !readJSON(w, r, &c, 1<<10) || c.BookID <= 0 {
+		return
+	}
+	if err := s.Store.UnhideBook(u.ID, c.BookID); err != nil {
+		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "couldn't do that"})
+		return
+	}
+	kosyncJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}

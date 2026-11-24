@@ -151,10 +151,48 @@ function bindTools() {
       end();
     });
   });
+  $("t-hidden").onclick = showHidden;
   guard("t-crash", function (end) {
     crashLogs(function (n) {
       note(n < 0 ? "The Kindle couldn't do that. Open KindleForge once, then try again." : n ? "Deleted " + n + " crash log" + (n === 1 ? "" : "s") + "." : "There are no crash logs on this Kindle.");
       end();
     });
+  });
+}
+
+// showHidden lists the books this person hid with "Don't show this book", each with "Show again".
+function showHidden() {
+  note("Looking…");
+  api("GET", "/kosync/plugin/hidden", null, function (err, data) {
+    if (err) return note(err);
+    var books = (data && data.books) || [];
+    note(books.length ? "" : "You haven't hidden any books.");
+    showLists(false);
+    backTo = function () { backTo = null; openMenu(); };
+    paintNav("Books I hid");
+    window.scrollTo(0, 0);
+    var m = $("main");
+    m.innerHTML = "";
+    $("pages").hidden = true;
+    for (var i = 0; i < books.length; i++) {
+      (function (b) {
+        var r = el("div", "row");
+        var show = el("button", "act", "Show again");
+        show.onclick = function () {
+          show.disabled = true;
+          api("POST", "/kosync/plugin/unhide", { book_id: b.id }, function (e2) {
+            if (e2) { show.disabled = false; return note(e2); }
+            m.removeChild(r);
+            note("“" + b.title + "” will show in your lists again.");
+          });
+        };
+        r.appendChild(show);
+        var what = el("div", "what");
+        what.appendChild(el("div", "title", b.title));
+        what.appendChild(el("div", "by", b.author));
+        r.appendChild(what);
+        m.appendChild(r);
+      })(books[i]);
+    }
   });
 }

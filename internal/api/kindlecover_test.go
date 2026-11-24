@@ -105,4 +105,24 @@ func TestKindleAppHidesABook(t *testing.T) {
 	if _, err := st.BookByID(id, nil); err != nil {
 		t.Fatal("the book must stay in NovelCheck")
 	}
+	// the app lists what was hidden, and Show again brings it back
+	call := func(method, path, body string) *http.Response {
+		r, _ := http.NewRequest(method, srv.URL+path, strings.NewReader(body))
+		r.Header.Set("x-auth-user", "admin")
+		r.Header.Set("x-auth-key", hex.EncodeToString(sum[:]))
+		out, err := http.DefaultClient.Do(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out
+	}
+	if r := call("GET", "/kosync/plugin/hidden", ""); r.StatusCode != 200 {
+		t.Fatalf("hidden list: %d", r.StatusCode)
+	}
+	if r := call("POST", "/kosync/plugin/unhide", `{"book_id":`+itoa(id)+`}`); r.StatusCode != 200 {
+		t.Fatalf("show again: %d", r.StatusCode)
+	}
+	if h := st.HiddenBooks(u.ID); len(h) != 0 {
+		t.Fatalf("it should show again: %v", h)
+	}
 }

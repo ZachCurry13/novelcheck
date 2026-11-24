@@ -4,6 +4,7 @@ package store
 
 // DeviceSeen is when a person's e-reader last reported.
 type DeviceSeen struct {
+	UserID   int64  `db:"user_id" json:"user_id"`
 	User     string `db:"username" json:"user"`
 	Device   string `db:"device" json:"device"`
 	Version  string `db:"plugin_version" json:"version"`
@@ -13,7 +14,7 @@ type DeviceSeen struct {
 // AllDevices lists every e-reader that ever reported, newest report first.
 func (s *Store) AllDevices() []DeviceSeen {
 	out := []DeviceSeen{}
-	_ = s.DB.Select(&out, `SELECT u.username, i.device, i.plugin_version, i.reported_at FROM device_info i JOIN users u ON u.id = i.user_id ORDER BY i.reported_at DESC`)
+	_ = s.DB.Select(&out, `SELECT i.user_id, u.username, i.device, i.plugin_version, i.reported_at FROM device_info i JOIN users u ON u.id = i.user_id ORDER BY i.reported_at DESC`)
 	return out
 }
 

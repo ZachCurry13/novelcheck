@@ -79,6 +79,38 @@ func (s *Server) healthItems() []healthItem {
 			add("kindle-"+name, "warn", name+": KOReader plugin "+d.Version+" is out of date", "Newest is "+kindleplugin.Version()+".", "Open KOReader on it with Wi-Fi on: the plugin offers to update.", "#/kindle")
 		}
 	}
+	// the same failure over and over in the background (the Deep Scan machine's program crashing, a service that refuses)
+	day := time.Now().UTC().Add(-24 * time.Hour).Format("2006-01-02 15:04:05")
+	shownErr := 0
+	for _, g := range groupErrors(s.Store.RecentErrors(400), 12) {
+		if g.Count >= 5 && g.At >= day && shownErr < 3 && (g.Method == "background" || g.Status >= 500) { // a request the app refused (4xx) is not a fault
+			shownErr++
+			what := strings.TrimSpace(g.Detail)
+			if len(what) > 120 {
+				what = what[:120] + "…"
+			}
+			where := g.Path
+			if g.Method == "background" {
+				where = "in the background (" + g.Path + ")"
+			}
+			add("repeat-"+g.Code, "warn", fmt.Sprintf("The same error %d times: %s", g.Count, where), what, "Send me the bug link: a repeating error usually has one cause.", "")
+		}
+	}
+	// Calibre's Content server lacking books the library has (it is what makes removing copies fail)
+	if items, _, err := s.Store.Notifications(60); err == nil {
+		for _, n := range items {
+			if n.Source == "calibre-behind" && !n.Read {
+				add("calibre-behind", "warn", "Calibre's Content server is behind", n.Message, "Restart the Calibre app (or its Content server) so it sees the newer books.", "")
+				break
+			}
+		}
+	}
+	// a Kindle with no copy of its books on the server
+	for _, d := range s.Store.AllDevices() {
+		if time.Since(time.Unix(d.Reported, 0)) < 14*24*time.Hour && !s.hasKindleBackup(d.UserID, d.Device) {
+			add("nobackup-"+d.Device, "warn", d.Device+" ("+d.User+") has no backup in NovelCheck", "If the Kindle is lost or reset, its books can't be put back.", "In KOReader: NovelCheck → Copy my Kindle. In the Kindle app: Menu → Back up my books.", "#/kindle")
+		}
+	}
 	// disk
 	if s.SysInfo != nil {
 		n := s.SysInfo.Snapshot()
@@ -155,4 +187,17 @@ func versionOlder(a, b string) bool {
 		}
 	}
 	return false
+}
+
+// hasKindleBackup says whether the server holds at least one file of this e-reader's backup.
+func (s *Server) hasKindleBackup(userID int64, device string) bool {
+	found := false
+	_ = filepath.WalkDir(s.kindleDir(userID, device), func(p string, e os.DirEntry, err error) error {
+		if err == nil && !e.IsDir() && !strings.HasSuffix(p, ".part") {
+			found = true
+			return filepath.SkipAll
+		}
+		return nil
+	})
+	return found
 }

@@ -43,6 +43,8 @@ func (s *Server) kosyncRoutes(r chi.Router) {
 	r.Get("/plugin/collection/{id}", s.handleKindleCollection)
 	r.Post("/plugin/kindle-words", s.handleKindleWords)
 	r.Post("/plugin/left", s.handlePluginLeft)
+	r.Get("/plugin/hidden", s.handlePluginHidden) // the Kindle app: books hidden from this person's lists, and Show again
+	r.Post("/plugin/unhide", s.handlePluginUnhide)
 	r.Get("/plugin/restore", s.handleRestoreList) // Restore from NovelCheck (plugin)
 	r.Get("/plugin/restore/file", s.handleRestoreFile)
 	r.Get("/plugin/kindle-app/{name}", s.handleKindleAppFile)

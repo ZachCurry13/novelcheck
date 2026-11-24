@@ -3,7 +3,8 @@
 // top menu's links, so it shows exactly what this account may open.
 
 // Icons are Material Symbols names (the font in /fonts holds only the ones the app uses).
-const MAIN = [["check", "photo_camera", "Check"], ["library", "local_library", "Library"], ["discover", "explore", "Discover"], ["queue", "bed", "Nightstand"], ["collections", "collections_bookmark", "Collections"], ["wishlist", "star", "Wishlist"], ["profile", "person", "Profile"]];
+const HOME_ICON = `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 2 12h3v8h5v-6h4v6h5v-8h3L12 3z"/></svg>`; // the icon font has no house
+const MAIN = [["home", HOME_ICON, "Home"], ["check", "photo_camera", "Check"], ["library", "local_library", "Library"], ["queue", "bed", "Nightstand"], ["discover", "explore", "Discover"], ["collections", "collections_bookmark", "Collections"], ["wishlist", "star", "Wishlist"], ["profile", "person", "Profile"]];
 
 let moreRoutes = [];
 

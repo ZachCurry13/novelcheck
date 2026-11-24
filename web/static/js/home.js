@@ -37,7 +37,18 @@ function inboxHTML(items) {
     <div class="flex shrink-0 gap-2"><a href="${esc(c.link)}" class="btn-primary py-1 text-sm">Review</a><button type="button" data-snooze="${esc(c.id)}" class="btn-ghost py-1 text-sm" title="Hide it for a week">Not now</button></div></div>`).join("")}</section>`;
 }
 
-const askFormHTML = `<section class="card space-y-2"><h2 class="font-semibold">Ask for a book</h2>
+// Quick actions (admins): the three things most often done by hand.
+const QUICK = {
+  covers: ["/api/admin/covers/find", "The cover finder is looking now"],
+  calibre: ["/api/admin/calibre-sync?wait=1", "Calibre was read again"],
+  backup: ["/api/admin/backups/now", "A backup of NovelCheck's data was made"],
+};
+const quickHTML = (d) => (d.health ? `<section class="card space-y-2"><h2 class="font-semibold">Quick actions</h2><div class="flex flex-wrap gap-2">
+  <button type="button" data-quick="covers" class="btn-secondary py-1 text-sm">Find covers now</button>
+  <button type="button" data-quick="calibre" class="btn-secondary py-1 text-sm">Read Calibre again</button>
+  <button type="button" data-quick="backup" class="btn-secondary py-1 text-sm">Back up now</button></div></section>` : "");
+
+const askFormHTML =`<section class="card space-y-2"><h2 class="font-semibold">Ask for a book</h2>
   <form id="ask" class="grid gap-2 sm:grid-cols-2"><input name="title" class="input" placeholder="Title" aria-label="Title" maxlength="200" required>
     <input name="author" class="input" placeholder="Author (if you know)" aria-label="Author" maxlength="200">
     <input name="note" class="input sm:col-span-2" placeholder="Why this one? (optional)" aria-label="Why" maxlength="500">
@@ -60,7 +71,9 @@ export async function renderHome(view) {
     const lost = d.unmatched ? `<section class="card text-sm"><b>${d.unmatched}</b> book${d.unmatched === 1 ? "" : "s"} on your e-reader couldn't be matched. <a href="#/settings" class="underline">Match them</a></section>` : "";
     const add = d.may_upload ? `<section class="card text-sm">Add books by dragging them onto the box at the top of the <a href="#/library" class="underline">Library</a>.</section>` : "";
     const host = view.querySelector("#home");
-    host.innerHTML = [healthHTML(d.health), askedHTML(d.requests || []), inboxHTML(d.inbox || []), next, fresh, mineHTML(d.my_requests), askFormHTML, lost, add].join("") || "";
+    host.innerHTML = [healthHTML(d.health), askedHTML(d.requests || []), inboxHTML(d.inbox || []), quickHTML(d), next, fresh, mineHTML(d.my_requests), askFormHTML, lost, add].join("") || "";
+    const want = new URLSearchParams(location.hash.split("?")[1] || "").get("ask"); // from "Ask a parent" in the Library
+    if (want) host.querySelector("#ask").title.value = want;
     host.querySelector("#ask").onsubmit = async (e) => {
       e.preventDefault();
       const f = e.target;
@@ -69,6 +82,14 @@ export async function renderHome(view) {
     host.onclick = async (e) => {
       const sn = e.target.closest("[data-snooze]");
       if (sn && await attempt(() => post("/api/home/snooze", { id: sn.dataset.snooze }), "Hidden for a week")) return draw();
+      const quick = e.target.closest("[data-quick]");
+      if (quick) {
+        const [path, said] = QUICK[quick.dataset.quick];
+        quick.disabled = true;
+        await attempt(() => post(path), said);
+        quick.disabled = false;
+        return;
+      }
       const act = e.target.closest("[data-do]");
       if (!act) return;
       const id = act.closest("[data-req]").dataset.req;

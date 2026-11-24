@@ -124,7 +124,8 @@ export async function renderLibrary(view, state) {
     if (done) done.textContent = data.total ? `Show ${data.total.toLocaleString()} book${data.total === 1 ? "" : "s"}` : "No books match: change a filter";
     $("#more-btn", view).classList.toggle("hidden", offset >= data.total);
     if (!data.total) {
-      grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>${form.q.value.trim() && state.user.role !== "restricted" ? `<div class="card mt-3"><p class="mb-2 font-semibold">Look in your Libby libraries</p><div data-lsbox></div></div>` : ""}`;
+      grid.innerHTML = `<p class="text-slate-400">No books match these filters.</p>${form.q.value.trim() && state.user.role !== "restricted" ? `<div class="card mt-3"><p class="mb-2 font-semibold">Look in your Libby libraries</p><div data-lsbox></div></div>` : ""}
+        ${form.q.value.trim() && state.user.role === "restricted" ? `<div class="card mt-3"><p class="mb-2">Can't find it? <a href="#/home?ask=${encodeURIComponent(form.q.value.trim())}" class="underline">Ask a parent for “${esc(form.q.value.trim())}”</a></p></div>` : ""}`;
       const box = grid.querySelector("[data-lsbox]");
       if (box) libbySearchBox(box, form.q.value.trim());
     }

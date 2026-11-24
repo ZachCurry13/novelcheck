@@ -26,9 +26,16 @@ function bar() {
   }
   return b;
 }
-function setDown(on) {
+let savedAt = "";
+function setDown(on, saved) {
+  if (on && saved && !savedAt) { // say when the pages being shown were saved (the first kept copy used)
+    savedAt = saved;
+    const when = new Date(saved);
+    if (!isNaN(when)) bar().textContent += ` The pages you see were saved ${when.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}.`;
+  }
   if (on === serverDown) return;
   serverDown = on;
+  if (!on) savedAt = "";
   if (on) {
     bar().classList.remove("hidden");
     probe = setInterval(async () => {
@@ -98,7 +105,7 @@ async function send(path, opts) {
         await backOnline(700 * 2 ** attempt);
         continue;
       }
-      if (res.headers.get("X-NovelCheck-Offline")) setDown(true); // a kept copy: the server is down
+      if (res.headers.get("X-NovelCheck-Offline")) setDown(true, res.headers.get("X-NovelCheck-Saved")); // a kept copy: the server is down
       else if (res.status < 500) setDown(false);
       return res;
     } catch {

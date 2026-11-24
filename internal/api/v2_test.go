@@ -1,9 +1,14 @@
 package api_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/zachcurry13/novelcheck/internal/api"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -128,5 +133,49 @@ func TestDontConvertIsRemembered(t *testing.T) {
 	}
 	if count() != 0 {
 		t.Fatalf("it should not be offered again: %d", count())
+	}
+}
+
+// The backups on the Health page: Back up now makes a copy, everyone who is an admin sees the list, only the main admin downloads.
+func TestBackupsPage(t *testing.T) {
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = t.TempDir() })
+	_ = st
+	admin := login(t, srv, "admin", "adminpass1")
+	_, none := admin.do("GET", "/api/admin/backups", nil, false)
+	if files, _ := none["files"].([]any); len(files) != 0 {
+		t.Fatalf("no copy yet: %v", none)
+	}
+	_, made := admin.do("POST", "/api/admin/backups/now", nil, true)
+	files, _ := made["files"].([]any)
+	if len(files) != 1 {
+		t.Fatalf("one copy after Back up now: %v", made)
+	}
+	name := files[0].(map[string]any)["name"].(string)
+	req, _ := http.NewRequest("GET", srv.URL+"/api/admin/backups/"+name, nil)
+	res, err := admin.http.Do(req)
+	if err != nil || res.StatusCode != 200 {
+		t.Fatalf("the main admin downloads it: %v %v", err, res)
+	}
+	res.Body.Close()
+	if res, _ := admin.do("GET", "/api/admin/backups/not-a-backup.db", nil, false); res.StatusCode != 404 {
+		t.Fatalf("only backup names: %d", res.StatusCode)
+	}
+}
+
+// Health names a Calibre Content server that is behind and an error that keeps repeating.
+func TestHealthSaysWhatIsRepeating(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	st.Notify("warning", "calibre-behind", "Calibre's Content server lacks 3 books", "")
+	for i := 0; i < 6; i++ {
+		_, _ = st.DB.Exec(`INSERT INTO error_log (code, at, method, path, status, username, detail) VALUES ('BG-x', ?, 'background', 'deep scan', 0, '', ?)`,
+			time.Now().UTC().Format("2006-01-02 15:04:05"), fmt.Sprintf("llama-server crashed (pid %d)", 100+i))
+	}
+	_, h := admin.do("GET", "/api/admin/health", nil, false)
+	text, _ := json.Marshal(h["items"])
+	for _, want := range []string{"Calibre's Content server is behind", "The same error 6 times"} {
+		if !strings.Contains(string(text), want) {
+			t.Fatalf("health lacks %q: %s", want, text)
+		}
 	}
 }

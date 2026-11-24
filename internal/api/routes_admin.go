@@ -15,7 +15,10 @@ import (
 func (s *Server) adminRoutes(r chi.Router) {
 	r.Use(auth.RequireAdmin)
 
-	r.Get("/admin/health", s.handleHealth)               // 2.0: is everything working
+	r.Get("/admin/health", s.handleHealth)   // 2.0: is everything working
+	r.Get("/admin/backups", s.handleBackups) // 2.0.2: the daily copies, Back up now, the main admin's download
+	r.Post("/admin/backups/now", s.handleBackupNow)
+	r.Get("/admin/backups/{name}", s.handleBackupFile)
 	r.Get("/admin/accuracy", s.handleAccuracy)           // 2.0: how the AI did against people's own levels
 	r.Post("/admin/accuracy/{id}/use", s.handleUseLevel) // use a person's level for the book
 	r.Get("/admin/settings", s.handleGetSettings)        // filtered to the admin's areas

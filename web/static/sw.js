@@ -1,7 +1,7 @@
 // NovelCheck service worker: caches the app shell for offline launch and
 // home-screen installs. API responses are not cached, except the few a reader
 // needs offline (MINE, below), which are cleared on sign-out and profile switch.
-const CACHE = "novelcheck-shell-v229";
+const CACHE = "novelcheck-shell-v230";
 const MINE = "novelcheck-mine";
 const SHELL = [
   "/",
@@ -253,6 +253,7 @@ const down = (res) => res.status >= 500 && res.status < 600;
 async function stale(r) {
   const h = new Headers(r.headers);
   h.set("X-NovelCheck-Offline", "1");
+  if (r.headers.get("date")) h.set("X-NovelCheck-Saved", r.headers.get("date")); // when this copy was saved, for the banner
   return new Response(await r.blob(), { status: r.status, statusText: r.statusText, headers: h });
 }
 const kept = (path) => KEEP.find(([re]) => re.test(path));
