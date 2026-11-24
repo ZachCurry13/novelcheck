@@ -28,7 +28,7 @@ function rowHTML(b) {
     <span class="min-w-0 flex-1"><b class="block truncate">${b.id ? `<a href="#/library?book=${b.id}" class="hover:underline">${name}</a>` : name}</b>
       <span class="block truncate text-xs text-slate-400">${esc(b.author || "Unknown author")}</span>
       ${chip} <span class="chip-none">${b.format === "cloud" ? "Amazon cloud" : "Downloaded"}</span>
-      ${pct > 0 && b.format !== "cloud" ? `<span class="mt-1 block h-1 rounded bg-slate-800"><span class="block h-1 rounded bg-indigo-500" style="width:${pct}%"></span></span>` : ""}</span></li>`;
+      ${pct > 0 && b.format !== "cloud" ? `<span class="mt-1 block h-1 rounded bg-slate-800"><span class="block h-1 rounded bg-indigo-500" data-w="${pct}"></span></span>` : ""}</span></li>`;
 }
 
 export async function renderKindle(view) {
@@ -66,6 +66,7 @@ export async function renderKindle(view) {
       <ul class="card divide-y divide-slate-800">${shown.map(rowHTML).join("") || `<li class="py-2 text-sm text-slate-400">No books match.</li>`}</ul>
       <section id="k-left" class="mt-4"></section>
       <section class="card mt-4 space-y-2"><h2 class="font-semibold">Ask this Kindle to…</h2><div id="k-tasks"></div></section>`;
+    body.querySelectorAll("[data-w]").forEach((e) => (e.style.width = e.dataset.w + "%")); // inline style="" is refused by the page policy
     body.querySelector("#k-pick")?.addEventListener("change", (e) => { current = e.target.value; sessionStorage.setItem("nc-kindle", current); show(); });
     body.querySelectorAll("[data-f]").forEach((b) => b.addEventListener("click", () => { filter = b.dataset.f; show(); }));
     renderLeftBooks(body.querySelector("#k-left"));

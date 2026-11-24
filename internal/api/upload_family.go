@@ -121,7 +121,11 @@ func (s *Server) checkUpload(ctx context.Context, cal *calibresrv.Client, id int
 			return out
 		}
 	}
-	if found && (info.Title == d.Title || hcTrueTitle(d.Title, author, info) != "") {
+	who := author // a file with no author is judged against the author Hardcover names
+	if who == "" && len(info.Authors) > 0 {
+		who = info.Authors[0]
+	}
+	if found && (info.Title == d.Title || hcTrueTitle(d.Title, who, info) != "") {
 		out["fixed"] = s.applyUploadMatch(ctx, cal, id, d, info)
 		out["status"] = "matched"
 		return out
@@ -167,6 +171,13 @@ func (s *Server) applyUploadMatch(ctx context.Context, cal *calibresrv.Client, i
 		if found, err := cal.SetFields(ctx, id, fields); err != nil || !found {
 			return nil
 		}
+	}
+	if d.Cover == "" && info.Image != "" { // a book with no cover gets Hardcover's
+		if img, err := fetchCover(ctx, info.Image); err == nil && cal.SetCover(ctx, id, img) == nil {
+			said = append(said, "cover")
+		}
+	}
+	if len(said) > 0 {
 		s.syncSoon(nil)
 	}
 	return said
