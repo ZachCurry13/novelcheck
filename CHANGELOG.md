@@ -9,7 +9,8 @@ becomes the release notes for that version and is shown in the app under
 ### 🖼️ Covers for books copied from a list
 - About 60 well-known books (like Neuromancer, Hyperion, Snow Crash) had no cover because they were imported as "Neuromancer - William Gibson - 1984" with the list's name as the author, and the cover finder searched that whole text. It now takes the title and author out of such a title. Books it searched before without success are searched again on the next run.
 
-### 📖 Kindle app 1.5.1
+### 📖 Kindle app 1.5.2
+- **The launcher stops a still-running copy of the app before starting the new one**, so reinstalling from the zip really shows the new version instead of the old screen.
 - The app tells NovelCheck its version and name each time it asks for an update, and the bug link lists when each Kindle app last did ("Kindle app: last time it asked for an update"), so it's visible whether the app reaches the server at all.
 
 ## [1.99.3]
