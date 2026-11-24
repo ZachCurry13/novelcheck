@@ -44,17 +44,19 @@ const ART = [(c) => `radial-gradient(circle at 70% 62%,${c}55 0 22%,transparent 
 const hash = (s) => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
 const HEIGHTS = [168, 182, 160, 190, 175, 165, 186, 172], WIDTHS = [30, 38, 32, 44, 34, 40, 36, 31, 42, 35];
 
+let coverBust = 0; // set when a cover was changed from the shelf, so the new one shows at once
+
 function bookHTML(b, mode, i) {
   const h = hash(b.title || ""), [c1, c2, tc] = COLORS[h % COLORS.length];
-  const vars = `--bs-b1:${c1};--bs-b2:${c2};--bs-t:${tc};`;
+  const vars = `--bs-b1:${c1};--bs-b2:${c2};--bs-t:${tc};${b.book_id ? "cursor:pointer;" : ""}`;
   const tip = esc(`${b.title}${b.author ? ` · ${b.author}` : ""}`);
   if (mode === "covers") {
     const plain = `<b>${esc(b.title)}</b><small>${esc(b.author || "")}</small>`;
-    return `<div class="bs-cover" data-plain="${esc(plain)}" style="${vars}--bs-art:${ART[h % ART.length](tc)}" title="${tip}">${b.book_id
-      ? `<img src="/api/books/${Number(b.book_id)}/cover" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">` : plain}</div>`;
+    return `<div class="bs-cover" ${b.book_id ? `data-open="${Number(b.book_id)}" role="button" tabindex="0"` : ""} data-plain="${esc(plain)}" style="${vars}--bs-art:${ART[h % ART.length](tc)}" title="${tip}">${b.book_id
+      ? `<img src="/api/books/${Number(b.book_id)}/cover${coverBust ? `?v=${coverBust}` : ""}" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">` : plain}</div>`;
   }
   const last = (b.author || "").trim().split(/\s+/).pop();
-  return `<div class="bs-spine${i % 11 === 7 ? " bs-lean" : ""}" style="${vars}width:${WIDTHS[h % WIDTHS.length]}px;height:${HEIGHTS[(h >>> 3) % HEIGHTS.length]}px" title="${tip}"><i>${esc(b.title)}</i><em>${esc(last)}</em></div>`;
+  return `<div class="bs-spine${i % 11 === 7 ? " bs-lean" : ""}" ${b.book_id ? `data-open="${Number(b.book_id)}" role="button" tabindex="0"` : ""} style="${vars}width:${WIDTHS[h % WIDTHS.length]}px;height:${HEIGHTS[(h >>> 3) % HEIGHTS.length]}px" title="${tip}"><i>${esc(b.title)}</i><em>${esc(last)}</em></div>`;
 }
 
 export async function renderBookshelf(host, state) {
@@ -118,6 +120,11 @@ export async function renderBookshelf(host, state) {
     if (pref.fall) stopFalling = startFalling(sceneHost.querySelector(".bs-fall"), sceneHost.querySelector(".bs-scene"), T);
   }
 
+  // a book on the shelf opens its page (to change its cover, rate it…)
+  sceneHost.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-open]");
+    if (b) import("./bookdialog.js").then((m) => m.openBook(Number(b.dataset.open), state, () => { coverBust = Date.now(); draw(); }));
+  });
   sceneHost.addEventListener("error", (e) => { // no cover image: the plain generated cover (title and author) takes its place
     const img = e.target;
     if (img.tagName !== "IMG" || !img.parentElement?.dataset.plain) return;

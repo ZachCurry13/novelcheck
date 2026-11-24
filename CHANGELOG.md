@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.98.3]
+
+### 📚 Open a book from your reading
+- **Tap a book on the bookshelf** (covers or spines) to open its page, where **Change cover**, your rating and the rest are. A changed cover shows on the shelf at once.
+- In **Stats**, a book's page now has **Open the book** (it used to only jump to the Library).
+
 ## [1.98.2]
 
 ### 🧹 Removing extra Calibre copies works when Calibre lags

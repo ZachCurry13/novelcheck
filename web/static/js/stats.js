@@ -143,7 +143,7 @@ export async function renderStats(view, state, source = {}) {
       return draw();
     }
     if (d.share !== undefined) return void openShareCard(m, s, title(), name);
-    if (d.openLib) return void (location.hash = "#/library");
+    if (d.openLib) return void import("./bookdialog.js").then((b) => b.openBook(Number(d.openLib), state, draw)); // its page: Change cover, rating…
     if (d.book !== undefined) return open({ type: "book", idx: Number(d.book) });
     if (d.periodOpen) {
       const [kind, start] = d.periodOpen.split(":");

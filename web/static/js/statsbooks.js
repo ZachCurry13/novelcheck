@@ -44,7 +44,7 @@ export function bookPage(m, i, readonly = false) {
         <p class="text-slate-400">${esc(b.author || "")}</p>
         <div class="h-2 overflow-hidden rounded-full bg-slate-800"><div class="h-full rounded-full bg-indigo-500" data-pct="${pct}"></div></div>
         <p class="text-sm text-slate-400">${pct}% read${b.series ? ` · ${esc(b.series)}` : ""}</p>
-        ${b.book_id ? `<button type="button" data-open-lib="${b.book_id}" class="btn-secondary px-3 py-1 text-sm">Open in your library</button>` : ""}</div></div>
+        ${b.book_id ? `<button type="button" data-open-lib="${b.book_id}" class="btn-secondary px-3 py-1 text-sm">Open the book (cover, rating…)</button>` : ""}</div></div>
     ${dl([["Time spent reading", fmtDur(d.sec)], ["Days reading this book", n(d.days)], ["Average time per day", fmtDur(d.avgDay)],
       d.first ? ["Book start date", `${esc(longDate(d.first))}<br><span class="text-sm font-normal text-slate-400">${esc(agoText(d.first))}</span>`] : null,
       d.last ? ["Last read date", `${esc(longDate(d.last))}<br><span class="text-sm font-normal text-slate-400">${esc(agoText(d.last))}</span>`] : null,
