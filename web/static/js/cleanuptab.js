@@ -5,7 +5,6 @@ import { get, post } from "./api.js";
 import { esc, attempt, fmtNum } from "./ui.js";
 import { mountCleanup } from "./cleanup.js";
 import { renderSameBooks } from "./samebooks.js";
-import { renderHCClean } from "./hcclean.js";
 import { renderUpload } from "./uploadbooks.js";
 import { renderCalTrash } from "./caltrash.js";
 
@@ -23,8 +22,6 @@ export async function renderCleanupTab(host, state) {
       <div id="cu-trash-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-twice"><summary class="cursor-pointer font-semibold">Books listed twice in NovelCheck (with the evidence)</summary>
       <div id="cu-twice-body" class="mt-2"></div></details></div>
-    <div class="card space-y-2"><details id="cu-hc"><summary class="cursor-pointer font-semibold">Fix Calibre details from Hardcover (series, titles, authors, ISBN, descriptions, genres)</summary>
-      <div id="cu-hc-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-abs"><summary class="cursor-pointer font-semibold">Fix Audiobookshelf details from Hardcover (titles, authors, series, ISBN, ASIN, narrators, covers)</summary>
       <div id="cu-abs-body" class="mt-2"></div></details></div>
     <div class="card space-y-2"><details id="cu-mem"><summary class="cursor-pointer font-semibold">Remembered ratings and covers (and how to forget them)</summary>
@@ -43,11 +40,10 @@ export async function renderCleanupTab(host, state) {
   host.querySelector("#cu-tools").innerHTML = [
     row("👯", "Books listed twice in NovelCheck", "The same book entered twice (for example on a list before the e-book arrived). Joining moves everything onto one entry.", c?.pairs, `<button type="button" data-cu="twice" class="btn-secondary py-1 text-sm">Review below</button>`),
     row("🔁", "Duplicates in Calibre", "The same book as two or more Calibre entries. Keeps the best copy (EPUB first) and moves the rest to Calibre's recycle bin.", c?.calibre_dups ?? null, link("#/duplicates", "Open")),
-    row("🏷️", "Tidy titles in Calibre", "Titles carrying track or series numbers like “01 - …”. NovelCheck already shows them tidied.", s?.title_fixes, btn("tidy-titles", "Tidy…")),
     row("🗂️", "Formats", "Keep only the formats you choose (say EPUB), convert books with no EPUB, undo for 7 days.", c?.remove_files, `<button type="button" data-cu="formats" class="btn-secondary py-1 text-sm">Formats…</button>`),
     row("🔖", "Genres", "Library books Calibre has no tags for. They are filled in by the AI by themselves; this runs it now.", g.missing, g.running ? btn("genres-stop", "Stop") : btn("genres-fill", "Fill in now")),
     row("📦", "Box sets", "Several books in one file: check them and split them into their books.", s?.box_sets, btn("box-sets", "Check and split")),
-    row("🖼️", "Books with no cover", job.running ? `Looking now: ${job.checked} of ${job.total} checked, ${job.found} found${job.current ? ` · ${esc(job.current)}` : ""}.` : "Finds real covers for books that show a drawn one. Runs daily; only uses covers whose title matches.", cv?.count ?? null, job.running ? `<button type="button" data-cu="covers-stop" class="btn-secondary py-1 text-sm">Stop</button>` : `<span class="flex flex-wrap gap-2"><button type="button" data-cu="covers-review" class="btn-primary py-1 text-sm">Review one by one</button><button type="button" data-cu="covers-find" class="btn-secondary py-1 text-sm">Find covers now</button></span>`),
+    row("🛠️", "Fix titles and covers", "One list of every book that needs something: a tidier title, Hardcover's series, ISBN or description, or a cover. Apply each one, or start the finders now.", (s?.title_fixes || 0) + (cv?.count || 0) + (s?.hc_suggestions || 0) || 0, `<button type="button" data-cu="fix-books" class="btn-primary py-1 text-sm">Open</button>`),
     row("🖼️", "Covers reported as wrong", "Covers your family flagged.", s?.cover_reports, btn("cover-reports", "Review")),
     row("🗑️", "Delete requests", "Books your family asked to remove.", s?.pending_deletes, link("#/deletions", "Review")),
     row("🔄", "Read the Calibre library now", "Re-reads Calibre so NovelCheck matches what is there (it also happens by itself).", null, btn("sync", "Read now")),
@@ -58,6 +54,7 @@ export async function renderCleanupTab(host, state) {
   host.onclick = async (e) => {
     const k = e.target.closest("[data-cu]")?.dataset.cu;
     if (k === "formats") import("./formats.js").then((m) => m.openFormats());
+    else if (k === "fix-books") import("./fixbooks.js").then((m) => m.openFixBooks(paintTools));
     else if (k === "covers-review") import("./coverreview.js").then((m) => m.openCoverReview(paintTools));
     else if (k === "covers-find" || k === "covers-stop") {
       if (await attempt(() => post(`/api/admin/covers/${k === "covers-find" ? "find" : "stop"}`), k === "covers-find" ? "Looking for covers in the background" : "Stopping")) paintTools();
@@ -77,13 +74,6 @@ export async function renderCleanupTab(host, state) {
     if (e.target.open && !body.dataset.done) {
       body.dataset.done = "1";
       renderUpload(body);
-    }
-  });
-  host.querySelector("#cu-hc").addEventListener("toggle", (e) => {
-    const body = host.querySelector("#cu-hc-body");
-    if (e.target.open && !body.dataset.done) {
-      body.dataset.done = "1";
-      renderHCClean(body);
     }
   });
   host.querySelector("#cu-mem").addEventListener("toggle", (e) => {

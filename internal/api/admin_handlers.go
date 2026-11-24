@@ -36,6 +36,7 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{
 		"counts":            counts,
 		"title_fixes":       s.Store.CountTitleFixes(),
+		"hc_suggestions":    s.Store.CountHCSuggestions(),
 		"cover_reports":     s.Store.CountCoverReports(),
 		"box_sets":          s.Store.BoxSetsWaiting(),
 		"problem_reports":   s.Store.CountProblemReports(),

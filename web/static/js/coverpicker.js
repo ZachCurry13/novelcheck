@@ -3,7 +3,7 @@
 import { get, del } from "./api.js";
 import { esc, attempt, toast } from "./ui.js";
 
-export async function openCoverPicker(b, done) {
+export async function openCoverPicker(b, done, { everyone: forAll = false } = {}) {
   const dlg = document.createElement("dialog");
   dlg.className = "dialog max-w-lg";
   dlg.innerHTML = `<div class="space-y-3 p-4"><h3 class="text-lg font-semibold">Change cover</h3>
@@ -24,7 +24,10 @@ export async function openCoverPicker(b, done) {
     return data;
   };
   const r = await get(`/api/books/${b.id}/cover-options`).catch(() => null);
-  if (r?.can_set_for_everyone) dlg.querySelector("[data-all]").classList.remove("hidden");
+  if (r?.can_set_for_everyone) {
+    dlg.querySelector("[data-all]").classList.remove("hidden");
+    dlg.querySelector("[data-everyone]").checked = forAll; // Fix titles and covers: for everyone by default
+  }
   const cands = r?.candidates || [];
   dlg.querySelector("[data-cands]").innerHTML = cands.length ? cands.map((c, i) => `<button type="button" data-pick="${i}" class="overflow-hidden rounded border border-slate-700 hover:border-indigo-400">
       <img src="/api/cover-preview?u=${encodeURIComponent(c.url)}" alt="" loading="lazy" class="aspect-[2/3] w-full object-cover"></button>`).join("")
