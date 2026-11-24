@@ -130,6 +130,8 @@ func (s *Server) Router() http.Handler {
 		r.Get("/plugin/kindle-mine", s.handleKindleMine)
 		r.Post("/plugin/kindle-words", s.handleKindleWords)
 		r.Post("/plugin/left", s.handlePluginLeft)
+		r.Get("/plugin/restore", s.handleRestoreList) // Restore from NovelCheck (plugin)
+		r.Get("/plugin/restore/file", s.handleRestoreFile)
 		r.Get("/plugin/kindle-app/{name}", s.handleKindleAppFile)
 	})
 	// KOReader's reading statistics (Cloud sync): a private WebDAV folder, same sign-in.
