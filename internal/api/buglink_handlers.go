@@ -187,7 +187,7 @@ func (s *Server) writeNoCovers(b *strings.Builder) {
 		}
 	}
 	fmt.Fprintf(b, "\n== Books with no cover (%d; %d of them with no ISBN) ==\n", len(missing), noISBN)
-	b.WriteString("id · title · author · ISBN · Calibre · true title found · searched in the last week with nothing found\n")
+	b.WriteString("id · title · author · ISBN · Calibre · true title found · searched in the last week with nothing found · lives in (library: formats) · Hardcover id · picture the app still shows\n")
 	for i, m := range missing {
 		if i == 400 {
 			fmt.Fprintf(b, "(and %d more)\n", len(missing)-i)
@@ -205,6 +205,29 @@ func (s *Server) writeNoCovers(b *strings.Builder) {
 		if s.Covers.Missed(s.coverName(m.ID)) {
 			missed = "searched, nothing found"
 		}
-		fmt.Fprintf(b, "#%d · %s · %s · %s · %s · %s · %s\n", m.ID, m.Title, orNone(m.Author), isbn, inCalibre, orNone(s.Store.TitleSuggestion(m.ID)), missed)
+		fmt.Fprintf(b, "#%d · %s · %s · %s · %s · %s · %s · %s\n", m.ID, m.Title, orNone(m.Author), isbn, inCalibre, orNone(s.Store.TitleSuggestion(m.ID)), missed, s.coverContext(m))
 	}
+}
+
+// coverContext says where a book without a book-shaped cover lives and whether the app still has a picture for it: the
+// libraries and formats of its copies (an audiobook shows its square Audiobookshelf cover; a Libby loan its own), and
+// whether Hardcover knows it.
+func (s *Server) coverContext(m store.BriefBook) string {
+	copies, _ := s.Store.BookCopies(m.ID)
+	var where []string
+	picture := "none"
+	for _, c := range copies {
+		where = append(where, c.CatalogName+": "+orNone(c.Format))
+		if c.Source == "audiobookshelf" {
+			picture = "square audiobook cover"
+		}
+	}
+	if picture == "none" && s.Store.DiscoverCoverURL(m.ID) != "" {
+		picture = "a list's cover"
+	}
+	hc := "none"
+	if id := s.Store.HCIDOf(m.ID); id > 0 {
+		hc = strconv.Itoa(id)
+	}
+	return orNone(strings.Join(where, ", ")) + " · " + hc + " · " + picture
 }

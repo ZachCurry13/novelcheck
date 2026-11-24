@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.2]
+
+### 🔎 The bug link says what each cover-less book is
+- Each line in "Books with no cover" now also says **which library holds it and in what format** (Calibre, Audiobookshelf, Libby…), **its Hardcover id**, and **whether the app still shows some picture for it** (an audiobook's square cover). Many of the books on that list are audiobooks or loans, not Calibre books, so sorting real books from junk starts there.
+
 ## [2.1.1]
 
 ### 📴 A friendlier message when the tunnel can't reach NovelCheck
