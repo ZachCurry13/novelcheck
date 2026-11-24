@@ -1,11 +1,18 @@
 /* NovelCheck Kindle app: the screens. ES5 only (see kindle.js). */
 var PER_PAGE = 6;
-var state = { books: [], page: 0, list: "up-next", levels: {} }; // levels: the spice levels shown ({"1": true, "2": true}); none ticked = all
+var state = { books: [], page: 0, list: "up-next", levels: {}, offline: false }; // levels: the spice levels shown ({"1": true, "2": true}); none ticked = all
 var got = {}; // books downloaded on this Kindle, by id
 try { got = JSON.parse(localStorage.getItem("nc-got")) || {}; } catch (e) {}
 
 function $(id) { return document.getElementById(id); }
 function note(text) { $("note").textContent = text || ""; }
+// setOffline shows (or clears) the line that says there is no connection and which saved copy is on screen.
+function setOffline(on, at) {
+  state.offline = on;
+  var s = $("status");
+  s.textContent = on ? "Offline" + (at ? ": showing what was saved " + dateText(at) : "") + ". Downloads wait for Wi-Fi." : "";
+  s.hidden = !on;
+}
 function el(tag, cls, text) {
   var e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -28,7 +35,10 @@ function paintSynced() {
   var at = 0;
   try { at = +localStorage.getItem("nc-synced") || 0; } catch (e) {}
   var m = at ? Math.round((new Date().getTime() - at) / 60000) : -1;
-  $("synced").textContent = m < 0 ? "Not synced yet" : m < 2 ? "Synced just now" : m < 120 ? "Synced " + m + " min ago" : m < 2880 ? "Synced " + Math.round(m / 60) + " h ago" : "Synced " + Math.round(m / 1440) + " days ago";
+  var e = $("synced");
+  e.className = "meta" + (m < 0 || m >= 720 ? " stale" : "");
+  e.textContent = m < 0 ? "Not synced yet" : m < 2 ? "Synced just now" : m < 120 ? "Synced " + m + " min ago" : m < 720 ? "Synced " + Math.round(m / 60) + " h ago" :
+    "Not up to date. Last synced " + dateText(at);
 }
 
 function show(list, query) {
@@ -38,9 +48,22 @@ function show(list, query) {
   for (var i = 0; i < tabs.length; i++) tabs[i].className = tabs[i].getAttribute("data-list") === tab ? "on" : "";
   var path = list === "search" ? "/kosync/plugin/search?q=" + encodeURIComponent(query) :
     list === "collection" ? "/kosync/plugin/collection/" + encodeURIComponent(query) : "/kosync/plugin/" + list;
+  var cached = cachedList(list);
+  if (cached && cached.books) { // what was saved shows at once; the fresh list replaces it
+    state.books = cached.books;
+    state.header = cached.header || "";
+    state.page = 0;
+    rows();
+  }
   note("Loading…");
-  api("GET", path + (path.indexOf("?") > 0 ? "&" : "?") + "device=" + encodeURIComponent(NC.device), null, function (err, data) {
-    if (err) return offline(err);
+  api("GET", path + (path.indexOf("?") > 0 ? "&" : "?") + "device=" + encodeURIComponent(NC.device), null, function (err, data, status) {
+    if (state.list !== list) return; // another tab was opened meanwhile
+    if (err) {
+      if (status === 0) setOffline(true, cached && cached.at);
+      if (cached && cached.books) return note(status === 0 ? "" : err);
+      return offline(err);
+    }
+    setOffline(false);
     state.header = "";
     if (list === "discover") { // rows of books the family has; each book remembers its row's name
       state.books = [];
@@ -56,6 +79,7 @@ function show(list, query) {
       state.books = (data && data.books) || [];
       if (list === "collection") state.header = ((data.icon ? data.icon + " " : "") + data.name) + (data.about ? ": " + data.about : "");
     }
+    cacheList(list, state.books, state.header);
     state.page = 0;
     note(state.books.length ? "" : list === "up-next" ? "Your Nightstand is empty." : list === "kindle-mine" ? "Nothing yet: tap Sync now." :
       list === "discover" ? "Nothing on Discover is in your library yet." : list === "collections" ? "No collections yet." : "No books found.");
@@ -106,6 +130,7 @@ function rows() {
   $("page").textContent = (state.page + 1) + " of " + pages;
   $("prev").disabled = state.page === 0;
   $("next").disabled = state.page >= pages - 1;
+  if (!fitting) fit();
 }
 
 // collectionRow is one collection in the Collections list.
@@ -164,8 +189,9 @@ function row(b) {
 }
 
 function downloadButton(b, main) {
-  var btn = el("button", main ? "main" : "", onKindle(b) ? "On Kindle" : "Download");
-  btn.disabled = !!onKindle(b);
+  var waiting = !onKindle(b) && isPending(b.id);
+  var btn = el("button", main ? "main" : "", onKindle(b) ? "On Kindle" : waiting ? "Waiting for Wi-Fi" : "Download");
+  btn.disabled = !!onKindle(b) || waiting;
   btn.onclick = function () { download(b, btn); };
   return btn;
 }
@@ -176,10 +202,16 @@ function ended() { var f = afterDownload; if (f) f(); }
 
 function download(b, btn, tries) {
   tries = tries || 0;
+  if (state.offline) { // known to be offline: wait for Wi-Fi instead of failing
+    queueDownload(b, btn);
+    retryPending();
+    return ended();
+  }
   btn.disabled = true;
   btn.textContent = "Getting…";
   api("GET", "/kosync/plugin/kindle/" + b.id + "?check=1", null, function (err, data, status) {
     if (err) {
+      if (status === 0) { setOffline(true, 0); queueDownload(b, btn); return ended(); }
       btn.disabled = false;
       btn.textContent = "Download";
       note(err);
@@ -325,6 +357,7 @@ document.addEventListener("DOMContentLoaded", function () {
   };
   $("dlall").onclick = downloadAll;
   $("ver").textContent = "v" + (NC.version || "?");
+  $("who").textContent = "Signed in as " + (NC.user || "?") + " · " + String(NC.device || "").replace(/ \(Amazon reader\)$/, "");
   paintSynced();
   setInterval(paintSynced, 60000);
   logLine("app " + NC.version + " opened as " + NC.device);
@@ -340,5 +373,6 @@ document.addEventListener("DOMContentLoaded", function () {
   $("next").onclick = function () { state.page++; rows(); };
   show("up-next");
   checkUpdate();
+  setTimeout(warmCache, 6000); // keep the Kindle's books and their ratings for when there is no Wi-Fi
   syncNow(false); // by itself at most every 12 hours
 });

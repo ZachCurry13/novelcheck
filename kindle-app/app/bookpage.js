@@ -5,9 +5,24 @@
 
 function details(id) {
   note("Loading…");
-  api("GET", "/kosync/plugin/info/" + id, null, function (err, b) {
-    if (err) return note(err);
+  api("GET", "/kosync/plugin/info/" + id, null, function (err, b, status) {
+    if (err) {
+      var c = cachedInfo(id);
+      if (!c) return note(err);
+      if (status === 0) setOffline(true, c.at);
+      note("");
+      return paintDetails(c.b); // the page as it was saved
+    }
+    setOffline(false);
+    cacheInfo(id, b);
     note("");
+    paintDetails(b);
+  });
+}
+
+function paintDetails(b) {
+  var id = b.id;
+  {
     window.scrollTo(0, 0);
     var m = $("main");
     m.innerHTML = "";
@@ -57,7 +72,7 @@ function details(id) {
     acts.appendChild(back);
     d.appendChild(acts);
     m.appendChild(d);
-  });
+  }
 }
 
 // finishPanel asks for stars (or none) and marks the book finished in NovelCheck (and so on Hardcover).
