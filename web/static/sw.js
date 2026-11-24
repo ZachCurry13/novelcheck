@@ -1,7 +1,7 @@
 // NovelCheck service worker: caches the app shell for offline launch and
 // home-screen installs. API responses are not cached, except the few a reader
 // needs offline (MINE, below), which are cleared on sign-out and profile switch.
-const CACHE = "novelcheck-shell-v227";
+const CACHE = "novelcheck-shell-v228";
 const MINE = "novelcheck-mine";
 const SHELL = [
   "/",
@@ -240,13 +240,28 @@ const KEEP = [
   [/^\/api\/books\/\d+$/, 50],
   [/^\/api\/books\/\d+\/cover$/, 50],
   [/^\/api\/(me|queue|content)$/, 3],
+  // read-only pages, so a server that is down shows what was last seen (with a banner saying so): kept by the whole
+  // address, since a list is asked many ways
+  [/^\/api\/(home|books|books\/facets|catalogs|collections|requests)$/, 40],
+  [/^\/api\/collections\/\d+$/, 20],
 ];
+const LISTED = /^\/api\/(home|books|books\/facets|catalogs|collections|requests)$/;
+const keyOf = (url) => (LISTED.test(url.pathname) ? url.pathname + url.search : url.pathname);
+// A server that is down answers with an error page (Cloudflare's 502, 521, 530 …), not with nothing: that counts as down.
+const down = (res) => res.status >= 500 && res.status < 600;
+// stale marks an answer from the kept copies, so the page can say the server is offline.
+async function stale(r) {
+  const h = new Headers(r.headers);
+  h.set("X-NovelCheck-Offline", "1");
+  return new Response(await r.blob(), { status: r.status, statusText: r.statusText, headers: h });
+}
 const kept = (path) => KEEP.find(([re]) => re.test(path));
 
-async function keep(path, res) {
+async function keep(key, res) {
   const c = await caches.open(MINE);
-  await c.delete(path);
-  await c.put(path, res);
+  await c.delete(key);
+  await c.put(key, res);
+  const path = key.split("?")[0];
   const [re, max] = kept(path);
   const same = (await c.keys()).filter((k) => re.test(new URL(k.url).pathname));
   await Promise.all(same.slice(0, Math.max(0, same.length - max)).map((k) => c.delete(k)));
@@ -318,19 +333,21 @@ self.addEventListener("fetch", (event) => {
     if (!keepIt) return;
     event.respondWith(fetch(event.request)
       .then((res) => {
+        if (down(res)) throw new Error("the server is down");
         if (res.ok && !url.pathname.endsWith("/cover")) { // covers are kept only for the Nightstand (keepNightstand)
           const copy = res.clone(), list = url.pathname === "/api/queue" ? res.clone() : null;
-          event.waitUntil(keep(url.pathname, copy).then(() => list && keepNightstand(list)));
+          event.waitUntil(keep(keyOf(url), copy).then(() => list && keepNightstand(list)));
         }
         return res;
       })
-      .catch(() => caches.open(MINE).then((c) => c.match(url.pathname)).then((r) => r || Response.error())));
+      .catch(() => caches.open(MINE).then((c) => c.match(keyOf(url))).then((r) => (r ? stale(r) : Response.error()))));
     return;
   }
   const plain = url.pathname.replace(/^\/v\/[^/]+(?=\/)/, "");
   event.respondWith(
     fetch(event.request)
       .then((res) => {
+        if (down(res)) throw new Error("the server is down"); // Cloudflare's error page: use the kept copy instead
         if (res.ok && SHELL.includes(plain)) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(event.request, copy));

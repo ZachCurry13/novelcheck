@@ -10,6 +10,39 @@ export class ApiError extends Error {
   }
 }
 
+// When NovelCheck's server can't be reached (or answers with an error page from the tunnel), sw.js gives the pages it kept
+// and marks them X-NovelCheck-Offline; this says so at the top of the screen, and looks again every 15 seconds.
+let serverDown = false;
+let probe = 0;
+function bar() {
+  let b = document.getElementById("offline-bar");
+  if (!b) {
+    b = document.createElement("div");
+    b.id = "offline-bar";
+    b.className = "fixed inset-x-0 top-0 z-50 bg-amber-900 px-3 py-1 text-center text-sm text-amber-100";
+    b.setAttribute("role", "status");
+    b.textContent = "NovelCheck's server can't be reached, so you're in offline mode: this is what was saved on this device. It looks again by itself.";
+    document.body.prepend(b);
+  }
+  return b;
+}
+function setDown(on) {
+  if (on === serverDown) return;
+  serverDown = on;
+  if (on) {
+    bar().classList.remove("hidden");
+    probe = setInterval(async () => {
+      try {
+        const r = await fetch("/api/build", { cache: "no-store" });
+        if (r.ok && (r.headers.get("content-type") || "").includes("json")) location.reload(); // it is back: show the live pages
+      } catch {}
+    }, 15000);
+  } else {
+    clearInterval(probe);
+    document.getElementById("offline-bar")?.classList.add("hidden");
+  }
+}
+
 let onUnauthorized = () => {};
 export function setUnauthorizedHandler(fn) {
   onUnauthorized = fn;
@@ -65,6 +98,8 @@ async function send(path, opts) {
         await backOnline(700 * 2 ** attempt);
         continue;
       }
+      if (res.headers.get("X-NovelCheck-Offline")) setDown(true); // a kept copy: the server is down
+      else if (res.status < 500) setDown(false);
       return res;
     } catch {
       if (opts.method === "GET" && wasAway() && away < 4) {
@@ -75,6 +110,7 @@ async function send(path, opts) {
       }
       if (opts.method !== "GET" || attempt >= RETRIES) {
         note("net", `${opts.method} ${path} could not connect`);
+        setDown(true);
         throw new ApiError(0, "Can't reach NovelCheck right now. Check your connection and try again.");
       }
       await backOnline(700 * 2 ** attempt);

@@ -23,6 +23,10 @@ NovelCheck 2.0 is about not having to babysit it: it tells you what needs you, c
 - On a rated book, parents and admins now have **I disagree**: pick the level you would give it. It doesn't change the book.
 - The **Accuracy** page (parents and admins) scores each AI model against those levels: how often it was exactly right, within one level, and whether it errs high or low. Admins can press **Use** to give a book the level a person gave.
 
+### 📴 Offline mode when the server is down
+- When NovelCheck's server can't be reached, or Cloudflare shows its error page, the app now opens from what it saved on the device instead of showing the error: Home, Library lists, collections, the Nightstand and the books you opened. A bar at the top says "NovelCheck's server can't be reached, so you're in offline mode". It looks again every 15 seconds and reloads by itself when the server is back. Changes (adding a book, a rating) wait until it is.
+- Saved copies are this device's and this person's: they are cleared when someone else signs in.
+
 ### 🙋 Ask for a book
 - Anyone can ask for a book on Home. A parent says yes: the book is marked OK for kids' accounts (the same OK as "Mark as OK" on its page) and goes on that person's Nightstand. A book that isn't in the library yet is approved and stays in the admins' list until someone gets it; **Got it** then puts it on their Nightstand.
 
