@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/version"
 	kindleplugin "github.com/zachcurry13/novelcheck/kindle-plugin"
 )
 
@@ -129,7 +130,7 @@ func (s *Server) handlePluginVersion(w http.ResponseWriter, r *http.Request) {
 	if s.kosyncUser(w, r) == nil {
 		return
 	}
-	kosyncJSON(w, http.StatusOK, map[string]any{"version": kindleplugin.Version(), "files": kindleplugin.UpdatableFiles()})
+	kosyncJSON(w, http.StatusOK, map[string]any{"version": kindleplugin.Version(), "files": kindleplugin.UpdatableFiles(), "server": version.Version})
 }
 
 // handlePluginFile sends one of the plugin's Lua files.

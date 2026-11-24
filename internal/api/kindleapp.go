@@ -14,6 +14,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/safe"
 	"github.com/zachcurry13/novelcheck/internal/store"
+	"github.com/zachcurry13/novelcheck/internal/version"
 	kindleapp "github.com/zachcurry13/novelcheck/kindle-app"
 )
 
@@ -162,7 +163,7 @@ func (s *Server) handleKindleAppVersion(w http.ResponseWriter, r *http.Request) 
 	q := r.URL.Query()
 	_ = s.Store.SetSetting("app_seen_"+strconv.FormatInt(u.ID, 10), time.Now().UTC().Format("2006-01-02 15:04:05")+" UTC · "+
 		clipText(q.Get("device"), 60)+" · app "+clipText(q.Get("v"), 20))
-	kosyncJSON(w, http.StatusOK, map[string]any{"version": kindleapp.Version, "files": kindleapp.Files()})
+	kosyncJSON(w, http.StatusOK, map[string]any{"version": kindleapp.Version, "files": kindleapp.Files(), "server": version.Version})
 }
 
 // handleKindleAppFile: GET /kosync/plugin/kindle-app/{name}, one of the app's files.

@@ -102,9 +102,18 @@ jobs:
           awk -v v="$v" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > notes.md
           [ -s notes.md ] || echo "See CHANGELOG.md for details." > notes.md
           printf '\n---\n**Update on TrueNAS:** Apps → novelcheck → Update when TrueNAS offers it (or follow Updating NovelCheck in docs/TRUENAS.md).\nImage: `ghcr.io/zachcurry13/novelcheck:%s` (also `:latest`).\n' "$v" >> notes.md
+      - id: gover
+        run: echo "line=$(grep -m1 '^go ' go.mod | awk '{print $2}' | cut -d. -f1,2)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ steps.gover.outputs.line }}
+          check-latest: true
+      - name: Kindle app and plugin files, so they can update from GitHub (cmd/updatemanifest)
+        run: go run ./cmd/updatemanifest -out dist -base "https://github.com/${{ github.repository }}/releases/download/${TAG}/"
       - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG }}
           name: NovelCheck ${{ env.TAG }}
           target_commitish: ${{ github.sha }}
           body_path: notes.md
+          files: dist/*

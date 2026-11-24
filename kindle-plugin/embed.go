@@ -18,6 +18,10 @@ const folder = "novelcheck.koplugin"
 
 var versionRE = regexp.MustCompile(`version\s*=\s*"([^"]+)"`)
 
+// MinServer is the oldest NovelCheck server this plugin works with (the plugin also updates from GitHub, ahead of the
+// person's server, and only when the server is at least this version). Raise it when a plugin change needs a server change.
+const MinServer = "1.104.0"
+
 // Version is the plugin's version (from its _meta.lua).
 func Version() string {
 	b, _ := files.ReadFile(folder + "/_meta.lua")

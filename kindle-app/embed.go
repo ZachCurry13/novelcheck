@@ -20,7 +20,12 @@ var files embed.FS
 
 // Version is the app's version. Raise it whenever a file in app/ changes: the app compares it with its own and
 // offers to update (Files and File below are what it fetches).
-const Version = "1.6.0"
+const Version = "1.7.0"
+
+// MinServer is the oldest NovelCheck server this app works with. The app also updates from GitHub, where it can be newer
+// than the person's server: it only takes such an update when the server is at least this version. Raise it when an app
+// change needs a server change.
+const MinServer = "1.99.3"
 
 // Files are the app's files the app can fetch to update itself (never config.js, which is per account).
 func Files() []string {

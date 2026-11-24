@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.105.0]
+
+### 🔄 The Kindle app and the plugin update from GitHub
+- Each release now carries the Kindle app's and the KOReader plugin's files. The app (1.7.0) and the plugin (1.65.0) look at the newest release on GitHub as well as at your server, and take whichever is newer. So a fix to the Kindle app or the plugin reaches the Kindle without you updating the server first.
+- A GitHub update is taken only when your server is new enough for it (each release says the oldest server it works with), so an app never ends up talking to a server that can't answer it. Servers older than 1.105.0 don't say their version, so they keep getting updates from themselves only.
+- The Kindle needs internet access to GitHub for this. If GitHub can't be reached, nothing changes: the server's own update still works.
+- **Spice filter in the app by number:** the Kindle app's All / No Spice / Closed Door / Open Door buttons are now All and the levels 0 to 5, and several can be ticked at once (like 1 and 2 together).
+- The first time, the server still has to be updated to 1.105.0 (and the Kindle app and plugin updated from it). After that they can run ahead of it.
+
 ## [1.104.0]
 
 ### 📖 Kindle app 1.6.0: no more dead space

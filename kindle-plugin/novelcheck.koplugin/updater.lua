@@ -42,17 +42,59 @@ return function(NovelCheck, ctx)
         return false
     end
 
-    -- latestVersion asks NovelCheck which plugin version it has, and its files.
+    -- The newest release on GitHub carries the plugin's files too, so the plugin can be newer than the person's NovelCheck
+    -- server. It is read with the Kindle's own curl (no sign-in), and taken only when the server is at least the version the
+    -- release says it needs.
+    local GH = "https://github.com/ZachCurry13/novelcheck/releases/"
+
+    local function shq(s)
+        return "'" .. (tostring(s):gsub("'", "'\\''")) .. "'"
+    end
+
+    local function curl(url, dest, seconds)
+        local ok = os.execute("curl -sfL -m " .. seconds .. " -o " .. shq(dest) .. " " .. shq(url) .. " 2>/dev/null")
+        return ok == true or ok == 0
+    end
+
+    function NovelCheck:githubInfo()
+        local tmp = DataStorage:getDataDir() .. "/novelcheck-gh.json"
+        os.remove(tmp)
+        if not curl(GH .. "latest/download/kindle-plugin.json", tmp, 8) then
+            os.remove(tmp)
+            return nil
+        end
+        local f = io.open(tmp, "rb")
+        local body = f and f:read("*a")
+        if f then
+            f:close()
+        end
+        os.remove(tmp)
+        local ok, g = pcall(json.decode, body or "")
+        if ok and type(g) == "table" and type(g.files) == "table" and #g.files > 0
+            and tostring(g.version):match("^[%d%.]+$") and tostring(g.min_server):match("^[%d%.]+$")
+            and g.prefix == "kindle-plugin-" and type(g.base) == "string"
+            and g.base:sub(1, #GH + 9) == GH .. "download/" and g.base:match("^[%w%._/:%-]+$") then
+            return g
+        end
+        return nil
+    end
+
+    -- latestVersion asks NovelCheck which plugin version it has, and its files, and GitHub for its own (the newer wins).
     function NovelCheck:latestVersion()
         local code, body = self:request("/kosync/plugin/version")
         if code ~= 200 then
             return nil
         end
         local ok, data = pcall(json.decode, body)
-        if ok and type(data) == "table" and data.version and type(data.files) == "table" then
-            return data
+        if not (ok and type(data) == "table" and data.version and type(data.files) == "table") then
+            return nil
         end
-        return nil
+        local g = self:githubInfo()
+        if g and versionLess(data.version, g.version) and data.server
+            and (data.server == "dev" or not versionLess(data.server, g.min_server)) then
+            return { version = g.version, files = g.files, from = "github", base = g.base, prefix = g.prefix }
+        end
+        return data
     end
 
     -- checkUpdate offers to update when NovelCheck has a newer plugin. Quiet, it
@@ -113,9 +155,14 @@ return function(NovelCheck, ctx)
             local path = PLUGIN_DIR .. "/" .. name
             local tmp = path .. ".new"
             table.insert(staged, { path = path, tmp = tmp })
-            local code = self:request("/kosync/plugin/file/" .. name, tmp)
+            local fetched
+            if info.from == "github" then
+                fetched = curl(info.base .. info.prefix .. name, tmp, 120)
+            else
+                fetched = self:request("/kosync/plugin/file/" .. name, tmp) == 200
+            end
             local size = lfs.attributes(tmp, "size")
-            if code ~= 200 or not size or size == 0 or not loadfile(tmp) then
+            if not fetched or not size or size == 0 or not loadfile(tmp) then
                 return giveUp()
             end
         end

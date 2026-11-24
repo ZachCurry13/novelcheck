@@ -1,6 +1,6 @@
 /* NovelCheck Kindle app: the screens. ES5 only (see kindle.js). */
 var PER_PAGE = 6;
-var state = { books: [], page: 0, list: "up-next", door: "" }; // door: a spice filter ("none", "closed", "open"), "" = all
+var state = { books: [], page: 0, list: "up-next", levels: {} }; // levels: the spice levels shown ({"1": true, "2": true}); none ticked = all
 var got = {}; // books downloaded on this Kindle, by id
 try { got = JSON.parse(localStorage.getItem("nc-got")) || {}; } catch (e) {}
 
@@ -12,11 +12,11 @@ function el(tag, cls, text) {
   if (text != null) e.textContent = text;
   return e;
 }
-function doorOf(level) { return level == null ? "" : level >= 4 ? "open" : level >= 2 ? "closed" : "none"; }
+function anyLevel() { for (var k in state.levels) if (state.levels[k]) return true; return false; }
 function shown() {
-  if (!state.door || state.list === "collections") return state.books;
+  if (!anyLevel() || state.list === "collections") return state.books;
   var out = [];
-  for (var i = 0; i < state.books.length; i++) if (doorOf(state.books[i].level) === state.door) out.push(state.books[i]);
+  for (var i = 0; i < state.books.length; i++) if (state.books[i].level != null && state.levels[state.books[i].level]) out.push(state.books[i]);
   return out;
 }
 function badge(level) { return level == null ? "Not rated yet" : "Spice " + level + " · " + (level >= 4 ? "Open Door" : level >= 2 ? "Closed Door" : "No Spice"); }
@@ -96,9 +96,9 @@ function rows() {
     }
     m.appendChild(row(part[i]));
   }
-  if (!part.length && state.books.length) m.appendChild(el("p", "meta", "No books with that spice level here. Tap All."));
+  if (!part.length && state.books.length) m.appendChild(el("p", "meta", "No books at the spice levels picked here. Tap All."));
   var pills = document.querySelectorAll(".pills button");
-  for (var j = 0; j < pills.length; j++) pills[j].className = pills[j].getAttribute("data-door") === state.door ? "on" : "";
+  for (var j = 0; j < pills.length; j++) { var lv = pills[j].getAttribute("data-lvl"); pills[j].className = (lv === "" ? !anyLevel() : state.levels[lv]) ? "on" : ""; }
   var missing = 0;
   for (var q = 0; q < state.books.length; q++) if (!onKindle(state.books[q])) missing++;
   $("dlall").hidden = !(state.list === "up-next" && missing > 0);
@@ -317,7 +317,12 @@ document.addEventListener("DOMContentLoaded", function () {
   var tabs = document.querySelectorAll(".tabs button[data-list]");
   for (var i = 0; i < tabs.length; i++) tabs[i].onclick = function () { show(this.getAttribute("data-list")); };
   var pills = document.querySelectorAll(".pills button");
-  for (var k = 0; k < pills.length; k++) pills[k].onclick = function () { state.door = this.getAttribute("data-door"); state.page = 0; rows(); };
+  for (var k = 0; k < pills.length; k++) pills[k].onclick = function () {
+    var lv = this.getAttribute("data-lvl");
+    if (lv === "") state.levels = {}; else state.levels[lv] = !state.levels[lv]; // several levels can be ticked together
+    state.page = 0;
+    rows();
+  };
   $("dlall").onclick = downloadAll;
   $("ver").textContent = "v" + (NC.version || "?");
   paintSynced();
