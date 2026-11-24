@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.6]
+
+### 📚 Pick where the Kindle app puts downloaded books
+- **Kindle app 1.16.0: Menu → "Downloads go to".** Tap it to switch between **Kindle library** (what it did until now: a Kindle book in the Kindle's own library, like any book from Amazon) and **KOReader** (the book as it is, usually an EPUB, in the NovelCheck folder inside KOReader's home folder, the same place the plugin uses). The choice is kept on each Kindle, so you can have KOReader and your wife the Kindle library.
+
 ## [2.1.5]
 
 ### 🔧 Fixes

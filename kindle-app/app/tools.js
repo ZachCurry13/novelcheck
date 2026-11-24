@@ -165,6 +165,13 @@ function bindTools() {
     });
   });
   $("t-hidden").onclick = showHidden;
+  var dest = function () { $("t-dest").textContent = stored("nc-dest") === "koreader" ? "Downloads go to: KOReader (tap to change)" : "Downloads go to: Kindle library (tap to change)"; };
+  dest();
+  $("t-dest").onclick = function () {
+    keep("nc-dest", stored("nc-dest") === "koreader" ? "kindle" : "koreader");
+    dest();
+    note(stored("nc-dest") === "koreader" ? "New downloads are EPUBs in KOReader's NovelCheck folder." : "New downloads are Kindle books in the Kindle library.");
+  };
   guard("t-crash", function (end) {
     crashLogs(function (n) {
       note(n < 0 ? "The Kindle couldn't do that. Open KindleForge once, then try again." : n ? "Deleted " + n + " crash log" + (n === 1 ? "" : "s") + "." : "There are no crash logs on this Kindle.");

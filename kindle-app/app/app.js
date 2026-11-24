@@ -280,6 +280,7 @@ function download(b, btn, tries) {
   }
   btn.disabled = true;
   btn.textContent = "Getting…";
+  if (stored("nc-dest") === "koreader") return saveForKOReader(b, btn); // the book as it is, in KOReader's folder, like the plugin
   api("GET", "/kosync/plugin/kindle/" + b.id + "?check=1", null, function (err, data, status) {
     if (err) {
       if (status === 0) { setOffline(true, 0); queueDownload(b, btn); return ended(); }
@@ -310,6 +311,38 @@ function thumbnail(b, path) {
     "[ -n \"$K\" ] && break; done; if [ -n \"$K\" ]; then mkdir -p " + dir + "; T=\"" + dir + "/thumbnail_${K}_portrait.jpg\"; " +
     "if curl -sfL -H " + sh("x-auth-user: " + NC.user) + " -H " + sh("x-auth-key: " + NC.key) + " -o \"$T.part\" -w '%{content_type}' " +
     sh(NC.server + "/kosync/plugin/cover/" + b.id + "?size=l") + " | grep -q jpeg; then mv \"$T.part\" \"$T\"; else rm -f \"$T.part\"; fi; fi ) >/dev/null 2>&1 &";
+}
+
+// saveForKOReader downloads the book in its own format (EPUB, no conversion) into the NovelCheck folder inside KOReader's home
+// folder (read from KOReader's settings, as the plugin does), where KOReader finds it. The file name comes from the server.
+function saveForKOReader(b, btn) {
+  var out = "/tmp/nc-dl-" + b.id + ".txt", tmp = "/tmp/nc-ko-" + b.id + ".part", hdr = "/tmp/nc-ko-" + b.id + ".hdr";
+  var cmd = "rm -f " + out + " " + hdr + "; H=$(sed -n 's/.*\\[\"home_dir\"\\] = \"\\(.*\\)\".*/\\1/p' /mnt/us/koreader/settings.reader.lua 2>/dev/null | head -1); " +
+    "[ -d \"$H\" ] || H=/mnt/us/documents; D=\"${H%/}/NovelCheck\"; mkdir -p \"$D\"; " +
+    "if curl -sfL -D " + hdr + " -H " + sh("x-auth-user: " + NC.user) + " -H " + sh("x-auth-key: " + NC.key) + " -o " + tmp + " " + sh(NC.server + "/kosync/plugin/book/" + b.id + "/book") +
+    "; then F=$(sed -n 's/^[Cc]ontent-[Dd]isposition:.*filename=\"\\(.*\\)\".*/\\1/p' " + hdr + " | tr -d '\\r' | tr '/' '_'); [ -n \"$F\" ] || F=book-" + b.id + ".epub; mv " + tmp + " \"$D/$F\"; echo ok > " + out +
+    "; else rm -f " + tmp + "; echo failed > " + out + "; fi; rm -f " + hdr + "; echo END >> " + out;
+  if (!run(cmd)) {
+    btn.disabled = false;
+    btn.textContent = "Download";
+    return note("Saving books needs KindleForge's helper. Open KindleForge once, then try again.");
+  }
+  note("Downloading " + b.title + " for KOReader…");
+  waitFor(out, 600, function (text) {
+    if (text && text.indexOf("ok") >= 0) {
+      got[b.id] = true;
+      logLine("downloaded " + b.title + " for KOReader");
+      try { localStorage.setItem("nc-got", JSON.stringify(got)); } catch (e) {}
+      btn.textContent = "On Kindle";
+      note(b.title + " is in KOReader's NovelCheck folder.");
+      return ended();
+    }
+    btn.disabled = false;
+    btn.textContent = "Download";
+    note("The download failed. Check Wi-Fi and try again.");
+    logLine("KOReader download failed: " + b.title);
+    setTimeout(ended, 0);
+  });
 }
 
 function save(b, file, btn) {
