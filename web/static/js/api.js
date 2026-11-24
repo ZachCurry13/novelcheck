@@ -106,6 +106,7 @@ async function send(path, opts) {
         continue;
       }
       if (res.headers.get("X-NovelCheck-Offline")) setDown(true, res.headers.get("X-NovelCheck-Saved")); // a kept copy: the server is down
+      else if (res.status >= 520 && res.status <= 530) setDown(true); // the tunnel can't reach NovelCheck (Cloudflare's 52x and 530)
       else if (res.status < 500) setDown(false);
       return res;
     } catch {
@@ -138,6 +139,10 @@ export async function api(path, { method = "GET", body, raw = false } = {}) {
     throw new ApiError(401, "Please sign in");
   }
   if (raw) return res;
+  if (res.status >= 520 && res.status <= 530) { // not NovelCheck's own answer: say so, instead of a bare "Error"
+    note("net", `${method} ${path} -> ${res.status} (the tunnel can't reach NovelCheck)`);
+    throw new ApiError(res.status, "NovelCheck's server can't be reached right now. It looks again by itself.");
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const code = res.headers.get("X-Error-Id") || "";

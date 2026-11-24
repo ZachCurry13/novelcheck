@@ -6,6 +6,9 @@ becomes the release notes for that version and is shown in the app under
 
 ## [2.1.1]
 
+### 📴 A friendlier message when the tunnel can't reach NovelCheck
+- When Cloudflare answers 530 or another 52x (it is up but NovelCheck is not: restarting after an update, or the NAS is off), pages now say "NovelCheck's server can't be reached right now. It looks again by itself." and show the offline bar, instead of a bare "Error" on every request. (This is what a phone showed for about 20 seconds while 2.1.0 was starting.)
+
 ### 🧹 Tidy backups
 - On the Health page, under Backups: **Tidy backups…** shows what it would remove, then (main admin only) removes it: **Amazon's dictionary files** from any Kindle backup, and files in a **Kindle app backup whose identical copy** (same name, same size, same SHA-256) is in the backup of the same Kindle's KOReader plugin. A file with the same name but other content stays, and the plugin's copy always stays. If the app's Kindle isn't linked to the plugin's ("Same Kindle as…" in Settings → Kindle), it says so and leaves its books alone.
 
