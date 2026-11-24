@@ -90,7 +90,9 @@ function parseLibrary(text) {
   var lines = text.split("\n"), books = [], places = {}, plugin = /^PLUGIN/.test(text);
   for (var i = 0; i < lines.length; i++) {
     var f = lines[i].split("\t");
-    if (f.length < 8 || !f[1] || /\.sh$/.test(f[2])) continue;
+    if (f.length < 8 || !f[1]) continue;
+    // a file that isn't a book (KUAL's launcher .azw2, a .sh scriptlet, a dictionary…) is not reported
+    if (f[2] && !/\.(azw|azw3|kfx|kfx-zip|mobi|prc|pdf|epub|kepub|txt|docx?|rtf|cbz|cbr)$/i.test(f[2])) continue;
     var pct = +f[3] || 0, at = +f[6] || 0;
     if (plugin && f[4] === "PDOC" && pct === 0) continue; // a book KOReader reads: the plugin reports it
     if (at > 1e11) at = Math.round(at / 1000); // milliseconds on some firmware

@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.99.1]
+
+### 📖 Kindle app 1.4.1
+- The app only reports real book files. Items like KUAL's launcher or a scriptlet no longer show up as "books NovelCheck couldn't match".
+
 ## [1.99.0]
 
 ### 📖 Kindle app 1.4.0
