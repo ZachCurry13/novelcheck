@@ -72,16 +72,10 @@ func Zip(server, user, code, name string) ([]byte, error) {
 			return nil, err
 		}
 	}
-	sum := md5.Sum([]byte(code)) // the plugin's sign-in sends the sync code's MD5, never the code
-	cfg, _ := json.Marshal(map[string]string{"server": strings.TrimRight(server, "/"), "user": user,
-		"key": hex.EncodeToString(sum[:]), "device": deviceName(name), "version": Version})
-	if err := add("extensions/novelcheck-app/config.js", []byte("// Made by NovelCheck for this account.\nvar NC = "+string(cfg)+";\n")); err != nil {
+	if err := add("extensions/novelcheck-app/config.js", Config(server, user, code, name)); err != nil {
 		return nil, err
 	}
-	script, _ := files.ReadFile("NovelCheck.sh")
-	icon, _ := files.ReadFile("cover.png")
-	script = bytes.Replace(script, []byte("{{ICON}}"), []byte(base64.StdEncoding.EncodeToString(icon)), 1)
-	if err := add("documents/NovelCheck.sh", script); err != nil {
+	if err := add("documents/NovelCheck.sh", Launcher()); err != nil {
 		return nil, err
 	}
 	if err := zw.Close(); err != nil {
@@ -106,4 +100,19 @@ func deviceName(name string) string {
 		return "Kindle"
 	}
 	return name
+}
+
+// Config is config.js: this account's sign-in (the plugin's sign-in sends the sync code's MD5, never the code).
+func Config(server, user, code, name string) []byte {
+	sum := md5.Sum([]byte(code))
+	cfg, _ := json.Marshal(map[string]string{"server": strings.TrimRight(server, "/"), "user": user,
+		"key": hex.EncodeToString(sum[:]), "device": deviceName(name), "version": Version})
+	return []byte("// Made by NovelCheck for this account.\nvar NC = " + string(cfg) + ";\n")
+}
+
+// Launcher is documents/NovelCheck.sh with its icon.
+func Launcher() []byte {
+	script, _ := files.ReadFile("NovelCheck.sh")
+	icon, _ := files.ReadFile("cover.png")
+	return bytes.Replace(script, []byte("{{ICON}}"), []byte(base64.StdEncoding.EncodeToString(icon)), 1)
 }

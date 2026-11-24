@@ -76,8 +76,11 @@ func TestKindleApp(t *testing.T) {
 	if code, body, _ := get("/kosync/plugin/kindle-app/app.js"); code != 200 || !strings.Contains(string(body), "ES5") {
 		t.Fatalf("an app file: %d", code)
 	}
-	if code, _, _ := get("/kosync/plugin/kindle-app/config.js"); code != 404 {
-		t.Fatalf("no per-account file is served: %d", code)
+	if code, body, _ := get("/kosync/plugin/kindle-app/config.js?server=https://nc.example&name=Sis"); code != 200 || !strings.Contains(string(body), `"server":"https://nc.example"`) || !strings.Contains(string(body), `"device":"Sis"`) {
+		t.Fatalf("the signed-in account's own config, for the plugin's install: %d %s", code, body)
+	}
+	if code, body, _ := get("/kosync/plugin/kindle-app/NovelCheck.sh"); code != 200 || !strings.HasPrefix(string(body), "#!/bin/sh") || strings.Contains(string(body), "{{ICON}}") {
+		t.Fatalf("the launcher: %d", code)
 	}
 	req, _ := http.NewRequest("OPTIONS", srv.URL+"/kosync/plugin/search", nil)
 	req.Header.Set("Origin", "file://")

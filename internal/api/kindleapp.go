@@ -168,10 +168,32 @@ func (s *Server) handleKindleAppVersion(w http.ResponseWriter, r *http.Request) 
 
 // handleKindleAppFile: GET /kosync/plugin/kindle-app/{name}, one of the app's files.
 func (s *Server) handleKindleAppFile(w http.ResponseWriter, r *http.Request) {
-	if s.kosyncUser(w, r) == nil {
+	u := s.kosyncUser(w, r)
+	if u == nil {
 		return
 	}
-	data, ok := kindleapp.File(chi.URLParam(r, "name"))
+	name := chi.URLParam(r, "name")
+	// The two per-account files, for the plugin's "Install the Kindle app" (the app's own update never asks for them).
+	if name == "config.js" || name == "NovelCheck.sh" {
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/octet-stream")
+		if name == "NovelCheck.sh" {
+			_, _ = w.Write(kindleapp.Launcher())
+			return
+		}
+		code, err := s.Store.KosyncCode(u.ID, false)
+		if err != nil {
+			writeStoreErr(w, err)
+			return
+		}
+		base := s.baseURL(r)
+		if q := r.URL.Query().Get("server"); strings.HasPrefix(q, "http://") || strings.HasPrefix(q, "https://") {
+			base = q // the address the Kindle's plugin uses, not the home address it may have just reached
+		}
+		_, _ = w.Write(kindleapp.Config(base, u.Username, code, r.URL.Query().Get("name")))
+		return
+	}
+	data, ok := kindleapp.File(name)
 	if !ok {
 		http.NotFound(w, r)
 		return

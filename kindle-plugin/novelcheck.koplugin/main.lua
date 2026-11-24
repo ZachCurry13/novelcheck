@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.65.0"
+local VERSION = "1.66.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -147,6 +147,7 @@ function NovelCheck:addToMainMenu(menu_items)
                 { text = _("Connect…"), keep_menu_open = true, callback = function() self:connectDialog() end },
                 { text = _("Device name…"), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
                 { text = _("Update"), callback = function() self:checkUpdate(false) end },
+                { text = _("Install the Kindle app"), callback = function() self:installKindleApp() end },
                 { text = _("Stop current job"), callback = function() if self.stopJob then self:stopJob() end end },
                 { text = _("Resume automatic jobs"), callback = function() self:resumeAutomatic() end },
                 self:developerMenu(),
@@ -569,7 +570,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps", "locked", "homeaddr", "leftbooks", "restore" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps", "locked", "homeaddr", "leftbooks", "restore", "installapp" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

@@ -6,6 +6,9 @@ becomes the release notes for that version and is shown in the app under
 
 ## [2.1.4]
 
+### 📲 Kindle app straight from KOReader
+- **NovelCheck → Settings → Install the Kindle app** (plugin 1.66.0). On a jailbroken Kindle that already has the plugin, this downloads the Kindle app, signed in as you, and puts the NovelCheck "book" in the library. No computer or phone needed. Close KOReader and open the book called NovelCheck.
+
 ### 🔧 From your list
 - **Health: one line per Kindle.** Jenna's name showed four times because each Kindle's problems (out of date, no backup, not reporting) were separate lines, and she has an old Kindle entry that never reports. Now each Kindle is one line with everything about it, and a Kindle that hasn't reported for two weeks has **Forget this Kindle** (main admin; its backup files stay).
 - **Duplicates: "These are different books: split them, and remember it."** After ticking "Not a copy", this button makes those entries a book of their own for good. Before, the choice was forgotten and the same two copies were listed again. Nothing is removed from Calibre; Calibre is read again afterwards.
