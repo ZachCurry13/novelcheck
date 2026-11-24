@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [1.98.4]
+
+### 📚 Books I've read
+- The Library's filters have **Books I've read**: only the books you've finished (on your Nightstand, or marked read in an import or on Hardcover, as Stats counts them), or only the ones you haven't. Everyone sees their own.
+
 ## [1.98.3]
 
 ### 📚 Open a book from your reading

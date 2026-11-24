@@ -87,6 +87,7 @@ export async function renderLibrary(view, state) {
       multi: fd.get("multi") === "on",
       deep: fd.get("deep") === "on",
       not_owned: fd.get("not_owned") === "on",
+      read: fd.get("read") || "",
       libby_audio: fd.get("libby_audio") || "",
       event,
       exclude: fd.getAll("hide").join(","),

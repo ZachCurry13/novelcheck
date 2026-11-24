@@ -34,6 +34,7 @@ type BookFilter struct {
 	Event          int64   // only books an event lists (kids: rated ones)
 	Events         []int64 // only books any of these events lists (a day's lists seen together)
 	NotOwned       bool    // hide books the family has
+	Read           string  // "1": only books the viewer has read; "0": only the ones they haven't
 	LibbyAudio     string  // "1": the audiobook is at one of the viewer's Libby libraries; "now": and available now
 	Season         string  // a seasonal shelf's key (package seasons), matched by its words
 	Sort           string  // "title" (default) | "author" | "recent" | "mild" (fewest peppers) | "long" / "short" (audiobook length) | "list" (the event's order)
@@ -167,6 +168,17 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 	}
 	if f.NotOwned {
 		where = append(where, "NOT "+ownedCond)
+	}
+	if (f.Read == "1" || f.Read == "0") && viewer != nil {
+		// read: finished on the Nightstand, or marked read in an import or on Hardcover (what Stats counts)
+		cond := `(EXISTS (SELECT 1 FROM queue_items rq WHERE rq.book_id = b.id AND rq.user_id = ? AND rq.status = 'finished')
+			OR EXISTS (SELECT 1 FROM imported_reads ri WHERE ri.book_id = b.id AND ri.user_id = ?)
+			OR EXISTS (SELECT 1 FROM hardcover_books rh WHERE rh.book_id = b.id AND rh.user_id = ? AND rh.status = 3))`
+		if f.Read == "0" {
+			cond = "NOT " + cond
+		}
+		where = append(where, cond)
+		args = append(args, viewer.ID, viewer.ID, viewer.ID)
 	}
 	if f.LibbyAudio != "" && viewer != nil {
 		cond := "EXISTS (SELECT 1 FROM libby_audio la WHERE la.book_id = b.id AND la.user_id = ? AND la.found = 1"

@@ -55,6 +55,7 @@ export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
           ${(facets.narrators || []).length ? `<option value="audio">Audiobooks</option>` : ""}
           <option value="multi">2+ formats</option><option value="dupes">Duplicates</option><option value="none">No file</option></select>`)}
         ${audioFilterHTML(facets)}
+        ${field("Books I've read", `<select name="read" class="input"><option value="">Any</option><option value="1">Only books I've read</option><option value="0">Only books I haven't read</option></select>`)}
         ${field("At my Libby library", `<select name="libby_audio" class="input" title="Books you don't have as an audiobook, checked against your libraries in the background"><option value="">Any</option><option value="1">The audiobook is there</option><option value="now">The audiobook is available now</option></select>`)}
         ${field("Rating", `<select name="rating" class="input"><option value="">Any</option>
           <option value="review">Needs review (the AI wasn't sure)</option><option value="old">Older rating (not on pepper scale)</option>
@@ -74,7 +75,7 @@ export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
 }
 
 const LABELS = { genre: "Genre", kind: "Type", author: "Author", series: "Series", catalog: "Library", overlap_with: "Also in", spice: "Peppers", age: "Age", rating: "Rating", lf: "At my library",
-  format: "Format", libby_audio: "Libby", narrator: "Narrator", min_hours: "At least (hours)", max_hours: "At most (hours)" };
+  format: "Format", read: "Read", libby_audio: "Libby", narrator: "Narrator", min_hours: "At least (hours)", max_hours: "At most (hours)" };
 
 // bindChips keeps a chip for each filter that is on, under the search bar; × clears it.
 export function bindChips(form, onChange) {

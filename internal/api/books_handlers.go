@@ -54,6 +54,7 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		Collection:     int64(queryInt(r, "collection")),
 		Events:         queryIDs(r, "event"), // one event, or a day's lists together ("21,22,23")
 		NotOwned:       q.Get("not_owned") == "1",
+		Read:           q.Get("read"),
 		LibbyAudio:     q.Get("libby_audio"),
 	}
 	if len(f.Catalogs) == 1 {
