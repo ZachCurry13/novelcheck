@@ -8,6 +8,7 @@ becomes the release notes for that version and is shown in the app under
 
 ### 📖 Kindle app 1.2.2: nothing extra in her library
 - The check that used to be a **NovelCheck Check** "book" (and its **NovelCheck-check** result) is now **Send a check** at the bottom of the app; its result goes only to NovelCheck. The app takes the two old items out of the library by itself after it updates.
+- **Covers for downloaded books.** After a download, the app puts the book's NovelCheck cover where the Kindle looks for it (its thumbnails folder, as Calibre does), so the book shows its cover instead of a plain tile. Books downloaded before this keep the plain tile until they're downloaded again.
 
 ## [1.98.0]
 

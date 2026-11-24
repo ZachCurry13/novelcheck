@@ -127,13 +127,28 @@ function download(b, btn, tries) {
   });
 }
 
+// thumbnail gives a downloaded book its cover in the Kindle's library. For a book copied onto it, the Kindle often
+// shows a plain tile and looks for the picture in system/thumbnails, named after the book's key and type in its
+// library database (the way Calibre does it). Once the Kindle has listed the book, the cover from NovelCheck goes
+// there. It runs in the background after the download reports back, and only with a real picture (never the drawn
+// stand-in).
+function thumbnail(b, path) {
+  if (!/^[A-Za-z0-9\/._-]+$/.test(path)) return "";
+  var snap = "/tmp/nc_th.db", dir = "/mnt/us/system/thumbnails";
+  return "; ( for i in 1 2 3 4 5 6; do sleep 5; cp /var/local/cc.db " + snap + "; [ -e /var/local/cc.db-wal ] && cp /var/local/cc.db-wal " + snap + "-wal; " +
+    "K=$(sqlite3 " + snap + " \"SELECT p_cdeKey || '_' || p_cdeType FROM Entries WHERE p_location='" + path + "' LIMIT 1\"); rm -f " + snap + "*; " +
+    "[ -n \"$K\" ] && break; done; if [ -n \"$K\" ]; then mkdir -p " + dir + "; T=\"" + dir + "/thumbnail_${K}_portrait.jpg\"; " +
+    "if curl -sfL -H " + sh("x-auth-user: " + NC.user) + " -H " + sh("x-auth-key: " + NC.key) + " -o \"$T.part\" -w '%{content_type}' " +
+    sh(NC.server + "/kosync/plugin/cover/" + b.id + "?size=l") + " | grep -q jpeg; then mv \"$T.part\" \"$T\"; else rm -f \"$T.part\"; fi; fi ) >/dev/null 2>&1 &";
+}
+
 function save(b, file, btn) {
   var dir = "/mnt/us/documents/NovelCheck", out = "/tmp/nc-dl-" + b.id + ".txt";
   var part = dir + "/" + file + ".part";
   var cmd = "mkdir -p " + dir + "; rm -f " + out + "; if curl -sfL -H " + sh("x-auth-user: " + NC.user) +
     " -H " + sh("x-auth-key: " + NC.key) + " -o " + sh(part) + " " + sh(NC.server + "/kosync/plugin/kindle/" + b.id) +
     "; then mv " + sh(part) + " " + sh(dir + "/" + file) + "; lipc-set-prop com.lab126.scanner doFullScan 1; echo ok > " + out +
-    "; else rm -f " + sh(part) + "; echo failed > " + out + "; fi; echo END >> " + out;
+    "; else rm -f " + sh(part) + "; echo failed > " + out + "; fi; echo END >> " + out + thumbnail(b, dir + "/" + file);
   if (!run(cmd)) {
     btn.disabled = false;
     btn.textContent = "Download";
