@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.8]
+
+### 🔧 Fixes
+- **Kindle page: no more dead links.** A book in the Amazon cloud list could point to a book NovelCheck no longer has (merged or removed since the Kindle reported), and tapping it said "not found". It now shows as "Not in your library" without a link until the Kindle reports again.
+
 ## [2.1.7]
 
 ### 🖼️ Covers, for good

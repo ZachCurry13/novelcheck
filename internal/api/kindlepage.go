@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/zachcurry13/novelcheck/internal/auth"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	kindleapp "github.com/zachcurry13/novelcheck/kindle-app"
 )
@@ -35,6 +36,11 @@ func (s *Server) handleKindleLibrary(w http.ResponseWriter, r *http.Request) {
 			}
 			if !seen[key] {
 				seen[key] = true
+				if b.BookID > 0 { // a book merged away or removed since the report: no link to a page that says "not found"
+					if _, err := s.Store.BookByID(b.BookID, auth.UserFrom(r)); err != nil {
+						b.BookID = 0
+					}
+				}
 				out = append(out, b)
 			}
 		}
