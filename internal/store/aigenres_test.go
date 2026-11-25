@@ -57,3 +57,20 @@ func TestNothingFoundNeedsTwoSightings(t *testing.T) {
 		t.Fatalf("a day later, only the one still missing: %v", got)
 	}
 }
+
+// "Show them again" forgets the sightings too, or the next search would leave the same books out at once.
+func TestShowAgainForgetsSightings(t *testing.T) {
+	st := newStore(t)
+	now := time.Date(2026, 11, 25, 10, 0, 0, 0, time.UTC)
+	st.ConfirmNothingFound([]int64{7}, now, 20*time.Hour)
+	_ = st.LeaveOut(7)
+	if err := st.ShowAllLeftOut(); err != nil {
+		t.Fatal(err)
+	}
+	if len(st.LeftOut()) != 0 {
+		t.Fatal("still left out")
+	}
+	if got := st.ConfirmNothingFound([]int64{7}, now.Add(48*time.Hour), 20*time.Hour); len(got) != 0 {
+		t.Fatalf("left out again at once: %v", got)
+	}
+}

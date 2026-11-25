@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.13]
+
+### 🔍 Five more fixes (all real, from a second look)
+1. **The "left out a day later" rule could never trigger.** The quick pass for free books (every three hours) saw only some of the books and wiped what the daily search had noted, so no book was ever seen twice. Only a full, finished search counts now.
+2. **"Show them again" brought the books back, and the next search hid them again at once,** because it kept the old sightings. It forgets them now.
+3. **Kindle app 1.18.2: the sign-in takes the address with a page on it** ("novelcheck.example.com/Kindleapp") as the address.
+4. **Stop works while the Hardcover scan is resting.** It used to wait out the full three minutes.
+5. **The scan's "Waiting a few minutes" note goes away when it carries on.**
+
 ## [2.1.12]
 
 ### 🔧 Fixes

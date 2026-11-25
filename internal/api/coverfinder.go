@@ -131,7 +131,12 @@ func (s *Server) findCovers(again, freeOnly bool) {
 	j.Running, j.stop, j.Checked, j.Found, j.Total, j.Note, j.Skipped, j.Free, j.Retry = true, false, 0, 0, len(missing), "", 0, len(free), 0
 	j.mu.Unlock()
 	defer func() {
-		s.leaveOutNothingFound(nothing)
+		j.mu.Lock()
+		stopped := j.stop
+		j.mu.Unlock()
+		if !freeOnly && !stopped { // the quick pass for free books, or a stopped run, saw only some of the books: it must not forget the sightings
+			s.leaveOutNothingFound(nothing)
+		}
 		j.mu.Lock()
 		j.Running, j.Current = false, ""
 		found, total, note, skipped, nfree, retry := j.Found, j.Total, j.Note, j.Skipped, j.Free, j.Retry

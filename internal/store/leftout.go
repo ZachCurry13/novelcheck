@@ -37,7 +37,11 @@ func (s *Store) LeaveOut(id int64) error {
 }
 
 // ShowAllLeftOut empties the list.
-func (s *Store) ShowAllLeftOut() error { return s.SetSetting(keyLeftOut, "") }
+// The sightings go too: otherwise the next search would leave the same books out again at once.
+func (s *Store) ShowAllLeftOut() error {
+	_ = s.SetSetting(keyNothingSince, "")
+	return s.SetSetting(keyLeftOut, "")
+}
 
 const keyNothingSince = "cover_nothing_since"
 

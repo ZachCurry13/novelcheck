@@ -81,13 +81,20 @@ func (s *Server) restIfAsked(ctx context.Context, err error, waits *int) bool {
 		return false
 	}
 	*waits++
+	return s.hcRest(ctx)
+}
+
+// hcRest waits three minutes for Hardcover (looking every few seconds whether Stop was pressed) and says whether to go on.
+func (s *Server) hcRest(ctx context.Context) bool {
 	s.hcjob.update(func(st *hcJobState) { st.Note = "Waiting a few minutes: Hardcover asked for a rest" })
-	select {
-	case <-ctx.Done():
-		return false
-	case <-time.After(3 * time.Minute):
-		return true
+	defer s.hcjob.update(func(st *hcJobState) { st.Note = "" })
+	for end := time.Now().Add(3 * time.Minute); time.Now().Before(end); {
+		if ctx.Err() != nil || s.hcjob.stopped() {
+			return false
+		}
+		time.Sleep(5 * time.Second)
 	}
+	return true
 }
 
 // runHCScan compares the library with Hardcover, 25 books at a time.
@@ -126,10 +133,9 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 		byISBN, err := hc.InfoByISBN(ctx, isbns)
 		if errors.Is(err, hardcover.ErrTooMany) && waits < 30 { // Hardcover wants a rest: take one, then do this group again
 			waits++
-			s.hcjob.update(func(st *hcJobState) { st.Note = "Waiting a few minutes: Hardcover asked for a rest" })
-			select {
-			case <-ctx.Done():
-			case <-time.After(3 * time.Minute):
+			if !s.hcRest(ctx) {
+				s.hcEnd("Stopped; what was found so far is below.")
+				return
 			}
 			i -= 25
 			continue

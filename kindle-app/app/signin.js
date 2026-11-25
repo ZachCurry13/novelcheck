@@ -13,6 +13,7 @@ function signin() {
     var user = $("si-user").value.replace(/^\s+|\s+$/g, ""), pw = $("si-pass").value;
     if (!server || !user || !pw) return say("Fill in all three.");
     if (!/^https?:\/\//.test(server)) server = "https://" + server;
+    server = server.replace(/^(https?:\/\/[^\/]+).*$/, "$1"); // the address with a page on it ("…/Kindleapp") is the address
     say("Signing in…");
     var x = new XMLHttpRequest();
     x.open("POST", server + "/kosync/plugin/app-signin", true);
