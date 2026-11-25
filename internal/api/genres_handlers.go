@@ -41,6 +41,7 @@ func (s *Server) handleGenreHardcover(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.Store.RecheckGenreless()
+	s.Store.RecheckAIGenres()
 	go func() {
 		defer s.ratingBusy.Store(false)
 		s.FillRatings(context.Background(), 800)

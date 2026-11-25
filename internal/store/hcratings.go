@@ -110,6 +110,26 @@ func (s *Store) RecheckGenreless() {
 	_, _ = s.DB.Exec(`UPDATE books SET hc_rated_at = 0 WHERE genre_source = '' AND hc_rated_at > 0`)
 }
 
+// RecheckAIGenres asks Hardcover again about every book whose genres the AI made (2.1.10): Hardcover's replace them where
+// it has some, and the AI's stay where it doesn't.
+func (s *Store) RecheckAIGenres() {
+	_, _ = s.DB.Exec(`UPDATE books SET hc_rated_at = 0 WHERE genre_source = 'ai' AND hc_rated_at > 0`)
+}
+
+// GenreSources counts the library's books by where their genres came from ("calibre", "hardcover", "ai", "" = none).
+func (s *Store) GenreSources() map[string]int {
+	rows := []struct {
+		Src string `db:"src"`
+		N   int    `db:"n"`
+	}{}
+	_ = s.DB.Select(&rows, `SELECT genre_source AS src, COUNT(*) AS n FROM books b WHERE `+ownedCond+` GROUP BY genre_source`)
+	out := map[string]int{}
+	for _, r := range rows {
+		out[r.Src] = r.N
+	}
+	return out
+}
+
 // PreviousBookIDs are the ids this book had before its row was deleted and made again (the rating memory knows
 // them): the cover finder looks for a cover stored under one of them before searching the web.
 func (s *Store) PreviousBookIDs(id int64) []int64 {

@@ -51,6 +51,8 @@ func (s *Server) diagnosticsText() string {
 		line("pending %d · queued %d · processing %d · analyzed %d · errors %d",
 			counts["pending"], counts["queued"], counts["processing"], counts["analyzed"], counts["error"])
 	}
+	g := s.Store.GenreSources()
+	line("genres from: Calibre %d · Hardcover %d · AI %d · none %d", g["calibre"], g["hardcover"], g["ai"], g[""])
 	ws := s.Worker.Status()
 	line("worker: %s · %d waiting · last error: %s", ws.State, ws.QueueLength, orNone(ws.LastError))
 	line("calibre library found: %v (%s)", s.Syncer.Available(), s.Syncer.LibraryDir())

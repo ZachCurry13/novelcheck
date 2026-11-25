@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.10]
+
+### 🏷️ Genres
+- **Hardcover's genres now replace the ones the AI made.** 2.1.4 stopped the AI from filling in genres, but books it had already tagged were never looked at again, so they kept the AI's genres. Now every book with AI genres is asked about on Hardcover again (a few hundred every few hours, at Hardcover's pace); where Hardcover has genres they replace the AI's, and where it has none the AI's stay. Calibre's own tags are never replaced. The bug log's Library section now says how many books have genres from Calibre, Hardcover, the AI, or none.
+
 ## [2.1.9]
 
 ### 📴 Offline

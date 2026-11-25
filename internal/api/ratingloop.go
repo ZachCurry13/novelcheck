@@ -121,9 +121,10 @@ func (s *Server) RatingLoop(ctx context.Context) {
 			s.Store.RecheckHardcover()
 			_ = s.Store.SetSetting(hcTitlesKey, "1")
 		}
-		if s.Store.Setting(hcGenresKey) != "1" { // genres from Hardcover (2.1.4): the books without one are looked at again
+		if s.Store.Setting(hcGenresKey) != "2" { // genres from Hardcover (2.1.4, 2.1.10): the books without one, and the ones the AI made, are looked at again
 			s.Store.RecheckGenreless()
-			_ = s.Store.SetSetting(hcGenresKey, "1")
+			s.Store.RecheckAIGenres()
+			_ = s.Store.SetSetting(hcGenresKey, "2")
 		}
 		if n := s.FillRatings(ctx, 800); n > 0 {
 			log.Printf("hardcover ratings: %d books rated", n)
