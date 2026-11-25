@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.9]
+
+### 📴 Offline
+- **The Kindle page and the Nightstand's "Put aside" list now open when NovelCheck's server can't be reached,** like the rest of the Nightstand, Home and the Library: they show what was last seen, with the offline banner. (A Kindle's cover pictures on that page show only if the phone already holds them.)
+
 ## [2.1.8]
 
 ### 🔧 Fixes

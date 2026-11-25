@@ -1,7 +1,7 @@
 // NovelCheck service worker: caches the app shell for offline launch and
 // home-screen installs. API responses are not cached, except the few a reader
 // needs offline (MINE, below), which are cleared on sign-out and profile switch.
-const CACHE = "novelcheck-shell-v237";
+const CACHE = "novelcheck-shell-v238";
 const MINE = "novelcheck-mine";
 const SHELL = [
   "/",
@@ -244,9 +244,10 @@ const KEEP = [
   // address, since a list is asked many ways
   [/^\/api\/(home|books|books\/facets|catalogs|collections|requests)$/, 40],
   [/^\/api\/collections\/\d+$/, 20],
+  [/^\/api\/me\/(kindles|kindle-library)$/, 30], // the Kindle page: which Kindles, and what each holds
 ];
-const LISTED = /^\/api\/(home|books|books\/facets|catalogs|collections|requests)$/;
-const keyOf = (url) => (LISTED.test(url.pathname) ? url.pathname + url.search : url.pathname);
+const LISTED = /^\/api\/(home|books|books\/facets|catalogs|collections|requests|me\/kindles|me\/kindle-library)$/;
+const keyOf = (url) => (LISTED.test(url.pathname) || url.pathname === "/api/queue" ? url.pathname + url.search : url.pathname);
 // A server that is down answers with an error page (Cloudflare's 502, 521, 530 …), not with nothing: that counts as down.
 const down = (res) => res.status >= 500 && res.status < 600;
 // stale marks an answer from the kept copies, so the page can say the server is offline.
@@ -330,13 +331,13 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) {
     // Downloads are kept only for the reader (?keep=1), and the Nightstand only as the plain list.
     const keepIt = kept(url.pathname) && (!url.pathname.endsWith("/download") || url.searchParams.has("keep")) &&
-      (url.pathname !== "/api/queue" || !url.search);
+      (url.pathname !== "/api/queue" || !url.search || url.search === "?hidden=1"); // the plain Nightstand, and its put-aside list
     if (!keepIt) return;
     event.respondWith(fetch(event.request)
       .then((res) => {
         if (down(res)) throw new Error("the server is down");
         if (res.ok && !url.pathname.endsWith("/cover")) { // covers are kept only for the Nightstand (keepNightstand)
-          const copy = res.clone(), list = url.pathname === "/api/queue" ? res.clone() : null;
+          const copy = res.clone(), list = url.pathname === "/api/queue" && !url.search ? res.clone() : null;
           event.waitUntil(keep(keyOf(url), copy).then(() => list && keepNightstand(list)));
         }
         return res;
