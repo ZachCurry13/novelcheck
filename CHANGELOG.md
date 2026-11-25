@@ -7,7 +7,7 @@ becomes the release notes for that version and is shown in the app under
 ## [2.1.9]
 
 ### 📴 Offline
-- **The Kindle page and the Nightstand's "Put aside" list now open when NovelCheck's server can't be reached,** like the rest of the Nightstand, Home and the Library: they show what was last seen, with the offline banner. (A Kindle's cover pictures on that page show only if the phone already holds them.)
+- **The Kindle page and the Nightstand's "Put aside" list now open when NovelCheck's server can't be reached,** like the rest of the Nightstand, Home and the Library: they show what was last seen, with the offline banner. Also kept now: Discover, Events, the wish list, Series, reading stats, notices, the e-reader shelf and box sets. (A Kindle's cover pictures on that page show only if the phone already holds them.)
 
 ## [2.1.8]
 

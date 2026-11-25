@@ -1,7 +1,7 @@
 // NovelCheck service worker: caches the app shell for offline launch and
 // home-screen installs. API responses are not cached, except the few a reader
 // needs offline (MINE, below), which are cleared on sign-out and profile switch.
-const CACHE = "novelcheck-shell-v238";
+const CACHE = "novelcheck-shell-v239";
 const MINE = "novelcheck-mine";
 const SHELL = [
   "/",
@@ -245,8 +245,10 @@ const KEEP = [
   [/^\/api\/(home|books|books\/facets|catalogs|collections|requests)$/, 40],
   [/^\/api\/collections\/\d+$/, 20],
   [/^\/api\/me\/(kindles|kindle-library)$/, 30], // the Kindle page: which Kindles, and what each holds
+  // the other read-only pages: Discover, Events, the wish list, Series, Stats, notices, the e-reader shelf, box sets
+  [/^\/api\/(discover|events|wishlist|series|series\/one|notifications|books\/states|listening|box-sets|me\/reading-stats|me\/koreader-books)$/, 20],
 ];
-const LISTED = /^\/api\/(home|books|books\/facets|catalogs|collections|requests|me\/kindles|me\/kindle-library)$/;
+const LISTED = /^\/api\/(home|books|books\/facets|catalogs|collections|requests|me\/kindles|me\/kindle-library|discover|events|wishlist|series|series\/one|notifications|books\/states|listening|box-sets|me\/reading-stats|me\/koreader-books)$/;
 const keyOf = (url) => (LISTED.test(url.pathname) || url.pathname === "/api/queue" ? url.pathname + url.search : url.pathname);
 // A server that is down answers with an error page (Cloudflare's 502, 521, 530 …), not with nothing: that counts as down.
 const down = (res) => res.status >= 500 && res.status < 600;
