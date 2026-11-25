@@ -76,3 +76,22 @@ func TestMissingCovers(t *testing.T) {
 		t.Fatalf("admins only: %d", res.StatusCode)
 	}
 }
+
+// A book the finder searched with nothing found is left out of the cover lists by itself; "Show them again" brings it back.
+func TestNothingFoundIsLeftOut(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	b, _ := st.UpsertBook("Nowhere Book", "Nobody", "", "")
+	_ = st.AddCopy(cal, b, "/c/none/nowhere.epub", "epub", "1")
+	_ = st.LeaveOut(b)
+	if _, out := admin.do("GET", "/api/admin/covers/missing", nil, false); out["count"] != float64(0) || out["left_out"] != float64(1) {
+		t.Fatalf("left out: %v", out)
+	}
+	if res, _ := admin.do("POST", "/api/admin/covers/leave-out/reset", map[string]string{}, true); res.StatusCode != 200 {
+		t.Fatalf("reset: %d", res.StatusCode)
+	}
+	if _, out := admin.do("GET", "/api/admin/covers/missing", nil, false); out["count"] != float64(1) {
+		t.Fatalf("shown again: %v", out)
+	}
+}

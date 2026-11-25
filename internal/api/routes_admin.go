@@ -102,6 +102,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/covers/preview", s.handleCoverPreview)
 		r.Post("/admin/covers/choose", s.handleCoverChoose)
 		r.Post("/admin/covers/leave-out", s.handleLeaveOut)
+		r.Post("/admin/covers/leave-out/reset", s.handleShowLeftOut)
 		r.Post("/admin/covers/find", s.handleFindCovers)
 		r.Post("/admin/covers/stop", s.handleStopCovers)
 		r.Get("/admin/memory", s.handleMemory)

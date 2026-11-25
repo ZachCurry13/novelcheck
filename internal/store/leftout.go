@@ -33,3 +33,6 @@ func (s *Store) LeaveOut(id int64) error {
 	}
 	return s.SetSetting(keyLeftOut, strings.Join(ids, ","))
 }
+
+// ShowAllLeftOut empties the list.
+func (s *Store) ShowAllLeftOut() error { return s.SetSetting(keyLeftOut, "") }

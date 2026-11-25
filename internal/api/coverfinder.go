@@ -123,12 +123,15 @@ func (s *Server) findCovers(again, freeOnly bool) {
 	if !freeOnly {
 		missing = s.MissingCovers()
 	}
+	nLibrary := len(missing)
 	free := s.MissingFreeCovers(freeCoverLimit)
 	missing = append(missing, free...)
+	var nothing []store.BriefBook // library books searched with nothing found: left out below, so nobody has to go through them
 	j.mu.Lock()
 	j.Running, j.stop, j.Checked, j.Found, j.Total, j.Note, j.Skipped, j.Free, j.Retry = true, false, 0, 0, len(missing), "", 0, len(free), 0
 	j.mu.Unlock()
 	defer func() {
+		s.leaveOutNothingFound(nothing)
 		j.mu.Lock()
 		j.Running, j.Current = false, ""
 		found, total, note, skipped, nfree, retry := j.Found, j.Total, j.Note, j.Skipped, j.Free, j.Retry
@@ -161,7 +164,7 @@ func (s *Server) findCovers(again, freeOnly bool) {
 	if !freeOnly {
 		backup = s.kindleBackupFiles()
 	}
-	for _, b := range missing {
+	for i, b := range missing {
 		j.mu.Lock()
 		stop := j.stop
 		j.Current = b.Title
@@ -186,6 +189,9 @@ func (s *Server) findCovers(again, freeOnly bool) {
 			j.Checked++
 			j.Skipped++
 			j.mu.Unlock()
+			if i < nLibrary {
+				nothing = append(nothing, b)
+			}
 			continue
 		}
 		ok, refused := s.findOneCover(ctx, cv, hc, b, backup)
@@ -198,6 +204,9 @@ func (s *Server) findCovers(again, freeOnly bool) {
 			j.Found++
 		}
 		j.mu.Unlock()
+		if !ok && !refused && i < nLibrary {
+			nothing = append(nothing, b)
+		}
 		time.Sleep(900 * time.Millisecond) // be gentle with the places we ask
 	}
 }
@@ -289,7 +298,7 @@ func (s *Server) handleMissingCovers(w http.ResponseWriter, r *http.Request) {
 		limit = n // Review covers goes through them all
 	}
 	list := missing[:min(len(missing), limit)]
-	writeJSON(w, http.StatusOK, map[string]any{"count": len(missing), "books": list, "job": s.covers.state()})
+	writeJSON(w, http.StatusOK, map[string]any{"count": len(missing), "books": list, "job": s.covers.state(), "left_out": len(s.Store.LeftOut())})
 }
 
 func (s *Server) handleFindCovers(w http.ResponseWriter, r *http.Request) {
@@ -319,4 +328,31 @@ func (s *Server) coverMisses(books []store.BriefBook, n int) string {
 		}
 	}
 	return strings.Join(out, " | ")
+}
+
+// leaveOutNothingFound leaves out the library books the finder searched with nothing found anywhere, so the lists hold only
+// what a person can still fix. Audiobooks that show Audiobookshelf's cover are not touched. "Show them again" undoes it.
+func (s *Server) leaveOutNothingFound(books []store.BriefBook) {
+	n := 0
+	for _, b := range books {
+		if s.hasCover(b) || s.audioPicture(b) {
+			continue
+		}
+		if s.Store.LeaveOut(b.ID) == nil {
+			n++
+		}
+	}
+	if n > 0 {
+		s.Store.NotifyRoutine("covers-left-out", fmt.Sprintf("Cover finder: %d books have no cover on any site it searches, so they are left out of the cover lists (Fix titles and covers → Show them again).", n), "#/admin?tab=cleanup")
+	}
+}
+
+// handleShowLeftOut: POST /api/admin/covers/leave-out/reset puts every left-out book back in the cover lists.
+func (s *Server) handleShowLeftOut(w http.ResponseWriter, r *http.Request) {
+	if err := s.Store.ShowAllLeftOut(); err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	s.rcache.ver.Add(1)
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }

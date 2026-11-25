@@ -35,6 +35,7 @@ export async function openFixBooks(onDone) {
         <button type="button" data-close class="btn-ghost">Close</button></div>
       <p class="text-sm text-slate-400">Every book that needs something, with what the finders found. They keep looking by themselves; these buttons start them now.</p>
       ${jobLine ? `<p class="rounded-lg bg-slate-800/60 p-2 text-sm">${jobLine}</p>` : ""}
+      ${cv?.left_out ? `<p class="text-sm text-slate-400">${cv.left_out} book${cv.left_out === 1 ? " is" : "s are"} left out of this list: no site has a cover for them. <button type="button" data-fx="unleave" class="underline">Show them again</button></p>` : ""}
       <p class="flex flex-wrap gap-2">${hc?.hardcover ? `<button type="button" data-fx="hc-scan" class="btn-secondary py-1 text-sm" ${hjob.running ? "disabled" : ""}>${hjob.running ? "Comparing with Hardcover…" : "Compare with Hardcover"}</button>` : `<a href="#/settings?s=connections" data-close class="btn-ghost py-1 text-sm">Connect Hardcover to compare</a>`}
         <button type="button" data-fx="covers-find" class="btn-secondary py-1 text-sm" ${job.running ? "disabled" : ""}>${job.running ? `Finding covers (${job.checked} of ${job.total})…` : "Find covers now"}</button>
         ${(tf?.fixes || []).length ? `<button type="button" data-fx="titles-all" class="btn-ghost py-1 text-sm">Apply every title (${tf.fixes.length})</button>` : ""}
@@ -55,6 +56,7 @@ export async function openFixBooks(onDone) {
       if (k === "more") { shown += PAGE; return load(); }
       if (k === "review") { dlg.close(); return import("./coverreview.js").then((m) => m.openCoverReview()); }
       if (k === "cover") return openCoverPicker(b, load, { everyone: true });
+      if (k === "unleave") ok = await attempt(() => post("/api/admin/covers/leave-out/reset"), "Showing them again");
       if (k === "leave") ok = await attempt(() => post("/api/admin/covers/leave-out", { id: b.id }), "Left out of the cover lists");
       if (k === "hc-scan") ok = await attempt(() => post("/api/admin/hc-clean/scan"), "Comparing with Hardcover in the background");
       if (k === "covers-find") ok = await attempt(() => post("/api/admin/covers/find"), "Looking for covers in the background");

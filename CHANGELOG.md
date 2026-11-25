@@ -7,6 +7,7 @@ becomes the release notes for that version and is shown in the app under
 ## [2.1.8]
 
 ### 🔧 Fixes
+- **Cover lists clean themselves.** After a cover search, a book that no site has a cover for (and that has no Audiobookshelf cover) is left out of the cover lists by itself, so nobody has to go through them one by one. Fix titles and covers says how many and has **Show them again**.
 - **Kindle page: no more dead links.** A book in the Amazon cloud list could point to a book NovelCheck no longer has (merged or removed since the Kindle reported), and tapping it said "not found". It now shows as "Not in your library" without a link until the Kindle reports again.
 
 ## [2.1.7]
