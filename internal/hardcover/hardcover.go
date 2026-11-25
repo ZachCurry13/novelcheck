@@ -297,3 +297,16 @@ func (c *Client) Shelves(ctx context.Context) ([]Book, error) {
 	}
 	return out, nil
 }
+
+// CoolingDown is how much longer calls with this token are on hold after Hardcover said "too many requests" (0 = none).
+func CoolingDown(token string) time.Duration {
+	gatesMu.Lock()
+	g := gates[CleanToken(token)]
+	gatesMu.Unlock()
+	if g == nil {
+		return 0
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return max(time.Until(g.until), 0)
+}

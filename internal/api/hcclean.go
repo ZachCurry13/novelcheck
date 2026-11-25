@@ -75,6 +75,21 @@ func isbnOf(d calibresrv.Details, fallback string) string {
 	return fallback
 }
 
+// restIfAsked takes a rest when Hardcover asked for one, and says whether to try the same call again.
+func (s *Server) restIfAsked(ctx context.Context, err error, waits *int) bool {
+	if !errors.Is(err, hardcover.ErrTooMany) || *waits >= 30 {
+		return false
+	}
+	*waits++
+	s.hcjob.update(func(st *hcJobState) { st.Note = "Waiting a few minutes: Hardcover asked for a rest" })
+	select {
+	case <-ctx.Done():
+		return false
+	case <-time.After(3 * time.Minute):
+		return true
+	}
+}
+
 // runHCScan compares the library with Hardcover, 25 books at a time.
 func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 	defer func() {
@@ -130,7 +145,15 @@ func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
 			}
 			info, how := byISBN[digitsOnly(isbnOf(d, r.ISBN))], "ISBN"
 			if info.ID == 0 && len(d.Authors) > 0 {
-				found, ok, err := hcInfoByTitle(ctx, hc, d.Title, d.Authors[0]) // also without a subtitle or series note
+				var found hardcover.BookInfo
+				var ok bool
+				var err error
+				for {
+					found, ok, err = hcInfoByTitle(ctx, hc, d.Title, d.Authors[0]) // also without a subtitle or series note
+					if !s.restIfAsked(ctx, err, &waits) {
+						break
+					}
+				}
 				if err != nil {
 					s.hcEnd("Hardcover: " + err.Error() + " (what was found so far is below)")
 					return

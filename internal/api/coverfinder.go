@@ -334,15 +334,20 @@ func (s *Server) coverMisses(books []store.BriefBook, n int) string {
 // what a person can still fix. Audiobooks that show Audiobookshelf's cover are not touched. "Show them again" undoes it.
 func (s *Server) leaveOutNothingFound(books []store.BriefBook) {
 	n := 0
+	var names []string
 	for _, b := range books {
 		if s.hasCover(b) || s.audioPicture(b) {
 			continue
 		}
 		if s.Store.LeaveOut(b.ID) == nil {
 			n++
+			if len(names) < 25 {
+				names = append(names, b.Title)
+			}
 		}
 	}
 	if n > 0 {
+		s.cleanupNote("Cover finder: left out", fmt.Sprintf("%d books with no cover on any site: %s", n, strings.Join(names, " | ")))
 		s.Store.NotifyRoutine("covers-left-out", fmt.Sprintf("Cover finder: %d books have no cover on any site it searches, so they are left out of the cover lists (Fix titles and covers → Show them again).", n), "#/admin?tab=cleanup")
 	}
 }

@@ -50,7 +50,8 @@ export function renderStats(view, s) {
   }
   banner($("#rerate", view), rerate !== "", rerate);
   const g = s.genres || {};
-  banner($("#genres-banner", view), canHere("ai") && g.missing, `<b>${fmtNum(g.missing)}</b> library book${g.missing === 1 ? " has" : "s have"} no genre yet.
+  const gs = s.genre_sources || {};
+  banner($("#genres-banner", view), canHere("ai") && (g.missing || gs.ai), `<b>${fmtNum(g.missing)}</b> library book${g.missing === 1 ? " has" : "s have"} no genre yet; ${fmtNum(gs.ai || 0)} still have the AI's, which Hardcover's replace as it looks each book up. (From Calibre: ${fmtNum(gs.calibre || 0)}, from Hardcover: ${fmtNum(gs.hardcover || 0)}.)
     <button data-act="genres-hardcover" class="btn-secondary ml-2 py-1">Look them up on Hardcover now</button>
     <span class="block text-xs text-slate-400">Genres come from Calibre's tags first, then from Hardcover as it looks each book up (a few hundred every few hours, by itself). The AI doesn't make genres any more. Tags you add in Calibre always win.</span>`);
 

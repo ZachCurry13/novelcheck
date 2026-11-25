@@ -1,5 +1,11 @@
 package store
 
+import (
+	"regexp"
+)
+
+var digits = regexp.MustCompile(`[0-9]+`)
+
 // Library cleanup's log (cleanup_log): what an action didn't do and why, newest 500 kept, shown on the bug link so a
 // cleanup problem can be seen and fixed without anyone describing it.
 
@@ -12,6 +18,17 @@ type CleanupEntry struct {
 
 // AddCleanupLog notes what an action didn't do.
 func (s *Store) AddCleanupLog(action, text string) {
+	// The same note again (only its numbers differ: a cover search that finds the same books missing) updates the
+	// newest one instead of adding a line, so the log shows what changed and not ten copies of "89 of 89".
+	var last struct {
+		ID   int64  `db:"id"`
+		Text string `db:"text"`
+	}
+	if s.DB.Get(&last, `SELECT id, text FROM cleanup_log WHERE action = ? ORDER BY id DESC LIMIT 1`, clip(action, 120)) == nil &&
+		digits.ReplaceAllString(last.Text, "#") == digits.ReplaceAllString(clip(text, 4000), "#") {
+		_, _ = s.DB.Exec(`UPDATE cleanup_log SET at = CURRENT_TIMESTAMP, text = ? WHERE id = ?`, clip(text, 4000), last.ID)
+		return
+	}
 	_, _ = s.DB.Exec(`INSERT INTO cleanup_log (action, text) VALUES (?, ?)`, clip(action, 120), clip(text, 4000))
 	_, _ = s.DB.Exec(`DELETE FROM cleanup_log WHERE id NOT IN (SELECT id FROM cleanup_log ORDER BY id DESC LIMIT 500)`)
 }

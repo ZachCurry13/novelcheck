@@ -9,6 +9,18 @@ becomes the release notes for that version and is shown in the app under
 ### 🏷️ Genres
 - **Hardcover's genres now replace the ones the AI made.** 2.1.4 stopped the AI from filling in genres, but books it had already tagged were never looked at again, so they kept the AI's genres. Now every book with AI genres is asked about on Hardcover again (a few hundred every few hours, at Hardcover's pace); where Hardcover has genres they replace the AI's, and where it has none the AI's stay. Calibre's own tags are never replaced. The bug log's Library section now says how many books have genres from Calibre, Hardcover, the AI, or none.
 
+### 🔧 Ten smaller things
+1. **The cleanup log folds repeats.** A cover search that finds the same books missing updates its one line instead of adding "89 of 89" again.
+2. **The cleanup log names the books the cover finder left out** (up to 25).
+3. **Health says when Hardcover asked for a rest** and that everything waits and carries on by itself.
+4. **Health has a Genres line** (from Calibre, Hardcover, the AI's, none) and warns when many books have none.
+5. **Health has a Covers line:** how many books have none, and how many the finder gave up on.
+6. **The Hardcover scan also rests and carries on** when Hardcover says "too many requests" in the middle of a book (before, only between groups).
+7. **Kindle app 1.17.0 shows when its books were last backed up** (in the Menu).
+8. **The Admin genres banner shows where genres come from** (Calibre, Hardcover, the AI's).
+9. **docs/AI_GPU.md:** using an Intel Arc or other GPU for the local AI as a separate llama.cpp app, and what fits in 6 GB.
+10. **The bug link counts genre sources** (above).
+
 ## [2.1.9]
 
 ### 📴 Offline

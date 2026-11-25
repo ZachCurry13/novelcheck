@@ -47,6 +47,12 @@ function backupKindle(done) {
   });
 }
 
+// paintBackup says when this Kindle's books were last sent to NovelCheck (by the button or by itself).
+function paintBackup() {
+  var t = +stored("nc-last-bk") || 0;
+  $("lastbk").textContent = t ? "Books last backed up: " + new Date(t).toISOString().slice(0, 16).replace("T", " ") + " UTC" : "Books not backed up yet.";
+}
+
 // autoBackup is backupKindle by itself, at most every 24 hours, after an automatic sync (books NovelCheck already has are skipped).
 function autoBackup() {
   if (toolBusy || new Date().getTime() - (+stored("nc-auto-bk") || 0) < 24 * 3600 * 1000) return;
@@ -55,6 +61,8 @@ function autoBackup() {
     toolBusy = false;
     if (sent < 0) return logLine("automatic backup could not run");
     keep("nc-auto-bk", String(new Date().getTime()));
+    keep("nc-last-bk", String(new Date().getTime()));
+    paintBackup();
     logLine("automatic backup: " + sent + " of " + wanted + " new books sent");
     if (sent) note("Sent " + sent + " new book" + (sent === 1 ? "" : "s") + " to NovelCheck.");
   });
@@ -155,6 +163,7 @@ function bindTools() {
       note(sent < 0 ? "The backup couldn't start. Check Wi-Fi, and that KindleForge's helper is there." :
         "Backed up " + sent + " of " + wanted + " books that NovelCheck needed" + (big ? "; " + big + " were too big to send" : "") + (failed ? "; " + failed + " failed" : "") + ".");
       logLine("backup: " + sent + " of " + wanted);
+      if (sent >= 0) { keep("nc-last-bk", String(new Date().getTime())); paintBackup(); }
       end();
     });
   });
@@ -165,6 +174,7 @@ function bindTools() {
     });
   });
   $("t-hidden").onclick = showHidden;
+  paintBackup();
   var dest = function () { $("t-dest").textContent = stored("nc-dest") === "koreader" ? "Downloads go to: KOReader (tap to change)" : "Downloads go to: Kindle library (tap to change)"; };
   dest();
   $("t-dest").onclick = function () {

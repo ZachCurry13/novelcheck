@@ -41,6 +41,7 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 		"box_sets":          s.Store.BoxSetsWaiting(),
 		"problem_reports":   s.Store.CountProblemReports(),
 		"genres":            s.Genres.Status(),
+		"genre_sources":     s.Store.GenreSources(),
 		"pending_deletes":   s.Store.PendingDeleteCount(),
 		"pending_deep":      s.Store.PendingDeepRequests(),
 		"deep_review":       s.Store.HeldDeepReads(),

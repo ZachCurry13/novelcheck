@@ -21,3 +21,14 @@ func TestRecheckAIGenres(t *testing.T) {
 		t.Fatalf("asked again: %d", at)
 	}
 }
+
+// The same cleanup note again (only its numbers differ) updates the newest line instead of adding one.
+func TestCleanupLogFoldsRepeats(t *testing.T) {
+	st := newStore(t)
+	st.AddCleanupLog("Cover finder", "no cover found for 89 of 89 books. Some: A | B")
+	st.AddCleanupLog("Cover finder", "no cover found for 88 of 88 books. Some: A | B")
+	st.AddCleanupLog("Cover finder", "no cover found for 5 of 5 books. Some: C")
+	if n := len(st.CleanupLog(10)); n != 2 {
+		t.Fatalf("entries: %d", n)
+	}
+}

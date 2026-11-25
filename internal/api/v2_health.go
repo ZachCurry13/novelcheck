@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zachcurry13/novelcheck/internal/hardcover"
 	"github.com/zachcurry13/novelcheck/internal/store"
 	kindleapp "github.com/zachcurry13/novelcheck/kindle-app"
 	kindleplugin "github.com/zachcurry13/novelcheck/kindle-plugin"
@@ -70,7 +71,24 @@ func (s *Server) healthItems() []healthItem {
 	if s.Store.RatingsToken() == "" {
 		add("hardcover", "warn", "Hardcover isn't connected", "Hardcover ratings, genres, ISBNs and many covers are off.", "Someone connects their Hardcover account under Settings → Connections.", "#/settings")
 	} else {
-		add("hardcover", "ok", "Hardcover", "Connected.", "", "")
+		if d := hardcover.CoolingDown(s.Store.RatingsToken()); d > 0 {
+			add("hardcover", "warn", "Hardcover asked for a rest", "Too many requests were sent; everything that uses Hardcover waits about "+ago(d)+" and then carries on by itself.", "", "")
+		} else {
+			add("hardcover", "ok", "Hardcover", "Connected.", "", "")
+		}
+		g := s.Store.GenreSources()
+		switch {
+		case g[""] > 100:
+			add("genres", "warn", fmt.Sprintf("%d books have no genre", g[""]), fmt.Sprintf("Genres come from Calibre's tags, then Hardcover. %d have the AI's from before; Hardcover's replace them as each book is looked up.", g["ai"]), "Look them up now from the banner on Admin.", "#/admin")
+		case g["ai"] > 0 || g[""] > 0:
+			add("genres", "ok", "Genres", fmt.Sprintf("From Calibre %d · Hardcover %d · the AI's %d (being replaced by Hardcover's) · none %d.", g["calibre"], g["hardcover"], g["ai"], g[""]), "", "")
+		}
+	}
+	// covers: what is still without one, and what the finder gave up on
+	if n, left := len(s.missingForPage()), len(s.Store.LeftOut()); n > 0 {
+		add("covers", "warn", fmt.Sprintf("%d books have no cover", n), fmt.Sprintf("The finder looks again by itself; %d more it found nothing for are left out of the lists.", left), "Choose a cover by hand under Admin → Library → Fix titles and covers.", "#/admin?tab=cleanup")
+	} else if left > 0 {
+		add("covers", "ok", "Covers", fmt.Sprintf("Every book has one, except %d the finder found nothing for (left out of the lists).", left), "", "")
 	}
 	// Kindles: one line each, with everything about it (not one line per problem)
 	for _, d := range s.Store.AllDevices() {
