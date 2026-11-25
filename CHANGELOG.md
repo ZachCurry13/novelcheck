@@ -10,6 +10,15 @@ becomes the release notes for that version and is shown in the app under
 - **Check: "Recently checked" shows whole titles.** The spice label took half the row, so titles and authors were cut to "American …" and "S…". The label now sits under the title, and a title can take two lines.
 - **Kindle app 1.18.0: when it can't read the Kindle's library, it now says why.** On one Kindle (a Colorsoft) the sync ended with "Couldn't read the Kindle library" and no reason. The app waits longer (150 s instead of 90) and writes what the Kindle's own tools answered into its log, which shows in the bug link.
 
+### 🔍 Ten fixes from a review of the last few days' changes
+1. **A book is left out of the cover lists only after it was still missing a day later.** One search can come up empty because a site was down for a while, and leaving it out on that one miss would have hidden a book that has a cover. (The 23 left out earlier stay out until you press Show them again.)
+2. **The cleanup log folds repeats only for the cover finder.** Other entries (a refused removal, a title fix) are different books each time, so each keeps its own line.
+3. **The Kindle app's sign-in takes the same time for an unknown name as for a wrong password,** so it can't be used to find out which names exist.
+4. **Health no longer waits on Audiobookshelf for its Covers line.** It uses the finished list, and skips the line until the page or the finder has made one.
+5. **The Kindle app's sign-in screen hides the page-up and page-down buttons** (app 1.18.1).
+6. Tests: the KindleForge scripts parse as shell; the two-sightings rule; the Hardcover rest; the cleanup log's folding.
+7. **A README for the KindleForge package folder.**
+
 ## [2.1.11]
 
 ### 🎧 Audiobooks

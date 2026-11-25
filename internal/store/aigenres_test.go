@@ -1,6 +1,9 @@
 package store_test
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 // A book whose genres the AI made is asked about on Hardcover again (2.1.10), so Hardcover's can replace them.
 func TestRecheckAIGenres(t *testing.T) {
@@ -30,5 +33,27 @@ func TestCleanupLogFoldsRepeats(t *testing.T) {
 	st.AddCleanupLog("Cover finder", "no cover found for 5 of 5 books. Some: C")
 	if n := len(st.CleanupLog(10)); n != 2 {
 		t.Fatalf("entries: %d", n)
+	}
+	// other actions keep every line: their numbers are different books
+	st.AddCleanupLog("POST /api/admin/title-fixes", `asked ids [1] answer skipped`)
+	st.AddCleanupLog("POST /api/admin/title-fixes", `asked ids [2] answer skipped`)
+	if n := len(st.CleanupLog(10)); n != 4 {
+		t.Fatalf("entries kept: %d", n)
+	}
+}
+
+// A book is left out of the cover lists only on a second sighting at least a day later (one search can miss a cover when a
+// site is down).
+func TestNothingFoundNeedsTwoSightings(t *testing.T) {
+	st := newStore(t)
+	now := time.Date(2026, 11, 25, 10, 0, 0, 0, time.UTC)
+	if got := st.ConfirmNothingFound([]int64{1, 2}, now, 20*time.Hour); len(got) != 0 {
+		t.Fatalf("first sighting: %v", got)
+	}
+	if got := st.ConfirmNothingFound([]int64{1, 2}, now.Add(2*time.Hour), 20*time.Hour); len(got) != 0 {
+		t.Fatalf("same day: %v", got)
+	}
+	if got := st.ConfirmNothingFound([]int64{1}, now.Add(24*time.Hour), 20*time.Hour); len(got) != 1 || got[0] != 1 {
+		t.Fatalf("a day later, only the one still missing: %v", got)
 	}
 }

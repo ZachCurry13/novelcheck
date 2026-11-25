@@ -85,7 +85,13 @@ func (s *Server) healthItems() []healthItem {
 		}
 	}
 	// covers: what is still without one, and what the finder gave up on
-	if n, left := len(s.missingForPage()), len(s.Store.LeftOut()); n > 0 {
+	s.missing.mu.Lock() // the kept list only: building it asks Audiobookshelf about every book, and Health must not wait on that
+	n, listed := len(s.missing.list), s.missing.ok
+	s.missing.mu.Unlock()
+	left := len(s.Store.LeftOut())
+	if !listed {
+		// not built yet: no Covers line until the page or the finder has made the list
+	} else if n > 0 {
 		add("covers", "warn", fmt.Sprintf("%d books have no cover", n), fmt.Sprintf("The finder looks again by itself; %d more it found nothing for are left out of the lists.", left), "Choose a cover by hand under Admin → Library → Fix titles and covers.", "#/admin?tab=cleanup")
 	} else if left > 0 {
 		add("covers", "ok", "Covers", fmt.Sprintf("Every book has one, except %d the finder found nothing for (left out of the lists).", left), "", "")

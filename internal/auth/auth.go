@@ -211,3 +211,6 @@ func UserFrom(r *http.Request) *store.User {
 	u, _ := r.Context().Value(ctxKey{}).(*store.User)
 	return u
 }
+
+// BurnTime spends about as long as a password check, for an unknown name, so the answer's time doesn't tell which names exist.
+func BurnTime(password string) { _ = bcrypt.CompareHashAndPassword(dummyHash, []byte(password)) }

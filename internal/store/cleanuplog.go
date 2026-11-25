@@ -18,13 +18,14 @@ type CleanupEntry struct {
 
 // AddCleanupLog notes what an action didn't do.
 func (s *Store) AddCleanupLog(action, text string) {
-	// The same note again (only its numbers differ: a cover search that finds the same books missing) updates the
-	// newest one instead of adding a line, so the log shows what changed and not ten copies of "89 of 89".
+	// The cover finder's same note again (only its numbers differ: the same books still missing) updates the newest one
+	// instead of adding a line, so the log shows what changed and not ten copies of "89 of 89". Other entries (a refused
+	// removal, say) keep every line: their numbers are different books.
 	var last struct {
 		ID   int64  `db:"id"`
 		Text string `db:"text"`
 	}
-	if s.DB.Get(&last, `SELECT id, text FROM cleanup_log WHERE action = ? ORDER BY id DESC LIMIT 1`, clip(action, 120)) == nil &&
+	if action == "Cover finder" && s.DB.Get(&last, `SELECT id, text FROM cleanup_log WHERE action = ? ORDER BY id DESC LIMIT 1`, clip(action, 120)) == nil &&
 		digits.ReplaceAllString(last.Text, "#") == digits.ReplaceAllString(clip(text, 4000), "#") {
 		_, _ = s.DB.Exec(`UPDATE cleanup_log SET at = CURRENT_TIMESTAMP, text = ? WHERE id = ?`, clip(text, 4000), last.ID)
 		return

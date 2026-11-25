@@ -30,6 +30,9 @@ func (s *Server) handleAppSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u, err := s.Store.UserByName(strings.TrimSpace(body.Username))
+	if err != nil {
+		auth.BurnTime(body.Password)
+	}
 	if err != nil || u.IsFriend() || !auth.CheckPassword(u.PasswordHash, body.Password) {
 		kosyncJSON(w, http.StatusUnauthorized, map[string]string{"message": "That name or password isn't right."})
 		return

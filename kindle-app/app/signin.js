@@ -4,6 +4,7 @@
 function signin() {
   var s = $("signin"), msg = $("si-msg");
   $("lists").hidden = true;
+  $("pager").style.display = "none"; // the page-up and page-down buttons belong to the lists
   document.getElementsByTagName("header")[0].hidden = true;
   s.hidden = false;
   function say(t) { msg.textContent = t; }

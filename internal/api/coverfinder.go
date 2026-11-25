@@ -335,8 +335,19 @@ func (s *Server) coverMisses(books []store.BriefBook, n int) string {
 func (s *Server) leaveOutNothingFound(books []store.BriefBook) {
 	n := 0
 	var names []string
+	var missing []store.BriefBook
+	var ids []int64
 	for _, b := range books {
-		if s.hasCover(b) || s.audioPicture(b) {
+		if !s.hasCover(b) && !s.audioPicture(b) {
+			missing, ids = append(missing, b), append(ids, b.ID)
+		}
+	}
+	sure := map[int64]bool{}
+	for _, id := range s.Store.ConfirmNothingFound(ids, time.Now(), 20*time.Hour) { // not on one search alone: a site may have been down
+		sure[id] = true
+	}
+	for _, b := range missing {
+		if !sure[b.ID] {
 			continue
 		}
 		if s.Store.LeaveOut(b.ID) == nil {
