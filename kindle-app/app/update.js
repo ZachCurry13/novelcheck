@@ -85,5 +85,7 @@ function update(v, btn) {
     btn.disabled = false;
     btn.textContent = "Update to " + v.version;
     note("The update failed. Check Wi-Fi and try again.");
+    logLine("update to " + v.version + " failed");
+    sendLog("an update failed");
   });
 }

@@ -112,6 +112,15 @@ function logLine(text) {
   try { localStorage.setItem("nc-log", JSON.stringify(lines.slice(-150))); } catch (e) {}
 }
 
+// An error nobody caught (a bug in the app) goes in the log and is sent, at most once in ten minutes.
+var lastErrorSent = 0;
+window.onerror = function (msg, src, line) {
+  logLine("error: " + msg + " (" + String(src || "").split("/").pop() + ":" + line + ")");
+  var now = new Date().getTime();
+  if (NC.server && now - lastErrorSent > 600000) { lastErrorSent = now; sendLog("an error in the app"); }
+  return false;
+};
+
 function sendLog(why) {
   var lines = [];
   try { lines = JSON.parse(localStorage.getItem("nc-log")) || []; } catch (e) {}

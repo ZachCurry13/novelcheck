@@ -22,7 +22,8 @@ function syncNow(force) {
           paintSynced();
           note(said.join(" "));
           logLine("sync" + (force ? " (button)" : "") + ": " + said.join(" "));
-          sendLog("after a sync");
+          // a sync that went fine is reported once a day; one that did not, at once
+          if (!ok || new Date().getTime() - (+stored("nc-log-sent") || 0) > 86400000) { keep("nc-log-sent", String(new Date().getTime())); sendLog("after a sync"); }
           if (left && left.length) showLeft(left); // books that left the Kindle: keep or remove them
           if (!force) autoBackup(); // the automatic sync also sends new books to NovelCheck, at most once a day
         });

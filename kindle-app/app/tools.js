@@ -59,7 +59,7 @@ function autoBackup() {
   toolBusy = true;
   backupKindle(function (sent, wanted) {
     toolBusy = false;
-    if (sent < 0) return logLine("automatic backup could not run");
+    if (sent < 0) { logLine("automatic backup could not run"); return sendLog("an automatic backup failed"); }
     keep("nc-auto-bk", String(new Date().getTime()));
     keep("nc-last-bk", String(new Date().getTime()));
     paintBackup();

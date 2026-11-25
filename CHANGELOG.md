@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.14]
+
+### 🤖 More of it by itself
+- **A notice when something stays wrong.** NovelCheck looks at the Health page every ten minutes. An item that has been off for half an hour (Calibre unreachable, the AI stuck, a full disk, Hardcover not connected) sends the admins one notice a day, which goes away when it is fine again. Short blips, Kindles, genres and covers never notify.
+- **The Kindle app reports its own trouble (app 1.19.0).** A bug in the app, a failed update and a failed automatic backup now send their log by themselves, like a failed sync and a failed download already did. A sync that went fine is reported once a day instead of every time.
+- **Clean Kindle logs no longer pile up in the bug log.** A log after a sync with nothing wrong replaces the last one from the same Kindle; logs with trouble in them are kept.
+
 ## [2.1.13]
 
 ### 🔍 Five more fixes (all real, from a second look)
