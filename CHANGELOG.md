@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.12]
+
+### 🔧 Fixes
+- **Check: "Recently checked" shows whole titles.** The spice label took half the row, so titles and authors were cut to "American …" and "S…". The label now sits under the title, and a title can take two lines.
+- **Kindle app 1.18.0: when it can't read the Kindle's library, it now says why.** On one Kindle (a Colorsoft) the sync ended with "Couldn't read the Kindle library" and no reason. The app waits longer (150 s instead of 90) and writes what the Kindle's own tools answered into its log, which shows in the bug link.
+
 ## [2.1.11]
 
 ### 🎧 Audiobooks

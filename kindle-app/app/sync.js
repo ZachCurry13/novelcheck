@@ -74,14 +74,23 @@ function removeStore(t, said, next) {
 function report(said, done) {
   var out = "/tmp/nc-books.txt", snap = "/tmp/nc_cc_snap.db";
   var cmd = "rm -f " + out + " " + snap + "*; [ -d /mnt/us/koreader/plugins/novelcheck.koplugin ] && echo PLUGIN > " + out + "; " +
-    "cp /var/local/cc.db " + snap + "; [ -e /var/local/cc.db-wal ] && cp /var/local/cc.db-wal " + snap + "-wal; " +
+    "cp /var/local/cc.db " + snap + " 2>> " + out + "; [ -e /var/local/cc.db-wal ] && cp /var/local/cc.db-wal " + snap + "-wal 2>> " + out + "; " +
     "sqlite3 -separator '\t' " + snap + " \"SELECT p_cdeKey, p_titles_0_nominal, COALESCE(p_location,''), COALESCE(p_percentFinished,0), p_cdeType, " +
-    "COALESCE(p_readState,0), COALESCE(p_lastAccess,0), COALESCE(j_credits,'') FROM Entries WHERE p_type='Entry:Item' AND p_cdeType IN ('EBOK','PDOC')\" >> " + out +
+    "COALESCE(p_readState,0), COALESCE(p_lastAccess,0), COALESCE(j_credits,'') FROM Entries WHERE p_type='Entry:Item' AND p_cdeType IN ('EBOK','PDOC')\" >> " + out + " 2>> " + out +
     "; rm -f " + snap + "*; echo END >> " + out;
   if (!run(cmd)) { said.push("Syncing needs KindleForge's helper. Open KindleForge once, then try again."); return done(false); }
   note("Reading your Kindle library…");
-  waitFor(out, 90, function (text) {
-    if (text == null) { said.push("Couldn't read the Kindle library."); return done(false); }
+  waitFor(out, 150, function (text) {
+    if (text == null) { // no answer in time: keep what the file says (or that it is empty) in the log, so the cause shows in the bug link
+      return readFile(out, function (t) {
+        logLine("library read: no answer in 150 s; the file holds: " + (t ? t.replace(/\s+/g, " ").slice(0, 300) : "nothing"));
+        said.push("Couldn't read the Kindle library.");
+        done(false);
+      });
+    }
+    var bad = [], rows = text.split("\n");
+    for (var q = 0; q < rows.length; q++) if (rows[q] && rows[q].indexOf("\t") < 0 && rows[q] !== "PLUGIN") bad.push(rows[q]);
+    if (bad.length) logLine("library read: " + bad.join(" ").slice(0, 300)); // an error from the Kindle's own tools
     var lib = parseLibrary(text);
     keep("nc-places", JSON.stringify(lib.places));
     note("Sending " + lib.books.length + " books…");

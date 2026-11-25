@@ -238,10 +238,10 @@ async function loadRecent(view, state) {
   const data = await attempt(() => get("/api/books" + qs({ catalog: cat.id, sort: "recent", limit: 8 })));
   if (!data?.books.length) return;
   host.innerHTML = `<h2 class="mb-2 mt-4 text-sm font-medium text-slate-400">Recently checked</h2>
-    <ul class="space-y-2">${data.books.map((b) => `<li><button data-open="${b.id}" class="card flex w-full items-center justify-between gap-3 text-left">
-      ${coverImg(b.id, "h-12 w-8")}
-      <span class="min-w-0 flex-1"><span class="block truncate font-semibold">${esc(b.title)}</span><span class="block truncate text-xs text-slate-400">${esc(b.author || "")}</span></span>
-      <span class="shrink-0">${classChip(b)}</span></button></li>`).join("")}</ul>`;
+    <ul class="space-y-2">${data.books.map((b) => `<li><button data-open="${b.id}" class="card flex w-full items-start gap-3 text-left">
+      ${coverImg(b.id, "h-16 w-11 shrink-0")}
+      <span class="min-w-0 flex-1"><span class="line-clamp-2 break-words font-semibold">${esc(b.title)}</span><span class="block truncate text-xs text-slate-400">${esc(b.author || "")}</span>
+      <span class="mt-1 block">${classChip(b)}</span></span></button></li>`).join("")}</ul>`;
   host.onclick = (e) => {
     const id = e.target.closest("[data-open]")?.dataset.open;
     if (id) openBook(Number(id), state);
