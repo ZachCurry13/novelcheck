@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.11]
+
+### 🎧 Audiobooks
+- **The audiobook fixes that were "waiting for you" only because of an old rule now apply by themselves.** NovelCheck used to hold back any audiobook whose ISBN led to a different title, like "Dark Tower II" for *The Drawing of the Three*, even when the author was the same. It already treats those as certain for new matches, but the ones already waiting stayed on the list. At the next round (or **Look now**) the waiting ones by the same author are applied, as long as fixing by itself is on. What stays on the list is only what is really doubtful: a different title by a different author, or a title that looked misspelled.
+
 ## [2.1.10]
 
 ### 🏷️ Genres

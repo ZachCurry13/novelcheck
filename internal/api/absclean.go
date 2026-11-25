@@ -40,6 +40,9 @@ func (s *Server) CleanAudiobooks(ctx context.Context, limit int) (string, error)
 		return "", nil
 	}
 	hc := &hardcover.Client{Token: token, URL: hardcoverURL}
+	if n := s.applyOldDoubtful(ctx, c); n > 0 { // waiting only under an older, stricter rule
+		_ = s.Store.SetSetting(keyABSCleanResult, fmt.Sprintf("%s: %d waiting fixes were certain after all (same author) and were applied", time.Now().Format("2 Jan 15:04"), n))
+	}
 	items, err := s.absToCheck(ctx, c, limit)
 	if err != nil || len(items) == 0 {
 		return "", err

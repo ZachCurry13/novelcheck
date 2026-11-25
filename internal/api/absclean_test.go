@@ -136,3 +136,52 @@ func TestAudiobookshelfCleanup(t *testing.T) {
 		t.Fatalf("nothing again within a month: %q", msg)
 	}
 }
+
+// A fix that waits only because an older NovelCheck judged an ISBN that leads to a different title doubtful (the same
+// author makes it certain now) is applied at the next round.
+func TestOldDoubtfulFixesApply(t *testing.T) {
+	hc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, `{"data": {"me": [{"id": 7, "username": "reader7"}]}}`)
+	}))
+	defer hc.Close()
+	var mu sync.Mutex
+	writes := map[string]string{}
+	abs := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/api/libraries":
+			fmt.Fprint(w, `{"libraries": []}`)
+		case r.Method == http.MethodPatch || r.Method == http.MethodPost:
+			b, _ := io.ReadAll(r.Body)
+			mu.Lock()
+			writes[r.URL.Path] = string(b)
+			mu.Unlock()
+			fmt.Fprint(w, `{}`)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer abs.Close()
+	api.SetHardcoverURL(hc.URL)
+	t.Cleanup(func() { api.SetHardcoverURL("") })
+	var server *api.Server
+	srv, st := setupWith(t, func(s *api.Server) { server = s })
+	_ = st.SetSetting(store.KeyABSURL, abs.URL)
+	_ = st.SetSetting(store.KeyABSToken, "tok")
+	admin := login(t, srv, "admin", "adminpass1")
+	admin.do("PUT", "/api/me/hardcover", map[string]string{"token": "good-token"}, true)
+	st.SaveABSFix(store.ABSFix{ItemID: "li_old", Title: "Dark Tower II", Author: "Stephen King", Fix: `{"title":"The Drawing of the Three"}`,
+		Why: "The ISBN leads to “The Drawing of the Three” on Hardcover, a different title"})
+	st.SaveABSFix(store.ABSFix{ItemID: "li_other", Title: "Mislabelled", Author: "Ann Author", Fix: `{"title":"Other Book","author":"Someone Else"}`,
+		Why: "The ISBN leads to “Other Book” on Hardcover, a different title"})
+	if _, err := server.CleanAudiobooks(context.Background(), 10); err != nil {
+		t.Fatal(err)
+	}
+	mu.Lock()
+	_, applied := writes["/api/items/li_old/media"]
+	_, other := writes["/api/items/li_other/media"]
+	mu.Unlock()
+	left, _ := st.ABSFixes()
+	if !applied || other || len(left) != 1 || left[0].ItemID != "li_other" {
+		t.Fatalf("applied %v, other %v, left %v", applied, other, left)
+	}
+}
