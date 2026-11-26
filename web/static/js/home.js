@@ -105,9 +105,9 @@ function mineHTML(list) {
 
 // While something runs, look again every five seconds and redraw only that card; stop when the page is left or nothing runs.
 let watching = 0;
-function watchRunning(view, host, list) {
+function watchRunning(view, host, list, now) {
   clearTimeout(watching);
-  if (!list?.length) return;
+  if (!now && !list?.length) return;
   watching = setTimeout(async () => {
     if (!view.isConnected) return;
     const r = await get("/api/admin/running").catch(() => null);
@@ -117,7 +117,7 @@ function watchRunning(view, host, list) {
     if (card) card.outerHTML = html || "";
     else if (html) host.insertAdjacentHTML("afterbegin", html);
     watchRunning(view, host, r.running);
-  }, 5000);
+  }, now ? 0 : 5000);
 }
 
 export async function renderHome(view) {
@@ -133,7 +133,7 @@ export async function renderHome(view) {
     const add = d.may_upload ? `<section class="card text-sm">Add books by dragging them onto the box at the top of the <a href="#/library" class="underline">Library</a>.</section>` : "";
     const host = view.querySelector("#home");
     host.innerHTML = [runningHTML(d.running), setupHTML(d.setup), healthHTML(d.health), autopilotHTML(d.autopilot), accuracyHTML(d.accuracy), askedHTML(d.requests || []), inboxHTML(d.inbox || []), quickHTML(d), next, fresh, mineHTML(d.my_requests), askFormHTML, lost, add].join("") || "";
-    watchRunning(view, host, d.running);
+    if (d.autopilot) watchRunning(view, host, null, true); // only admins have the autopilot card, and the running list; Home itself is kept ready, so this is asked apart
     const want = new URLSearchParams(location.hash.split("?")[1] || "").get("ask"); // from "Ask a parent" in the Library
     if (want) host.querySelector("#ask").title.value = want;
     host.querySelector("#ask").onsubmit = async (e) => {

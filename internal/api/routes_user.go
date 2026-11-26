@@ -38,14 +38,14 @@ func (s *Server) userRoutes(r chi.Router) {
 	r.Put("/me/device-link", s.handleDeviceLink)  // the plugin and the app are one Kindle
 	r.Post("/upload/ebook", s.handleFamilyUpload) // drag and drop for admins and people an admin allowed
 	r.Post("/upload/fix", s.handleUploadFix)
-	r.Get("/home", s.handleHome) // 2.0: the start screen
+	r.With(s.cached).Get("/home", s.handleHome) // 2.0: the start screen
 	r.Post("/home/snooze", s.handleSnooze)
 	r.Get("/requests", s.handleRequests) // ask for a book; a parent answers
 	r.Post("/requests", s.handleAddRequest)
 	r.Post("/requests/{id}/decide", s.handleDecideRequest)
 	r.Post("/books/{id}/disagree", s.handleDisagree) // a grown-up's own level for a book
-	r.Get("/me/kindle-library", s.handleKindleLibrary)
-	r.Get("/me/kindles", s.handleKindles)
+	r.With(s.cached).Get("/me/kindle-library", s.handleKindleLibrary)
+	r.With(s.cached).Get("/me/kindles", s.handleKindles)
 	r.Get("/me/left", s.handleMyLeft) // books that left your e-reader, and the ones you removed from your library
 	r.Post("/me/left", s.handleMyLeft)
 	r.Delete("/me/hidden-books/{id}", s.handleUnhide)
@@ -91,7 +91,7 @@ func (s *Server) userRoutes(r chi.Router) {
 	r.Get("/events", s.handleListEvents)
 	r.Get("/events/{id}", s.handleGetEvent)
 	r.Post("/books/bulk", s.handleBulkBooks)
-	r.Get("/books/{id}", s.handleGetBook)
+	r.With(s.cached).Get("/books/{id}", s.handleGetBook)
 	r.Get("/books/{id}/download", s.handleDownload)
 	r.Get("/books/{id}/position", s.handleReaderPosition)
 	r.Put("/books/{id}/position", s.handleReaderPosition)
@@ -119,7 +119,7 @@ func (s *Server) userRoutes(r chi.Router) {
 	r.Post("/books/{id}/cover-report", s.handleReportCover)
 	r.Post("/books/{id}/delete-request", s.handleRequestDelete)
 	r.Delete("/books/{id}/delete-request", s.handleCancelDelete)
-	r.Get("/catalogs", s.handleListCatalogs)
+	r.With(s.cached).Get("/catalogs", s.handleListCatalogs)
 	r.Put("/catalogs/{id}/shown", s.handleCatalogShown)
 	r.Get("/age-groups", s.handleAgeGroups)
 	r.Get("/updates", s.handleUpdates)

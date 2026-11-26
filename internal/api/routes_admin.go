@@ -16,7 +16,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 	r.Use(auth.RequireAdmin)
 
 	r.With(ownerOnly).Post("/admin/devices/forget", s.handleForgetDevice) // a Kindle that stopped reporting
-	r.Get("/admin/health", s.handleHealth)                                // 2.0: is everything working
+	r.With(s.cached).Get("/admin/health", s.handleHealth)                 // 2.0: is everything working
 	r.Get("/admin/backups", s.handleBackups)                              // 2.0.2: the daily copies, Back up now, the main admin's download
 	r.Post("/admin/backups/now", s.handleBackupNow)
 	r.Get("/admin/backups/tidy", s.handleTidyPreview) // Tidy backups: dictionaries, and files the plugin's backup holds identically
@@ -165,7 +165,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Put("/admin/tunnel", s.handleTunnelSave)
 		r.Get("/admin/system", s.handleSystem)
 		r.Post("/admin/health", s.handleHealthChecks)
-		r.Get("/admin/integrations", s.handleIntegrations)
+		r.With(s.cached).Get("/admin/integrations", s.handleIntegrations)
 		r.Post("/admin/integrations/check", s.handleIntegrationsCheck)
 		r.Post("/admin/integrations/db-check", s.handleDatabaseCheck)
 		r.Get("/admin/diagnostics", s.handleDiagnostics)

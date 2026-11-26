@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.25]
+
+### ⚡ Pages are ready before you open them
+- **A change made by someone else (or by a Kindle, or a background job) no longer makes you wait.** Before, any change anywhere threw away every kept page, so the next page you opened was worked out from scratch (Home took 3.6 s on average, the duplicates list 2 s, the integrations check 3.2 s). Now you are shown the kept page at once while it is refreshed behind it. A change you made yourself still shows in your very next page, and a change to who may see what (a library made private, a person's rules, a book approved) still takes effect for everyone at once.
+- **Pages people use are kept up to date in the background.** Anything opened in the last half hour is worked out again in the server's memory right after a change or when it gets old, so the next person gets it ready.
+- **More pages are kept in memory:** Home, the duplicates list, the integrations check, Health, the Nightstand, a book's page (not while it is being rated), the library list and the Kindle page.
+- **The database keeps up to 256 MB in memory and maps the file,** so reads are memory reads.
+- Still slow because of what they do: reading Calibre again (it reads the whole library), looking a book up on Hardcover, and a Kindle's report. {admin}
 ## [2.1.24]
 
 ### 📚 KOReader plugin 1.67.0: its own icon, one list

@@ -122,11 +122,12 @@ func (s *Server) Router() http.Handler {
 
 		r.Group(func(r chi.Router) {
 			r.Use(s.Auth.RequireUser)
+			r.Use(s.ownWrites)
 			r.Use(friendGuard) // friends' accounts: only the parts listed in friend.go
 			s.userRoutes(r)
 			r.Group(func(r chi.Router) {
 				r.Use(s.requireModule(store.KeyModuleQueue, "The Nightstand"))
-				r.Get("/queue", s.handleListQueue)
+				r.With(s.cached).Get("/queue", s.handleListQueue)
 				r.Post("/queue", s.handleEnqueue)
 				r.Put("/queue/order", s.handleReorderQueue)
 				r.Delete("/queue/{id}", s.handleDequeue)

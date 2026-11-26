@@ -25,9 +25,11 @@ func Open(dataDir string) (*sqlx.DB, error) {
 		return nil, fmt.Errorf("create data dir: %w", err)
 	}
 	path := filepath.Join(dataDir, FileName)
+	// cache_size(-262144): up to 256 MB of the database is kept in memory per connection (the whole database is far smaller);
+	// mmap_size: and the file is mapped, so a read is a memory read; temp_store(2): temporary tables live in memory.
 	// busy_timeout: a write waits up to 30 s for another to finish (as it did when there was one connection);
 	// _txlock=immediate: a transaction takes its place in the write queue at its start, so it can't fail halfway.
-	dsn := "file:" + path + "?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(30000)&_txlock=immediate"
+	dsn := "file:" + path + "?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(30000)&_pragma=cache_size(-262144)&_pragma=mmap_size(1073741824)&_pragma=temp_store(2)&_txlock=immediate"
 	d, err := OpenDSN(dsn)
 	if err != nil {
 		return nil, err
