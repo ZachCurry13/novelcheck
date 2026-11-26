@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.47]
+
+### 📦 Box sets split themselves when it is sure
+- **NovelCheck now reads what a box set holds and splits it into its books by itself** (every half hour, a few at a time, with the same "Identify books" switch as reading the first pages). It reads the set's own table of contents when it has a file, or asks the AI when it doesn't (a Kindle store set has no file). It splits only when it is sure: the title says how many books are inside ("Books 1-3", "Trilogy", "5 Book Set"), that many were found, and, when the AI named them, each one is a real book by that author. Each new book gets rated. A notice says what it split; the split can be undone under Admin → Library → Box sets.
+- **When it isn't sure,** it fills in what it found, so a parent only has to confirm with one tap instead of pressing Find. It looks at a set that couldn't be settled again after a week. {admin}
+
 ## [2.1.46]
 
 ### 📲 People hear when their Kindle needs an update
