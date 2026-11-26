@@ -3,7 +3,7 @@
 // (a new person gets the guide instead), for kids' accounts, or for a version already seen. Where the last seen
 // version is kept: this device's storage, so each phone gets it once after its own update.
 import { esc } from "./ui.js";
-import { renderMarkdown, changelogSections } from "./markdown.js";
+import { renderMarkdown, changelogSections, forViewer } from "./markdown.js";
 
 const KEY = "novelcheck.seenVersion";
 const MAX = 3;
@@ -48,7 +48,11 @@ export function showNotesAfterUpdate(current, changelog, state) {
   write(now); // seen from now on, whether or not it gets read
   const user = state?.user;
   if (!user || user.role === "restricted" || (!last && !user.guide_seen)) return;
-  const { shown, more } = notesToShow(changelog, now, last);
+  const manager = user.role === "admin" || user.role === "editor";
+  const picked = notesToShow(changelog, now, last);
+  // only what applies to this person (admin-only notes are hidden from the others); no popup when nothing does
+  const shown = picked.shown.map((s) => ({ ...s, body: forViewer(s.body, manager) })).filter((s) => s.body);
+  const more = picked.more;
   if (!shown.length) return;
   const dlg = document.createElement("dialog");
   dlg.className = "dialog";

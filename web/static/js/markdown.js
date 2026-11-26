@@ -62,3 +62,24 @@ export function changelogSections(md) {
     return { version: p.slice(0, p.indexOf("]")), body: p.slice(nl + 1).trim() };
   });
 }
+
+// forViewer cuts a release note down to what applies to this person. A bullet that ends in {admin} is for admins and editors
+// only; the tag itself is never shown. A heading with nothing left under it goes too, and "" means nothing is left.
+export function forViewer(body, manager) {
+  const kept = [];
+  for (const line of String(body || "").split("\n")) {
+    const tagged = /\s*\{admin\}\s*$/.test(line);
+    if (tagged && !manager) continue;
+    kept.push(line.replace(/\s*\{admin\}\s*$/, ""));
+  }
+  const out = [];
+  for (let i = 0; i < kept.length; i++) {
+    if (/^###\s/.test(kept[i])) {
+      let j = i + 1;
+      while (j < kept.length && !kept[j].trim()) j++;
+      if (j >= kept.length || /^#{2,3}\s/.test(kept[j])) continue;
+    }
+    out.push(kept[i]);
+  }
+  return out.join("\n").trim();
+}

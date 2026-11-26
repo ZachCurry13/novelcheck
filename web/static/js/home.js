@@ -19,6 +19,17 @@ function healthHTML(h) {
     ${h.items.map((i) => `<p class="text-sm"><b class="${LEVEL[i.level]}">${esc(i.title)}</b> <span class="text-slate-400">${esc(i.fix || i.detail)}</span> ${i.link ? `<a href="${esc(i.link)}" class="underline">Go</a>` : ""}</p>`).join("")}</section>`;
 }
 
+// "Getting started": what a new NovelCheck needs, in order, until it is all done (an admin can hide it for a week).
+function setupHTML(steps) {
+  if (!steps?.length) return "";
+  const done = steps.filter((x) => x.done).length;
+  return `<section class="card space-y-2"><div class="flex items-center justify-between gap-2"><h2 class="font-semibold">Getting started <span class="text-sm font-normal text-slate-400">${done} of ${steps.length} done</span></h2>
+    <button type="button" data-snooze="setup" class="btn-ghost py-1 text-sm" title="Hide it for a week">Hide</button></div>
+    <ul class="space-y-2">${steps.map((x) => `<li class="flex items-start gap-3 text-sm"><span class="${x.done ? "text-emerald-300" : "text-slate-500"}" aria-hidden="true">${x.done ? "✓" : "○"}</span>
+      <span class="min-w-0 flex-1"><b>${esc(x.title)}</b>${x.optional ? ` <span class="text-xs text-slate-500">(optional)</span>` : ""}${x.done ? "" : `<span class="block text-slate-400">${esc(x.detail)}</span>`}</span>
+      ${x.done ? "" : `<a href="${esc(x.link)}" class="btn-secondary shrink-0 py-1 text-sm">Do it</a>`}</li>`).join("")}</ul></section>`;
+}
+
 function askedHTML(list) {
   if (!list.length) return "";
   return `<section class="card space-y-2"><h2 class="font-semibold">Asks waiting for you</h2>${list.map((q) => `<div class="rounded-lg border border-slate-700 p-3" data-req="${q.id}">
@@ -71,7 +82,7 @@ export async function renderHome(view) {
     const lost = d.unmatched ? `<section class="card text-sm"><b>${d.unmatched}</b> book${d.unmatched === 1 ? "" : "s"} on your e-reader couldn't be matched. <a href="#/settings" class="underline">Match them</a></section>` : "";
     const add = d.may_upload ? `<section class="card text-sm">Add books by dragging them onto the box at the top of the <a href="#/library" class="underline">Library</a>.</section>` : "";
     const host = view.querySelector("#home");
-    host.innerHTML = [healthHTML(d.health), askedHTML(d.requests || []), inboxHTML(d.inbox || []), quickHTML(d), next, fresh, mineHTML(d.my_requests), askFormHTML, lost, add].join("") || "";
+    host.innerHTML = [setupHTML(d.setup), healthHTML(d.health), askedHTML(d.requests || []), inboxHTML(d.inbox || []), quickHTML(d), next, fresh, mineHTML(d.my_requests), askFormHTML, lost, add].join("") || "";
     const want = new URLSearchParams(location.hash.split("?")[1] || "").get("ask"); // from "Ask a parent" in the Library
     if (want) host.querySelector("#ask").title.value = want;
     host.querySelector("#ask").onsubmit = async (e) => {

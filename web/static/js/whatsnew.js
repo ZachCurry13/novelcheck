@@ -1,13 +1,14 @@
 // "What's new": running version, update status, and release notes.
 import { get } from "./api.js";
 import { esc, attempt } from "./ui.js";
-import { renderMarkdown, changelogSections } from "./markdown.js";
+import { renderMarkdown, changelogSections, forViewer } from "./markdown.js";
 
 export async function renderWhatsNew(view, state) {
   const data = await attempt(() => get("/api/updates"));
   if (!data) return;
   const st = data.status || { current: "unknown", releases: [] };
   const manager = state.user.role === "admin" || state.user.role === "editor";
+  isManager = manager;
   const newer = st.releases.filter((r) => r.newer);
 
   let banner = "";
@@ -42,13 +43,16 @@ function sameVersion(a, b) {
   return String(b || "").replace(/^v/, "").split("-")[0] === a;
 }
 
+let isManager = false; // set per visit: admin-only notes are hidden from everyone else
 function section(title, notes, date, url) {
+  const body = forViewer(notes, isManager);
+  if (!body) return "";
   return `<article class="card">
     <div class="flex flex-wrap items-baseline justify-between gap-2">
       <h2 class="text-lg font-semibold">${esc(title)}</h2>
       <span class="text-xs text-slate-500">${date ? esc(new Date(date).toLocaleDateString()) : ""}
         ${url ? ` · <a href="${esc(url)}" target="_blank" rel="noopener noreferrer" class="underline">GitHub</a>` : ""}</span>
     </div>
-    <div class="text-sm leading-relaxed text-slate-300">${renderMarkdown(notes)}</div>
+    <div class="text-sm leading-relaxed text-slate-300">${renderMarkdown(body)}</div>
   </article>`;
 }

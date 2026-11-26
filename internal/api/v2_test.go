@@ -286,3 +286,27 @@ func TestKindleAppPage(t *testing.T) {
 		t.Fatalf("the zip needs a sign-in: %d", res.StatusCode)
 	}
 }
+
+// A new NovelCheck's admin sees what to do first, and "Hide" (a week's snooze) takes it away; kids never see it.
+func TestHomeGettingStarted(t *testing.T) {
+	srv, _ := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	_, home := admin.do("GET", "/api/home", nil, false)
+	steps, _ := home["setup"].([]any)
+	if len(steps) < 4 {
+		t.Fatalf("the admin's list: %v", home["setup"])
+	}
+	first, _ := steps[0].(map[string]any)
+	if first["id"] != "books" || first["done"] != false || first["link"] == "" {
+		t.Fatalf("a fresh library has no books yet: %v", first)
+	}
+	admin.do("POST", "/api/home/snooze", map[string]any{"id": "setup"}, true)
+	if _, home = admin.do("GET", "/api/home", nil, false); home["setup"] != nil {
+		t.Fatalf("hidden: %v", home["setup"])
+	}
+	admin.do("POST", "/api/admin/users", map[string]any{"username": "kid2", "password": "kidpass12"}, true)
+	kid := login(t, srv, "kid2", "kidpass12")
+	if _, kh := kid.do("GET", "/api/home", nil, false); kh["setup"] != nil {
+		t.Fatalf("kids never see the list: %v", kh["setup"])
+	}
+}

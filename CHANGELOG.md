@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.18]
+
+### 🦈 Easier for people who aren't the admin
+- **"What's new" shows each person only what applies to them.** Release notes about the admin side (Health, Hardcover, cleanup, the bug log) are marked and hidden from everyone but admins and editors, and nobody gets a popup when an update has nothing for them.
+- **A "Getting started" list on Home for admins** until NovelCheck is set up: add your books, choose an AI, connect Hardcover, add the family, make a backup, set up a Kindle. Each step says what it is for in a sentence and has a **Do it** button; **Hide** puts it away for a week. {admin}
+
 ## [2.1.17]
 
 ### 📏 Page counts
@@ -12,68 +18,68 @@ becomes the release notes for that version and is shown in the app under
 ## [2.1.16]
 
 ### 🧹 Fix titles and covers is easier to use
-- **Apply many at once.** A box at the top has **Apply all the sure ones** (titles, series, ISBNs, descriptions and authors matched by ISBN or the exact title and author) and a button per kind (All genres, All series, All ISBNs…). Genres and series numbers are left for you to choose, because Hardcover is wrong about them more often. It asks once before writing into Calibre, and says plainly when the Hardcover job is still running and the buttons will work when it finishes.
-- **It shows what the Hardcover job is doing** (comparing or applying, how many, and why it is waiting) and updates by itself.
-- **Hardcover's promotional tags are no longer suggested as genres** ("Hottest Books of the Season", "Best Books of the Year", "Top 10", "New Releases" and the like).
+- **Apply many at once.** A box at the top has **Apply all the sure ones** (titles, series, ISBNs, descriptions and authors matched by ISBN or the exact title and author) and a button per kind (All genres, All series, All ISBNs…). Genres and series numbers are left for you to choose, because Hardcover is wrong about them more often. It asks once before writing into Calibre, and says plainly when the Hardcover job is still running and the buttons will work when it finishes. {admin}
+- **It shows what the Hardcover job is doing** (comparing or applying, how many, and why it is waiting) and updates by itself. {admin}
+- **Hardcover's promotional tags are no longer suggested as genres** ("Hottest Books of the Season", "Best Books of the Year", "Top 10", "New Releases" and the like). {admin}
 - **A book with no cover shows a quiet placeholder** instead of the browser's broken-picture icon, on every screen.
 
 ## [2.1.15]
 
 ### 🤖 The Hardcover scan carries on by itself
-- **Compare with Hardcover resumes after Calibre or Hardcover stops answering.** Before, the scan ended at the first failure (an app restarting, Hardcover's limit) with "0 of 1,320 done" and you had to press it again. Now it says why, waits half an hour and goes on from where it stopped, up to four times. The suggestions found so far are kept, and Stop works while it rests.
+- **Compare with Hardcover resumes after Calibre or Hardcover stops answering.** Before, the scan ended at the first failure (an app restarting, Hardcover's limit) with "0 of 1,320 done" and you had to press it again. Now it says why, waits half an hour and goes on from where it stopped, up to four times. The suggestions found so far are kept, and Stop works while it rests. {admin}
 
 ## [2.1.14]
 
 ### 🤖 More of it by itself
-- **A notice when something stays wrong.** NovelCheck looks at the Health page every ten minutes. An item that has been off for half an hour (Calibre unreachable, the AI stuck, a full disk, Hardcover not connected) sends the admins one notice a day, which goes away when it is fine again. Short blips, Kindles, genres and covers never notify.
-- **The Kindle app reports its own trouble (app 1.19.0).** A bug in the app, a failed update and a failed automatic backup now send their log by themselves, like a failed sync and a failed download already did. A sync that went fine is reported once a day instead of every time.
-- **Clean Kindle logs no longer pile up in the bug log.** A log after a sync with nothing wrong replaces the last one from the same Kindle; logs with trouble in them are kept.
+- **A notice when something stays wrong.** NovelCheck looks at the Health page every ten minutes. An item that has been off for half an hour (Calibre unreachable, the AI stuck, a full disk, Hardcover not connected) sends the admins one notice a day, which goes away when it is fine again. Short blips, Kindles, genres and covers never notify. {admin}
+- **The Kindle app reports its own trouble (app 1.19.0).** A bug in the app, a failed update and a failed automatic backup now send their log by themselves, like a failed sync and a failed download already did. A sync that went fine is reported once a day instead of every time. {admin}
+- **Clean Kindle logs no longer pile up in the bug log.** A log after a sync with nothing wrong replaces the last one from the same Kindle; logs with trouble in them are kept. {admin}
 
 ## [2.1.13]
 
 ### 🔍 Five more fixes (all real, from a second look)
-1. **The "left out a day later" rule could never trigger.** The quick pass for free books (every three hours) saw only some of the books and wiped what the daily search had noted, so no book was ever seen twice. Only a full, finished search counts now.
-2. **"Show them again" brought the books back, and the next search hid them again at once,** because it kept the old sightings. It forgets them now.
-3. **Kindle app 1.18.2: the sign-in takes the address with a page on it** ("novelcheck.example.com/Kindleapp") as the address.
-4. **Stop works while the Hardcover scan is resting.** It used to wait out the full three minutes.
-5. **The scan's "Waiting a few minutes" note goes away when it carries on.**
+1. **The "left out a day later" rule could never trigger.** The quick pass for free books (every three hours) saw only some of the books and wiped what the daily search had noted, so no book was ever seen twice. Only a full, finished search counts now. {admin}
+2. **"Show them again" brought the books back, and the next search hid them again at once,** because it kept the old sightings. It forgets them now. {admin}
+3. **Kindle app 1.18.2: the sign-in takes the address with a page on it** ("novelcheck.example.com/Kindleapp") as the address. {admin}
+4. **Stop works while the Hardcover scan is resting.** It used to wait out the full three minutes. {admin}
+5. **The scan's "Waiting a few minutes" note goes away when it carries on.** {admin}
 
 ## [2.1.12]
 
 ### 🔧 Fixes
 - **Check: "Recently checked" shows whole titles.** The spice label took half the row, so titles and authors were cut to "American …" and "S…". The label now sits under the title, and a title can take two lines.
-- **Kindle app 1.18.0: when it can't read the Kindle's library, it now says why.** On one Kindle (a Colorsoft) the sync ended with "Couldn't read the Kindle library" and no reason. The app waits longer (150 s instead of 90) and writes what the Kindle's own tools answered into its log, which shows in the bug link.
+- **Kindle app 1.18.0: when it can't read the Kindle's library, it now says why.** On one Kindle (a Colorsoft) the sync ended with "Couldn't read the Kindle library" and no reason. The app waits longer (150 s instead of 90) and writes what the Kindle's own tools answered into its log, which shows in the bug link. {admin}
 
 ### 🔍 Ten fixes from a review of the last few days' changes
-1. **A book is left out of the cover lists only after it was still missing a day later.** One search can come up empty because a site was down for a while, and leaving it out on that one miss would have hidden a book that has a cover. (The 23 left out earlier stay out until you press Show them again.)
-2. **The cleanup log folds repeats only for the cover finder.** Other entries (a refused removal, a title fix) are different books each time, so each keeps its own line.
-3. **The Kindle app's sign-in takes the same time for an unknown name as for a wrong password,** so it can't be used to find out which names exist.
-4. **Health no longer waits on Audiobookshelf for its Covers line.** It uses the finished list, and skips the line until the page or the finder has made one.
-5. **The Kindle app's sign-in screen hides the page-up and page-down buttons** (app 1.18.1).
-6. Tests: the KindleForge scripts parse as shell; the two-sightings rule; the Hardcover rest; the cleanup log's folding.
-7. **A README for the KindleForge package folder.**
+1. **A book is left out of the cover lists only after it was still missing a day later.** One search can come up empty because a site was down for a while, and leaving it out on that one miss would have hidden a book that has a cover. (The 23 left out earlier stay out until you press Show them again.) {admin}
+2. **The cleanup log folds repeats only for the cover finder.** Other entries (a refused removal, a title fix) are different books each time, so each keeps its own line. {admin}
+3. **The Kindle app's sign-in takes the same time for an unknown name as for a wrong password,** so it can't be used to find out which names exist. {admin}
+4. **Health no longer waits on Audiobookshelf for its Covers line.** It uses the finished list, and skips the line until the page or the finder has made one. {admin}
+5. **The Kindle app's sign-in screen hides the page-up and page-down buttons** (app 1.18.1). {admin}
+6. Tests: the KindleForge scripts parse as shell; the two-sightings rule; the Hardcover rest; the cleanup log's folding. {admin}
+7. **A README for the KindleForge package folder.** {admin}
 
 ## [2.1.11]
 
 ### 🎧 Audiobooks
-- **The audiobook fixes that were "waiting for you" only because of an old rule now apply by themselves.** NovelCheck used to hold back any audiobook whose ISBN led to a different title, like "Dark Tower II" for *The Drawing of the Three*, even when the author was the same. It already treats those as certain for new matches, but the ones already waiting stayed on the list. At the next round (or **Look now**) the waiting ones by the same author are applied, as long as fixing by itself is on. What stays on the list is only what is really doubtful: a different title by a different author, or a title that looked misspelled.
+- **The audiobook fixes that were "waiting for you" only because of an old rule now apply by themselves.** NovelCheck used to hold back any audiobook whose ISBN led to a different title, like "Dark Tower II" for *The Drawing of the Three*, even when the author was the same. It already treats those as certain for new matches, but the ones already waiting stayed on the list. At the next round (or **Look now**) the waiting ones by the same author are applied, as long as fixing by itself is on. What stays on the list is only what is really doubtful: a different title by a different author, or a title that looked misspelled. {admin}
 
 ## [2.1.10]
 
 ### 🏷️ Genres
-- **Hardcover's genres now replace the ones the AI made.** 2.1.4 stopped the AI from filling in genres, but books it had already tagged were never looked at again, so they kept the AI's genres. Now every book with AI genres is asked about on Hardcover again (a few hundred every few hours, at Hardcover's pace); where Hardcover has genres they replace the AI's, and where it has none the AI's stay. Calibre's own tags are never replaced. The bug log's Library section now says how many books have genres from Calibre, Hardcover, the AI, or none.
+- **Hardcover's genres now replace the ones the AI made.** 2.1.4 stopped the AI from filling in genres, but books it had already tagged were never looked at again, so they kept the AI's genres. Now every book with AI genres is asked about on Hardcover again (a few hundred every few hours, at Hardcover's pace); where Hardcover has genres they replace the AI's, and where it has none the AI's stay. Calibre's own tags are never replaced. The bug log's Library section now says how many books have genres from Calibre, Hardcover, the AI, or none. {admin}
 
 ### 🔧 Ten smaller things
-1. **The cleanup log folds repeats.** A cover search that finds the same books missing updates its one line instead of adding "89 of 89" again.
-2. **The cleanup log names the books the cover finder left out** (up to 25).
-3. **Health says when Hardcover asked for a rest** and that everything waits and carries on by itself.
-4. **Health has a Genres line** (from Calibre, Hardcover, the AI's, none) and warns when many books have none.
-5. **Health has a Covers line:** how many books have none, and how many the finder gave up on.
-6. **The Hardcover scan also rests and carries on** when Hardcover says "too many requests" in the middle of a book (before, only between groups).
+1. **The cleanup log folds repeats.** A cover search that finds the same books missing updates its one line instead of adding "89 of 89" again. {admin}
+2. **The cleanup log names the books the cover finder left out** (up to 25). {admin}
+3. **Health says when Hardcover asked for a rest** and that everything waits and carries on by itself. {admin}
+4. **Health has a Genres line** (from Calibre, Hardcover, the AI's, none) and warns when many books have none. {admin}
+5. **Health has a Covers line:** how many books have none, and how many the finder gave up on. {admin}
+6. **The Hardcover scan also rests and carries on** when Hardcover says "too many requests" in the middle of a book (before, only between groups). {admin}
 7. **Kindle app 1.17.0 shows when its books were last backed up** (in the Menu).
-8. **The Admin genres banner shows where genres come from** (Calibre, Hardcover, the AI's).
-9. **docs/AI_GPU.md:** using an Intel Arc or other GPU for the local AI as a separate llama.cpp app, and what fits in 6 GB.
-10. **The bug link counts genre sources** (above).
+8. **The Admin genres banner shows where genres come from** (Calibre, Hardcover, the AI's). {admin}
+9. **docs/AI_GPU.md:** using an Intel Arc or other GPU for the local AI as a separate llama.cpp app, and what fits in 6 GB. {admin}
+10. **The bug link counts genre sources** (above). {admin}
 
 ## [2.1.9]
 
@@ -83,15 +89,15 @@ becomes the release notes for that version and is shown in the app under
 ## [2.1.8]
 
 ### 🔧 Fixes
-- **Cover lists clean themselves.** After a cover search, a book that no site has a cover for (and that has no Audiobookshelf cover) is left out of the cover lists by itself, so nobody has to go through them one by one. Fix titles and covers says how many and has **Show them again**.
+- **Cover lists clean themselves.** After a cover search, a book that no site has a cover for (and that has no Audiobookshelf cover) is left out of the cover lists by itself, so nobody has to go through them one by one. Fix titles and covers says how many and has **Show them again**. {admin}
 - **Kindle page: no more dead links.** A book in the Amazon cloud list could point to a book NovelCheck no longer has (merged or removed since the Kindle reported), and tapping it said "not found". It now shows as "Not in your library" without a link until the Kindle reports again.
 
 ## [2.1.7]
 
 ### 🖼️ Covers, for good
-- **Hardcover no longer says "too many requests" to everything at once.** The cover finder, the genre scan, ratings and each person's sync all talked to Hardcover separately, so together they went over its limit and the scan did 0 of 1,320 books. They now share one pace per Hardcover account, and when Hardcover asks for a rest, all of them wait. The Hardcover scan waits a few minutes and carries on instead of stopping.
-- **Not a book: leave it out.** In Fix titles and covers, each book with no cover has this button. It drops the book from the cover lists, the finder and the bug log for good (for the junk Calibre entries and free comics).
-- Already there for the rest: **Choose cover** on the same list lets you pick one by hand (a search result, an address or an upload).
+- **Hardcover no longer says "too many requests" to everything at once.** The cover finder, the genre scan, ratings and each person's sync all talked to Hardcover separately, so together they went over its limit and the scan did 0 of 1,320 books. They now share one pace per Hardcover account, and when Hardcover asks for a rest, all of them wait. The Hardcover scan waits a few minutes and carries on instead of stopping. {admin}
+- **Not a book: leave it out.** In Fix titles and covers, each book with no cover has this button. It drops the book from the cover lists, the finder and the bug log for good (for the junk Calibre entries and free comics). {admin}
+- Already there for the rest: **Choose cover** on the same list lets you pick one by hand (a search result, an address or an upload). {admin}
 
 ## [2.1.6]
 
@@ -101,26 +107,26 @@ becomes the release notes for that version and is shown in the app under
 ## [2.1.5]
 
 ### 🔧 Fixes
-- **Duplicates: "Remove" on one book no longer ends with an error.** The page crashed right after removing ("Cannot access 'gone' before initialization"): the copy was removed in Calibre, but the book stayed on screen, the count never updated and the page never read Calibre again. It now updates as it should.
+- **Duplicates: "Remove" on one book no longer ends with an error.** The page crashed right after removing ("Cannot access 'gone' before initialization"): the copy was removed in Calibre, but the book stayed on screen, the count never updated and the page never read Calibre again. It now updates as it should. {admin}
 - **Kindle app 1.15.0 sends new books by itself.** After its automatic sync (at most every 12 hours) the app also sends books NovelCheck doesn't have yet, at most once a day, the same as the Menu's "Back up my books". DRM-free books go into Calibre; books from Amazon's store are left out.
 
 ## [2.1.4]
 
 ### 📲 Kindle app straight on the Kindle
-- **The Kindle app signs in by itself (app 1.14.0).** A copy with no sign-in file now shows a screen for NovelCheck's address, your name and password (and a name for the Kindle). NovelCheck answers with a key, never your password or sync code, and the app keeps it.
-- **A KindleForge package** (`kindle-app/kindleforge`: `install.sh`, `uninstall.sh`, a registry entry) installs the app from the latest release, so a jailbroken Kindle needs no computer or phone. It becomes visible in KindleForge once its entry is accepted into the KindleForge package list.
+- **The Kindle app signs in by itself (app 1.14.0).** A copy with no sign-in file now shows a screen for NovelCheck's address, your name and password (and a name for the Kindle). NovelCheck answers with a key, never your password or sync code, and the app keeps it. {admin}
+- **A KindleForge package** (`kindle-app/kindleforge`: `install.sh`, `uninstall.sh`, a registry entry) installs the app from the latest release, so a jailbroken Kindle needs no computer or phone. It becomes visible in KindleForge once its entry is accepted into the KindleForge package list. {admin}
 
 ### 📲 Kindle app straight from KOReader
-- **NovelCheck → Settings → Install the Kindle app** (plugin 1.66.0). On a jailbroken Kindle that already has the plugin, this downloads the Kindle app, signed in as you, and puts the NovelCheck "book" in the library. No computer or phone needed. Close KOReader and open the book called NovelCheck.
+- **NovelCheck → Settings → Install the Kindle app** (plugin 1.66.0). On a jailbroken Kindle that already has the plugin, this downloads the Kindle app, signed in as you, and puts the NovelCheck "book" in the library. No computer or phone needed. Close KOReader and open the book called NovelCheck. {admin}
 
 ### 🔧 From your list
-- **Health: one line per Kindle.** Jenna's name showed four times because each Kindle's problems (out of date, no backup, not reporting) were separate lines, and she has an old Kindle entry that never reports. Now each Kindle is one line with everything about it, and a Kindle that hasn't reported for two weeks has **Forget this Kindle** (main admin; its backup files stay).
-- **Duplicates: "These are different books: split them, and remember it."** After ticking "Not a copy", this button makes those entries a book of their own for good. Before, the choice was forgotten and the same two copies were listed again. Nothing is removed from Calibre; Calibre is read again afterwards.
-- **Genres come from Hardcover, not the AI.** The AI no longer fills in genres by itself, and the Admin banner now offers **Look them up on Hardcover now** instead of "Fill in with AI". Books with no genre are looked at on Hardcover again once (a few hundred every few hours, by itself).
-- **Find covers is clearer.** The Fix titles and covers window now says in words what the cover finder is doing (and updates while it works), and what it found last time.
+- **Health: one line per Kindle.** Jenna's name showed four times because each Kindle's problems (out of date, no backup, not reporting) were separate lines, and she has an old Kindle entry that never reports. Now each Kindle is one line with everything about it, and a Kindle that hasn't reported for two weeks has **Forget this Kindle** (main admin; its backup files stay). {admin}
+- **Duplicates: "These are different books: split them, and remember it."** After ticking "Not a copy", this button makes those entries a book of their own for good. Before, the choice was forgotten and the same two copies were listed again. Nothing is removed from Calibre; Calibre is read again afterwards. {admin}
+- **Genres come from Hardcover, not the AI.** The AI no longer fills in genres by itself, and the Admin banner now offers **Look them up on Hardcover now** instead of "Fill in with AI". Books with no genre are looked at on Hardcover again once (a few hundred every few hours, by itself). {admin}
+- **Find covers is clearer.** The Fix titles and covers window now says in words what the cover finder is doing (and updates while it works), and what it found last time. {admin}
 
 ### 📲 A link to hand out for the Kindle app
-- **`/kindleapp`** (any capitals: `/Kindleapp` works): a page that asks the person to sign in, then offers the Kindle app already set up for their account, with a box for the Kindle's name and the install steps. Nothing to type on the Kindle. It says plainly that the Kindle must be jailbroken with KindleForge and that the file goes on over a cable from a computer (a Kindle can't download and install it by itself). Use `https://<your NovelCheck address>/Kindleapp`.
+- **`/kindleapp`** (any capitals: `/Kindleapp` works): a page that asks the person to sign in, then offers the Kindle app already set up for their account, with a box for the Kindle's name and the install steps. Nothing to type on the Kindle. It says plainly that the Kindle must be jailbroken with KindleForge and that the file goes on over a cable from a computer (a Kindle can't download and install it by itself). Use `https://<your NovelCheck address>/Kindleapp`. {admin}
 
 ## [2.1.3]
 

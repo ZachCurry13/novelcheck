@@ -63,6 +63,11 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	}
 	out["requests"] = s.openRequestsFor(u)
 	snoozed := s.Store.Snoozed(u.ID)
+	if u.IsAdmin() && !snoozed["setup"] { // a new NovelCheck: what to do first, until it is all done
+		if steps := s.setupSteps(); !setupDone(steps) {
+			out["setup"] = steps
+		}
+	}
 	inbox := []homeCard{}
 	add := func(id, title, detail string, n int, link string) {
 		if n > 0 && !snoozed[id] {
