@@ -14,7 +14,8 @@ function details(id) {
       return paintDetails(c.b); // the page as it was saved
     }
     setOffline(false);
-    if (b && (b.blocked || b.pending)) return note(b.message || "Still being checked. Try again in a minute.");
+    if (b && b.pending) return note("Still being checked. Try again in a minute.");
+    if (b && b.blocked) return paintBlocked(b);
     cacheInfo(id, b);
     note("");
     paintDetails(b);

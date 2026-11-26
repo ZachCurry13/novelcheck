@@ -111,8 +111,20 @@ return function(NovelCheck)
             UIManager:show(InfoMessage:new{ text = err })
             return
         end
-        if info.blocked or info.pending then
-            UIManager:show(InfoMessage:new{ text = info.message or _("Still being checked. Try again in a minute.") })
+        if info.pending then
+            UIManager:show(InfoMessage:new{ text = _("Still being checked. Try again in a minute.") })
+            return
+        end
+        if info.blocked then -- outside this account's rules: nothing about the book, and a way to ask a parent
+            local ask
+            ask = ButtonDialog:new{
+                title = info.message,
+                buttons = {
+                    { { text = _("Ask a parent for access"), callback = function() UIManager:close(ask); self:askAccess(hit) end } },
+                    { { text = _("Close"), callback = function() UIManager:close(ask) end } },
+                },
+            }
+            UIManager:show(ask)
             return
         end
         local lines = { info.title or hit.title }
@@ -180,6 +192,15 @@ return function(NovelCheck)
         table.insert(buttons, { { text = _("Close"), callback = function() UIManager:close(dialog) end } })
         dialog = ButtonDialog:new{ title = table.concat(lines, "\n"), buttons = buttons }
         UIManager:show(dialog)
+    end
+
+    function NovelCheck:askAccess(hit)
+        local code, data = self:postJSON("/kosync/plugin/access-request", { book_id = hit.id })
+        if code == 200 then
+            UIManager:show(InfoMessage:new{ text = _("Asked. A parent will look at it."), timeout = 3 })
+        else
+            UIManager:show(InfoMessage:new{ text = data.message or (_("Could not ask.") .. "\n" .. tostring(code)) })
+        end
     end
 
     function NovelCheck:requestFormat(hit, format)

@@ -3,10 +3,8 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/enrich"
@@ -133,8 +131,8 @@ func (s *Server) handlePluginWish(w http.ResponseWriter, r *http.Request) {
 }
 
 // blockedInfo answers /plugin/info for a book this person's rules hide. While the book is still being rated it says "processing"
-// (the rules may need the rating); once rated and still hidden it says so plainly, shows nothing about the book (no rating, so a
-// kid is not pointed at it), and tells the parents once, who can allow it by marking the book OK.
+// (the rules may need the rating); once rated and still hidden it says so plainly and shows nothing about the book (no rating, so
+// a kid is not pointed at it). The person can ask for access (handlePluginAccess); nobody is told until they do.
 func (s *Server) blockedInfo(u *store.User, id int64) (map[string]any, bool) {
 	b, err := s.Store.BookByID(id, nil)
 	if err != nil {
@@ -143,10 +141,36 @@ func (s *Server) blockedInfo(u *store.User, id int64) (map[string]any, bool) {
 	if b.Status != "analyzed" {
 		return map[string]any{"id": id, "status": b.Status, "pending": true}, true
 	}
-	if _, told := blockedTold.LoadOrStore(fmt.Sprintf("%d|%d", u.ID, id), true); !told && u.Role == store.RoleRestricted {
-		s.Store.Notify("info", "lookups", fmt.Sprintf("%s looked up “%s”, which is outside their rules. It stays hidden from them unless you mark it OK.", u.Username, b.Title), "#/library")
-	}
-	return map[string]any{"id": id, "status": "analyzed", "blocked": true, "message": "That book isn't available on your account. A parent has been told."}, true
+	return map[string]any{"id": id, "status": "analyzed", "blocked": true, "ask": true, "message": "This book isn't on your account yet."}, true
 }
 
-var blockedTold sync.Map // "person|book" already reported to the parents
+// handlePluginAccess: POST /kosync/plugin/access-request {"book_id"}: the person asks a parent for a book their rules hide. It is
+// an ordinary book request: a parent says Yes (the book is marked OK and put on their Nightstand) or No.
+func (s *Server) handlePluginAccess(w http.ResponseWriter, r *http.Request) {
+	u := s.kosyncUser(w, r)
+	if u == nil {
+		return
+	}
+	var body struct {
+		BookID int64 `json:"book_id"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).Decode(&body); err != nil || body.BookID <= 0 {
+		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "which book?"})
+		return
+	}
+	b, err := s.Store.BookByID(body.BookID, nil)
+	if err != nil {
+		kosyncJSON(w, http.StatusNotFound, map[string]string{"message": "no such book"})
+		return
+	}
+	if _, err := s.Store.BookByID(body.BookID, u); err == nil {
+		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "you can already open this book"})
+		return
+	}
+	if _, err := s.Store.AddRequest(u.ID, b.Title, b.Author, "Asked from the Kindle: the book is outside their rules"); err != nil {
+		kosyncJSON(w, http.StatusConflict, map[string]string{"message": "You already asked. A parent hasn't answered yet."})
+		return
+	}
+	s.Store.Notify("info", "requests", u.Username+" asked for access to “"+b.Title+"”.", "#/home")
+	kosyncJSON(w, http.StatusOK, map[string]string{"asked": "ok"})
+}

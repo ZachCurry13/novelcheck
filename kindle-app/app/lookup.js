@@ -60,3 +60,26 @@ function askFor(b, format) {
     note("Asked for the " + (format === "audio" ? "audiobook" : "ebook") + ". A parent will see it on the wishlist.");
   });
 }
+
+// paintBlocked: a book outside this account's rules shows nothing about it, only a way to ask a parent for access.
+function paintBlocked(b) {
+  note("");
+  showLists(false);
+  backTo = function () { openMenu(); };
+  paintNav("Check a book");
+  window.scrollTo(0, 0);
+  var m = $("main");
+  m.innerHTML = "";
+  $("pages").hidden = true;
+  m.appendChild(el("p", "", b.message));
+  var ask = el("button", "main", "Ask a parent for access");
+  ask.onclick = function () {
+    ask.disabled = true;
+    api("POST", "/kosync/plugin/access-request", { book_id: b.id }, function (err) {
+      if (err) { ask.disabled = false; return note(err); }
+      ask.textContent = "Asked";
+      note("Asked. A parent will look at it.");
+    });
+  };
+  m.appendChild(ask);
+}

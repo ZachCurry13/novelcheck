@@ -71,7 +71,7 @@ func TestWishFeedAndArrival(t *testing.T) {
 	}
 }
 
-// A kid who looks up a book above their limit gets a plain "not available" and nothing about the book; the parents are told.
+// A kid who looks up a book above their limit sees nothing about it, can ask for access, and only then does a parent hear of it.
 func TestLookupBlockedForKid(t *testing.T) {
 	srv, st := setup(t)
 	_ = st.SetSetting(store.KeyModuleKOReader, "true")
@@ -98,7 +98,30 @@ func TestLookupBlockedForKid(t *testing.T) {
 	if res.StatusCode != 200 || out["blocked"] != true || out["title"] != nil || out["level"] != nil {
 		t.Fatalf("blocked info: %d %v", res.StatusCode, out)
 	}
-	if _, n := admin.do("GET", "/api/notifications", nil, false); !strings.Contains(toJSON(n), "outside their rules") {
-		t.Fatalf("parents told: %v", n)
+	if _, n := admin.do("GET", "/api/notifications", nil, false); strings.Contains(toJSON(n), "Too Spicy") {
+		t.Fatalf("nobody is told just because a kid looked: %v", n)
+	}
+	ask := func() int {
+		req, _ := http.NewRequest("POST", srv.URL+"/kosync/plugin/access-request", strings.NewReader(`{"book_id":`+itoa(id)+`}`))
+		req.Header.Set("x-auth-user", "kid")
+		req.Header.Set("x-auth-key", key)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		return res.StatusCode
+	}
+	if code := ask(); code != 200 {
+		t.Fatalf("ask for access: %d", code)
+	}
+	if code := ask(); code != 409 {
+		t.Fatalf("asked twice: %d", code)
+	}
+	if _, n := admin.do("GET", "/api/notifications", nil, false); !strings.Contains(toJSON(n), "asked for access to") {
+		t.Fatalf("the parent sees the ask: %v", n)
+	}
+	if _, q := admin.do("GET", "/api/requests", nil, false); len(q["open"].([]any)) != 1 {
+		t.Fatalf("the ask is a request a parent can answer: %v", q)
 	}
 }
