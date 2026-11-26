@@ -85,7 +85,7 @@ function report(said, done) {
     if (text == null) { // no answer in time: keep what the file says (or that it is empty) in the log, so the cause shows in the bug link
       return readFile(out, function (t) {
         logLine("library read: no answer in 150 s; the file holds: " + (t ? t.replace(/\s+/g, " ").slice(0, 300) : "nothing"));
-        said.push("Couldn't read the Kindle library.");
+        said.push("Couldn't read the Kindle library. " + HELPER_HINT);
         done(false);
       });
     }

@@ -5,6 +5,8 @@ var got = {}; // books downloaded on this Kindle, by id
 try { got = JSON.parse(localStorage.getItem("nc-got")) || {}; } catch (e) {}
 
 function $(id) { return document.getElementById(id); }
+// The Kindle's own helper (KindleForge's utild) saves books and reads the library; without an answer from it nothing can.
+var HELPER_HINT = "This Kindle's helper isn't answering. Open KindleForge once (it starts the helper), then open NovelCheck again. Without KindleForge on this Kindle the app can't save books or read its library.";
 function note(text) { $("note").textContent = text || ""; }
 
 // ----- where you are: the top bar has ☰ Menu at the left (on a list) or ‹ Back (inside a book, the menu, a collection)
@@ -369,7 +371,7 @@ function save(b, file, btn) {
     }
     btn.disabled = false;
     btn.textContent = "Download";
-    note("The download failed. Check Wi-Fi and try again.");
+    note(text == null ? HELPER_HINT : "The download failed. Check Wi-Fi and try again.");
     setTimeout(ended, 0);
     logLine("download failed: " + b.title + " (" + file + "): " + (text == null ? "no answer from the Kindle helper" : text.replace(/\s+/g, " ")));
     sendLog("a download failed");

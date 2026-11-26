@@ -14,6 +14,9 @@ becomes the release notes for that version and is shown in the app under
 - **A task you start from the phone carries on at the server when you close the app or change page.** "Apply all" on audiobook fixes and finding a box set's contents used to stop if the phone left; they now run to the end. Calibre writes, title tidying and duplicate removal already did.
 - **Home shows what is running now** (finding covers, comparing with Hardcover, Calibre being read, Deep Scans, rating), with progress, and looks again every few seconds. {admin}
 
+### 🔧 The Kindle app says why it can't read or save
+- **When the Kindle's helper doesn't answer (app 1.19.1), the app says so in plain words** instead of "Couldn't read the Kindle library" or "The download failed. Check Wi-Fi": "This Kindle's helper isn't answering. Open KindleForge once (it starts the helper), then open NovelCheck again." This is what your sister's Kindle showed (every read, download and backup got no answer from the helper). The helper is KindleForge's; without KindleForge installed on that Kindle the app cannot save books or read its library.
+
 ### 🔕 Quieter Home
 - **A Kindle that only runs an older app is a note, not a warning.** It shows as "FYI" on the Health page and stays off Home; it updates itself when opened. A Kindle that hasn't reported for two weeks or has no backup still shows. {admin}
 
