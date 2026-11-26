@@ -351,7 +351,7 @@ func TestHomeShowsAccuracy(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	_, h := admin.do("GET", "/api/home", nil, false)
+	_, h := admin.do("GET", "/api/home?fresh=1", nil, false)
 	a, _ := h["accuracy"].(map[string]any)
 	if a == nil || a["n"] != float64(6) || a["exact"] != float64(83) || a["within1"] != float64(83) {
 		t.Fatalf("accuracy: %v", h["accuracy"])
@@ -419,12 +419,46 @@ func TestRunningNow(t *testing.T) {
 	if list, ok := r["running"].([]any); !ok || len(list) != 0 {
 		t.Fatalf("nothing runs on a fresh server: %v", r)
 	}
-	if _, home := admin.do("GET", "/api/home", nil, false); home["running"] == nil {
-		t.Fatalf("Home carries the list: %v", home)
-	}
 	admin.do("POST", "/api/admin/users", map[string]any{"username": "kid4", "password": "kidpass12"}, true)
 	kid := login(t, srv, "kid4", "kidpass12")
 	if res, _ := kid.do("GET", "/api/admin/running", nil, false); res.StatusCode != 403 {
 		t.Fatalf("kids: %d", res.StatusCode)
+	}
+}
+
+// A change by someone else never makes a person wait: the kept page is shown at once (and worked out again behind it);
+// a person's own change is in the next page they see.
+func TestOthersChangesDoNotMakeYouWait(t *testing.T) {
+	srv, _ := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	admin.do("POST", "/api/admin/users", map[string]any{"username": "kid5", "password": "kidpass12"}, true)
+	kid := login(t, srv, "kid5", "kidpass12")
+	look := func() string {
+		res, _ := admin.do("GET", "/api/home", nil, false)
+		return res.Header.Get("X-Cache")
+	}
+	look() // the admin's own change just now: worked out afresh
+	if got := look(); got != "hit" {
+		t.Fatalf("Home is kept: %q", got)
+	}
+	kid.do("POST", "/api/requests", map[string]any{"title": "A book", "author": "Someone"}, true) // someone else changes something
+	if got := look(); got != "hit" {
+		t.Fatalf("someone else's change must not make the admin wait: %q", got)
+	}
+	admin.do("POST", "/api/home/snooze", map[string]any{"id": "x"}, true) // their own change
+	if got := look(); got != "miss" {
+		t.Fatalf("their own change shows in their next page: %q", got)
+	}
+	kidLook := func() string {
+		res, _ := kid.do("GET", "/api/home", nil, false)
+		return res.Header.Get("X-Cache")
+	}
+	kidLook()
+	if got := kidLook(); got != "hit" {
+		t.Fatalf("the kid's Home is kept: %q", got)
+	}
+	admin.do("POST", "/api/admin/users", map[string]any{"username": "kid6", "password": "kidpass12"}, true) // who may see what: nobody is shown a kept answer
+	if got := kidLook(); got != "miss" {
+		t.Fatalf("an access change shows at once to everyone: %q", got)
 	}
 }

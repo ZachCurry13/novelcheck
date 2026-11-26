@@ -5,7 +5,7 @@ import "github.com/go-chi/chi/v5"
 // kosyncRoutes: KOReader progress sync and the plugin and Kindle app endpoints, all signed in with the NovelCheck name
 // and a sync code (not a login).
 func (s *Server) kosyncRoutes(r chi.Router) {
-	r.Use(noStore, kosyncCORS)
+	r.Use(noStore, kosyncCORS, s.kosyncWrites)
 	r.Post("/users/create", s.handleKosyncCreate)
 	r.Post("/plugin/app-signin", s.handleAppSignin)
 	r.Get("/users/auth", s.handleKosyncAuth)

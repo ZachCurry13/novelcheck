@@ -131,6 +131,13 @@ func (s *Server) errorRecorder(next http.Handler) http.Handler {
 		s.noteActivity(r, rec.status, time.Since(began))
 		if changesData(r.Method, r.URL.Path) && rec.status > 0 && rec.status < 400 {
 			s.rcache.bump() // something changed: the kept list pages are out of date
+			if sensitiveWrite(r.URL.Path) {
+				s.rcache.bumpHard()
+			}
+			select {
+			case s.rcache.kicker() <- struct{}{}: // the pages in use are worked out again right away (hotloop.go)
+			default:
+			}
 		}
 		if recordable(rec.status) {
 			s.noteError(rec, r, rec.status)

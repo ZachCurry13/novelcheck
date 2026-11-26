@@ -3,7 +3,7 @@
 NovelCheck talks to AI servers with the standard OpenAI-style chat protocol, so any server that speaks it works:
 Ollama, or llama.cpp's own `llama-server`. The GPU belongs to that server, not to NovelCheck.
 
-## Intel Arc (A380 and similar), as a separate app
+## Intel Arc cards, as a separate app
 
 Ollama reaches Intel GPUs through its Vulkan backend, which is still experimental and can crash on some cards
 (`llama-server process has terminated: signal: segmentation fault`, or a `vk::PhysicalDevice::createDevice` error).
