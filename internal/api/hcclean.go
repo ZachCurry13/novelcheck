@@ -97,15 +97,23 @@ func (s *Server) hcRest(ctx context.Context) bool {
 	return true
 }
 
-// runHCScan compares the library with Hardcover, 25 books at a time.
+// runHCScan compares the library with Hardcover, 25 books at a time, and carries on by itself when Calibre or Hardcover
+// stops answering partway (hcscanresume.go).
 func (s *Server) runHCScan(token string, refs []store.CalibreBookRef) {
+	s.runHCScanResuming(token, refs)
+}
+
+// scanPart is one go at refs. resume: the scan already began, so the suggestions kept so far stay.
+func (s *Server) scanPart(token string, refs []store.CalibreBookRef, resume bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			s.hcEnd(fmt.Sprintf("Stopped by a problem: %v", r))
 		}
 	}()
 	cal, hc := s.calibreClient(), &hardcover.Client{Token: token, URL: hardcoverURL}
-	_ = s.Store.ClearNewHCSuggestions()
+	if !resume {
+		_ = s.Store.ClearNewHCSuggestions()
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Hour)
 	defer cancel()
 	waits := 0

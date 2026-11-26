@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.15]
+
+### 🤖 The Hardcover scan carries on by itself
+- **Compare with Hardcover resumes after Calibre or Hardcover stops answering.** Before, the scan ended at the first failure (an app restarting, Hardcover's limit) with "0 of 1,320 done" and you had to press it again. Now it says why, waits half an hour and goes on from where it stopped, up to four times. The suggestions found so far are kept, and Stop works while it rests.
+
 ## [2.1.14]
 
 ### 🤖 More of it by itself
