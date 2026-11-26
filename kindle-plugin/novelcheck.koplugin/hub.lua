@@ -15,6 +15,13 @@ local lfs = require("libs/libkoreader-lfs")
 local _ = require("gettext")
 
 return function(NovelCheck)
+    -- A colour for the main button (a colour e-reader shows it; a black-and-white one shows a gray). Older KOReader has no colour
+    -- names, so then it stays light gray.
+    local function accent()
+        local ok, c = pcall(function() return Blitbuffer.colorFromString("#F2A765") end)
+        return (ok and c) or Blitbuffer.COLOR_LIGHT_GRAY
+    end
+
     local function trim(s)
         return ((s or ""):gsub("^%s+", ""):gsub("%s+$", ""))
     end
@@ -174,7 +181,7 @@ return function(NovelCheck)
             if then_ ~= "" then table.insert(rows, note(_("Then") .. ": " .. then_)) end
             table.insert(rows, { {
                 text = have and _("Read it") or _("Download"), font_bold = true, font_size = 26, height = Device.screen:scaleBySize(64),
-                background = Blitbuffer.COLOR_LIGHT_GRAY,
+                background = accent(),
                 callback = go(function()
                     if have then
                         require("apps/reader/readerui"):showReader(path)

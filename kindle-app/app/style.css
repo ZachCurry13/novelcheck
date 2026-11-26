@@ -68,3 +68,19 @@ header button { margin: 0 0.25rem; }
 #find { margin: 0.5rem 0 1rem; }
 #find input { width: 72%; min-height: 3.5rem; font-size: 1.5rem; }
 #find button { min-height: 3.5rem; font-size: 1.5rem; font-weight: bold; }
+
+/* Colour for a Kindle Colorsoft. Each colour is strong enough to show on its muted screen, and the text and borders stay black on a
+   light fill, so a black-and-white Kindle shows the same page in grays, just as readable. */
+.badge.lvl0 { background: #a8dfae; }
+.badge.lvl1 { background: #d6e98c; }
+.badge.lvl2 { background: #f7da72; }
+.badge.lvl3 { background: #f6b068; }
+.badge.lvl4 { background: #f08a78; }
+.badge.lvl5 { background: #e2605c; }
+.badge.lvlx { background: #ddd; }
+button.main { background: #b8431a; color: #fff; border-color: #7e2a0d; }
+button.on { background: #1f5f8b; color: #fff; border-color: #123b57; }
+.headsup { background: #fdeeb5; }
+#status { background: #ffe6bd; }
+.sect { border-bottom-color: #b8431a; }
+header { border-bottom-color: #b8431a; }

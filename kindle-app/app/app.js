@@ -115,6 +115,8 @@ function shown() {
 }
 // the same names as on the web and in KOReader
 var SPICE_NAMES = ["No Romance", "Sweet Romance", "Romantic", "Steamy Closed-Door", "Explicit / Open Door", "Very Explicit / Erotica-Level"];
+// lvlClass gives a spice badge its colour (a colour Kindle shows it; a black-and-white one shows gray): green for none, then yellow, orange, red.
+function lvlClass(level) { return "badge lvl" + (level == null ? "x" : level); }
 function badge(level) { return level == null ? "Not rated yet" : "Spice " + level + " · " + (SPICE_NAMES[level] || ""); }
 function spice(level) { return level == null ? "Not rated yet" : "Spice level " + level + ": " + (SPICE_NAMES[level] || ""); }
 function onKindle(b) { return got[b.id] || b.on_device; }
@@ -276,7 +278,7 @@ function row(b) {
   if (more.length) what.appendChild(el("div", "meta", more.join(" \u00b7 ")));
   if (state.list === "kindle-mine") { // the books on this Kindle: their rating, and where they are
     var meta = el("div", "meta");
-    meta.appendChild(el("span", "badge", b.status === "pending" || b.status === "processing" ? "Being rated…" : badge(b.level) + (b.old_rules ? " (older)" : "")));
+    meta.appendChild(el("span", lvlClass(b.status === "pending" || b.status === "processing" ? null : b.level), b.status === "pending" || b.status === "processing" ? "Being rated…" : badge(b.level) + (b.old_rules ? " (older)" : "")));
     meta.appendChild(document.createTextNode((b.format === "cloud" ? " In your Amazon library" : b.percent > 0 ? " " + Math.round(b.percent * 100) + "% read" : "")));
     what.appendChild(meta);
     if (b.id) what.onclick = function () { details(b.id); };
@@ -284,7 +286,7 @@ function row(b) {
     return r;
   }
   var line = el("div", "meta");
-  line.appendChild(el("span", "badge", badge(b.level)));
+  line.appendChild(el("span", lvlClass(b.level), badge(b.level)));
   what.appendChild(line);
   what.onclick = function () { details(b.id); };
   var dl = downloadButton(b);

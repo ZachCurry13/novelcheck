@@ -8,7 +8,7 @@ import (
 
 // appHash is the app's files for this Version. A change to app/ without a new Version would never reach a Kindle
 // (the app only updates to a newer version), so this fails until Version is raised and the hash written here.
-const appHash = "e92d3406572c3ff95aefdb945659be7a1b8416434e00fccf70d6b33df13a694b"
+const appHash = "39781b4719d53e51ecbcf51a01c40749d3a257157b7dbbbce30add3cb005d86f"
 
 func TestVersionRaisedWithTheFiles(t *testing.T) {
 	h := sha256.New()

@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.51]
+
+### 🎨 Colour for a Kindle Colorsoft
+- **The Kindle app (1.28.0) now has colour.** The spice badges are coloured by level (green for none, then yellow, orange and red), the main buttons are a warm orange and the selected filters blue, and the heads-up and status lines have a soft tint. Book covers were already sent in full colour. A black-and-white Kindle shows the same page in grays, just as readable: the text and borders stay black on a light fill.
+- **The KOReader card (plugin 1.77.0)** gives its big Read it / Open button an orange fill on KOReader versions that know colours (a gray one otherwise). KOReader's own menus and dialogs use KOReader's look.
+
 ## [2.1.50]
 
 ### 🆓 Free books, and your Hardcover Want to read, in NovelCheck
