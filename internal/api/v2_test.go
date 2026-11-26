@@ -357,3 +357,24 @@ func TestHomeShowsAccuracy(t *testing.T) {
 		t.Fatalf("accuracy: %v", h["accuracy"])
 	}
 }
+
+// One Kindle reported by two programs (the KOReader plugin and the Kindle app, linked as the same Kindle) is one line on
+// Health, not two; an unnamed app and the only plugin of the same person are linked by themselves.
+func TestOneKindleTwoReportsIsOneLine(t *testing.T) {
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = t.TempDir() })
+	admin := login(t, srv, "admin", "adminpass1")
+	u, _ := st.UserByName("admin")
+	st.SaveDeviceInfo(u.ID, "Zach Paperwhite", "1.0.0")
+	st.SaveDeviceInfo(u.ID, "Kindle (Amazon reader)", "app 1.0.0")
+	st.AutoLink(u.ID, "Kindle (Amazon reader)") // what a report does
+	_, h := admin.do("GET", "/api/admin/health", nil, false)
+	n := 0
+	for _, it := range h["items"].([]any) {
+		if strings.Contains(it.(map[string]any)["title"].(string), "Paperwhite") || strings.Contains(it.(map[string]any)["title"].(string), "Kindle (Amazon") {
+			n++
+		}
+	}
+	if n != 1 {
+		t.Fatalf("one Kindle, one line: %v", h["items"])
+	}
+}

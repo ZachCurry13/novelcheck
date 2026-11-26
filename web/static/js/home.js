@@ -16,7 +16,7 @@ function healthHTML(h) {
   return `<section class="card space-y-2"><div class="flex items-center justify-between gap-2">
     <h2 class="font-semibold ${LEVEL[h.level]}">${calm ? "Everything is working" : h.level === "bad" ? "Something needs fixing now" : "A few things need a look"}</h2>
     <a href="#/health" class="btn-ghost py-1 text-sm">Health</a></div>
-    ${h.items.map((i) => `<p class="text-sm"><b class="${LEVEL[i.level]}">${esc(i.title)}</b> <span class="text-slate-400">${esc(i.fix || i.detail)}</span> ${i.link ? `<a href="${esc(i.link)}" class="underline">Go</a>` : ""}</p>`).join("")}</section>`;
+    ${h.items.map((i) => `<p class="text-sm"><b class="${LEVEL[i.level]}">${esc(i.title)}</b> <span class="text-slate-400">${esc(i.detail || i.fix)}</span> ${i.link ? `<a href="${esc(i.link)}" class="underline">Go</a>` : ""}</p>`).join("")}</section>`;
 }
 
 // "Getting started": what a new NovelCheck needs, in order, until it is all done (an admin can hide it for a week).

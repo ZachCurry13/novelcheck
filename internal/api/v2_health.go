@@ -96,35 +96,60 @@ func (s *Server) healthItems() []healthItem {
 	} else if left > 0 {
 		add("covers", "ok", "Covers", fmt.Sprintf("Every book has one, except %d the finder found nothing for (left out of the lists).", left), "", "")
 	}
-	// Kindles: one line each, with everything about it (not one line per problem)
+	// Kindles: one line each. A Kindle is the KOReader plugin's report and the Kindle app's report of the same device (they are
+	// linked: "Same Kindle as…"), so two reports of one Kindle are one line, with everything about it.
+	type kindle struct {
+		name, user string
+		userID     int64
+		devs       []store.DeviceSeen
+		newest     int64
+	}
+	kindles, order, linksOf := map[string]*kindle{}, []string{}, map[int64]map[string]string{}
 	for _, d := range s.Store.AllDevices() {
-		seen := time.Since(time.Unix(d.Reported, 0))
-		name := d.Device + " (" + d.User + ")"
+		if linksOf[d.UserID] == nil {
+			linksOf[d.UserID] = s.Store.DeviceLinks(d.UserID)
+		}
+		name := d.Device
+		if l := linksOf[d.UserID][d.Device]; l != "" {
+			name = l
+		}
+		key := fmt.Sprint(d.UserID, "|", name)
+		k := kindles[key]
+		if k == nil {
+			k = &kindle{name: name, user: d.User, userID: d.UserID}
+			kindles[key], order = k, append(order, key)
+		}
+		k.devs = append(k.devs, d)
+		k.newest = max(k.newest, d.Reported)
+	}
+	for _, key := range order {
+		k := kindles[key]
+		seen := time.Since(time.Unix(k.newest, 0))
+		label := k.name + " (" + k.user + ")"
 		var issues []string
-		level := "ok"
 		stale := seen > 14*24*time.Hour
 		if stale {
 			issues = append(issues, "hasn't reported for "+ago(seen))
-			level = "warn"
 		}
-		if strings.HasPrefix(d.Version, "app ") && versionOlder(strings.TrimPrefix(d.Version, "app "), kindleapp.Version) {
-			issues = append(issues, "Kindle app "+strings.TrimPrefix(d.Version, "app ")+" is out of date (newest "+kindleapp.Version+")")
-			level = "warn"
-		} else if !strings.HasPrefix(d.Version, "app ") && versionOlder(d.Version, kindleplugin.Version()) {
-			issues = append(issues, "KOReader plugin "+d.Version+" is out of date (newest "+kindleplugin.Version()+")")
-			level = "warn"
+		backedUp := false
+		for _, d := range k.devs {
+			if strings.HasPrefix(d.Version, "app ") && versionOlder(strings.TrimPrefix(d.Version, "app "), kindleapp.Version) {
+				issues = append(issues, "Kindle app "+strings.TrimPrefix(d.Version, "app ")+" is out of date (newest "+kindleapp.Version+")")
+			} else if !strings.HasPrefix(d.Version, "app ") && versionOlder(d.Version, kindleplugin.Version()) {
+				issues = append(issues, "KOReader plugin "+d.Version+" is out of date (newest "+kindleplugin.Version()+")")
+			}
+			backedUp = backedUp || s.hasKindleBackup(d.UserID, d.Device)
 		}
-		if !stale && !s.hasKindleBackup(d.UserID, d.Device) {
+		if !stale && !backedUp {
 			issues = append(issues, "has no backup in NovelCheck")
-			level = "warn"
 		}
-		if level == "ok" {
+		if len(issues) == 0 {
 			continue
 		}
 		fix := "Open NovelCheck on it with Wi-Fi on, press Sync now, and update if it offers. Back it up from the app's Menu or KOReader's Copy my Kindle."
-		it := healthItem{ID: "kindle-" + name, Level: level, Title: name, Detail: strings.Join(issues, "; "), Fix: fix, Link: "#/kindle"}
+		it := healthItem{ID: "kindle-" + label, Level: "warn", Title: label, Detail: strings.Join(issues, "; "), Fix: fix, Link: "#/kindle"}
 		if stale {
-			it.Forget = &forgetDevice{UserID: d.UserID, Device: d.Device}
+			it.Forget = &forgetDevice{UserID: k.userID, Device: k.devs[0].Device}
 			it.Fix = "If this Kindle is gone or replaced, forget it (its backup files stay). Otherwise open NovelCheck on it with Wi-Fi on."
 		}
 		out = append(out, it)

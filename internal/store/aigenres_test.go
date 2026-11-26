@@ -89,3 +89,24 @@ func TestPrintPagesKept(t *testing.T) {
 		t.Fatalf("pages: %d", got)
 	}
 }
+
+// One person's one unnamed app and one plugin are one Kindle; with two of either, nothing is guessed.
+func TestTheOnlyPairIsOneKindle(t *testing.T) {
+	st := newStore(t)
+	u1, _ := st.CreateUser("one", "h", "admin")
+	u2, _ := st.CreateUser("two", "h", "admin")
+	st.SaveDeviceInfo(u1.ID, "Zach Paperwhite", "1.66.0")
+	st.SaveDeviceInfo(u1.ID, "Kindle (Amazon reader)", "app 1.19.0")
+	st.AutoLink(u1.ID, "Kindle (Amazon reader)")
+	l := st.DeviceLinks(u1.ID)
+	if l["Zach Paperwhite"] != "Zach Paperwhite" || l["Kindle (Amazon reader)"] != "Zach Paperwhite" {
+		t.Fatalf("links: %v", l)
+	}
+	st.SaveDeviceInfo(u2.ID, "Dad's Kindle", "1.66.0")
+	st.SaveDeviceInfo(u2.ID, "Mom's Kindle", "1.66.0")
+	st.SaveDeviceInfo(u2.ID, "Kindle (Amazon reader)", "app 1.19.0")
+	st.AutoLink(u2.ID, "Kindle (Amazon reader)")
+	if l := st.DeviceLinks(u2.ID); len(l) != 0 {
+		t.Fatalf("two plugins: a guess, so nothing linked: %v", l)
+	}
+}

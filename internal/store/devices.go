@@ -143,6 +143,7 @@ const AppDeviceSuffix = " (Amazon reader)"
 // AutoLink links the Kindle app's report and the plugin's when their names say it: "Zach Paperwhite" (plugin) and
 // "Zach Paperwhite (Amazon reader)" (app, named when it was downloaded).
 func (s *Store) AutoLink(userID int64, device string) {
+	s.linkTheOnlyPair(userID)
 	base := strings.TrimSuffix(device, AppDeviceSuffix)
 	if base == "" {
 		return
@@ -158,6 +159,33 @@ func (s *Store) AutoLink(userID int64, device string) {
 	}
 	_ = s.LinkDevice(userID, base, base)
 	_ = s.LinkDevice(userID, base+AppDeviceSuffix, base)
+}
+
+// linkTheOnlyPair joins an app and a plugin report that no name ties together ("Kindle (Amazon reader)", from an app
+// installed without a name, and "Zach Paperwhite") when the person has exactly one of each that is not linked yet: one
+// person with one app and one plugin has one Kindle. With more than one of either it is a guess, so nothing is joined.
+func (s *Store) linkTheOnlyPair(userID int64) {
+	var rows []struct {
+		Device  string `db:"device"`
+		Version string `db:"plugin_version"`
+	}
+	_ = s.DB.Select(&rows, `SELECT device, plugin_version FROM device_info WHERE user_id = ?`, userID)
+	links := s.DeviceLinks(userID)
+	var apps, plugins []string
+	for _, r := range rows {
+		if links[r.Device] != "" {
+			continue
+		}
+		if strings.HasPrefix(r.Version, "app ") {
+			apps = append(apps, r.Device)
+		} else {
+			plugins = append(plugins, r.Device)
+		}
+	}
+	if len(apps) == 1 && len(plugins) == 1 {
+		_ = s.LinkDevice(userID, plugins[0], plugins[0])
+		_ = s.LinkDevice(userID, apps[0], plugins[0])
+	}
 }
 
 // HasDevice says whether the person has an e-reader report with this name (the plugin's or the app's).

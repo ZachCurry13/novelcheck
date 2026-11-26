@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.21]
+
+### 🔧 One Kindle, one line
+- **One Kindle shows once.** Your Kindle appeared twice on Health because the KOReader plugin ("Zach Paperwhite") and the Kindle app ("Kindle (Amazon reader)") report it under different names and nothing tied them together. When a person has exactly one of each that isn't linked yet, they are now joined by themselves at the next sync; with more than one it would be a guess, so nothing is joined (Settings → Kindle: "Same Kindle as…"). Health also groups linked reports into one line. {admin}
+- **Home says what is wrong with a Kindle,** not only what to do about it ("Kindle app 1.16.0 is out of date; has no backup in NovelCheck"). {admin}
+
 ## [2.1.20]
 
 ### 🧹 The Kindle page is tidier
