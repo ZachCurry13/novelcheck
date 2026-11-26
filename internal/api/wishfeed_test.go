@@ -157,3 +157,33 @@ func TestRatingOnlyAboveLimit(t *testing.T) {
 		t.Fatalf("rating only: %d %v", res.StatusCode, out)
 	}
 }
+
+// A wish is also met when the library keeps the same book under another spelling (a second record with the same title words and
+// author surname), in the format asked for.
+func TestWishMetByAnotherRecordOfTheBook(t *testing.T) {
+	_, st := setup(t)
+	lookedUp, _ := st.EnsureCatalog(store.LookedUpCatalog, "custom")
+	abs, _ := st.EnsureCatalog(store.AudiobookshelfCatalog, "custom")
+	wish, _ := st.UpsertBook("Cress", "Marissa Meyer", "", "")
+	_ = st.AddCopy(lookedUp, wish, "lookup:Cress", "list", "")
+	lib, _ := st.UpsertBook("The Cress", "Meyer, Marissa", "", "")
+	if lib == wish {
+		t.Skip("the library merged them already")
+	}
+	u, _ := st.UserByName("admin")
+	if err := st.AddWishFormat(wish, u, "", "audio"); err != nil {
+		t.Fatal(err)
+	}
+	var told int
+	st.OnWishAcquired = func(store.Wish) { told++ }
+	st.MarkAcquired()
+	if told != 0 {
+		t.Fatal("nothing has arrived yet")
+	}
+	_ = st.AddCopy(abs, lib, "abs:1", "audio", "1")
+	st.MarkAcquired()
+	st.MarkAcquired()
+	if told != 1 {
+		t.Fatalf("told %d times", told)
+	}
+}

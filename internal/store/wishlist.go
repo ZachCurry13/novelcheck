@@ -139,14 +139,53 @@ func (s *Store) MarkAcquired() {
 			continue
 		}
 		for _, w := range got {
-			res, err := s.DB.Exec(`UPDATE wishlist SET status = 'acquired', decided_by = 'in the library now', updated_at = CURRENT_TIMESTAMP
-				WHERE id = ? AND status IN ('wanted', 'approved')`, w.ID)
-			if err != nil {
-				continue
-			}
-			if n, _ := res.RowsAffected(); n > 0 && s.OnWishAcquired != nil {
-				s.OnWishAcquired(w)
+			s.acquire(w)
+		}
+	}
+	// A second look: the wish's book may be another record of the same book (a spelling the library keeps apart, as Cress and
+	// "Cress (The Lunar Chronicles)"). If a record with the same title and author surname is in a real library in the wished-for
+	// format, the wish is met. Wishes with no author are left to the exact match above.
+	var open []Wish
+	if err := s.DB.Select(&open, `SELECT `+wishCols+` FROM wishlist w JOIN books b ON b.id = w.book_id WHERE w.status IN ('wanted', 'approved')`); err != nil {
+		return
+	}
+	for _, w := range open {
+		if strings.TrimSpace(w.Author) == "" {
+			continue
+		}
+		for id := range s.looseCandidates(w.Title, w.Author) {
+			if id != w.BookID && s.ownedAs(id, w.Format) {
+				s.acquire(w)
+				break
 			}
 		}
 	}
+}
+
+// acquire marks one open wish acquired and tells OnWishAcquired, once.
+func (s *Store) acquire(w Wish) {
+	res, err := s.DB.Exec(`UPDATE wishlist SET status = 'acquired', decided_by = 'in the library now', updated_at = CURRENT_TIMESTAMP
+		WHERE id = ? AND status IN ('wanted', 'approved')`, w.ID)
+	if err != nil {
+		return
+	}
+	if n, _ := res.RowsAffected(); n > 0 && s.OnWishAcquired != nil {
+		s.OnWishAcquired(w)
+	}
+}
+
+// ownedAs reports whether the book is in a real library in the wished-for format ("" = any).
+func (s *Store) ownedAs(bookID int64, format string) bool {
+	var n int
+	if format == "" {
+		_ = s.DB.Get(&n, `SELECT COUNT(*) FROM books b WHERE b.id = ? AND `+ownedCond, bookID)
+		return n > 0
+	}
+	cond, ok := formatCond[format]
+	if !ok {
+		return false
+	}
+	_ = s.DB.Get(&n, `SELECT COUNT(*) FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
+		WHERE cb.book_id = ? AND c.name NOT IN ('`+LookedUpCatalog+`', '`+DiscoverCatalog+`', '`+EventsCatalog+`') AND `+cond, bookID)
+	return n > 0
 }

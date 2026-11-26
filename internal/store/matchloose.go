@@ -39,6 +39,18 @@ func titleVariants(clean string, haveAuthor bool) []string {
 }
 
 func (s *Store) matchLoose(title, author string) int64 {
+	seen := s.looseCandidates(title, author)
+	if len(seen) != 1 {
+		return 0
+	}
+	for id := range seen {
+		return id
+	}
+	return 0
+}
+
+// looseCandidates are the books whose title (in any usual spelling) and author surname fit; matchLoose trusts only a single one.
+func (s *Store) looseCandidates(title, author string) map[int64]bool {
 	last := squash(lastName(author))
 	haveAuthor := !junkAuthors[strings.ToLower(strings.TrimSpace(author))] && last != ""
 	seen := map[int64]bool{}
@@ -66,11 +78,5 @@ func (s *Store) matchLoose(title, author string) int64 {
 			}
 		}
 	}
-	if len(seen) != 1 {
-		return 0
-	}
-	for id := range seen {
-		return id
-	}
-	return 0
+	return seen
 }
