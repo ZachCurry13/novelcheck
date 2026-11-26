@@ -17,6 +17,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/db"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
+	"github.com/zachcurry13/novelcheck/internal/freebooks"
 	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
@@ -89,6 +90,7 @@ func setupWith(t *testing.T, adjust func(*api.Server)) (*httptest.Server, *store
 		Tunnel:  &tunnel.Manager{Binary: "no-such-cloudflared"},
 		SysInfo: sysinfo.New(t.TempDir()),
 		Push:    push.New(st),
+		Free:    offlineFree(), // no test reaches the real Gutendex
 	}
 	s.Deep = deepread.New(st, s.Cfg.CalibreDir)
 	s.Suggest = suggest.New(st)
@@ -190,3 +192,10 @@ func TestEndToEnd(t *testing.T) {
 }
 
 func itoa(n int64) string { b, _ := json.Marshal(n); return string(b) }
+
+// offlineFree is a free-books client that finds nothing (its address answers nobody), so a test never waits for the internet.
+func offlineFree() *freebooks.Client {
+	c := freebooks.New()
+	c.Base = "http://127.0.0.1:1"
+	return c
+}
