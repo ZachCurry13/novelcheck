@@ -21,6 +21,8 @@ func (s *Server) userRoutes(r chi.Router) {
 	r.Put("/me/delivery", s.handleUpdateDelivery)
 	r.Put("/me/guide-seen", s.handleGuideSeen)
 	r.Put("/me/start-page", s.handleStartPage)
+	r.Get("/me/library-default", s.handleLibraryDefault)
+	r.Put("/me/library-default", s.handleLibraryDefault)
 	r.With(auth.RequireManager).Put("/me/claim-library", s.handleClaimLibrary) // where my event claims go
 	r.Put("/me/appearance", s.handleAppearance)
 	r.Get("/me/searches", s.handleSearches)

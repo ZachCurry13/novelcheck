@@ -1,6 +1,6 @@
 // Unified dashboard: browse and filter books across every catalog.
 import { bindMoreMenu } from "./libmenu.js";
-import { get, post, qs } from "./api.js";
+import { get, post, put, qs } from "./api.js";
 import { $, esc, attempt, toast, canManage, can } from "./ui.js";
 import { openCalibreRemoval } from "./calibreremove.js";
 import { libbySearchBox } from "./libbysearch.js";
@@ -217,6 +217,23 @@ export async function renderLibrary(view, state) {
   // Back from a book's series, an author's page and so on: the search and filters are as you left them
   // (the chips under the search box show which are on; the panel stays closed).
   if (isBack() && [...preset.keys()].length === 0) restoreForm("library", form);
+  // The libraries this person chose to see by default (Library filter → "Save the ticked libraries as my default"), unless a link or
+  // "back" already set the filters.
+  const libDef = await get("/api/me/library-default").catch(() => ({ catalogs: [] }));
+  const catBoxes = [...form.querySelectorAll('input[name="catalog"]')];
+  if (!event && !collection && !season && [...preset.keys()].length === 0 && !catBoxes.some((b) => b.checked) && libDef.catalogs?.length) {
+    for (const box of catBoxes) box.checked = libDef.catalogs.includes(Number(box.value));
+  }
+  const defMsg = (t) => { const m = form.querySelector("[data-lib-default-msg]"); if (m) m.textContent = t; };
+  form.querySelector("[data-lib-default]")?.addEventListener("click", async () => {
+    const ids = catBoxes.filter((b) => b.checked).map((b) => Number(b.value));
+    if (await attempt(() => put("/api/me/library-default", { catalogs: ids }))) defMsg(ids.length ? "Saved: the Library opens with these." : "Saved: all libraries.");
+  });
+  form.querySelector("[data-lib-default-clear]")?.addEventListener("click", async () => {
+    for (const box of catBoxes) box.checked = false;
+    form.dispatchEvent(new Event("change", { bubbles: true }));
+    if (await attempt(() => put("/api/me/library-default", { catalogs: [] }))) defMsg("Saved: all libraries.");
+  });
   form.addEventListener("input", () => saveForm("library", form));
   form.addEventListener("change", () => saveForm("library", form));
   countFilters();

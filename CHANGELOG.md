@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.38]
+
+### 📚 Choose which libraries your Library shows
+- **Library → Filters → Library: tick the libraries you want (for example Calibre, Audiobookshelf, a bookshelf, your Kindle library and Kindle store) and tap "Save the ticked libraries as my default".** From then on your Library opens with only those, so books that were only looked up (Check a book), other people's Kindle libraries and the like stay out unless you tick them. "Use all" clears it. It is saved per person and applies only when you open the Library without a link or a filter already set.
+
 ## [2.1.37]
 
 ### 🏷️ A book's window says whether it is in your library

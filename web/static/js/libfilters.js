@@ -40,6 +40,7 @@ export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
       ${peppersHTML()}
       ${checksHTML("Genre", "genre", (facets.genres || []).filter((g) => g.count).map((g) => ({ value: g.key, label: g.label, count: g.count })))}
       ${checksHTML("Library", "catalog", (catalogs || []).map((c) => ({ value: String(c.id), label: c.name, count: c.book_count })))}
+      <p class="facet-note"><button type="button" data-lib-default class="facet-link">Save the ticked libraries as my default</button> · <button type="button" data-lib-default-clear class="facet-link">Use all</button><span data-lib-default-msg class="ml-1 text-xs text-slate-400"></span></p>
       ${on(state.user, "parents") ? pillsHTML("Age group", "age", [["", "Any"], ...AGE_GROUPS.map(([l, n]) => [String(l), n]), ["unset", "Not set"]]) : ""}
       ${sortPillsHTML(event)}
       <details class="facet fmore"><summary><span>More</span><span class="fmore-arrow" aria-hidden="true">▸</span>

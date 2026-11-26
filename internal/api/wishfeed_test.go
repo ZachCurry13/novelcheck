@@ -223,3 +223,21 @@ func TestBugLogShowsRemovalsAndKindles(t *testing.T) {
 		t.Fatalf("log: %s", string(b)[:min(len(b), 600)])
 	}
 }
+
+// A person's default libraries are saved for them alone, and a library that is gone is left out.
+func TestLibraryDefault(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	if res, out := admin.do("PUT", "/api/me/library-default", map[string]any{"catalogs": []int64{cal, 9999}}, true); res.StatusCode != 200 || len(out["catalogs"].([]any)) != 1 {
+		t.Fatalf("save: %d %v", res.StatusCode, out)
+	}
+	admin.do("POST", "/api/admin/users", map[string]any{"username": "other", "password": "otherpass12"}, true)
+	other := login(t, srv, "other", "otherpass12")
+	if _, out := other.do("GET", "/api/me/library-default", nil, false); len(out["catalogs"].([]any)) != 0 {
+		t.Fatalf("someone else's default: %v", out)
+	}
+	if _, out := admin.do("PUT", "/api/me/library-default", map[string]any{"catalogs": []int64{}}, true); len(out["catalogs"].([]any)) != 0 {
+		t.Fatalf("clear: %v", out)
+	}
+}
