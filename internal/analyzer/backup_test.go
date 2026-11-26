@@ -59,7 +59,7 @@ func TestBackupAIWhenMainIsDown(t *testing.T) {
 	go w.Run(ctx)
 	w.Enqueue(true, id)
 
-	deadline := time.Now().Add(5 * time.Second)
+	deadline := time.Now().Add(20 * time.Second) // a busy CI machine can make the first try wait out its one-second limit, twice, before the backup is asked
 	for time.Now().Before(deadline) {
 		b, _ := st.BookByID(id, nil)
 		if b.Status == "error" {
