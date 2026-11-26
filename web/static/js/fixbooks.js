@@ -30,11 +30,23 @@ export async function openFixBooks(onDone) {
     // what the cover finder is doing or did last, in words: it used to be a button that changed and nothing else
     const jobLine = job.running ? `Finding covers: ${job.checked} of ${job.total}${job.current ? ` · now looking for “${esc(job.current)}”` : ""}${job.found ? ` · found ${job.found} so far` : ""}`
       : job.total ? `Last time it looked at ${job.total} book${job.total === 1 ? "" : "s"} and found ${job.found}${job.skipped ? `; ${job.skipped} were skipped because they were searched this week` : ""}${job.retry ? `; ${job.retry} will be tried again (Google's daily limit)` : ""}. The books listed below have no cover on any site it searches: choose one by hand.` : "";
-    if (job.running) setTimeout(() => dlg.open && load(), 3000); // watch it work
+    if (job.running || hjob.running) setTimeout(() => dlg.open && load(), 3000); // watch it work
+    const hs = hc?.suggestions || [];
+    const SURE = hs.filter((x) => x.field !== "tags" && x.field !== "series_index" && !/typo/.test(x.confidence || "")); // not genres, not the series number, not a guessed title
+    const sureCount = SURE.length + (tf?.fixes || []).length;
+    const NAMES = { title: "titles", authors: "authors", series: "series", series_index: "series numbers", identifiers: "ISBNs", comments: "descriptions", tags: "genres" };
+    const byField = {};
+    for (const x of hs) byField[x.field] = (byField[x.field] || 0) + 1;
+    const hline = hjob.running ? `Hardcover: ${hjob.kind === "apply" ? "applying" : "comparing"} ${hjob.done} of ${hjob.total}${hjob.note ? ` · ${esc(hjob.note)}` : ""}` : "";
+    const bulk = list.length ? `<div class="space-y-2 rounded-lg border border-slate-700 p-3"><p class="font-semibold">Apply many at once</p>
+      <p class="text-sm text-slate-400">Apply writes the change into your Calibre. “Sure” means matched by ISBN or by the exact title and author; genres and series numbers are left for you to choose, because Hardcover is wrong about them more often.${hjob.running ? " <b>The Hardcover job is still running: these buttons work when it finishes.</b>" : ""}</p>
+      <p class="flex flex-wrap gap-2"><button type="button" data-fx="apply-sure" class="btn-primary py-1 text-sm" ${hjob.running || !sureCount ? "disabled" : ""}>Apply all the sure ones (${sureCount})</button>
+      ${Object.keys(byField).map((f) => `<button type="button" data-fx="apply-field" data-field="${f}" class="btn-secondary py-1 text-xs" ${hjob.running ? "disabled" : ""}>All ${NAMES[f] || f} (${byField[f]})</button>`).join("")}</p></div>` : "";
     dlg.innerHTML = `<div class="space-y-3 p-4"><div class="flex flex-wrap items-center justify-between gap-2"><h3 class="text-lg font-semibold">Fix titles and covers (${list.length})</h3>
         <button type="button" data-close class="btn-ghost">Close</button></div>
       <p class="text-sm text-slate-400">Every book that needs something, with what the finders found. They keep looking by themselves; these buttons start them now.</p>
-      ${jobLine ? `<p class="rounded-lg bg-slate-800/60 p-2 text-sm">${jobLine}</p>` : ""}
+      ${jobLine || hline ? `<p class="rounded-lg bg-slate-800/60 p-2 text-sm">${[jobLine, hline].filter(Boolean).join("<br>")}</p>` : ""}
+      ${bulk}
       ${cv?.left_out ? `<p class="text-sm text-slate-400">${cv.left_out} book${cv.left_out === 1 ? " is" : "s are"} left out of this list: no site has a cover for them. <button type="button" data-fx="unleave" class="underline">Show them again</button></p>` : ""}
       <p class="flex flex-wrap gap-2">${hc?.hardcover ? `<button type="button" data-fx="hc-scan" class="btn-secondary py-1 text-sm" ${hjob.running ? "disabled" : ""}>${hjob.running ? "Comparing with Hardcover…" : "Compare with Hardcover"}</button>` : `<a href="#/settings?s=connections" data-close class="btn-ghost py-1 text-sm">Connect Hardcover to compare</a>`}
         <button type="button" data-fx="covers-find" class="btn-secondary py-1 text-sm" ${job.running ? "disabled" : ""}>${job.running ? `Finding covers (${job.checked} of ${job.total})…` : "Find covers now"}</button>
@@ -58,6 +70,14 @@ export async function openFixBooks(onDone) {
       if (k === "cover") return openCoverPicker(b, load, { everyone: true });
       if (k === "unleave") ok = await attempt(() => post("/api/admin/covers/leave-out/reset"), "Showing them again");
       if (k === "leave") ok = await attempt(() => post("/api/admin/covers/leave-out", { id: b.id }), "Left out of the cover lists");
+      if (k === "apply-sure" || k === "apply-field") {
+        const ids = k === "apply-sure" ? SURE.map((x) => x.id) : hs.filter((x) => x.field === el.dataset.field).map((x) => x.id);
+        const titles = k === "apply-sure" ? (tf?.fixes || []).map((x) => x.id) : [];
+        if (!ids.length && !titles.length) return;
+        if (!confirm(`Write ${ids.length + titles.length} change${ids.length + titles.length === 1 ? "" : "s"} into Calibre now?\n\nCalibre keeps no undo for these.`)) return;
+        if (titles.length) await attempt(() => post("/api/admin/title-fixes", { ids: titles }), "Titles tidied in Calibre");
+        ok = ids.length ? await attempt(() => post("/api/admin/hc-clean/apply", { ids }), "Applying in the background") : true;
+      }
       if (k === "hc-scan") ok = await attempt(() => post("/api/admin/hc-clean/scan"), "Comparing with Hardcover in the background");
       if (k === "covers-find") ok = await attempt(() => post("/api/admin/covers/find"), "Looking for covers in the background");
       if (k === "titles-all") ok = await attempt(() => post("/api/admin/title-fixes", { ids: tf.fixes.map((x) => x.id) }), "Titles tidied in Calibre");

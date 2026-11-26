@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -82,7 +83,7 @@ func hcChanges(cal calibresrv.Details, hc hardcover.BookInfo) []hcChange {
 	}
 	merged, fresh := append([]string{}, cal.Tags...), []string{}
 	for _, t := range hc.Tags {
-		if !have[strings.ToLower(t)] {
+		if !have[strings.ToLower(t)] && !junkTag(t) {
 			merged, fresh = append(merged, t), append(fresh, t)
 		}
 	}
@@ -91,6 +92,13 @@ func hcChanges(cal calibresrv.Details, hc hardcover.BookInfo) []hcChange {
 	}
 	return out
 }
+
+// junkTag: Hardcover's tags include promotions ("Hottest Books of the Season"), which are not genres.
+func junkTag(t string) bool {
+	return junkTags.MatchString(t)
+}
+
+var junkTags = regexp.MustCompile(`(?i)hottest|books of the (season|year|month|week|decade)|best books|bestsell|new releases|staff picks|top \d+`)
 
 func firstChars(s string, n int) string {
 	if r := []rune(s); len(r) > n {

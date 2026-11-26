@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.16]
+
+### 🧹 Fix titles and covers is easier to use
+- **Apply many at once.** A box at the top has **Apply all the sure ones** (titles, series, ISBNs, descriptions and authors matched by ISBN or the exact title and author) and a button per kind (All genres, All series, All ISBNs…). Genres and series numbers are left for you to choose, because Hardcover is wrong about them more often. It asks once before writing into Calibre, and says plainly when the Hardcover job is still running and the buttons will work when it finishes.
+- **It shows what the Hardcover job is doing** (comparing or applying, how many, and why it is waiting) and updates by itself.
+- **Hardcover's promotional tags are no longer suggested as genres** ("Hottest Books of the Season", "Best Books of the Year", "Top 10", "New Releases" and the like).
+- **A book with no cover shows a quiet placeholder** instead of the browser's broken-picture icon, on every screen.
+
 ## [2.1.15]
 
 ### 🤖 The Hardcover scan carries on by itself
