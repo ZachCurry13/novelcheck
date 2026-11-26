@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.75.0"
+local VERSION = "1.76.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -120,6 +120,7 @@ function NovelCheck:menuItems()
         { text = _("Nightstand"), callback = function() self:showUpNext() end },
         { text = _("New in the library"), callback = function() self:newInLibrary() end },
         { text = _("Check a book"), callback = function() self:searchLibrary() end },
+        { text = _("Want to read (Hardcover)"), callback = function() self:showWant() end },
         { text = _("Get my Nightstand books"), callback = function() self:downloadAll() end },
         { text = _("My Kindle"), callback = function() DeviceBooks.show(self) end },
         { text = _("Finish this book…"), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },

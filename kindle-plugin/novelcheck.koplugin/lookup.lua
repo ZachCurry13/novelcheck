@@ -8,6 +8,7 @@ It adds its functions to the NovelCheck plugin class (see main.lua).
 local ButtonDialog = require("ui/widget/buttondialog")
 local InfoMessage = require("ui/widget/infomessage")
 local Menu = require("ui/widget/menu")
+local NetworkMgr = require("ui/network/manager")
 local UIManager = require("ui/uimanager")
 local _ = require("gettext")
 local json = require("json")
@@ -180,6 +181,10 @@ return function(NovelCheck)
             table.insert(buttons, { { text = queued and _("On your Nightstand") or _("Add to Nightstand"), enabled = not queued,
                 callback = function() UIManager:close(dialog); self:addToNightstand(hit) end } })
         end
+        if info.free and not info.url then
+            table.insert(buttons, { { text = _("Add the free copy to the library"),
+                callback = function() UIManager:close(dialog); self:addFreeCopy(info.title or hit.title, info.author) end } })
+        end
         for _i, f in ipairs(info.request or {}) do
             table.insert(buttons, { { text = _("Request the") .. " " .. FORMAT[f],
                 callback = function() UIManager:close(dialog); self:requestFormat(hit, f) end } })
@@ -197,6 +202,73 @@ return function(NovelCheck)
         table.insert(buttons, { { text = _("Close"), callback = function() UIManager:close(dialog) end } })
         dialog = ButtonDialog:new{ title = table.concat(lines, "\n"), buttons = buttons }
         UIManager:show(dialog)
+    end
+
+    -- addFreeCopy puts the public-domain copy of a book in the family library (Project Gutenberg); it shows in the library a minute later.
+    function NovelCheck:addFreeCopy(title, author)
+        UIManager:show(InfoMessage:new{ text = _("Adding the free copy..."), timeout = 1 })
+        UIManager:nextTick(function()
+            local code, data = self:postJSON("/kosync/plugin/free-add", { title = title, author = author })
+            if code == 200 then
+                UIManager:show(InfoMessage:new{ text = _("Added to the library. Open this book again in a minute to download it."), timeout = 4 })
+            else
+                UIManager:show(InfoMessage:new{ text = data.message or (_("Could not add it.") .. "\n" .. tostring(code)) })
+            end
+        end)
+    end
+
+    -- showWant lists the books on your Hardcover Want to read shelf against the library: tap one to download it, add its free copy,
+    -- or request it.
+    function NovelCheck:showWant()
+        NetworkMgr:runWhenOnline(function()
+            local code, body = self:request("/kosync/plugin/want")
+            local ok, data = pcall(json.decode, body or "")
+            if not ok or type(data) ~= "table" then
+                data = {}
+            end
+            if code ~= 200 then
+                UIManager:show(InfoMessage:new{ text = data.message or (_("Could not reach NovelCheck.") .. "\n" .. tostring(code)) })
+                return
+            end
+            if not data.connected then
+                UIManager:show(InfoMessage:new{ text = _("Connect Hardcover in NovelCheck (Settings, Connections) to see your Want to read list here.") })
+                return
+            end
+            local items = {}
+            for _i, b in ipairs(data.books or {}) do
+                local mark = b.in_library and (b.downloadable and _("ready") or _("in library")) or (b.free and _("free") or "")
+                table.insert(items, {
+                    text = b.title .. ((b.author or "") ~= "" and (" - " .. b.author) or ""),
+                    mandatory = mark ~= "" and mark or nil,
+                    callback = function()
+                        UIManager:close(self.wantmenu)
+                        if b.in_library and b.id then
+                            self:showBookInfo({ id = b.id, title = b.title })
+                        else
+                            self:checkPick({ title = b.title, author = b.author })
+                        end
+                    end,
+                })
+            end
+            if #items == 0 then
+                UIManager:show(InfoMessage:new{ text = _("Nothing on your Want to read shelf.") })
+                return
+            end
+            self.wantmenu = Menu:new{
+                title = _("Want to read"),
+                item_table = items,
+                is_borderless = true,
+                is_popout = false,
+                covers_fullscreen = true,
+                width = Device.screen:getWidth(),
+                height = Device.screen:getHeight(),
+                close_callback = function() self.wantmenu = nil end,
+            }
+            if self.addBack then
+                self:addBack(self.wantmenu)
+            end
+            UIManager:show(self.wantmenu)
+        end)
     end
 
     function NovelCheck:askAccess(hit)

@@ -499,6 +499,7 @@ document.addEventListener("DOMContentLoaded", function () {
     rows();
   };
   bindTools();
+  $("wantbtn").onclick = showWant;
   $("find").onsubmit = function (e) {
     e.preventDefault();
     var q = $("q").value.replace(/^\s+|\s+$/g, "");

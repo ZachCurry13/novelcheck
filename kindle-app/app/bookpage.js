@@ -61,6 +61,11 @@ function paintDetails(b) {
     if (b.rating_only) d.appendChild(el("p", "headsup", b.message));
     else if (!inLib && !b.url) d.appendChild(el("p", "headsup", "Not available in the library yet."));
     if (b.url) acts.appendChild(downloadButton(b, true));
+    if (b.free && !b.url && inLib === false) { // public domain: one tap puts the free copy in the library
+      var fr = el("button", "main", "Add the free copy to the library");
+      fr.onclick = function () { fr.disabled = true; addFree(b, fr); };
+      acts.appendChild(fr);
+    }
     var fmts = { ebook: "ebook", audio: "audiobook" };
     var asks = b.request || [];
     for (var a1 = 0; a1 < asks.length; a1++) (function (f) {

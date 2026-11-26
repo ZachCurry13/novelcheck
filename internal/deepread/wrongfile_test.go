@@ -60,7 +60,9 @@ func TestWrongFileIsFixedOrStops(t *testing.T) {
 		t.Fatal("no hook: the scan stops")
 	}
 	r2, st2, id2, _ := wrongFileBook(t)
-	r2.OnWrongFile = func(_ context.Context, b *store.Book) (string, string, FileVerdict) { return "Dune", "Frank Herbert", FileIs }
+	r2.OnWrongFile = func(_ context.Context, b *store.Book) (string, string, FileVerdict) {
+		return "Dune", "Frank Herbert", FileIs
+	}
 	next2, _ := st2.NextDeepRead()
 	if err := r2.scan(context.Background(), next2); err != nil {
 		t.Fatalf("renamed, the scan goes on: %v", err)

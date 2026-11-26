@@ -35,6 +35,7 @@ export async function renderCheck(view, state) {
       </form>
       <div id="check-result" aria-live="polite"></div>
       <section id="recent"></section>
+      <section id="want"></section>
     </div>`;
   await Promise.all([loadFlags(true), loadContent()]);
   const out = $("#check-result", view); // a card per check, newest first, so several photos in a row all keep their answer
@@ -148,6 +149,7 @@ export async function renderCheck(view, state) {
     else if (act === "peppers") openPepperGuide();
     else if (act === "queue") attempt(() => post("/api/queue", { book_id: id }), "Added to your Nightstand");
     else if (act === "wish" || act === "unwish") toggleWish(act, id, slot);
+    else if (act === "free") addFree(e.target.closest("[data-act]"), slot);
     else if (act === "retry") check({ query: e.target.dataset.q }, "Trying again…", slot);
     else if (act === "retry-slot" && slot?._body) check(slot._body, "Trying again…", slot);
     else if (act === "dismiss") slot?.remove();
@@ -157,6 +159,16 @@ export async function renderCheck(view, state) {
       form.q.focus();
     }
   });
+  // addFree puts the public-domain copy in the library; the book shows in the Library a minute later.
+  const addFree = async (btn, slot) => {
+    const b = slot?._last?.book;
+    if (!b || !btn) return;
+    btn.disabled = true;
+    btn.textContent = "Adding…";
+    const r = await attempt(() => post("/api/free/add", { title: b.title, author: b.author }), "Added to the library; it shows up in a minute");
+    if (r) btn.textContent = "Added: it shows in the Library soon";
+    else { btn.disabled = false; btn.textContent = "Add the free copy to the library"; }
+  };
   const toggleWish = async (act, id, slot) => {
     const last = slot?._last;
     if (!last) return;
@@ -183,6 +195,7 @@ export async function renderCheck(view, state) {
     if (isbn) check({ query: isbn }, "Looking up the barcode…");
   });
   loadRecent(view, state);
+  import("./wanttoread.js").then((m) => m.wantCard($("#want", view), state));
 }
 
 const status = (text) => `<p class="card flex items-center gap-3 text-sm text-slate-300"><span class="animate-pulse text-xl">⏳</span><span>${text}</span></p>`;
@@ -224,10 +237,11 @@ function resultCard(b, res) {
 function actions(res) {
   if (res.friend) return `<button data-act="queue" class="btn-primary">＋ Add to your Nightstand</button>`; // no family wishlist
   if (res.in_library) return `<button data-act="queue" class="btn-primary">＋ Add to your Nightstand</button>`;
+  const free = res.free ? `<button data-act="free" class="btn-primary" title="A public-domain copy from Project Gutenberg goes into the library">Add the free copy to the library</button>` : "";
   const wish = res.my_wish
     ? `<button data-act="unwish" class="btn-secondary" title="Remove it from your wishlist">On your wishlist${res.my_wish.status === "approved" ? " (to get)" : ""}</button>`
     : `<button data-act="wish" class="btn-primary">Add to Wishlist</button>`;
-  return `${wish}<button data-act="queue" class="btn-secondary" title="Add it to your Nightstand until you get a copy">＋ Nightstand (to get)</button>`;
+  return `${free}${wish}<button data-act="queue" class="btn-secondary" title="Add it to your Nightstand until you get a copy">＋ Nightstand (to get)</button>`;
 }
 
 // The last few books checked that aren't in the library.

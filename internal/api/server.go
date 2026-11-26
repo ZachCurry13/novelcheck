@@ -18,6 +18,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/covers"
 	"github.com/zachcurry13/novelcheck/internal/deepread"
 	"github.com/zachcurry13/novelcheck/internal/discover"
+	"github.com/zachcurry13/novelcheck/internal/freebooks"
 	"github.com/zachcurry13/novelcheck/internal/genrefill"
 	"github.com/zachcurry13/novelcheck/internal/libby"
 	"github.com/zachcurry13/novelcheck/internal/ollama"
@@ -42,6 +43,7 @@ type Server struct {
 	SysInfo     *sysinfo.Sampler
 	Push        *push.Service        // phone notifications; nil turns them off
 	Deep        *deepread.Runner     // Deep Scans (full-text reading)
+	Free        *freebooks.Client    // Project Gutenberg through Gutendex (nil = the real one)
 	Covers      covers.Cache         // shrunk book covers under /data/covers
 	Genres      *genrefill.Filler    // AI genres for books without Calibre tags
 	Suggest     *suggest.Service     // Suggested Reads under Nightstand

@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.50]
+
+### 🆓 Free books, and your Hardcover Want to read, in NovelCheck
+- **A book in the public domain can be added to the library with one tap.** When Check a book (the web, the KOReader plugin 1.76.0 and the Kindle app 1.27.0) finds a book that Project Gutenberg has a free copy of, it offers **Add the free copy to the library**. The title and the author have to agree with the catalog's, the copy goes into Calibre like an upload (checked with Hardcover), and the book shows in the library a minute later, ready to download to a Kindle. Only admins, parents and people an admin allowed to add books can do it (the same limit of 50 a day), and a kid can't.
+- **Your Hardcover "Want to read" list, against the library.** Under Check a book, in the plugin (More → Want to read) and in the Kindle app (Menu → Want to read), each book on your Hardcover Want to read shelf says whether it is **in the library** (ready to download), **free** (one tap adds the free copy) or neither (check it, and request it). Nothing is added unless you tap. Needs Hardcover connected under Settings → Connections.
+
 ## [2.1.49]
 
 ### 🛠️ A wrong file fixes itself instead of stopping the Deep Scan

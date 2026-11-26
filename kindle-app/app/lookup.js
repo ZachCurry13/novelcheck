@@ -83,3 +83,49 @@ function paintBlocked(b) {
   };
   m.appendChild(ask);
 }
+
+// addFree puts the public-domain copy of a book in the library (Project Gutenberg); it shows in the library a minute later.
+function addFree(b, btn) {
+  api("POST", "/kosync/plugin/free-add", { title: b.title, author: b.author }, function (err) {
+    if (err) { btn.disabled = false; return note(err); }
+    btn.textContent = "Added";
+    note("Added to the library. Open this book again in a minute to download it.");
+  });
+}
+
+// showWant lists the books on the person's Hardcover Want to read shelf against the library: tap one to open it, to add its free
+// copy, or to check it (and request it).
+function showWant() {
+  note("Looking at your Want to read…");
+  api("GET", "/kosync/plugin/want", null, function (err, data) {
+    if (err) return note(err);
+    if (!data || !data.connected) return note("Connect Hardcover in NovelCheck (Settings, Connections) to see your Want to read list here.");
+    var books = data.books || [];
+    if (!books.length) return note("Nothing on your Want to read shelf.");
+    note("");
+    showLists(false);
+    backTo = function () { openMenu(); };
+    paintNav("Want to read");
+    window.scrollTo(0, 0);
+    var m = $("main");
+    m.innerHTML = "";
+    $("pages").hidden = true;
+    for (var i = 0; i < books.length; i++) {
+      (function (b) {
+        var r = el("div", "row");
+        var btn = el("button", "act", b.in_library ? "Open" : b.free ? "Add free" : "Check");
+        btn.onclick = function () {
+          if (b.in_library && b.id) return details(b.id);
+          if (b.free) { btn.disabled = true; return addFree(b, btn); }
+          checkPick({ title: b.title, author: b.author });
+        };
+        r.appendChild(btn);
+        var what = el("div", "what");
+        what.appendChild(el("b", "", b.title));
+        what.appendChild(el("div", "meta", (b.author || "") + (b.in_library ? (b.downloadable ? " · ready to download" : " · in the library") : b.free ? " · free (public domain)" : "")));
+        r.appendChild(what);
+        m.appendChild(r);
+      })(books[i]);
+    }
+  });
+}

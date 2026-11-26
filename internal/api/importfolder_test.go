@@ -2,11 +2,16 @@ package api_test
 
 import (
 	"archive/zip"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/zachcurry13/novelcheck/internal/api"
+	"github.com/zachcurry13/novelcheck/internal/freebooks"
 )
 
 // The watch folder adds one e-book per book (the best format), unpacks zips, ignores the extras, deletes what it added, moves
@@ -79,5 +84,53 @@ func TestWatchFolder(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(filepath.Dir(dir), "escape.epub")); err == nil {
 		t.Fatal("the zip wrote outside its folder")
+	}
+}
+
+// A free (public domain) book is added to Calibre with one call, only by someone who may add books, and only when the catalog agrees.
+func TestAddFreeBook(t *testing.T) {
+	var gut *httptest.Server
+	gut = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/books/") {
+			_, _ = w.Write([]byte(`{"results":[{"id":84,"title":"Frankenstein; Or, The Modern Prometheus","authors":[{"name":"Shelley, Mary Wollstonecraft"}],"formats":{"application/epub+zip":"` + gut.URL + `/f.epub"}}]}`))
+			return
+		}
+		_, _ = w.Write([]byte("PK\x03\x04 pretend epub"))
+	}))
+	defer gut.Close()
+	fc := freebooks.New()
+	fc.Base = gut.URL
+	cal := &fakeCalibreDetails{book: map[string]any{"title": "Frankenstein", "authors": "Mary Shelley", "series": "", "series_index": 1.0,
+		"tags": []string{}, "comments": "", "identifiers": map[string]string{}}}
+	cs := cal.serve(t)
+	srv, st := setupWith(t, func(s *api.Server) { s.Free = fc })
+	admin := login(t, srv, "admin", "adminpass1")
+	admin.do("PUT", "/api/admin/calibre/server", map[string]string{"url": cs.URL}, true)
+	if _, out := admin.do("GET", "/api/free?title=Frankenstein&author=Mary+Shelley", nil, false); out["free"] != true {
+		t.Fatalf("free: %v", out)
+	}
+	if res, _ := admin.do("POST", "/api/free/add", map[string]string{"title": "Frankenstein", "author": "Stephen King"}, true); res.StatusCode != 404 {
+		t.Fatalf("the author must agree: %d", res.StatusCode)
+	}
+	admin.do("POST", "/api/admin/users", map[string]any{"username": "reader", "password": "readerpass1", "role": "restricted"}, true)
+	kid := login(t, srv, "reader", "readerpass1")
+	if res, _ := kid.do("POST", "/api/free/add", map[string]string{"title": "Frankenstein", "author": "Mary Shelley"}, true); res.StatusCode != 403 {
+		t.Fatalf("a kid cannot add books: %d", res.StatusCode)
+	}
+	if res, out := admin.do("POST", "/api/free/add", map[string]string{"title": "Frankenstein", "author": "Mary Shelley"}, true); res.StatusCode != 200 || out["title"] == "" {
+		t.Fatalf("add: %d %v", res.StatusCode, out)
+	}
+	if len(cal.uploads) != 1 || !strings.Contains(cal.uploads[0], "/cdb/add-book/") {
+		t.Fatalf("calibre got: %v", cal.uploads)
+	}
+	_ = st
+}
+
+// Want to read says so plainly when Hardcover isn't connected.
+func TestWantToReadNeedsHardcover(t *testing.T) {
+	srv, _ := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	if res, out := admin.do("GET", "/api/me/want-to-read", nil, false); res.StatusCode != 200 || out["connected"] != false {
+		t.Fatalf("want to read: %d %v", res.StatusCode, out)
 	}
 }

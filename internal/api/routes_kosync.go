@@ -25,6 +25,9 @@ func (s *Server) kosyncRoutes(r chi.Router) {
 	r.Get("/plugin/lookup", s.handlePluginLookup)
 	r.Post("/plugin/check", s.handlePluginCheck)
 	r.Post("/plugin/wish", s.handlePluginWish)
+	r.Get("/plugin/free", s.handlePluginFree)
+	r.Get("/plugin/want", s.handlePluginWant)
+	r.Post("/plugin/free-add", s.handlePluginFreeAdd)
 	r.Post("/plugin/access-request", s.handlePluginAccess)
 	r.Post("/plugin/nightstand", s.handlePluginNightstand)
 	r.Post("/plugin/nightstand/remove", s.handlePluginNightstandRemove) // the Kindle app: take a book off

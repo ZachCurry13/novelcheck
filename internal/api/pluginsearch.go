@@ -160,6 +160,11 @@ func (s *Server) handlePluginInfo(w http.ResponseWriter, r *http.Request) {
 	s.moreInfo(u, b, out)
 	out["status"], out["can_look_up"] = b.Status, mayLookUp(u)
 	s.requestInfo(u, b, out)
+	if _, has := out["url"]; !has && !s.Store.Owned(b.ID) && mayAddFree(u) {
+		if _, free := s.freeMatch(r.Context(), b.Title, b.Author); free {
+			out["free"] = true // public domain: the plugin offers to add it to the library
+		}
+	}
 	if items, err := s.Store.ListQueue(u.ID, false); err == nil {
 		for _, it := range items {
 			if it.BookID == b.ID {

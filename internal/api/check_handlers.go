@@ -90,9 +90,10 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 	if _, err := s.Store.BookByID(id, auth.UserFrom(r)); err != nil { // above this person's limit: the rating, but the library is not shown to them
 		catalogs, copies = nil, nil
 	}
+	_, free := s.freeMatch(r.Context(), b.Title, b.Author) // a public-domain book can be added to the library with one tap
 	writeJSON(w, http.StatusOK, map[string]any{"book": b, "rating": b.Status == "processing",
 		"in_library": len(catalogs) > 0, "catalogs": catalogs, "found": look.found, "source": look.source,
-		"my_wish": s.Store.MyWish(id, auth.UserFrom(r).ID)})
+		"my_wish": s.Store.MyWish(id, auth.UserFrom(r).ID), "free": free && len(catalogs) == 0 && mayAddFree(auth.UserFrom(r))})
 }
 
 // lookup is the book a photo or a typed title, author or ISBN points to.
