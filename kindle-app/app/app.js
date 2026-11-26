@@ -35,7 +35,7 @@ function openMenu() {
   $("lists").hidden = true;
   $("menu").hidden = false;
   note("");
-  backTo = function () { backTo = null; rows(); };
+  backTo = function () { backTo = null; if (state.books && state.books.length) rows(); else show(state.list || "up-next"); };
   paintNav("Menu");
   window.scrollTo(0, 0);
 }
@@ -525,7 +525,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   $("prev").onclick = function () { state.page--; rows(); };
   $("next").onclick = function () { state.page++; rows(); };
-  show("up-next");
+  openMenu(); // the app opens on Check a book, with the lists under it
   checkUpdate();
   setTimeout(warmCache, 6000); // keep the Kindle's books and their ratings for when there is no Wi-Fi
   syncNow(false); // by itself at most every 12 hours

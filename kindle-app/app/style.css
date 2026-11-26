@@ -65,3 +65,6 @@ header button { margin: 0 0.25rem; }
 .hint { margin: 0.5rem 0; text-align: center; }
 .pills .meta { margin-right: 0.25rem; }
 .pills button { margin-right: 0.25rem; margin-bottom: 0.25rem; }
+#find { margin: 0.5rem 0 1rem; }
+#find input { width: 72%; min-height: 3.5rem; font-size: 1.5rem; }
+#find button { min-height: 3.5rem; font-size: 1.5rem; font-weight: bold; }

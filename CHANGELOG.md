@@ -14,6 +14,7 @@ becomes the release notes for that version and is shown in the app under
 ### 🔎 "Check a book" on the Kindle, same name and same page as on your phone
 - **Search is now called Check a book** in the KOReader plugin and the Kindle app, because that is what it does: it finds the book in the library or looks it up online.
 - **A book the library has but without an ebook (an audiobook, say) now shows up in the results**, marked "no ebook". Before, it was left out, so the app said "No books found" for a book you knew was in the library. Its page offers Request the ebook.
+- **The Kindle app opens on Check a book** (a big box and button at the top of the Menu, with the five lists under it), so looking up a book is the first thing you do. Tap Menu or Back for your lists.
 - **The book's page in KOReader fits the screen:** title, author, spice level, whether it is in your library, and the buttons (Download, Add to Nightstand, request) are always visible. The long text (why this rating, summary, what it contains) is behind a **Details** button.
 
 ### 🌶️ A spice limit for any account
