@@ -187,3 +187,19 @@ func TestWishMetByAnotherRecordOfTheBook(t *testing.T) {
 		t.Fatalf("told %d times", told)
 	}
 }
+
+// Asking the AI about a book: a kid needs the parents' AI switch, a book that is not rated yet cannot be asked about.
+func TestAskBookRules(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	admin.do("POST", "/api/admin/users", map[string]any{"username": "kid", "password": "kidpass12", "role": "restricted"}, true)
+	_, _ = st.DB.Exec(`UPDATE users SET max_spice = -1, hide_unrated = 0 WHERE username = 'kid'`)
+	kid := login(t, srv, "kid", "kidpass12")
+	id, _ := st.UpsertBook("Unrated", "Someone", "", "")
+	if res, _ := kid.do("POST", "/api/books/"+itoa(id)+"/ask", map[string]string{"question": "Who?"}, true); res.StatusCode != 403 {
+		t.Fatalf("a kid without the AI switch: %d", res.StatusCode)
+	}
+	if res, _ := admin.do("POST", "/api/books/"+itoa(id)+"/ask", map[string]string{"question": "Who?"}, true); res.StatusCode != 409 {
+		t.Fatalf("a book not rated yet: %d", res.StatusCode)
+	}
+}

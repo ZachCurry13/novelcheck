@@ -24,6 +24,7 @@ type PartResult struct {
 	DemonicPresence bool
 	Content         []string // content item keys found in this part (package content)
 	CustomFlags     []string
+	Digest          string // neutral facts for questions later: who is on the page and how big their role is (kept, never shown as a rating)
 }
 
 var deepPartPrompt = `You are reading one part of a book for parents who want to know about its romantic/sexual content and certain themes. Judge only the text you are given.
@@ -47,8 +48,10 @@ Only mark nudity, solo_acts or heavy_innuendo for sexual content on the page in 
 4. Content Details. List the key of every item below that occurs in THIS text; use [] if none apply.
 ` + content.PromptList() + `
 
+5. Digest. In "digest" write one to three short, neutral sentences of facts a parent might ask about later: which characters appear in THIS text and how big their role is (main, supporting, minor, or only mentioned), and what any flagged item refers to (for example, who an LGBTQ+ character is and how big a role they have). No plot spoilers, nothing explicit. "" if there is nothing worth keeping.
+
 OUTPUT FORMAT (JSON ONLY, in this order):
-{"romance": "what romantic or sexual content happens on the page in this text, modestly, or \"none\"", "level": 0 | 1 | 2 | 3 | 4 | 5, "note": "one short, modest sentence on any romance/sexual content or flagged themes in this part, or \"\" if there is none", "nudity": true | false, "solo_acts": true | false, "heavy_innuendo": true | false, "playful_fantasy": true | false, "dark_occult": true | false, "demonic_presence": true | false, "content": ["key", ...]}`
+{"romance": "what romantic or sexual content happens on the page in this text, modestly, or \"none\"", "level": 0 | 1 | 2 | 3 | 4 | 5, "note": "one short, modest sentence on any romance/sexual content or flagged themes in this part, or \"\" if there is none", "nudity": true | false, "solo_acts": true | false, "heavy_innuendo": true | false, "playful_fantasy": true | false, "dark_occult": true | false, "demonic_presence": true | false, "content": ["key", ...], "digest": "short neutral facts, or \"\""}`
 
 // DeepPartSystem is the instruction for reading one part, with the family's
 // custom filters.
@@ -80,6 +83,7 @@ func ParsePart(out string) (PartResult, error) {
 		LGBTQ           bool            `json:"lgbtq_content"` // before v1.19
 		Content         json.RawMessage `json:"content"`
 		Custom          json.RawMessage `json:"custom_flags"`
+		Digest          string          `json:"digest"`
 	}
 	if err := json.Unmarshal([]byte(out[start:end+1]), &raw); err != nil {
 		return PartResult{}, fmt.Errorf("invalid JSON: %w", err)
@@ -97,7 +101,7 @@ func ParsePart(out string) (PartResult, error) {
 	}
 	return PartResult{Level: level, Evidence: evidence, Note: ShortNote(raw.Note), Nudity: raw.Nudity, SoloActs: raw.SoloActs,
 		HeavyInnuendo: raw.HeavyInnuendo, PlayfulFantasy: raw.PlayfulFantasy, DarkOccult: raw.DarkOccult || raw.DemonicPresence,
-		DemonicPresence: raw.DemonicPresence, Content: contentFrom(raw.Content, raw.LGBTQ), CustomFlags: customFlagsFrom(raw.Custom)}, nil
+		DemonicPresence: raw.DemonicPresence, Content: contentFrom(raw.Content, raw.LGBTQ), CustomFlags: customFlagsFrom(raw.Custom), Digest: shortDigest(raw.Digest)}, nil
 }
 
 // ShortNote keeps a part note to one tidy line of at most 200 characters.
@@ -137,4 +141,13 @@ func ParseWrapUp(out string) (reason, summary string, ok bool) {
 		return "", "", false
 	}
 	return ShortReason(v.Reason), strings.TrimSpace(v.Summary), v.Summary != ""
+}
+
+// shortDigest keeps a part's digest to at most 400 characters on one line.
+func shortDigest(s string) string {
+	s = strings.Join(strings.Fields(s), " ")
+	if r := []rune(s); len(r) > 400 {
+		s = strings.TrimSpace(string(r[:399])) + "…"
+	}
+	return s
 }

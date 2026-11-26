@@ -127,6 +127,7 @@ func (s *Server) userRoutes(r chi.Router) {
 	r.Get("/content", s.handleContentCatalog)
 	r.With(s.requireModule(store.KeyModuleDiscover, "Discover"), s.cached).Get("/discover", s.handleDiscover)
 	r.Post("/books/{id}/wish", s.handleAddWish)
+	r.Post("/books/{id}/ask", s.handleAskBook)
 	r.Delete("/books/{id}/wish", s.handleRemoveWish)
 	r.Get("/wishlist", s.handleWishlist)
 	r.Get("/books/{id}/deep-scan", s.handleBookDeepScan)

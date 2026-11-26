@@ -9,6 +9,7 @@ import { ageAndNotesHTML, bindAgeAndNotes } from "./booknotes.js";
 import { on } from "./modules.js";
 import { customChips } from "./customflags.js";
 import { renderDeepSection, deepChip } from "./deepscan.js";
+import { askBox } from "./askbook.js";
 import { reviewChip } from "./librarycard.js";
 import { disagreeHTML, bindDisagree } from "./disagree.js";
 import { reduceMotion } from "./appearance.js";
@@ -104,6 +105,7 @@ export async function openBook(id, state, onChange) {
       ${reviewChip(b) ? `<p class="rounded-lg bg-amber-900/30 p-2 text-sm text-amber-200">The AI wasn't sure of this rating${b.blurb || b.description ? "" : " (it had little to go on)"}.${!manager ? "" : data.big_model
         ? ` <button type="button" data-act="rerate-big" class="underline">Re-rate with the big model (${esc(data.big_model)})</button>` : " Check it and edit it, or mark it OK."}</p>` : ""}
       ${contentSection(b)}
+      <div id="ask-section"></div>
       ${b.status === "error" && manager ? `<p class="text-sm text-rose-400">Last error: ${esc(b.analysis_error)}
         <button type="button" data-copy-err class="ml-1 text-xs underline">Copy</button>${can(state.user, "system") ? ` <button type="button" data-dx-err class="text-xs underline">Diagnose</button>` : ""}</p>` : ""}
       ${(b.blurb || b.description) ? `<div><span class="label">Blurb</span>
@@ -233,6 +235,7 @@ export async function openBook(id, state, onChange) {
   dlg.showModal();
   if (!friend) {
     renderDeepSection($("#deep-section", dlg), b.id, state.user, b.title);
+    askBox($("#ask-section", dlg), b, state.user);
     renderAudioSection($("#audio-section", dlg), data, b, state);
     bindBookCollections(dlg, b.id, manager, data.collections || []);
   }

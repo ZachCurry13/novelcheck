@@ -280,6 +280,15 @@ CREATE TABLE IF NOT EXISTS user_collections (
 -- Deep reads: the AI reads a book's whole EPUB in parts. Admins start them;
 -- anyone else requests one for an admin to approve. notes is a JSON list of
 -- what each part contained.
+-- What a Deep Scan noted about each part of a book (who is on the page, how big their role is, what a flagged item refers to),
+-- kept so questions about the book can be answered later without reading it again. JSON list of {label, text}.
+CREATE TABLE IF NOT EXISTS book_digests (
+    book_id    INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
+    digest     TEXT NOT NULL DEFAULT '',
+    model      TEXT NOT NULL DEFAULT '',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS deep_reads (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     position     INTEGER NOT NULL DEFAULT 0,  -- order in the queue (an admin can drag it)

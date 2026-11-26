@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.35]
+
+### 💬 Ask a question about a book
+- **Every rated book's window has "Ask a question about this book".** For example, after an LGBTQ+ rating: "Is the character a main character or just mentioned?" The answer is short and neutral (no explicit detail, no spoilers beyond the question) and says where it comes from: **the notes kept when the whole book was read**, or **a best guess from the rating and summary**.
+- **Deep Scan now keeps a few neutral notes for each part it reads** (who is on the page and how big their role is, what a flagged item refers to), so these questions can be answered from the book itself, quickly, without reading it again. Books scanned before this need another Deep Scan to get notes; until then the answer is a labeled best guess. The notes are never shown as a rating.
+- **Kids can ask only with the parents' "Allow AI features" switch.** A book hidden from someone cannot be asked about. {admin}
+
 ## [2.1.34]
 
 ### ✨ Smaller things, finished

@@ -46,6 +46,7 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 	system := llm.DeepPartSystem(flags)
 	prev := book.SpiceLevel
 	var results []llm.PartResult
+	var digest []store.DigestPart
 	model := ""
 	for i := 0; i < len(parts); i++ {
 		p := parts[i]
@@ -90,9 +91,11 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 			return fmt.Errorf("part %d of %d (%s): %w", i+1, len(parts), p.Label, err)
 		}
 		results = append(results, res)
+		digest = append(digest, store.DigestPart{Label: p.Label, Text: res.Digest})
 	}
 	_ = r.Store.SetDeepProgress(d.ID, len(parts), len(parts), model, prev)
 
+	_ = r.Store.SaveDigest(book.ID, digest, model) // kept for questions about the book, whether or not the rating waits for an admin
 	a, notes := combine(parts, results)
 	a.Model = store.DeepModelPrefix + model
 	a.SpiceReason, a.SummaryVerdict = r.wrapUp(ctx, book, *a.SpiceLevel, notes)
@@ -166,9 +169,14 @@ func (r *Runner) announce(title string, prev *int, level int) {
 // ask tries the AIs in order (the Deep Scan model first, if one is set)
 // until one gives an answer parse accepts. It returns the model used.
 func ask[T any](ctx context.Context, r *Runner, bookID int64, system, user string, parse func(string) (T, error)) (T, string, error) {
+	return askWith(ctx, r, r.aiChain(), bookID, system, user, parse)
+}
+
+// askWith is ask with the AIs to try given.
+func askWith[T any](ctx context.Context, r *Runner, chain []store.AIConfig, bookID int64, system, user string, parse func(string) (T, error)) (T, string, error) {
 	var zero T
 	var errs []string
-	for _, ai := range r.aiChain() {
+	for _, ai := range chain {
 		client := llm.New(ai.Provider, ai.BaseURL, ai.APIKey, ai.JSONMode)
 		for _, model := range ai.Models {
 			cctx, cancel := context.WithTimeout(ctx, llm.Timeout(ai.BaseURL, r.Store.SettingInt(store.KeyLLMTimeoutSeconds)))
