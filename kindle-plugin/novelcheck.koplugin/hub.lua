@@ -172,6 +172,9 @@ return function(NovelCheck)
         end
         table.insert(rows, {
             { text = _("Sync now"), callback = go(function() self:syncNow() end) },
+            { text = _("Back up"), callback = go(function() if self.backupKindle then self:backupKindle(false) end end) },
+        })
+        table.insert(rows, {
             { text = _("More…"), callback = go(function() self:showList(_("NovelCheck"), self:menuItems()) end) },
             { text = _("Close"), callback = function() UIManager:close(dialog) end },
         })

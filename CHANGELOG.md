@@ -6,6 +6,9 @@ becomes the release notes for that version and is shown in the app under
 
 ## [2.1.32]
 
+### 💾 Back up from the KOReader card (plugin 1.73.0)
+- **The NovelCheck card has a Back up button** next to Sync now, so a backup is one tap away (it still says when the last one was).
+
 ### 🎯 The wishlist recognizes the book under another spelling
 - **A wish is now met when the library has the same book written a little differently** (for example "Cress" wished for, "The Cress" in Audiobookshelf, or "Meyer, Marissa" as the author), in the format that was asked for. Before, the wish only cleared when the library's record was exactly the one the wish was made on, so some wishes stayed open after the book arrived. Needs the author to be known; the title and the author's last name must fit. Wishes already open are checked on the next round (every ten minutes). {admin}
 
