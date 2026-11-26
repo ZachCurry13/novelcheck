@@ -68,6 +68,9 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 			out["setup"] = steps
 		}
 	}
+	if u.IsAdmin() && u.Can(store.AreaCalibre) {
+		out["autopilot"] = map[string]any{"on": s.autopilotOn(), "waiting": s.sureWaiting(), "last": s.Store.Setting(keyAutopilotLast)}
+	}
 	inbox := []homeCard{}
 	add := func(id, title, detail string, n int, link string) {
 		if n > 0 && !snoozed[id] {

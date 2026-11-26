@@ -310,3 +310,24 @@ func TestHomeGettingStarted(t *testing.T) {
 		t.Fatalf("kids never see the list: %v", kh["setup"])
 	}
 }
+
+// Autopilot starts off, an admin turns it on from Home, and kids cannot touch it.
+func TestAutopilotSwitch(t *testing.T) {
+	srv, _ := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	if _, r := admin.do("GET", "/api/admin/autopilot", nil, false); r["on"] != false {
+		t.Fatalf("starts off: %v", r)
+	}
+	if _, r := admin.do("PUT", "/api/admin/autopilot", map[string]any{"on": true}, true); r["on"] != true {
+		t.Fatalf("turned on: %v", r)
+	}
+	_, home := admin.do("GET", "/api/home", nil, false)
+	if a, _ := home["autopilot"].(map[string]any); a == nil || a["on"] != true {
+		t.Fatalf("Home says so: %v", home["autopilot"])
+	}
+	admin.do("POST", "/api/admin/users", map[string]any{"username": "kid3", "password": "kidpass12"}, true)
+	kid := login(t, srv, "kid3", "kidpass12")
+	if res, _ := kid.do("PUT", "/api/admin/autopilot", map[string]any{"on": false}, true); res.StatusCode != 403 {
+		t.Fatalf("kids: %d", res.StatusCode)
+	}
+}

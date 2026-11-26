@@ -1,6 +1,6 @@
 // Home (the start screen, 2.0): what is next for this person, new books, their asks and the answers, and for parents the asks waiting
 // for an answer; for admins also how healthy NovelCheck is and the inbox of things that need a decision.
-import { get, post } from "./api.js";
+import { get, post, put } from "./api.js";
 import { esc, attempt } from "./ui.js";
 
 const LEVEL = { ok: "text-emerald-300", warn: "text-amber-300", bad: "text-rose-300" };
@@ -28,6 +28,17 @@ function setupHTML(steps) {
     <ul class="space-y-2">${steps.map((x) => `<li class="flex items-start gap-3 text-sm"><span class="${x.done ? "text-emerald-300" : "text-slate-500"}" aria-hidden="true">${x.done ? "✓" : "○"}</span>
       <span class="min-w-0 flex-1"><b>${esc(x.title)}</b>${x.optional ? ` <span class="text-xs text-slate-500">(optional)</span>` : ""}${x.done ? "" : `<span class="block text-slate-400">${esc(x.detail)}</span>`}</span>
       ${x.done ? "" : `<a href="${esc(x.link)}" class="btn-secondary shrink-0 py-1 text-sm">Do it</a>`}</li>`).join("")}</ul></section>`;
+}
+
+// Autopilot: the sure Hardcover fixes written into Calibre by themselves (off until turned on; Calibre has no undo).
+function autopilotHTML(a) {
+  if (!a) return "";
+  return a.on
+    ? `<section class="card flex items-center justify-between gap-3 text-sm"><span><b class="text-emerald-300">Autopilot is on.</b> <span class="text-slate-400">The sure fixes from Hardcover are written into Calibre by themselves${a.waiting ? ` (${a.waiting} waiting for the next round)` : ""}. ${esc(a.last || "")}</span></span>
+      <button type="button" data-autopilot="off" class="btn-ghost shrink-0 py-1 text-sm">Turn off</button></section>`
+    : `<section class="card space-y-2"><h2 class="font-semibold">Autopilot is off</h2>
+      <p class="text-sm text-slate-400">Turn it on and NovelCheck writes the sure fixes into Calibre by itself, every half hour${a.waiting ? `: ${a.waiting} are waiting now` : ""}. “Sure” means titles, authors, series, ISBNs and descriptions Hardcover matched by ISBN or the exact title and author. Genres, series numbers, covers and anything doubtful stay on this page for you to decide. Calibre has no undo for these writes.</p>
+      <button type="button" data-autopilot="on" class="btn-primary py-1 text-sm">Turn on Autopilot</button></section>`;
 }
 
 function askedHTML(list) {
@@ -82,7 +93,7 @@ export async function renderHome(view) {
     const lost = d.unmatched ? `<section class="card text-sm"><b>${d.unmatched}</b> book${d.unmatched === 1 ? "" : "s"} on your e-reader couldn't be matched. <a href="#/settings" class="underline">Match them</a></section>` : "";
     const add = d.may_upload ? `<section class="card text-sm">Add books by dragging them onto the box at the top of the <a href="#/library" class="underline">Library</a>.</section>` : "";
     const host = view.querySelector("#home");
-    host.innerHTML = [setupHTML(d.setup), healthHTML(d.health), askedHTML(d.requests || []), inboxHTML(d.inbox || []), quickHTML(d), next, fresh, mineHTML(d.my_requests), askFormHTML, lost, add].join("") || "";
+    host.innerHTML = [setupHTML(d.setup), healthHTML(d.health), autopilotHTML(d.autopilot), askedHTML(d.requests || []), inboxHTML(d.inbox || []), quickHTML(d), next, fresh, mineHTML(d.my_requests), askFormHTML, lost, add].join("") || "";
     const want = new URLSearchParams(location.hash.split("?")[1] || "").get("ask"); // from "Ask a parent" in the Library
     if (want) host.querySelector("#ask").title.value = want;
     host.querySelector("#ask").onsubmit = async (e) => {
@@ -93,6 +104,13 @@ export async function renderHome(view) {
     host.onclick = async (e) => {
       const sn = e.target.closest("[data-snooze]");
       if (sn && await attempt(() => post("/api/home/snooze", { id: sn.dataset.snooze }), "Hidden for a week")) return draw();
+      const ap = e.target.closest("[data-autopilot]");
+      if (ap) {
+        ap.disabled = true;
+        if (await attempt(() => put("/api/admin/autopilot", { on: ap.dataset.autopilot === "on" }), ap.dataset.autopilot === "on" ? "Autopilot is on" : "Autopilot is off")) return draw();
+        ap.disabled = false;
+        return;
+      }
       const quick = e.target.closest("[data-quick]");
       if (quick) {
         const [path, said] = QUICK[quick.dataset.quick];

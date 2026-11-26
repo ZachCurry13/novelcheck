@@ -156,6 +156,7 @@ func main() {
 		go srv.CalibreBehindLoop(ctx) // a 🔔 notice while Calibre's Content server lacks books the library has
 		go srv.RatingLoop(ctx)        // Hardcover readers' ratings for every book, for "Highest rated"
 		go srv.HealthWatchLoop(ctx)   // a notice when something on the Health page stays wrong
+		go srv.AutopilotLoop(ctx)     // the sure Hardcover fixes written into Calibre, when an admin turned Autopilot on
 		go srv.CoverLoop(ctx)         // a real cover for books Calibre has none for, once a day
 		go srv.NewBooksLoop(ctx)      // new books and audiobooks on everyone's phones
 		go srv.SummaryLoop(ctx)       // the weekly, monthly and yearly reading summaries on people's phones

@@ -32,7 +32,7 @@ export async function openFixBooks(onDone) {
       : job.total ? `Last time it looked at ${job.total} book${job.total === 1 ? "" : "s"} and found ${job.found}${job.skipped ? `; ${job.skipped} were skipped because they were searched this week` : ""}${job.retry ? `; ${job.retry} will be tried again (Google's daily limit)` : ""}. The books listed below have no cover on any site it searches: choose one by hand.` : "";
     if (job.running || hjob.running) setTimeout(() => dlg.open && load(), 3000); // watch it work
     const hs = hc?.suggestions || [];
-    const SURE = hs.filter((x) => x.field !== "tags" && x.field !== "series_index" && !/typo/.test(x.confidence || "")); // not genres, not the series number, not a guessed title
+    const SURE = hs.filter((x) => ["title", "authors", "series", "identifiers", "comments"].includes(x.field) && !/typo/.test(x.confidence || "")); // the same kinds Autopilot may apply: not genres, series numbers, covers or a guessed title
     const sureCount = SURE.length + (tf?.fixes || []).length;
     const NAMES = { title: "titles", authors: "authors", series: "series", series_index: "series numbers", identifiers: "ISBNs", comments: "descriptions", tags: "genres" };
     const byField = {};

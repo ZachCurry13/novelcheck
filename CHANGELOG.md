@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.19]
+
+### 🤖 Autopilot
+- **Autopilot (off until you turn it on, from Home).** Every half hour NovelCheck writes the *sure* fixes Hardcover suggested into Calibre by itself, so nobody has to press Apply: titles, authors, series, ISBNs and descriptions matched by ISBN or the exact title and author. Genres, series numbers, covers, guessed titles and removing duplicate copies still wait for you on Home. Home shows whether it is on, how many fixes are waiting, and what it did last; **Turn off** is one tap. It starts off because Calibre has no undo for these writes. {admin}
+
 ## [2.1.18]
 
 ### 🦈 Easier for people who aren't the admin
