@@ -100,7 +100,17 @@ export function startRecording() {
     if (el) note("tap", `${el.tagName.toLowerCase()} ${label(el)}`);
   }, true);
   window.addEventListener("hashchange", () => note("page", location.hash));
-  window.addEventListener("error", (e) => note("error", `${e.message} (${(e.filename || "").split("/").pop()}:${e.lineno})`));
+  window.addEventListener("error", (e) => {
+    if (e.target && e.target !== window) { // a script, style or picture that could not be loaded (not a thrown error)
+      note("error", `could not load ${(e.target.src || e.target.href || e.target.tagName || "").toString().split("/").slice(-2).join("/")}`);
+      return;
+    }
+    const where = `${(e.filename || "").split("/").pop()}:${e.lineno}`;
+    const frame = String(e.error?.stack || "").split("\n").slice(0, 3).map((l) => l.trim().split("/").pop()).join(" < ");
+    // "Script error." with no file is what a browser says when it hides the details (a script from another site, or an add-on or
+    // a translation tool in the browser): say so, and on which page, since the cause is then not in NovelCheck's own code.
+    note("error", e.message === "Script error." && !e.filename ? `Script error: the browser hid the details (an add-on or a script from elsewhere) on ${location.hash || "/"}` : `${e.message} (${where})${frame ? " " + frame : ""}`);
+  }, true);
   window.addEventListener("unhandledrejection", (e) => note("error", `promise: ${e.reason?.message || e.reason}`));
   note("page", `opened ${location.hash || "/"}`);
   watchRedraws();

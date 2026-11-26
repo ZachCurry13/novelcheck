@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.53]
+
+### 🔎 Browser errors say more
+- **A page error in a bug report now says which file failed to load, the first lines of where it happened, and the page it was on.** Before, a phone's "Script error" came with nothing, so it couldn't be traced (the one from 2.1.42 right after a "More" tap). If the browser itself hides the details (an add-on or a script from another site), the report now says that instead. {admin}
+
 ## [2.1.52]
 
 ### 🔧 From the log
