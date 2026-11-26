@@ -38,3 +38,12 @@ func (s *Store) DeviceFileNames(bookID int64) []string {
 	_ = s.DB.Select(&out, `SELECT DISTINCT filename FROM device_books WHERE book_id = ?`, bookID)
 	return out
 }
+
+// LookedUpBooks lists the books that were only looked up (Check a book), not in a library, newest first, for the cover finder.
+func (s *Store) LookedUpBooks(limit int) ([]BriefBook, error) {
+	out := []BriefBook{}
+	err := s.DB.Select(&out, `SELECT b.id, b.title, b.author, b.isbn, '' AS asin FROM books b
+		JOIN catalog_books cb ON cb.book_id = b.id JOIN catalogs c ON c.id = cb.catalog_id
+		WHERE c.name = ? AND NOT (`+ownedCond+`) GROUP BY b.id ORDER BY b.id DESC LIMIT ?`, LookedUpCatalog, limit)
+	return out, err
+}

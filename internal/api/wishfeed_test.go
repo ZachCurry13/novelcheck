@@ -354,10 +354,20 @@ func TestJunkAuthorIdentifier(t *testing.T) {
 			t.Fatalf("%q changed", name)
 		}
 	}
+	if got := store.StripJunkToken("F. C. Yee FOLF7SLTZ3Y67TE2QPL6EVXGMLIPU6Z.kfx"); got != "F. C. Yee" {
+		t.Fatalf("with the file extension: %q", got)
+	}
+	if got := store.StripJunkToken("F. C. Yee .kfx"); got != "F. C. Yee" {
+		t.Fatalf("an extension alone: %q", got)
+	}
 	_, st := setup(t)
 	junk, _ := st.UpsertBook("Shadow of Kyoshi", "F. C. Yee FOLF7SLTZ3Y67TE2QPL6EVXGMLIPU6Z", "", "")
-	if fixed := st.RepairJunkAuthors(); len(fixed) != 1 || fixed[0] != junk {
-		t.Fatalf("repaired: %v", fixed)
+	short, _ := st.UpsertBook("Another Kindle Book", "Some Author .kfx", "", "")
+	if fixed := st.RepairJunkAuthors(); len(fixed) != 2 {
+		t.Fatalf("repaired: %v (%d, %d)", fixed, junk, short)
+	}
+	if b, _ := st.BookByID(short, nil); b.Author != "Some Author" {
+		t.Fatalf("a short author with an extension: %q", b.Author)
 	}
 	if b, _ := st.BookByID(junk, nil); b.Author != "F. C. Yee" {
 		t.Fatalf("author: %q", b.Author)

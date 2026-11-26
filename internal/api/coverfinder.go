@@ -126,6 +126,13 @@ func (s *Server) findCovers(again, freeOnly bool) {
 	nLibrary := len(missing)
 	free := s.MissingFreeCovers(freeCoverLimit)
 	missing = append(missing, free...)
+	if checked, _ := s.Store.LookedUpBooks(100); len(checked) > 0 { // books only checked, which no library list reaches
+		for _, b := range checked {
+			if !s.hasCover(b) {
+				missing = append(missing, b)
+			}
+		}
+	}
 	var nothing []store.BriefBook // library books searched with nothing found: left out below, so nobody has to go through them
 	j.mu.Lock()
 	j.Running, j.stop, j.Checked, j.Found, j.Total, j.Note, j.Skipped, j.Free, j.Retry = true, false, 0, 0, len(missing), "", 0, len(free), 0
@@ -376,4 +383,20 @@ func (s *Server) handleShowLeftOut(w http.ResponseWriter, r *http.Request) {
 	}
 	s.rcache.ver.Add(1)
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+// coverNow looks for a book's cover at once (Check a book: the person is looking at the result, so its cover comes with it, in
+// at most a few seconds). The cover finder goes on looking later when this finds nothing.
+func (s *Server) coverNow(ctx context.Context, b *store.Book) {
+	brief := store.BriefBook{ID: b.ID, Title: b.Title, Author: b.Author, ISBN: b.ISBN}
+	if s.Covers.Dir == "" || s.hasCover(brief) { // (no cover folder: a test, which must not reach the internet)
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, 7*time.Second)
+	defer cancel()
+	var hc *hardcover.Client
+	if token := s.Store.RatingsToken(); token != "" {
+		hc = &hardcover.Client{Token: token, URL: hardcoverURL}
+	}
+	s.findOneCover(ctx, s.Covers, hc, brief, nil)
 }

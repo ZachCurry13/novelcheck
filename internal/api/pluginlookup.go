@@ -73,6 +73,7 @@ func (s *Server) handlePluginCheck(w http.ResponseWriter, r *http.Request) {
 		kosyncJSON(w, http.StatusNotFound, map[string]string{"message": "No results."})
 		return
 	}
+	s.coverNow(r.Context(), b)
 	s.rateChecked(b, checkRun{At: start, User: u.Username, What: f.Title, Title: b.Title, Lookup: time.Since(start)})
 	kosyncJSON(w, http.StatusOK, map[string]any{"id": id})
 }

@@ -10,6 +10,9 @@ import (
 // not part of a name.
 var junkToken = regexp.MustCompile(`\b[A-Z0-9]{20,}\b`)
 
+// A file extension left on the end of an author (a Kindle book's name: "F. C. Yee .kfx").
+var junkExt = regexp.MustCompile(`(?i)\s*\.(kfx|azw3?|mobi|epub|pdf)\s*$`)
+
 // StripJunkToken takes such an identifier out of an author ("" stays ""; a real name is untouched).
 func StripJunkToken(author string) string {
 	out := junkToken.ReplaceAllStringFunc(author, func(tok string) string {
@@ -18,7 +21,7 @@ func StripJunkToken(author string) string {
 		}
 		return ""
 	})
-	return strings.Join(strings.Fields(out), " ")
+	return strings.TrimSpace(junkExt.ReplaceAllString(strings.Join(strings.Fields(out), " "), ""))
 }
 
 // RepairJunkAuthors fixes the books that already carry such an identifier in the author: the author is cleaned, and a book that
@@ -29,7 +32,7 @@ func (s *Store) RepairJunkAuthors() []int64 {
 		Title  string `db:"title"`
 		Author string `db:"author"`
 	}
-	_ = s.DB.Select(&rows, `SELECT id, title, author FROM books WHERE length(author) >= 24`)
+	_ = s.DB.Select(&rows, `SELECT id, title, author FROM books WHERE length(author) >= 24 OR LOWER(author) LIKE '%.kfx' OR LOWER(author) LIKE '%.azw%' OR LOWER(author) LIKE '%.mobi' OR LOWER(author) LIKE '%.epub' OR LOWER(author) LIKE '%.pdf'`)
 	var fixed []int64
 	for _, r := range rows {
 		clean := StripJunkToken(r.Author)

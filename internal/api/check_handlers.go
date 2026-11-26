@@ -65,6 +65,7 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
+	s.coverNow(r.Context(), b) // its cover is looked for now, with the result
 	what := body.Query
 	if body.Image != "" {
 		what = "photo"

@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.55]
+
+### 🖼️ A checked book gets its cover right away
+- **Check a book now looks for the cover while it checks the book,** so the result (and "Recently checked") shows a real cover instead of a plain card with the title. It waits at most seven seconds for it; the cover finder keeps looking if it finds nothing. Before, a book that was only checked was never in the cover finder's list, so it kept the plain card for good.
+- **Books already checked without a cover are looked at too:** the cover finder's next run (and "Find covers now") now includes the last 100 checked books.
+- **A Kindle file name left on an author is taken off** ("F. C. Yee .kfx" is now "F. C. Yee"), for new Kindle reports and for books already made that way, when the server starts.
+
 ## [2.1.54]
 
 ### 🆓 The free copy is offered in a book's window too
