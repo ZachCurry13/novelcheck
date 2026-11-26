@@ -184,3 +184,72 @@ func TestBusyMainGoesStraightToBackup(t *testing.T) {
 		t.Fatalf("expected a calm note, got %+v", items)
 	}
 }
+
+// The first model says its free requests for today are used up and the next one fails for another reason (a name that no longer
+// exists): the backup's takeover is still the calm note about the limit, and the same note, however many books it rates.
+func TestLimitThenAnotherFaultIsStillTheLimitNote(t *testing.T) {
+	d, err := db.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+	st := store.New(d)
+	main := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Model string `json:"model"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		if body.Model == "gemini-a" {
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = w.Write([]byte(`{"error":{"message":"Generate content requests per day limit exceeded on Free Tier. Please retry in 4h28m24s."}}`))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"message":"models/gemini-gone is not found"}}`))
+	}))
+	defer main.Close()
+	backup := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"choices": []any{map[string]any{"message": map[string]string{
+			"role": "assistant", "content": `{"spice_level": 1, "summary_verdict": "Sweet."}`}}}})
+	}))
+	defer backup.Close()
+	for k, v := range map[string]string{
+		store.KeyLLMBaseURL: main.URL, store.KeyLLMModel: "gemini-a", store.KeyLLMFallbackModel: "gemini-gone", store.KeyScanDelaySeconds: "0",
+		store.KeyBackupEnabled: "true", store.KeyBackupBaseURL: backup.URL, store.KeyBackupModel: "llama",
+	} {
+		_ = st.SetSetting(k, v)
+	}
+	var ids []int64
+	for _, title := range []string{"One", "Two", "Three"} {
+		id, _ := st.UpsertBook(title, "A", "", "")
+		_ = st.SetBlurb(id, "x")
+		ids = append(ids, id)
+	}
+	w := analyzer.New(st)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go w.Run(ctx)
+	w.Enqueue(true, ids...)
+	for deadline := time.Now().Add(8 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+		done := 0
+		for _, id := range ids {
+			if b, _ := st.BookByID(id, nil); b.Status == "analyzed" {
+				done++
+			}
+		}
+		if done == len(ids) {
+			items, _, _ := st.Notifications(10)
+			var notes []store.Notification
+			for _, n := range items {
+				if n.Source == "llm-backup" {
+					notes = append(notes, n)
+				}
+			}
+			if len(notes) != 1 || notes[0].Level != "info" || !strings.Contains(notes[0].Message, "free limit for today") || notes[0].Count != 3 {
+				t.Fatalf("expected one calm note, counted three times, got %+v", notes)
+			}
+			return
+		}
+	}
+	t.Fatal("books were not rated")
+}

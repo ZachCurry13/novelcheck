@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.52]
+
+### 🔧 From the log
+- **The "main AI isn't working" notice no longer repeats itself.** Gemini had used up its free requests for today, and its second model then failed for another reason, so each rating made a new notice (the time left changed every minute, so none counted as a repeat: 25 in one afternoon). A limit now gives the one calm note ("reached its free limit for today, the local AI is rating books"), counted when it repeats, and the old pile is cleared when the server starts. {admin}
+- **A restart no longer shows up as an error.** A rating cut off by shutting the server down was recorded as a failure ("context canceled", five times, which put a warning on Home). It is now left alone, and the book is queued again at the next start. {admin}
+- **A book's "more from Hardcover" no longer holds the page.** When Hardcover was resting or busy with background work, opening a book waited up to 88 seconds. It now waits at most six seconds and opens without that part. {admin}
+
 ## [2.1.51]
 
 ### 🎨 Colour for a Kindle Colorsoft

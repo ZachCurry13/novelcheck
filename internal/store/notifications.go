@@ -112,3 +112,14 @@ func (s *Store) ResolveMentioning(source, text string) {
 	}
 	_, _ = s.DB.Exec(`UPDATE notifications SET read = 1 WHERE read = 0 AND source = ? AND instr(message, ?) > 0`, source, text)
 }
+
+// ClearRepeatedBackupNotes marks as read the many near-identical "main AI isn't working" notices an earlier version made (each had
+// a time that changed every minute, so none was counted as a repeat). It returns how many it cleared.
+func (s *Store) ClearRepeatedBackupNotes() int64 {
+	res, err := s.DB.Exec(`UPDATE notifications SET read = 1 WHERE read = 0 AND source = 'llm-backup' AND message LIKE '%Its last answer — %'`)
+	if err != nil {
+		return 0
+	}
+	n, _ := res.RowsAffected()
+	return n
+}

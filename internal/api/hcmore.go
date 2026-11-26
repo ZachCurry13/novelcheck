@@ -54,7 +54,11 @@ func (s *Server) handleHCMore(w http.ResponseWriter, r *http.Request) {
 		writeStoreErr(w, err)
 		return
 	}
-	out, _ := s.hardcoverMore(r.Context(), b)
+	// A person is looking at a page: when Hardcover is resting or busy with the background work (it shares one pace per token), the
+	// page opens without this part after a few seconds instead of waiting a minute or more behind it.
+	hctx, cancel := context.WithTimeout(r.Context(), 6*time.Second)
+	defer cancel()
+	out, _ := s.hardcoverMore(hctx, b)
 	// Kids see only the similar books they could open in the family's libraries.
 	list := []similarBook{}
 	for _, x := range out.Similar {

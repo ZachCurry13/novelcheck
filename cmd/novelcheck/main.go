@@ -60,6 +60,9 @@ func main() {
 	// Books left mid-rating by a previous shutdown are queued again as soon as the worker exists (below).
 	interrupted := st.InterruptedRatings()
 	_ = st.PurgeExpiredSessions()
+	if n := st.ClearRepeatedBackupNotes(); n > 0 {
+		log.Printf("cleared %d repeated main-AI notices", n)
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

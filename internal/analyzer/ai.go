@@ -24,9 +24,10 @@ func (w *Worker) askAIs(ctx context.Context, id int64, user string) (*store.Anal
 func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, user string) (*store.Analysis, error) {
 	var errs []string
 	var lastErr error
-	limited := false   // every failure so far was a service's own daily limit, not a fault
-	busy := false      // every failure so far was a service saying it is too busy right now
-	var mainWhy string // what the first AI answered when it failed, for the notice (it did not say anything before)
+	limited := false    // every failure so far was a service's own daily limit, not a fault
+	busy := false       // every failure so far was a service saying it is too busy right now
+	var mainWhy string  // what the first AI answered when it failed, for the notice (it did not say anything before)
+	anyLimited := false // some model said its free requests for today are used up: that explains a takeover, whatever the other models did
 	for _, ai := range ais {
 		busyHere := 0
 		if len(ai.Models) == 0 {
@@ -40,7 +41,7 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 			v, err := w.analyzeWith(ctx, ai, client, model, id, user)
 			traceOf(ctx).add(ai.Name, model, time.Since(start), err)
 			if err == nil {
-				if ai.Name == "backup" && limited {
+				if ai.Name == "backup" && (limited || anyLimited) {
 					w.Store.Notify("info", "llm-backup", takeoverNote(ais, ai), "#/system")
 				} else if ai.Name == "backup" && busy {
 					w.Store.Notify("info", "llm-backup", busyNote(ais, ai), "#/system")
@@ -56,11 +57,15 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 			if ctx.Err() != nil {
 				return nil, ctx.Err()
 			}
+			anyLimited = anyLimited || llm.DailyLimit(err) != nil
 			limited = (lastErr == nil || limited) && llm.DailyLimit(err) != nil
 			busy = (lastErr == nil || busy) && llm.Busy(err)
 			lastErr = err
 			if mainWhy == "" {
 				mainWhy = fmt.Sprintf("%s: %v", model, err)
+				if i := strings.Index(mainWhy, "; NovelCheck will ask"); i > 0 {
+					mainWhy = mainWhy[:i] // the rest changes every minute: the same notice must stay the same text, so it is counted, not repeated
+				}
 				if r := []rune(mainWhy); len(r) > 200 {
 					mainWhy = string(r[:200]) + "…"
 				}

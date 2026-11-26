@@ -409,3 +409,19 @@ func TestInterruptedRatingsComeBack(t *testing.T) {
 		t.Fatalf("interrupted: %v (c=%d)", ids, c)
 	}
 }
+
+// The pile of "main AI isn't working" notices an earlier version made is cleared; a different notice is left alone.
+func TestClearRepeatedBackupNotes(t *testing.T) {
+	_, st := setup(t)
+	for i := 1; i <= 3; i++ {
+		st.Notify("warning", "llm-backup", "The main AI isn't working. Its last answer — gemini: used up; NovelCheck will ask it again in "+strings.Repeat("1", i)+" h", "#/system")
+	}
+	st.Notify("warning", "llm-backup", "Some other backup notice", "#/system")
+	if n := st.ClearRepeatedBackupNotes(); n != 3 {
+		t.Fatalf("cleared %d", n)
+	}
+	_, unread, _ := st.Notifications(10)
+	if unread != 1 {
+		t.Fatalf("unread: %d", unread)
+	}
+}

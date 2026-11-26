@@ -206,12 +206,18 @@ func (w *Worker) Run(ctx context.Context) {
 		var saved bool
 		if w.takeRerate(id) {
 			err := safe.Run(fmt.Sprintf("re-rating book %d", id), func() (err error) { saved, err = w.rerateOne(ctx, id); return err })
+			if err != nil && ctx.Err() != nil {
+				return // the app is shutting down: that is not a failure, and the book keeps its rating
+			}
 			if err != nil {
 				log.Printf("re-rating book %d failed (kept its old rating): %v", id, err)
 			}
 			w.runBook(saved, err)
 		} else {
 			err := safe.Run(fmt.Sprintf("rating book %d", id), func() (err error) { saved, err = w.process(ctx, id); return err })
+			if err != nil && ctx.Err() != nil {
+				return // shutting down: the book stays as it was and is queued again at the next start
+			}
 			if err != nil {
 				log.Printf("analysis of book %d failed: %v", id, err)
 				w.mu.Lock()
