@@ -8,6 +8,7 @@ import { $, esc, attempt, toast } from "./ui.js";
 import { renderDiagnose } from "./diagnose.js";
 import { copyBar, bindCopy } from "./copy.js";
 import { homeAddressCard } from "./homeaddress.js";
+import { importFolderCard } from "./importfolder.js";
 
 const BADGE = { ok: "integ-ok", update: "integ-update", warn: "integ-warn", off: "integ-off", info: "integ-off" };
 const CHECK = { ok: ["✓", "text-emerald-300"], warn: ["⚠️", "text-amber-300"], error: ["⛔", "text-rose-300"], skip: ["–", "text-slate-400"] };
@@ -61,6 +62,7 @@ export async function renderSystem(view) {
   renderDiagnose($("#diagnose", view));
   bindServerCheck(view);
   homeAddressCard(view);
+  importFolderCard(view);
   const body = $("#integ-body", view);
   const btn = $("#integ-check", view);
   let data = null;

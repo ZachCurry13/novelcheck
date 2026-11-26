@@ -162,6 +162,7 @@ func main() {
 		go srv.IdentifyLoop(ctx)      // unsure books named from their own first pages; unsure duplicates settled
 		go srv.CoverLoop(ctx)         // a real cover for books Calibre has none for, once a day
 		go srv.NewBooksLoop(ctx)      // new books and audiobooks on everyone's phones
+		go srv.ImportLoop(ctx)        // books dropped into the to-process folder are added to Calibre
 		go srv.WishLoop(ctx)          // a wished-for book that arrived: the person and the parents are told
 		go srv.SummaryLoop(ctx)       // the weekly, monthly and yearly reading summaries on people's phones
 		go srv.BigRecheckLoop(ctx)    // a second opinion from the bigger model on "not sure" ratings

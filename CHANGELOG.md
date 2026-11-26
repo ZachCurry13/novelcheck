@@ -6,6 +6,9 @@ becomes the release notes for that version and is shown in the app under
 
 ## [2.1.35]
 
+### 📥 Add books from a folder
+- **Another app can drop books into a folder and NovelCheck adds them (Admin, Integrations, "Add books from a folder").** The folder can hold the e-book, a folder with the e-book and other files, or a zip. Every three minutes NovelCheck unpacks zips, adds the best e-book file for each book to Calibre (epub first, then azw3, mobi, pdf), checks it with Hardcover like an upload, and deletes what it took it from; the extra files (a txt file, a cover) are ignored. A book it can't add is moved to a **failed** folder with a bell notice, and every book added gets a notice too. It waits until nothing in an item has changed for a minute, so a copy in progress is left alone. Off until an admin switches it on; the folder defaults to "to-process" inside NovelCheck's data folder; there is a switch to keep finished items in a **done** folder instead of deleting them. A zip can't write outside its own folder or unpack past 2 GB. {admin}
+
 ### 💬 Ask a question about a book
 - **Every rated book's window has "Ask a question about this book".** For example, after an LGBTQ+ rating: "Is the character a main character or just mentioned?" The answer is short and neutral (no explicit detail, no spoilers beyond the question) and says where it comes from: **the notes kept when the whole book was read**, or **a best guess from the rating and summary**.
 - **Deep Scan now keeps a few neutral notes for each part it reads** (who is on the page and how big their role is, what a flagged item refers to), so these questions can be answered from the book itself, quickly, without reading it again. Books scanned before this need another Deep Scan to get notes; until then the answer is a labeled best guess. The notes are never shown as a rating.
