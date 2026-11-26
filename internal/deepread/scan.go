@@ -42,7 +42,7 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 	if err != nil {
 		return nil // the book was removed meanwhile
 	}
-	if err := r.checkFile(book); err != nil {
+	if err := r.checkFile(ctx, book); err != nil {
 		return err
 	}
 	parts, _, err := r.Prepare(d.BookID)
@@ -259,7 +259,7 @@ func sleep(ctx context.Context, d time.Duration) bool {
 
 // checkFile compares the EPUB's own title and author with the book's before reading it. A different book (title and author
 // both differ) stops the scan, so its rating cannot land on the wrong book; the same author with another title only warns.
-func (r *Runner) checkFile(book *store.Book) error {
+func (r *Runner) checkFile(ctx context.Context, book *store.Book) error {
 	path, ok := r.EPUBFor(book.ID)
 	if !ok {
 		return nil
@@ -269,6 +269,17 @@ func (r *Runner) checkFile(book *store.Book) error {
 		return nil // Prepare says what is wrong with the file
 	}
 	stop, warn := wrongFile(book.Title, book.Author, fileTitle, fileAuthor)
+	if (stop || warn) && r.OnWrongFile != nil { // its first pages settle it when they can: the book is renamed to what the file is, or the metadata was only odd
+		old := book.Title
+		switch title, author, verdict := r.OnWrongFile(ctx, book); verdict {
+		case FileAgrees:
+			return nil
+		case FileIs:
+			r.Store.Notify("info", "deep-scan-fixed", fmt.Sprintf("The file for “%s” is really “%s” by %s: its first pages say so. It was renamed in Calibre and the Deep Scan went on with the right book.", old, title, author), "#/library?book="+fmt.Sprint(book.ID))
+			book.Title, book.Author = title, author
+			return nil
+		}
+	}
 	switch {
 	case stop:
 		msg := fmt.Sprintf("Deep Scan stopped: the EPUB for “%s” says it is “%s” by %s. It looks like the wrong file: check it in Calibre.", book.Title, fileTitle, fileAuthor)

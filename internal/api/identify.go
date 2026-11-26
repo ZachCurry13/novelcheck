@@ -214,3 +214,27 @@ func (s *Server) identifyOnce(ctx context.Context, books, pairs int) {
 		s.Store.NotifyRoutine("identify", fmt.Sprintf("Read the first pages of unsure books: %d renamed, %d pairs joined, %d pairs marked as different.", named, merged, differ), "#/admin?tab=cleanup")
 	}
 }
+
+// FixWrongFile is the Deep Scan's way out of "this file isn't the book it is filed under": the file's first pages are read (the same
+// reading as for unsure titles, only when that is switched on). If they say it is the library's book the metadata was only odd; if
+// they name another book with certainty it is renamed in Calibre to that; otherwise nothing is settled and the scan stops as before.
+func (s *Server) FixWrongFile(ctx context.Context, b *store.Book) (string, string, deepread.FileVerdict) {
+	if !s.identifyOn() {
+		return "", "", deepread.FileUnsure
+	}
+	ident, ok := s.identifyBook(ctx, b.ID)
+	if !ok {
+		return "", "", deepread.FileUnsure
+	}
+	if !looksOff(b.Title) && deepread.TitleFits(b.Title, ident.Title) {
+		return "", "", deepread.FileAgrees
+	}
+	if !s.nameFromPages(ctx, b.ID) {
+		return "", "", deepread.FileUnsure
+	}
+	author := b.Author
+	if authorUnknown(author) && ident.Author != "" {
+		author = ident.Author
+	}
+	return ident.Title, author, deepread.FileIs
+}

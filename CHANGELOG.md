@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.49]
+
+### 🛠️ A wrong file fixes itself instead of stopping the Deep Scan
+- **When a Deep Scan finds that a book's file is a different book from its name, NovelCheck now reads the file's first pages and settles it.** If the pages print a different title (and it is certain), the book is renamed in Calibre to what the file really is and the scan goes on with the right book; if the pages say it is the right book and only the file's hidden details were odd, the scan simply goes on. Before, both stopped with a warning. When the first pages don't settle it, it still stops and tells you. This uses the same "Identify books" switch. {admin}
+
 ## [2.1.48]
 
 ### 🔁 A restart no longer loses what NovelCheck was doing

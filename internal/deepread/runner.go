@@ -28,7 +28,20 @@ type Runner struct {
 	CalibreDir string // the read-only mount; EPUBs must be inside it
 	wake       chan struct{}
 	waiting    atomic.Bool // scans wait for the Deep Scan machine
+	// OnWrongFile is asked when a file's own title does not fit the book it is filed under. It reads the file's first pages and says:
+	// FileIs (it renamed the book to what the file really is, returning the new title and author), FileAgrees (the pages say it is the
+	// right book, only the metadata is odd) or FileUnsure (nothing was settled: the scan stops or warns as before). Nil = FileUnsure.
+	OnWrongFile func(ctx context.Context, book *store.Book) (title, author string, verdict FileVerdict)
 }
+
+// FileVerdict is OnWrongFile's answer.
+type FileVerdict int
+
+const (
+	FileUnsure FileVerdict = iota
+	FileIs
+	FileAgrees
+)
 
 func New(st *store.Store, calibreDir string) *Runner {
 	return &Runner{Store: st, CalibreDir: calibreDir, wake: make(chan struct{}, 1)}

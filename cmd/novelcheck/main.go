@@ -151,6 +151,7 @@ func main() {
 		Web:         web.FS(),
 	}
 	st.OnWishAcquired = srv.WishArrived
+	deep.OnWrongFile = srv.FixWrongFile
 	if ids := st.RepairJunkAuthors(); len(ids) > 0 { // books made with an identifier from Amazon in the author: cleaned, then rated
 		worker.Enqueue(false, ids...)
 	}
