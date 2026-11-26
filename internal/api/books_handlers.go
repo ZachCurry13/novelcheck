@@ -39,6 +39,7 @@ func (s *Server) handleListBooks(w http.ResponseWriter, r *http.Request) {
 		ExcludeFlags:   splitCSV(q.Get("exclude")),
 		Status:         q.Get("status"),
 		Age:            q.Get("age"),
+		Medium:         q.Get("medium"),
 		Format:         q.Get("format"),
 		Spice:          q.Get("spice"),
 		Author:         q.Get("author"),

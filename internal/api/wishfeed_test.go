@@ -241,3 +241,35 @@ func TestLibraryDefault(t *testing.T) {
 		t.Fatalf("clear: %v", out)
 	}
 }
+
+// Digital shows books with an e-book or audiobook copy, Physical the books on the shelf (a paper copy).
+func TestDigitalAndPhysicalLibrary(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	shelf, _ := st.EnsureCatalog("Living Room Shelf", "custom")
+	digital, _ := st.UpsertBook("On My Kindle", "Author One", "", "")
+	_ = st.AddCopy(cal, digital, "/c/a.epub", "epub", "1")
+	paper, _ := st.UpsertBook("On The Shelf", "Author Two", "", "")
+	_ = st.AddCopy(shelf, paper, "paper", "paper", "")
+	both, _ := st.UpsertBook("Both Ways", "Author Three", "", "")
+	_ = st.AddCopy(cal, both, "/c/b.epub", "epub", "2")
+	_ = st.AddCopy(shelf, both, "paper-b", "paper", "")
+	titles := func(q string) string {
+		_, out := admin.do("GET", "/api/books?"+q, nil, false)
+		var names []string
+		for _, b := range out["books"].([]any) {
+			names = append(names, b.(map[string]any)["title"].(string))
+		}
+		return strings.Join(names, "|")
+	}
+	if got := titles("medium=digital&sort=title"); got != "Both Ways|On My Kindle" {
+		t.Fatalf("digital: %q", got)
+	}
+	if got := titles("medium=physical&sort=title"); got != "Both Ways|On The Shelf" {
+		t.Fatalf("physical: %q", got)
+	}
+	if got := titles("sort=title"); got != "Both Ways|On My Kindle|On The Shelf" {
+		t.Fatalf("all: %q", got)
+	}
+}

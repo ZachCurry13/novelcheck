@@ -22,6 +22,7 @@ type BookFilter struct {
 	Status         string
 	Age            string  // "" any | "unset" | "1".."5" = suitable up to that age group
 	Spice          string  // "" any | "0".."5" exact peppers | "old" = rated before the pepper scale | "review" = the AI was unsure
+	Medium         string  // "" all | "digital" (an e-book or audiobook copy) | "physical" (a paper copy: the shelf)
 	Format         string  // "" any | "epub" etc. | "multi" (2+ formats) | "none" (no file) | "dupes" (2+ Calibre entries)
 	Author         string  // part of an author's name
 	Series         string  // part of a series name
@@ -283,6 +284,12 @@ func filterCond(f BookFilter, viewer *User) (string, []any) {
 		if len(levels) > 0 {
 			where = append(where, "b.spice_level IN ("+strings.Join(levels, ",")+")")
 		}
+	}
+	switch f.Medium {
+	case "digital":
+		where = append(where, "EXISTS (SELECT 1 FROM catalog_books md WHERE md.book_id = b.id AND md.format NOT IN ('', 'list', 'paper'))")
+	case "physical":
+		where = append(where, "EXISTS (SELECT 1 FROM catalog_books mp WHERE mp.book_id = b.id AND mp.format = 'paper')")
 	}
 	if c, ok := formatConds[f.Format]; ok {
 		where = append(where, c)

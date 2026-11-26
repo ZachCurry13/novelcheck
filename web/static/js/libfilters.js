@@ -37,10 +37,11 @@ export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
     <div id="filter-chips" class="fchips" aria-live="polite"></div>
     <aside class="fpanel filter-more" aria-label="Filters">
       <div class="fhead"><b>Filters</b><button type="button" data-clear-all class="facet-link">Clear all</button></div>
+      ${pillsHTML("Show", "medium", [["", "All"], ["digital", "Digital"], ["physical", "Physical (the shelf)"]])}
       ${peppersHTML()}
       ${checksHTML("Genre", "genre", (facets.genres || []).filter((g) => g.count).map((g) => ({ value: g.key, label: g.label, count: g.count })))}
       ${checksHTML("Library", "catalog", (catalogs || []).map((c) => ({ value: String(c.id), label: c.name, count: c.book_count })))}
-      <p class="facet-note"><button type="button" data-lib-default class="facet-link">Save the ticked libraries as my default</button> · <button type="button" data-lib-default-clear class="facet-link">Use all</button><span data-lib-default-msg class="ml-1 text-xs text-slate-400"></span></p>
+      <p class="facet-note"><button type="button" data-lib-default class="facet-link">Save these as my default</button> · <button type="button" data-lib-default-clear class="facet-link">Show everything</button><span data-lib-default-msg class="ml-1 text-xs text-slate-400"></span></p>
       ${on(state.user, "parents") ? pillsHTML("Age group", "age", [["", "Any"], ...AGE_GROUPS.map(([l, n]) => [String(l), n]), ["unset", "Not set"]]) : ""}
       ${sortPillsHTML(event)}
       <details class="facet fmore"><summary><span>More</span><span class="fmore-arrow" aria-hidden="true">▸</span>
@@ -75,7 +76,7 @@ export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
   </form>`;
 }
 
-const LABELS = { genre: "Genre", kind: "Type", author: "Author", series: "Series", catalog: "Library", overlap_with: "Also in", spice: "Peppers", age: "Age", rating: "Rating", lf: "At my library",
+const LABELS = { medium: "Show", genre: "Genre", kind: "Type", author: "Author", series: "Series", catalog: "Library", overlap_with: "Also in", spice: "Peppers", age: "Age", rating: "Rating", lf: "At my library",
   format: "Format", read: "Read", libby_audio: "Libby", narrator: "Narrator", min_hours: "At least (hours)", max_hours: "At most (hours)" };
 
 // bindChips keeps a chip for each filter that is on, under the search bar; × clears it.

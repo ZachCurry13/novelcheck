@@ -75,6 +75,7 @@ export async function renderLibrary(view, state) {
     return {
       q: fd.get("q"),
       catalog: fd.getAll("catalog").join(","),
+      medium: fd.get("medium"),
       overlap_with: fd.get("overlap_with"),
       spice: ["review", "old"].includes(fd.get("rating")) ? fd.get("rating") : fd.get("spice"), // the squares: "0,1,2"
       status: fd.get("rating") === "failed" ? "error" : "",
@@ -206,7 +207,7 @@ export async function renderLibrary(view, state) {
   }
   // Links such as #/library?author=… (from a book's window) open with that filter set.
   const preset = new URLSearchParams(location.hash.split("?")[1] || "");
-  for (const k of ["q", "author", "series", "genre", "kind", "catalog", "spice", "narrator", "format", "sort", "rating"]) {
+  for (const k of ["q", "author", "series", "genre", "kind", "medium", "catalog", "spice", "narrator", "format", "sort", "rating"]) {
     const v = preset.get(k), el = form.elements[k];
     if (!v || !el) continue;
     if (el instanceof RadioNodeList && el[0]?.type === "checkbox") { // tick boxes: tick each value named
@@ -221,18 +222,20 @@ export async function renderLibrary(view, state) {
   // "back" already set the filters.
   const libDef = await get("/api/me/library-default").catch(() => ({ catalogs: [] }));
   const catBoxes = [...form.querySelectorAll('input[name="catalog"]')];
-  if (!event && !collection && !season && [...preset.keys()].length === 0 && !catBoxes.some((b) => b.checked) && libDef.catalogs?.length) {
+  if (!event && !collection && !season && [...preset.keys()].length === 0 && !catBoxes.some((b) => b.checked) && !form.medium?.value && (libDef.catalogs?.length || libDef.medium)) {
     for (const box of catBoxes) box.checked = libDef.catalogs.includes(Number(box.value));
+    if (libDef.medium && form.medium) form.medium.value = libDef.medium;
   }
   const defMsg = (t) => { const m = form.querySelector("[data-lib-default-msg]"); if (m) m.textContent = t; };
   form.querySelector("[data-lib-default]")?.addEventListener("click", async () => {
     const ids = catBoxes.filter((b) => b.checked).map((b) => Number(b.value));
-    if (await attempt(() => put("/api/me/library-default", { catalogs: ids }))) defMsg(ids.length ? "Saved: the Library opens with these." : "Saved: all libraries.");
+    if (await attempt(() => put("/api/me/library-default", { catalogs: ids, medium: form.medium?.value || "" }))) defMsg(ids.length || form.medium?.value ? "Saved: the Library opens with these." : "Saved: everything.");
   });
   form.querySelector("[data-lib-default-clear]")?.addEventListener("click", async () => {
     for (const box of catBoxes) box.checked = false;
+    if (form.medium) form.medium.value = "";
     form.dispatchEvent(new Event("change", { bubbles: true }));
-    if (await attempt(() => put("/api/me/library-default", { catalogs: [] }))) defMsg("Saved: all libraries.");
+    if (await attempt(() => put("/api/me/library-default", { catalogs: [], medium: "" }))) defMsg("Saved: everything.");
   });
   form.addEventListener("input", () => saveForm("library", form));
   form.addEventListener("change", () => saveForm("library", form));

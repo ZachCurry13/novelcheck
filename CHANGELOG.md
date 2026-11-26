@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.39]
+
+### 📖 Digital and physical in one Library
+- **A "Show" switch at the top of the Library filters: All, Digital or Physical (the shelf).** Digital is books with an e-book or audiobook copy; Physical is books with a paper copy (your living room bookshelf). A book you have both ways shows in both. A book that is only on the shelf now says "✓ On your shelf" in its window. It is one library with one rating per book, not two. The Kindle app and the KOReader plugin stay digital only.
+- **"Save these as my default" now remembers the switch too** (with the ticked libraries), and **"Show everything"** clears both.
+
 ## [2.1.38]
 
 ### 📚 Choose which libraries your Library shows

@@ -88,7 +88,7 @@ export async function openBook(id, state, onChange) {
           ${b.series ? `<p>${seriesLink(b, seriesText(b))}</p>` : seriesLine(b)}
           <p class="text-slate-400">${authorLinks(b.author)}${b.isbn ? " · ISBN " + esc(b.isbn) : ""}</p>
           ${friend ? "" : owned
-            ? `<p class="mt-1 text-sm text-emerald-300">✓ In the library${[...new Set(own.map((e) => e.catalog_name))].length ? ": " + [...new Set(own.map((e) => e.catalog_name))].map(esc).join(", ") : ""}</p>`
+            ? `<p class="mt-1 text-sm text-emerald-300">${own.length && own.every((e) => e.formats.length && e.formats.every((f) => f === "Paper")) ? "✓ On your shelf" : "✓ In the library"}${[...new Set(own.map((e) => e.catalog_name))].length ? ": " + [...new Set(own.map((e) => e.catalog_name))].map(esc).join(", ") : ""}</p>`
             : `<p class="mt-1 text-sm text-amber-300">Not in your library. It was only looked up (Check a book) or is on a Discover list or a wishlist, so there is no file to read or download.</p>`}
           ${b.hc_rating > 0 ? `<p class="text-sm text-slate-300">★ ${b.hc_rating.toFixed(2)} from ${Number(b.hc_ratings).toLocaleString()} Hardcover readers</p>` : ""}
           ${data.my_progress ? `<p class="mt-1 text-sm text-indigo-300" title="From your e-reader's sync">Your progress: ${progressText(data.my_progress)}</p>` : ""}
