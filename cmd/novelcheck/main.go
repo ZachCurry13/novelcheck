@@ -149,6 +149,9 @@ func main() {
 		Web:         web.FS(),
 	}
 	st.OnWishAcquired = srv.WishArrived
+	if ids := st.RepairJunkAuthors(); len(ids) > 0 { // books made with an identifier from Amazon in the author: cleaned, then rated
+		worker.Enqueue(false, ids...)
+	}
 	if safeReason == "" {
 		go srv.IndexFingerprints(ctx) // a book on an e-reader is found by its file
 		go srv.NameLoop(ctx)          // true titles and authors for books not from Calibre, once a day

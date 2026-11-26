@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.43]
+
+### 🔧 Two odd things on Check a book
+- **"Shadow of Kyoshi" showed a long code after the author and never got rated.** Amazon's Kindle puts an identifier after some authors; NovelCheck copied it into the author, so the book never matched its real title and author and sat "In line". It is now taken out (for new Kindle reports, and for books already made that way, when the server starts and when a Kindle app reports), the book is joined with its real entry if there is one, and it goes to be rated.
+- **Typing "Merry's Christmas escape by f. Tilly" made the whole thing the title.** When Open Library doesn't know the book, "Title by Author" is now split into the title and the author.
+
 ## [2.1.42]
 
 ### 🤖 Not sure ratings, and the bigger model, in your hands

@@ -19,9 +19,13 @@ const maxNewStoreBooks = 500
 // addStoreBooks puts the report's Amazon store books (md5 "asin:<id>") that aren't in the library yet into the
 // person's store library and queues them for rating, so the report then matches them.
 func (s *Server) addStoreBooks(u *store.User, books []store.DeviceBook) {
+	if fixed := s.Store.RepairJunkAuthors(); len(fixed) > 0 { // books made earlier with Amazon's identifier in the author
+		s.Worker.Enqueue(false, fixed...)
+	}
 	var cat int64
 	var queue []int64
 	for _, b := range books {
+		b.Author = store.StripJunkToken(b.Author)
 		asin, ok := strings.CutPrefix(b.MD5, "asin:")
 		if !ok || asin == "" || strings.TrimSpace(b.Title) == "" || strings.TrimSpace(b.Author) == "" {
 			continue

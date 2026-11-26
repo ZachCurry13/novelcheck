@@ -102,6 +102,7 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 	for i := range body.Books {
 		b := &body.Books[i]
 		b.MD5, b.Format = strings.ToLower(strings.TrimSpace(b.MD5)), strings.ToLower(b.Format)
+		b.Author = store.StripJunkToken(b.Author) // an identifier Amazon puts after an author
 		b.Filename = filepath.Base(strings.ReplaceAll(b.Filename, "\\", "/")) // never a folder
 		if len(b.Title) > 300 {
 			b.Title = b.Title[:300]

@@ -343,3 +343,26 @@ func TestNotSureList(t *testing.T) {
 		t.Fatalf("no Deep Scan machine: %d", res.StatusCode)
 	}
 }
+
+// An identifier Amazon puts after an author is taken out, for new reports and for books already made with it; a real name stays.
+func TestJunkAuthorIdentifier(t *testing.T) {
+	if got := store.StripJunkToken("F. C. Yee FOLF7SLTZ3Y67TE2QPL6EVXGMLIPU6Z"); got != "F. C. Yee" {
+		t.Fatalf("stripped: %q", got)
+	}
+	for _, name := range []string{"Brandon Sanderson", "J. R. R. TOLKIEN", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"} { // no digits: not an identifier
+		if store.StripJunkToken(name) != name {
+			t.Fatalf("%q changed", name)
+		}
+	}
+	_, st := setup(t)
+	junk, _ := st.UpsertBook("Shadow of Kyoshi", "F. C. Yee FOLF7SLTZ3Y67TE2QPL6EVXGMLIPU6Z", "", "")
+	if fixed := st.RepairJunkAuthors(); len(fixed) != 1 || fixed[0] != junk {
+		t.Fatalf("repaired: %v", fixed)
+	}
+	if b, _ := st.BookByID(junk, nil); b.Author != "F. C. Yee" {
+		t.Fatalf("author: %q", b.Author)
+	}
+	if id := st.MatchBook("Shadow of Kyoshi", "F. C. Yee"); id != junk {
+		t.Fatalf("found by its real author: %d", id)
+	}
+}

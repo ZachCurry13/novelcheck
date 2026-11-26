@@ -163,7 +163,10 @@ func (s *Server) lookUp(w http.ResponseWriter, r *http.Request, query, image str
 		choices := ec.Search(ctx, query, maxChoices)
 		switch {
 		case len(choices) == 0:
-			l.found = enrich.Found{Title: query} // not in Open Library: rate what was typed
+			l.found = enrich.Found{Title: query} // not in Open Library: rate what was typed ("Title by Author" is the two)
+			if t, a, ok := strings.Cut(query, " by "); ok && strings.TrimSpace(t) != "" && strings.TrimSpace(a) != "" {
+				l.found = enrich.Found{Title: strings.TrimSpace(t), Author: strings.TrimSpace(a)}
+			}
 		case enrich.Sure(query, choices):
 			l.found = choices[0].Found()
 		default:
