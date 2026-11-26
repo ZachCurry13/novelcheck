@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.26]
+
+### 📲 The Kindle app installs the KOReader plugin
+- **Menu → "Install the KOReader plugin" (app 1.20.0).** The Kindle app puts the KOReader plugin on the Kindle, already signed in as you, the same way the plugin can install the app. It downloads each plugin file beside the old one and swaps them all in only when every one came, so a bad connection never leaves half a plugin. KOReader must be on the Kindle; close and reopen it afterwards. Nothing to type. {admin}
+
 ## [2.1.23]
 
 ### 📖 Unsure books name themselves

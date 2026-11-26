@@ -98,6 +98,14 @@ func TestKindleApp(t *testing.T) {
 	if c, _ := post("wrong"); c != 401 {
 		t.Fatalf("a wrong password: %d", c)
 	}
+	// the plugin's sign-in file, for the Kindle app to install the KOReader plugin already connected
+	if code, body, _ := get("/kosync/plugin/config.lua?server=https://nc.example"); code != 200 || !strings.Contains(string(body), `user = "admin"`) ||
+		!strings.Contains(string(body), `code = "`+ks["code"].(string)+`"`) || !strings.Contains(string(body), `server = "https://nc.example"`) {
+		t.Fatalf("plugin config: %d %s", code, body)
+	}
+	if res, err := http.Get(srv.URL + "/kosync/plugin/config.lua"); err != nil || res.StatusCode != 401 {
+		t.Fatalf("the plugin's sign-in needs a sign-in: %v %v", err, res)
+	}
 	req, _ := http.NewRequest("OPTIONS", srv.URL+"/kosync/plugin/search", nil)
 	req.Header.Set("Origin", "file://")
 	req.Header.Set("Access-Control-Request-Headers", "x-auth-user, x-auth-key")

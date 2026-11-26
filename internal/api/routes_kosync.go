@@ -17,6 +17,7 @@ func (s *Server) kosyncRoutes(r chi.Router) {
 	r.Post("/plugin/debug", s.handlePluginDebug)
 	r.Get("/plugin/book/{id}/{name}", s.handlePluginBook)
 	r.Get("/plugin/version", s.handlePluginVersion)
+	r.Get("/plugin/config.lua", s.handlePluginConfig)
 	r.Get("/plugin/names", s.handlePluginNames)
 	r.Get("/plugin/search", s.handlePluginSearch)
 	r.Get("/plugin/new", s.handlePluginNew)

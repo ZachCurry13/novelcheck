@@ -64,15 +64,19 @@ func Zip(server, user, code string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg := "-- Made by NovelCheck for this account: the plugin connects with it on first start.\nreturn {\n" +
-		"    server = " + luaString(server) + ",\n    user = " + luaString(user) + ",\n    code = " + luaString(code) + ",\n}\n"
-	if _, err := w.Write([]byte(cfg)); err != nil {
+	if _, err := w.Write(Config(server, user, code)); err != nil {
 		return nil, err
 	}
 	if err := zw.Close(); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+// Config is config.lua: it connects the plugin to server as user with the sync code (the plugin reads it on first start).
+func Config(server, user, code string) []byte {
+	return []byte("-- Made by NovelCheck for this account: the plugin connects with it on first start.\nreturn {\n" +
+		"    server = " + luaString(server) + ",\n    user = " + luaString(user) + ",\n    code = " + luaString(code) + ",\n}\n")
 }
 
 // UpdatableFiles are the plugin's Lua files, which the plugin can fetch to
