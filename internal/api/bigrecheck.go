@@ -27,6 +27,7 @@ func (s *Server) BigRecheckLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-t.C:
+			s.resumeBigBatch() // a batch started by hand that a restart stopped
 			n := s.RecheckNotSure(ctx, bigRecheckBatch)
 			n += s.recheckTonight(ctx)
 			if n > 0 {

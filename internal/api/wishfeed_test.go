@@ -395,3 +395,17 @@ func TestUpdateNudge(t *testing.T) {
 		t.Fatal("health")
 	}
 }
+
+// After a restart the books that were being rated, then those waiting, are listed to be queued again (in that order).
+func TestInterruptedRatingsComeBack(t *testing.T) {
+	_, st := setup(t)
+	a, _ := st.UpsertBook("Waiting", "A", "", "")
+	b, _ := st.UpsertBook("Being rated", "B", "", "")
+	c, _ := st.UpsertBook("Pending", "C", "", "")
+	_ = st.SetStatus(a, "queued", "")
+	_ = st.SetStatus(b, "processing", "")
+	ids := st.InterruptedRatings()
+	if len(ids) != 2 || ids[0] != b || ids[1] != a {
+		t.Fatalf("interrupted: %v (c=%d)", ids, c)
+	}
+}

@@ -111,6 +111,9 @@ func (s *Server) handleNotSure(w http.ResponseWriter, r *http.Request) {
 		"away": ok && s.Deep != nil && s.Deep.MachineAway(), "run": bigRun.snapshot()})
 }
 
+// keyBigBatchLeft is how many of a batch started by hand are still to do; it is kept so a restart carries the batch on.
+const keyBigBatchLeft = "bigrecheck_batch_left"
+
 // handleNotSureRun: POST {"limit": n} looks at n of the waiting ratings now (0 = all of them), in the background.
 func (s *Server) handleNotSureRun(w http.ResponseWriter, r *http.Request) {
 	var body struct {
@@ -119,28 +122,40 @@ func (s *Server) handleNotSureRun(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &body, 1<<10) {
 		return
 	}
-	ai, ok := s.Store.DeepAI()
-	if !ok || s.Deep == nil || !llm.IsLocal(ai.BaseURL) {
-		writeErr(w, http.StatusConflict, "the bigger model needs the Deep Scan machine on your home network (AI & Scans)")
+	if msg := s.startBigBatch(body.Limit); msg != "" {
+		writeErr(w, http.StatusConflict, msg)
 		return
 	}
+	writeJSON(w, http.StatusAccepted, bigRun.snapshot())
+}
+
+// startBigBatch begins a batch of limit ratings (0 = every waiting one) and returns why it could not, or "" when it started.
+func (s *Server) startBigBatch(limit int) string {
+	ai, ok := s.Store.DeepAI()
+	if !ok || s.Deep == nil || !llm.IsLocal(ai.BaseURL) {
+		return "the bigger model needs the Deep Scan machine on your home network (AI & Scans)"
+	}
 	if s.Deep.MachineAway() {
-		writeErr(w, http.StatusConflict, "the Deep Scan machine isn't answering right now")
-		return
+		return "the Deep Scan machine isn't answering right now"
 	}
 	bigRun.mu.Lock()
 	if bigRun.on {
 		bigRun.mu.Unlock()
-		writeErr(w, http.StatusConflict, "a batch is already running")
-		return
+		return "a batch is already running"
 	}
 	waiting, _ := s.Store.NotSureToRecheck(100000)
 	total := len(waiting)
-	if body.Limit > 0 && body.Limit < total {
-		total = body.Limit
+	if limit > 0 && limit < total {
+		total = limit
+	}
+	if total == 0 {
+		bigRun.mu.Unlock()
+		_ = s.Store.SetSetting(keyBigBatchLeft, "0")
+		return "nothing is waiting"
 	}
 	bigRun.on, bigRun.done, bigRun.total = true, 0, total
 	bigRun.mu.Unlock()
+	_ = s.Store.SetSetting(keyBigBatchLeft, strconv.Itoa(total))
 	go func() {
 		defer func() { bigRun.mu.Lock(); bigRun.on = false; bigRun.mu.Unlock() }()
 		ctx, cancel := context.WithTimeout(context.Background(), 12*time.Hour)
@@ -149,10 +164,21 @@ func (s *Server) handleNotSureRun(w http.ResponseWriter, r *http.Request) {
 		for left > 0 {
 			n := s.recheck(ctx, min(5, left))
 			if n == 0 {
+				if more, _ := s.Store.NotSureToRecheck(1); len(more) == 0 {
+					_ = s.Store.SetSetting(keyBigBatchLeft, "0") // none waiting any more
+				} // else the machine went away: the batch is kept and goes on when it is back
 				return
 			}
 			left -= n
+			_ = s.Store.SetSetting(keyBigBatchLeft, strconv.Itoa(left))
 		}
 	}()
-	writeJSON(w, http.StatusAccepted, bigRun.snapshot())
+	return ""
+}
+
+// resumeBigBatch carries on a batch a restart (or the machine going off) stopped.
+func (s *Server) resumeBigBatch() {
+	if left := s.Store.SettingInt(keyBigBatchLeft); left > 0 {
+		_ = s.startBigBatch(left)
+	}
 }

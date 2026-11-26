@@ -23,6 +23,13 @@ type Note struct {
 	To    int    `json:"to"`
 }
 
+// savedPart is one finished part of a scan, kept so a restart can go on after it.
+type savedPart struct {
+	Label  string
+	Result llm.PartResult
+	Digest string
+}
+
 // partTries is how often a part is tried before the scan fails; retryWait
 // grows with each try (5 s, 20 s).
 const partTries = 3
@@ -48,7 +55,19 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 	var results []llm.PartResult
 	var digest []store.DigestPart
 	model := ""
-	for i := 0; i < len(parts); i++ {
+	// A scan stopped by a restart goes on after the last part it finished, when those parts are still the same.
+	var saved []savedPart
+	if raw := r.Store.DeepProgress(d.ID); raw != "" {
+		_ = json.Unmarshal([]byte(raw), &saved)
+	}
+	resumed := 0
+	for resumed < len(saved) && resumed < len(parts) && saved[resumed].Label == parts[resumed].Label {
+		results = append(results, saved[resumed].Result)
+		digest = append(digest, store.DigestPart{Label: saved[resumed].Label, Text: saved[resumed].Digest})
+		resumed++
+	}
+	saved = saved[:resumed]
+	for i := resumed; i < len(parts); i++ {
 		p := parts[i]
 		if r.Store.DeepReadStatus(d.ID) == "cancelled" {
 			return nil
@@ -92,7 +111,14 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 		}
 		results = append(results, res)
 		digest = append(digest, store.DigestPart{Label: p.Label, Text: res.Digest})
+		if len(results) == i+1 { // no part was split on the way: this one can be resumed from
+			saved = append(saved, savedPart{Label: p.Label, Result: res, Digest: res.Digest})
+			if raw, err := json.Marshal(saved); err == nil {
+				r.Store.SaveDeepProgress(d.ID, string(raw))
+			}
+		}
 	}
+	r.Store.ClearDeepProgress(d.ID) // the whole book is read
 	_ = r.Store.SetDeepProgress(d.ID, len(parts), len(parts), model, prev)
 
 	_ = r.Store.SaveDigest(book.ID, digest, model) // kept for questions about the book, whether or not the rating waits for an admin

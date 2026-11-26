@@ -202,6 +202,13 @@ func (s *Store) QueueForAnalysis(limit int) ([]int64, error) {
 	return ids, nil
 }
 
+// InterruptedRatings lists the books a shutdown left mid-rating (being rated first, then the ones waiting), to be queued again.
+func (s *Store) InterruptedRatings() []int64 {
+	var ids []int64
+	_ = s.DB.Select(&ids, `SELECT id FROM books WHERE status IN ('processing', 'queued') ORDER BY status = 'queued', id`)
+	return ids
+}
+
 // ResetQueued returns queued/processing books to pending (wipe analysis queue).
 func (s *Store) ResetQueued() (int64, error) {
 	res, err := s.DB.Exec(`UPDATE books SET status = 'pending' WHERE status IN ('queued', 'processing')`)

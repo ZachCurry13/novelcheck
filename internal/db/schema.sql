@@ -289,6 +289,14 @@ CREATE TABLE IF NOT EXISTS book_digests (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- The parts of a Deep Scan already read (JSON list of {label, result, digest}), so a scan stopped by a restart goes on from the last
+-- finished part instead of starting the book again. Removed when the scan ends.
+CREATE TABLE IF NOT EXISTS deep_progress (
+    deep_id    INTEGER PRIMARY KEY REFERENCES deep_reads(id) ON DELETE CASCADE,
+    data       TEXT NOT NULL DEFAULT '',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS deep_reads (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     position     INTEGER NOT NULL DEFAULT 0,  -- order in the queue (an admin can drag it)

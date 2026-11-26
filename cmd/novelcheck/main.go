@@ -57,16 +57,18 @@ func main() {
 	if err := auth.Bootstrap(st, cfg.AdminUser, cfg.AdminPassword); err != nil {
 		log.Fatalf("bootstrap admin: %v", err)
 	}
-	// Books left mid-analysis by a previous shutdown go back to Pending.
-	if n, err := st.ResetQueued(); err == nil && n > 0 {
-		log.Printf("reset %d interrupted analyses to pending", n)
-	}
+	// Books left mid-rating by a previous shutdown are queued again as soon as the worker exists (below).
+	interrupted := st.InterruptedRatings()
 	_ = st.PurgeExpiredSessions()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	worker := analyzer.New(st)
+	if len(interrupted) > 0 {
+		worker.Enqueue(false, interrupted...)
+		log.Printf("queued %d interrupted ratings again", len(interrupted))
+	}
 	// AI collections: fills run in the background; weekly ideas only while
 	// the AI is idle and within automatic rating's hours.
 	collectionsSvc := collections.New(st)

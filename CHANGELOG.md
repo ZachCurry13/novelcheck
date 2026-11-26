@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.48]
+
+### 🔁 A restart no longer loses what NovelCheck was doing
+- **Books that were being rated, or waiting to be, are queued again by themselves** when NovelCheck starts. Before, they went back to "pending" and waited for you to press Rate (with automatic rating off, that was a long wait).
+- **A Deep Scan carries on after the last part it finished** instead of reading the whole book again. (If a part was split in two on the way, it carries on from the part before it.)
+- **A "Look at all / 10 now" batch on Not sure ratings carries on** after a restart, or when the Deep Scan machine comes back after being off, within five minutes.
+- Everything else that runs in the background already started again by itself. A format job (convert, remove) is still lost if it is interrupted; it is quick to run again. {admin}
+
 ## [2.1.47]
 
 ### 📦 Box sets split themselves when it is sure
