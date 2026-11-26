@@ -989,3 +989,12 @@ CREATE TABLE IF NOT EXISTS inbox_snooze (
     until   DATETIME NOT NULL,
     PRIMARY KEY (user_id, item)
 );
+
+-- 2.1.23: what a book's own first pages say it is (title and author as printed), read by the AI, so an unsure book can be named
+-- or an unsure duplicate settled. An empty title means it was tried and the pages did not say (retried after a month).
+CREATE TABLE IF NOT EXISTS book_identity (
+    book_id INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
+    title   TEXT NOT NULL DEFAULT '',
+    author  TEXT NOT NULL DEFAULT '',
+    at      INTEGER NOT NULL DEFAULT 0
+);

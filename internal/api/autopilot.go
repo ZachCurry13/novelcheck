@@ -84,19 +84,30 @@ func (s *Server) autopilotOnce() {
 func (s *Server) handleAutopilot(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPut {
 		var body struct {
-			On bool `json:"on"`
+			On       *bool `json:"on"`
+			Identify *bool `json:"identify"`
 		}
 		if !readJSON(w, r, &body, 1<<10) {
 			return
 		}
-		v := "off"
-		if body.On {
-			v = "on"
+		onOff := func(b bool) string {
+			if b {
+				return "on"
+			}
+			return "off"
 		}
-		if err := s.Store.SetSetting(keyAutopilot, v); err != nil {
-			writeStoreErr(w, err)
-			return
+		if body.On != nil {
+			if err := s.Store.SetSetting(keyAutopilot, onOff(*body.On)); err != nil {
+				writeStoreErr(w, err)
+				return
+			}
+		}
+		if body.Identify != nil {
+			if err := s.Store.SetSetting(keyIdentify, onOff(*body.Identify)); err != nil {
+				writeStoreErr(w, err)
+				return
+			}
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"on": s.autopilotOn(), "waiting": s.sureWaiting(), "last": s.Store.Setting(keyAutopilotLast)})
+	writeJSON(w, http.StatusOK, map[string]any{"on": s.autopilotOn(), "waiting": s.sureWaiting(), "last": s.Store.Setting(keyAutopilotLast), "identify": s.identifyOn()})
 }

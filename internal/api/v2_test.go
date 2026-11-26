@@ -378,3 +378,53 @@ func TestOneKindleTwoReportsIsOneLine(t *testing.T) {
 		t.Fatalf("one Kindle, one line: %v", h["items"])
 	}
 }
+
+// A backed-up Kindle that only runs an older app is an FYI on the Health page, and is left off Home.
+func TestOlderAppIsOnlyANote(t *testing.T) {
+	dir := t.TempDir()
+	srv, st := setupWith(t, func(s *api.Server) { s.Cfg.DataDir = dir })
+	admin := login(t, srv, "admin", "adminpass1")
+	u, _ := st.UserByName("admin")
+	st.SaveDeviceInfo(u.ID, "Pat Kindle (Amazon reader)", "app 1.0.0")
+	_, _ = st.SaveDeviceBooks(u.ID, "Pat Kindle (Amazon reader)", []store.DeviceBook{{Filename: "x.epub", Title: "X"}})
+	if err := os.MkdirAll(filepath.Join(dir, "kindle-backup", fmt.Sprint(u.ID), "Pat Kindle (Amazon reader)"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_ = os.WriteFile(filepath.Join(dir, "kindle-backup", fmt.Sprint(u.ID), "Pat Kindle (Amazon reader)", "book.epub"), []byte("x"), 0o644)
+	_, h := admin.do("GET", "/api/admin/health", nil, false)
+	level := ""
+	for _, it := range h["items"].([]any) {
+		if m := it.(map[string]any); strings.Contains(m["title"].(string), "Pat Kindle") {
+			level, _ = m["level"].(string)
+		}
+	}
+	if level != "info" {
+		t.Fatalf("an older app alone is an FYI, not a warning: %q %v", level, h["items"])
+	}
+	_, home := admin.do("GET", "/api/home", nil, false)
+	if hh, _ := home["health"].(map[string]any); hh != nil {
+		for _, it := range hh["items"].([]any) {
+			if strings.Contains(it.(map[string]any)["title"].(string), "Pat Kindle") {
+				t.Fatalf("Home must not show it: %v", hh)
+			}
+		}
+	}
+}
+
+// "Running now": admins see what the server is doing; kids cannot ask.
+func TestRunningNow(t *testing.T) {
+	srv, _ := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	_, r := admin.do("GET", "/api/admin/running", nil, false)
+	if list, ok := r["running"].([]any); !ok || len(list) != 0 {
+		t.Fatalf("nothing runs on a fresh server: %v", r)
+	}
+	if _, home := admin.do("GET", "/api/home", nil, false); home["running"] == nil {
+		t.Fatalf("Home carries the list: %v", home)
+	}
+	admin.do("POST", "/api/admin/users", map[string]any{"username": "kid4", "password": "kidpass12"}, true)
+	kid := login(t, srv, "kid4", "kidpass12")
+	if res, _ := kid.do("GET", "/api/admin/running", nil, false); res.StatusCode != 403 {
+		t.Fatalf("kids: %d", res.StatusCode)
+	}
+}

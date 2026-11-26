@@ -62,6 +62,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out["requests"] = s.openRequestsFor(u)
+	out["running"] = s.runningTasks()
 	if rows := s.Store.Accuracy(); len(rows) > 0 && rows[0].N >= 5 { // how far the AI's levels can be trusted, from people's own levels
 		all := rows[0]
 		out["accuracy"] = map[string]any{"n": all.N, "exact": int(all.Exact*100 + 0.5), "within1": int(all.Within1*100 + 0.5)}
@@ -73,7 +74,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if u.IsAdmin() && u.Can(store.AreaCalibre) {
-		out["autopilot"] = map[string]any{"on": s.autopilotOn(), "waiting": s.sureWaiting(), "last": s.Store.Setting(keyAutopilotLast)}
+		out["autopilot"] = map[string]any{"on": s.autopilotOn(), "waiting": s.sureWaiting(), "last": s.Store.Setting(keyAutopilotLast), "identify": s.identifyOn()}
 	}
 	inbox := []homeCard{}
 	add := func(id, title, detail string, n int, link string) {
@@ -97,7 +98,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 		items := s.healthItems()
 		var worst []healthItem
 		for _, it := range items {
-			if it.Level != "ok" && len(worst) < 4 {
+			if it.Level != "ok" && it.Level != "info" && len(worst) < 4 { // notes (FYI) stay on the Health page
 				worst = append(worst, it)
 			}
 		}

@@ -30,9 +30,24 @@ function setupHTML(steps) {
       ${x.done ? "" : `<a href="${esc(x.link)}" class="btn-secondary shrink-0 py-1 text-sm">Do it</a>`}</li>`).join("")}</ul></section>`;
 }
 
+// "Running now": what the server is doing for the admins at this moment. It keeps going whatever the phone does; this card
+// only watches (it looks again every few seconds while something runs).
+function runningHTML(list) {
+  if (!list?.length) return "";
+  return `<section class="card space-y-2" data-running><h2 class="font-semibold">Running now <span class="text-sm font-normal text-slate-400">on the server; it carries on if you close the app</span></h2>
+    <ul class="space-y-2">${list.map((t) => `<li class="text-sm"><b>${esc(t.title)}</b>${t.detail ? ` <span class="text-slate-400">${esc(t.detail)}</span>` : ""}
+      ${t.total ? `<progress class="mt-1 block h-1.5 w-full" max="${t.total}" value="${t.done || 0}"></progress><span class="text-xs text-slate-500">${t.done || 0} of ${t.total}</span>` : ""}</li>`).join("")}</ul></section>`;
+}
+
 // Autopilot: the sure Hardcover fixes written into Calibre by themselves (off until turned on; Calibre has no undo).
 function autopilotHTML(a) {
   if (!a) return "";
+  const identify = `<p class="mt-2 text-sm text-slate-400">Reading the first pages of books it is unsure of, to name them and to settle unsure duplicates, is <b>${a.identify ? "on" : "off"}</b>.
+    <button type="button" data-identify="${a.identify ? "off" : "on"}" class="underline">${a.identify ? "Turn off" : "Turn on"}</button></p>`;
+  return `<div>${autopilotCard(a)}${identify}</div>`;
+}
+
+function autopilotCard(a) {
   return a.on
     ? `<section class="card flex items-center justify-between gap-3 text-sm"><span><b class="text-emerald-300">Autopilot is on.</b> <span class="text-slate-400">The sure fixes from Hardcover are written into Calibre by themselves${a.waiting ? ` (${a.waiting} waiting for the next round)` : ""}. ${esc(a.last || "")}</span></span>
       <button type="button" data-autopilot="off" class="btn-ghost shrink-0 py-1 text-sm">Turn off</button></section>`
@@ -88,6 +103,23 @@ function mineHTML(list) {
   return `<section class="card space-y-1"><h2 class="font-semibold">Your asks</h2>${list.map((q) => `<p class="text-sm"><b>${esc(q.title)}</b> · ${WORDS[q.status] || q.status}${q.answer ? ` <span class="text-slate-400">${esc(q.answer)}</span>` : ""}</p>`).join("")}</section>`;
 }
 
+// While something runs, look again every five seconds and redraw only that card; stop when the page is left or nothing runs.
+let watching = 0;
+function watchRunning(view, host, list) {
+  clearTimeout(watching);
+  if (!list?.length) return;
+  watching = setTimeout(async () => {
+    if (!view.isConnected) return;
+    const r = await get("/api/admin/running").catch(() => null);
+    if (!r || !view.isConnected) return;
+    const html = runningHTML(r.running);
+    const card = host.querySelector("[data-running]");
+    if (card) card.outerHTML = html || "";
+    else if (html) host.insertAdjacentHTML("afterbegin", html);
+    watchRunning(view, host, r.running);
+  }, 5000);
+}
+
 export async function renderHome(view) {
   view.innerHTML = `<h1 class="page-title mb-3">Home</h1><div id="home" class="max-w-4xl space-y-4"><p class="text-slate-400">Loading…</p></div>`;
   const draw = async () => {
@@ -100,7 +132,8 @@ export async function renderHome(view) {
     const lost = d.unmatched ? `<section class="card text-sm"><b>${d.unmatched}</b> book${d.unmatched === 1 ? "" : "s"} on your e-reader couldn't be matched. <a href="#/settings" class="underline">Match them</a></section>` : "";
     const add = d.may_upload ? `<section class="card text-sm">Add books by dragging them onto the box at the top of the <a href="#/library" class="underline">Library</a>.</section>` : "";
     const host = view.querySelector("#home");
-    host.innerHTML = [setupHTML(d.setup), healthHTML(d.health), autopilotHTML(d.autopilot), accuracyHTML(d.accuracy), askedHTML(d.requests || []), inboxHTML(d.inbox || []), quickHTML(d), next, fresh, mineHTML(d.my_requests), askFormHTML, lost, add].join("") || "";
+    host.innerHTML = [runningHTML(d.running), setupHTML(d.setup), healthHTML(d.health), autopilotHTML(d.autopilot), accuracyHTML(d.accuracy), askedHTML(d.requests || []), inboxHTML(d.inbox || []), quickHTML(d), next, fresh, mineHTML(d.my_requests), askFormHTML, lost, add].join("") || "";
+    watchRunning(view, host, d.running);
     const want = new URLSearchParams(location.hash.split("?")[1] || "").get("ask"); // from "Ask a parent" in the Library
     if (want) host.querySelector("#ask").title.value = want;
     host.querySelector("#ask").onsubmit = async (e) => {
@@ -116,6 +149,13 @@ export async function renderHome(view) {
         ap.disabled = true;
         if (await attempt(() => put("/api/admin/autopilot", { on: ap.dataset.autopilot === "on" }), ap.dataset.autopilot === "on" ? "Autopilot is on" : "Autopilot is off")) return draw();
         ap.disabled = false;
+        return;
+      }
+      const idn = e.target.closest("[data-identify]");
+      if (idn) {
+        idn.disabled = true;
+        if (await attempt(() => put("/api/admin/autopilot", { identify: idn.dataset.identify === "on" }), idn.dataset.identify === "on" ? "Identifying books is on" : "Identifying books is off")) return draw();
+        idn.disabled = false;
         return;
       }
       const quick = e.target.closest("[data-quick]");

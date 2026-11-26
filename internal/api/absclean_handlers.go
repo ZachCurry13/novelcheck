@@ -93,13 +93,16 @@ func (s *Server) handleABSFixAll(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "Audiobookshelf isn't set up")
 		return
 	}
+	// Not stopped when the phone leaves the page: it carries on to the end.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 30*time.Minute)
+	defer cancel()
 	applied := 0
 	for _, f := range list {
 		var fix audiobookshelf.Fix
 		if json.Unmarshal([]byte(f.Fix), &fix) != nil {
 			continue
 		}
-		if err := c.ApplyFix(r.Context(), f.ItemID, fix); err != nil {
+		if err := c.ApplyFix(ctx, f.ItemID, fix); err != nil {
 			if errors.Is(err, audiobookshelf.ErrNoEditRights) {
 				writeErr(w, http.StatusForbidden, err.Error())
 				return
@@ -111,7 +114,7 @@ func (s *Server) handleABSFixAll(w http.ResponseWriter, r *http.Request) {
 		applied++
 	}
 	if applied > 0 { // NovelCheck's own copy of the details
-		res, err := audiobookshelf.Sync(r.Context(), s.Store, c)
+		res, err := audiobookshelf.Sync(ctx, s.Store, c)
 		audiobookshelf.Record(s.Store, res, err)
 	}
 	s.handleABSClean(w, r)
@@ -138,7 +141,9 @@ func (s *Server) handleABSFix(w http.ResponseWriter, r *http.Request) {
 			writeErr(w, http.StatusBadRequest, "Audiobookshelf isn't set up")
 			return
 		}
-		if err := c.ApplyFix(r.Context(), id, fix); err != nil {
+		ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 5*time.Minute)
+		defer cancel()
+		if err := c.ApplyFix(ctx, id, fix); err != nil {
 			status := http.StatusBadGateway
 			if errors.Is(err, audiobookshelf.ErrNoEditRights) {
 				status = http.StatusForbidden

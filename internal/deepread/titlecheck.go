@@ -85,3 +85,28 @@ func wrongFile(libTitle, libAuthor, fileTitle, fileAuthor string) (stop, warn bo
 	}
 	return false, true
 }
+
+// TitleFits is titleFits for other packages: can the title read from a file be this library title?
+func TitleFits(library, file string) bool { return titleFits(library, file) }
+
+// SameTitleWords says whether two titles are the same apart from little words and punctuation ("The Gunslinger" and
+// "Gunslinger, The"): the strict test for joining two books, where TitleFits is the loose one.
+func SameTitleWords(a, b string) bool {
+	x, y := titleWords(a), titleWords(b)
+	if len(x) == 0 || len(x) != len(y) {
+		return false
+	}
+	have := map[string]int{}
+	for _, w := range x {
+		have[w]++
+	}
+	for _, w := range y {
+		if have[w]--; have[w] < 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// AuthorFits is authorFits for other packages.
+func AuthorFits(library, file string) bool { return authorFits(library, file) }

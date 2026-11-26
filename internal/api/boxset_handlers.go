@@ -84,7 +84,7 @@ func (s *Server) handleAskBoxSet(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 5*time.Minute) // the AI answer is kept even if the phone left
 	defer cancel()
 	var found []store.BoxEntry
 	_, err = llm.Ask(ctx, s.Store, s.Store.AIConfigs(), id, llm.BoxContentsSystem,

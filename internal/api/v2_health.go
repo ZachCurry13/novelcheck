@@ -146,8 +146,13 @@ func (s *Server) healthItems() []healthItem {
 		if len(issues) == 0 {
 			continue
 		}
+		// A Kindle that only runs an older app or plugin is a note, not a problem: it updates itself when it is opened.
+		level := "info"
+		if stale || !backedUp {
+			level = "warn"
+		}
 		fix := "Open NovelCheck on it with Wi-Fi on, press Sync now, and update if it offers. Back it up from the app's Menu or KOReader's Copy my Kindle."
-		it := healthItem{ID: "kindle-" + label, Level: "warn", Title: label, Detail: strings.Join(issues, "; "), Fix: fix, Link: "#/kindle"}
+		it := healthItem{ID: "kindle-" + label, Level: level, Title: label, Detail: strings.Join(issues, "; "), Fix: fix, Link: "#/kindle"}
 		if stale {
 			it.Forget = &forgetDevice{UserID: k.userID, Device: k.devs[0].Device}
 			it.Fix = "If this Kindle is gone or replaced, forget it (its backup files stay). Otherwise open NovelCheck on it with Wi-Fi on."
@@ -203,7 +208,7 @@ func (s *Server) healthItems() []healthItem {
 	} else {
 		add("backup", "ok", "Backup", "Last copy "+ago(d)+" ago, in the data folder's backups.", "", "")
 	}
-	rank := map[string]int{"bad": 0, "warn": 1, "ok": 2}
+	rank := map[string]int{"bad": 0, "warn": 1, "info": 2, "ok": 3}
 	sort.SliceStable(out, func(i, j int) bool { return rank[out[i].Level] < rank[out[j].Level] })
 	return out
 }

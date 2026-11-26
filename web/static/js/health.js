@@ -2,8 +2,8 @@
 import { get, post } from "./api.js";
 import { esc, attempt } from "./ui.js";
 
-const DOT = { ok: "text-emerald-300", warn: "text-amber-300", bad: "text-rose-300" };
-const WORD = { ok: "OK", warn: "Look at", bad: "Fix now" };
+const DOT = { ok: "text-emerald-300", info: "text-slate-400", warn: "text-amber-300", bad: "text-rose-300" };
+const WORD = { ok: "OK", info: "FYI", warn: "Look at", bad: "Fix now" };
 
 export async function renderHealth(view) {
   view.innerHTML = `<a href="#/home" class="text-sm text-slate-400 underline">← Home</a><h1 class="page-title mb-1 mt-2">Health</h1>

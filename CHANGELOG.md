@@ -4,6 +4,19 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.23]
+
+### 📖 Unsure books name themselves
+- **NovelCheck reads the first pages of books it is unsure of.** A book whose title looks like a file name ("_OceanofPDF.com_My_Merry_Mistake", "Unknown") or that Hardcover doesn't know is read by the AI: the title page and copyright page say what it is. When the title it finds is really printed in those pages, NovelCheck renames the book in Calibre (and fills in an unknown author), and writes the old name in the cleanup log. {admin}
+- **Unsure duplicates settle themselves.** For two entries NovelCheck thinks may be one book but isn't sure, both are read: the same title and author on the pages joins them; clearly different titles mark them as different books. Anything in between (like "Dune" and "Dune Messiah") is left for you. It is on by default and a line on Home turns it off. {admin}
+
+### 🏃 Tasks keep running
+- **A task you start from the phone carries on at the server when you close the app or change page.** "Apply all" on audiobook fixes and finding a box set's contents used to stop if the phone left; they now run to the end. Calibre writes, title tidying and duplicate removal already did.
+- **Home shows what is running now** (finding covers, comparing with Hardcover, Calibre being read, Deep Scans, rating), with progress, and looks again every few seconds. {admin}
+
+### 🔕 Quieter Home
+- **A Kindle that only runs an older app is a note, not a warning.** It shows as "FYI" on the Health page and stays off Home; it updates itself when opened. A Kindle that hasn't reported for two weeks or has no backup still shows. {admin}
+
 ## [2.1.22]
 
 ### 🔍 Deep Scan checks it is reading the right book

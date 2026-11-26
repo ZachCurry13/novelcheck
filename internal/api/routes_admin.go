@@ -81,6 +81,7 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/upload/targets", s.handleUploadTargets)
 		r.Post("/admin/upload/ebook", s.handleUploadEbook)
 		r.Post("/admin/upload/audiobook", s.handleUploadAudiobook)
+		r.Get("/admin/running", s.handleRunning)
 		r.Get("/admin/autopilot", s.handleAutopilot)
 		r.Put("/admin/autopilot", s.handleAutopilot)
 		r.Get("/admin/hc-clean", s.handleHCCleanState)
