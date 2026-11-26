@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.74.0"
+local VERSION = "1.75.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -490,6 +490,9 @@ function NovelCheck:showUpNext()
             height = Device.screen:getHeight(),
             close_callback = function() self.menu = nil end,
         }
+        if self.addBack then
+            self:addBack(self.menu)
+        end
         UIManager:show(self.menu)
     end)
 end

@@ -74,9 +74,24 @@ return function(NovelCheck)
         end
     end
 
+    -- addBack gives a menu the back arrow at the bottom left (to the card, by default); KOReader shows the arrow when onReturn is
+    -- set and enables it when the menu has a path.
+    function NovelCheck:addBack(menu, back)
+        menu.onReturn = function()
+            UIManager:close(menu)
+            if back then
+                back()
+            else
+                self:showHub()
+            end
+        end
+        menu.paths = { {} }
+        menu:updateItems()
+    end
+
     -- showList shows a list of menu items (the plugin's own list) full screen; an item with a submenu opens it, a switch
     -- shows its state and the list is drawn again after it is pressed.
-    function NovelCheck:showList(title, items)
+    function NovelCheck:showList(title, items, back)
         local menu
         local rows = {}
         for _i, it in ipairs(items) do
@@ -86,7 +101,7 @@ return function(NovelCheck)
                     row.mandatory = "▸"
                     row.callback = function()
                         UIManager:close(menu)
-                        self:showList(it.text, it.sub_item_table)
+                        self:showList(it.text, it.sub_item_table, function() self:showList(title, items, back) end)
                     end
                 else
                     local cb = it.callback
@@ -99,7 +114,7 @@ return function(NovelCheck)
                             cb()
                         end
                         if it.checked_func then
-                            self:showList(title, items) -- the switch's new state
+                            self:showList(title, items, back) -- the switch's new state
                         end
                     end
                 end
@@ -114,7 +129,16 @@ return function(NovelCheck)
             covers_fullscreen = true,
             width = Device.screen:getWidth(),
             height = Device.screen:getHeight(),
+            -- the back arrow at the bottom left: KOReader shows it when onReturn is set and enables it when the menu has a path
+            onReturn = back and function()
+                UIManager:close(menu)
+                back()
+            end or nil,
         }
+        if back then
+            menu.paths = { {} } -- init starts the list empty; one entry turns the arrow on
+            menu:updateItems()
+        end
         UIManager:show(menu)
     end
 
@@ -175,7 +199,7 @@ return function(NovelCheck)
             { text = _("Back up"), callback = go(function() if self.backupKindle then self:backupKindle(false) end end) },
         })
         table.insert(rows, {
-            { text = _("More…"), callback = go(function() self:showList(_("NovelCheck"), self:menuItems()) end) },
+            { text = _("More…"), callback = go(function() self:showList(_("NovelCheck"), self:menuItems(), function() self:showHub() end) end) },
             { text = _("Close"), callback = function() UIManager:close(dialog) end },
         })
         dialog = ButtonDialog:new{

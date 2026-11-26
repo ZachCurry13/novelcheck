@@ -6,9 +6,12 @@ becomes the release notes for that version and is shown in the app under
 
 ## [2.1.33]
 
-### 🏠 At home the Kindle talks to the server over Wi-Fi, anywhere else over the internet (app 1.25.0, plugin 1.74.0)
+### 🏠 At home the Kindle talks to the server over Wi-Fi, anywhere else over the internet (app 1.25.0, plugin 1.75.0)
 - **A home network address, set once.** Admin, Integrations, "Home network address" (like http://192.168.1.20:8080). Kindles with the app or the plugin pick it up the next time they check for updates. Then each request first knocks on the home address for 2.5 seconds; if it answers, everything goes over the Wi-Fi alone, and if not, the main address is used. The answer is remembered for ten minutes, so away from home the wait is at most 2.5 seconds, once every ten minutes. The plugin could already do this with a per-Kindle address; the app could not. Covers and book downloads in the app still use the main address. {admin}
 - **"Keep safe" is now "Backups"** in the plugin's More list.
+
+### ⬅️ A back arrow in the plugin's lists
+- **The arrow at the bottom left (like the rest of KOReader) now works in NovelCheck's lists:** More goes back to the card, a submenu such as Organize goes back to More, and Check a book results, "Which book did you mean?" and the Nightstand go back to the card.
 
 ### 🔧 From the log
 - **A Kindle report with a tab or line break inside a file name is no longer refused as "bad request"** (Jenna's Kindle had five of these in a row after the plugin was installed). If something else is wrong with a report, the bug log now says what. {admin}

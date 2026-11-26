@@ -2,6 +2,6 @@ local _ = require("gettext")
 return {
     name = "novelcheck",
     fullname = _("NovelCheck"),
-    version = "1.74.0",
+    version = "1.75.0",
     description = _([[Shows your NovelCheck Nightstand list, downloads its books, and manages the books on this device.]]),
 }

@@ -76,6 +76,9 @@ return function(NovelCheck)
                     height = Device.screen:getHeight(),
                     close_callback = function() self.pickmenu = nil end,
                 }
+                if self.addBack then
+                    self:addBack(self.pickmenu)
+                end
                 UIManager:show(self.pickmenu)
             end
         end)

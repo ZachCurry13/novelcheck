@@ -145,6 +145,9 @@ return function(NovelCheck, ctx)
             height = Device.screen:getHeight(),
             close_callback = function() self.searchmenu = nil end,
         }
+        if self.addBack then
+            self:addBack(self.searchmenu)
+        end
         UIManager:show(self.searchmenu)
     end
 
