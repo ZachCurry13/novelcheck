@@ -73,3 +73,15 @@ func TestReadRejectsNonEPUB(t *testing.T) {
 		t.Fatalf("missing container: %v", err)
 	}
 }
+
+func TestMetaReadsTheFilesOwnTitle(t *testing.T) {
+	p := writeEPUB(t, map[string]string{
+		"META-INF/container.xml": `<?xml version="1.0"?><container xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="c.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`,
+		"c.opf": `<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/"><metadata>
+			<dc:title> The Gunslinger </dc:title><dc:creator>Stephen King</dc:creator></metadata><manifest/><spine/></package>`,
+	})
+	title, author, err := Meta(p)
+	if err != nil || title != "The Gunslinger" || author != "Stephen King" {
+		t.Fatalf("%q %q %v", title, author, err)
+	}
+}

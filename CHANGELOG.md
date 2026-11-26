@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.22]
+
+### 🔍 Deep Scan checks it is reading the right book
+- **Before reading, Deep Scan compares the file's own title and author with the book.** If both differ (the EPUB for "Quick Start Guide" is really *Wuthering Heights*), the scan stops, nothing is rated, and a warning says what the file is and, when that title is also in your library, which book it is. If only the title differs and the author is the same (another title for the same book, or the wrong book of a series) the scan goes on and a warning says to check the file in Calibre. Files with no title of their own, or "Unknown", always pass. {admin}
+
 ## [2.1.21]
 
 ### 🔧 One Kindle, one line

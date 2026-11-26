@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zachcurry13/novelcheck/internal/epub"
 	"github.com/zachcurry13/novelcheck/internal/llm"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
@@ -33,6 +34,9 @@ func (r *Runner) scan(ctx context.Context, d *store.DeepRead) error {
 	book, err := r.Store.BookByID(d.BookID, nil)
 	if err != nil {
 		return nil // the book was removed meanwhile
+	}
+	if err := r.checkFile(book); err != nil {
+		return err
 	}
 	parts, _, err := r.Prepare(d.BookID)
 	if err != nil {
@@ -217,4 +221,31 @@ func sleep(ctx context.Context, d time.Duration) bool {
 	case <-t.C:
 		return true
 	}
+}
+
+// checkFile compares the EPUB's own title and author with the book's before reading it. A different book (title and author
+// both differ) stops the scan, so its rating cannot land on the wrong book; the same author with another title only warns.
+func (r *Runner) checkFile(book *store.Book) error {
+	path, ok := r.EPUBFor(book.ID)
+	if !ok {
+		return nil
+	}
+	fileTitle, fileAuthor, err := epub.Meta(path)
+	if err != nil {
+		return nil // Prepare says what is wrong with the file
+	}
+	stop, warn := wrongFile(book.Title, book.Author, fileTitle, fileAuthor)
+	switch {
+	case stop:
+		msg := fmt.Sprintf("Deep Scan stopped: the EPUB for “%s” says it is “%s” by %s. It looks like the wrong file: check it in Calibre.", book.Title, fileTitle, fileAuthor)
+		if other := r.Store.LibraryBookByKey(store.NormKey(fileTitle, fileAuthor)); other > 0 && other != book.ID {
+			msg += fmt.Sprintf(" That title is also in your library (book #%d).", other)
+		}
+		r.Store.Notify("warning", "deep-scan-wrong-file", msg, "#/library?book="+fmt.Sprint(book.ID))
+		return errors.New(msg)
+	case warn:
+		r.Store.Notify("warning", "deep-scan-title", fmt.Sprintf("Deep Scan is reading “%s”, but the file says its title is “%s” (same author). If that is not the same book, fix the file in Calibre; the rating would be for the file's book.", book.Title, fileTitle),
+			"#/library?book="+fmt.Sprint(book.ID))
+	}
+	return nil
 }
