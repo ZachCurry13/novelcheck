@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.66.0"
+local VERSION = "1.67.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -112,28 +112,33 @@ function NovelCheck:importConfig()
     end
 end
 
-function NovelCheck:addToMainMenu(menu_items)
-    local entry = {
-        text = _("NovelCheck"),
-        sorting_hint = "tools",
-        sub_item_table = {
-            { text = _("Search"), callback = function() self:searchLibrary() end },
-            { text = _("Nightstand"), callback = function() self:showUpNext() end },
-            { text = _("Download Nightstand"), callback = function() self:downloadAll() end },
-            { text = _("New"), callback = function() self:newInLibrary() end },
-            { text = _("On this e-reader"), callback = function() DeviceBooks.show(self) end },
-            { text = _("Finish this book…"), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
-            { text = _("Sync now"), callback = function() self:syncNow() end },
-            { text = _("Kindle care"), sub_item_table = {
-                { text = _("Back up now"), callback = function() if self.backupKindle then self:backupKindle(false) end end },
-                { text = _("Restore from NovelCheck…"), callback = function() if self.restoreKindle then self:restoreKindle() end end },
-                { text = _("Tidy books…"), callback = function() if self.tidyBooks then self:tidyBooks() end end },
-                { text = _("Undo tidy"), callback = function() if self.undoTidy then self:undoTidy() end end },
-                { text = _("Tidy names"), callback = function() self:tidyNames() end },
-                { text = _("Delete finished books…"), callback = function() DeviceBooks.removeFinished(self) end },
-                { text = _("Delete crash logs…"), callback = function() if self.cleanCrashLogs then self:cleanCrashLogs() end end },
-            } },
-            { text = _("Automatic"), sub_item_table = {
+-- menuItems is the plugin's menu, one level of what to do and two small submenus: it sits in its own tab (tab.lua), or, when
+-- the tab cannot be added, in a NovelCheck entry of the Tools tab.
+function NovelCheck:menuItems()
+    return {
+        { text = _("Nightstand"), callback = function() self:showUpNext() end },
+        { text = _("New"), callback = function() self:newInLibrary() end },
+        { text = _("Search"), callback = function() self:searchLibrary() end },
+        { text = _("Download Nightstand"), callback = function() self:downloadAll() end },
+        { text = _("On this e-reader"), callback = function() DeviceBooks.show(self) end },
+        { text = _("Finish this book…"), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
+        { text = _("Sync now"), callback = function() self:syncNow() end },
+        { text = _("Back up and tidy"), sub_item_table = {
+            { text = _("Back up now"), callback = function() if self.backupKindle then self:backupKindle(false) end end },
+            { text = _("Restore from NovelCheck…"), callback = function() if self.restoreKindle then self:restoreKindle() end end },
+            { text = _("Tidy books…"), callback = function() if self.tidyBooks then self:tidyBooks() end end },
+            { text = _("Undo tidy"), callback = function() if self.undoTidy then self:undoTidy() end end },
+            { text = _("Tidy names"), callback = function() self:tidyNames() end },
+            { text = _("Delete finished books…"), callback = function() DeviceBooks.removeFinished(self) end },
+            { text = _("Delete crash logs…"), callback = function() if self.cleanCrashLogs then self:cleanCrashLogs() end end },
+        } },
+        { text = _("Settings"), sub_item_table = {
+            { text = _("Set up"), callback = function() self:easySetup() end },
+            { text = _("Connect…"), keep_menu_open = true, callback = function() self:connectDialog() end },
+            { text = _("Device name…"), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
+            { text = _("Update"), callback = function() self:checkUpdate(false) end },
+            { text = _("Install the Kindle app"), callback = function() self:installKindleApp() end },
+            { text = _("Automatic jobs"), sub_item_table = {
                 self:autoItem(_("Report books"), "auto_report", true),
                 self:autoItem(_("Download Nightstand"), "auto_download", false),
                 self:autoItem(_("Reading stats"), "auto_stats", false),
@@ -142,21 +147,21 @@ function NovelCheck:addToMainMenu(menu_items)
                 self:autoItem(_("Delete crash logs"), "auto_crashlogs", true),
                 self:autoItem(_("Ask for stars at the end"), "auto_finish", true),
             } },
-            { text = _("Settings"), sub_item_table = {
-                { text = _("Set up"), callback = function() self:easySetup() end },
-                { text = _("Connect…"), keep_menu_open = true, callback = function() self:connectDialog() end },
-                { text = _("Device name…"), keep_menu_open = true, callback = function() self:deviceNameDialog() end },
-                { text = _("Update"), callback = function() self:checkUpdate(false) end },
-                { text = _("Install the Kindle app"), callback = function() self:installKindleApp() end },
-                { text = _("Stop current job"), callback = function() if self.stopJob then self:stopJob() end end },
-                { text = _("Resume automatic jobs"), callback = function() self:resumeAutomatic() end },
-                self:developerMenu(),
-                { text = _("About"), keep_menu_open = true, callback = function() self:showAbout() end },
-            } },
-        },
+            { text = _("Stop current job"), callback = function() if self.stopJob then self:stopJob() end end },
+            { text = _("Resume automatic jobs"), callback = function() self:resumeAutomatic() end },
+            self:developerMenu(),
+            { text = _("About"), keep_menu_open = true, callback = function() self:showAbout() end },
+        } },
     }
-    self:trackMenu(entry.sub_item_table)
-    menu_items.novelcheck = entry
+end
+
+function NovelCheck:addToMainMenu(menu_items)
+    local items = self:menuItems()
+    self:trackMenu(items)
+    if self.addTab and self:addTab(menu_items, items) then
+        return -- NovelCheck has its own icon in the top bar
+    end
+    menu_items.novelcheck = { text = _("NovelCheck"), sorting_hint = "tools", sub_item_table = items }
 end
 
 -- About: the version, which NovelCheck this is connected to, and the project
@@ -246,7 +251,7 @@ function NovelCheck:autoRun()
         self.settings:saveSetting("auto_inflight", 0)
         self.settings:flush()
         UIManager:show(InfoMessage:new{ text = _("The automatic jobs stopped early last time, so they're paused.") .. "\n"
-            .. _("Turn them back on with NovelCheck > Settings > Resume automatic jobs."), timeout = 15 })
+            .. _("Turn them back on with NovelCheck icon > Settings > Resume automatic jobs."), timeout = 15 })
         return
     end
     self.settings:saveSetting("auto_inflight", os.time())
@@ -300,7 +305,7 @@ end
 -- the book report, highlights and reading statistics. Each works quietly and logs its own trouble.
 function NovelCheck:syncNow()
     if not self:isConnected() then
-        UIManager:show(InfoMessage:new{ text = _("Not connected. Open NovelCheck > Settings > Connect.") })
+        UIManager:show(InfoMessage:new{ text = _("Not connected. Open NovelCheck icon > Settings > Connect.") })
         return
     end
     UIManager:show(InfoMessage:new{ text = _("Syncing with NovelCheck…"), timeout = 3 })
@@ -356,7 +361,7 @@ function NovelCheck:connectDialog()
                 self.home_seen = nil
                 self.settings:flush()
                 UIManager:close(dialog)
-                UIManager:show(InfoMessage:new{ text = _("Saved. Open NovelCheck > Nightstand to try it.") })
+                UIManager:show(InfoMessage:new{ text = _("Saved. Open NovelCheck icon > Nightstand to try it.") })
             end },
         } },
     }
@@ -570,7 +575,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps", "locked", "homeaddr", "leftbooks", "restore", "installapp" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps", "locked", "homeaddr", "leftbooks", "restore", "installapp", "tab" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

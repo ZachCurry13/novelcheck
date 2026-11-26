@@ -1,5 +1,5 @@
 --[[
-NovelCheck plugin: "Set up" (NovelCheck > Settings > Set up). One tap points KOReader's Progress sync
+NovelCheck plugin: "Set up" (NovelCheck icon > Settings > Set up). One tap points KOReader's Progress sync
 and Reading statistics sync at NovelCheck, using the server, username and sync
 code this plugin already has. It also runs the statistics sync on demand.
 It adds its functions to the NovelCheck plugin class (see main.lua).
@@ -141,7 +141,7 @@ return function(NovelCheck, ctx)
     function NovelCheck:syncStatsNow()
         NetworkMgr:runWhenOnline(function()
             if not self:syncStats() then
-                UIManager:show(InfoMessage:new{ text = _("Could not start the statistics sync. Run NovelCheck > Settings > Set up first.") })
+                UIManager:show(InfoMessage:new{ text = _("Could not start the statistics sync. Run NovelCheck icon > Settings > Set up first.") })
             end
         end)
     end

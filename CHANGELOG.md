@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.24]
+
+### 📚 KOReader plugin 1.67.0: its own icon, one list
+- **NovelCheck has its own icon in KOReader's top bar** (a book with a check mark), in the file manager and in the book's menu. One tap shows one list: Nightstand, New, Search, Download Nightstand, On this e-reader, Finish this book, Sync now, then **Back up and tidy** and **Settings**. Before, everything was inside NovelCheck inside Tools, with a second layer of menus (Kindle care, Automatic) in between. **Automatic** is now inside Settings as **Automatic jobs**.
+- If the icon cannot be added (an unusual KOReader version, or a top-menu order of your own that leaves it out), the same list is in a NovelCheck entry in the Tools tab as before, so the plugin is never lost. The plugin updates itself from GitHub; close and reopen KOReader once after it updates to see the icon.
+
 ## [2.1.23]
 
 ### 📖 Unsure books name themselves

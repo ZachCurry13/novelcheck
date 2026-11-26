@@ -1,6 +1,6 @@
 --[[
 NovelCheck plugin: putting the NovelCheck Kindle app (the Amazon-reader app, no KOReader needed) on this Kindle.
-NovelCheck > Settings > Install the Kindle app downloads the app's files and this account's sign-in from NovelCheck into
+NovelCheck icon > Settings > Install the Kindle app downloads the app's files and this account's sign-in from NovelCheck into
 extensions/novelcheck-app, and the launcher "book" into documents. It needs the Kindle jailbroken with KindleForge.
 It adds its functions to the NovelCheck plugin class (see main.lua).
 ]]

@@ -20,15 +20,15 @@ When a book leaves the device (plugin 1.63.0), the plugin asks: keep it in Novel
 
 The menu (plugin 1.62.0): **Search**, **Nightstand**, **Download Nightstand**, **New**, **On this e-reader**, **Finish this book…**, **Sync now** (the book report, highlights, reading statistics and the tasks from NovelCheck at once), **Kindle care** (back up, tidy, delete finished books, crash logs), **Automatic** and **Settings** (set up, connect, device name, update, stop, developer tools, about).
 
-1. In KOReader's top menu, open the tools tab (the wrench), then **NovelCheck >
-   Settings > Connect…** and fill in:
+1. In KOReader's top menu, tap the **NovelCheck icon** (a book with a check mark, near the end of
+   the row of icons; the same tab is in the book's menu), then **Settings > Connect…** and fill in:
    - **Address**: where you open NovelCheck, like `https://novelcheck.example.com`.
    - **Username**: your NovelCheck name.
    - **Sync code**: from NovelCheck, **Settings > KOReader setup > Reading sync**.
-2. Open **NovelCheck > Nightstand**. Tap a book to download it into a
+2. Open **NovelCheck icon > Nightstand**. Tap a book to download it into a
    **NovelCheck** folder inside KOReader's home folder, next to your other books.
 
-3. **NovelCheck > Sync now** (or the automatic report when online) sends NovelCheck the list of books
+3. **NovelCheck icon > Sync now** (or the automatic report when online) sends NovelCheck the list of books
    in the home folder (including the NovelCheck folder) (file names, formats and sizes, never folder names).
    **Settings > Device name…** sets what NovelCheck calls this device. Settings > Reading
    sync shows the result.
@@ -49,25 +49,25 @@ Open **Settings > KOReader plugin** in NovelCheck and press **Download the plugi
 
 ## On this e-reader
 
-- **NovelCheck > On this device** lists the books with progress; tap one to delete it (it asks first).
+- **NovelCheck icon > On this e-reader** lists the books with progress; tap one to delete it (it asks first).
 - **Delete finished books...** lists the finished ones and deletes them after you confirm.
 - **Download Nightstand** downloads every Nightstand book that is not on the device yet.
 - **About** shows the plugin version.
 
 ## Automatic and updating (NovelCheck 1.39 or newer)
 
-- **NovelCheck > Automatic:** when the e-reader gets online (at most every 6 hours) the plugin reports its books, so they appear on your Nightstand without any menu (switch on **Download Nightstand** to also fetch new books). Turn either off there.
-- **NovelCheck > Settings > Update** downloads the newest plugin files from your NovelCheck, checks them, swaps them in (old files are kept as `.bak`) and asks to restart KOReader. The plugin also mentions a new version once after connecting. If an update ever goes wrong, copy the folder from **Settings > KOReader plugin** over USB.
+- **NovelCheck icon > Settings > Automatic jobs:** when the e-reader gets online (at most every 6 hours) the plugin reports its books, so they appear on your Nightstand without any menu (switch on **Download Nightstand** to also fetch new books). Turn either off there.
+- **NovelCheck icon > Settings > Update** downloads the newest plugin files from your NovelCheck, checks them, swaps them in (old files are kept as `.bak`) and asks to restart KOReader. The plugin also mentions a new version once after connecting. If an update ever goes wrong, copy the folder from **Settings > KOReader plugin** over USB.
 
 ## One-tap setup (NovelCheck 1.40 or newer, plugin 1.40.0)
 
-**NovelCheck > Settings > Set up** connects KOReader's Progress sync and Reading statistics sync to NovelCheck using the details already in the plugin. You do not need to add a Cloud storage (WebDAV) account or an OPDS catalog by hand. After it finishes, restart KOReader. **Sync reading statistics now** (same menu) runs the sync; **Automatic > Sync reading statistics when online** does it by itself.
+**NovelCheck icon > Settings > Set up** connects KOReader's Progress sync and Reading statistics sync to NovelCheck using the details already in the plugin. You do not need to add a Cloud storage (WebDAV) account or an OPDS catalog by hand. After it finishes, restart KOReader. **Sync reading statistics now** (same menu) runs the sync; **Automatic > Sync reading statistics when online** does it by itself.
 
 ## Matching and tidy names (NovelCheck 1.41 or newer, plugin 1.41.0)
 
-The plugin now sends each book's real title and author, so NovelCheck matches your Kindle's books to your library far more often. In NovelCheck, **Settings > KOReader plugin > Match books on my e-readers** fixes the rest by hand. **NovelCheck > Tidy book names** (in KOReader) then shows your library's titles and authors for the matched books (display only; the files are not touched).
+The plugin now sends each book's real title and author, so NovelCheck matches your Kindle's books to your library far more often. In NovelCheck, **Settings > KOReader plugin > Match books on my e-readers** fixes the rest by hand. **NovelCheck icon > Back up and tidy > Tidy names** (in KOReader) then shows your library's titles and authors for the matched books (display only; the files are not touched).
 
-On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reopen it from KUAL. **NovelCheck > Settings > Set up** usually needs no restart.
+On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reopen it from KUAL. **NovelCheck icon > Settings > Set up** usually needs no restart.
 
 ## Search and add books (NovelCheck 1.45 or newer, plugin 1.45.0)
 
@@ -77,7 +77,7 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 
 ## Highlights and finishing a book (NovelCheck 1.83 or newer, plugin 1.54.0)
 
-- **NovelCheck > Sync now** sends what you highlighted and the notes you wrote; **Automatic > Highlights** does it by itself. They appear on the book's page in NovelCheck under **My highlights**. Only books NovelCheck knows are sent for; a book it doesn't have yet is tried again next time.
+- **NovelCheck icon > Sync now** sends what you highlighted and the notes you wrote; **Automatic > Highlights** does it by itself. They appear on the book's page in NovelCheck under **My highlights**. Only books NovelCheck knows are sent for; a book it doesn't have yet is tried again next time.
 - At the end of a book a window asks for **stars**, marks the book finished (in NovelCheck and KOReader) and offers the **next book of the series** to download. **NovelCheck > Finish this book...** does it by hand while a book is open; **Automatic > Ask for stars at the end of a book** switches the window off.
 
 ## Copy my Kindle (NovelCheck 1.85 or newer, plugin 1.55.2)
@@ -102,3 +102,12 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 ## Developer tools (NovelCheck 1.50 or newer, plugin 1.50.0)
 
 **NovelCheck > Settings > Developer tools** helps when something doesn't work: **Run self-test** checks the connection, sign-in and the plugin's files; **View log** shows every menu tap, request and error; **Send log to NovelCheck** sends the log to Settings > Developer > Bug reports (your sync code is removed), **Send log with a note...** adds what you were doing, and **Send errors automatically** (on by default) sends the log by itself, at most every ten minutes, after an error. **Run self-test** sends its result too. Times in the log are UTC. If the plugin doesn't appear in KOReader at all, look for `LOAD_ERROR.txt` in the plugin's folder, or send KOReader's `crash.log`.
+
+
+## Where it lives (1.67.0)
+
+NovelCheck has its own icon in KOReader's top bar. One tap shows one list: **Nightstand, New, Search, Download Nightstand,
+On this e-reader, Finish this book, Sync now**, then two small menus, **Back up and tidy** and **Settings** (with
+**Automatic jobs** inside). It is added by changing KOReader's top menu when the plugin loads (`tab.lua`). If that cannot be
+done, or you keep your own top-menu order that leaves it out, the same list is in a **NovelCheck** entry in the Tools tab
+(the wrench), as before. The icon file is written into `koreader/icons/` and `resources/icons/mdlight/`.

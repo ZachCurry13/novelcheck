@@ -122,7 +122,7 @@ return function(NovelCheck, ctx)
                 if self.settings:readSetting("update_notified") ~= info.version then
                     self.settings:saveSetting("update_notified", info.version)
                     self.settings:flush()
-                    UIManager:show(InfoMessage:new{ text = _("A NovelCheck plugin update is available:") .. " " .. info.version .. "\n" .. _("Open NovelCheck > Settings > Update.") })
+                    UIManager:show(InfoMessage:new{ text = _("A NovelCheck plugin update is available:") .. " " .. info.version .. "\n" .. _("Open NovelCheck icon > Settings > Update.") })
                 end
             else
                 UIManager:show(ConfirmBox:new{
