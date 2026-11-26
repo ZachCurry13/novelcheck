@@ -8,10 +8,9 @@ becomes the release notes for that version and is shown in the app under
 
 ### 🧭 Settings is about me; Admin is about everyone
 - **Settings now holds only what is about you:** your password and sharing, your look and notifications, **My Kindle & KOReader**, your connections (Hardcover, Libby, your Audiobookshelf login), a new **My Library** card (how to choose which libraries your Library opens with and which show on your pages), and **Report a problem** (what was called Developer: send a report from this browser).
-- **Moved to Admin (admins only), where they affect everyone:**
-  - **Diagnostics and bug reports** (the server report, the bug link, plugin logs, the debug recording) are in **Admin → System → "Diagnostics and bug reports"**.
-  - **"Kindle books NovelCheck doesn't know" and "Kindle backups"** are in **Admin → E-readers & Delivery → "Kindles of the family"**.
-  - **The wanted-list feed** moved from the Wishlist page to **Admin → System → Integrations**. {admin}
+- **Moved to Admin, where they affect everyone: Diagnostics and bug reports** (the server report, the bug link, plugin logs, the debug recording) are in **Admin → System → "Diagnostics and bug reports"**. {admin}
+- **Moved to Admin: "Kindle books NovelCheck doesn't know" and "Kindle backups"** are in **Admin → E-readers & Delivery → "Kindles of the family"**. {admin}
+- **Moved to Admin: the wanted-list feed** left the Wishlist page and is in **Admin → System → Integrations**. {admin}
 
 ## [2.1.43]
 
