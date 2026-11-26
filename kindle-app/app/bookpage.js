@@ -57,8 +57,9 @@ function paintDetails(b) {
     if (extra.length) d.appendChild(el("p", "meta", extra.join(" · ")));
     if (b.summary) d.appendChild(el("p", "", b.summary));
     var acts = el("div", "actions");
-    var inLib = b.in_library !== false; // older saved pages don't say: they are library books
-    if (!inLib && !b.url) d.appendChild(el("p", "headsup", "Not available in the library yet."));
+    var inLib = b.in_library !== false && !b.rating_only; // older saved pages don't say: they are library books
+    if (b.rating_only) d.appendChild(el("p", "headsup", b.message));
+    else if (!inLib && !b.url) d.appendChild(el("p", "headsup", "Not available in the library yet."));
     if (b.url) acts.appendChild(downloadButton(b, true));
     var fmts = { ebook: "ebook", audio: "audiobook" };
     var asks = b.request || [];

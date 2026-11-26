@@ -141,7 +141,9 @@ return function(NovelCheck)
         elseif info.status and info.status ~= "analyzed" then
             table.insert(lines, _("Still being rated. Open it again in a minute."))
         end
-        if info.url then
+        if info.rating_only then
+            table.insert(lines, info.message)
+        elseif info.url then
             table.insert(lines, _("In your library") .. (info.format and (" (" .. info.format .. ", " .. sizeText(info.size) .. ")") or ""))
         elseif info.in_library then
             table.insert(lines, _("In the library, but not as an ebook."))

@@ -87,6 +87,9 @@ func (s *Server) handleCheck(w http.ResponseWriter, r *http.Request) {
 			"catalogs": []string{}, "found": look.found, "source": look.source, "friend": true})
 		return
 	}
+	if _, err := s.Store.BookByID(id, auth.UserFrom(r)); err != nil { // above this person's limit: the rating, but the library is not shown to them
+		catalogs, copies = nil, nil
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"book": b, "rating": b.Status == "processing",
 		"in_library": len(catalogs) > 0, "catalogs": catalogs, "found": look.found, "source": look.source,
 		"my_wish": s.Store.MyWish(id, auth.UserFrom(r).ID)})

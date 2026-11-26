@@ -125,3 +125,35 @@ func TestLookupBlockedForKid(t *testing.T) {
 		t.Fatalf("the ask is a request a parent can answer: %v", q)
 	}
 }
+
+// A grown-up with a spice limit still sees a book's rating when she checks it, but the library is not shown to her: no download,
+// no Nightstand, no request.
+func TestRatingOnlyAboveLimit(t *testing.T) {
+	srv, st := setup(t)
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	admin.do("POST", "/api/admin/users", map[string]any{"username": "wife", "password": "wifepass12", "role": "editor"}, true)
+	_, _ = st.DB.Exec(`UPDATE users SET max_spice = 3 WHERE username = 'wife'`)
+	wife := login(t, srv, "wife", "wifepass12")
+	_, ks := wife.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+	key := hex.EncodeToString(sum[:])
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	four := 4
+	id, _ := st.UpsertBook("Over Three", "Someone", "", "")
+	_ = st.AddCopy(cal, id, "/c/o.epub", "epub", "1")
+	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &four, Model: "gpt"})
+	req, _ := http.NewRequest("GET", srv.URL+"/kosync/plugin/info/"+itoa(id), nil)
+	req.Header.Set("x-auth-user", "wife")
+	req.Header.Set("x-auth-key", key)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	out := map[string]any{}
+	_ = json.NewDecoder(res.Body).Decode(&out)
+	if res.StatusCode != 200 || out["rating_only"] != true || out["level"] != float64(4) || out["url"] != nil || out["in_library"] != nil || out["request"] != nil {
+		t.Fatalf("rating only: %d %v", res.StatusCode, out)
+	}
+}

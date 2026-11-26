@@ -141,7 +141,24 @@ func (s *Server) blockedInfo(u *store.User, id int64) (map[string]any, bool) {
 	if b.Status != "analyzed" {
 		return map[string]any{"id": id, "status": b.Status, "pending": true}, true
 	}
+	if u.Role != store.RoleRestricted { // a grown-up with a spice limit still gets the rating; the library just is not shown to them
+		return s.ratingOnly(u, b), true
+	}
 	return map[string]any{"id": id, "status": "analyzed", "blocked": true, "ask": true, "message": "This book isn't on your account yet."}, true
+}
+
+// ratingOnly is a book's page for someone whose rules hide it from their library: what the rating says, and nothing about whether
+// the library has it (no download, no Nightstand, no request).
+func (s *Server) ratingOnly(u *store.User, b *store.Book) map[string]any {
+	summary := strings.TrimSpace(b.Blurb)
+	if r := []rune(summary); len(r) > 600 {
+		summary = string(r[:600]) + "…"
+	}
+	out := map[string]any{"id": b.ID, "title": b.Title, "author": b.Author, "series": b.Series, "series_index": b.SeriesIndex,
+		"level": b.SpiceLevel, "reason": b.SpiceReason, "verdict": b.SummaryVerdict, "summary": summary, "status": b.Status,
+		"rating_only": true, "message": "Above your spice limit, so it isn't shown in your library."}
+	s.moreInfo(u, b, out)
+	return out
 }
 
 // handlePluginAccess: POST /kosync/plugin/access-request {"book_id"}: the person asks a parent for a book their rules hide. It is
