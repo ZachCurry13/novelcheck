@@ -9,12 +9,13 @@ type DeviceSeen struct {
 	Device   string `db:"device" json:"device"`
 	Version  string `db:"plugin_version" json:"version"`
 	Reported int64  `db:"reported_at" json:"reported_at"`
+	Since    int64  `db:"since" json:"since"` // when it started running this version (its last report if not known)
 }
 
 // AllDevices lists every e-reader that ever reported, newest report first.
 func (s *Store) AllDevices() []DeviceSeen {
 	out := []DeviceSeen{}
-	_ = s.DB.Select(&out, `SELECT i.user_id, u.username, i.device, i.plugin_version, i.reported_at FROM device_info i JOIN users u ON u.id = i.user_id ORDER BY i.reported_at DESC`)
+	_ = s.DB.Select(&out, `SELECT i.user_id, u.username, i.device, i.plugin_version, i.reported_at, COALESCE(NULLIF(i.version_since, 0), i.reported_at) AS since FROM device_info i JOIN users u ON u.id = i.user_id ORDER BY i.reported_at DESC`)
 	return out
 }
 

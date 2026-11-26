@@ -1,6 +1,6 @@
 // Health (admins, 2.0): one list that says whether NovelCheck is working, worst first, each problem with what to do about it.
 import { get, post } from "./api.js";
-import { esc, attempt } from "./ui.js";
+import { esc, attempt, toast } from "./ui.js";
 
 const DOT = { ok: "text-emerald-300", info: "text-slate-400", warn: "text-amber-300", bad: "text-rose-300" };
 const WORD = { ok: "OK", info: "FYI", warn: "Look at", bad: "Fix now" };
@@ -14,6 +14,14 @@ export async function renderHealth(view) {
   backups(view);
   const host = view.querySelector("#health");
   host.onclick = async (e) => {
+    const rm = e.target.closest("[data-remind]");
+    if (rm) {
+      rm.disabled = true;
+      const r = await attempt(() => post("/api/admin/devices/remind", JSON.parse(rm.dataset.remind)));
+      if (r) toast(r.sent ? "Reminder sent to their phone" : "They have no phone notifications on, so nothing was sent. Ask them to open the app on their Kindle.");
+      rm.disabled = false;
+      return;
+    }
     const f = e.target.closest("[data-forget]");
     if (!f || !confirm("Forget this Kindle? NovelCheck stops listing it. Its backup files stay.")) return;
     if (await attempt(() => post("/api/admin/devices/forget", JSON.parse(f.dataset.forget)), "Forgotten")) renderHealth(view);
@@ -21,6 +29,7 @@ export async function renderHealth(view) {
   view.querySelector("#health").innerHTML = d.items.map((i) => `<div class="card flex items-start gap-3"><span class="mt-1 shrink-0 text-xs font-semibold ${DOT[i.level]}">${WORD[i.level]}</span>
     <div class="min-w-0"><p class="font-semibold">${esc(i.title)}</p><p class="text-sm text-slate-300">${esc(i.detail)}</p>
     ${i.fix ? `<p class="text-sm"><b>What to do:</b> ${esc(i.fix)} ${i.link ? `<a href="${esc(i.link)}" class="underline">Go</a>` : ""}</p>` : ""}
+    ${i.remind ? `<button type="button" data-remind='${esc(JSON.stringify(i.remind))}' class="btn-secondary mt-1 py-1 text-xs">Send a reminder</button>` : ""}
     ${i.forget ? `<button type="button" data-forget='${esc(JSON.stringify(i.forget))}' class="btn-ghost mt-1 py-1 text-xs">Forget this Kindle</button>` : ""}</div></div>`).join("") || `<p class="text-slate-400">Nothing to report.</p>`;
 }
 

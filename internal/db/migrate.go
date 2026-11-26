@@ -68,6 +68,7 @@ func migrate(d *sqlx.DB) error {
 		{"books", "content_amounts", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "premise", "TEXT NOT NULL DEFAULT ''"},
 		{"catalogs", "physical", "INTEGER NOT NULL DEFAULT 0"},
+		{"device_info", "version_since", "INTEGER NOT NULL DEFAULT 0"}, // when the reported version last changed (0 = not known: its last report)
 		{"users", "only_collections", "INTEGER NOT NULL DEFAULT 0"},
 		{"deep_reads", "position", "INTEGER NOT NULL DEFAULT 0"},
 		{"users", "ai_features", "INTEGER NOT NULL DEFAULT 0"},

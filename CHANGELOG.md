@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.46]
+
+### 📲 People hear when their Kindle needs an update
+- **When a new Kindle app or KOReader plugin comes out, each person whose Kindle runs an older one gets one phone notice** ("Open NovelCheck on your Kindle with Wi-Fi on and it updates itself"), once per version, a Kindle that hasn't reported for two months excepted. It is checked every hour, so after you update the server, anyone already behind hears within the hour.
+- **The "needs a look" line for a Kindle now says how far behind it is and for how long** ("Kindle app 1.2.0 is out of date (newest 1.26.0): 24 versions behind, on this version for about 31 days"), and has a **Send a reminder** button (on Home and on Health) that sends that person the notice again. It says if they have no phone notifications on. {admin}
+
 ## [2.1.45]
 
 ### 🔎 The notice says why the main AI failed

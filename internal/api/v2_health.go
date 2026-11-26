@@ -11,8 +11,6 @@ import (
 
 	"github.com/zachcurry13/novelcheck/internal/hardcover"
 	"github.com/zachcurry13/novelcheck/internal/store"
-	kindleapp "github.com/zachcurry13/novelcheck/kindle-app"
-	kindleplugin "github.com/zachcurry13/novelcheck/kindle-plugin"
 )
 
 // Health: one list that says whether NovelCheck is working, from what the server already knows (no outside call), each
@@ -31,6 +29,7 @@ type healthItem struct {
 	Fix    string        `json:"fix,omitempty"`    // what to do, in words
 	Link   string        `json:"link,omitempty"`   // where
 	Forget *forgetDevice `json:"forget,omitempty"` // a Kindle that stopped reporting can be forgotten
+	Remind *forgetDevice `json:"remind,omitempty"` // a Kindle running an older app or plugin: send its person a reminder
 }
 
 // ago says how long ago a time was, in words ("3 h", "2 days").
@@ -132,11 +131,22 @@ func (s *Server) healthItems() []healthItem {
 			issues = append(issues, "hasn't reported for "+ago(seen))
 		}
 		backedUp := false
+		var remind *forgetDevice
 		for _, d := range k.devs {
-			if strings.HasPrefix(d.Version, "app ") && versionOlder(strings.TrimPrefix(d.Version, "app "), kindleapp.Version) {
-				issues = append(issues, "Kindle app "+strings.TrimPrefix(d.Version, "app ")+" is out of date (newest "+kindleapp.Version+")")
-			} else if !strings.HasPrefix(d.Version, "app ") && versionOlder(d.Version, kindleplugin.Version()) {
-				issues = append(issues, "KOReader plugin "+d.Version+" is out of date (newest "+kindleplugin.Version()+")")
+			if kind, cur, target := kindleTarget(d.Version); versionOlder(cur, target) {
+				what := "Kindle app"
+				if kind == "plugin" {
+					what = "KOReader plugin"
+				}
+				note := what + " " + cur + " is out of date (newest " + target + ")"
+				if n := versionsBehind(cur, target); n > 0 {
+					note += fmt.Sprintf(": %d versions behind", n)
+				}
+				if d.Since > 0 {
+					note += ", on this version for about " + ago(time.Since(time.Unix(d.Since, 0)))
+				}
+				issues = append(issues, note)
+				remind = &forgetDevice{UserID: d.UserID, Device: d.Device}
 			}
 			backedUp = backedUp || s.hasKindleBackup(d.UserID, d.Device)
 		}
@@ -152,7 +162,7 @@ func (s *Server) healthItems() []healthItem {
 			level = "warn"
 		}
 		fix := "Open NovelCheck on it with Wi-Fi on, press Sync now, and update if it offers. Back it up from the app's Menu or KOReader's Copy my Kindle."
-		it := healthItem{ID: "kindle-" + label, Level: level, Title: label, Detail: strings.Join(issues, "; "), Fix: fix, Link: "#/kindle"}
+		it := healthItem{ID: "kindle-" + label, Level: level, Title: label, Detail: strings.Join(issues, "; "), Fix: fix, Link: "#/kindle", Remind: remind}
 		if stale {
 			it.Forget = &forgetDevice{UserID: k.userID, Device: k.devs[0].Device}
 			it.Fix = "If this Kindle is gone or replaced, forget it (its backup files stay). Otherwise open NovelCheck on it with Wi-Fi on."

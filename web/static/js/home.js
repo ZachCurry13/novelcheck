@@ -1,7 +1,7 @@
 // Home (the start screen, 2.0): what is next for this person, new books, their asks and the answers, and for parents the asks waiting
 // for an answer; for admins also how healthy NovelCheck is and the inbox of things that need a decision.
 import { get, post, put } from "./api.js";
-import { esc, attempt } from "./ui.js";
+import { esc, attempt, toast } from "./ui.js";
 
 const LEVEL = { ok: "text-emerald-300", warn: "text-amber-300", bad: "text-rose-300" };
 const WORDS = { pending: "waiting for a parent", approved: "approved", declined: "not this time", done: "ready" };
@@ -16,7 +16,7 @@ function healthHTML(h) {
   return `<section class="card space-y-2"><div class="flex items-center justify-between gap-2">
     <h2 class="font-semibold ${LEVEL[h.level]}">${calm ? "Everything is working" : h.level === "bad" ? "Something needs fixing now" : "A few things need a look"}</h2>
     <a href="#/health" class="btn-ghost py-1 text-sm">Health</a></div>
-    ${h.items.map((i) => `<p class="text-sm"><b class="${LEVEL[i.level]}">${esc(i.title)}</b> <span class="text-slate-400">${esc(i.detail || i.fix)}</span> ${i.link ? `<a href="${esc(i.link)}" class="underline">Go</a>` : ""}</p>`).join("")}</section>`;
+    ${h.items.map((i) => `<p class="text-sm"><b class="${LEVEL[i.level]}">${esc(i.title)}</b> <span class="text-slate-400">${esc(i.detail || i.fix)}</span> ${i.link ? `<a href="${esc(i.link)}" class="underline">Go</a>` : ""}${i.remind ? ` <button type="button" data-remind='${esc(JSON.stringify(i.remind))}' class="btn-ghost py-0 text-xs underline">Send a reminder</button>` : ""}</p>`).join("")}</section>`;
 }
 
 // "Getting started": what a new NovelCheck needs, in order, until it is all done (an admin can hide it for a week).
@@ -142,6 +142,14 @@ export async function renderHome(view) {
       if (await attempt(() => post("/api/requests", { title: f.title.value, author: f.author.value, note: f.note.value }), "Asked. A parent will answer.")) draw();
     };
     host.onclick = async (e) => {
+      const rm = e.target.closest("[data-remind]");
+      if (rm) {
+        rm.disabled = true;
+        const r = await attempt(() => post("/api/admin/devices/remind", JSON.parse(rm.dataset.remind)));
+        if (r) toast(r.sent ? "Reminder sent to their phone" : "They have no phone notifications on, so nothing was sent. Ask them to open the app on their Kindle.");
+        rm.disabled = false;
+        return;
+      }
       const sn = e.target.closest("[data-snooze]");
       if (sn && await attempt(() => post("/api/home/snooze", { id: sn.dataset.snooze }), "Hidden for a week")) return draw();
       const ap = e.target.closest("[data-autopilot]");

@@ -15,6 +15,7 @@ import (
 func (s *Server) adminRoutes(r chi.Router) {
 	r.Use(auth.RequireAdmin)
 
+	r.Post("/admin/devices/remind", s.handleRemindDevice)
 	r.With(ownerOnly).Post("/admin/devices/forget", s.handleForgetDevice) // a Kindle that stopped reporting
 	r.With(s.cached).Get("/admin/health", s.handleHealth)                 // 2.0: is everything working
 	r.Get("/admin/backups", s.handleBackups)                              // 2.0.2: the daily copies, Back up now, the main admin's download

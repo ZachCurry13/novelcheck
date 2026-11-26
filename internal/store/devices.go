@@ -33,8 +33,11 @@ type Device struct {
 
 // SaveDeviceInfo notes which plugin version a device runs.
 func (s *Store) SaveDeviceInfo(userID int64, device, version string) {
-	_, _ = s.DB.Exec(`INSERT INTO device_info (user_id, device, plugin_version, reported_at) VALUES (?, ?, ?, ?)
-		ON CONFLICT(user_id, device) DO UPDATE SET plugin_version = excluded.plugin_version, reported_at = excluded.reported_at`, userID, device, version, time.Now().Unix())
+	now := time.Now().Unix()
+	_, _ = s.DB.Exec(`INSERT INTO device_info (user_id, device, plugin_version, reported_at, version_since) VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT(user_id, device) DO UPDATE SET
+			version_since = CASE WHEN plugin_version != excluded.plugin_version THEN excluded.reported_at ELSE version_since END,
+			plugin_version = excluded.plugin_version, reported_at = excluded.reported_at`, userID, device, version, now, now)
 }
 
 // SaveDeviceBooks replaces a device's list with a new report, matching each

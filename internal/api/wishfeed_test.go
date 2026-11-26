@@ -366,3 +366,32 @@ func TestJunkAuthorIdentifier(t *testing.T) {
 		t.Fatalf("found by its real author: %d", id)
 	}
 }
+
+// A Kindle on an older app gets one notice per new version, the Health line says how far behind it is, and an admin can remind.
+func TestUpdateNudge(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	u, _ := st.UserByName("admin")
+	st.SaveDeviceInfo(u.ID, "Old Kindle", "app 1.2.0")
+	_, out := admin.do("GET", "/api/admin/health", nil, false)
+	found := false
+	for _, it := range out["items"].([]any) {
+		m := it.(map[string]any)
+		if strings.Contains(m["title"].(string), "Old Kindle") && strings.Contains(m["detail"].(string), "versions behind") && m["remind"] != nil {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("health line: %v", out["items"])
+	}
+	if res, o := admin.do("POST", "/api/admin/devices/remind", map[string]any{"user_id": u.ID, "device": "Old Kindle"}, true); res.StatusCode != 200 || o["sent"] != false {
+		t.Fatalf("remind (no phone notifications on): %d %v", res.StatusCode, o)
+	}
+	if res, _ := admin.do("POST", "/api/admin/devices/remind", map[string]any{"user_id": u.ID, "device": "Nope"}, true); res.StatusCode != 404 {
+		t.Fatalf("unknown Kindle: %d", res.StatusCode)
+	}
+	st.SaveDeviceInfo(u.ID, "Old Kindle", "app 1.2.1")
+	if _, o := admin.do("GET", "/api/admin/health", nil, false); o == nil {
+		t.Fatal("health")
+	}
+}
