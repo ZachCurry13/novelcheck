@@ -6,6 +6,12 @@ becomes the release notes for that version and is shown in the app under
 
 ## [2.1.43]
 
+### 🖼️ Book covers are shown whole
+- **A cover is no longer cropped in the Library.** Covers a little wider than the card (like "The 10 Laws of Career Reinvention", whose title lost its edge) used to be cut to fit; now the whole cover shows, with a thin margin at the sides when it is narrower or wider than the card.
+
+### 📝 Release notes for the admin side stay with the admin side
+- **One note about the AI & Scans page in 2.1.42 wasn't marked for admins, so everyone saw it.** It is now. (Notes marked this way show for admins and parents; an ordinary reader sees none of them.) {admin}
+
 ### 🔧 Two odd things on Check a book
 - **"Shadow of Kyoshi" showed a long code after the author and never got rated.** Amazon's Kindle puts an identifier after some authors; NovelCheck copied it into the author, so the book never matched its real title and author and sat "In line". It is now taken out (for new Kindle reports, and for books already made that way, when the server starts and when a Kindle app reports), the book is joined with its real entry if there is one, and it goes to be rated.
 - **Typing "Merry's Christmas escape by f. Tilly" made the whole thing the title.** When Open Library doesn't know the book, "Title by Author" is now split into the title and the author.
@@ -13,7 +19,7 @@ becomes the release notes for that version and is shown in the app under
 ## [2.1.42]
 
 ### 🤖 Not sure ratings, and the bigger model, in your hands
-- **Admin → AI & Scans now has "Not sure ratings":** every rating the AI wasn't sure of, with how many are still waiting for the bigger model's second opinion, and the whole list to look through.
+- **Admin → AI & Scans now has "Not sure ratings":** every rating the AI wasn't sure of, with how many are still waiting for the bigger model's second opinion, and the whole list to look through. {admin}
 - **You decide how they get a second look:** **Look at all now** (one batch), **Look at 10 now**, or **each night: N books** (inside the hours automatic rating is allowed; it says how many were done tonight). A batch shows how far it got and carries on if you leave the page. Each rating gets one second opinion from the bigger model. This needs the Deep Scan machine on your home network (so it costs nothing); if it isn't set up or is off, the buttons say so. Before, this only happened by itself when automatic rating was switched on. {admin}
 
 ## [2.1.41]

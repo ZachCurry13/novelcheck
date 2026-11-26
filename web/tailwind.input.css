@@ -343,7 +343,7 @@ dialog.dialog.search-view[open] { animation: none; }
 .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 1.25rem 1rem; }
 .lib-tile { display: flex; flex-direction: column; min-width: 0; cursor: pointer; }
 .lib-tile .tile-cover { position: relative; aspect-ratio: 2 / 3; border-radius: 0.4rem; overflow: hidden; background: rgb(var(--slate-800)); }
-.lib-tile .tile-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.lib-tile .tile-img { display: block; width: 100%; height: 100%; object-fit: contain; } /* the whole cover, never cropped */
 /* a cover that is not book-shaped (a square audiobook cover, a wide one) is shown whole, not cropped (js/covers.js) */
 img.cover-fit { object-fit: contain !important; }
 .lib-tile:hover .tile-img { filter: brightness(1.06); }
