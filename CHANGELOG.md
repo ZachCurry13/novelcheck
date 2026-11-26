@@ -4,6 +4,17 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.20]
+
+### 🧹 The Kindle page is tidier
+- **It opens on what is on the Kindle.** The list used to start with every book in the Amazon library (541 of 547 on one Kindle). It now starts on **Downloaded**, says "3 on this Kindle · 541 only in the Amazon library", and **All**, **Amazon cloud** and a new **Not in your library** are one tap away.
+- **Titles are readable.** File names like "_OceanofPDF.com_My_Merry_Mistake" show as "My Merry Mistake", with no file ending or underscores.
+- **Spice labels match the rest of the app** ("Spice level 1: Sweet Romance" instead of "Spice 1 · No Spice"), and the filters say Spice 0–1, 2–3, 4–5.
+- **Books with no cover show a clearer placeholder** (a book outline) instead of an empty dark box.
+
+### 🔍 Can I trust the ratings?
+- **Home shows how accurate the ratings are,** from people's own levels on books they checked: how often the AI matched exactly and how often it was within one level, with a link to the details. Parents and admins only, once at least five books were checked. {admin}
+
 ## [2.1.19]
 
 ### 🤖 Autopilot

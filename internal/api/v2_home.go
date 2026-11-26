@@ -62,6 +62,10 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out["requests"] = s.openRequestsFor(u)
+	if rows := s.Store.Accuracy(); len(rows) > 0 && rows[0].N >= 5 { // how far the AI's levels can be trusted, from people's own levels
+		all := rows[0]
+		out["accuracy"] = map[string]any{"n": all.N, "exact": int(all.Exact*100 + 0.5), "within1": int(all.Within1*100 + 0.5)}
+	}
 	snoozed := s.Store.Snoozed(u.ID)
 	if u.IsAdmin() && !snoozed["setup"] { // a new NovelCheck: what to do first, until it is all done
 		if steps := s.setupSteps(); !setupDone(steps) {

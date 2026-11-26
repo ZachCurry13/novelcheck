@@ -331,3 +331,29 @@ func TestAutopilotSwitch(t *testing.T) {
 		t.Fatalf("kids: %d", res.StatusCode)
 	}
 }
+
+// Parents see how far the AI's levels can be trusted on Home, once enough books were checked by people.
+func TestHomeShowsAccuracy(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	if _, h := admin.do("GET", "/api/home", nil, false); h["accuracy"] != nil {
+		t.Fatalf("too few checked books: %v", h["accuracy"])
+	}
+	var uid int64
+	_ = st.DB.Get(&uid, `SELECT id FROM users WHERE username = 'admin'`)
+	for i := 0; i < 6; i++ {
+		b, _ := st.UpsertBook("Checked "+string(rune('A'+i)), "Au Thor", "", "")
+		level, ai := 2, 2
+		if i == 0 {
+			ai = 4 // one the AI got wrong by two levels
+		}
+		if _, err := st.DB.Exec(`INSERT INTO rating_feedback (book_id, user_id, level, ai_level, model) VALUES (?, ?, ?, ?, 'm')`, b, uid, level, ai); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_, h := admin.do("GET", "/api/home", nil, false)
+	a, _ := h["accuracy"].(map[string]any)
+	if a == nil || a["n"] != float64(6) || a["exact"] != float64(83) || a["within1"] != float64(83) {
+		t.Fatalf("accuracy: %v", h["accuracy"])
+	}
+}

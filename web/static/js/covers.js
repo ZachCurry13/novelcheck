@@ -9,7 +9,7 @@ export const coverImg = (id, cls = "h-24 w-16", large = false, bust = "") =>
     class="${cls} shrink-0 rounded bg-slate-800 object-cover shadow">`;
 
 // A book with no cover answers 404: a quiet stand-in takes the place of the browser's broken-picture icon, everywhere.
-const BLANK = "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 60"><rect width="40" height="60" rx="3" fill="#1e293b"/><path d="M11 17h18v26H11zM20 17v26" fill="none" stroke="#64748b" stroke-width="2"/></svg>`);
+const BLANK = "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 60"><rect width="40" height="60" rx="3" fill="#334155"/><path d="M11 17h18v26H11zM20 17v26" fill="none" stroke="#94a3b8" stroke-width="2"/></svg>`);
 document.addEventListener("error", (e) => {
   const i = e.target;
   if (i?.tagName === "IMG" && /\/api\/books\/\d+\/cover/.test(i.getAttribute("src") || "") && !i.dataset.nocover) {
