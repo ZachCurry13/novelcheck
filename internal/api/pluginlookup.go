@@ -3,8 +3,10 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/zachcurry13/novelcheck/internal/enrich"
@@ -68,7 +70,7 @@ func (s *Server) handlePluginCheck(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	b, err := s.Store.BookByID(id, u) // a book outside this person's rules: nothing comes back
+	b, err := s.Store.BookByID(id, nil) // rated first, whoever asks: whether this person may see it is decided on its page (blockedInfo)
 	if err != nil {
 		kosyncJSON(w, http.StatusNotFound, map[string]string{"message": "No results."})
 		return
@@ -129,3 +131,22 @@ func (s *Server) handlePluginWish(w http.ResponseWriter, r *http.Request) {
 	s.Store.Notify("info", "wishlist", "New books are on the family wishlist.", "#/wishlist")
 	kosyncJSON(w, http.StatusOK, map[string]string{"wish": body.Format})
 }
+
+// blockedInfo answers /plugin/info for a book this person's rules hide. While the book is still being rated it says "processing"
+// (the rules may need the rating); once rated and still hidden it says so plainly, shows nothing about the book (no rating, so a
+// kid is not pointed at it), and tells the parents once, who can allow it by marking the book OK.
+func (s *Server) blockedInfo(u *store.User, id int64) (map[string]any, bool) {
+	b, err := s.Store.BookByID(id, nil)
+	if err != nil {
+		return nil, false
+	}
+	if b.Status != "analyzed" {
+		return map[string]any{"id": id, "status": b.Status, "pending": true}, true
+	}
+	if _, told := blockedTold.LoadOrStore(fmt.Sprintf("%d|%d", u.ID, id), true); !told && u.Role == store.RoleRestricted {
+		s.Store.Notify("info", "lookups", fmt.Sprintf("%s looked up “%s”, which is outside their rules. It stays hidden from them unless you mark it OK.", u.Username, b.Title), "#/library")
+	}
+	return map[string]any{"id": id, "status": "analyzed", "blocked": true, "message": "That book isn't available on your account. A parent has been told."}, true
+}
+
+var blockedTold sync.Map // "person|book" already reported to the parents

@@ -111,6 +111,10 @@ return function(NovelCheck)
             UIManager:show(InfoMessage:new{ text = err })
             return
         end
+        if info.blocked or info.pending then
+            UIManager:show(InfoMessage:new{ text = info.message or _("Still being checked. Try again in a minute.") })
+            return
+        end
         local lines = { info.title or hit.title }
         if info.author and info.author ~= "" then
             table.insert(lines, _("by") .. " " .. info.author)

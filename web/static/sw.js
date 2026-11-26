@@ -144,6 +144,7 @@ const SHELL = [
   "/js/recentsearches.js",
   "/js/safemodebanner.js",
   "/js/barcode.js",
+  "/js/wishfeed.js",
   "/js/wishlist.js",
   "/js/delivery.js",
   "/js/series.js",

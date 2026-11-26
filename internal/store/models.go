@@ -14,6 +14,8 @@ type Store struct {
 	// OnNotify, if set, hears about each new notification (not repeats of an
 	// unread one), e.g. to push it to phones. It must not block.
 	OnNotify func(level, source, message, link string)
+	// OnWishAcquired hears about each wish whose book has just arrived (once). It must not block.
+	OnWishAcquired func(w Wish)
 
 	rematchedAt sync.Map // user id -> when their unmatched books were last re-checked (rematch.go)
 

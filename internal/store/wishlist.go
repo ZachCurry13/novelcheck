@@ -8,6 +8,7 @@ import (
 // Wish is a book someone would like the family to get.
 type Wish struct {
 	ID         int64  `db:"id" json:"id"`
+	UserID     int64  `db:"user_id" json:"-"`
 	BookID     int64  `db:"book_id" json:"book_id"`
 	Title      string `db:"title" json:"title"`
 	Author     string `db:"author" json:"author"`
@@ -30,7 +31,7 @@ var ErrAlreadyWished = errors.New("this book is already on your wishlist")
 const ownedCond = `EXISTS (SELECT 1 FROM catalog_books oc JOIN catalogs ocat ON ocat.id = oc.catalog_id
 	WHERE (oc.book_id = b.id OR oc.book_id IN (SELECT obm.box_id FROM box_members obm WHERE obm.book_id = b.id)) AND ocat.name NOT IN ('` + LookedUpCatalog + `', '` + DiscoverCatalog + `', '` + EventsCatalog + `'))`
 
-const wishCols = `w.id, w.book_id, b.title, b.author, b.spice_level, w.username, w.note, w.format, w.status, w.decided_by,
+const wishCols = `w.id, w.user_id, w.book_id, b.title, b.author, b.spice_level, w.username, w.note, w.format, w.status, w.decided_by,
 	w.created_at, w.updated_at`
 
 // formatCond is true for a copy (alias cb) in the wished-for format.
@@ -83,13 +84,7 @@ func (s *Store) MyWishFormat(bookID, userID int64, format string) *Wish {
 // Wishes lists the wishlist, newest first: everyone's (for parents) or one
 // person's. Books that have since arrived in a library are marked acquired.
 func (s *Store) Wishes(userID int64, everyone bool) ([]Wish, error) {
-	_, _ = s.DB.Exec(`UPDATE wishlist SET status = 'acquired', decided_by = 'in the library now', updated_at = CURRENT_TIMESTAMP
-		WHERE status IN ('wanted', 'approved') AND format = '' AND book_id IN (SELECT b.id FROM books b WHERE ` + ownedCond + `)`)
-	for f, cond := range formatCond {
-		_, _ = s.DB.Exec(`UPDATE wishlist SET status = 'acquired', decided_by = 'in the library now', updated_at = CURRENT_TIMESTAMP
-			WHERE status IN ('wanted', 'approved') AND format = ? AND book_id IN (SELECT cb.book_id FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id
-				WHERE c.name NOT IN ('`+LookedUpCatalog+`', '`+DiscoverCatalog+`', '`+EventsCatalog+`') AND `+cond+`)`, f)
-	}
+	s.MarkAcquired()
 	q := `SELECT ` + wishCols + ` FROM wishlist w JOIN books b ON b.id = w.book_id`
 	args := []any{}
 	if !everyone {
@@ -125,3 +120,33 @@ func (s *Store) PendingWishes() int {
 
 // OwnedCond is ownedCond for other packages: the SQL test for "the book (alias b) is in a real library".
 const OwnedCond = ownedCond
+
+// MarkAcquired marks every open wish whose book has arrived in a real library (in the format asked for) as acquired, and tells
+// OnWishAcquired about each one once. It runs when the wishlist is read and every few minutes, so the person is told soon.
+func (s *Store) MarkAcquired() {
+	const lib = `c.name NOT IN ('` + LookedUpCatalog + `', '` + DiscoverCatalog + `', '` + EventsCatalog + `')`
+	type rule struct {
+		where string
+		args  []any
+	}
+	rules := []rule{{`w.format = '' AND w.book_id IN (SELECT b.id FROM books b WHERE ` + ownedCond + `)`, nil}}
+	for f, cond := range formatCond {
+		rules = append(rules, rule{`w.format = ? AND w.book_id IN (SELECT cb.book_id FROM catalog_books cb JOIN catalogs c ON c.id = cb.catalog_id WHERE ` + lib + ` AND ` + cond + `)`, []any{f}})
+	}
+	for _, r := range rules {
+		var got []Wish
+		if err := s.DB.Select(&got, `SELECT `+wishCols+` FROM wishlist w JOIN books b ON b.id = w.book_id WHERE w.status IN ('wanted', 'approved') AND `+r.where, r.args...); err != nil {
+			continue
+		}
+		for _, w := range got {
+			res, err := s.DB.Exec(`UPDATE wishlist SET status = 'acquired', decided_by = 'in the library now', updated_at = CURRENT_TIMESTAMP
+				WHERE id = ? AND status IN ('wanted', 'approved')`, w.ID)
+			if err != nil {
+				continue
+			}
+			if n, _ := res.RowsAffected(); n > 0 && s.OnWishAcquired != nil {
+				s.OnWishAcquired(w)
+			}
+		}
+	}
+}

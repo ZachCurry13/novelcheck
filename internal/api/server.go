@@ -91,6 +91,7 @@ func (s *Server) Router() http.Handler {
 	r.Use(securityHeaders)
 
 	r.Get("/bugs/{token}", s.handleBugLink)
+	r.Get("/feed/wishes/{token}", s.handleWishFeed)
 	r.Post("/bugs/{token}/resolve", s.handleBugLinkResolve)
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })
 

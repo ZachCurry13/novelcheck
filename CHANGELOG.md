@@ -6,6 +6,11 @@ becomes the release notes for that version and is shown in the app under
 
 ## [2.1.31]
 
+### 📚 The wanted list: a feed, and a notice when a book arrives
+- **A feed of what the family still wants (admins: Wishlist, "Share the wanted list").** An RSS link with a secret in it, so you can share it without a login. It lists each book as "Title by Author (ebook)" or "(audiobook)", never who asked. A book drops off the feed as soon as it is in the library, in the format asked for. You can turn it off or make a new link (the old one stops working). Anyone with the link can read it, so share it only with people you trust. {admin}
+- **The person who asked is told when it arrives** (a phone notice, "Your audiobook is here"), and so are the parents (a bell notice, which also goes to their phones). It checks every ten minutes. {admin}
+- **A kid who looks up a book above their limit** sees only "That book isn't available on your account. A parent has been told." Nothing about the book (no rating) is shown, the parents get a notice, and it stays hidden unless a parent marks the book OK. (KOReader plugin 1.72.0, Kindle app 1.24.0.) {admin}
+
 ### 🌶️ A spice limit for any account
 - **Settings, People now has "Hide books above this spice level" for every account, not only kids.** Pick, for example, Level 3 for a grown-up and she never sees Level 4 or 5 books anywhere (lists, search, Kindle, Nightstand). Before, only kid accounts showed it, and saving a grown-up's account quietly reset a limit she had set herself on her own Profile. Both fixed. Kids keep their own box and age presets. {admin}
 

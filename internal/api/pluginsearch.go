@@ -132,6 +132,10 @@ func (s *Server) handlePluginInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	b, err := s.Store.BookByID(id, u)
 	if err != nil {
+		if out, ok := s.blockedInfo(u, id); ok {
+			kosyncJSON(w, http.StatusOK, out)
+			return
+		}
 		http.NotFound(w, r)
 		return
 	}
