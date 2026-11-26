@@ -34,7 +34,7 @@ func (s *Server) freeClient() *freebooks.Client {
 
 // freeMatch is the free copy of a book, if any (the answer is kept for hours, so this is cheap to ask again).
 func (s *Server) freeMatch(ctx context.Context, title, author string) (freebooks.Match, bool) {
-	ctx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second) // Check a book must not wait long for a third party
 	defer cancel()
 	return s.freeClient().Find(ctx, title, author)
 }
