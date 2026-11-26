@@ -56,6 +56,9 @@ return function(NovelCheck)
     -- homeFailed forgets a good knock when a real request to the home address then failed.
     function NovelCheck:homeFailed()
         local home = trim(self.settings:readSetting("server_home"))
+        if home == "" then
+            home = trim(self.settings:readSetting("server_home_auto"))
+        end
         self.home_seen = { base = home, at = os.time(), ok = false }
     end
 
@@ -64,6 +67,9 @@ return function(NovelCheck)
     function NovelCheck:addresses()
         local out = {}
         local home = trim(self.settings:readSetting("server_home"))
+        if home == "" then
+            home = trim(self.settings:readSetting("server_home_auto")) -- from the server's own setting
+        end
         if home ~= "" and self:homeReachable(home) then
             out[#out + 1] = home
         end

@@ -31,6 +31,7 @@ function github(done) {
 
 function checkUpdate() {
   api("GET", "/kosync/plugin/kindle-app?v=" + encodeURIComponent(NC.version || "") + "&device=" + encodeURIComponent(NC.device || ""), null, function (err, v) {
+    if (!err && v && typeof v.home === "string") keep("nc-home", v.home); // the home address an admin set on the server
     var ver = $("ver"), base = "v" + (NC.version || "?");
     github(function (g) {
       var best = null;

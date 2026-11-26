@@ -89,6 +89,11 @@ return function(NovelCheck, ctx)
         if not (ok and type(data) == "table" and data.version and type(data.files) == "table") then
             return nil
         end
+        if type(data.home) == "string" and self.settings:readSetting("server_home_auto") ~= data.home then
+            self.settings:saveSetting("server_home_auto", data.home) -- the home address an admin set on the server
+            self.settings:flush()
+            self.home_seen = nil
+        end
         local g = self:githubInfo()
         if g and versionLess(data.version, g.version) and data.server
             and (data.server == "dev" or not versionLess(data.server, g.min_server)) then

@@ -173,6 +173,8 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/bug-link", s.handleAdminBugLink)
 		r.Post("/admin/bug-link", s.handleAdminBugLink)
 		r.Delete("/admin/bug-link", s.handleAdminBugLink)
+		r.Get("/admin/home-address", s.handleAdminHomeAddress)
+		r.Put("/admin/home-address", s.handleAdminHomeAddress)
 		r.Get("/admin/wish-feed", s.handleAdminWishFeed)
 		r.Post("/admin/wish-feed", s.handleAdminWishFeed)
 		r.Delete("/admin/wish-feed", s.handleAdminWishFeed)

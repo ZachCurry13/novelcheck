@@ -505,3 +505,24 @@ func TestPluginSearchAndNightstand(t *testing.T) {
 		t.Fatal("kids look up only when a parent allows it")
 	}
 }
+
+// An e-reader report with a raw tab or line break inside a file name is still read (it was refused as "bad request").
+func TestDeviceReportWithControlCharacters(t *testing.T) {
+	srv, st := setup(t)
+	_ = st.SetSetting(store.KeyModuleKOReader, "true")
+	admin := login(t, srv, "admin", "adminpass1")
+	_, ks := admin.do("GET", "/api/me/kosync", nil, false)
+	sum := md5.Sum([]byte(ks["code"].(string)))
+	body := "{\"device\":\"Kindle\",\"books\":[{\"filename\":\"A\tTab\nBook.epub\",\"format\":\"epub\",\"title\":\"A \\\"quoted\\\" title\",\"size\":10}]}"
+	req, _ := http.NewRequest("POST", srv.URL+"/kosync/plugin/device", strings.NewReader(body))
+	req.Header.Set("x-auth-user", "admin")
+	req.Header.Set("x-auth-key", hex.EncodeToString(sum[:]))
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != 200 {
+		t.Fatalf("report with a tab and a line break: %d", res.StatusCode)
+	}
+}

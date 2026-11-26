@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -84,7 +85,12 @@ func (s *Server) handlePluginDevice(w http.ResponseWriter, r *http.Request) {
 		Plugin string             `json:"plugin_version"`
 		Books  []store.DeviceBook `json:"books"`
 	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 2<<20)).Decode(&body); err != nil {
+	raw, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 2<<20))
+	if err == nil {
+		err = json.Unmarshal(cleanJSONStrings(raw), &body)
+	}
+	if err != nil {
+		setDetail(w, err) // the bug log then says why (a file name with a raw control character, a body cut short, too large)
 		kosyncJSON(w, http.StatusBadRequest, map[string]string{"message": "bad request"})
 		return
 	}
@@ -130,7 +136,7 @@ func (s *Server) handlePluginVersion(w http.ResponseWriter, r *http.Request) {
 	if s.kosyncUser(w, r) == nil {
 		return
 	}
-	kosyncJSON(w, http.StatusOK, map[string]any{"version": kindleplugin.Version(), "files": kindleplugin.UpdatableFiles(), "server": version.Version})
+	kosyncJSON(w, http.StatusOK, map[string]any{"version": kindleplugin.Version(), "files": kindleplugin.UpdatableFiles(), "server": version.Version, "home": s.homeAddress()})
 }
 
 // handlePluginFile sends one of the plugin's Lua files.
@@ -146,4 +152,23 @@ func (s *Server) handlePluginFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	_, _ = w.Write(data)
+}
+
+// cleanJSONStrings turns a raw control character inside a JSON string (a tab or line break in a file name or a title, which an
+// e-reader may leave unescaped) into a space, because Go's decoder refuses the whole report for it. Outside strings nothing changes.
+func cleanJSONStrings(b []byte) []byte {
+	in, esc := false, false
+	for i, c := range b {
+		switch {
+		case esc:
+			esc = false
+		case in && c == '\\':
+			esc = true
+		case c == '"':
+			in = !in
+		case in && c < 0x20:
+			b[i] = ' '
+		}
+	}
+	return b
 }

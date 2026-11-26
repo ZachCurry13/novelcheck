@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.73.0"
+local VERSION = "1.74.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -124,7 +124,7 @@ function NovelCheck:menuItems()
         { text = _("My Kindle"), callback = function() DeviceBooks.show(self) end },
         { text = _("Finish this book…"), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
         { text = _("Sync now"), callback = function() self:syncNow() end },
-        { text = _("Keep safe"), sub_item_table = {
+        { text = _("Backups"), sub_item_table = {
             { text = _("Back up now"), callback = function() if self.backupKindle then self:backupKindle(false) end end },
             { text = _("Restore from NovelCheck…"), callback = function() if self.restoreKindle then self:restoreKindle() end end },
         } },
@@ -392,7 +392,7 @@ function NovelCheck:request(path, file, post_body)
             if type(code) == "number" then
                 return code, body
             end
-            if i == 1 and self.homeFailed and base == trim(self.settings:readSetting("server_home")) then
+            if i == 1 and self.homeFailed and (base == trim(self.settings:readSetting("server_home")) or base == trim(self.settings:readSetting("server_home_auto"))) then
                 self:homeFailed()
             end
         end

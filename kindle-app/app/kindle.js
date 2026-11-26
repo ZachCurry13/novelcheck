@@ -8,9 +8,38 @@ function sh(s) {
 }
 
 // api calls the server with the plugin's sign-in; done(err, data, status). err is a sentence to show.
-function api(method, path, body, done) {
+// The home address (an admin sets it on the server; update.js keeps it in nc-home): at home the app talks to NovelCheck over
+// the Wi-Fi alone. A 2.5-second knock (GET /healthz) says whether it answers; the answer is kept for ten minutes, so away from
+// home a request waits at most 2.5 seconds, once every ten minutes, then goes to the main address.
+var homeState = { at: 0, ok: false, base: "" };
+function knockHome(base, then) {
+  var now = new Date().getTime();
+  if (homeState.base === base && now - homeState.at < 600000) return then(homeState.ok);
+  var k = new XMLHttpRequest();
+  var finished = false;
+  var end = function (ok) {
+    if (finished) return;
+    finished = true;
+    homeState = { at: new Date().getTime(), ok: ok, base: base };
+    then(ok);
+  };
+  k.open("GET", base + "/healthz", true);
+  k.timeout = 2500;
+  k.onreadystatechange = function () { if (k.readyState === 4) end(k.status === 200); };
+  try { k.send(null); } catch (e) { end(false); }
+}
+
+function api(method, path, body, done, remoteOnly) {
+  var home = remoteOnly || path.indexOf("/kosync/") !== 0 ? "" : (stored("nc-home") || "");
+  if (home) return knockHome(home, function (ok) { send(method, ok ? home : NC.server, path, body, done, ok ? home : ""); });
+  send(method, NC.server, path, body, done, "");
+}
+
+// send asks one address; when it was the home address and nothing answered, the home address is forgotten for ten minutes and the
+// same request goes to the main address.
+function send(method, base, path, body, done, triedHome) {
   var x = new XMLHttpRequest();
-  x.open(method, NC.server + path, true);
+  x.open(method, base + path, true);
   x.setRequestHeader("x-auth-user", NC.user);
   x.setRequestHeader("x-auth-key", NC.key);
   x.setRequestHeader("Accept", "application/json");
@@ -18,6 +47,10 @@ function api(method, path, body, done) {
   x.timeout = 20000;
   x.onreadystatechange = function () {
     if (x.readyState !== 4) return;
+    if (x.status === 0 && triedHome) {
+      homeState = { at: new Date().getTime(), ok: false, base: triedHome };
+      return api(method, path, body, done, true);
+    }
     var data = null;
     try { data = JSON.parse(x.responseText); } catch (e) {}
     // any answer at all means NovelCheck can be reached: a leftover "Offline" line goes

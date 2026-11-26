@@ -4,6 +4,15 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.33]
+
+### 🏠 At home the Kindle talks to the server over Wi-Fi, anywhere else over the internet (app 1.25.0, plugin 1.74.0)
+- **A home network address, set once.** Admin, Integrations, "Home network address" (like http://192.168.1.20:8080). Kindles with the app or the plugin pick it up the next time they check for updates. Then each request first knocks on the home address for 2.5 seconds; if it answers, everything goes over the Wi-Fi alone, and if not, the main address is used. The answer is remembered for ten minutes, so away from home the wait is at most 2.5 seconds, once every ten minutes. The plugin could already do this with a per-Kindle address; the app could not. Covers and book downloads in the app still use the main address. {admin}
+- **"Keep safe" is now "Backups"** in the plugin's More list.
+
+### 🔧 From the log
+- **A Kindle report with a tab or line break inside a file name is no longer refused as "bad request"** (Jenna's Kindle had five of these in a row after the plugin was installed). If something else is wrong with a report, the bug log now says what. {admin}
+
 ## [2.1.32]
 
 ### 💾 Back up from the KOReader card (plugin 1.73.0)
