@@ -125,7 +125,7 @@ done, or you keep your own top-menu order that leaves it out, the same list is i
 
 ## Search outside the library (1.71.0)
 
-Search lists library matches first. **Not here? Look it up online** (also shown alone when nothing matches) finds the book on
+Check a book (the search) lists library matches first. **Not here? Look it up online** (also shown alone when nothing matches) finds the book on
 Open Library; pick the one you meant and NovelCheck rates it as Check a book does, which can take a minute. The book's page shows
 the rating and summary, with **Download** and **Add to Nightstand** if the library has it, or "Not available in the library yet."
 with **Request the ebook** and **Request the audiobook** (the family wishlist) if not. A kid needs a parent's OK for this (the AI

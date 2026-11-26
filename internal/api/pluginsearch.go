@@ -21,6 +21,7 @@ const pluginHitLimit = 30
 type pluginHit struct {
 	pluginBook
 	Series   string `json:"series,omitempty"`
+	NoFile   bool   `json:"no_file,omitempty"` // in the library but with nothing to download here (an audiobook, a paper copy): search still lists it
 	OnDevice bool   `json:"on_device"`
 	Queue    string `json:"queue,omitempty"` // the status on the Nightstand, when it is there
 }
@@ -56,6 +57,11 @@ func (s *Server) pluginBookFor(b *store.Book) (pluginBook, bool) {
 
 // hits turns books into search results marked with what the person has already.
 func (s *Server) hits(u *store.User, device string, books []store.Book) []pluginHit {
+	return s.hitsWith(u, device, books, false)
+}
+
+// hitsWith is hits; withNoFile also keeps books of the library that have no file to download (search shows them, with their page).
+func (s *Server) hitsWith(u *store.User, device string, books []store.Book, withNoFile bool) []pluginHit {
 	onDevice := map[int64]bool{}
 	for _, id := range s.Store.DeviceBookIDs(u.ID, device) {
 		onDevice[id] = true
@@ -70,10 +76,13 @@ func (s *Server) hits(u *store.User, device string, books []store.Book) []plugin
 	for i := range books {
 		pb, ok := s.pluginBookFor(&books[i])
 		if !ok {
-			continue
+			if !withNoFile || !s.Store.Owned(books[i].ID) {
+				continue
+			}
+			pb = pluginBook{ID: books[i].ID, Title: books[i].Title, Author: books[i].Author, Level: books[i].SpiceLevel, Stars: books[i].HCRating}
 		}
 		pb.Status = queued[books[i].ID]
-		out = append(out, pluginHit{pluginBook: pb, Series: books[i].Series, OnDevice: onDevice[books[i].ID], Queue: queued[books[i].ID]})
+		out = append(out, pluginHit{pluginBook: pb, NoFile: !ok, Series: books[i].Series, OnDevice: onDevice[books[i].ID], Queue: queued[books[i].ID]})
 	}
 	return out
 }
@@ -94,7 +103,7 @@ func (s *Server) handlePluginSearch(w http.ResponseWriter, r *http.Request) {
 		kosyncJSON(w, http.StatusInternalServerError, map[string]string{"message": "search failed"})
 		return
 	}
-	res := s.hits(u, r.URL.Query().Get("device"), books)
+	res := s.hitsWith(u, r.URL.Query().Get("device"), books, true)
 	if len(res) > pluginHitLimit {
 		res = res[:pluginHitLimit]
 	}

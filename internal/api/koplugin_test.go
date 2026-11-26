@@ -442,8 +442,11 @@ func TestPluginSearchAndNightstand(t *testing.T) {
 		!strings.HasPrefix(hit["url"].(string), "/kosync/plugin/book/"+itoa(reptile)+"/") {
 		t.Fatalf("hit: %v", hit)
 	}
-	if _, out := get("/kosync/plugin/search?q=paper+only"); len(out["books"].([]any)) != 0 {
-		t.Fatalf("a book with nothing to download is not offered: %v", out)
+	if _, out := get("/kosync/plugin/search?q=paper+only"); len(out["books"].([]any)) != 1 || out["books"].([]any)[0].(map[string]any)["no_file"] != true {
+		t.Fatalf("a library book with nothing to download is listed, marked no_file: %v", out)
+	}
+	if _, out := get("/kosync/plugin/new?"); len(out["books"].([]any)) != 2 {
+		t.Fatalf("New still lists only books with a file: %v", out)
 	}
 	if _, out := get("/kosync/plugin/search?q=x"); len(out["books"].([]any)) != 0 {
 		t.Fatalf("a one-letter search: %v", out)

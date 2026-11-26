@@ -119,7 +119,7 @@ function NovelCheck:menuItems()
     return {
         { text = _("Nightstand"), callback = function() self:showUpNext() end },
         { text = _("New in the library"), callback = function() self:newInLibrary() end },
-        { text = _("Search"), callback = function() self:searchLibrary() end },
+        { text = _("Check a book"), callback = function() self:searchLibrary() end },
         { text = _("Get my Nightstand books"), callback = function() self:downloadAll() end },
         { text = _("My Kindle"), callback = function() DeviceBooks.show(self) end },
         { text = _("Finish this book…"), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },

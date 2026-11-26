@@ -125,23 +125,30 @@ return function(NovelCheck)
         end
         if type(info.level) == "number" then
             local why = (info.reason and info.reason ~= "") and (": " .. info.reason) or ""
-            table.insert(lines, _("Spice level") .. ": " .. tostring(info.level) .. why)
+            table.insert(lines, _("Spice level") .. " " .. tostring(info.level) .. why)
         elseif info.status and info.status ~= "analyzed" then
             table.insert(lines, _("Still being rated. Open it again in a minute."))
         end
+        if info.url then
+            table.insert(lines, _("In your library") .. (info.format and (" (" .. info.format .. ", " .. sizeText(info.size) .. ")") or ""))
+        elseif info.in_library then
+            table.insert(lines, _("In the library, but not as an ebook."))
+        else
+            table.insert(lines, _("Not available in the library yet."))
+        end
+        -- everything else is behind Details, so the buttons are always on the screen
+        local more = {}
         if info.verdict and info.verdict ~= "" then
-            table.insert(lines, info.verdict)
+            table.insert(more, info.verdict)
         end
         if info.summary and info.summary ~= "" then
-            table.insert(lines, "")
-            table.insert(lines, info.summary)
+            table.insert(more, info.summary)
         end
-        if info.format then
-            table.insert(lines, "")
-            table.insert(lines, info.format .. ", " .. sizeText(info.size))
-        elseif not info.url then
-            table.insert(lines, "")
-            table.insert(lines, _("Not available in the library yet."))
+        for _i, g in ipairs(info.content or {}) do
+            table.insert(more, g.group .. ": " .. table.concat(g.items or {}, ", "))
+        end
+        if info.genres and #info.genres > 0 then
+            table.insert(more, table.concat(info.genres, ", "))
         end
         local dialog
         local buttons = {}
@@ -162,6 +169,13 @@ return function(NovelCheck)
         end
         for _i, f in ipairs(info.wished or {}) do
             table.insert(buttons, { { text = _("Asked for the") .. " " .. FORMAT[f], enabled = false } })
+        end
+        if #more > 0 then
+            table.insert(buttons, { { text = _("Details: why this rating, summary"),
+                callback = function()
+                    local TextViewer = require("ui/widget/textviewer")
+                    UIManager:show(TextViewer:new{ title = info.title or hit.title, text = table.concat(more, "\n\n") })
+                end } })
         end
         table.insert(buttons, { { text = _("Close"), callback = function() UIManager:close(dialog) end } })
         dialog = ButtonDialog:new{ title = table.concat(lines, "\n"), buttons = buttons }

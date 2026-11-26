@@ -1,6 +1,6 @@
 --[[
 NovelCheck plugin: the launcher card. Tapping NovelCheck's icon in KOReader's top bar opens one card with big buttons, like an
-app's home screen, instead of a menu list: what it is connected as and when it last synced, then search, the book that is next with one big Read it / Download button, Nightstand, New and My Kindle,
+app's home screen, instead of a menu list: what it is connected as and when it last synced, then a Check a book bar, the book that is next with one big Read it / Download button, Nightstand, New and My Kindle,
 Sync now and More (More is the whole list, with the rarely used things: Back up and tidy, Settings).
 It adds its functions to the NovelCheck plugin class (see main.lua).
 ]]
@@ -138,7 +138,7 @@ return function(NovelCheck)
         else
             table.insert(rows, note(_("Not connected yet: More > Settings > Connect")))
         end
-        table.insert(rows, { { text = "🔍  " .. _("Search the library…"), font_size = 22, height = Device.screen:scaleBySize(52),
+        table.insert(rows, { { text = "🔍  " .. _("Check a book…"), font_size = 22, height = Device.screen:scaleBySize(52),
             callback = go(function() self:searchLibrary() end) } })
         local nb = self.settings:readSetting("next_book")
         if type(nb) == "table" and nb.title then

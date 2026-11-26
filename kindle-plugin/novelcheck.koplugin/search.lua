@@ -52,16 +52,16 @@ return function(NovelCheck, ctx)
         end
         local dialog
         dialog = InputDialog:new{
-            title = _("Search your NovelCheck library"),
+            title = _("Check a book"),
             input = "",
-            input_hint = _("Any words of the title or author"),
+            input_hint = _("Title or author"),
             buttons = { {
                 { text = _("Cancel"), callback = function() UIManager:close(dialog) end },
-                { text = _("Search"), is_enter_default = true, callback = function()
+                { text = _("Check"), is_enter_default = true, callback = function()
                     local q = (dialog:getInputText() or ""):gsub("^%s+", ""):gsub("%s+$", "")
                     UIManager:close(dialog)
                     if #q >= 2 then
-                        self:runSearch("/kosync/plugin/search?q=" .. util.urlEncode(q), _("Search") .. ": " .. q, q)
+                        self:runSearch("/kosync/plugin/search?q=" .. util.urlEncode(q), _("Check a book") .. ": " .. q, q)
                     end
                 end },
             } },
@@ -107,6 +107,9 @@ return function(NovelCheck, ctx)
             local marks = {}
             if type(h.level) == "number" then
                 table.insert(marks, "Spice " .. tostring(h.level))
+            end
+            if h.no_file then
+                table.insert(marks, _("no ebook"))
             end
             if h.on_device then
                 table.insert(marks, _("on device"))

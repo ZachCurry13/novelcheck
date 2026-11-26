@@ -11,6 +11,11 @@ becomes the release notes for that version and is shown in the app under
 - **The person who asked is told when it arrives** (a phone notice, "Your audiobook is here"), and so are the parents (a bell notice, which also goes to their phones). It checks every ten minutes. {admin}
 - **A kid who looks up a book above their limit** sees only "That book isn't available on your account. A parent has been told." Nothing about the book (no rating) is shown, the parents get a notice, and it stays hidden unless a parent marks the book OK. (KOReader plugin 1.72.0, Kindle app 1.24.0.) {admin}
 
+### 🔎 "Check a book" on the Kindle, same name and same page as on your phone
+- **Search is now called Check a book** in the KOReader plugin and the Kindle app, because that is what it does: it finds the book in the library or looks it up online.
+- **A book the library has but without an ebook (an audiobook, say) now shows up in the results**, marked "no ebook". Before, it was left out, so the app said "No books found" for a book you knew was in the library. Its page offers Request the ebook.
+- **The book's page in KOReader fits the screen:** title, author, spice level, whether it is in your library, and the buttons (Download, Add to Nightstand, request) are always visible. The long text (why this rating, summary, what it contains) is behind a **Details** button.
+
 ### 🌶️ A spice limit for any account
 - **Settings, People now has "Hide books above this spice level" for every account, not only kids.** Pick, for example, Level 3 for a grown-up and she never sees Level 4 or 5 books anywhere (lists, search, Kindle, Nightstand). Before, only kid accounts showed it, and saving a grown-up's account quietly reset a limit she had set herself on her own Profile. Both fixed. Kids keep their own box and age presets. {admin}
 

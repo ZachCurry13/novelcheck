@@ -11,7 +11,7 @@ function note(text) { $("note").textContent = text || ""; }
 
 // ----- where you are: the top bar has ☰ Menu at the left (on a list) or ‹ Back (inside a book, the menu, a collection)
 var backTo = null; // what ‹ Back does; null on a list, where the button opens the menu
-var TITLES = { "up-next": "Nightstand", "new": "New", "discover": "Discover", "collections": "Collections", "kindle-mine": "My Kindle", "search": "Search" };
+var TITLES = { "up-next": "Nightstand", "new": "New", "discover": "Discover", "collections": "Collections", "kindle-mine": "My Kindle", "search": "Check a book" };
 function paintNav(title) {
   $("navbtn").textContent = backTo ? "‹ Back" : "☰ Menu";
   $("title").textContent = title || "NovelCheck";
@@ -139,7 +139,7 @@ function show(list, query) {
   for (var i = 0; i < tabs.length; i++) tabs[i].className = tabs[i].getAttribute("data-list") === tab ? "on" : "";
   var path = list === "search" ? "/kosync/plugin/search?q=" + encodeURIComponent(query) :
     list === "collection" ? "/kosync/plugin/collection/" + encodeURIComponent(query) : "/kosync/plugin/" + list;
-  var cached = cachedList(list);
+  var cached = list === "search" ? null : cachedList(list); // a search is for this query only
   if (cached && cached.books && cached.books.length) { // what was saved shows at once; the fresh list replaces it
     state.books = cached.books;
     state.header = cached.header || "";
@@ -170,7 +170,7 @@ function show(list, query) {
       state.books = (data && data.books) || [];
       if (list === "collection") state.header = ((data.icon ? data.icon + " " : "") + data.name) + (data.about ? ": " + data.about : "");
     }
-    cacheList(list, state.books, state.header);
+    if (list !== "search") cacheList(list, state.books, state.header);
     keep("nc-count-" + list, String(state.books.length)); // the Menu shows how many are in each list
     state.page = 0;
     note(state.books.length ? "" : list === "up-next" ? "Your Nightstand is empty." : list === "kindle-mine" ? "Nothing yet: tap Sync now." :
@@ -288,6 +288,10 @@ function row(b) {
   what.appendChild(line);
   what.onclick = function () { details(b.id); };
   var dl = downloadButton(b);
+  if (b.no_file) { // in the library with nothing to download here: its page says why and offers a request
+    dl = el("button", "", "Details");
+    dl.onclick = function () { details(b.id); };
+  }
   dl.className += " act"; // floats right, so it goes in before the text
   r.appendChild(dl);
   r.appendChild(what);
