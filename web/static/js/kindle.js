@@ -37,6 +37,14 @@ function rowHTML(b) {
       ${pct > 0 && b.format !== "cloud" ? `<span class="mt-1 block h-1 rounded bg-slate-800"><span class="block h-1 rounded bg-indigo-500" data-w="${pct}"></span></span>` : ""}</span></li>`;
 }
 
+// whatsOn says which NovelCheck parts are on a Kindle and how they share the work.
+function whatsOn(ds) {
+  const app = ds.some(isApp), plugin = ds.some((d) => !isApp(d));
+  if (app && plugin) return "Both are on this Kindle. The KOReader plugin backs it up and syncs your reading; the Kindle app picks books and shows your Amazon library. Either works alone.";
+  if (app) return "Only the Kindle app is on this Kindle. To read in KOReader too, open the app's Menu and choose Install the KOReader plugin.";
+  return "Only the KOReader plugin is on this Kindle. To use NovelCheck from the Kindle's home screen too, open KOReader's NovelCheck icon, then More > Settings > Install the Kindle app.";
+}
+
 export async function renderKindle(view) {
   view.innerHTML = `<h1 class="page-title mb-1">Kindle</h1><div id="k-who"></div><div id="k-body"><p class="text-slate-400">Loading…</p></div>`;
   const people = await get("/api/admin/users").catch(() => []); // a parent can look at a kid's Kindle
@@ -82,6 +90,7 @@ export async function renderKindle(view) {
     body.innerHTML = `${names.length > 1 ? `<label class="mb-2 block text-sm text-slate-400">Kindle <select id="k-pick" class="input ml-1 py-1">${names.map((n) => `<option ${n === current ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>` : ""}
       <div class="card mb-3 text-sm"><b>${esc(current)}</b>
         ${ds.map((d) => `<span class="${isApp(d) && String(d.plugin_version).slice(4) !== s.app_latest ? "chip-wait" : "chip-none"}">${isApp(d) ? "Kindle app " + esc(String(d.plugin_version).slice(4)) : "KOReader plugin " + esc(d.plugin_version)}</span>`).join(" ")}
+        <p class="mt-1 text-xs text-slate-400">${whatsOn(ds)}</p>
         <p class="text-xs text-slate-400">Last report ${esc(ago(last))} · ${books.filter((b) => b.format !== "cloud").length} on this Kindle · ${books.filter((b) => b.format === "cloud").length} only in the Amazon library</p></div>
       <div class="mb-2 flex flex-wrap gap-1">${FILTERS.map(([k, label]) => `<button type="button" data-f="${k}" class="chip-filter${k === filter ? " on" : ""}">${label}</button>`).join("")}</div>
       <ul class="card divide-y divide-slate-800">${shown.map(rowHTML).join("") || `<li class="py-2 text-sm text-slate-400">No books match.</li>`}</ul>

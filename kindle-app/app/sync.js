@@ -93,6 +93,7 @@ function report(said, done) {
     for (var q = 0; q < rows.length; q++) if (rows[q] && rows[q].indexOf("\t") < 0 && rows[q] !== "PLUGIN") bad.push(rows[q]);
     if (bad.length) logLine("library read: " + bad.join(" ").slice(0, 300)); // an error from the Kindle's own tools
     var lib = parseLibrary(text);
+    keep("nc-plugin", lib.plugin ? "1" : "0"); // is the KOReader plugin on this Kindle? it then does the backups
     keep("nc-places", JSON.stringify(lib.places));
     note("Sending " + lib.books.length + " books…");
     api("POST", "/kosync/plugin/device", { device: NC.device, plugin_version: "app " + NC.version, books: lib.books }, function (err, r) {

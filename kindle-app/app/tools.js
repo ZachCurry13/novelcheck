@@ -73,11 +73,13 @@ function installPlugin(done) {
 // paintBackup says when this Kindle's books were last sent to NovelCheck (by the button or by itself).
 function paintBackup() {
   var t = +stored("nc-last-bk") || 0;
+  if (stored("nc-plugin") === "1") { $("lastbk").textContent = "The KOReader plugin on this Kindle does the backups."; return; }
   $("lastbk").textContent = t ? "Books last backed up: " + new Date(t).toISOString().slice(0, 16).replace("T", " ") + " UTC" : "Books not backed up yet.";
 }
 
 // autoBackup is backupKindle by itself, at most every 24 hours, after an automatic sync (books NovelCheck already has are skipped).
 function autoBackup() {
+  if (stored("nc-plugin") === "1") return; // the plugin backs up the whole Kindle: not twice
   if (toolBusy || new Date().getTime() - (+stored("nc-auto-bk") || 0) < 24 * 3600 * 1000) return;
   toolBusy = true;
   backupKindle(function (sent, wanted) {

@@ -202,7 +202,7 @@ return function(NovelCheck, ctx)
 
     -- scanBooksAsync is scanBooks that keeps the Kindle answering: the folders are listed first (quick), then the
     -- books are described a few at a time (the slow part: fingerprints, titles, finished marks), with the screen free
-    -- between turns. done(books, stopped) is called at the end. It can be stopped (NovelCheck icon > Settings > Stop current job).
+    -- between turns. done(books, stopped) is called at the end. It can be stopped (NovelCheck icon > More > Settings > Stop current job).
     function NovelCheck:scanBooksAsync(done, opts)
         local found = {}
         local function list(dir, depth)

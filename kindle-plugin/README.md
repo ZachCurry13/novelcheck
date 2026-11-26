@@ -56,18 +56,18 @@ Open **Settings > KOReader plugin** in NovelCheck and press **Download the plugi
 
 ## Automatic and updating (NovelCheck 1.39 or newer)
 
-- **NovelCheck icon > Settings > Automatic jobs:** when the e-reader gets online (at most every 6 hours) the plugin reports its books, so they appear on your Nightstand without any menu (switch on **Download Nightstand** to also fetch new books). Turn either off there.
-- **NovelCheck icon > Settings > Update** downloads the newest plugin files from your NovelCheck, checks them, swaps them in (old files are kept as `.bak`) and asks to restart KOReader. The plugin also mentions a new version once after connecting. If an update ever goes wrong, copy the folder from **Settings > KOReader plugin** over USB.
+- **NovelCheck icon > More > Settings > Automatic jobs:** when the e-reader gets online (at most every 6 hours) the plugin reports its books, so they appear on your Nightstand without any menu (switch on **Download Nightstand** to also fetch new books). Turn either off there.
+- **NovelCheck icon > More > Settings > Update** downloads the newest plugin files from your NovelCheck, checks them, swaps them in (old files are kept as `.bak`) and asks to restart KOReader. The plugin also mentions a new version once after connecting. If an update ever goes wrong, copy the folder from **Settings > KOReader plugin** over USB.
 
 ## One-tap setup (NovelCheck 1.40 or newer, plugin 1.40.0)
 
-**NovelCheck icon > Settings > Set up** connects KOReader's Progress sync and Reading statistics sync to NovelCheck using the details already in the plugin. You do not need to add a Cloud storage (WebDAV) account or an OPDS catalog by hand. After it finishes, restart KOReader. **Sync reading statistics now** (same menu) runs the sync; **Automatic > Sync reading statistics when online** does it by itself.
+**NovelCheck icon > More > Settings > Set up** connects KOReader's Progress sync and Reading statistics sync to NovelCheck using the details already in the plugin. You do not need to add a Cloud storage (WebDAV) account or an OPDS catalog by hand. After it finishes, restart KOReader. **Sync reading statistics now** (same menu) runs the sync; **Automatic > Sync reading statistics when online** does it by itself.
 
 ## Matching and tidy names (NovelCheck 1.41 or newer, plugin 1.41.0)
 
 The plugin now sends each book's real title and author, so NovelCheck matches your Kindle's books to your library far more often. In NovelCheck, **Settings > KOReader plugin > Match books on my e-readers** fixes the rest by hand. **NovelCheck icon > Back up and tidy > Tidy names** (in KOReader) then shows your library's titles and authors for the matched books (display only; the files are not touched).
 
-On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reopen it from KUAL. **NovelCheck icon > Settings > Set up** usually needs no restart.
+On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reopen it from KUAL. **NovelCheck icon > More > Settings > Set up** usually needs no restart.
 
 ## Search and add books (NovelCheck 1.45 or newer, plugin 1.45.0)
 
@@ -103,6 +103,12 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 
 **NovelCheck > Settings > Developer tools** helps when something doesn't work: **Run self-test** checks the connection, sign-in and the plugin's files; **View log** shows every menu tap, request and error; **Send log to NovelCheck** sends the log to Settings > Developer > Bug reports (your sync code is removed), **Send log with a note...** adds what you were doing, and **Send errors automatically** (on by default) sends the log by itself, at most every ten minutes, after an error. **Run self-test** sends its result too. Times in the log are UTC. If the plugin doesn't appear in KOReader at all, look for `LOAD_ERROR.txt` in the plugin's folder, or send KOReader's `crash.log`.
 
+
+## The launcher card (1.68.0)
+
+Tapping NovelCheck's icon opens one card, like an app's home screen: who you are signed in as, when it last synced and backed up,
+then big buttons for **Nightstand, New in the library, Search, On this e-reader, Sync now** and **More…**. **More** is the whole
+list below (Back up and tidy, Settings and the rest). If the card cannot open, the icon shows that list instead.
 
 ## Where it lives (1.67.0)
 

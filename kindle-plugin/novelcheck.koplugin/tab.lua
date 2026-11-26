@@ -59,7 +59,21 @@ return function(NovelCheck)
         return type(buttons) == "table" and not inOrder(buttons, "novelcheck_tab")
     end
 
-    -- addTab puts items in the tab; true when it did.
+    -- closeMenu closes KOReader's top menu (the file manager's or the reader's), as the "last document" tab does.
+    local function closeMenu(ui)
+        local menu = ui and ui.menu
+        if not menu then
+            return
+        end
+        if menu.onCloseFileManagerMenu then
+            menu:onCloseFileManagerMenu()
+        elseif menu.onCloseReaderMenu then
+            menu:onCloseReaderMenu()
+        end
+    end
+
+    -- addTab puts items in the tab; true when it did. Tapping the icon opens the launcher card (hub.lua); if that fails the
+    -- menu stays open, and the tab shows the list of items.
     function NovelCheck:addTab(menu_items, items)
         local ok, done = pcall(function()
             local prefix, order
@@ -83,7 +97,15 @@ return function(NovelCheck)
             order.novelcheck_tab = order.novelcheck_tab or {}
             writeIcon(DataStorage:getDataDir() .. "/icons") -- survives a KOReader update; read at the next start
             writeIcon("resources/icons/mdlight") -- read at once
-            menu_items.novelcheck_tab = { icon = "novelcheck" }
+            menu_items.novelcheck_tab = {
+                icon = "novelcheck",
+                remember = false,
+                callback = function()
+                    if self.showHub and pcall(self.showHub, self) then
+                        pcall(closeMenu, self.ui)
+                    end
+                end,
+            }
             for i, it in ipairs(items) do
                 it.sorting_hint = "novelcheck_tab"
                 menu_items[string.format("novelcheck_%02d", i)] = it

@@ -88,7 +88,7 @@ return function(NovelCheck)
                 self:dlog("error", "restore " .. rel .. ": " .. tostring(got))
             end
             if i % 20 == 0 then
-                UIManager:show(InfoMessage:new{ text = _("Restoring") .. " " .. tostring(i) .. " / " .. tostring(#todo) .. "\n" .. _("Stop: NovelCheck icon > Settings > Stop current job"), timeout = 3 })
+                UIManager:show(InfoMessage:new{ text = _("Restoring") .. " " .. tostring(i) .. " / " .. tostring(#todo) .. "\n" .. _("Stop: NovelCheck icon > More > Settings > Stop current job"), timeout = 3 })
             end
             UIManager:scheduleIn(0.05, function() step(i + 1) end)
         end

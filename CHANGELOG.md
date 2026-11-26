@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.27]
+
+### 📱 NovelCheck in KOReader feels like an app
+- **Tapping the NovelCheck icon opens a launcher card** (plugin 1.68.0), like an app's home screen: who you are signed in as, when it last synced and backed up, then big buttons for Nightstand, New in the library, Search, On this e-reader and Sync now, and **More…** for everything else (Back up and tidy, Settings). If the card can't open, the icon shows the list as before.
+- **The Kindle app and the plugin share the work on one Kindle (app 1.21.0).** When the KOReader plugin is on the Kindle, the app no longer backs the Kindle up by itself (the plugin backs up the whole Kindle); its Menu says so. Either one works alone.
+- **The web Kindle page says what is on each Kindle:** both, only the app, or only the plugin, who does what, and how to add the other from where you are. {admin}
+
 ## [2.1.26]
 
 ### 📲 The Kindle app installs the KOReader plugin

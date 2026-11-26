@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.67.0"
+local VERSION = "1.68.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -56,6 +56,7 @@ local NovelCheck = WidgetContainer:extend{
     is_doc_only = false,
     load_errors = load_errors,
 }
+NovelCheck.DeviceBooks = DeviceBooks -- for the launcher card (hub.lua)
 
 -- Until the developer tools load (debuglog.lua), logging does nothing.
 function NovelCheck:dlog() end
@@ -251,7 +252,7 @@ function NovelCheck:autoRun()
         self.settings:saveSetting("auto_inflight", 0)
         self.settings:flush()
         UIManager:show(InfoMessage:new{ text = _("The automatic jobs stopped early last time, so they're paused.") .. "\n"
-            .. _("Turn them back on with NovelCheck icon > Settings > Resume automatic jobs."), timeout = 15 })
+            .. _("Turn them back on with NovelCheck icon > More > Settings > Resume automatic jobs."), timeout = 15 })
         return
     end
     self.settings:saveSetting("auto_inflight", os.time())
@@ -305,7 +306,7 @@ end
 -- the book report, highlights and reading statistics. Each works quietly and logs its own trouble.
 function NovelCheck:syncNow()
     if not self:isConnected() then
-        UIManager:show(InfoMessage:new{ text = _("Not connected. Open NovelCheck icon > Settings > Connect.") })
+        UIManager:show(InfoMessage:new{ text = _("Not connected. Open NovelCheck icon > More > Settings > Connect.") })
         return
     end
     UIManager:show(InfoMessage:new{ text = _("Syncing with NovelCheck…"), timeout = 3 })
@@ -575,7 +576,7 @@ function NovelCheck:downloadAll(quiet)
     end)
 end
 
-for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps", "locked", "homeaddr", "leftbooks", "restore", "installapp", "tab" } do
+for _i, name in ipairs{ "debuglog", "debugsend", "setup", "synccheck", "tidynames", "search", "updater", "devicereport", "bookshelfsrc", "highlights", "finishbook", "kindlecopy", "tidybooks", "crashlogs", "kindletasks", "steps", "locked", "homeaddr", "leftbooks", "restore", "installapp", "hub", "tab" } do
     local ok, mod = loadOwn(name)
     if ok and type(mod) ~= "function" then
         ok, mod = false, "returned " .. type(mod) .. " instead of a function"

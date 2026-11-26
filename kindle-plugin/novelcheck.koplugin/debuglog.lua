@@ -84,7 +84,7 @@ return function(NovelCheck, ctx)
                     if not ok then
                         self:dlog("error", name .. ": " .. tostring(err))
                         UIManager:show(InfoMessage:new{ text = _("Something went wrong:") .. " " .. name .. "\n" .. tostring(err):sub(1, 300)
-                            .. "\n" .. _("NovelCheck icon > Settings > Developer tools > Send log to NovelCheck.") })
+                            .. "\n" .. _("NovelCheck icon > More > Settings > Developer tools > Send log to NovelCheck.") })
                     end
                 end
             end
