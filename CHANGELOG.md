@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.54]
+
+### 🆓 The free copy is offered in a book's window too
+- **A book that isn't in the library but is free (public domain) now shows "Add the free copy to the library" in its own window,** next to Nightstand and Wishlist, as well as on the Check a book result. Before it was only on the result card, so opening the book from Recently checked or a list didn't show it. It downloads the copy from Project Gutenberg to the server and adds it to Calibre, not from Hardcover (Hardcover doesn't host books).
+
 ## [2.1.53]
 
 ### 🔎 Browser errors say more

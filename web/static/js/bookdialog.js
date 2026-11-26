@@ -144,6 +144,7 @@ export async function openBook(id, state, onChange) {
       <div class="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap gap-2 border-t border-slate-800 bg-slate-900/95 px-6 py-3 backdrop-blur">
         ${readable ? `<a href="/reader.html?id=${b.id}" class="btn-primary"><span class="ms" aria-hidden="true">local_library</span>Read</a>` : ""}
         ${on(state.user, "queue") ? `<button data-act="queue" class="${readable ? "btn-secondary" : "btn-primary"}">${owned || friend ? "＋ Nightstand" : "＋ Nightstand (to get)"}</button>` : ""}
+        ${data.free && !owned && !friend ? `<button data-act="free" class="btn-primary" title="A public-domain copy from Project Gutenberg goes into the library">Add the free copy to the library</button>` : ""}
         ${!owned && !friend ? (data.my_wish ? `<button data-act="unwish" class="btn-ghost" title="Remove it from your wishlist">On your wishlist · Remove</button>` : `<button data-act="wish" class="btn-secondary">Add to Wishlist</button>`) : ""}
         ${manager ? `<button data-act="edit-verdict" class="btn-secondary">Edit rating</button>` : ""}
       </div>
@@ -212,6 +213,13 @@ export async function openBook(id, state, onChange) {
       if (await attempt(() => post(`/api/books/${b.id}/delete-request`, { reason: "Main admin: delete the files" }))) { dlg.close(); location.hash = "#/deletions"; }
     } else if (act === "hide-book") {
       if (await attempt(() => post("/api/me/left", { book_id: b.id, choice: "hide" }), "Removed from your library. Settings → Kindle & KOReader shows it again.")) { dlg.close(); onChange?.(); }
+    } else if (act === "free") {
+      const btn = e.target.closest("[data-act]");
+      btn.disabled = true;
+      btn.textContent = "Adding…";
+      const ok = await attempt(() => post("/api/free/add", { title: b.title, author: b.author }), "Added to the library; it shows up in a minute");
+      if (ok) btn.textContent = "Added: it shows in the Library soon";
+      else { btn.disabled = false; btn.textContent = "Add the free copy to the library"; }
     } else if (act === "wish") {
       const note = prompt("Add a note for the family? (optional)", "");
       if (note === null) return;

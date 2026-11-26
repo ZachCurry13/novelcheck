@@ -12,6 +12,7 @@ import (
 
 	"github.com/zachcurry13/novelcheck/internal/api"
 	"github.com/zachcurry13/novelcheck/internal/freebooks"
+	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
 // The watch folder adds one e-book per book (the best format), unpacks zips, ignores the extras, deletes what it added, moves
@@ -108,6 +109,12 @@ func TestAddFreeBook(t *testing.T) {
 	admin.do("PUT", "/api/admin/calibre/server", map[string]string{"url": cs.URL}, true)
 	if _, out := admin.do("GET", "/api/free?title=Frankenstein&author=Mary+Shelley", nil, false); out["free"] != true {
 		t.Fatalf("free: %v", out)
+	}
+	lookedUp, _ := st.EnsureCatalog(store.LookedUpCatalog, "custom") // a book that was only looked up: its window offers the free copy
+	bid, _ := st.UpsertBook("Frankenstein", "Mary Shelley", "", "")
+	_ = st.AddCopy(lookedUp, bid, "lookup:Frankenstein", "list", "")
+	if _, out := admin.do("GET", "/api/books/"+itoa(bid), nil, false); out["free"] != true {
+		t.Fatalf("the book's window should offer the free copy: %v", out["free"])
 	}
 	if res, _ := admin.do("POST", "/api/free/add", map[string]string{"title": "Frankenstein", "author": "Stephen King"}, true); res.StatusCode != 404 {
 		t.Fatalf("the author must agree: %d", res.StatusCode)

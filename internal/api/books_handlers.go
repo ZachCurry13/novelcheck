@@ -123,6 +123,11 @@ func (s *Server) handleGetBook(w http.ResponseWriter, r *http.Request) {
 		out["downloadable"], out["has_audio"], out["has_ebook"], out["collections"] = false, false, false, []any{}
 		out["owned"] = len(copies) > 0
 	}
+	if owned, _ := out["owned"].(bool); !owned && mayAddFree(u) { // public domain: the window offers to add the free copy to the library
+		if _, free := s.freeMatch(r.Context(), b.Title, b.Author); free {
+			out["free"] = true
+		}
+	}
 	if p, ok := s.Store.ReadingProgress(u.ID)[id]; ok {
 		out["my_progress"] = p // from their e-reader's sync
 	}
