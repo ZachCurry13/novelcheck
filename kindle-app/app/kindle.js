@@ -182,10 +182,17 @@ function chrome() {
     if (k.chrome && k.chrome.isDecanterChromeEnabled) {
       // the ⋯ button next to the X opens the Kindle's own menu (as KindleForge's does); a pick comes back as an event
       var items = [], n = 0;
-      for (var i = 0; typeof SORTS !== "undefined" && i < SORTS.length; i++) items.push({ id: "NC_SORT_" + SORTS[i][0], state: "enabled", handling: "notifyApp", label: "Sort: " + SORTS[i][1], position: n++ });
-      items.push({ id: "NC_SYNC", state: "enabled", handling: "notifyApp", label: "Sync now", position: n++ });
-      items.push({ id: "NC_MENU", state: "enabled", handling: "notifyApp", label: "Menu: search and lists", position: n++ });
-      items.push({ id: "NC_RELOAD", state: "enabled", handling: "notifyApp", label: "Reload", position: n++ });
+      var add = function (id, label) { items.push({ id: id, state: "enabled", handling: "notifyApp", label: label, position: n++ }); };
+      add("NC_SYNC", "Sync now");
+      add("NC_BACKUP", "Back up my books to NovelCheck");
+      add("NC_RESTORE", "Restore books from NovelCheck");
+      add("NC_HIDDEN", "Books I hid");
+      add("NC_PLUGIN", "Install the KOReader plugin");
+      add("NC_DEST", typeof destLabel === "function" ? destLabel() : "Downloads go to…");
+      add("NC_CRASH", "Delete crash logs");
+      add("NC_CHECK", "Something not working? Send a check");
+      add("NC_MENU", "Menu: search and lists");
+      add("NC_RELOAD", "Reload");
       k.messaging.sendMessage("com.lab126.chromebar", "configureChrome", {
         appId: "com.novelcheck.kindle",
         topNavBar: { template: "title", title: "NovelCheck", buttons: [{ id: "KPP_MORE", state: "enabled", handling: "system" }, { id: "KPP_CLOSE", state: "enabled", handling: "system" }] },

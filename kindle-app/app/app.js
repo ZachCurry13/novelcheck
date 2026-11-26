@@ -1,6 +1,6 @@
 /* NovelCheck Kindle app: the screens. ES5 only (see kindle.js). */
 var PER_PAGE = 6;
-var state = { books: [], page: 0, list: "up-next", levels: {}, offline: false }; // levels: the spice levels shown ({"1": true, "2": true}); none ticked = all
+var state = { books: [], page: 0, list: "up-next", levels: {}, offline: false, show: "" }; // levels: the spice levels shown ({"1": true, "2": true}); none ticked = all
 var got = {}; // books downloaded on this Kindle, by id
 try { got = JSON.parse(localStorage.getItem("nc-got")) || {}; } catch (e) {}
 
@@ -21,7 +21,17 @@ function showLists(listView) { // listView: the filters and the page buttons bel
   $("lists").hidden = false;
   $("filters").hidden = !listView;
 }
+// paintCounts puts how many books were in each list the last time it was opened on the Menu's buttons.
+function paintCounts() {
+  var names = ["up-next", "new", "discover", "collections", "kindle-mine"];
+  for (var i = 0; i < names.length; i++) {
+    var c = +stored("nc-count-" + names[i]);
+    var e = $("c-" + names[i]);
+    if (e) e.textContent = c ? String(c) : "";
+  }
+}
 function openMenu() {
+  paintCounts();
   $("lists").hidden = true;
   $("menu").hidden = false;
   note("");
@@ -76,25 +86,37 @@ function setSort(k) {
 }
 // menuPick runs what was chosen in the Kindle's own ⋯ menu (kindle.js chrome).
 function menuPick(id) {
-  if (id.indexOf("NC_SORT_") === 0) return setSort(id.slice(8));
+  if (id === "NC_CHECK") return sendCheck();
+  if (id.indexOf("NC_") === 0 && typeof TOOLS !== "undefined" && (TOOLS[id] || id === "NC_HIDDEN" || id === "NC_DEST")) return runTool(id);
   if (id === "NC_SYNC") { note("Syncing…"); return syncNow(true); }
   if (id === "NC_MENU") return openMenu();
   if (id === "NC_RELOAD") window.location.reload();
 }
-function nextSort() {
-  for (var i = 0; i < SORTS.length; i++) if (SORTS[i][0] === sortKey) return setSort(SORTS[(i + 1) % SORTS.length][0]);
-  setSort(SORTS[0][0]);
+// sendCheck has the Kindle check itself and send the result to NovelCheck (the ⋯ menu's "Something not working?").
+function sendCheck() {
+  if (!run("sh /mnt/us/extensions/novelcheck-app/check.sh")) return note("The check needs KindleForge's helper. Open KindleForge once, then try again.");
+  note("Checking this Kindle… A message appears when it's done, and the result goes to NovelCheck.");
 }
 
 function anyLevel() { for (var k in state.levels) if (state.levels[k]) return true; return false; }
+// shown is the list with this screen's filters applied: the spice levels ticked, and all / on my Kindle / not on it.
 function shown() {
-  if (!anyLevel() || state.list === "collections") return sorted(state.books);
   var out = [];
-  for (var i = 0; i < state.books.length; i++) if (state.books[i].level != null && state.levels[state.books[i].level]) out.push(state.books[i]);
+  var plain = state.list === "collections" || state.list === "discover";
+  for (var i = 0; i < state.books.length; i++) {
+    var b = state.books[i];
+    if (!plain || state.list === "discover") {
+      if (anyLevel() && !(b.level != null && state.levels[b.level])) continue;
+    }
+    if (!plain && state.show && (state.show === "on") !== !!onKindle(b)) continue;
+    out.push(b);
+  }
   return sorted(out);
 }
-function badge(level) { return level == null ? "Not rated yet" : "Spice " + level + " · " + (level >= 4 ? "Open Door" : level >= 2 ? "Closed Door" : "No Spice"); }
-function spice(level) { return level == null ? "Not rated yet" : "Spice level " + level + " (" + (level >= 4 ? "Open Door" : level >= 2 ? "Closed Door" : "No Spice") + ")"; }
+// the same names as on the web and in KOReader
+var SPICE_NAMES = ["No Romance", "Sweet Romance", "Romantic", "Steamy Closed-Door", "Explicit / Open Door", "Very Explicit / Erotica-Level"];
+function badge(level) { return level == null ? "Not rated yet" : "Spice " + level + " · " + (SPICE_NAMES[level] || ""); }
+function spice(level) { return level == null ? "Not rated yet" : "Spice level " + level + ": " + (SPICE_NAMES[level] || ""); }
 function onKindle(b) { return got[b.id] || b.on_device; }
 
 // paintSynced says how long ago the last sync was ("Synced 2 h ago").
@@ -148,6 +170,7 @@ function show(list, query) {
       if (list === "collection") state.header = ((data.icon ? data.icon + " " : "") + data.name) + (data.about ? ": " + data.about : "");
     }
     cacheList(list, state.books, state.header);
+    keep("nc-count-" + list, String(state.books.length)); // the Menu shows how many are in each list
     state.page = 0;
     note(state.books.length ? "" : list === "up-next" ? "Your Nightstand is empty." : list === "kindle-mine" ? "Nothing yet: tap Sync now." :
       list === "discover" ? "Nothing on Discover is in your library yet." : list === "collections" ? "No collections yet." : "No books found.");
@@ -188,13 +211,17 @@ function rows() {
     }
     m.appendChild(row(part[i]));
   }
-  if (!part.length && state.books.length) m.appendChild(el("p", "meta", "No books at the spice levels picked here. Tap All."));
+  if (!part.length && state.books.length) m.appendChild(el("p", "meta", "No books match these filters. Tap All."));
   if (!state.books.length) m.appendChild(el("p", "", state.list === "up-next" ? "Your Nightstand is empty. Add books to it from New or Discover, or in NovelCheck on the web." :
     state.list === "kindle-mine" ? "Nothing yet: tap Sync now." : state.list === "collections" ? "No collections yet." : state.list === "discover" ? "Nothing on Discover is in your library yet." : "No books found."));
   var pills = document.querySelectorAll(".pills button[data-lvl]");
-  var sb = $("sortbtn");
-  sb.hidden = state.list === "discover" || state.list === "collections";
-  sb.textContent = "Sort: " + sortLabel(sortKey);
+  var noSort = state.list === "discover" || state.list === "collections";
+  $("sortrow").hidden = noSort;
+  $("showrow").hidden = noSort;
+  var sorts = document.querySelectorAll(".pills button[data-sort]");
+  for (var s1 = 0; s1 < sorts.length; s1++) sorts[s1].className = sorts[s1].getAttribute("data-sort") === sortKey ? "on" : "";
+  var shows = document.querySelectorAll(".pills button[data-show]");
+  for (var s2 = 0; s2 < shows.length; s2++) shows[s2].className = shows[s2].getAttribute("data-show") === state.show ? "on" : "";
   for (var j = 0; j < pills.length; j++) { var lv = pills[j].getAttribute("data-lvl"); pills[j].className = (lv === "" ? !anyLevel() : state.levels[lv]) ? "on" : ""; }
   var missing = 0;
   for (var q = 0; q < state.books.length; q++) if (!onKindle(state.books[q])) missing++;
@@ -451,7 +478,16 @@ document.addEventListener("DOMContentLoaded", function () {
   // its own name ("Zach Paperwhite (Amazon reader)"), so the plugin's report of the same Kindle is never replaced
   if (!/ \(Amazon reader\)$/.test(NC.device)) NC.device = (NC.device || "Kindle") + " (Amazon reader)";
   $("navbtn").onclick = goBack;
-  $("sortbtn").onclick = nextSort;
+  state.show = stored("nc-show") || "";
+  var sortChips = document.querySelectorAll(".pills button[data-sort]");
+  for (var sc = 0; sc < sortChips.length; sc++) sortChips[sc].onclick = function () { setSort(this.getAttribute("data-sort")); };
+  var showChips = document.querySelectorAll(".pills button[data-show]");
+  for (var sh = 0; sh < showChips.length; sh++) showChips[sh].onclick = function () {
+    state.show = this.getAttribute("data-show");
+    keep("nc-show", state.show);
+    state.page = 0;
+    rows();
+  };
   bindTools();
   $("find").onsubmit = function (e) {
     e.preventDefault();
@@ -474,10 +510,6 @@ document.addEventListener("DOMContentLoaded", function () {
   setInterval(paintSynced, 60000);
   logLine("app " + NC.version + " opened as " + NC.device);
   $("report").onclick = function () { note("Syncing…"); syncNow(true); };
-  $("check").onclick = function () {
-    if (!run("sh /mnt/us/extensions/novelcheck-app/check.sh")) return note("The check needs KindleForge's helper. Open KindleForge once, then try again.");
-    note("Checking this Kindle… A message appears when it's done, and the result goes to NovelCheck.");
-  };
   if (!stored("nc-tidy-1") && run("rm -f '/mnt/us/documents/NovelCheck-check.txt' '/mnt/us/documents/NovelCheck-Check.sh'; lipc-set-prop com.lab126.scanner doFullScan 1")) {
     keep("nc-tidy-1", "1"); // app 1.2.0 put a check "book" and its result in the library: take them out once
   }

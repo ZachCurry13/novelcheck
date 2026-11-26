@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.29]
+
+### ✨ A calmer home screen, in KOReader and in the Kindle app
+- **KOReader card, version 3 (plugin 1.70.0).** A search bar on top, then the book that is next with one big **Read it** button (or **Download** when it is not on the Kindle yet) and the next two titles, then three big buttons: **Nightstand** (with how many), **New** and **My Kindle**. Sync now and More are at the bottom.
+- **Kindle app Menu (app 1.22.0).** Only the five lists (Nightstand, New, Discover, Collections, My Kindle), each with its count, so nothing scrolls. Back up, restore, books I hid, install the KOReader plugin, where downloads go, delete crash logs and "Something not working? Send a check" are now under the ⋯ menu.
+- **Filters on the book list.** Sort (Recent, A–Z, Author, Spice, Rating), the spice levels, and All / On my Kindle / Not on my Kindle are on the screen itself. The spice names match the website and KOReader.
+
 ## [2.1.28]
 
 ### ✨ The KOReader launcher card, version 2 (plugin 1.69.0)

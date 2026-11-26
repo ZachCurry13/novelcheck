@@ -59,4 +59,9 @@ header button { margin: 0 0.25rem; }
 .cands button { width: 100%; margin-top: 0.25rem; }
 
 .pills { overflow: hidden; }
-.pills .sort { float: right; margin-right: 0; min-height: 2.5rem; }
+/* the Menu: five big buttons with how many books each list had, and nothing to scroll */
+.menutabs button { min-height: 3.5rem; font-size: 1.5rem; }
+.menutabs .count { float: right; font-size: 1.25rem; font-weight: normal; }
+.hint { margin: 0.5rem 0; text-align: center; }
+.pills .meta { margin-right: 0.25rem; }
+.pills button { margin-right: 0.25rem; margin-bottom: 0.25rem; }

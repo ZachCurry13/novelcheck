@@ -1,7 +1,7 @@
 --[[
 NovelCheck plugin: the launcher card. Tapping NovelCheck's icon in KOReader's top bar opens one card with big buttons, like an
-app's home screen, instead of a menu list: what it is connected as and when it last synced, then Nightstand, New, Search,
-This Kindle, Sync now and More (More is the whole list, with the rarely used things: Back up and tidy, Settings).
+app's home screen, instead of a menu list: what it is connected as and when it last synced, then search, the book that is next with one big Read it / Download button, Nightstand, New and My Kindle,
+Sync now and More (More is the whole list, with the rarely used things: Back up and tidy, Settings).
 It adds its functions to the NovelCheck plugin class (see main.lua).
 ]]
 
@@ -11,6 +11,7 @@ local Device = require("device")
 local Menu = require("ui/widget/menu")
 local UIManager = require("ui/uimanager")
 local json = require("json")
+local lfs = require("libs/libkoreader-lfs")
 local _ = require("gettext")
 
 return function(NovelCheck)
@@ -52,6 +53,13 @@ return function(NovelCheck)
         pick = pick or (books or {})[1]
         self.settings:saveSetting("next_title", pick and pick.title or "")
         self.settings:saveSetting("next_reading", pick and pick.status == "reading" or false)
+        self.settings:saveSetting("next_book", pick and { id = pick.id, url = pick.url, format = pick.format, title = pick.title, author = pick.author } or false)
+        self.settings:saveSetting("next_count", #(books or {}))
+        local then_ = {}
+        for _i, b in ipairs(books or {}) do
+            if b ~= pick and #then_ < 2 then table.insert(then_, b.title) end
+        end
+        self.settings:saveSetting("next_then", table.concat(then_, ", "))
         self.settings:flush()
     end
 
@@ -130,27 +138,40 @@ return function(NovelCheck)
         else
             table.insert(rows, note(_("Not connected yet: More > Settings > Connect")))
         end
-        table.insert(rows, { {
-            text = _("Open Nightstand"), font_bold = true, font_size = 26, height = Device.screen:scaleBySize(64),
-            background = Blitbuffer.COLOR_LIGHT_GRAY, callback = go(function() self:showUpNext() end),
-        } })
-        local next_title = trim(self.settings:readSetting("next_title"))
-        if next_title ~= "" then
-            table.insert(rows, note((self.settings:readSetting("next_reading") and _("Reading:") or _("Next:")) .. " " .. next_title))
+        table.insert(rows, { { text = "🔍  " .. _("Search the library…"), font_size = 22, height = Device.screen:scaleBySize(52),
+            callback = go(function() self:searchLibrary() end) } })
+        local nb = self.settings:readSetting("next_book")
+        if type(nb) == "table" and nb.title then
+            local path = nb.url and self:bookPath(nb)
+            local have = path and lfs.attributes(path, "mode") == "file"
+            local by = trim(nb.author) ~= "" and (" - " .. nb.author) or ""
+            table.insert(rows, note((self.settings:readSetting("next_reading") and _("Reading") or _("Up next")) .. ": " .. nb.title .. by))
+            local then_ = trim(self.settings:readSetting("next_then"))
+            if then_ ~= "" then table.insert(rows, note(_("Then") .. ": " .. then_)) end
+            table.insert(rows, { {
+                text = have and _("Read it") or _("Download"), font_bold = true, font_size = 26, height = Device.screen:scaleBySize(64),
+                background = Blitbuffer.COLOR_LIGHT_GRAY,
+                callback = go(function()
+                    if have then
+                        require("apps/reader/readerui"):showReader(path)
+                    else
+                        self:download(nb)
+                    end
+                end),
+            } })
         end
+        local count = tonumber(self.settings:readSetting("next_count"))
         table.insert(rows, {
-            { text = _("New in the library"), callback = go(function() self:newInLibrary() end) },
-            { text = _("Search"), callback = go(function() self:searchLibrary() end) },
-        })
-        table.insert(rows, {
-            { text = _("My Kindle"), callback = go(function() self.DeviceBooks.show(self) end) },
-            { text = _("Sync now"), callback = go(function() self:syncNow() end) },
+            { text = _("Nightstand") .. (count and (" (" .. count .. ")") or ""), height = Device.screen:scaleBySize(56), callback = go(function() self:showUpNext() end) },
+            { text = _("New"), height = Device.screen:scaleBySize(56), callback = go(function() self:newInLibrary() end) },
+            { text = _("My Kindle"), height = Device.screen:scaleBySize(56), callback = go(function() self.DeviceBooks.show(self) end) },
         })
         local backed = ago(self.settings:readSetting("last_backup"))
         if backed then
             table.insert(rows, note(_("Last backup") .. " " .. backed))
         end
         table.insert(rows, {
+            { text = _("Sync now"), callback = go(function() self:syncNow() end) },
             { text = _("More…"), callback = go(function() self:showList(_("NovelCheck"), self:menuItems()) end) },
             { text = _("Close"), callback = function() UIManager:close(dialog) end },
         })

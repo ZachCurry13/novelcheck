@@ -104,11 +104,12 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 **NovelCheck > Settings > Developer tools** helps when something doesn't work: **Run self-test** checks the connection, sign-in and the plugin's files; **View log** shows every menu tap, request and error; **Send log to NovelCheck** sends the log to Settings > Developer > Bug reports (your sync code is removed), **Send log with a note...** adds what you were doing, and **Send errors automatically** (on by default) sends the log by itself, at most every ten minutes, after an error. **Run self-test** sends its result too. Times in the log are UTC. If the plugin doesn't appear in KOReader at all, look for `LOAD_ERROR.txt` in the plugin's folder, or send KOReader's `crash.log`.
 
 
-## The launcher card (1.69.0)
+## The launcher card (1.70.0)
 
-Tapping NovelCheck's icon opens one card: a line with who you are and when it last synced, one big button, **Open Nightstand**,
-with **what is next** under it ("Next: …", or "Reading: …"), then **New in the library**, **Search**, **My Kindle** (the books on
-it with progress) and **Sync now**, the last backup, and **More…** and **Close**. **More** is the whole list: **Get my Nightstand
+Tapping NovelCheck's icon opens one card: who you are and when it last synced, a **search** bar, the book that is next ("Reading: …"
+or "Up next: …", and the next two titles) with one big button, **Read it** (or **Download** if it is not on the Kindle yet), then
+**Nightstand** (with how many), **New** and **My Kindle** (the books on it with progress), the last backup, and **Sync now**,
+**More…** and **Close**. **More** is the whole list: **Get my Nightstand
 books**, **Keep safe** (Back up now, Restore), **Organize** (Move my books into one folder, Show real titles (display only),
 Undo the last move), **Free up space** (Delete finished books, Delete crash logs) and **Settings**. Nothing under Organize
 deletes anything: moving a book needs a backup of it first and can be undone, and real titles change only what is shown.

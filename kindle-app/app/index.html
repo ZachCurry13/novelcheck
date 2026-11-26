@@ -19,10 +19,9 @@
   <div class="brand"><img id="logo" src="logo.png" alt=""><div><h1>NovelCheck</h1><span id="ver" class="meta"></span><br><span id="who" class="meta"></span></div></div>
   <button id="update" class="main" hidden></button>
   <form id="find"><input id="q" type="text" placeholder="Title or author"><button>Search</button></form>
-  <div class="tabs menutabs"><button data-list="up-next">Nightstand</button><button data-list="new">New</button><button data-list="discover">Discover</button><button data-list="collections">Collections</button><button data-list="kindle-mine">My Kindle</button></div>
-  <div class="tabs menutabs tools"><p class="meta">This Kindle</p>
-    <button id="t-backup">Back up my books to NovelCheck</button><button id="t-restore">Restore books from NovelCheck</button><button id="t-crash">Delete crash logs</button><button id="t-hidden">Books I hid</button><button id="t-plugin">Install the KOReader plugin</button><button id="t-dest"></button><p id="lastbk" class="meta"></p></div>
-  <p class="help"><button id="check" class="small">Something not working? Send a check</button></p>
+  <div class="tabs menutabs"><button data-list="up-next">Nightstand<span class="count" id="c-up-next"></span></button><button data-list="new">New<span class="count" id="c-new"></span></button><button data-list="discover">Discover<span class="count" id="c-discover"></span></button><button data-list="collections">Collections<span class="count" id="c-collections"></span></button><button data-list="kindle-mine">My Kindle<span class="count" id="c-kindle-mine"></span></button></div>
+  <p id="lastbk" class="meta hint"></p>
+  <p class="meta hint">Back up, restore, downloads and more: the ⋯ menu at the top right.</p>
 </section>
 <section id="signin" hidden>
   <div class="brand"><img src="logo.png" alt=""><div><h1>NovelCheck</h1><span class="meta">Sign in to start</span></div></div>
@@ -34,8 +33,11 @@
   <p id="si-msg" class="meta"></p>
 </section>
 <section id="lists">
-  <div id="filters"><div class="tabs pills"><button id="sortbtn" class="sort">Sort: Recent</button><span class="meta">Spice level:</span> <button data-lvl="">All</button><button data-lvl="0">0</button><button data-lvl="1">1</button><button data-lvl="2">2</button><button data-lvl="3">3</button><button data-lvl="4">4</button><button data-lvl="5">5</button></div>
-  <p class="tabs"><button id="dlall" hidden>Download all of my Nightstand</button></p></div>
+  <div id="filters">
+  <div class="tabs pills" id="sortrow"><span class="meta">Sort:</span> <button data-sort="recent">Recent</button><button data-sort="title">A–Z</button><button data-sort="author">Author</button><button data-sort="spice_up">Spice ↑</button><button data-sort="spice_down">Spice ↓</button><button data-sort="stars">Rating</button></div>
+  <div class="tabs pills"><span class="meta">Spice level:</span> <button data-lvl="">All</button><button data-lvl="0">0</button><button data-lvl="1">1</button><button data-lvl="2">2</button><button data-lvl="3">3</button><button data-lvl="4">4</button><button data-lvl="5">5</button></div>
+  <div class="tabs pills" id="showrow"><span class="meta">Show:</span> <button data-show="">All</button><button data-show="on">On my Kindle</button><button data-show="off">Not on my Kindle</button> <button id="dlall" hidden>Download all</button></div>
+  </div>
   <main id="main"></main>
   <footer id="pages"><button id="prev">Prev</button><span id="page"></span><button id="next">Next</button></footer>
 </section>

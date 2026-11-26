@@ -173,17 +173,14 @@ function runTask(t, said, next) {
 }
 
 // The Menu's "This Kindle" buttons.
-function bindTools() {
-  var guard = function (id, fn) {
-    $(id).onclick = function () {
-      if (toolBusy) return note("Another job is still running. Wait for it to finish.");
-      toolBusy = true;
-      var btn = this;
-      btn.disabled = true;
-      fn(function () { toolBusy = false; btn.disabled = false; });
-    };
-  };
-  guard("t-backup", function (end) {
+function bindTools() { paintBackup(); }
+
+// destLabel is the ⋯ menu's line for where downloads go.
+function destLabel() { return "Downloads go to: " + (stored("nc-dest") === "koreader" ? "KOReader" : "the Kindle library") + " (tap to change)"; }
+
+// The tools of the ⋯ menu that take a while: one at a time.
+var TOOLS = {
+  NC_BACKUP: function (end) {
     backupKindle(function (sent, wanted, big, failed) {
       note(sent < 0 ? "The backup couldn't start. Check Wi-Fi, and that KindleForge's helper is there." :
         "Backed up " + sent + " of " + wanted + " books that NovelCheck needed" + (big ? "; " + big + " were too big to send" : "") + (failed ? "; " + failed + " failed" : "") + ".");
@@ -191,36 +188,41 @@ function bindTools() {
       if (sent >= 0) { keep("nc-last-bk", String(new Date().getTime())); paintBackup(); }
       end();
     });
-  });
-  guard("t-restore", function (end) {
+  },
+  NC_RESTORE: function (end) {
     restoreKindle(function (put, total) {
       note(put < 0 ? "Couldn't reach NovelCheck." : total === 0 ? "NovelCheck has no backup of this Kindle yet." : put ? "Restored " + put + " book" + (put === 1 ? "" : "s") + ". They show in the library in a moment." : "Nothing to restore: every backed-up book is already here.");
       end();
     });
-  });
-  $("t-hidden").onclick = showHidden;
-  guard("t-plugin", function (end) {
+  },
+  NC_PLUGIN: function (end) {
     installPlugin(function (ok, text) {
       note(text);
       logLine("install KOReader plugin: " + (ok ? "ok" : text));
       if (!ok) sendLog("the KOReader plugin did not install");
       end();
     });
-  });
-  paintBackup();
-  var dest = function () { $("t-dest").textContent = stored("nc-dest") === "koreader" ? "Downloads go to: KOReader (tap to change)" : "Downloads go to: Kindle library (tap to change)"; };
-  dest();
-  $("t-dest").onclick = function () {
-    keep("nc-dest", stored("nc-dest") === "koreader" ? "kindle" : "koreader");
-    dest();
-    note(stored("nc-dest") === "koreader" ? "New downloads are EPUBs in KOReader's NovelCheck folder." : "New downloads are Kindle books in the Kindle library.");
-  };
-  guard("t-crash", function (end) {
+  },
+  NC_CRASH: function (end) {
     crashLogs(function (n) {
       note(n < 0 ? "The Kindle couldn't do that. Open KindleForge once, then try again." : n ? "Deleted " + n + " crash log" + (n === 1 ? "" : "s") + "." : "There are no crash logs on this Kindle.");
       end();
     });
-  });
+  }
+};
+
+// runTool does what was picked in the ⋯ menu (app.js menuPick).
+function runTool(id) {
+  if (id === "NC_HIDDEN") return showHidden();
+  if (id === "NC_DEST") {
+    keep("nc-dest", stored("nc-dest") === "koreader" ? "kindle" : "koreader");
+    note(stored("nc-dest") === "koreader" ? "New downloads are EPUBs in KOReader's NovelCheck folder." : "New downloads are Kindle books in the Kindle library.");
+    return chrome(); // the menu's line shows the new choice
+  }
+  if (!TOOLS[id]) return;
+  if (toolBusy) return note("Another job is still running. Wait for it to finish.");
+  toolBusy = true;
+  TOOLS[id](function () { toolBusy = false; });
 }
 
 // showHidden lists the books this person hid with "Don't show this book", each with "Show again".
