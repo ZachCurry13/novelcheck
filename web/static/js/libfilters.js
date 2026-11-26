@@ -15,6 +15,18 @@ const field = (label, control, extra = "") => `<label class="field ${extra}"><sp
 export const SORTS = (event) => [...(event ? [["list", "Event order"]] : []), ["title", "Title"], ["author", "Author"],
   ["rating", "Highest rated on Hardcover"], ["recent", "Recently added"], ["mild", "Fewest peppers"], ["spicy", "Most peppers"]];
 
+// libraryGroupsHTML lays the libraries out in groups: the family's (shared), the person's own, and, for an admin, everyone else's
+// private ones, folded away.
+function libraryGroupsHTML(catalogs, user) {
+  const item = (c) => ({ value: String(c.id), label: c.name, count: c.book_count });
+  const family = catalogs.filter((c) => c.owner_id == null);
+  const mine = catalogs.filter((c) => c.owner_id != null && c.owner_id === user?.id);
+  const others = catalogs.filter((c) => c.owner_id != null && c.owner_id !== user?.id);
+  return `${checksHTML(mine.length ? "Family libraries" : "Library", "catalog", family.map(item), 8)}
+    ${checksHTML("My libraries", "catalog", mine.map(item), 8)}
+    ${others.length ? `<details class="facet"><summary><h3 class="inline">Other people's libraries</h3></summary>${checksHTML("", "catalog", others.map(item), 8)}</details>` : ""}`;
+}
+
 export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
   const manager = canManage(state.user);
   const opt = (v, label, n) => `<option value="${esc(v)}">${esc(label)}${n === undefined ? "" : ` (${n.toLocaleString()})`}</option>`;
@@ -40,7 +52,7 @@ export function filtersHTML({ facets, catOpts, catalogs, event, state }) {
       ${pillsHTML("Show", "medium", [["", "All"], ["digital", "Digital"], ["physical", "Physical (the shelf)"]])}
       ${peppersHTML()}
       ${checksHTML("Genre", "genre", (facets.genres || []).filter((g) => g.count).map((g) => ({ value: g.key, label: g.label, count: g.count })))}
-      ${checksHTML("Library", "catalog", (catalogs || []).map((c) => ({ value: String(c.id), label: c.name, count: c.book_count })))}
+      ${libraryGroupsHTML(catalogs || [], state.user)}
       <p class="facet-note"><button type="button" data-lib-default class="facet-link">Save these as my default</button> · <button type="button" data-lib-default-clear class="facet-link">Show everything</button><span data-lib-default-msg class="ml-1 text-xs text-slate-400"></span></p>
       ${on(state.user, "parents") ? pillsHTML("Age group", "age", [["", "Any"], ...AGE_GROUPS.map(([l, n]) => [String(l), n]), ["unset", "Not set"]]) : ""}
       ${sortPillsHTML(event)}

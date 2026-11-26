@@ -173,6 +173,8 @@ func (s *Server) adminRoutes(r chi.Router) {
 		r.Get("/admin/bug-link", s.handleAdminBugLink)
 		r.Post("/admin/bug-link", s.handleAdminBugLink)
 		r.Delete("/admin/bug-link", s.handleAdminBugLink)
+		r.Get("/admin/catalogs/kindle-pairs", s.handleKindleLibraryPairs)
+		r.Post("/admin/catalogs/merge", s.handleMergeCatalogs)
 		r.Get("/admin/import", s.handleAdminImport)
 		r.Put("/admin/import", s.handleAdminImport)
 		r.Post("/admin/import/now", s.handleAdminImportNow)

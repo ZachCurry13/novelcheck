@@ -273,3 +273,41 @@ func TestDigitalAndPhysicalLibrary(t *testing.T) {
 		t.Fatalf("all: %q", got)
 	}
 }
+
+// A person's two Kindle libraries are joined into one, keeping every book once, and the Kindle app's store books then go there.
+func TestJoinKindleLibraries(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	u, _ := st.UserByName("admin")
+	amazon, _ := st.CreateOwnedCatalog("Zach's Amazon Kindle library", "drive", u.ID, true)
+	store1, _ := st.CreateOwnedCatalog("admin's Kindle store", "drive", u.ID, true)
+	a, _ := st.UpsertBook("Book A", "Au", "", "")
+	b, _ := st.UpsertBook("Book B", "Au", "", "")
+	_ = st.AddCopy(amazon, a, "amazon:a", "kindle", "a")
+	_ = st.AddCopy(amazon, b, "amazon:b", "kindle", "b")
+	_ = st.AddCopy(store1, b, "kindle:b", "kindle", "b")
+	_, out := admin.do("GET", "/api/admin/catalogs/kindle-pairs", nil, false)
+	pairs := out["pairs"].([]any)
+	if len(pairs) != 1 || pairs[0].(map[string]any)["into"] != float64(amazon) || pairs[0].(map[string]any)["new_name"] != "admin's Kindle" {
+		t.Fatalf("pairs: %v", out)
+	}
+	p := pairs[0].(map[string]any)
+	if res, o := admin.do("POST", "/api/admin/catalogs/merge", map[string]any{"from": p["from"], "into": p["into"], "name": p["new_name"]}, true); res.StatusCode != 200 || len(o["pairs"].([]any)) != 0 {
+		t.Fatalf("merge: %d %v", res.StatusCode, o)
+	}
+	var n int
+	_ = st.DB.Get(&n, `SELECT COUNT(DISTINCT book_id) FROM catalog_books WHERE catalog_id = ?`, amazon)
+	c, err := st.CatalogByID(amazon)
+	if err != nil || c.Name != "admin's Kindle" || n != 2 {
+		t.Fatalf("joined library: %v %v books=%d", c, err, n)
+	}
+	if _, err := st.CatalogByID(store1); err == nil {
+		t.Fatal("the smaller library should be gone")
+	}
+	if id, _ := st.StoreCatalog(u); id != amazon {
+		t.Fatalf("the Kindle app's store books go to the joined library, got %d", id)
+	}
+	if res, _ := admin.do("POST", "/api/admin/catalogs/merge", map[string]any{"from": amazon, "into": amazon, "name": "x"}, true); res.StatusCode != 400 {
+		t.Fatalf("same library: %d", res.StatusCode)
+	}
+}

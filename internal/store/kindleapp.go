@@ -10,10 +10,12 @@ import (
 
 // StoreCatalog is the person's private library of Kindle store books, made on first use.
 func (s *Store) StoreCatalog(u *User) (int64, error) {
-	name := u.Username + "'s Kindle store"
-	if c, err := s.CatalogByName(name); err == nil && c != nil {
-		return c.ID, nil
+	for _, n := range []string{u.Username + "'s Kindle", u.Username + "'s Kindle store"} { // "…'s Kindle" is what joined libraries are called
+		if c, err := s.CatalogByName(n); err == nil && c != nil {
+			return c.ID, nil
+		}
 	}
+	name := u.Username + "'s Kindle store"
 	return s.CreateOwnedCatalog(name, "drive", u.ID, true)
 }
 

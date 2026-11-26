@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.40]
+
+### 🗂️ Libraries in groups, and one Kindle library per person
+- **The Library filter groups the libraries:** **Family libraries** (Calibre, Audiobookshelf, the shelf: shared with everyone), **My libraries** (yours), and, for admins only, **Other people's libraries** folded away. A friend's account still sees only her own. Everyone else already saw the family libraries; nothing about who can see what has changed.
+- **Join Kindle libraries (admins, Integrations).** People who have two libraries for their Kindle books (an Amazon import and the Kindle app's store books) get a "Join" button for each, which moves every book into one library called "<name>'s Kindle". Nothing is lost, a book in both is kept once, and nothing happens until you press the button. The Kindle app's store books then go to the joined library. {admin}
+
 ## [2.1.39]
 
 ### 📖 Digital and physical in one Library
