@@ -104,7 +104,7 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 **NovelCheck > Settings > Developer tools** helps when something doesn't work: **Run self-test** checks the connection, sign-in and the plugin's files; **View log** shows every menu tap, request and error; **Send log to NovelCheck** sends the log to Settings > Developer > Bug reports (your sync code is removed), **Send log with a note...** adds what you were doing, and **Send errors automatically** (on by default) sends the log by itself, at most every ten minutes, after an error. **Run self-test** sends its result too. Times in the log are UTC. If the plugin doesn't appear in KOReader at all, look for `LOAD_ERROR.txt` in the plugin's folder, or send KOReader's `crash.log`.
 
 
-## The launcher card (1.70.0)
+## The launcher card (1.71.0)
 
 Tapping NovelCheck's icon opens one card: who you are and when it last synced, a **search** bar, the book that is next ("Reading: …"
 or "Up next: …", and the next two titles) with one big button, **Read it** (or **Download** if it is not on the Kindle yet), then
@@ -122,3 +122,11 @@ On this e-reader, Finish this book, Sync now**, then two small menus, **Back up 
 **Automatic jobs** inside). It is added by changing KOReader's top menu when the plugin loads (`tab.lua`). If that cannot be
 done, or you keep your own top-menu order that leaves it out, the same list is in a **NovelCheck** entry in the Tools tab
 (the wrench), as before. The icon file is written into `koreader/icons/` and `resources/icons/mdlight/`.
+
+## Search outside the library (1.71.0)
+
+Search lists library matches first. **Not here? Look it up online** (also shown alone when nothing matches) finds the book on
+Open Library; pick the one you meant and NovelCheck rates it as Check a book does, which can take a minute. The book's page shows
+the rating and summary, with **Download** and **Add to Nightstand** if the library has it, or "Not available in the library yet."
+with **Request the ebook** and **Request the audiobook** (the family wishlist) if not. A kid needs a parent's OK for this (the AI
+features switch).

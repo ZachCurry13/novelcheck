@@ -132,6 +132,7 @@ function paintSynced() {
 
 function show(list, query) {
   state.list = list;
+  state.query = list === "search" ? query : "";
   showLists(true);
   var tabs = document.querySelectorAll(".tabs button[data-list]");
   var tab = list === "collection" ? "collections" : list; // a collection's books stay under Collections
@@ -214,6 +215,11 @@ function rows() {
   if (!part.length && state.books.length) m.appendChild(el("p", "meta", "No books match these filters. Tap All."));
   if (!state.books.length) m.appendChild(el("p", "", state.list === "up-next" ? "Your Nightstand is empty. Add books to it from New or Discover, or in NovelCheck on the web." :
     state.list === "kindle-mine" ? "Nothing yet: tap Sync now." : state.list === "collections" ? "No collections yet." : state.list === "discover" ? "Nothing on Discover is in your library yet." : "No books found."));
+  if (state.list === "search" && state.query) { // not in the library: look it up online, as Check a book does
+    var up = el("button", "main", "Not here? Look it up online");
+    up.onclick = function () { lookupOnline(state.query); };
+    m.appendChild(up);
+  }
   var pills = document.querySelectorAll(".pills button[data-lvl]");
   var noSort = state.list === "discover" || state.list === "collections";
   $("sortrow").hidden = noSort;

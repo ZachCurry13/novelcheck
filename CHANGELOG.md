@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.30]
+
+### 🔎 Search on the Kindle works like Check a book
+- **Look up a book the library doesn't have (KOReader plugin 1.71.0, Kindle app 1.23.0).** Search the library; at the bottom (or when nothing matches) tap **Not here? Look it up online**, pick the book you meant, and it is saved and rated just like in Check a book. Its page shows the rating, the verdict and the summary. If the library has it: Download and Add to Nightstand. If not, it says so and offers **Request the ebook** and **Request the audiobook**, which go on the family wishlist (for a book you have as an ebook, only the audiobook is offered, and the other way round).
+- **Kids:** looking up a book from outside the library needs a parent's OK, the same switch as AI features (Settings, People; its label now says so). A book outside a kid's rules gives "No results", as everywhere else. {admin}
+- **Harry Potter and other fantasy are no longer marked "Dark Occult" for an invented villain, curse or ritual.** The rating instructions now say Dark Occult is real-world occult practice, and that when unsure about a fantasy novel it is not occult. Books already marked keep their mark until they are checked again. {admin}
+
 ## [2.1.29]
 
 ### ✨ A calmer home screen, in KOReader and in the Kindle app

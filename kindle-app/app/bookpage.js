@@ -55,7 +55,22 @@ function paintDetails(b) {
     if (extra.length) d.appendChild(el("p", "meta", extra.join(" · ")));
     if (b.summary) d.appendChild(el("p", "", b.summary));
     var acts = el("div", "actions");
+    var inLib = b.in_library !== false; // older saved pages don't say: they are library books
+    if (!inLib && !b.url) d.appendChild(el("p", "headsup", "Not available in the library yet."));
     if (b.url) acts.appendChild(downloadButton(b, true));
+    var fmts = { ebook: "ebook", audio: "audiobook" };
+    var asks = b.request || [];
+    for (var a1 = 0; a1 < asks.length; a1++) (function (f) {
+      var rq = el("button", a1 === 0 && !b.url ? "main" : "", "Request the " + fmts[f]);
+      rq.onclick = function () { rq.disabled = true; askFor(b, f); };
+      acts.appendChild(rq);
+    })(asks[a1]);
+    var wished = b.wished || [];
+    for (var a2 = 0; a2 < wished.length; a2++) {
+      var done = el("button", "", "Asked for the " + fmts[wished[a2]]);
+      done.disabled = true;
+      acts.appendChild(done);
+    }
     var onNs = !!b.queue; // the button adds the book to the Nightstand, or takes it off again
     var ns = el("button", "", onNs ? "Remove from Nightstand" : "Add to Nightstand");
     ns.onclick = function () {
@@ -70,7 +85,8 @@ function paintDetails(b) {
         logLine((onNs ? "added to" : "removed from") + " the Nightstand: " + b.title);
       });
     };
-    acts.appendChild(ns);
+    if (inLib) acts.appendChild(ns);
+    if (!inLib) { d.appendChild(acts); m.appendChild(d); return; }
     var cv = el("button", "", "Change cover");
     cv.onclick = function () { pickCover(b); };
     acts.appendChild(cv);

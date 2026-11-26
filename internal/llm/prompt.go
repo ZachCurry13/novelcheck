@@ -80,7 +80,8 @@ const ContentGuide = `2. Content Elements:
 
 3. Spiritual & Occult Classification:
 - Whimsical / Standard Fantasy: Fictional fairy-tale magic, standard wizards (e.g., Merlin, Gandalf), vampires, werewolves and other fantasy creatures, or light YA fantasy (e.g., Harry Potter). (Mark dark_occult: false)
-- Dark Occult / Demonic: Explicit real-world occult practices, black magic rituals, demonic possession, or active demonic themes. (Mark dark_occult: true)`
+- Dark Occult / Demonic: Explicit real-world occult practices (a book that teaches or promotes them), real black magic rituals, demonic possession, or active demonic themes. (Mark dark_occult: true)
+- An invented villain, curse, dark spell or ritual inside a fantasy story (e.g., Voldemort and his rituals in Harry Potter) is fantasy, not occult. (Mark dark_occult: false). When unsure about a fantasy novel, mark dark_occult: false.`
 
 // maxBlurbChars keeps prompts small (and cheap) for the lightweight model.
 const maxBlurbChars = 2500

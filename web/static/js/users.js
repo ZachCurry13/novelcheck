@@ -173,7 +173,7 @@ function userCard(u, parents, viewer) {
       ${u.role !== "admin" ? `<label class="toggle min-h-[2.5rem]"><input type="checkbox" data-can-upload ${u.can_upload ? "checked" : ""}>
         Allow adding e-books (drag and drop in the Library; checked against Hardcover)</label>` : ""}
       ${u.role === "restricted" ? `<label class="toggle min-h-[2.5rem]"><input type="checkbox" data-ai-features ${u.ai_features ? "checked" : ""}>
-        Allow AI features (Suggested Reads picked by the AI, asking for a Deep Scan)</label>${collectionLimitHTML(u, collections)}` : ""}
+        Allow AI features (Suggested Reads picked by the AI, asking for a Deep Scan, looking up books the library does not have from the Kindle app and KOReader)</label>${collectionLimitHTML(u, collections)}` : ""}
       <div class="grid gap-2 sm:grid-cols-2">
         <select name="delivery_method" class="input">${deliveryOptions(viewer, u.delivery_method)}</select>
         <input name="kindle_email" value="${esc(u.kindle_email)}" placeholder="name@kindle.com" class="input">

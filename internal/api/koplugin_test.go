@@ -474,4 +474,31 @@ func TestPluginSearchAndNightstand(t *testing.T) {
 	if _, out := get("/kosync/plugin/up-next"); len(out["books"].([]any)) != 1 {
 		t.Fatalf("up next: %v", out)
 	}
+
+	// ask for the format the family lacks, and look up a book it does not have
+	_, info := get("/kosync/plugin/info/" + itoa(reptile))
+	if r, _ := info["request"].([]any); len(r) != 1 || r[0] != "audio" || info["in_library"] != true {
+		t.Fatalf("what can be asked: %v", info)
+	}
+	if code := post("/kosync/plugin/wish", `{"book_id":`+itoa(reptile)+`,"format":"audio"}`); code != 200 {
+		t.Fatalf("wish: %d", code)
+	}
+	if code := post("/kosync/plugin/wish", `{"book_id":`+itoa(reptile)+`,"format":"audio"}`); code != 409 {
+		t.Fatalf("asked twice: %d", code)
+	}
+	if code := post("/kosync/plugin/wish", `{"book_id":`+itoa(reptile)+`,"format":"paper"}`); code != 400 {
+		t.Fatalf("bad format: %d", code)
+	}
+	if _, info := get("/kosync/plugin/info/" + itoa(reptile)); len(info["wished"].([]any)) != 1 {
+		t.Fatalf("wished: %v", info)
+	}
+	if code := post("/kosync/plugin/check", `{"title":"A Book Nobody Has","author":"Nobody"}`); code != 200 {
+		t.Fatalf("check: %d", code)
+	}
+	if code := post("/kosync/plugin/check", `{"title":""}`); code != 400 {
+		t.Fatalf("empty check: %d", code)
+	}
+	if !(&store.User{Role: store.RoleAdmin}).MayUseAI() || (&store.User{Role: store.RoleRestricted}).MayUseAI() || !(&store.User{Role: store.RoleRestricted, AIFeatures: true}).MayUseAI() {
+		t.Fatal("kids look up only when a parent allows it")
+	}
 }

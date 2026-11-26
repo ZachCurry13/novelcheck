@@ -41,7 +41,7 @@ State YES or NO: does the book have any LGBTQ+ characters, themes or relationshi
 ### 5. Spiritual and Occult
 State YES or NO for each:
 * **Playful Fantasy:** fairy-tale magic, standard wizards (Merlin, Gandalf), vampires, werewolves and other fantasy creatures, light YA fantasy (Harry Potter).
-* **Dark Occult:** real-world occult practices, black magic rituals.
+* **Dark Occult:** real-world occult practices, real black magic rituals. An invented villain, curse or ritual inside a fantasy story (Voldemort in Harry Potter) is Playful Fantasy, not Dark Occult. When unsure about a fantasy novel, answer NO.
 * **Demonic Presence:** demonic possession or active demonic themes.
 
 ### 6. Other Content

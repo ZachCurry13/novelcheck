@@ -61,7 +61,7 @@ return function(NovelCheck, ctx)
                     local q = (dialog:getInputText() or ""):gsub("^%s+", ""):gsub("%s+$", "")
                     UIManager:close(dialog)
                     if #q >= 2 then
-                        self:runSearch("/kosync/plugin/search?q=" .. util.urlEncode(q), _("Search") .. ": " .. q)
+                        self:runSearch("/kosync/plugin/search?q=" .. util.urlEncode(q), _("Search") .. ": " .. q, q)
                     end
                 end },
             } },
@@ -78,7 +78,7 @@ return function(NovelCheck, ctx)
         self:runSearch("/kosync/plugin/new?", _("New in library"))
     end
 
-    function NovelCheck:runSearch(path, title)
+    function NovelCheck:runSearch(path, title, q)
         NetworkMgr:runWhenOnline(function()
             local data, err = self:getJSON(path .. "&device=" .. util.urlEncode(self:deviceName()))
             if not data then
@@ -86,14 +86,18 @@ return function(NovelCheck, ctx)
                 return
             end
             if type(data.books) ~= "table" or #data.books == 0 then
-                UIManager:show(InfoMessage:new{ text = _("No books found.") })
+                if q then
+                    self:lookupOnline(q) -- not in the library: look it up online, like Check a book
+                else
+                    UIManager:show(InfoMessage:new{ text = _("No books found.") })
+                end
                 return
             end
-            self:showHits(title, data.books)
+            self:showHits(title, data.books, q)
         end)
     end
 
-    function NovelCheck:showHits(title, hits)
+    function NovelCheck:showHits(title, hits, q)
         local items = {}
         for _i, h in ipairs(hits) do
             local line = h.title
@@ -116,6 +120,15 @@ return function(NovelCheck, ctx)
                 callback = function() self:showBookInfo(h) end,
             })
         end
+        if q then
+            table.insert(items, {
+                text = _("Not here? Look it up online"),
+                callback = function()
+                    UIManager:close(self.searchmenu)
+                    self:lookupOnline(q)
+                end,
+            })
+        end
         if self.searchmenu then
             UIManager:close(self.searchmenu)
         end
@@ -130,62 +143,6 @@ return function(NovelCheck, ctx)
             close_callback = function() self.searchmenu = nil end,
         }
         UIManager:show(self.searchmenu)
-    end
-
-    -- showBookInfo: what the book is, with Download and Nightstand buttons.
-    function NovelCheck:showBookInfo(hit)
-        local info, err = self:getJSON("/kosync/plugin/info/" .. tostring(hit.id))
-        if not info then
-            UIManager:show(InfoMessage:new{ text = err })
-            return
-        end
-        local lines = { info.title or hit.title }
-        if info.author and info.author ~= "" then
-            table.insert(lines, _("by") .. " " .. info.author)
-        end
-        if info.series and info.series ~= "" then
-            local n = tonumber(info.series_index)
-            table.insert(lines, info.series .. ((n and n > 0) and (" #" .. tostring(n)) or ""))
-        end
-        if type(info.level) == "number" then
-            local why = (info.reason and info.reason ~= "") and (": " .. info.reason) or ""
-            table.insert(lines, _("Spice level") .. ": " .. tostring(info.level) .. why)
-        end
-        if info.verdict and info.verdict ~= "" then
-            table.insert(lines, info.verdict)
-        end
-        if info.summary and info.summary ~= "" then
-            table.insert(lines, "")
-            table.insert(lines, info.summary)
-        end
-        if info.format then
-            table.insert(lines, "")
-            table.insert(lines, info.format .. ", " .. sizeText(info.size))
-        end
-        local dialog
-        local on_device = hit.on_device
-        local queued = info.queue and info.queue ~= ""
-        dialog = ButtonDialog:new{
-            title = table.concat(lines, "\n"),
-            buttons = {
-                {
-                    { text = on_device and _("Already on this device") or _("Download to this device"), enabled = info.url ~= nil and not on_device,
-                      callback = function()
-                          UIManager:close(dialog)
-                          self:downloadHit(hit, info)
-                      end },
-                },
-                {
-                    { text = queued and _("On your Nightstand") or _("Add to Nightstand"), enabled = not queued,
-                      callback = function()
-                          UIManager:close(dialog)
-                          self:addToNightstand(hit)
-                      end },
-                },
-                { { text = _("Close"), callback = function() UIManager:close(dialog) end } },
-            },
-        }
-        UIManager:show(dialog)
     end
 
     function NovelCheck:downloadHit(hit, info)

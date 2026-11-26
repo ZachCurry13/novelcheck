@@ -145,6 +145,8 @@ func (s *Server) handlePluginInfo(w http.ResponseWriter, r *http.Request) {
 		out["format"], out["size"], out["url"] = pb.Format, pb.Size, pb.URL
 	}
 	s.moreInfo(u, b, out)
+	out["status"], out["can_look_up"] = b.Status, mayLookUp(u)
+	s.requestInfo(u, b, out)
 	if items, err := s.Store.ListQueue(u.ID, false); err == nil {
 		for _, it := range items {
 			if it.BookID == b.ID {
