@@ -24,8 +24,9 @@ func (w *Worker) askAIs(ctx context.Context, id int64, user string) (*store.Anal
 func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, user string) (*store.Analysis, error) {
 	var errs []string
 	var lastErr error
-	limited := false // every failure so far was a service's own daily limit, not a fault
-	busy := false    // every failure so far was a service saying it is too busy right now
+	limited := false   // every failure so far was a service's own daily limit, not a fault
+	busy := false      // every failure so far was a service saying it is too busy right now
+	var mainWhy string // what the first AI answered when it failed, for the notice (it did not say anything before)
 	for _, ai := range ais {
 		busyHere := 0
 		if len(ai.Models) == 0 {
@@ -45,7 +46,7 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 					w.Store.Notify("info", "llm-backup", busyNote(ais, ai), "#/system")
 				} else if ai.Name == "backup" {
 					w.Store.Notify("warning", "llm-backup",
-						"The main AI isn't working, so the backup AI rated some books. Check Admin → Integrations → Check now.", "#/system")
+						"The main AI isn't working, so the backup AI rated some books. Check Admin → Integrations → Check now. Its last answer — "+mainWhy, "#/system")
 				} else {
 					w.Store.Resolve("llm-backup")
 				}
@@ -58,6 +59,12 @@ func (w *Worker) askWith(ctx context.Context, ais []store.AIConfig, id int64, us
 			limited = (lastErr == nil || limited) && llm.DailyLimit(err) != nil
 			busy = (lastErr == nil || busy) && llm.Busy(err)
 			lastErr = err
+			if mainWhy == "" {
+				mainWhy = fmt.Sprintf("%s: %v", model, err)
+				if r := []rune(mainWhy); len(r) > 200 {
+					mainWhy = string(r[:200]) + "…"
+				}
+			}
 			errs = append(errs, fmt.Sprintf("%s AI (%s): %v", ai.Name, model, err))
 			if llm.HostDown(err) {
 				break // the server is down or stuck: its other models won't answer either

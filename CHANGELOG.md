@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.45]
+
+### 🔎 The notice says why the main AI failed
+- **"The main AI isn't working, so the backup AI rated some books" now ends with what the main AI actually answered** (for example a rate-limit or a wrong model name), so you can tell a quiet limit from a real fault without digging. {admin}
+
 ## [2.1.44]
 
 ### 🧭 Settings is about me; Admin is about everyone
