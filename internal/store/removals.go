@@ -1,6 +1,10 @@
 package store
 
-import "strconv"
+import (
+	"path/filepath"
+	"strconv"
+	"strings"
+)
 
 // CalibreRemoval is one book NovelCheck removed from Calibre.
 type CalibreRemoval struct {
@@ -92,5 +96,35 @@ func (s *Store) CalibreEntryFiles(calibreID int) []string {
 	}
 	var out []string
 	_ = s.DB.Select(&out, `SELECT path FROM catalog_books WHERE catalog_id = ? AND external_id = ?`, cat, strconv.Itoa(calibreID))
+	return out
+}
+
+// DevicesHoldingTitle lists the e-readers (as "person / device") whose last report has a file with this title (ignoring case and
+// punctuation) in it or in its file name.
+func (s *Store) DevicesHoldingTitle(title string) []string {
+	key, _, _ := strings.Cut(NormKey(title, ""), "|")
+	if len(key) < 4 {
+		return nil
+	}
+	var rows []struct {
+		User     string `db:"username"`
+		Device   string `db:"device"`
+		Title    string `db:"title"`
+		Filename string `db:"filename"`
+	}
+	_ = s.DB.Select(&rows, `SELECT u.username, d.device, d.title, d.filename FROM device_books d JOIN users u ON u.id = d.user_id`)
+	seen := map[string]bool{}
+	var out []string
+	for _, r := range rows {
+		for _, text := range []string{r.Title, strings.TrimSuffix(r.Filename, filepath.Ext(r.Filename))} {
+			if k, _, _ := strings.Cut(NormKey(text, ""), "|"); k != "" && strings.Contains(k, key) {
+				if who := r.User + " / " + r.Device; !seen[who] {
+					seen[who] = true
+					out = append(out, who)
+				}
+				break
+			}
+		}
+	}
 	return out
 }

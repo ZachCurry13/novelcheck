@@ -110,3 +110,14 @@ func (s *Server) writeUploads(b *strings.Builder) {
 		b.WriteString("(none)\n")
 	}
 }
+
+// writeRemovals lists the books removed from Calibre through NovelCheck, and for each which Kindles report a file with that title
+// (a book that comes back after it was removed is usually a Kindle file being copied or matched again).
+func (s *Server) writeRemovals(b *strings.Builder) {
+	rem := s.Store.CalibreRemovals(40)
+	fmt.Fprintf(b, "\n== Removed from Calibre through NovelCheck (newest first, %d) ==\n", len(rem))
+	for _, r := range rem {
+		held := s.Store.DevicesHoldingTitle(r.Title)
+		fmt.Fprintf(b, "%s UTC · %s · %s · Calibre #%d · %s · on a Kindle now: %s\n", r.At, orNone(r.By), r.Tool, r.CalibreID, orNone(r.Title), orNone(strings.Join(held, "; ")))
+	}
+}

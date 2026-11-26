@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.36]
+
+### 🔎 The bug log shows what was removed from Calibre
+- **A new section lists the last 40 books removed through NovelCheck** (when, who, which tool, Calibre number, title) and, for each, which Kindles still report a file with that title. A book that keeps coming back after it was removed usually means a Kindle file is being copied or matched again, and this shows it. {admin}
+
 ## [2.1.35]
 
 ### 📥 Add books from a folder

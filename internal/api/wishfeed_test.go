@@ -203,3 +203,23 @@ func TestAskBookRules(t *testing.T) {
 		t.Fatalf("a book not rated yet: %d", res.StatusCode)
 	}
 }
+
+// The bug log lists what was removed from Calibre and which Kindles still have a file with that title.
+func TestBugLogShowsRemovalsAndKindles(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	_, _ = st.DB.Exec(`INSERT INTO calibre_removals (by_user, tool, calibre_id, title) VALUES ('admin', 'duplicates', 77, 'Brave New World')`)
+	u, _ := st.UserByName("admin")
+	_, _ = st.DB.Exec(`INSERT INTO device_books (user_id, device, filename, title, reported_at) VALUES (?, 'Kindle', 'Brave New World - Aldous Huxley (151).epub', '', 1)`, u.ID)
+	_, out := admin.do("POST", "/api/admin/bug-link", map[string]string{}, true)
+	url, _ := out["url"].(string)
+	res, err := http.Get(srv.URL + url[strings.Index(url, "/bugs/"):])
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	b, _ := io.ReadAll(res.Body)
+	if !strings.Contains(string(b), "Calibre #77 · Brave New World · on a Kindle now: admin / Kindle") {
+		t.Fatalf("log: %s", string(b)[:min(len(b), 600)])
+	}
+}
