@@ -24,8 +24,6 @@ const keyIdentify = "identify_auto" // "off" turns it off
 
 func (s *Server) identifyOn() bool { return s.Store.Setting(keyIdentify) != "off" }
 
-const identifyWords = 1200 // how much of the start of the book the AI reads
-
 func norm(s string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsLetter(r) || unicode.IsNumber(r) {
@@ -52,27 +50,6 @@ func authorUnknown(a string) bool {
 	return l == "" || l == "unknown" || l == "unknown author"
 }
 
-// firstPages is the start of the book's text, up to identifyWords words, with what the file's package says.
-func firstPages(path string) (text, metaTitle, metaAuthor string, err error) {
-	sections, err := epub.Read(path)
-	if err != nil {
-		return "", "", "", err
-	}
-	metaTitle, metaAuthor, _ = epub.Meta(path)
-	var b strings.Builder
-	words := 0
-	for _, sec := range sections {
-		for _, w := range strings.Fields(sec.Text) {
-			b.WriteString(w + " ")
-			if words++; words >= identifyWords {
-				return b.String(), metaTitle, metaAuthor, nil
-			}
-		}
-		b.WriteString("\n")
-	}
-	return b.String(), metaTitle, metaAuthor, nil
-}
-
 // identifyBook says what the book's first pages say it is (kept, so each book is read once). ok is false when it could not be told.
 func (s *Server) identifyBook(ctx context.Context, bookID int64) (store.Identity, bool) {
 	if id, tried := s.Store.IdentityOf(bookID); tried {
@@ -83,28 +60,44 @@ func (s *Server) identifyBook(ctx context.Context, bookID int64) (store.Identity
 	}
 	path, found := s.Deep.EPUBFor(bookID)
 	if !found {
-		s.Store.SaveIdentity(bookID, "", "") // no EPUB to read (an audiobook, a PDF): not asked again for a month
+		s.Store.SaveIdentity(bookID, "", "", "") // no EPUB to read (an audiobook, a PDF): not asked again for a month
 		return store.Identity{}, false
 	}
-	text, mt, ma, err := firstPages(path)
-	if err != nil || strings.TrimSpace(text) == "" {
-		s.Store.SaveIdentity(bookID, "", "")
+	fm, err := epub.Front(path) // the package's metadata, the title page, the copyright page: where a book says what it is
+	isbn := ""
+	if len(fm.ISBNs) > 0 {
+		isbn = fm.ISBNs[0]
+	}
+	if err != nil {
+		s.Store.SaveIdentity(bookID, "", "", "")
+		return store.Identity{}, false
+	}
+	front := fm.TitlePage + " " + fm.CopyrightPage
+	// 1. The file's own title and author, when its title page or copyright page bears them out: no AI needed.
+	if !looksOff(fm.Title) && !authorUnknown(fm.Author) && printedIn(front, fm.Title) {
+		s.Store.SaveIdentity(bookID, fm.Title, fm.Author, isbn)
+		return store.Identity{Title: fm.Title, Author: fm.Author, ISBN: isbn}, true
+	}
+	// 2. Otherwise the AI reads just the pages that say it.
+	if strings.TrimSpace(front+fm.Opening) == "" {
+		s.Store.SaveIdentity(bookID, "", "", isbn)
 		return store.Identity{}, false
 	}
 	var got llm.Identity
-	if _, err := llm.Ask(ctx, s.Store, s.Store.AIConfigs(), bookID, llm.IdentifySystem, llm.IdentifyUser(mt, ma, text), func(out string) error {
-		var perr error
-		got, perr = llm.ParseIdentity(out)
-		return perr
-	}); err != nil {
+	if _, err := llm.Ask(ctx, s.Store, s.Store.AIConfigs(), bookID, llm.IdentifySystem,
+		llm.IdentifyUser(fm.Title, fm.Author, fm.Publisher, fm.TitlePage, fm.CopyrightPage, fm.Opening), func(out string) error {
+			var perr error
+			got, perr = llm.ParseIdentity(out)
+			return perr
+		}); err != nil {
 		return store.Identity{}, false // the AI did not answer: not kept, so it is asked again next time
 	}
-	if !got.Certain || !printedIn(text+" "+mt, got.Title) {
-		s.Store.SaveIdentity(bookID, "", "")
+	if !got.Certain || !printedIn(front+" "+fm.Opening+" "+fm.Title, got.Title) {
+		s.Store.SaveIdentity(bookID, "", "", isbn)
 		return store.Identity{}, false
 	}
-	s.Store.SaveIdentity(bookID, got.Title, got.Author)
-	return store.Identity{Title: got.Title, Author: got.Author}, true
+	s.Store.SaveIdentity(bookID, got.Title, got.Author, isbn)
+	return store.Identity{Title: got.Title, Author: got.Author, ISBN: isbn}, true
 }
 
 // nameFromPages renames a wrongly named book in Calibre from what its pages say; true when it did.
@@ -114,7 +107,13 @@ func (s *Server) nameFromPages(ctx context.Context, bookID int64) bool {
 		return false
 	}
 	b, err := s.Store.BookByID(bookID, nil)
-	if err != nil || (!looksOff(b.Title) && deepread.TitleFits(b.Title, ident.Title)) {
+	if err != nil {
+		return false
+	}
+	if b.ISBN == "" && ident.ISBN != "" && s.Store.SetMissingISBN(b.ID, ident.ISBN) { // the copyright page's ISBN, for a book with none
+		s.saveISBNInCalibre(ctx, b.ID, ident.ISBN)
+	}
+	if !looksOff(b.Title) && deepread.TitleFits(b.Title, ident.Title) {
 		return false // already named right
 	}
 	calibreID := 0

@@ -996,5 +996,6 @@ CREATE TABLE IF NOT EXISTS book_identity (
     book_id INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
     title   TEXT NOT NULL DEFAULT '',
     author  TEXT NOT NULL DEFAULT '',
+    isbn    TEXT NOT NULL DEFAULT '', -- the ISBN printed on its copyright page (or in its package), when valid
     at      INTEGER NOT NULL DEFAULT 0
 );

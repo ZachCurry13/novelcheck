@@ -10,21 +10,22 @@ import (
 type Identity struct {
 	Title  string
 	Author string
+	ISBN   string
 	At     int64
 }
 
 // SaveIdentity keeps what was read (empty title: the pages did not say).
-func (s *Store) SaveIdentity(bookID int64, title, author string) {
-	_, _ = s.DB.Exec(`INSERT INTO book_identity (book_id, title, author, at) VALUES (?, ?, ?, ?)
-		ON CONFLICT(book_id) DO UPDATE SET title = excluded.title, author = excluded.author, at = excluded.at`,
-		bookID, strings.TrimSpace(title), strings.TrimSpace(author), time.Now().Unix())
+func (s *Store) SaveIdentity(bookID int64, title, author, isbn string) {
+	_, _ = s.DB.Exec(`INSERT INTO book_identity (book_id, title, author, isbn, at) VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT(book_id) DO UPDATE SET title = excluded.title, author = excluded.author, isbn = excluded.isbn, at = excluded.at`,
+		bookID, strings.TrimSpace(title), strings.TrimSpace(author), strings.TrimSpace(isbn), time.Now().Unix())
 }
 
 // IdentityOf is what was read for the book, and whether anything was tried (an answer older than a month with no title is
 // tried again).
 func (s *Store) IdentityOf(bookID int64) (Identity, bool) {
 	var id Identity
-	if s.DB.Get(&id, `SELECT title AS "title", author AS "author", at AS "at" FROM book_identity WHERE book_id = ?`, bookID) != nil {
+	if s.DB.Get(&id, `SELECT title AS "title", author AS "author", isbn AS "isbn", at AS "at" FROM book_identity WHERE book_id = ?`, bookID) != nil {
 		return Identity{}, false
 	}
 	if id.Title == "" && time.Since(time.Unix(id.At, 0)) > 30*24*time.Hour {
