@@ -208,3 +208,24 @@ func (s *Store) TrialSample(n int) ([]TrialBook, error) {
 	}
 	return out, nil
 }
+
+// NotSureBook is a rating the AI was unsure of, for the list an admin decides about.
+type NotSureBook struct {
+	ID      int64  `db:"id" json:"id"`
+	Title   string `db:"title" json:"title"`
+	Author  string `db:"author" json:"author"`
+	Level   *int   `db:"spice_level" json:"level"`
+	Model   string `db:"analysis_model" json:"model"`
+	Checked bool   `db:"checked" json:"checked"` // the bigger model already gave its second opinion under the current rules
+}
+
+// NotSureList is every "Not sure" rating (analyzed, low confidence, no parent OK, not by hand or a Deep Scan) in a library, those
+// still waiting for the bigger model first.
+func (s *Store) NotSureList() []NotSureBook {
+	out := []NotSureBook{}
+	_ = s.DB.Select(&out, `SELECT b.id, b.title, b.author, b.spice_level, b.analysis_model, (b.big_rules >= ?) AS checked FROM books b
+		WHERE b.status = 'analyzed' AND b.confidence = 'low' AND b.approved = 0
+		AND b.analysis_model NOT LIKE 'manual:%' AND b.analysis_model NOT LIKE 'deep:%'
+		AND EXISTS (SELECT 1 FROM catalog_books cb WHERE cb.book_id = b.id) ORDER BY checked, b.id DESC`, RulesVersion)
+	return out
+}

@@ -318,3 +318,28 @@ func TestJoinKindleLibraries(t *testing.T) {
 		t.Fatalf("same library: %d", res.StatusCode)
 	}
 }
+
+// The Not sure list shows every unsure rating, the nightly number is kept, and a batch needs the Deep Scan machine.
+func TestNotSureList(t *testing.T) {
+	srv, st := setup(t)
+	admin := login(t, srv, "admin", "adminpass1")
+	cal, _ := st.EnsureCatalog(store.CalibreCatalogName, "calibre")
+	two := 2
+	id, _ := st.UpsertBook("Unsure Book", "An Author", "", "")
+	_ = st.AddCopy(cal, id, "/c/u.epub", "epub", "1")
+	_ = st.SaveAnalysis(id, store.Analysis{SpiceLevel: &two, Model: "small", Confidence: "low"})
+	_, out := admin.do("GET", "/api/admin/not-sure", nil, false)
+	books, _ := out["books"].([]any)
+	if len(books) != 1 || out["waiting"] != float64(1) || out["machine"] != false {
+		t.Fatalf("list: %v", out)
+	}
+	if _, o := admin.do("PUT", "/api/admin/not-sure", map[string]int{"nightly": 10}, true); o["nightly"] != float64(10) {
+		t.Fatalf("nightly: %v", o)
+	}
+	if res, _ := admin.do("PUT", "/api/admin/not-sure", map[string]int{"nightly": -1}, true); res.StatusCode != 400 {
+		t.Fatalf("a negative number: %d", res.StatusCode)
+	}
+	if res, _ := admin.do("POST", "/api/admin/not-sure/run", map[string]int{"limit": 0}, true); res.StatusCode != 409 {
+		t.Fatalf("no Deep Scan machine: %d", res.StatusCode)
+	}
+}

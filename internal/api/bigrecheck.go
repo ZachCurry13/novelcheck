@@ -17,7 +17,8 @@ import (
 
 const bigRecheckBatch = 3
 
-// BigRecheckLoop looks for "not sure" ratings every five minutes.
+// BigRecheckLoop looks for "not sure" ratings every five minutes: the automatic way (when automatic rating is on) and the
+// nightly way (an admin chose "this many a night" on the AI page).
 func (s *Server) BigRecheckLoop(ctx context.Context) {
 	t := time.NewTicker(5 * time.Minute)
 	defer t.Stop()
@@ -26,20 +27,27 @@ func (s *Server) BigRecheckLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			if n := s.RecheckNotSure(ctx, bigRecheckBatch); n > 0 {
+			n := s.RecheckNotSure(ctx, bigRecheckBatch)
+			n += s.recheckTonight(ctx)
+			if n > 0 {
 				log.Printf("bigger model: %d unsure ratings looked at again", n)
 			}
 		}
 	}
 }
 
-// RecheckNotSure rates up to limit "not sure" books again on the bigger model and says how many it did.
+// RecheckNotSure rates up to limit "not sure" books again on the bigger model and says how many it did (the automatic way).
 func (s *Server) RecheckNotSure(ctx context.Context, limit int) int {
-	ai, ok := s.Store.DeepAI()
-	if !ok || s.Deep == nil || !llm.IsLocal(ai.BaseURL) || !analyzer.AutoRateOn(s.Store) || !analyzer.RateHoursOpen(s.Store, time.Now()) {
+	if !analyzer.AutoRateOn(s.Store) || !analyzer.RateHoursOpen(s.Store, time.Now()) {
 		return 0
 	}
-	if s.Deep.MachineAway() {
+	return s.recheck(ctx, limit)
+}
+
+// recheck is the work itself: up to limit unsure books, on the bigger model when it is a machine on the home network and is on.
+func (s *Server) recheck(ctx context.Context, limit int) int {
+	ai, ok := s.Store.DeepAI()
+	if !ok || s.Deep == nil || !llm.IsLocal(ai.BaseURL) || s.Deep.MachineAway() {
 		return 0
 	}
 	ids, err := s.Store.NotSureToRecheck(limit)
@@ -58,6 +66,7 @@ func (s *Server) RecheckNotSure(ctx context.Context, limit int) int {
 			break
 		}
 		s.Store.MarkBigChecked(id) // one second opinion per rules version, even when it could not be given
+		bigRun.step()
 		done++
 	}
 	return done

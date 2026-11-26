@@ -4,6 +4,12 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.42]
+
+### 🤖 Not sure ratings, and the bigger model, in your hands
+- **Admin → AI & Scans now has "Not sure ratings":** every rating the AI wasn't sure of, with how many are still waiting for the bigger model's second opinion, and the whole list to look through.
+- **You decide how they get a second look:** **Look at all now** (one batch), **Look at 10 now**, or **each night: N books** (inside the hours automatic rating is allowed; it says how many were done tonight). A batch shows how far it got and carries on if you leave the page. Each rating gets one second opinion from the bigger model. This needs the Deep Scan machine on your home network (so it costs nothing); if it isn't set up or is off, the buttons say so. Before, this only happened by itself when automatic rating was switched on. {admin}
+
 ## [2.1.41]
 
 ### 🏷️ See where a book is, right on its cover

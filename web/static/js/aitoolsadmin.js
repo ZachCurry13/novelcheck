@@ -11,6 +11,7 @@ const hours = (s) => (s >= 5400 ? `about ${(s / 3600).toFixed(1)} hours` : `abou
 
 export async function renderAITools(host, deepHost) {
   let timer;
+  if (!host._notSure) { host._notSure = true; import("./notsure.js").then((m) => m.notSureCard(host.parentElement || host)); }
   const paint = async () => {
     const st = await get("/api/admin/aitools").catch(() => null);
     if (!st || !host.isConnected) return clearInterval(timer);
