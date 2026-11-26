@@ -4,6 +4,14 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.34]
+
+### ✨ Smaller things, finished
+- **Kids hear back.** When a parent answers a book request (Yes, or not this time), the person who asked gets a phone notice with the answer.
+- **Covers and book files use the home address too (app 1.26.0).** When the Kindle is at home and the home address answered, covers, downloads, backups and restores go over the Wi-Fi alone; everything else already did.
+- **The app asks again after a moment** when the Kindle has no connection right after the app restarted (for instance after it updated itself), instead of showing "No connection" for what was only Wi-Fi waking up. Reads and the book report only.
+- **The Back up button on the KOReader card stays.**
+
 ## [2.1.33]
 
 ### 🏠 At home the Kindle talks to the server over Wi-Fi, anywhere else over the internet (app 1.25.0, plugin 1.75.0)

@@ -349,7 +349,7 @@ function thumbnail(b, path) {
     "K=$(sqlite3 " + snap + " \"SELECT p_cdeKey || '_' || p_cdeType FROM Entries WHERE p_location='" + path + "' LIMIT 1\"); rm -f " + snap + "*; " +
     "[ -n \"$K\" ] && break; done; if [ -n \"$K\" ]; then mkdir -p " + dir + "; T=\"" + dir + "/thumbnail_${K}_portrait.jpg\"; " +
     "if curl -sfL -H " + sh("x-auth-user: " + NC.user) + " -H " + sh("x-auth-key: " + NC.key) + " -o \"$T.part\" -w '%{content_type}' " +
-    sh(NC.server + "/kosync/plugin/cover/" + b.id + "?size=l") + " | grep -q jpeg; then mv \"$T.part\" \"$T\"; else rm -f \"$T.part\"; fi; fi ) >/dev/null 2>&1 &";
+    sh(server() + "/kosync/plugin/cover/" + b.id + "?size=l") + " | grep -q jpeg; then mv \"$T.part\" \"$T\"; else rm -f \"$T.part\"; fi; fi ) >/dev/null 2>&1 &";
 }
 
 // saveForKOReader downloads the book in its own format (EPUB, no conversion) into the NovelCheck folder inside KOReader's home
@@ -358,7 +358,7 @@ function saveForKOReader(b, btn) {
   var out = "/tmp/nc-dl-" + b.id + ".txt", tmp = "/tmp/nc-ko-" + b.id + ".part", hdr = "/tmp/nc-ko-" + b.id + ".hdr";
   var cmd = "rm -f " + out + " " + hdr + "; H=$(sed -n 's/.*\\[\"home_dir\"\\] = \"\\(.*\\)\".*/\\1/p' /mnt/us/koreader/settings.reader.lua 2>/dev/null | head -1); " +
     "[ -d \"$H\" ] || H=/mnt/us/documents; D=\"${H%/}/NovelCheck\"; mkdir -p \"$D\"; " +
-    "if curl -sfL -D " + hdr + " -H " + sh("x-auth-user: " + NC.user) + " -H " + sh("x-auth-key: " + NC.key) + " -o " + tmp + " " + sh(NC.server + "/kosync/plugin/book/" + b.id + "/book") +
+    "if curl -sfL -D " + hdr + " -H " + sh("x-auth-user: " + NC.user) + " -H " + sh("x-auth-key: " + NC.key) + " -o " + tmp + " " + sh(server() + "/kosync/plugin/book/" + b.id + "/book") +
     "; then F=$(sed -n 's/^[Cc]ontent-[Dd]isposition:.*filename=\"\\(.*\\)\".*/\\1/p' " + hdr + " | tr -d '\\r' | tr '/' '_'); [ -n \"$F\" ] || F=book-" + b.id + ".epub; mv " + tmp + " \"$D/$F\"; echo ok > " + out +
     "; else rm -f " + tmp + "; echo failed > " + out + "; fi; rm -f " + hdr + "; echo END >> " + out;
   if (!run(cmd)) {
@@ -388,7 +388,7 @@ function save(b, file, btn) {
   var dir = "/mnt/us/documents/NovelCheck", out = "/tmp/nc-dl-" + b.id + ".txt";
   var part = dir + "/" + file + ".part";
   var cmd = "mkdir -p " + dir + "; rm -f " + out + "; if curl -sfL -H " + sh("x-auth-user: " + NC.user) +
-    " -H " + sh("x-auth-key: " + NC.key) + " -o " + sh(part) + " " + sh(NC.server + "/kosync/plugin/kindle/" + b.id) +
+    " -H " + sh("x-auth-key: " + NC.key) + " -o " + sh(part) + " " + sh(server() + "/kosync/plugin/kindle/" + b.id) +
     "; then mv " + sh(part) + " " + sh(dir + "/" + file) + "; lipc-set-prop com.lab126.scanner doFullScan 1; echo ok > " + out +
     "; else rm -f " + sh(part) + "; echo failed > " + out + "; fi; echo END >> " + out + thumbnail(b, dir + "/" + file);
   if (!run(cmd)) {

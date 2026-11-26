@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/zachcurry13/novelcheck/internal/auth"
+	"github.com/zachcurry13/novelcheck/internal/push"
 	"github.com/zachcurry13/novelcheck/internal/store"
 )
 
@@ -122,5 +123,22 @@ func (s *Server) handleDecideRequest(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "approve, decline or done")
 		return
 	}
+	s.tellRequester(id)
 	writeJSON(w, http.StatusOK, map[string]string{"ok": strconv.FormatInt(id, 10)})
+}
+
+// tellRequester sends the person who asked a phone notice with the parent's answer (Yes, or not this time).
+func (s *Server) tellRequester(id int64) {
+	q, err := s.Store.RequestByID(id)
+	if err != nil || s.Push == nil || (q.Status != "approved" && q.Status != "done" && q.Status != "declined") {
+		return
+	}
+	title, body := "✅ Yes: "+q.Title, q.Answer
+	if q.Status == "declined" {
+		title = "Not this time: " + q.Title
+	}
+	if body == "" {
+		body = "A parent answered your ask."
+	}
+	s.Push.ToUser(q.UserID, push.Message{Title: title, Body: body, URL: "/#/home", Tag: "request-" + strconv.FormatInt(id, 10)})
 }

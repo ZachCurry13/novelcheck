@@ -37,7 +37,7 @@ function backupKindle(done) {
         if (sizes[path] > MAX_UPLOAD) { big++; return next(); }
         note("Backing up " + (total - send.length) + " of " + total + ": " + path.split("/").pop() + "…");
         var out = "/tmp/nc-bk-one.txt";
-        shellOut("if curl -sf -m 900 -T " + sh(path) + AUTH + " " + sh(NC.server + "/kosync/plugin/kindle/file?device=" + encodeURIComponent(NC.device) + "&path=" + encodeURIComponent(path)) +
+        shellOut("if curl -sf -m 900 -T " + sh(path) + AUTH + " " + sh(server() + "/kosync/plugin/kindle/file?device=" + encodeURIComponent(NC.device) + "&path=" + encodeURIComponent(path)) +
           " > /dev/null; then echo ok > " + out + "; else echo failed > " + out + "; fi", out, 920, function (t) {
           if (t && t.indexOf("ok") >= 0) { sent++; failed = 0; } else failed++;
           next();
@@ -113,7 +113,7 @@ function restoreKindle(done) {
       note("Checking " + (total - todo.length) + " of " + total + "…");
       var dest = "/mnt/us/" + rel, out = "/tmp/nc-rs-one.txt";
       shellOut("if [ -e " + sh(dest) + " ]; then echo have > " + out + "; else mkdir -p \"$(dirname " + sh(dest) + ")\"; if curl -sf -m 900 " + AUTH + " -o " + sh(dest + ".part") + " " +
-        sh(NC.server + "/kosync/plugin/restore/file?device=" + encodeURIComponent(NC.device) + "&path=" + encodeURIComponent(rel)) + "; then mv " + sh(dest + ".part") + " " + sh(dest) +
+        sh(server() + "/kosync/plugin/restore/file?device=" + encodeURIComponent(NC.device) + "&path=" + encodeURIComponent(rel)) + "; then mv " + sh(dest + ".part") + " " + sh(dest) +
         "; echo ok > " + out + "; else rm -f " + sh(dest + ".part") + "; echo failed > " + out + "; fi; fi", out, 920, function (t) {
         if (t && t.indexOf("ok") >= 0) { put++; note("Restored " + put + ": " + rel.split("/").pop()); }
         next();

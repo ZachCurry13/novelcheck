@@ -29,6 +29,13 @@ function knockHome(base, then) {
   try { k.send(null); } catch (e) { end(false); }
 }
 
+// server is the address for a request made outside api(): the home address while a knock to it answered in the last ten minutes, else
+// the main one (covers and book files are big, so the Wi-Fi alone helps most there).
+function server() {
+  var h = stored("nc-home");
+  return h && homeState.base === h && homeState.ok && new Date().getTime() - homeState.at < 600000 ? h : NC.server;
+}
+
 function api(method, path, body, done, remoteOnly) {
   var home = remoteOnly || path.indexOf("/kosync/") !== 0 ? "" : (stored("nc-home") || "");
   if (home) return knockHome(home, function (ok) { send(method, ok ? home : NC.server, path, body, done, ok ? home : ""); });
@@ -37,7 +44,7 @@ function api(method, path, body, done, remoteOnly) {
 
 // send asks one address; when it was the home address and nothing answered, the home address is forgotten for ten minutes and the
 // same request goes to the main address.
-function send(method, base, path, body, done, triedHome) {
+function send(method, base, path, body, done, triedHome, retried) {
   var x = new XMLHttpRequest();
   x.open(method, base + path, true);
   x.setRequestHeader("x-auth-user", NC.user);
@@ -55,6 +62,9 @@ function send(method, base, path, body, done, triedHome) {
     try { data = JSON.parse(x.responseText); } catch (e) {}
     // any answer at all means NovelCheck can be reached: a leftover "Offline" line goes
     if (x.status > 0 && typeof state !== "undefined" && state.offline && typeof setOffline === "function") setOffline(false);
+    if (x.status === 0 && !retried && (method === "GET" || path.indexOf("/plugin/device") >= 0)) { // Wi-Fi is often not ready for a moment after the app restarts (after updating itself)
+      return setTimeout(function () { send(method, base, path, body, done, triedHome, true); }, 4000);
+    }
     if (x.status === 0) {
       if (path.indexOf("/plugin/debug") < 0) logLine(method + " " + path.split("?")[0] + ": no connection");
       return done("No connection. Turn off Airplane Mode and try again.", null, 0);
@@ -101,7 +111,7 @@ function nextCover() {
   };
   if (!window.Uint8Array || !window.btoa) return done("this browser can't show covers (no Uint8Array or btoa)");
   var x = new XMLHttpRequest();
-  x.open("GET", NC.server + (job.path || "/kosync/plugin/cover/" + id + "?size=" + job.size + (coverVer[id] ? "&v=" + coverVer[id] : "")), true);
+  x.open("GET", server() + (job.path || "/kosync/plugin/cover/" + id + "?size=" + job.size + (coverVer[id] ? "&v=" + coverVer[id] : "")), true);
   x.setRequestHeader("x-auth-user", NC.user);
   x.setRequestHeader("x-auth-key", NC.key);
   x.responseType = "arraybuffer";
@@ -126,7 +136,7 @@ function nextCover() {
 function fileCover(job, done) {
   var dir = "/var/local/mesquite/NovelCheck/covers", name = "c" + job.id + "_" + job.size + ".jpg", out = "/tmp/nc-cover-" + job.id + ".txt";
   var cmd = "mkdir -p " + dir + "; rm -f " + out + "; if curl -sfL -H " + sh("x-auth-user: " + NC.user) + " -H " + sh("x-auth-key: " + NC.key) +
-    " -o " + dir + "/" + name + " " + sh(NC.server + "/kosync/plugin/cover/" + job.id + "?size=" + job.size) + "; then echo ok > " + out + "; else rm -f " + dir + "/" + name + "; echo failed > " + out + "; fi; echo END >> " + out;
+    " -o " + dir + "/" + name + " " + sh(server() + "/kosync/plugin/cover/" + job.id + "?size=" + job.size) + "; then echo ok > " + out + "; else rm -f " + dir + "/" + name + "; echo failed > " + out + "; fi; echo END >> " + out;
   if (!run(cmd)) return done(false);
   waitFor(out, 20, function (text) {
     var ok = !!text && text.indexOf("ok") >= 0;
