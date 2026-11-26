@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.31]
+
+### 🌶️ A spice limit for any account
+- **Settings, People now has "Hide books above this spice level" for every account, not only kids.** Pick, for example, Level 3 for a grown-up and she never sees Level 4 or 5 books anywhere (lists, search, Kindle, Nightstand). Before, only kid accounts showed it, and saving a grown-up's account quietly reset a limit she had set herself on her own Profile. Both fixed. Kids keep their own box and age presets. {admin}
+
 ## [2.1.30]
 
 ### 🔎 Search on the Kindle works like Check a book

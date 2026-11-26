@@ -158,11 +158,12 @@ function userCard(u, parents, viewer) {
       </div>
       ${accessHTML(u, viewer)}
       ${u.role === "restricted" && on(viewer, "queue") ? `<div data-reading="${u.id}"></div>` : ""}
-      ${u.role === "restricted" ? `<label class="block"><span class="label">Most peppers allowed</span>
+      <label class="block"><span class="label">${u.role === "restricted" ? "Most peppers allowed" : "Hide books above this spice level"}</span>
         <select name="max_spice" class="input">
           <option value="-1" ${u.max_spice < 0 ? "selected" : ""}>No limit</option>
-          ${PEPPERS.filter((p) => p.n <= 3 || u.max_spice === p.n).map((p) => `<option value="${p.n}" ${u.max_spice === p.n ? "selected" : ""}>Up to Level ${p.n}: ${esc(p.name)}</option>`).join("")}
+          ${PEPPERS.filter((p) => u.role !== "restricted" || p.n <= 3 || u.max_spice === p.n).map((p) => `<option value="${p.n}" ${u.max_spice === p.n ? "selected" : ""}>Up to Level ${p.n}: ${esc(p.name)}</option>`).join("")}
         </select></label>
+      ${u.role === "restricted" ? `
         <div class="grid gap-2 sm:grid-cols-2">${Object.entries(PRESETS).map(([k, p]) =>
           `<button data-uact="${k}" class="btn-secondary text-xs" title="${esc(p.title)} Saves right away.">${esc(p.label)}</button>`).join("")}</div>` : ""}
       <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
@@ -197,6 +198,7 @@ function badges(u) {
     const n = (u.admin_areas || "").split(",").filter(Boolean).length;
     out.push(`<span class="chip-cat" title="Areas the main admin gave">${n} of 6 areas</span>`);
   }
+  if (u.role !== "restricted" && u.max_spice >= 0) out.push(`<span class="chip-closed">Max Level ${u.max_spice}</span>`);
   if (u.role === "restricted") {
     out.push(`<span class="chip-closed">${u.max_spice < 0 ? "No pepper limit" : `Max Level ${u.max_spice}`}</span>`);
     const age = AGE_GROUPS.find(([l]) => l === u.age_level);

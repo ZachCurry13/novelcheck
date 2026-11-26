@@ -157,7 +157,7 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if upd.Role != store.RoleRestricted {
-		upd.AgeLevel, upd.MaxSpice = 0, -1
+		upd.AgeLevel = 0 // an age group is for kids; a spice limit can be set for anyone
 	}
 	if msg := validateDelivery(upd.DeliveryMethod, upd.KindleEmail); msg != "" {
 		writeErr(w, http.StatusBadRequest, msg)
