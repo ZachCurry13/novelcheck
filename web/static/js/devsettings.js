@@ -39,8 +39,8 @@ const adminCards = () => `<div class="card space-y-2 lg:col-span-2"><h2 class="t
     <p class="text-sm text-slate-400">Version, settings (never keys or passwords), the rating worker, recent problems and the remote-access log.</p>
     <button type="button" data-dev="server" class="btn-secondary">Copy server report</button></div>`;
 
-export async function renderDevTab(host, user) {
-  const admin = user.role === "admin";
+export async function renderDevTab(host, user, opts = {}) {
+  const admin = opts.admin ?? user.role === "admin"; // Settings sends admin: false (a plain "report a problem"); Admin → System sends true
   host.innerHTML = (admin ? activityCardHTML() : "") + browserCard() + kindleCard(admin) + (admin ? adminCards() : "");
   const show = () => {
     host.querySelector("#dev-web").textContent = report(appVersion());

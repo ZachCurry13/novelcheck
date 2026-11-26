@@ -10,6 +10,7 @@ import { renderCalibrePicker } from "./calibrepicker.js";
 import { renderRemoteAccess } from "./remoteaccess.js";
 import { renderCalibreServer } from "./calibreserver.js";
 import { renderErrors } from "./errors.js";
+import { kindleAdminHTML, bindKindleAdmin } from "./kindleadmin.js";
 import { on } from "./modules.js";
 import { renderFlagsAdmin } from "./customflags.js";
 import { renderSettingsTab } from "./adminsettings.js";
@@ -63,6 +64,7 @@ export async function renderAdmin(view, state) {
     ${hasTab("cleanup") ? `<section data-panel="cleanup"><div id="cleanup-tab"></div></section>` : ""}
     ${hasTab("delivery") ? `<section data-panel="delivery" class="space-y-4">
       <div id="settings-delivery"></div>
+      ${can(u, "calibre") ? `<h2 class="text-lg font-semibold">Kindles of the family</h2>${kindleAdminHTML}` : ""}
       <div class="card space-y-1 text-sm${on(state.user, "koreader") ? "" : " module-off"}" data-module="koreader">
         <p class="font-semibold">KOReader</p>
         <p class="text-slate-400">Nothing to set up here: each reader finds their private catalog address and QR code under
@@ -72,12 +74,18 @@ export async function renderAdmin(view, state) {
     ${inArea("system", `<section data-panel="system" class="space-y-4">
       <div id="problems-banner" class="hidden rounded-lg bg-slate-800/60 p-3 text-sm"></div>
       <div id="settings-system"></div>
+      <details id="diagnostics" class="card"><summary class="cursor-pointer text-lg font-semibold">Diagnostics and bug reports</summary><div id="diagnostics-body" class="mt-3 grid gap-4 lg:grid-cols-2"></div></details>
       <div class="card flex flex-wrap gap-2">
         <a href="/api/admin/backup" class="btn-secondary" download>Download novelcheck.db (backup)</a>
         <a href="#/system" class="btn-ghost">Integrations</a><a href="#/usage" class="btn-ghost">Usage</a>
       </div>
     </section>`)}`;
 
+  if ($("#ka-unknown", view)) bindKindleAdmin(view);
+  $("#diagnostics", view)?.addEventListener("toggle", (e) => {
+    const box = $("#diagnostics-body", view);
+    if (e.target.open && box && !box.dataset.done) { box.dataset.done = "1"; import("./devsettings.js").then((m) => m.renderDevTab(box, u, { admin: true })); }
+  });
   if (can(u, "calibre")) import("./jobbanner.js").then((m) => m.watchJob($("#job-banner", view)));
   let cleanupLoaded = false;
   const show = (tab, push) => {

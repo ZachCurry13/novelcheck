@@ -8,7 +8,6 @@ import { pepperChip } from "./peppers.js";
 import { openBook } from "./bookdialog.js";
 import { when } from "./deepscan.js";
 import { coverImg } from "./covers.js";
-import { wishFeedCard } from "./wishfeed.js";
 
 const STATUS = {
   wanted: ["Wanted", "chip-pending"],
@@ -48,7 +47,6 @@ export async function renderWishlist(view, state) {
         Add books with <b>Add to Wishlist</b> on Check a book or in a book's window.</p>
       <ul class="space-y-2">${open.map(row).join("") || `<li class="text-sm text-slate-500">Nothing on the wishlist right now.</li>`}</ul>
       ${done.length ? `<h2 class="mb-2 mt-6 text-lg font-semibold">Done</h2><ul class="space-y-2">${done.map(row).join("")}</ul>` : ""}`;
-    if (state.user.role === "admin") wishFeedCard(view);
   };
   view.onclick = async (e) => {
     const act = e.target.closest("[data-act]")?.dataset.act;

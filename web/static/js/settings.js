@@ -14,7 +14,6 @@ import { profileExtrasHTML, bindProfileExtras } from "./profileextras.js";
 import { familyCardHTML, bindFamilyCard } from "./familysettings.js";
 import { renderSyncStatus } from "./syncstatus.js";
 import { renderPluginCard } from "./pluginmanage.js";
-import { kindleAdminHTML, bindKindleAdmin } from "./kindleadmin.js";
 import { renderHardcover } from "./hardcover.js";
 import { renderLibbyCard } from "./libby.js";
 import { renderABSCard } from "./absaccount.js";
@@ -22,7 +21,7 @@ import { renderDevTab } from "./devsettings.js";
 import { tabStrip } from "./tabs.js";
 import { renderSharingCard } from "./sharing.js";
 
-const SECTIONS = { general: "General", account: "Account", kindle: "Kindle & KOReader", connections: "Connections", developer: "Developer" };
+const SECTIONS = { general: "General", account: "Account", kindle: "My Kindle & KOReader", connections: "Connections", developer: "Report a problem" };
 
 // sectionFromHash reads #/settings?s=kindle.
 const sectionFromHash = (u) => {
@@ -45,6 +44,9 @@ function generalHTML(u) {
         <div class="mt-2">${amazonStepsHTML(u.delivery_from)}</div></details>
       <button class="btn-primary">Save delivery settings</button>
     </form>
+    <div class="card space-y-2 lg:col-span-2"><h2 class="text-lg font-semibold">My Library</h2>
+      <p class="text-sm text-slate-400">Which libraries your Library opens with: tick them in the Library's Filters and tap <b>Save these as my default</b>. Which libraries show on your pages at all: the list on the Import page.</p>
+      <div class="flex flex-wrap gap-2"><a href="#/library" class="btn-secondary">Open my Library</a><a href="#/import" class="btn-ghost">Libraries on my pages</a></div></div>
     <div id="push-card" class="card space-y-3 lg:col-span-2"></div>
     <div id="summary-card" class="card space-y-3 lg:col-span-2"></div>`;
 }
@@ -66,7 +68,6 @@ function kindleHTML(u) {
   return `<div id="plugin-card" class="card space-y-2${off}"></div>
     <div class="card space-y-2${off}"><details id="remote-card"><summary class="cursor-pointer text-lg font-semibold">Kindle remote: tell an e-reader what to do</summary>
       <p class="mt-1 text-sm text-slate-400">Runs on the e-reader at its next sync. Parents can pick a family member's.</p><div id="remote-body" class="mt-2 text-sm text-slate-300"></div></details></div>
-    ${canHere("calibre") ? kindleAdminHTML : ""}
     <div id="sync-card" class="card space-y-2${off}"></div>
     <div class="card space-y-2${off}"><details><summary class="cursor-pointer text-lg font-semibold">Without the plugin: manual KOReader setup</summary>
       <p class="mt-1 text-sm text-slate-400">The catalog address, QR code and reading-sync steps, for a phone or an e-reader without the plugin. With the plugin, <b>NovelCheck → Settings → Set up</b> does all of it.</p>
@@ -110,7 +111,7 @@ export async function renderSettings(view, state) {
         if (ok) e.target.reset();
       });
     } else if (section === "developer") {
-      renderDevTab($("#dev-tab", view), u);
+      renderDevTab($("#dev-tab", view), u, { admin: false }); // the logs, bug reports and server tools are in Admin → System
     } else if (section === "kindle") {
       $("#ko-setup", view).addEventListener("click", () => openKOReaderSetup());
       if (on(u, "koreader")) {
@@ -119,7 +120,6 @@ export async function renderSettings(view, state) {
         $("#remote-card", view)?.addEventListener("toggle", (e) => {
           if (e.target.open) import("./kindletasks.js").then((m) => m.renderKindleTasks($("#remote-body", view)));
         });
-        if ($("#ka-unknown", view)) bindKindleAdmin(view);
       }
     } else {
       renderHardcover($("#hardcover-card", view));

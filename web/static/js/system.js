@@ -10,6 +10,7 @@ import { copyBar, bindCopy } from "./copy.js";
 import { homeAddressCard } from "./homeaddress.js";
 import { importFolderCard } from "./importfolder.js";
 import { kindleMergeCard } from "./kindlemerge.js";
+import { wishFeedCard } from "./wishfeed.js";
 
 const BADGE = { ok: "integ-ok", update: "integ-update", warn: "integ-warn", off: "integ-off", info: "integ-off" };
 const CHECK = { ok: ["✓", "text-emerald-300"], warn: ["⚠️", "text-amber-300"], error: ["⛔", "text-rose-300"], skip: ["–", "text-slate-400"] };
@@ -65,6 +66,7 @@ export async function renderSystem(view) {
   homeAddressCard(view);
   importFolderCard(view);
   kindleMergeCard(view);
+  wishFeedCard(view);
   const body = $("#integ-body", view);
   const btn = $("#integ-check", view);
   let data = null;
