@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.37]
+
+### 🏷️ A book's window says whether it is in your library
+- **Right under the title, a line now says "✓ In the library: Calibre, Audiobookshelf…" or "Not in your library. It was only looked up (Check a book) or is on a Discover list or a wishlist, so there is no file to read or download."** Before, a book that was only looked up looked just like one you own, and the answer was far down the window.
+
 ## [2.1.36]
 
 ### 🔎 The bug log shows what was removed from Calibre
