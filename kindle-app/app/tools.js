@@ -47,6 +47,29 @@ function backupKindle(done) {
   });
 }
 
+// installPlugin puts the KOReader plugin on this Kindle, signed in as this person: the files from NovelCheck into KOReader's
+// plugins folder (each downloaded beside the old one and swapped in only when all came), and its sign-in file. KOReader
+// has to be restarted to start it. done(true | false, text).
+function installPlugin(done) {
+  var dir = "/mnt/us/koreader/plugins/novelcheck.koplugin", out = "/tmp/nc-plugin.txt";
+  api("GET", "/kosync/plugin/version", null, function (err, v) {
+    var names = [];
+    for (var i = 0; !err && v && v.files && i < v.files.length; i++) if (/^[A-Za-z0-9_.]+\.lua$/.test(v.files[i])) names.push(v.files[i]);
+    if (err || !names.length) return done(false, "Couldn't ask NovelCheck for the plugin. Check Wi-Fi.");
+    var base = NC.server + "/kosync/plugin/", get = "curl -sfL -m 120" + AUTH + " -o ";
+    var cmd = "if [ ! -d /mnt/us/koreader ]; then echo nokoreader > " + out + "; else mkdir -p " + dir + "; ok=1; ";
+    for (var k = 0; k < names.length; k++) cmd += get + dir + "/" + names[k] + ".new " + sh(base + "file/" + names[k]) + " && [ -s " + dir + "/" + names[k] + ".new ] || ok=0; ";
+    cmd += get + dir + "/config.lua.new " + sh(base + "config.lua?server=" + encodeURIComponent(NC.server)) + " && [ -s " + dir + "/config.lua.new ] || ok=0; " +
+      "if [ $ok = 1 ]; then for f in " + dir + "/*.new; do mv -f \"$f\" \"${f%.new}\"; done; echo ok > " + out + "; else rm -f " + dir + "/*.new; echo failed > " + out + "; fi; fi";
+    note("Installing the KOReader plugin…");
+    shellOut(cmd, out, 300, function (t) {
+      if (t && t.indexOf("ok") >= 0) return done(true, "The KOReader plugin is installed, signed in as you. Close KOReader and open it again (from the KindleForge or KUAL launcher); NovelCheck is the icon with a book and a check mark, or under Tools.");
+      if (t && t.indexOf("nokoreader") >= 0) return done(false, "KOReader isn't on this Kindle, so there is nowhere to put the plugin.");
+      done(false, t == null ? HELPER_HINT : "The plugin download failed. Check Wi-Fi and try again.");
+    });
+  });
+}
+
 // paintBackup says when this Kindle's books were last sent to NovelCheck (by the button or by itself).
 function paintBackup() {
   var t = +stored("nc-last-bk") || 0;
@@ -174,6 +197,14 @@ function bindTools() {
     });
   });
   $("t-hidden").onclick = showHidden;
+  guard("t-plugin", function (end) {
+    installPlugin(function (ok, text) {
+      note(text);
+      logLine("install KOReader plugin: " + (ok ? "ok" : text));
+      if (!ok) sendLog("the KOReader plugin did not install");
+      end();
+    });
+  });
   paintBackup();
   var dest = function () { $("t-dest").textContent = stored("nc-dest") === "koreader" ? "Downloads go to: KOReader (tap to change)" : "Downloads go to: Kindle library (tap to change)"; };
   dest();

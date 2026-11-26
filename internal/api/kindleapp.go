@@ -16,6 +16,7 @@ import (
 	"github.com/zachcurry13/novelcheck/internal/store"
 	"github.com/zachcurry13/novelcheck/internal/version"
 	kindleapp "github.com/zachcurry13/novelcheck/kindle-app"
+	kindleplugin "github.com/zachcurry13/novelcheck/kindle-plugin"
 )
 
 // The Kindle app (kindle-app/, for a jailbroken Kindle without KOReader) uses the plugin's endpoints, plus these:
@@ -227,4 +228,26 @@ func kosyncCORS(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// handlePluginConfig: GET /kosync/plugin/config.lua[?server=], the plugin's own sign-in file for the person asking, so the
+// Kindle app can put the KOReader plugin on the Kindle already connected (the plugin needs the sync code itself, to set up
+// KOReader's progress sync; the key the app holds is only its MD5, which already grants the same access).
+func (s *Server) handlePluginConfig(w http.ResponseWriter, r *http.Request) {
+	u := s.kosyncUser(w, r)
+	if u == nil {
+		return
+	}
+	code, err := s.Store.KosyncCode(u.ID, false)
+	if err != nil {
+		writeStoreErr(w, err)
+		return
+	}
+	base := s.baseURL(r)
+	if q := r.URL.Query().Get("server"); strings.HasPrefix(q, "http://") || strings.HasPrefix(q, "https://") {
+		base = q
+	}
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	_, _ = w.Write(kindleplugin.Config(strings.TrimRight(base, "/"), u.Username, code))
 }
