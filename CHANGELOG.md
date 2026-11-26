@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.41]
+
+### 🏷️ See where a book is, right on its cover
+- **Every book in the Library now shows small labels on the bottom of its cover for each place it is:** 📘 E-book (the library), 🎧 Audio (audiobook), 📱 Kindle (a Kindle library) and 📚 Shelf (the paper copy). A book in two places shows both; a book that was only looked up says "Not in library". The pepper level stays in the corner.
+
 ## [2.1.40]
 
 ### 🗂️ Libraries in groups, and one Kindle library per person

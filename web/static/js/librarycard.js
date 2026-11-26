@@ -18,6 +18,20 @@ export function reviewChip(b) {
     ? `<span class="chip-dup" title="The AI wasn't sure of this rating: worth a look, or a re-rate on the big model">Not sure</span>` : "";
 }
 
+// whereBadges says where the book is, on the cover's bottom edge: the library's e-book, an audiobook, a Kindle library, the shelf
+// (paper); one label for each place it is in, or "Not in library" when it was only looked up. Lists send the catalogs and formats.
+export function whereBadges(b) {
+  const fmts = (b.formats || "").split(",").map((f) => f.trim().toUpperCase()).filter(Boolean);
+  const cats = (b.catalogs || "").split(",").map((c) => c.trim()).filter(Boolean);
+  const out = [];
+  if (fmts.some((f) => !["AUDIO", "PAPER", "KINDLE", "LIST", "CLOUD"].includes(f))) out.push("📘 E-book");
+  if (fmts.includes("AUDIO")) out.push("🎧 Audio");
+  if (cats.some((c) => /kindle/i.test(c)) || fmts.includes("KINDLE") || fmts.includes("CLOUD")) out.push("📱 Kindle");
+  if (fmts.includes("PAPER")) out.push("📚 Shelf");
+  return out.length ? `<div class="tile-where">${out.map((t) => `<span>${t}</span>`).join("")}</div>`
+    : `<div class="tile-where"><span class="not-owned">Not in library</span></div>`;
+}
+
 // card is one book, as a bookshop shows it: the cover (with its pepper level, and ＋ for the Nightstand),
 // the title and author, a few chips, and an event's Claim buttons (extra). The blurb, formats and libraries
 // are on the book's own page.
@@ -27,6 +41,7 @@ export function card(b, queueOn, extra = "") {
     <article data-book="${b.id}" data-state="${esc(b.status || "")}" class="lib-tile">
       <div class="tile-cover">${coverImg(b.id, "tile-img", (window.devicePixelRatio || 1) > 1.4)}
         ${rated ? `<span class="lvl lvl-${b.spice_level} tile-lvl" title="Spice level ${b.spice_level}">${b.spice_level}</span>` : ""}
+        ${whereBadges(b)}
         ${!queueOn ? "" : b.in_queue ? `<span class="tile-add">${IN_QUEUE}</span>` : `<button data-queue="${b.id}" title="Add to your Nightstand" aria-label="Add to your Nightstand" class="tile-add tile-add-btn">＋</button>`}
       </div>
       <h3 class="tile-title">${esc(b.title)}</h3>

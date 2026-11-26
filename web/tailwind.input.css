@@ -348,6 +348,10 @@ dialog.dialog.search-view[open] { animation: none; }
 img.cover-fit { object-fit: contain !important; }
 .lib-tile:hover .tile-img { filter: brightness(1.06); }
 .lib-tile .tile-lvl { position: absolute; left: 0.4rem; bottom: 0.4rem; height: 1.4rem; width: 1.4rem; font-size: 0.75rem; border-radius: 0.35rem; }
+/* where the book is: small labels on the cover's bottom edge (library e-book, audiobook, Kindle, shelf), one per place */
+.lib-tile .tile-where { position: absolute; left: 2.2rem; right: 0.4rem; bottom: 0.4rem; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.2rem; pointer-events: none; }
+.lib-tile .tile-where span { display: inline-flex; align-items: center; height: 1.4rem; padding: 0 0.4rem; border-radius: 0.35rem; font-size: 0.7rem; font-weight: 600; background: rgb(var(--slate-900) / 0.88); color: rgb(var(--slate-100)); }
+.lib-tile .tile-where .not-owned { background: rgb(var(--slate-800) / 0.9); color: rgb(var(--slate-400)); }
 .lib-tile .tile-add { position: absolute; right: 0.35rem; top: 0.35rem; display: inline-flex; align-items: center; justify-content: center; min-width: 2.25rem; height: 2.25rem; border-radius: 9999px; background: rgb(var(--slate-950) / 0.8); color: rgb(var(--slate-100)); border: 0; font-size: 1.15rem; cursor: pointer; }
 .lib-tile .tile-title { margin-top: 0.55rem; font-family: var(--nc-font-head); font-size: 0.9375rem; font-weight: 600; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .lib-tile .tile-author { margin-top: 0.15rem; font-size: 0.8125rem; color: rgb(var(--slate-400)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

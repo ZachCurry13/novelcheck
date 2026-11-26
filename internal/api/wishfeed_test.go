@@ -263,6 +263,13 @@ func TestDigitalAndPhysicalLibrary(t *testing.T) {
 		}
 		return strings.Join(names, "|")
 	}
+	_, all := admin.do("GET", "/api/books?sort=title", nil, false)
+	for _, b := range all["books"].([]any) { // the cards say where a book is from these two fields
+		m := b.(map[string]any)
+		if m["title"] == "Both Ways" && (!strings.Contains(m["formats"].(string), "EPUB") || !strings.Contains(m["formats"].(string), "PAPER") || !strings.Contains(m["catalogs"].(string), "Living Room Shelf")) {
+			t.Fatalf("card data: %v", m)
+		}
+	}
 	if got := titles("medium=digital&sort=title"); got != "Both Ways|On My Kindle" {
 		t.Fatalf("digital: %q", got)
 	}
