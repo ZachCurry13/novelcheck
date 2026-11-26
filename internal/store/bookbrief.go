@@ -13,6 +13,8 @@ type BookBrief struct {
 	Genres string `db:"genres"`
 	Spice  *int   `db:"spice_level"`
 	Series string `db:"series"`
+	// HCPages is the printed page count Hardcover has (0 = unknown).
+	HCPages int `db:"hc_pages"`
 }
 
 // GenreList splits the ",fantasy,romance," form.
@@ -31,7 +33,7 @@ func (s *Store) BookBriefs(ids []int64) map[int64]BookBrief {
 	out := map[int64]BookBrief{}
 	for len(ids) > 0 {
 		n := min(len(ids), 400)
-		query, args, err := sqlx.In(`SELECT id, kind, genres, spice_level, series FROM books WHERE id IN (?)`, ids[:n])
+		query, args, err := sqlx.In(`SELECT id, kind, genres, spice_level, series, hc_pages FROM books WHERE id IN (?)`, ids[:n])
 		if err != nil {
 			return out
 		}

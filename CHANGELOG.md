@@ -4,6 +4,11 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.17]
+
+### 📏 Page counts
+- **"I Am Number Four" at 868 pages: a 440-page book.** Reading stats (Longest book finished, The doorstop, Fastest finish and the page totals) used the page count the e-reader gave, and an e-reader counts screens, which depends on the font size and can be double the printed length. NovelCheck now keeps the printed page count Hardcover has for each book and uses it when it knows it, falling back to the e-reader's count. Each book is looked at on Hardcover once more to fill it in (a few hundred every few hours), so the numbers correct themselves over a day or two.
+
 ## [2.1.16]
 
 ### 🧹 Fix titles and covers is easier to use

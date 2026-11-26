@@ -7,6 +7,9 @@ import { GENRES } from "./genres.js";
 const FINISHED = 0.97;
 const HOUR = 3600e3;
 const n = (x) => Number(x).toLocaleString();
+// A book's length: the printed page count Hardcover has when known; else what the list or the e-reader counted (an
+// e-reader counts screens, so a 440-page book can read as 868 there).
+const pg = (b) => b.print_pages || b.pages || 0;
 const plural = (k, one) => `${n(k)} ${one}${k === 1 ? "" : "s"}`;
 const dayText = (ms) => new Date(ms).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 const keyText = (k) => dayText(keyDate(k).getTime());
@@ -75,12 +78,12 @@ export function records(m, year = null) {
   if (!f.rows.length && !f.fin.length) return out;
   if (!f.rows.length) { // only an imported list or Hardcover so far: what the finished books themselves say
     put("📚", "Books finished", plural(f.fin.length, "book"), "from your imported list or Hardcover; hours and pages a day come from KOReader");
-    const pages = f.fin.reduce((t, x) => t + (x.b.pages || 0), 0);
+    const pages = f.fin.reduce((t, x) => t + (pg(x.b) || 0), 0);
     if (pages) put("📄", "Pages in those books", `${n(pages)} pages`, "");
     const fm = top(f.finMonths);
     if (fm && fm[1] > 1) put("🏁", "Most books finished in a month", plural(fm[1], "book"), monthText(fm[0]));
-    const big = f.fin.slice().sort((a, b) => (b.b.pages || 0) - (a.b.pages || 0))[0];
-    if (big?.b.pages) put("🧱", "Longest book finished", `${n(big.b.pages)} pages`, big.b.title);
+    const big = f.fin.slice().sort((a, b) => (pg(b.b) || 0) - (pg(a.b) || 0))[0];
+    if (big && pg(big.b)) put("🧱", "Longest book finished", `${n(pg(big.b))} pages`, big.b.title);
     const au = top(f.authors), ge = top(f.genres), se = top(f.series);
     if (au) put("✍️", "Most-read author", au[0], `${plural(au[1], "book")} finished`);
     if (ge) put("🏷️", "Most-read genre", GENRES[ge[0]] || ge[0], `${plural(ge[1], "book")} finished`);
@@ -102,13 +105,13 @@ export function records(m, year = null) {
   const paced = [...f.days].filter(([, v]) => v.sec >= 3600 && v.pages).map(([k, v]) => [k, Math.round(v.pages / (v.sec / 3600))]);
   const pace = top(new Map(paced));
   if (pace) put("💨", "Fastest pace", `${n(pace[1])} pages an hour`, `${keyText(pace[0])} (days with an hour or more)`);
-  const real = f.fin.filter((x) => !x.elsewhere && (x.b.pages || 0) >= 100); // how long a book took is only known from KOReader
-  const fast = real.slice().sort((a, b) => a.days - b.days || (b.b.pages || 0) - (a.b.pages || 0))[0];
+  const real = f.fin.filter((x) => !x.elsewhere && (pg(x.b) || 0) >= 100); // how long a book took is only known from KOReader
+  const fast = real.slice().sort((a, b) => a.days - b.days || (pg(b.b) || 0) - (pg(a.b) || 0))[0];
   const slow = real.slice().sort((a, b) => b.days - a.days)[0];
-  if (fast) put("⚡", "Fastest finish", plural(fast.days, "day"), `${fast.b.title} · ${n(fast.b.pages)} pages`);
+  if (fast) put("⚡", "Fastest finish", plural(fast.days, "day"), `${fast.b.title} · ${n(pg(fast.b))} pages`);
   if (slow && slow !== fast) put("🐢", "Longest haul", plural(slow.days, "day"), `${slow.b.title}, from first page to last`);
-  const big = f.fin.slice().sort((a, b) => (b.b.pages || 0) - (a.b.pages || 0))[0];
-  if (big?.b.pages) put("🧱", "Longest book finished", `${n(big.b.pages)} pages`, big.b.title);
+  const big = f.fin.slice().sort((a, b) => (pg(b.b) || 0) - (pg(a.b) || 0))[0];
+  if (big && pg(big.b)) put("🧱", "Longest book finished", `${n(pg(big.b))} pages`, big.b.title);
   const most = f.fin.slice().sort((a, b) => b.sec - a.sec)[0];
   if (most?.sec) put("⌛", "Book you spent the most time on", fmtDur(most.sec), most.b.title);
   const night = f.rows.filter((r) => new Date(r.ms).getHours() < 5).sort((a, b) => new Date(b.ms).getHours() - new Date(a.ms).getHours())[0];
@@ -132,15 +135,15 @@ export function awards(m, year) {
   const out = [];
   const put = (icon, title, winner, why) => winner && out.push({ icon, title, winner, why });
   const by = (fn) => f.fin.slice().sort(fn)[0];
-  const real = f.fin.filter((x) => !x.elsewhere && (x.b.pages || 0) >= 100);
+  const real = f.fin.filter((x) => !x.elsewhere && (pg(x.b) || 0) >= 100);
   const book = by((a, b) => b.sec - a.sec);
   put("📕", "Book of the year", book?.sec ? book.b.title : "", book && `${fmtDur(book.sec)} with it${book.b.author ? ` · ${book.b.author}` : ""}`);
   const fav = f.fin.filter((x) => x.b.rating > 0).sort((a, b) => b.b.rating - a.b.rating || b.sec - a.sec)[0];
   put("⭐", "Your favorite", fav?.b.title, fav && `you gave it ${fav.b.rating} star${fav.b.rating === 1 ? "" : "s"}`);
   const fast = real.slice().sort((a, b) => a.days - b.days)[0];
   put("⚡", "Couldn't put it down", fast?.b.title, fast && `finished in ${plural(fast.days, "day")}`);
-  const big = by((a, b) => (b.b.pages || 0) - (a.b.pages || 0));
-  put("🧱", "The doorstop", big?.b.pages ? big.b.title : "", big && `${n(big.b.pages)} pages`);
+  const big = by((a, b) => (pg(b.b) || 0) - (pg(a.b) || 0));
+  put("🧱", "The doorstop", big && pg(big.b) ? big.b.title : "", big && `${n(pg(big.b))} pages`);
   const au = top(f.authors), ge = top(f.genres), se = top(f.series), mo = top(f.months);
   put("✍️", "Author of the year", au?.[0], au && `${plural(au[1], "book")} finished`);
   put("🏷️", "Genre of the year", ge && (GENRES[ge[0]] || ge[0]), ge && `${plural(ge[1], "book")} finished`);

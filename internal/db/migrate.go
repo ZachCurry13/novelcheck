@@ -49,6 +49,7 @@ func migrate(d *sqlx.DB) error {
 		{"books", "hc_warnings", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "hc_moods", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "hc_id", "INTEGER NOT NULL DEFAULT 0"},
+		{"books", "hc_pages", "INTEGER NOT NULL DEFAULT 0"}, // the printed page count Hardcover has
 		{"books", "tags", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "genres", "TEXT NOT NULL DEFAULT ''"},
 		{"books", "kind", "TEXT NOT NULL DEFAULT ''"},

@@ -13,6 +13,7 @@ type statBook struct {
 	Author      string   `json:"author"`
 	BookID      *int64   `json:"book_id"`
 	Pages       int      `json:"pages"`
+	PrintPages  int      `json:"print_pages,omitempty"` // the printed length Hardcover has; Pages is what the e-reader counted, which depends on its font
 	Percent     float64  `json:"percent"`
 	ReadSeconds int64    `json:"read_seconds"`
 	LastOpen    int64    `json:"last_open"`
@@ -81,7 +82,7 @@ func (s *Server) readingStatsFor(owner, viewer *store.User) map[string]any {
 		if b.BookID != nil {
 			x.Rating = ratings[*b.BookID]
 			if br, ok := briefs[*b.BookID]; ok {
-				x.Kind, x.Genres, x.Series, x.SeriesTotal = br.Kind, br.GenreList(), br.Series, seriesTotals[br.Series]
+				x.Kind, x.Genres, x.Series, x.SeriesTotal, x.PrintPages = br.Kind, br.GenreList(), br.Series, seriesTotals[br.Series], br.HCPages
 				if viewer.Role != store.RoleRestricted {
 					x.Spice = br.Spice
 				}

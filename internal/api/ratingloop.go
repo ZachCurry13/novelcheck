@@ -37,6 +37,7 @@ func (s *Server) FillRatings(ctx context.Context, limit int) int {
 	keep := func(b store.RatingToCheck, info hardcover.BookInfo) {
 		s.Store.SaveHCRating(b.ID, info.Rating, info.Ratings)
 		s.Store.SaveHCID(b.ID, info.ID)
+		s.Store.SaveHCPages(b.ID, info.Pages)
 		if t := hcTrueTitle(b.Title, b.Author, info); t != "" && s.applyTrueTitle(ctx, b.ID, b.Author, t) {
 			renamed++
 		}
@@ -106,6 +107,7 @@ func (s *Server) FillRatings(ctx context.Context, limit int) int {
 
 const hcTitlesKey = "hc_titles_pass"
 const hcGenresKey = "hc_genres_pass"
+const hcPagesKey = "hc_pages_pass"
 
 // RatingLoop fills ratings 12 minutes after start, then every 6 hours, 800 books a round.
 func (s *Server) RatingLoop(ctx context.Context) {
@@ -120,6 +122,10 @@ func (s *Server) RatingLoop(ctx context.Context) {
 		if s.Store.Setting(hcTitlesKey) != "1" { // the pass learned the true titles: look at every book again
 			s.Store.RecheckHardcover()
 			_ = s.Store.SetSetting(hcTitlesKey, "1")
+		}
+		if s.Store.Setting(hcPagesKey) != "1" { // printed page counts (2.1.17): every book is looked at once more
+			s.Store.RecheckHardcover()
+			_ = s.Store.SetSetting(hcPagesKey, "1")
 		}
 		if s.Store.Setting(hcGenresKey) != "2" { // genres from Hardcover (2.1.4, 2.1.10): the books without one, and the ones the AI made, are looked at again
 			s.Store.RecheckGenreless()

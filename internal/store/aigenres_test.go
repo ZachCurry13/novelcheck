@@ -74,3 +74,18 @@ func TestShowAgainForgetsSightings(t *testing.T) {
 		t.Fatalf("left out again at once: %v", got)
 	}
 }
+
+// The printed page count from Hardcover is kept and offered to Reading stats (an e-reader's own count depends on its font).
+func TestPrintPagesKept(t *testing.T) {
+	st := newStore(t)
+	id, _ := st.UpsertBook("I Am Number Four", "Pittacus Lore", "", "")
+	st.SaveHCPages(id, 0)     // unknown: ignored
+	st.SaveHCPages(id, 99999) // nonsense: ignored
+	if st.BookBriefs([]int64{id})[id].HCPages != 0 {
+		t.Fatal("kept a bad count")
+	}
+	st.SaveHCPages(id, 440)
+	if got := st.BookBriefs([]int64{id})[id].HCPages; got != 440 {
+		t.Fatalf("pages: %d", got)
+	}
+}

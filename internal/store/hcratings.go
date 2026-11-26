@@ -68,6 +68,14 @@ func (s *Store) SaveHCTags(id int64, warnings, moods string) {
 	_, _ = s.DB.Exec(`UPDATE books SET hc_warnings = ?, hc_moods = ? WHERE id = ?`, warnings, moods, id)
 }
 
+// SaveHCPages keeps the printed page count Hardcover has for the book (0 is ignored; a device's own count depends on the
+// font and the screen, so it can be double).
+func (s *Store) SaveHCPages(id int64, pages int) {
+	if pages > 0 && pages < 20000 {
+		_, _ = s.DB.Exec(`UPDATE books SET hc_pages = ? WHERE id = ?`, pages, id)
+	}
+}
+
 // SaveHCID keeps the book's id on Hardcover (0 is ignored).
 func (s *Store) SaveHCID(id int64, hcID int) {
 	if hcID > 0 {
