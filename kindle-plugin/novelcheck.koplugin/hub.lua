@@ -5,10 +5,12 @@ This Kindle, Sync now and More (More is the whole list, with the rarely used thi
 It adds its functions to the NovelCheck plugin class (see main.lua).
 ]]
 
+local Blitbuffer = require("ffi/blitbuffer")
 local ButtonDialog = require("ui/widget/buttondialog")
 local Device = require("device")
 local Menu = require("ui/widget/menu")
 local UIManager = require("ui/uimanager")
+local json = require("json")
 local _ = require("gettext")
 
 return function(NovelCheck)
@@ -16,7 +18,11 @@ return function(NovelCheck)
         return ((s or ""):gsub("^%s+", ""):gsub("%s+$", ""))
     end
 
-    -- ago says how long since a time, in words.
+    local function plural(n, one, many)
+        return string.format("%d %s", n, n == 1 and one or many)
+    end
+
+    -- ago says how long since a time, in words ("1 minute ago", "4 days ago").
     local function ago(ts)
         ts = tonumber(ts)
         if not ts or ts <= 0 then
@@ -26,11 +32,38 @@ return function(NovelCheck)
         if d < 90 then
             return _("just now")
         elseif d < 3600 then
-            return string.format(_("%d minutes ago"), math.floor(d / 60))
+            return plural(math.floor(d / 60), _("minute"), _("minutes")) .. " " .. _("ago")
         elseif d < 86400 then
-            return string.format(_("%d hours ago"), math.floor(d / 3600))
+            return plural(math.floor(d / 3600), _("hour"), _("hours")) .. " " .. _("ago")
         end
-        return string.format(_("%d days ago"), math.floor(d / 86400))
+        return plural(math.floor(d / 86400), _("day"), _("days")) .. " " .. _("ago")
+    end
+
+    -- rememberNext keeps what is next on the Nightstand (the book being read, else the first), so the launcher card can say so at
+    -- once, without asking the network.
+    function NovelCheck:rememberNext(books)
+        local pick
+        for _i, b in ipairs(books or {}) do
+            if b.status == "reading" then
+                pick = b
+                break
+            end
+        end
+        pick = pick or (books or {})[1]
+        self.settings:saveSetting("next_title", pick and pick.title or "")
+        self.settings:saveSetting("next_reading", pick and pick.status == "reading" or false)
+        self.settings:flush()
+    end
+
+    -- refreshNext asks for the Nightstand quietly and keeps what is next (used after a report, when the network is up).
+    function NovelCheck:refreshNext()
+        local code, body = self:request("/kosync/plugin/up-next")
+        if code == 200 then
+            local ok, data = pcall(json.decode, body or "")
+            if ok and type(data) == "table" and type(data.books) == "table" then
+                self:rememberNext(data.books)
+            end
+        end
     end
 
     -- showList shows a list of menu items (the plugin's own list) full screen; an item with a submenu opens it, a switch
@@ -77,7 +110,8 @@ return function(NovelCheck)
         UIManager:show(menu)
     end
 
-    -- showHub opens the launcher card.
+    -- showHub opens the launcher card: one big button for the Nightstand with what is next under it, a small grid of the
+    -- other everyday things, and More for the rest.
     function NovelCheck:showHub()
         local dialog
         local function go(fn)
@@ -86,33 +120,45 @@ return function(NovelCheck)
                 fn()
             end
         end
-        local lines = { _("NovelCheck") }
+        local function note(text) -- a line of plain gray text (a button that does nothing)
+            return { { text = text, enabled = false, font_size = 18 } }
+        end
+        local rows = {}
         if self:isConnected() then
-            table.insert(lines, string.format(_("Signed in as %s"), trim(self.settings:readSetting("user"))))
             local synced = ago(self.settings:readSetting("last_auto"))
-            table.insert(lines, synced and (_("Last synced") .. " " .. synced) or _("Not synced yet"))
-            local backed = ago(self.settings:readSetting("last_backup"))
-            if backed then
-                table.insert(lines, _("Last backup") .. " " .. backed)
-            end
+            table.insert(rows, note(trim(self.settings:readSetting("user")) .. " · " .. (synced and (_("synced") .. " " .. synced) or _("not synced yet"))))
         else
-            table.insert(lines, _("Not connected yet: More > Settings > Connect"))
+            table.insert(rows, note(_("Not connected yet: More > Settings > Connect")))
         end
-        local function row(text, fn)
-            return { { text = text, callback = go(fn) } }
+        table.insert(rows, { {
+            text = _("Open Nightstand"), font_bold = true, font_size = 26, height = Device.screen:scaleBySize(64),
+            background = Blitbuffer.COLOR_LIGHT_GRAY, callback = go(function() self:showUpNext() end),
+        } })
+        local next_title = trim(self.settings:readSetting("next_title"))
+        if next_title ~= "" then
+            table.insert(rows, note((self.settings:readSetting("next_reading") and _("Reading:") or _("Next:")) .. " " .. next_title))
         end
+        table.insert(rows, {
+            { text = _("New in the library"), callback = go(function() self:newInLibrary() end) },
+            { text = _("Search"), callback = go(function() self:searchLibrary() end) },
+        })
+        table.insert(rows, {
+            { text = _("My Kindle"), callback = go(function() self.DeviceBooks.show(self) end) },
+            { text = _("Sync now"), callback = go(function() self:syncNow() end) },
+        })
+        local backed = ago(self.settings:readSetting("last_backup"))
+        if backed then
+            table.insert(rows, note(_("Last backup") .. " " .. backed))
+        end
+        table.insert(rows, {
+            { text = _("More…"), callback = go(function() self:showList(_("NovelCheck"), self:menuItems()) end) },
+            { text = _("Close"), callback = function() UIManager:close(dialog) end },
+        })
         dialog = ButtonDialog:new{
-            title = table.concat(lines, "\n"),
+            title = _("NovelCheck"),
             title_align = "center",
-            buttons = {
-                row(_("Nightstand"), function() self:showUpNext() end),
-                row(_("New in the library"), function() self:newInLibrary() end),
-                row(_("Search"), function() self:searchLibrary() end),
-                row(_("On this e-reader"), function() self.DeviceBooks.show(self) end),
-                row(_("Sync now"), function() self:syncNow() end),
-                row(_("More…"), function() self:showList(_("NovelCheck"), self:menuItems()) end),
-                { { text = _("Close"), callback = function() UIManager:close(dialog) end } },
-            },
+            use_info_style = false,
+            buttons = rows,
         }
         UIManager:show(dialog)
     end

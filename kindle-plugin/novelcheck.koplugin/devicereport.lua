@@ -261,6 +261,9 @@ return function(NovelCheck, ctx)
                 if code == 200 and self.askLeft then
                     self:askLeft(answer) -- books that left the device: keep or remove them
                 end
+                if code == 200 and self.refreshNext then
+                    self:refreshNext() -- what is next on the Nightstand, for the launcher card
+                end
             end)
         end, { quiet = true })
     end

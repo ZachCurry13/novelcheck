@@ -48,7 +48,7 @@ if not okDB then
     DeviceBooks = { show = function() end, removeFinished = function() end }
 end
 
-local VERSION = "1.68.0"
+local VERSION = "1.69.0"
 -- PLUGIN_DIR, the folder this plugin runs from (config.lua from NovelCheck's download sits there), is set above.
 
 local NovelCheck = WidgetContainer:extend{
@@ -118,18 +118,22 @@ end
 function NovelCheck:menuItems()
     return {
         { text = _("Nightstand"), callback = function() self:showUpNext() end },
-        { text = _("New"), callback = function() self:newInLibrary() end },
+        { text = _("New in the library"), callback = function() self:newInLibrary() end },
         { text = _("Search"), callback = function() self:searchLibrary() end },
-        { text = _("Download Nightstand"), callback = function() self:downloadAll() end },
-        { text = _("On this e-reader"), callback = function() DeviceBooks.show(self) end },
+        { text = _("Get my Nightstand books"), callback = function() self:downloadAll() end },
+        { text = _("My Kindle"), callback = function() DeviceBooks.show(self) end },
         { text = _("Finish this book…"), callback = function() if self.finishBookDialog then self:finishBookDialog() end end },
         { text = _("Sync now"), callback = function() self:syncNow() end },
-        { text = _("Back up and tidy"), sub_item_table = {
+        { text = _("Keep safe"), sub_item_table = {
             { text = _("Back up now"), callback = function() if self.backupKindle then self:backupKindle(false) end end },
             { text = _("Restore from NovelCheck…"), callback = function() if self.restoreKindle then self:restoreKindle() end end },
-            { text = _("Tidy books…"), callback = function() if self.tidyBooks then self:tidyBooks() end end },
-            { text = _("Undo tidy"), callback = function() if self.undoTidy then self:undoTidy() end end },
-            { text = _("Tidy names"), callback = function() self:tidyNames() end },
+        } },
+        { text = _("Organize"), sub_item_table = {
+            { text = _("Move my books into one folder…"), callback = function() if self.tidyBooks then self:tidyBooks() end end },
+            { text = _("Show real titles (display only)"), callback = function() self:tidyNames() end },
+            { text = _("Undo the last move"), callback = function() if self.undoTidy then self:undoTidy() end end },
+        } },
+        { text = _("Free up space"), sub_item_table = {
             { text = _("Delete finished books…"), callback = function() DeviceBooks.removeFinished(self) end },
             { text = _("Delete crash logs…"), callback = function() if self.cleanCrashLogs then self:cleanCrashLogs() end end },
         } },
@@ -457,6 +461,9 @@ function NovelCheck:showUpNext()
             UIManager:show(InfoMessage:new{ text = _("NovelCheck answered something unexpected.") })
             return
         end
+        if self.rememberNext then
+            self:rememberNext(data.books)
+        end
         if #data.books == 0 then
             UIManager:show(InfoMessage:new{ text = _("Nothing to download: your Nightstand has no books with a file.") })
             return
@@ -537,6 +544,9 @@ function NovelCheck:downloadAll(quiet)
                 UIManager:show(InfoMessage:new{ text = _("Could not read your Nightstand list.") .. "\n" .. tostring(code) })
             end
             return
+        end
+        if self.rememberNext then
+            self:rememberNext(data.books)
         end
         local todo = {}
         for _i, b in ipairs(data.books) do

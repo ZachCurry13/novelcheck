@@ -65,7 +65,7 @@ Open **Settings > KOReader plugin** in NovelCheck and press **Download the plugi
 
 ## Matching and tidy names (NovelCheck 1.41 or newer, plugin 1.41.0)
 
-The plugin now sends each book's real title and author, so NovelCheck matches your Kindle's books to your library far more often. In NovelCheck, **Settings > KOReader plugin > Match books on my e-readers** fixes the rest by hand. **NovelCheck icon > Back up and tidy > Tidy names** (in KOReader) then shows your library's titles and authors for the matched books (display only; the files are not touched).
+The plugin now sends each book's real title and author, so NovelCheck matches your Kindle's books to your library far more often. In NovelCheck, **Settings > KOReader plugin > Match books on my e-readers** fixes the rest by hand. **NovelCheck icon > More > Organize > Show real titles** (in KOReader) then shows your library's titles and authors for the matched books (display only; the files are not touched).
 
 On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reopen it from KUAL. **NovelCheck icon > More > Settings > Set up** usually needs no restart.
 
@@ -104,11 +104,15 @@ On a Kindle, KOReader's own Restart closes KOReader instead of reopening it; reo
 **NovelCheck > Settings > Developer tools** helps when something doesn't work: **Run self-test** checks the connection, sign-in and the plugin's files; **View log** shows every menu tap, request and error; **Send log to NovelCheck** sends the log to Settings > Developer > Bug reports (your sync code is removed), **Send log with a note...** adds what you were doing, and **Send errors automatically** (on by default) sends the log by itself, at most every ten minutes, after an error. **Run self-test** sends its result too. Times in the log are UTC. If the plugin doesn't appear in KOReader at all, look for `LOAD_ERROR.txt` in the plugin's folder, or send KOReader's `crash.log`.
 
 
-## The launcher card (1.68.0)
+## The launcher card (1.69.0)
 
-Tapping NovelCheck's icon opens one card, like an app's home screen: who you are signed in as, when it last synced and backed up,
-then big buttons for **Nightstand, New in the library, Search, On this e-reader, Sync now** and **More…**. **More** is the whole
-list below (Back up and tidy, Settings and the rest). If the card cannot open, the icon shows that list instead.
+Tapping NovelCheck's icon opens one card: a line with who you are and when it last synced, one big button, **Open Nightstand**,
+with **what is next** under it ("Next: …", or "Reading: …"), then **New in the library**, **Search**, **My Kindle** (the books on
+it with progress) and **Sync now**, the last backup, and **More…** and **Close**. **More** is the whole list: **Get my Nightstand
+books**, **Keep safe** (Back up now, Restore), **Organize** (Move my books into one folder, Show real titles (display only),
+Undo the last move), **Free up space** (Delete finished books, Delete crash logs) and **Settings**. Nothing under Organize
+deletes anything: moving a book needs a backup of it first and can be undone, and real titles change only what is shown.
+If the card cannot open, the icon shows that list instead.
 
 ## Where it lives (1.67.0)
 

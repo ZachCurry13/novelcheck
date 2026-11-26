@@ -125,7 +125,7 @@ return function(NovelCheck)
             text = _("Move") .. " " .. #plan .. " " .. _("books into Books/NovelCheck, where the other NovelCheck books are?") .. "\n\n"
                 .. _("Example:") .. "\n" .. plan[1].from:gsub("^.*/", "") .. "\n> " .. plan[1].to:gsub("^/mnt/us/", "") .. "\n\n"
                 .. (skipped > 0 and (tostring(skipped) .. " " .. _("are left where they are (not backed up yet, or the name is taken).") .. "\n") or "")
-                .. _("Nothing is deleted. Undo the last tidy any time."),
+                .. _("Nothing is deleted. Undo the last move any time from NovelCheck > Organize."),
             ok_text = _("Move them"),
             ok_callback = function() self:doTidy(plan) end,
         })

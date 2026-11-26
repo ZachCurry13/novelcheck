@@ -4,6 +4,13 @@ All notable changes to NovelCheck. Newest first. Each `## [x.y.z]` section
 becomes the release notes for that version and is shown in the app under
 **What's new**.
 
+## [2.1.28]
+
+### ✨ The KOReader launcher card, version 2 (plugin 1.69.0)
+- **One big button and what's next.** The card opens on **Open Nightstand** (large, shaded) with the book you are reading or the next one under it, kept on the Kindle so it shows at once. Under it: New in the library, Search, My Kindle, Sync now, then More and Close. The line at the top says who you are and when you last synced.
+- **Clearer names, grouped.** "Tidy books" became **Move my books into one folder** (it moves, never deletes, and says so), "Tidy names" became **Show real titles (display only)**, "Undo tidy" became **Undo the last move**, "Download Nightstand" became **Get my Nightstand books**, and "On this e-reader" became **My Kindle**. The list is grouped: **Keep safe**, **Organize**, **Free up space**, **Settings**.
+- **Fixed "1 minutes ago"** (and "1 hours", "1 days").
+
 ## [2.1.27]
 
 ### 📱 NovelCheck in KOReader feels like an app
